@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownM
 import { toast } from '../../../lib/toast';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { CreateStockProductModal } from './CreateStockProductModal';
+import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'DRAFT';
 type StockFilter = 'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'UNLIMITED';
@@ -284,6 +285,7 @@ export default function AllProducts() {
                     >
                       {p.name}
                     </button>
+                    {p.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={p.slug} />}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-regantify-text">{p.category ?? '—'}</td>

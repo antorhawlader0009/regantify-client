@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, X, Search } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
@@ -8,6 +8,21 @@ import { toast } from '../../../lib/toast';
 
 interface CartLine extends OrderItemInput {
   key: string; // productId + variantId, for React keys / dedupe within this form only
+}
+
+// State shape passed via navigate(path, { state }) from the Incomplete
+// Orders page's "Create Order" action — see IncompleteOrders.tsx. Kept
+// intentionally light: IncompleteOrderItem has no pricing (a shopper's
+// in-progress cart is never treated as a priced snapshot the way a real
+// Order's items are), so cart lines are surfaced as a note for the
+// vendor to re-add themselves with live, correct pricing, rather than
+// silently prefilling a cart with stale/zero prices.
+export interface CreateOrderFromIncompleteState {
+  customerName?: string | null;
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+  shippingAddress?: string | null;
+  itemsSummary?: string; // e.g. "2x Men's Dress Shoes (wbie1158-brown-43)"
 }
 
 function formatPrice(value: number) {
@@ -21,6 +36,7 @@ const DELIVERY_CHARGE: Record<'DHAKA' | 'OUTSIDE_DHAKA', number> = {
 
 export default function AddOrder() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
   // -- Customer / Shipping --
@@ -34,6 +50,22 @@ export default function AddOrder() {
   const [shippingZip, setShippingZip] = useState('');
   const [shippingCity, setShippingCity] = useState('');
   const [shippingDistrict, setShippingDistrict] = useState('');
+
+  // Prefill from "Create Order" on the Incomplete Orders page — runs
+  // once on mount only (empty deps), since this page's own field state
+  // should win over the handoff the moment the vendor starts editing.
+  useEffect(() => {
+    const state = location.state as CreateOrderFromIncompleteState | null;
+    if (!state) return;
+    if (state.customerName) setCustomerName(state.customerName);
+    if (state.customerPhone) setCustomerPhone(state.customerPhone);
+    if (state.customerEmail) setCustomerEmail(state.customerEmail);
+    if (state.shippingAddress) setShippingAddress(state.shippingAddress);
+    if (state.itemsSummary) {
+      setStaffNote(`Cart from incomplete checkout — please re-add these items with current pricing:\n${state.itemsSummary}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // -- Cart --
   const [cart, setCart] = useState<CartLine[]>([]);

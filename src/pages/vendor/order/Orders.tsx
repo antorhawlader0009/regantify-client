@@ -11,6 +11,7 @@ import { CheckHistoryModal } from './CheckHistoryModal';
 import { ChangeLabelModal } from './ChangeLabelModal';
 import { InvoiceModal } from './InvoiceModal';
 import { DateRangeFilter } from './DateRangeFilter';
+import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -126,7 +127,10 @@ function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoi
             <div className="w-10 h-10 rounded-lg bg-regantify-content" />
           )}
           <div>
-            <p className="text-sm text-regantify-text leading-tight">{firstItem?.productName}</p>
+            <p className="text-sm text-regantify-text leading-tight flex items-center gap-1.5">
+              {firstItem?.productName}
+              {firstItem?.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={firstItem.product.slug} />}
+            </p>
             <p className="text-xs text-regantify-text-muted">{firstItem?.productSku}</p>
             <p className="text-xs text-regantify-text-muted">x{firstItem?.quantity}</p>
           </div>

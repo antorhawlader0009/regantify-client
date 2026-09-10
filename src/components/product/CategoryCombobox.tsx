@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesApi } from '../../lib/categoriesApi';
-import { inputClass } from './ProductFormPieces';
+import { productInputClass } from './ProductFormPieces';
 
 interface CategoryComboboxProps {
   value: string;
@@ -108,7 +108,7 @@ export function CategoryCombobox({ value, onChange, placeholder, exclude = [], o
           }
         }}
         placeholder={placeholder ?? 'Search or type a category'}
-        className={inputClass}
+        className={productInputClass}
         autoComplete="off"
       />
       {open && suggestions.length > 0 && (

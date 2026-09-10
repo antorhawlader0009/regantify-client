@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Camera, X, ChevronLeft, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
-import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
+import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { ImportCsvModal } from './ImportCsvModal';
@@ -241,7 +241,7 @@ export default function AddProduct() {
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="ie. Cotton T-shirt, 3 Pcs Embroidery Lawn Dress"
-                className={inputClass}
+                className={productInputClass}
               />
             </Field>
 
@@ -277,7 +277,7 @@ export default function AddProduct() {
             )}
             {showBrand && (
               <Field label="Brand">
-                <input type="text" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="ie. Regantify Basics" className={inputClass} />
+                <input type="text" value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="ie. Regantify Basics" className={productInputClass} />
               </Field>
             )}
             {showSummary && (
@@ -292,7 +292,7 @@ export default function AddProduct() {
                 onChange={(e) => setNote(e.target.value)}
                 rows={2}
                 placeholder="Internal note about this product"
-                className={`${inputClass} resize-y`}
+                className={`${productInputClass} resize-y`}
               />
             </Field>
           </div>
@@ -383,7 +383,7 @@ export default function AddProduct() {
                 type="text"
                 autoFocus
                 placeholder="https://youtube.com/..."
-                className={inputClass}
+                className={productInputClass}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') setAddingVideo(false);
                 }}
@@ -408,7 +408,7 @@ export default function AddProduct() {
         {/* Pricing Information */}
         <SectionCard title="Pricing Information">
           <div className="space-y-5">
-            <Field label="Price">
+            <Field label="Price" required>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted">৳</span>
@@ -417,7 +417,7 @@ export default function AddProduct() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="Product price"
-                    className={`${inputClass} pl-7`}
+                    className={`${productInputClass} pl-7`}
                   />
                 </div>
                 {!showDiscount && (
@@ -437,7 +437,7 @@ export default function AddProduct() {
                     value={discountPrice}
                     onChange={(e) => setDiscountPrice(e.target.value)}
                     placeholder="Discounted price"
-                    className={`${inputClass} pl-7`}
+                    className={`${productInputClass} pl-7`}
                   />
                 </div>
               </Field>
@@ -451,7 +451,7 @@ export default function AddProduct() {
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
                   placeholder="Purchase cost"
-                  className={`${inputClass} pl-7`}
+                  className={`${productInputClass} pl-7`}
                 />
               </div>
             </Field>
@@ -462,7 +462,7 @@ export default function AddProduct() {
         <SectionCard title="Stock Information">
           <div className="space-y-5">
             <Field label="SKU Code" required tooltip="A unique code you use to identify this product.">
-              <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="ie. mt-01, 3pc20-10" className={inputClass} />
+              <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="ie. mt-01, 3pc20-10" className={productInputClass} />
             </Field>
 
             <Field label="Is this a Pre-Order Item?" required tooltip="Pre-order items can be sold before they're in stock.">
@@ -479,12 +479,12 @@ export default function AddProduct() {
             </Field>
 
             <Field label="Stock Quantity" tooltip="Leave blank for unlimited stock.">
-              <input type="number" value={stockQuantity} onChange={(e) => setStockQuantity(e.target.value)} placeholder="ie. 100" className={inputClass} />
+              <input type="number" value={stockQuantity} onChange={(e) => setStockQuantity(e.target.value)} placeholder="ie. 100" className={productInputClass} />
             </Field>
 
             <Field label="Weight" tooltip="Used to calculate shipping cost.">
               <div className="flex gap-2">
-                <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ie. 100" className={`${inputClass} flex-1`} />
+                <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ie. 100" className={`${productInputClass} flex-1`} />
                 <select
                   value={weightUnit}
                   onChange={(e) => setWeightUnit(e.target.value as WeightUnit)}
@@ -549,7 +549,7 @@ export default function AddProduct() {
                 onChange={(e) => setMetaTitle(e.target.value.slice(0, 70))}
                 placeholder={name || 'Page title'}
                 maxLength={70}
-                className={inputClass}
+                className={productInputClass}
               />
               <p className="text-xs text-regantify-text-muted mt-1">{metaTitle.length} of 70 characters used</p>
             </div>
@@ -561,7 +561,7 @@ export default function AddProduct() {
                 onChange={(e) => setMetaDescription(e.target.value.slice(0, 160))}
                 rows={3}
                 maxLength={160}
-                className={`${inputClass} resize-y`}
+                className={`${productInputClass} resize-y`}
               />
               <p className="text-xs text-regantify-text-muted mt-1">{metaDescription.length} of 160 characters used</p>
             </div>
@@ -580,7 +580,7 @@ export default function AddProduct() {
                     setSlug(slugify(e.target.value));
                   }}
                   placeholder={slugify(name) || 'product-url'}
-                  className={`${inputClass} pl-[4.6rem]`}
+                  className={`${productInputClass} pl-[4.6rem]`}
                 />
               </div>
               <p className="text-xs text-regantify-text-muted mt-1 break-all">

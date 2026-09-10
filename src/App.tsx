@@ -35,6 +35,7 @@ import Collections from './pages/vendor/collection/Collections';
 import AddCollection from './pages/vendor/collection/AddCollection';
 import Themes from './pages/vendor/store/Themes';
 import Orders from './pages/vendor/order/Orders';
+import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
 import OrderDetail from './pages/vendor/order/OrderDetail';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -67,7 +68,8 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/collections' &&
     r.path !== '/vendor/product/low-stock' &&
     r.path !== '/vendor/store/themes' &&
-    r.path !== '/vendor/orders',
+    r.path !== '/vendor/orders' &&
+    r.path !== '/vendor/orders/incomplete',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav);
 
@@ -135,6 +137,7 @@ export default function App() {
                 <Route path="/vendor/product/collections/edit/:id" element={<AddCollection />} />
                 <Route path="/vendor/store/themes" element={<Themes />} />
                 <Route path="/vendor/orders" element={<Orders />} />
+                <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 {vendorPlaceholderRoutes.map((r) => (

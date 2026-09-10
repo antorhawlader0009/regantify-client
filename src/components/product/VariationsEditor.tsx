@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Plus, Camera } from 'lucide-react';
-import { inputClass } from './ProductFormPieces';
+import { productInputClass } from './ProductFormPieces';
 import type { VariationOptionInput, ProductVariantInput, VariationValuePhotoInput } from '../../lib/productsApi';
 import { productsApi } from '../../lib/productsApi';
 
@@ -248,7 +248,7 @@ export function VariationsEditor({
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="ie. Material"
-              className={inputClass}
+              className={productInputClass}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && customName.trim()) {
                   addOption(customName.trim());

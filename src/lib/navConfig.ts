@@ -46,13 +46,17 @@ export const vendorNav: NavSection[] = [
       { label: 'Categories', path: '/vendor/product/categories' },
       { label: 'Collections', path: '/vendor/product/collections' },
       { label: 'Brands', path: '/vendor/product/brands' },
+      { label: 'Inventory', path: '/vendor/product/inventory' },
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
     ],
   },
   {
     label: 'Order',
     icon: ClipboardList,
-    children: [{ label: 'Orders', path: '/vendor/orders' }],
+    children: [
+      { label: 'Orders', path: '/vendor/orders' },
+      { label: 'Incomplete Orders', path: '/vendor/orders/incomplete' },
+    ],
   },
   { label: 'Customers', icon: Users, path: '/vendor/customers' },
   {

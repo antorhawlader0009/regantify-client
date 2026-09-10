@@ -6,6 +6,7 @@ import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CheckHistoryModal } from './CheckHistoryModal';
+import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -85,7 +86,10 @@ export default function OrderDetail() {
                     <div className="w-12 h-12 rounded-lg bg-regantify-content" />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm text-regantify-text">{item.productName}</p>
+                    <p className="text-sm text-regantify-text flex items-center gap-1.5">
+                      {item.productName}
+                      {item.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={item.product.slug} />}
+                    </p>
                     <p className="text-xs text-regantify-text-muted">
                       {item.productSku}
                       {Object.entries(item.selectedOptions).length > 0 &&

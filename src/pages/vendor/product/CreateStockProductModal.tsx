@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Dialog } from '../../../components/ui/Dialog';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { toast } from '../../../lib/toast';
+import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface CreateStockProductModalProps {
@@ -84,8 +85,9 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
       <div className="p-6 space-y-4">
         <div>
           <h2 className="font-semibold text-regantify-text">Create Stock Product</h2>
-          <p className="text-sm text-regantify-text-muted mt-1">
+          <p className="text-sm text-regantify-text-muted mt-1 flex items-center gap-1.5">
             Product: <span className="font-medium text-regantify-text">{product.name}</span>
+            {product.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={product.slug} />}
           </p>
           <p className="text-xs text-regantify-text-muted mt-0.5">
             Source SKU: {product.sku} → New SKU: <span className="font-medium">{newSku}</span>

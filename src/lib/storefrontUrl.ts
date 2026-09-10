@@ -19,3 +19,8 @@ function storefrontOrigin(): string {
 export function storefrontStoreUrl(subdomain: string): string {
   return `${storefrontOrigin()}/store/${subdomain}`;
 }
+
+/** Link to one product's public storefront page — used by the small "view on storefront" icon wherever a product name is shown in the vendor dashboard. */
+export function storefrontProductUrl(subdomain: string, slug: string): string {
+  return `${storefrontOrigin()}/store/${subdomain}/product/${slug}`;
+}

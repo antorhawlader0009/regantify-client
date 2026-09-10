@@ -27,6 +27,10 @@ export interface OrderItem {
   unitPrice: string;
   quantity: number;
   lineTotal: string;
+  // Live product snapshot for the "view on storefront" link — null when
+  // the product was since deleted, or DRAFT (no public page to link to).
+  // See OrdersService.itemsInclude.
+  product?: { slug: string; visibility: 'PUBLIC' | 'DRAFT' } | null;
 }
 
 export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST';
