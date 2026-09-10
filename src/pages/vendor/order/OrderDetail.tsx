@@ -1,0 +1,217 @@
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft } from 'lucide-react';
+import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
+import { toast } from '../../../lib/toast';
+import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
+import { CheckHistoryModal } from './CheckHistoryModal';
+
+function formatPrice(value: string) {
+  return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+export default function OrderDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [historyPhone, setHistoryPhone] = useState<string | null>(null);
+  const [statusNote, setStatusNote] = useState('');
+
+  const { data: order, isLoading } = useQuery({
+    queryKey: ['order', id],
+    queryFn: () => ordersApi.findOne(id!),
+    enabled: Boolean(id),
+  });
+
+  const { data: history = [] } = useQuery({
+    queryKey: ['order-history', id],
+    queryFn: () => ordersApi.getHistory(id!),
+    enabled: Boolean(id),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (status: OrderStatus) => ordersApi.updateStatus(id!, status, statusNote.trim() || undefined),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['order-history', id] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setStatusNote('');
+      toast.success('Order status updated.');
+    },
+    onError: () => toast.error('Could not update the order status. Please try again.'),
+  });
+
+  if (isLoading || !order) {
+    return <p className="text-sm text-regantify-text-muted">Loading…</p>;
+  }
+
+  return (
+    <div className="max-w-4xl">
+      <button
+        onClick={() => navigate('/vendor/orders')}
+        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
+      >
+        <ChevronLeft size={16} />
+        Orders
+      </button>
+
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-2xl font-semibold text-regantify-text">ORDER-{order.invoiceNumber}</h1>
+        <OrderStatusBadge status={order.status} />
+        <span className="text-sm text-regantify-text-muted">{formatDateTime(order.createdAt)}</span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <section className="bg-white rounded-2xl border border-black/5 p-6">
+            <h2 className="text-base font-semibold text-regantify-text mb-4">Items</h2>
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 pb-3 border-b border-black/5 last:border-0 last:pb-0">
+                  {item.productImage ? (
+                    <img src={item.productImage} alt="" className="w-12 h-12 rounded-lg object-cover bg-regantify-content" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-regantify-content" />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm text-regantify-text">{item.productName}</p>
+                    <p className="text-xs text-regantify-text-muted">
+                      {item.productSku}
+                      {Object.entries(item.selectedOptions).length > 0 &&
+                        ` · ${Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(', ')}`}
+                    </p>
+                    <p className="text-xs text-regantify-text-muted">
+                      {formatPrice(item.unitPrice)} × {item.quantity}
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium text-regantify-text">{formatPrice(item.lineTotal)}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-black/5 space-y-1.5 text-sm">
+              <div className="flex justify-between text-regantify-text-muted">
+                <span>Subtotal</span>
+                <span>{formatPrice(order.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-regantify-text-muted">
+                <span>Delivery charge</span>
+                <span>{formatPrice(order.deliveryCharge)}</span>
+              </div>
+              {Number(order.discountAmount) > 0 && (
+                <div className="flex justify-between text-regantify-text-muted">
+                  <span>Discount{order.discountLabel ? ` — ${order.discountLabel}` : ''}</span>
+                  <span>−{formatPrice(order.discountAmount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-semibold text-regantify-text pt-1.5 border-t border-black/5">
+                <span>Total</span>
+                <span>{formatPrice(order.total)}</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-6">
+            <h2 className="text-base font-semibold text-regantify-text mb-4">Status History</h2>
+            {history.length === 0 ? (
+              <p className="text-sm text-regantify-text-muted">No history yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {history.map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-3 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-regantify-cta mt-1.5 shrink-0" />
+                    <div>
+                      <p className="text-regantify-text">
+                        {entry.fromStatus ? `${orderStatusLabel(entry.fromStatus)} → ` : ''}
+                        {orderStatusLabel(entry.toStatus)}
+                        {entry.changedBy ? ` · ${entry.changedBy}` : ''}
+                      </p>
+                      {entry.note && <p className="text-regantify-text-muted text-xs mt-0.5">{entry.note}</p>}
+                      <p className="text-regantify-text-muted text-xs mt-0.5">{formatDateTime(entry.createdAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="space-y-6">
+          <section className="bg-white rounded-2xl border border-black/5 p-6">
+            <h2 className="text-base font-semibold text-regantify-text mb-4">Customer</h2>
+            <p className="text-sm text-regantify-text">{order.customerName}</p>
+            <p className="text-sm text-regantify-text-muted">{order.customerPhone}</p>
+            {order.customerPhoneAlt && <p className="text-sm text-regantify-text-muted">{order.customerPhoneAlt}</p>}
+            {order.customerEmail && <p className="text-sm text-regantify-text-muted">{order.customerEmail}</p>}
+            <button
+              onClick={() => setHistoryPhone(order.customerPhone)}
+              className="mt-2 text-xs px-2.5 py-1 rounded-lg border border-black/10 text-regantify-text-muted hover:bg-regantify-content"
+            >
+              Check History
+            </button>
+            {order.customerNote && (
+              <p className="mt-3 text-xs text-regantify-text-muted bg-regantify-content rounded-lg p-2.5">
+                {order.customerNote}
+              </p>
+            )}
+            {order.staffNote && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-regantify-text-muted mb-1">Staff Note</p>
+                <p className="text-xs text-regantify-text-muted bg-regantify-content rounded-lg p-2.5">{order.staffNote}</p>
+              </div>
+            )}
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-6">
+            <h2 className="text-base font-semibold text-regantify-text mb-4">Shipping</h2>
+            <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
+            {order.shippingCity && <p className="text-xs text-regantify-text-muted mt-1">City: {order.shippingCity}</p>}
+            {order.shippingDistrict && (
+              <p className="text-xs text-regantify-text-muted">District: {order.shippingDistrict}</p>
+            )}
+            {order.shippingZip && <p className="text-xs text-regantify-text-muted">ZIP: {order.shippingZip}</p>}
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-6">
+            <h2 className="text-base font-semibold text-regantify-text mb-3">Update Status</h2>
+            <textarea
+              value={statusNote}
+              onChange={(e) => setStatusNote(e.target.value)}
+              placeholder="Optional note (e.g. Confirmed by Bayazid)"
+              rows={2}
+              className="w-full mb-3 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm resize-y focus:outline-none"
+            />
+            <select
+              value=""
+              onChange={(e) => e.target.value && statusMutation.mutate(e.target.value as OrderStatus)}
+              disabled={statusMutation.isPending}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
+            >
+              <option value="" disabled>
+                Change status to…
+              </option>
+              {ALL_ORDER_STATUSES.filter((s) => s !== order.status).map((status) => (
+                <option key={status} value={status}>
+                  {orderStatusLabel(status)}
+                </option>
+              ))}
+            </select>
+          </section>
+        </div>
+      </div>
+
+      <CheckHistoryModal phone={historyPhone} onOpenChange={(open) => !open && setHistoryPhone(null)} />
+    </div>
+  );
+}

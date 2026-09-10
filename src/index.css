@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f1f1f1;
+}
+
+/* Scroll still works everywhere — the scrollbar itself is just hidden,
+   since a visible scrollbar clashes with the design. Applies to every
+   scrollable element (html/body, the dashboard's <main>, any overflow-y
+   panel), not just one spot. */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge/IE */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, new Edge */
+}
