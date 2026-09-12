@@ -51,11 +51,11 @@ export function AddBrandModal({ onClose }: AddBrandModalProps) {
   });
 
   const handleNameChange = (value: string) => {
-    setName(value);
+    setName(value.slice(0, 100));
     // Slug follows the name automatically until the vendor edits it
     // themselves — same "auto-fill until touched" pattern as most
     // name→slug fields.
-    if (!slugTouched) setSlug(slugify(value));
+    if (!slugTouched) setSlug(slugify(value).slice(0, 100));
   };
 
   const handleLogoSelect = (file: File | undefined) => {
@@ -123,6 +123,7 @@ export function AddBrandModal({ onClose }: AddBrandModalProps) {
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Name"
+              maxLength={100}
               className={inputClass}
             />
           </div>
@@ -135,10 +136,11 @@ export function AddBrandModal({ onClose }: AddBrandModalProps) {
               type="text"
               value={slug}
               onChange={(e) => {
-                setSlug(e.target.value);
+                setSlug(e.target.value.slice(0, 100));
                 setSlugTouched(true);
               }}
               placeholder="Slug"
+              maxLength={100}
               className={inputClass}
             />
           </div>

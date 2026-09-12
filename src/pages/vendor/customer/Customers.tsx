@@ -6,6 +6,7 @@ import { customersApi, type VendorCustomer } from '../../../lib/customersApi';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { toCsv, downloadCsv } from '../../../lib/csv';
+import { CustomerTabs } from './CustomerTabs';
 
 interface CustomerRowProps {
   customer: VendorCustomer;
@@ -203,6 +204,8 @@ export default function Customers() {
           </DropdownMenu>
         </div>
       </div>
+
+      <CustomerTabs />
 
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
         <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">

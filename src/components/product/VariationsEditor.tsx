@@ -246,8 +246,9 @@ export function VariationsEditor({
               autoFocus
               type="text"
               value={customName}
-              onChange={(e) => setCustomName(e.target.value)}
+              onChange={(e) => setCustomName(e.target.value.slice(0, 50))}
               placeholder="ie. Material"
+              maxLength={50}
               className={productInputClass}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && customName.trim()) {
@@ -301,7 +302,7 @@ export function VariationsEditor({
                   <input
                     type="text"
                     value={valueInputs[option.name] ?? ''}
-                    onChange={(e) => setValueInputs((prev) => ({ ...prev, [option.name]: e.target.value }))}
+                    onChange={(e) => setValueInputs((prev) => ({ ...prev, [option.name]: e.target.value.slice(0, 50) }))}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -309,6 +310,7 @@ export function VariationsEditor({
                       }
                     }}
                     placeholder="Add value"
+                    maxLength={50}
                     className="px-2.5 py-1 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none w-24"
                   />
                   <button type="button" onClick={() => addValue(option.name)} className="text-regantify-text-muted hover:text-regantify-text">
@@ -432,7 +434,8 @@ export function VariationsEditor({
                       <input
                         type="text"
                         value={v.sku}
-                        onChange={(e) => updateVariantField(v.sku, 'sku', e.target.value)}
+                        onChange={(e) => updateVariantField(v.sku, 'sku', e.target.value.slice(0, 60))}
+                        maxLength={60}
                         className="w-full px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text focus:outline-none"
                       />
                     </td>
@@ -441,6 +444,8 @@ export function VariationsEditor({
                         type="number"
                         value={v.stock ?? ''}
                         onChange={(e) => updateVariantField(v.sku, 'stock', e.target.value)}
+                        min={0}
+                        max={1000000}
                         className="w-20 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text focus:outline-none"
                       />
                     </td>
@@ -450,6 +455,8 @@ export function VariationsEditor({
                         value={v.listPrice ?? ''}
                         onChange={(e) => updateVariantField(v.sku, 'listPrice', e.target.value)}
                         placeholder="Variation price"
+                        min={0}
+                        max={10000000}
                         className="w-28 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
@@ -459,6 +466,8 @@ export function VariationsEditor({
                         value={v.discountPrice ?? ''}
                         onChange={(e) => updateVariantField(v.sku, 'discountPrice', e.target.value)}
                         placeholder="Variation price"
+                        min={0}
+                        max={10000000}
                         className="w-28 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
@@ -468,6 +477,8 @@ export function VariationsEditor({
                         value={v.cost ?? ''}
                         onChange={(e) => updateVariantField(v.sku, 'cost', e.target.value)}
                         placeholder="Cost"
+                        min={0}
+                        max={10000000}
                         className="w-24 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
@@ -478,6 +489,8 @@ export function VariationsEditor({
                           value={v.weight ?? ''}
                           onChange={(e) => updateVariantField(v.sku, 'weight', e.target.value)}
                           placeholder="ie. 100"
+                          min={0}
+                          max={10000}
                           className="w-20 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                         />
                         <span className="text-xs text-regantify-text-muted">{weightUnit}</span>

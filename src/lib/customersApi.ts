@@ -64,6 +64,18 @@ export interface UpdateCustomerPayload {
   zip?: string;
 }
 
+/** Customers > Details tab — summary cards + order-status breakdown. */
+export interface CustomerStats {
+  contacts30Days: number;
+  contactsAllTime: number;
+  accountsCreated30Days: number;
+  accountsCreatedAllTime: number;
+  averageLtv: number;
+  placedOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+}
+
 export interface ExportCsvParams {
   search?: string;
   blacklistedOnly?: boolean;
@@ -74,6 +86,8 @@ export interface ExportCsvParams {
 export const customersApi = {
   list: (params: ListCustomersParams = {}) =>
     api.get<CustomerListResponse>('/api/v1/customers', { params }).then((r) => r.data),
+
+  getStats: () => api.get<CustomerStats>('/api/v1/customers/stats').then((r) => r.data),
 
   findOne: (phone: string) =>
     api.get<VendorCustomerDetail>(`/api/v1/customers/${encodeURIComponent(phone)}`).then((r) => r.data),

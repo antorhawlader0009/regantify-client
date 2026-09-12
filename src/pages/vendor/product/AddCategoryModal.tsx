@@ -7,6 +7,8 @@ import { toast } from '../../../lib/toast';
 interface AddCategoryModalProps {
   categories: Category[];
   onClose: () => void;
+  /** When set, the modal edits this category instead of creating a new one. */
+  editingCategory?: Category;
 }
 
 type PhotoKind = 'cover' | 'square';
@@ -70,31 +72,39 @@ function SearchSelect({
   );
 }
 
-export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps) {
+export function AddCategoryModal({ categories, onClose, editingCategory }: AddCategoryModalProps) {
   const queryClient = useQueryClient();
+  const isEditing = !!editingCategory;
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(editingCategory?.name ?? '');
 
-  const [parentQuery, setParentQuery] = useState('');
-  const [parentId, setParentId] = useState('');
+  const [parentQuery, setParentQuery] = useState(editingCategory?.parent?.name ?? '');
+  const [parentId, setParentId] = useState(editingCategory?.parentId ?? '');
 
-  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>(editingCategory?.visibility ?? 'PUBLIC');
 
   // Not wired up to any API yet — just captured for when the catalog feed
   // integration exists. These are plain text for now too (no real
   // Facebook/Google taxonomy lookup behind them), but styled the same as
   // the searchable Parent Category field to match the reference.
-  const [facebookCategory, setFacebookCategory] = useState('');
-  const [googleCategory, setGoogleCategory] = useState('');
+  const [facebookCategory, setFacebookCategory] = useState(editingCategory?.facebookCategory ?? '');
+  const [googleCategory, setGoogleCategory] = useState(editingCategory?.googleCategory ?? '');
 
-  const [coverPhoto, setCoverPhoto] = useState<PhotoState | null>(null);
-  const [squarePhoto, setSquarePhoto] = useState<PhotoState | null>(null);
+  const [coverPhoto, setCoverPhoto] = useState<PhotoState | null>(
+    editingCategory?.coverPhotoUrl ? { previewUrl: editingCategory.coverPhotoUrl, uploadedUrl: editingCategory.coverPhotoUrl, uploading: false } : null,
+  );
+  const [squarePhoto, setSquarePhoto] = useState<PhotoState | null>(
+    editingCategory?.squarePhotoUrl ? { previewUrl: editingCategory.squarePhotoUrl, uploadedUrl: editingCategory.squarePhotoUrl, uploading: false } : null,
+  );
   const coverInputRef = useRef<HTMLInputElement>(null);
   const squareInputRef = useRef<HTMLInputElement>(null);
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  const parentOptions = useMemo(() => categories.map((c) => ({ id: c.id, label: c.name })), [categories]);
+  const parentOptions = useMemo(
+    () => categories.filter((c) => c.id !== editingCategory?.id).map((c) => ({ id: c.id, label: c.name })),
+    [categories, editingCategory],
+  );
 
   const createMutation = useMutation({
     mutationFn: categoriesApi.create,
@@ -105,6 +115,19 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
     },
     onError: (err: any) => {
       setFormError(err?.response?.data?.message ?? 'Could not create the category. Please try again.');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof categoriesApi.update>[1]) =>
+      categoriesApi.update(editingCategory!.id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Category updated.');
+      onClose();
+    },
+    onError: (err: any) => {
+      setFormError(err?.response?.data?.message ?? 'Could not update the category. Please try again.');
     },
   });
 
@@ -134,7 +157,7 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
       return;
     }
 
-    createMutation.mutate({
+    const payload = {
       name: name.trim(),
       visibility,
       parentId: parentId || undefined,
@@ -142,8 +165,16 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
       squarePhotoUrl: squarePhoto?.uploadedUrl,
       facebookCategory: facebookCategory.trim() || undefined,
       googleCategory: googleCategory.trim() || undefined,
-    });
+    };
+
+    if (isEditing) {
+      updateMutation.mutate(payload);
+    } else {
+      createMutation.mutate(payload);
+    }
   };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
@@ -153,7 +184,7 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
       >
         <div className="p-6 space-y-5">
           <div className="flex items-start justify-between">
-            <h2 className="sr-only">Add Category</h2>
+            <h2 className="sr-only">{isEditing ? 'Edit Category' : 'Add Category'}</h2>
             <button onClick={onClose} className="ml-auto text-regantify-text-muted hover:text-regantify-text">
               <X size={18} />
             </button>
@@ -164,8 +195,9 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value.slice(0, 100))}
               placeholder="Name"
+              maxLength={100}
               className={inputClass}
             />
           </div>
@@ -204,8 +236,9 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
             <input
               type="text"
               value={facebookCategory}
-              onChange={(e) => setFacebookCategory(e.target.value)}
+              onChange={(e) => setFacebookCategory(e.target.value.slice(0, 150))}
               placeholder="Search Facebook Category"
+              maxLength={150}
               className={inputClass}
             />
           </div>
@@ -215,8 +248,9 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
             <input
               type="text"
               value={googleCategory}
-              onChange={(e) => setGoogleCategory(e.target.value)}
+              onChange={(e) => setGoogleCategory(e.target.value.slice(0, 150))}
               placeholder="Search Google Category"
+              maxLength={150}
               className={inputClass}
             />
           </div>
@@ -311,11 +345,17 @@ export function AddCategoryModal({ categories, onClose }: AddCategoryModalProps)
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={createMutation.isPending}
+            disabled={isSaving}
             className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
               transition-colors disabled:opacity-60"
           >
-            {createMutation.isPending ? 'Creating…' : 'Create Category'}
+            {isEditing
+              ? isSaving
+                ? 'Saving…'
+                : 'Save Changes'
+              : isSaving
+                ? 'Creating…'
+                : 'Create Category'}
           </button>
         </div>
       </div>

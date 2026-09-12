@@ -198,7 +198,7 @@ export default function AddCollection() {
         <SectionCard title="General Information">
           <div className="space-y-5">
             <Field label="Name">
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value.slice(0, 150))} maxLength={150} className={inputClass} />
             </Field>
 
             <Field label="Collection Link" required hint="Dedicated shop listing page for this collection">
@@ -209,7 +209,8 @@ export default function AddCollection() {
                 <input
                   type="text"
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
+                  onChange={(e) => setSlug(e.target.value.slice(0, 200))}
+                  maxLength={200}
                   className="flex-1 py-2.5 pr-3.5 bg-transparent text-regantify-text text-sm focus:outline-none"
                 />
               </div>
@@ -253,7 +254,7 @@ export default function AddCollection() {
         </SectionCard>
 
         <SectionCard title="Content">
-          <RichTextEditor value={content} onChange={setContent} placeholder="Enter text here…" />
+          <RichTextEditor value={content} onChange={setContent} placeholder="Enter text here…" maxLength={10000} />
         </SectionCard>
 
         <SectionCard title="Layout Options">
@@ -296,10 +297,11 @@ export default function AddCollection() {
             <input
               type="text"
               value={categoryQuery}
-              onChange={(e) => setCategoryQuery(e.target.value)}
+              onChange={(e) => setCategoryQuery(e.target.value.slice(0, 100))}
               onFocus={() => setCategoryFocused(true)}
               onBlur={() => setTimeout(() => setCategoryFocused(false), 150)}
               placeholder="Search Category"
+              maxLength={100}
               className={inputClass}
             />
             {categoryFocused && categoryMatches.length > 0 && (
@@ -323,8 +325,9 @@ export default function AddCollection() {
           <Field label="Add Products by SKU" hint="Enter comma-separated SKU IDs to add multiple products at once">
             <textarea
               value={skuInput}
-              onChange={(e) => setSkuInput(e.target.value)}
+              onChange={(e) => setSkuInput(e.target.value.slice(0, 5000))}
               rows={3}
+              maxLength={5000}
               placeholder="Enter comma-separated SKU IDs (e.g., SKU001, SKU002, SKU003)"
               className={`${inputClass} resize-y`}
             />
@@ -368,10 +371,11 @@ export default function AddCollection() {
             <input
               type="text"
               value={productQuery}
-              onChange={(e) => setProductQuery(e.target.value)}
+              onChange={(e) => setProductQuery(e.target.value.slice(0, 200))}
               onFocus={() => setProductFocused(true)}
               onBlur={() => setTimeout(() => setProductFocused(false), 150)}
               placeholder="Search products to add"
+              maxLength={200}
               className={`${inputClass} pl-10`}
             />
             {productFocused && productMatches.length > 0 && (

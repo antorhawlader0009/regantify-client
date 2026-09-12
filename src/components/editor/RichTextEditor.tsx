@@ -34,6 +34,8 @@ interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  /** Max plain-text length (HTML tags don't count) — typing past it is blocked and a counter is shown. */
+  maxLength?: number;
 }
 
 const FONT_SIZES = [
@@ -110,7 +112,7 @@ function ToolbarButton({
  * lists, font size, text/highlight color, link, image, divider, clear
  * formatting, embedded video, and an HTML source view toggle.
  */
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, placeholder, maxLength }: RichTextEditorProps) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showSourceView, setShowSourceView] = useState(false);
@@ -131,7 +133,19 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       Placeholder.configure({ placeholder: placeholder ?? '' }),
     ],
     content: value,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      // Counts visible text only (getText() strips tags/attributes), so
+      // formatting marks (bold, links, colors) never eat into the limit —
+      // only what the vendor actually sees as characters does. A paste or
+      // keystroke that pushes past maxLength is rolled back right away
+      // (undo + skip this onChange) rather than silently truncating mid-
+      // word or mid-tag, which could mangle the HTML.
+      if (maxLength !== undefined && editor.getText().length > maxLength) {
+        editor.commands.undo();
+        return;
+      }
+      onChange(editor.getHTML());
+    },
     editorProps: {
       attributes: {
         class:
@@ -395,6 +409,12 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         />
       ) : (
         <EditorContent editor={editor} />
+      )}
+
+      {maxLength !== undefined && !showSourceView && (
+        <p className="text-xs text-regantify-text-muted px-4 py-2 border-t border-black/5">
+          {editor.getText().length} of {maxLength} characters used
+        </p>
       )}
     </div>
   );

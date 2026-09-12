@@ -43,6 +43,7 @@ import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
 import OrderDetail from './pages/vendor/order/OrderDetail';
 import Customers from './pages/vendor/customer/Customers';
+import CustomerDetails from './pages/vendor/customer/CustomerDetails';
 import AddCustomer from './pages/vendor/customer/AddCustomer';
 import BulkUploadCustomers from './pages/vendor/customer/BulkUploadCustomers';
 import CustomerDetail from './pages/vendor/customer/CustomerDetail';
@@ -176,6 +177,7 @@ export default function App() {
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
+                <Route path="/vendor/customers/details" element={<CustomerDetails />} />
                 <Route path="/vendor/customers/add" element={<AddCustomer />} />
                 <Route path="/vendor/customers/bulk-upload" element={<BulkUploadCustomers />} />
                 <Route path="/vendor/customers/:phone/edit" element={<EditCustomer />} />

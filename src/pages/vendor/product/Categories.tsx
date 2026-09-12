@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
-import { categoriesApi } from '../../../lib/categoriesApi';
+import { categoriesApi, type Category } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
 import { toast } from '../../../lib/toast';
 
@@ -12,6 +12,7 @@ export default function Categories() {
   const [search, setSearch] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('ALL');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['categories'],
@@ -106,7 +107,13 @@ export default function Categories() {
             {filtered.map((c) => (
               <tr key={c.id} className="border-t border-black/5">
                 <td className="px-5 py-3.5">
-                  <span className="text-regantify-cta font-medium">{c.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditingCategory(c)}
+                    className="text-regantify-cta font-medium hover:underline"
+                  >
+                    {c.name}
+                  </button>
                 </td>
                 <td className="px-5 py-3.5 text-regantify-text">{c.parent?.name ?? ''}</td>
                 <td className="px-5 py-3.5">
@@ -134,6 +141,14 @@ export default function Categories() {
 
       {showAddModal && (
         <AddCategoryModal categories={categories} onClose={() => setShowAddModal(false)} />
+      )}
+
+      {editingCategory && (
+        <AddCategoryModal
+          categories={categories}
+          editingCategory={editingCategory}
+          onClose={() => setEditingCategory(null)}
+        />
       )}
     </div>
   );

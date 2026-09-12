@@ -462,13 +462,14 @@ export default function EditProduct() {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.slice(0, 200))}
+                maxLength={200}
                 className={productInputClass}
               />
             </Field>
 
             <Field label="Product Description">
-              <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" />
+              <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" maxLength={10000} />
             </Field>
 
             <Field label="Category">
@@ -510,7 +511,7 @@ export default function EditProduct() {
                 value={secondaryCategoryInput}
                 onChange={setSecondaryCategoryInput}
                 onSubmit={(name) => {
-                  if (!secondaryCategories.includes(name)) {
+                  if (!secondaryCategories.includes(name) && secondaryCategories.length < 10) {
                     setSecondaryCategories([...secondaryCategories, name]);
                   }
                   setSecondaryCategoryInput('');
@@ -519,28 +520,29 @@ export default function EditProduct() {
                 exclude={[category, ...secondaryCategories]}
               />
               <p className="text-xs text-regantify-text-muted mt-1.5">
-                Pick a suggestion or type a name, then press Enter to add it.
+                Pick a suggestion or type a name, then press Enter to add it. Up to 10 categories.
               </p>
             </Field>
 
             <Field label="Product Summary">
-              <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" />
+              <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" maxLength={500} />
             </Field>
 
             <Field label="Brand">
-              <input type="text" value={brand} onChange={(e) => setBrand(e.target.value)} className={productInputClass} />
+              <input type="text" value={brand} onChange={(e) => setBrand(e.target.value.slice(0, 100))} maxLength={100} className={productInputClass} />
             </Field>
 
             <Field label="Note" hint="This note is only visible to staff">
-              <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className={`${productInputClass} resize-y`} />
+              <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 1000))} rows={2} maxLength={1000} className={`${productInputClass} resize-y`} />
             </Field>
 
             <Field label="Creator">
               <input
                 type="text"
                 value={creator}
-                onChange={(e) => setCreator(e.target.value)}
+                onChange={(e) => setCreator(e.target.value.slice(0, 100))}
                 placeholder="Staff member name"
+                maxLength={100}
                 className={productInputClass}
               />
             </Field>
@@ -626,11 +628,12 @@ export default function EditProduct() {
                 type="text"
                 autoFocus
                 placeholder="https://youtube.com/..."
+                maxLength={500}
                 className={productInputClass}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') setAddingVideo(false);
                 }}
-                onChange={(e) => setVideoUrl(e.target.value)}
+                onChange={(e) => setVideoUrl(e.target.value.slice(0, 500))}
               />
               <button type="button" onClick={() => setAddingVideo(false)} className="px-4 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium">
                 Add
@@ -658,6 +661,8 @@ export default function EditProduct() {
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
+                  min={0}
+                  max={10000000}
                   className={`${productInputClass} pl-7`}
                 />
               </div>
@@ -670,6 +675,8 @@ export default function EditProduct() {
                   type="number"
                   value={discountPrice}
                   onChange={(e) => setDiscountPrice(e.target.value)}
+                  min={0}
+                  max={10000000}
                   className={`${productInputClass} pl-7`}
                 />
               </div>
@@ -682,6 +689,8 @@ export default function EditProduct() {
                   type="number"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
+                  min={0}
+                  max={10000000}
                   className={`${productInputClass} pl-7`}
                 />
               </div>
@@ -694,7 +703,7 @@ export default function EditProduct() {
           <div className="space-y-5">
             <Field label="SKU Code" required tooltip="A unique code you use to identify this product.">
               {editingSku ? (
-                <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} className={productInputClass} autoFocus />
+                <input type="text" value={sku} onChange={(e) => setSku(e.target.value.slice(0, 50))} maxLength={50} className={productInputClass} autoFocus />
               ) : (
                 <div className="flex gap-2">
                   <input type="text" value={sku} disabled className={`${productInputClass} opacity-60`} />
@@ -724,7 +733,7 @@ export default function EditProduct() {
 
             {variationOptions.length === 0 && (
               <Field label="Stock Quantity" tooltip="Leave blank for unlimited stock.">
-                <input type="number" value={stockQuantity} onChange={(e) => setStockQuantity(e.target.value)} placeholder="ie. 100" className={productInputClass} />
+                <input type="number" value={stockQuantity} onChange={(e) => setStockQuantity(e.target.value)} placeholder="ie. 100" min={0} max={1000000} className={productInputClass} />
               </Field>
             )}
 
@@ -734,7 +743,7 @@ export default function EditProduct() {
               hint={variationOptions.length > 0 ? 'This product has variations. You can also set variation-specific weights.' : undefined}
             >
               <div className="flex gap-2">
-                <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ie. 100" className={`${productInputClass} flex-1`} />
+                <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ie. 100" min={0} max={10000} className={`${productInputClass} flex-1`} />
                 <select
                   value={weightUnit}
                   onChange={(e) => setWeightUnit(e.target.value as WeightUnit)}
@@ -805,11 +814,11 @@ export default function EditProduct() {
 
           <div className="pb-4 border-b border-black/5">
             <p className="text-sm font-medium text-regantify-text">{storeName ?? 'My Store'}</p>
-            <p className="text-xs text-regantify-text-muted truncate">
+            <p className="text-xs text-regantify-text-muted break-all">
               {typeof window !== 'undefined' ? window.location.origin.replace(/^https?:\/\//, '') : ''}
               /store/{storeSubdomain ?? '…'} › products › {displaySlug}
             </p>
-            <p className="text-sm text-regantify-cta mt-1">{metaTitle.trim() || name.trim() || displaySlug}</p>
+            <p className="text-sm text-regantify-cta mt-1 break-all">{metaTitle.trim() || name.trim() || displaySlug}</p>
           </div>
 
           <div className="space-y-4 pt-4">
@@ -847,8 +856,9 @@ export default function EditProduct() {
                 <input
                   type="text"
                   value={slug}
-                  onChange={(e) => setSlug(slugify(e.target.value))}
+                  onChange={(e) => setSlug(slugify(e.target.value).slice(0, 200))}
                   placeholder={slugify(name) || 'product-url'}
+                  maxLength={200}
                   className={`${productInputClass} pl-[4.6rem]`}
                 />
               </div>

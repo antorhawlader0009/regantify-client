@@ -34,6 +34,9 @@ export const categoriesApi = {
   create: (payload: CreateCategoryPayload) =>
     api.post<Category>('/api/v1/categories', payload).then((r) => r.data),
 
+  update: (id: string, payload: Partial<CreateCategoryPayload>) =>
+    api.patch<Category>(`/api/v1/categories/${id}`, payload).then((r) => r.data),
+
   remove: (id: string) => api.delete(`/api/v1/categories/${id}`).then((r) => r.data),
 
   // Uploads one cover or square photo and returns its Cloudinary URL —

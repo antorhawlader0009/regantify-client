@@ -9,6 +9,8 @@ interface CategoryComboboxProps {
   placeholder?: string;
   /** Category names to exclude from suggestions (e.g. already picked as secondary categories, or the primary category). */
   exclude?: string[];
+  /** Max characters for a freely-typed category name. Defaults to 100. */
+  maxLength?: number;
   /**
    * When provided, Enter (or clicking a suggestion) calls this with the
    * chosen name instead of leaving it in the input — used for "add to a
@@ -28,7 +30,7 @@ interface CategoryComboboxProps {
  * it's a fast way to reuse an existing category, not a hard foreign key
  * picker. Matching is case-insensitive substring, capped at 8 suggestions.
  */
-export function CategoryCombobox({ value, onChange, placeholder, exclude = [], onSubmit }: CategoryComboboxProps) {
+export function CategoryCombobox({ value, onChange, placeholder, exclude = [], maxLength = 100, onSubmit }: CategoryComboboxProps) {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,7 +81,7 @@ export function CategoryCombobox({ value, onChange, placeholder, exclude = [], o
         type="text"
         value={value}
         onChange={(e) => {
-          onChange(e.target.value);
+          onChange(e.target.value.slice(0, maxLength));
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
@@ -108,6 +110,7 @@ export function CategoryCombobox({ value, onChange, placeholder, exclude = [], o
           }
         }}
         placeholder={placeholder ?? 'Search or type a category'}
+        maxLength={maxLength}
         className={productInputClass}
         autoComplete="off"
       />
