@@ -34,10 +34,28 @@ import Brands from './pages/vendor/product/Brands';
 import Collections from './pages/vendor/collection/Collections';
 import AddCollection from './pages/vendor/collection/AddCollection';
 import Themes from './pages/vendor/store/Themes';
+import Pages from './pages/vendor/store/Pages';
+import AddPage from './pages/vendor/store/AddPage';
+import Social from './pages/vendor/store/Social';
+import Logo from './pages/vendor/store/Logo';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
 import OrderDetail from './pages/vendor/order/OrderDetail';
+import Customers from './pages/vendor/customer/Customers';
+import AddCustomer from './pages/vendor/customer/AddCustomer';
+import BulkUploadCustomers from './pages/vendor/customer/BulkUploadCustomers';
+import CustomerDetail from './pages/vendor/customer/CustomerDetail';
+import EditCustomer from './pages/vendor/customer/EditCustomer';
+import Reviews from './pages/vendor/review/Reviews';
+import AddReview from './pages/vendor/review/AddReview';
+import Staff from './pages/vendor/staff/Staff';
+import AddStaffMember from './pages/vendor/staff/AddStaffMember';
+import Coupons from './pages/vendor/marketing/Coupons';
+import AddCoupon from './pages/vendor/marketing/AddCoupon';
+import Campaigns from './pages/vendor/marketing/Campaigns';
+import AddCampaign from './pages/vendor/marketing/AddCampaign';
+import Sms from './pages/vendor/sms/Sms';
 import AdminDashboard from './pages/admin/Dashboard';
 
 const queryClient = new QueryClient();
@@ -68,8 +86,17 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/collections' &&
     r.path !== '/vendor/product/low-stock' &&
     r.path !== '/vendor/store/themes' &&
+    r.path !== '/vendor/store/pages' &&
+    r.path !== '/vendor/store/social' &&
+    r.path !== '/vendor/store/logo' &&
     r.path !== '/vendor/orders' &&
-    r.path !== '/vendor/orders/incomplete',
+    r.path !== '/vendor/orders/incomplete' &&
+    r.path !== '/vendor/customers' &&
+    r.path !== '/vendor/reviews' &&
+    r.path !== '/vendor/staff' &&
+    r.path !== '/vendor/marketing/coupons' &&
+    r.path !== '/vendor/marketing/campaigns' &&
+    r.path !== '/vendor/sms',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav);
 
@@ -121,8 +148,11 @@ export default function App() {
               <Route path="/vendor/complete-profile" element={<VendorCompleteProfile />} />
             </Route>
 
-            {/* Vendor dashboard — protected, VENDOR role only */}
-            <Route element={<ProtectedRoute allowedRoles={['VENDOR']} />}>
+            {/* Vendor dashboard — protected, VENDOR or STAFF (a team
+                member under a vendor's store — see StaffMember model;
+                every route here is scoped identically either way via
+                VendorService.findVendorIdByUserId) */}
+            <Route element={<ProtectedRoute allowedRoles={['VENDOR', 'STAFF']} />}>
               <Route element={<VendorLayout />}>
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                 <Route path="/vendor/settings" element={<VendorSettings />} />
@@ -136,10 +166,32 @@ export default function App() {
                 <Route path="/vendor/product/collections/add" element={<AddCollection />} />
                 <Route path="/vendor/product/collections/edit/:id" element={<AddCollection />} />
                 <Route path="/vendor/store/themes" element={<Themes />} />
+                <Route path="/vendor/store/pages" element={<Pages />} />
+                <Route path="/vendor/store/pages/add" element={<AddPage />} />
+                <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
+                <Route path="/vendor/store/social" element={<Social />} />
+                <Route path="/vendor/store/logo" element={<Logo />} />
                 <Route path="/vendor/orders" element={<Orders />} />
                 <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
+                <Route path="/vendor/customers" element={<Customers />} />
+                <Route path="/vendor/customers/add" element={<AddCustomer />} />
+                <Route path="/vendor/customers/bulk-upload" element={<BulkUploadCustomers />} />
+                <Route path="/vendor/customers/:phone/edit" element={<EditCustomer />} />
+                <Route path="/vendor/customers/:phone" element={<CustomerDetail />} />
+                <Route path="/vendor/reviews" element={<Reviews />} />
+                <Route path="/vendor/reviews/add" element={<AddReview />} />
+                <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
+                <Route path="/vendor/staff" element={<Staff />} />
+                <Route path="/vendor/staff/add" element={<AddStaffMember />} />
+                <Route path="/vendor/marketing/coupons" element={<Coupons />} />
+                <Route path="/vendor/marketing/coupons/add" element={<AddCoupon />} />
+                <Route path="/vendor/marketing/coupons/:id/edit" element={<AddCoupon />} />
+                <Route path="/vendor/marketing/campaigns" element={<Campaigns />} />
+                <Route path="/vendor/marketing/campaigns/add" element={<AddCampaign />} />
+                <Route path="/vendor/marketing/campaigns/:id/edit" element={<AddCampaign />} />
+                <Route path="/vendor/sms" element={<Sms />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

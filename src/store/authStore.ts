@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Role = 'SUPER_ADMIN' | 'VENDOR';
+export type Role = 'SUPER_ADMIN' | 'VENDOR' | 'STAFF';
 
 export interface AuthUser {
   id: string;

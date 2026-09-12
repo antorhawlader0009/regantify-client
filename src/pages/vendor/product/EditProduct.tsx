@@ -6,6 +6,7 @@ import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
+import { categoriesApi } from '../../../lib/categoriesApi';
 import { productsApi, type VariationOptionInput, type ProductVariantInput, type VariationValuePhotoInput } from '../../../lib/productsApi';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
@@ -50,6 +51,15 @@ export default function EditProduct() {
     enabled: Boolean(id),
   });
 
+  // Store > Categories' real category list — for the optional "Link to
+  // Category" dropdown (see AddProduct.tsx's own comment on why this
+  // is separate from the free-text Category combobox above it).
+  const { data: categoryOptions = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.list(),
+    staleTime: 60_000,
+  });
+
   // General Information
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -58,6 +68,7 @@ export default function EditProduct() {
   const [creator, setCreator] = useState('');
   const [visibility, setVisibility] = useState<'PUBLIC' | 'DRAFT'>('PUBLIC');
   const [category, setCategory] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [secondaryCategories, setSecondaryCategories] = useState<string[]>([]);
   const [secondaryCategoryInput, setSecondaryCategoryInput] = useState('');
   const [brand, setBrand] = useState('');
@@ -155,6 +166,7 @@ export default function EditProduct() {
       creator,
       visibility,
       category,
+      categoryId,
       secondaryCategories,
       brand,
       summary,
@@ -187,6 +199,7 @@ export default function EditProduct() {
     setCreator(p.creator ?? '');
     setVisibility(p.visibility);
     setCategory(p.category ?? '');
+    setCategoryId(p.categoryId ?? '');
     setSecondaryCategories(p.secondaryCategories ?? []);
     setBrand(p.brand ?? '');
     setSummary(p.summary ?? '');
@@ -255,6 +268,7 @@ export default function EditProduct() {
         note: note.trim() || undefined,
         creator: creator.trim() || undefined,
         category: category.trim() || undefined,
+        categoryId,
         secondaryCategories,
         brand: brand.trim() || undefined,
         summary: summary || undefined,
@@ -460,6 +474,26 @@ export default function EditProduct() {
             <Field label="Category">
               <CategoryCombobox value={category} onChange={setCategory} placeholder="ie. Women Shoes" />
             </Field>
+
+            {categoryOptions.length > 0 && (
+              <Field
+                label="Link to Category"
+                hint="Optional — lets Marketing > Coupons' category restriction apply to this product"
+              >
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className={productInputClass}
+                >
+                  <option value="">None</option>
+                  {categoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
             <Field label="Secondary Categories">
               <div className="flex flex-wrap items-center gap-1.5 mb-2">

@@ -57,6 +57,17 @@ export default function AllProducts() {
   // from a previous, larger result set doesn't land past the new total.
   useEffect(() => setPage(1), [search, category, visibility, stockType, perPage]);
 
+  // Clear any bulk-selected product IDs whenever the visible result set
+  // changes (new filter, new page). Without this, selecting products on
+  // one page/filter and then navigating away leaves their ids sitting in
+  // `selected` with nothing on screen to show for it — the "Delete
+  // Selected (N)" bar keeps showing a stale count, the header checkbox's
+  // checked state can end up wrong by coincidence (e.g. 3 selected
+  // earlier + the new page also has exactly 3 products), and a vendor
+  // could end up bulk-deleting products they can no longer see and have
+  // likely forgotten they selected.
+  useEffect(() => setSelected(new Set()), [search, category, visibility, stockType, page, perPage]);
+
   const { data, isLoading } = useQuery({
     queryKey: ['products', { search, category, visibility, stockType, page, perPage }],
     queryFn: () =>
@@ -134,13 +145,25 @@ export default function AllProducts() {
     if (selected.size === 0) return;
     const count = selected.size;
     if (window.confirm(`Delete ${count} selected product(s)? This cannot be undone.`)) {
-      Promise.all(Array.from(selected).map((id) => productsApi.remove(id)))
-        .then(() => {
-          setSelected(new Set());
-          queryClient.invalidateQueries({ queryKey: ['products'] });
-          toast.success(`${count} product(s) deleted.`);
-        })
-        .catch(() => toast.error('Could not delete all selected products. Please try again.'));
+      // Promise.allSettled, not Promise.all: with N independent DELETE
+      // calls, one failing (e.g. a network blip) must not hide that the
+      // others already succeeded server-side. Promise.all's catch would
+      // skip invalidating the query below entirely, leaving the list
+      // showing products that are actually already gone — this always
+      // refreshes the list and reports exactly how many succeeded.
+      Promise.allSettled(Array.from(selected).map((id) => productsApi.remove(id))).then((results) => {
+        const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+        const failed = results.length - succeeded;
+        setSelected(new Set());
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        if (failed === 0) {
+          toast.success(`${succeeded} product(s) deleted.`);
+        } else if (succeeded === 0) {
+          toast.error('Could not delete the selected products. Please try again.');
+        } else {
+          toast.error(`Deleted ${succeeded} of ${count} — ${failed} failed. Please try again for the rest.`);
+        }
+      });
     }
   };
 

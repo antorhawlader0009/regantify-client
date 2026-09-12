@@ -37,6 +37,12 @@ export interface Product {
   note?: string | null;
   creator?: string | null;
   category?: string | null;
+  // Optional link to a real Category row — see Product.categoryId's
+  // own schema comment on why this is additive alongside `category`
+  // (the free-text field above, which still drives the storefront's
+  // category filter/nav). Mainly exists so Marketing > Coupons'
+  // category restriction has something on Product it can actually match.
+  categoryId?: string | null;
   secondaryCategories: string[];
   brand?: string | null;
   summary?: string | null;
@@ -49,6 +55,8 @@ export interface Product {
   price: string; // Decimal, serialized as string — see server schema notes
   discountPrice?: string | null;
   cost?: string | null;
+  // Shown as a read-only column on Marketing > Campaigns' product table.
+  freeShipping: boolean;
   sku: string;
   isPreOrder: boolean;
   stockQuantity?: number | null;
@@ -66,6 +74,7 @@ export interface CreateProductPayload {
   description?: string;
   note?: string;
   category?: string;
+  categoryId?: string;
   brand?: string;
   summary?: string;
   metaTitle?: string;
@@ -124,6 +133,7 @@ export interface UpdateProductPayload {
   note?: string;
   creator?: string;
   category?: string;
+  categoryId?: string;
   secondaryCategories?: string[];
   brand?: string;
   summary?: string;

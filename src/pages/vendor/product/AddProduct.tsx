@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, X, ChevronLeft, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
+import { categoriesApi } from '../../../lib/categoriesApi';
 import { ImportCsvModal } from './ImportCsvModal';
 import { productsApi, type VariationOptionInput, type ProductVariantInput, type VariationValuePhotoInput } from '../../../lib/productsApi';
 import { toast } from '../../../lib/toast';
@@ -46,6 +47,7 @@ export default function AddProduct() {
   const [showBrand, setShowBrand] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [category, setCategory] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [brand, setBrand] = useState('');
   const [summary, setSummary] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
@@ -92,6 +94,16 @@ export default function AddProduct() {
   const [formError, setFormError] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const queryClient = useQueryClient();
+
+  // Store > Categories' real category list — for the optional "Link to
+  // Category" dropdown below, which is separate from the free-text
+  // Category combobox above it (see Product.categoryId's own schema
+  // comment on why both exist).
+  const { data: categoryOptions = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.list(),
+    staleTime: 60_000,
+  });
 
   const createMutation = useMutation({
     mutationFn: productsApi.create,
@@ -168,6 +180,7 @@ export default function AddProduct() {
       description: description || undefined,
       note: note.trim() || undefined,
       category: showCategory ? category.trim() || undefined : undefined,
+      categoryId: showCategory ? categoryId || undefined : undefined,
       brand: showBrand ? brand.trim() || undefined : undefined,
       summary: showSummary ? summary.trim() || undefined : undefined,
       metaTitle: metaTitle.trim() || undefined,
@@ -273,6 +286,25 @@ export default function AddProduct() {
             {showCategory && (
               <Field label="Category">
                 <CategoryCombobox value={category} onChange={setCategory} placeholder="ie. Men's Fashion" />
+              </Field>
+            )}
+            {showCategory && categoryOptions.length > 0 && (
+              <Field
+                label="Link to Category"
+                hint="Optional — lets Marketing > Coupons' category restriction apply to this product"
+              >
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className={productInputClass}
+                >
+                  <option value="">None</option>
+                  {categoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </Field>
             )}
             {showBrand && (

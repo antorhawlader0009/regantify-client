@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Search, MessageSquare, Plus, Copy } from 'lucide-react';
@@ -239,6 +239,15 @@ export default function IncompleteOrders() {
     queryKey: ['incomplete-orders', search, page, perPage],
     queryFn: () => incompleteOrdersApi.list({ search: search.trim() || undefined, page, perPage }),
   });
+
+  // Clear any bulk-selected ids whenever the visible result set changes
+  // (new search or page). Without this, selected ids from a previous
+  // page/search stay in `selectedIds` with nothing on screen to show
+  // for it — the header checkbox's checked state can end up wrong by
+  // coincidence, and bulkRemoveMutation/bulkLabelMutation would act on
+  // rows the vendor can no longer see and likely doesn't remember
+  // selecting.
+  useEffect(() => setSelectedIds([]), [search, page]);
 
   const incompleteOrders = data?.incompleteOrders ?? [];
   const total = data?.total ?? 0;

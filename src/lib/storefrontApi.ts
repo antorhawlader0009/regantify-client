@@ -7,6 +7,7 @@ export interface StorefrontInfo {
   id: string;
   storeName: string;
   subdomain: string;
+  theme: 'MEDIUM' | 'MINIMAL' | 'STOREPAL';
 }
 
 export interface StorefrontVariationOption {
