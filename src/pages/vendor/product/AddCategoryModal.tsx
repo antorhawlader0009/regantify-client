@@ -9,6 +9,16 @@ interface AddCategoryModalProps {
   onClose: () => void;
   /** When set, the modal edits this category instead of creating a new one. */
   editingCategory?: Category;
+  /** Prefills the Parent Category field — used when adding a subcategory
+   * from a specific main category's row (see Categories.tsx's "+" button).
+   * Ignored once `editingCategory` is set, which already carries its own
+   * real parent. */
+  initialParentId?: string;
+  initialParentName?: string;
+  /** Hides the Parent Category field entirely, for the same "add a
+   * subcategory under this main category" flow — the parent is already
+   * fixed by `initialParentId`, so there's nothing to pick. */
+  hideParentField?: boolean;
 }
 
 type PhotoKind = 'cover' | 'square';
@@ -72,14 +82,46 @@ function SearchSelect({
   );
 }
 
-export function AddCategoryModal({ categories, onClose, editingCategory }: AddCategoryModalProps) {
+interface CategoryFormProps {
+  categories: Category[];
+  /** When set, the form edits this category instead of creating a new one. */
+  editingCategory?: Category;
+  /** Prefills the Parent Category field for a brand-new category — e.g.
+   * adding a subcategory from a specific main category's row. Ignored
+   * once `editingCategory` is set, which already carries its own real
+   * parent. */
+  initialParentId?: string;
+  initialParentName?: string;
+  /** Hides the Parent Category field entirely, when the parent is
+   * already fixed by `initialParentId` (nothing to pick). */
+  hideParentField?: boolean;
+  /** Hides this form's own top-right close (X) button — for when it's
+   * embedded in a bigger dialog that already has its own close button
+   * (see `SubcategoriesModal`), so there's only ever one. */
+  hideCloseButton?: boolean;
+  onSaved: () => void;
+  onCancel: () => void;
+}
+
+/** The Add/Edit Category form itself — no overlay/backdrop of its own, so
+ * `AddCategoryModal` below can wrap it in a normal dialog. */
+export function CategoryForm({
+  categories,
+  editingCategory,
+  initialParentId,
+  initialParentName,
+  hideParentField,
+  hideCloseButton,
+  onSaved,
+  onCancel,
+}: CategoryFormProps) {
   const queryClient = useQueryClient();
   const isEditing = !!editingCategory;
 
   const [name, setName] = useState(editingCategory?.name ?? '');
 
-  const [parentQuery, setParentQuery] = useState(editingCategory?.parent?.name ?? '');
-  const [parentId, setParentId] = useState(editingCategory?.parentId ?? '');
+  const [parentQuery, setParentQuery] = useState(editingCategory?.parent?.name ?? initialParentName ?? '');
+  const [parentId, setParentId] = useState(editingCategory?.parentId ?? initialParentId ?? '');
 
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>(editingCategory?.visibility ?? 'PUBLIC');
 
@@ -111,7 +153,7 @@ export function AddCategoryModal({ categories, onClose, editingCategory }: AddCa
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category created.');
-      onClose();
+      onSaved();
     },
     onError: (err: any) => {
       setFormError(err?.response?.data?.message ?? 'Could not create the category. Please try again.');
@@ -124,7 +166,7 @@ export function AddCategoryModal({ categories, onClose, editingCategory }: AddCa
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category updated.');
-      onClose();
+      onSaved();
     },
     onError: (err: any) => {
       setFormError(err?.response?.data?.message ?? 'Could not update the category. Please try again.');
@@ -177,18 +219,16 @@ export function AddCategoryModal({ categories, onClose, editingCategory }: AddCa
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-6 space-y-5">
-          <div className="flex items-start justify-between">
-            <h2 className="sr-only">{isEditing ? 'Edit Category' : 'Add Category'}</h2>
-            <button onClick={onClose} className="ml-auto text-regantify-text-muted hover:text-regantify-text">
-              <X size={18} />
-            </button>
-          </div>
+    <>
+      <div className="p-6 space-y-5">
+          {!hideCloseButton && (
+            <div className="flex items-start justify-between">
+              <h2 className="sr-only">{isEditing ? 'Edit Category' : 'Add Category'}</h2>
+              <button onClick={onCancel} className="ml-auto text-regantify-text-muted hover:text-regantify-text">
+                <X size={18} />
+              </button>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-regantify-text mb-1.5">Name</label>
@@ -202,22 +242,24 @@ export function AddCategoryModal({ categories, onClose, editingCategory }: AddCa
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Parent Category</label>
-            <SearchSelect
-              placeholder="Search Category"
-              query={parentQuery}
-              onQueryChange={(v) => {
-                setParentQuery(v);
-                setParentId('');
-              }}
-              options={parentOptions}
-              onSelect={(o) => {
-                setParentId(o.id);
-                setParentQuery(o.label);
-              }}
-            />
-          </div>
+          {!hideParentField && (
+            <div>
+              <label className="block text-sm font-medium text-regantify-text mb-1.5">Parent Category</label>
+              <SearchSelect
+                placeholder="Search Category"
+                query={parentQuery}
+                onQueryChange={(v) => {
+                  setParentQuery(v);
+                  setParentId('');
+                }}
+                options={parentOptions}
+                onSelect={(o) => {
+                  setParentId(o.id);
+                  setParentQuery(o.label);
+                }}
+              />
+            </div>
+          )}
 
           <div className="border-t border-black/5 pt-5">
             <label className="block text-sm font-medium text-regantify-text mb-1.5">Visibility</label>
@@ -339,25 +381,55 @@ export function AddCategoryModal({ categories, onClose, editingCategory }: AddCa
           </div>
 
           {formError && <p className="text-red-500 text-sm">{formError}</p>}
-        </div>
+      </div>
 
-        <div className="border-t border-black/5 px-6 py-4 flex justify-end">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
-              transition-colors disabled:opacity-60"
-          >
-            {isEditing
-              ? isSaving
-                ? 'Saving…'
-                : 'Save Changes'
-              : isSaving
-                ? 'Creating…'
-                : 'Create Category'}
-          </button>
-        </div>
+      <div className="border-t border-black/5 px-6 py-4 flex justify-end">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSaving}
+          className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
+            transition-colors disabled:opacity-60"
+        >
+          {isEditing
+            ? isSaving
+              ? 'Saving…'
+              : 'Save Changes'
+            : isSaving
+              ? 'Creating…'
+              : 'Create Category'}
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** Thin overlay wrapper around `CategoryForm` — used both for the plain
+ * "+ Add New" / row "Edit" flows, and for adding a subcategory from a
+ * specific main category's row (`initialParentId`/`hideParentField`). */
+export function AddCategoryModal({
+  categories,
+  onClose,
+  editingCategory,
+  initialParentId,
+  initialParentName,
+  hideParentField,
+}: AddCategoryModalProps) {
+  return (
+    <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <CategoryForm
+          categories={categories}
+          editingCategory={editingCategory}
+          initialParentId={initialParentId}
+          initialParentName={initialParentName}
+          hideParentField={hideParentField}
+          onSaved={onClose}
+          onCancel={onClose}
+        />
       </div>
     </div>
   );

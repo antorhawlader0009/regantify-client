@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Store, Search, LogOut, User, Settings, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { authApi } from '../lib/authApi';
+import { financeApi } from '../lib/financeApi';
 import { storefrontStoreUrl } from '../lib/storefrontUrl';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from './ui/DropdownMenu';
 
@@ -21,7 +23,12 @@ export function Topbar({ brandLabel = 'Regantify' }: TopbarProps) {
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isVendor = user?.role === 'VENDOR';
-  const balance = user?.vendor?.balance;
+
+  // Always fetched fresh on tap — never trusts the possibly-stale balance
+  // sitting on the in-memory auth user (only refreshed on login/token
+  // refresh) — so this always shows whatever the balance is right now,
+  // e.g. right after an order was just marked Completed.
+  const walletMutation = useMutation({ mutationFn: () => financeApi.getWallet() });
 
   // Clear any pending auto-hide timer on unmount so it doesn't fire after
   // the component (or the whole layout, on logout) is gone.
@@ -37,8 +44,12 @@ export function Topbar({ brandLabel = 'Regantify' }: TopbarProps) {
       return;
     }
 
-    setBalanceRevealed(true);
-    hideTimerRef.current = setTimeout(() => setBalanceRevealed(false), BALANCE_REVEAL_MS);
+    walletMutation.mutate(undefined, {
+      onSuccess: () => {
+        setBalanceRevealed(true);
+        hideTimerRef.current = setTimeout(() => setBalanceRevealed(false), BALANCE_REVEAL_MS);
+      },
+    });
   };
 
   const handleSettings = () => {
@@ -96,21 +107,32 @@ export function Topbar({ brandLabel = 'Regantify' }: TopbarProps) {
           </a>
         )}
 
-        {/* Balance — masked like a bKash-style balance chip. Tap to reveal
-            for 5 seconds, tap again to hide immediately. */}
-        {isVendor && balance !== undefined && (
+        {/* Balance — bKash-style "See Balance" pill. Tap fetches the
+            live balance and slides it up into view (replacing the "See
+            Balance" label) for 5 seconds, tap again to hide immediately. */}
+        {isVendor && (
           <button
             onClick={handleToggleBalance}
+            disabled={walletMutation.isPending}
             className="flex items-center gap-2 bg-white/10 hover:bg-white/15 transition-colors
-              rounded-full pl-3.5 pr-3 py-2 text-sm font-medium text-white overflow-hidden"
-            title={balanceRevealed ? 'Hide balance' : 'Show balance'}
+              rounded-full pl-3.5 pr-3 py-2 text-sm font-medium text-white disabled:opacity-70"
+            title={balanceRevealed ? 'Hide balance' : 'See balance'}
           >
-            <span
-              className={`transition-all duration-300 ease-out whitespace-nowrap ${
-                balanceRevealed ? 'max-w-[120px] opacity-100' : 'max-w-0 opacity-0'
-              }`}
-            >
-              ৳{Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            <span className="relative h-5 overflow-hidden">
+              <span
+                className={`flex flex-col transition-transform duration-300 ease-out ${
+                  balanceRevealed ? '-translate-y-5' : 'translate-y-0'
+                }`}
+              >
+                <span className="h-5 leading-5 whitespace-nowrap">
+                  {walletMutation.isPending ? 'Loading…' : 'See Balance'}
+                </span>
+                <span className="h-5 leading-5 whitespace-nowrap">
+                  {walletMutation.data
+                    ? `৳${Number(walletMutation.data.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                    : ''}
+                </span>
+              </span>
             </span>
             {balanceRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>

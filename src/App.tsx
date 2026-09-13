@@ -57,6 +57,8 @@ import AddCoupon from './pages/vendor/marketing/AddCoupon';
 import Campaigns from './pages/vendor/marketing/Campaigns';
 import AddCampaign from './pages/vendor/marketing/AddCampaign';
 import Sms from './pages/vendor/sms/Sms';
+import Wallet from './pages/vendor/finance/Wallet';
+import Transactions from './pages/vendor/finance/Transactions';
 import AdminDashboard from './pages/admin/Dashboard';
 
 const queryClient = new QueryClient();
@@ -97,7 +99,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/staff' &&
     r.path !== '/vendor/marketing/coupons' &&
     r.path !== '/vendor/marketing/campaigns' &&
-    r.path !== '/vendor/sms',
+    r.path !== '/vendor/sms' &&
+    r.path !== '/vendor/finance/wallet' &&
+    r.path !== '/vendor/finance/transactions',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav);
 
@@ -194,6 +198,8 @@ export default function App() {
                 <Route path="/vendor/marketing/campaigns/add" element={<AddCampaign />} />
                 <Route path="/vendor/marketing/campaigns/:id/edit" element={<AddCampaign />} />
                 <Route path="/vendor/sms" element={<Sms />} />
+                <Route path="/vendor/finance/wallet" element={<Wallet />} />
+                <Route path="/vendor/finance/transactions" element={<Transactions />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

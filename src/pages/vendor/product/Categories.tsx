@@ -1,11 +1,40 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, X, ChevronDown } from 'lucide-react';
 import { categoriesApi, type Category } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
+import { SubcategoriesModal } from './SubcategoriesModal';
+import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
+
+/** Every descendant of `parentId`, at any depth, flattened — so a
+ * category nested more than one level deep still shows up as a chip on
+ * its top-level ancestor's row instead of silently disappearing from
+ * this (deliberately 2-column, not tree-indented) layout. */
+function getDescendants(categories: Category[], parentId: string): Category[] {
+  const direct = categories.filter((c) => c.parentId === parentId);
+  return direct.flatMap((c) => [c, ...getDescendants(categories, c.id)]);
+}
+
+function ActionsMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  return (
+    <DropdownMenu
+      trigger={
+        <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
+          Actions
+          <ChevronDown size={14} />
+        </button>
+      }
+    >
+      <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
+      <DropdownMenuItem onSelect={onDelete} danger>
+        Delete
+      </DropdownMenuItem>
+    </DropdownMenu>
+  );
+}
 
 export default function Categories() {
   const queryClient = useQueryClient();
@@ -13,6 +42,7 @@ export default function Categories() {
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('ALL');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [addingSubcategoryFor, setAddingSubcategoryFor] = useState<Category | null>(null);
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['categories'],
@@ -28,13 +58,20 @@ export default function Categories() {
     onError: () => toast.error('Could not delete the category. Please try again.'),
   });
 
+  const mainCategories = useMemo(() => categories.filter((c) => !c.parentId), [categories]);
+
   const filtered = useMemo(() => {
-    return categories.filter((c) => {
-      if (visibilityFilter !== 'ALL' && c.visibility !== visibilityFilter) return false;
-      if (search.trim() && !c.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
-      return true;
+    const query = search.trim().toLowerCase();
+    return mainCategories.filter((main) => {
+      if (visibilityFilter !== 'ALL' && main.visibility !== visibilityFilter) return false;
+      if (!query) return true;
+      const subcategories = getDescendants(categories, main.id);
+      return (
+        main.name.toLowerCase().includes(query) ||
+        subcategories.some((sub) => sub.name.toLowerCase().includes(query))
+      );
     });
-  }, [categories, visibilityFilter, search]);
+  }, [mainCategories, categories, visibilityFilter, search]);
 
   const handleDelete = (id: string, name: string) => {
     if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
@@ -83,8 +120,8 @@ export default function Categories() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-regantify-content text-left text-regantify-text-muted">
-              <th className="px-5 py-3 font-medium">NAME</th>
-              <th className="px-5 py-3 font-medium">PARENT</th>
+              <th className="px-5 py-3 font-medium">MAIN CATEGORIES</th>
+              <th className="px-5 py-3 font-medium">SUB CATEGORIES</th>
               <th className="px-5 py-3 font-medium">VISIBILITY</th>
               <th className="px-5 py-3 font-medium"></th>
             </tr>
@@ -104,37 +141,75 @@ export default function Categories() {
                 </td>
               </tr>
             )}
-            {filtered.map((c) => (
-              <tr key={c.id} className="border-t border-black/5">
-                <td className="px-5 py-3.5">
-                  <button
-                    type="button"
-                    onClick={() => setEditingCategory(c)}
-                    className="text-regantify-cta font-medium hover:underline"
-                  >
-                    {c.name}
-                  </button>
-                </td>
-                <td className="px-5 py-3.5 text-regantify-text">{c.parent?.name ?? ''}</td>
-                <td className="px-5 py-3.5">
-                  <span
-                    className={`text-xs font-semibold px-2 py-1 rounded-md ${
-                      c.visibility === 'PUBLIC' ? 'bg-green-100 text-green-700' : 'bg-regantify-content text-regantify-text-muted'
-                    }`}
-                  >
-                    {c.visibility}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 text-right">
-                  <button
-                    onClick={() => handleDelete(c.id, c.name)}
-                    className="text-red-600 hover:underline text-sm"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {filtered.map((main) => {
+              const subcategories = getDescendants(categories, main.id);
+
+              return (
+                <tr key={main.id} className="border-t border-black/5 align-top">
+                  <td className="px-5 py-3.5 whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => setEditingCategory(main)}
+                      className="text-regantify-cta font-medium hover:underline"
+                    >
+                      {main.name}
+                    </button>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {subcategories.map((sub) => (
+                        <span
+                          key={sub.id}
+                          className="inline-flex items-center gap-1.5 bg-regantify-black text-white text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setEditingCategory(sub)}
+                            className="hover:underline"
+                            title={`Edit ${sub.name}`}
+                          >
+                            {sub.name}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(sub.id, sub.name)}
+                            className="hover:opacity-70"
+                            title={`Remove ${sub.name}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() => setAddingSubcategoryFor(main)}
+                        title="Add subcategory"
+                        className="w-6 h-6 flex items-center justify-center rounded-full border border-black/15
+                          text-regantify-text-muted hover:bg-regantify-content"
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span
+                      className={`text-xs font-semibold px-2 py-1 rounded-md ${
+                        main.visibility === 'PUBLIC' ? 'bg-green-100 text-green-700' : 'bg-regantify-content text-regantify-text-muted'
+                      }`}
+                    >
+                      {main.visibility}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <ActionsMenu
+                      onEdit={() => setEditingCategory(main)}
+                      onDelete={() => handleDelete(main.id, main.name)}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -148,6 +223,15 @@ export default function Categories() {
           categories={categories}
           editingCategory={editingCategory}
           onClose={() => setEditingCategory(null)}
+        />
+      )}
+
+      {addingSubcategoryFor && (
+        <SubcategoriesModal
+          mainCategory={addingSubcategoryFor}
+          categories={categories}
+          onClose={() => setAddingSubcategoryFor(null)}
+          onDeleteSubcategory={handleDelete}
         />
       )}
     </div>
