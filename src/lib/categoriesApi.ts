@@ -7,6 +7,7 @@ export interface Category {
   visibility: 'PUBLIC' | 'PRIVATE';
   parentId?: string | null;
   parent?: { id: string; name: string } | null;
+  position: number;
   coverPhotoUrl?: string | null;
   squarePhotoUrl?: string | null;
   facebookCategory?: string | null;
@@ -38,6 +39,10 @@ export const categoriesApi = {
     api.patch<Category>(`/api/v1/categories/${id}`, payload).then((r) => r.data),
 
   remove: (id: string) => api.delete(`/api/v1/categories/${id}`).then((r) => r.data),
+
+  // Persists a new top-to-bottom order for Main Categories after a
+  // drag-and-drop reorder — `ids` is the complete new order.
+  reorder: (ids: string[]) => api.patch('/api/v1/categories/reorder', { ids }).then((r) => r.data),
 
   // Uploads one cover or square photo and returns its Cloudinary URL —
   // called before Create Category is submitted, same pattern as product

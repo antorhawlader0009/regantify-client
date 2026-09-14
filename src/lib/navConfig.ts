@@ -60,13 +60,13 @@ export const vendorNav: NavSection[] = [
   },
   { label: 'Customers', icon: Users, path: '/vendor/customers' },
   {
-    label: 'Shipping',
+    label: 'Courier Integration',
     icon: Truck,
     children: [
-      { label: 'Shipments', path: '/vendor/shipping/shipments' },
-      { label: 'Courier', path: '/vendor/shipping/courier' },
-      { label: 'Tracking', path: '/vendor/shipping/tracking' },
-      { label: 'Returns', path: '/vendor/shipping/returns' },
+      { label: 'Steadfast', path: '/vendor/shipping/shipments' },
+      { label: 'Pathao', path: '/vendor/shipping/courier' },
+      { label: 'Redex', path: '/vendor/shipping/tracking' },
+      { label: 'Tracking', path: '/vendor/shipping/returns' },
     ],
   },
   {

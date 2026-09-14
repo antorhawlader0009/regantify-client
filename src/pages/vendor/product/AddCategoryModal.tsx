@@ -15,9 +15,9 @@ interface AddCategoryModalProps {
    * real parent. */
   initialParentId?: string;
   initialParentName?: string;
-  /** Hides the Parent Category field entirely, for the same "add a
-   * subcategory under this main category" flow — the parent is already
-   * fixed by `initialParentId`, so there's nothing to pick. */
+  /** Hides the Parent Category field entirely — used when creating/editing
+   * a Main Category, which by definition has no parent. Subcategory
+   * add/edit flows always show it (see `SubcategoriesModal`). */
   hideParentField?: boolean;
 }
 
@@ -60,7 +60,15 @@ function SearchSelect({
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onFocus={() => setFocused(true)}
-        onBlur={() => setTimeout(() => setFocused(false), 150)}
+        onBlur={() =>
+          setTimeout(() => {
+            setFocused(false);
+            // Only a clicked suggestion may end up in the box — anything
+            // typed that wasn't picked from the list gets discarded once
+            // the user moves on, so free text can never masquerade as a match.
+            if (!options.some((o) => o.label === query)) onQueryChange('');
+          }, 150)
+        }
         placeholder={placeholder}
         className={inputClass}
       />
@@ -92,8 +100,8 @@ interface CategoryFormProps {
    * parent. */
   initialParentId?: string;
   initialParentName?: string;
-  /** Hides the Parent Category field entirely, when the parent is
-   * already fixed by `initialParentId` (nothing to pick). */
+  /** Hides the Parent Category field entirely — used when creating/editing
+   * a Main Category, which by definition has no parent. */
   hideParentField?: boolean;
   /** Hides this form's own top-right close (X) button — for when it's
    * embedded in a bigger dialog that already has its own close button
@@ -143,8 +151,11 @@ export function CategoryForm({
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  // A subcategory's parent is always a Main Category — restricting the
+  // options keeps the hierarchy exactly two levels deep, matching how the
+  // Categories table always displays (and lets you drag-and-drop) it.
   const parentOptions = useMemo(
-    () => categories.filter((c) => c.id !== editingCategory?.id).map((c) => ({ id: c.id, label: c.name })),
+    () => categories.filter((c) => !c.parentId && c.id !== editingCategory?.id).map((c) => ({ id: c.id, label: c.name })),
     [categories, editingCategory],
   );
 
@@ -192,6 +203,10 @@ export function CategoryForm({
 
     if (!name.trim()) {
       setFormError('Category name is required.');
+      return;
+    }
+    if (!hideParentField && !parentId) {
+      setFormError('Please pick a parent category from the suggestions.');
       return;
     }
     if (coverPhoto?.uploading || squarePhoto?.uploading) {

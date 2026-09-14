@@ -5,7 +5,6 @@ import { Camera, X, ChevronLeft, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
-import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { ImportCsvModal } from './ImportCsvModal';
 import { productsApi, type VariationOptionInput, type ProductVariantInput, type VariationValuePhotoInput } from '../../../lib/productsApi';
@@ -95,15 +94,37 @@ export default function AddProduct() {
   const [showImportModal, setShowImportModal] = useState(false);
   const queryClient = useQueryClient();
 
-  // Store > Categories' real category list — for the optional "Link to
-  // Category" dropdown below, which is separate from the free-text
-  // Category combobox above it (see Product.categoryId's own schema
-  // comment on why both exist).
+  // Store > Categories' real category tree — drives the Main/Sub Category
+  // selects below (and the separate flat "Link to Category" dropdown).
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.list(),
     staleTime: 60_000,
   });
+
+  // Main/Sub Category are just two views onto the same `categoryId` FK —
+  // derived from it (and from `categoryOptions`) rather than tracked as
+  // their own state, so there's only ever one source of truth to keep in
+  // sync with "Link to Category" below.
+  const mainCategoryOptions = categoryOptions.filter((c) => !c.parentId);
+  const selectedProductCategory = categoryOptions.find((c) => c.id === categoryId);
+  const mainCategoryId = selectedProductCategory
+    ? (selectedProductCategory.parentId ?? selectedProductCategory.id)
+    : '';
+  const subCategoryId = selectedProductCategory?.parentId ? selectedProductCategory.id : '';
+  const subCategoryOptions = mainCategoryId ? categoryOptions.filter((c) => c.parentId === mainCategoryId) : [];
+
+  // `category` (plain text) is the legacy field the storefront still reads
+  // for filtering/breadcrumbs — picking a Main/Sub Category keeps it in sync.
+  const handleMainCategoryChange = (id: string) => {
+    setCategoryId(id);
+    setCategory(categoryOptions.find((c) => c.id === id)?.name ?? '');
+  };
+  const handleSubCategoryChange = (id: string) => {
+    const resolvedId = id || mainCategoryId;
+    setCategoryId(resolvedId);
+    setCategory(categoryOptions.find((c) => c.id === resolvedId)?.name ?? '');
+  };
 
   const createMutation = useMutation({
     mutationFn: productsApi.create,
@@ -259,6 +280,75 @@ export default function AddProduct() {
               />
             </Field>
 
+            <Field label="Photos">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-regantify-text mb-2">Photo Size</p>
+                  <div className="flex items-center gap-5">
+                    <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
+                      <input type="radio" checked={photoSize === 'SQUARE'} onChange={() => setPhotoSize('SQUARE')} />
+                      Square
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
+                      <input type="radio" checked={photoSize === 'PORTRAIT'} onChange={() => setPhotoSize('PORTRAIT')} />
+                      Portrait
+                    </label>
+                  </div>
+                  <p className="text-xs text-regantify-text-muted mt-1.5">
+                    Recommended size: Square photos = 800px x 800px, Portrait photos = 800px x 1200px.
+                  </p>
+                </div>
+
+                {photos.length > 0 && (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                    {photos.map((photo) => (
+                      <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-regantify-content border border-black/5">
+                        <img src={photo.uploadedUrl ?? photo.previewUrl} alt="" className="w-full h-full object-cover" />
+                        {photo.uploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {photo.error && (
+                          <div className="absolute inset-0 bg-red-600/70 flex items-center justify-center text-white text-xs text-center px-1">
+                            {photo.error}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(photo.id)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="w-full py-14 rounded-2xl border-2 border-dashed border-black/15 bg-regantify-content
+                    flex flex-col items-center justify-center gap-2 text-regantify-text hover:border-black/25 transition-colors"
+                >
+                  <Camera size={28} />
+                  <span className="font-medium">Upload Photos</span>
+                </button>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => {
+                    handlePhotoFiles(e.target.files);
+                    e.target.value = '';
+                  }}
+                  className="hidden"
+                />
+              </div>
+            </Field>
+
             <Field label="Product Description">
               <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" maxLength={10000} />
             </Field>
@@ -284,9 +374,43 @@ export default function AddProduct() {
               </div>
             </div>
 
-            {showCategory && (
-              <Field label="Category">
-                <CategoryCombobox value={category} onChange={setCategory} placeholder="ie. Men's Fashion" />
+            {showCategory && mainCategoryOptions.length > 0 && (
+              <Field label="Main Category">
+                <select
+                  value={mainCategoryId}
+                  onChange={(e) => handleMainCategoryChange(e.target.value)}
+                  className={productInputClass}
+                >
+                  <option value="">Select a main category</option>
+                  {mainCategoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {showCategory && mainCategoryOptions.length > 0 && (
+              <Field label="Sub Category">
+                <select
+                  value={subCategoryId}
+                  onChange={(e) => handleSubCategoryChange(e.target.value)}
+                  disabled={!mainCategoryId || subCategoryOptions.length === 0}
+                  className={productInputClass}
+                >
+                  <option value="">
+                    {!mainCategoryId
+                      ? 'Select a main category first'
+                      : subCategoryOptions.length > 0
+                        ? 'None'
+                        : 'No subcategories'}
+                  </option>
+                  {subCategoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </Field>
             )}
             {showCategory && categoryOptions.length > 0 && (
@@ -329,76 +453,6 @@ export default function AddProduct() {
                 className={`${productInputClass} resize-y`}
               />
             </Field>
-          </div>
-        </SectionCard>
-
-        {/* Photos */}
-        <SectionCard title="Photos">
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-regantify-text mb-2">Photo Size</p>
-              <div className="flex items-center gap-5">
-                <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
-                  <input type="radio" checked={photoSize === 'SQUARE'} onChange={() => setPhotoSize('SQUARE')} />
-                  Square
-                </label>
-                <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
-                  <input type="radio" checked={photoSize === 'PORTRAIT'} onChange={() => setPhotoSize('PORTRAIT')} />
-                  Portrait
-                </label>
-              </div>
-              <p className="text-xs text-regantify-text-muted mt-1.5">
-                Recommended size: Square photos = 800px x 800px, Portrait photos = 800px x 1200px.
-              </p>
-            </div>
-
-            {photos.length > 0 && (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-regantify-content border border-black/5">
-                    <img src={photo.uploadedUrl ?? photo.previewUrl} alt="" className="w-full h-full object-cover" />
-                    {photo.uploading && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                    {photo.error && (
-                      <div className="absolute inset-0 bg-red-600/70 flex items-center justify-center text-white text-xs text-center px-1">
-                        {photo.error}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(photo.id)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => photoInputRef.current?.click()}
-              className="w-full py-14 rounded-2xl border-2 border-dashed border-black/15 bg-regantify-content
-                flex flex-col items-center justify-center gap-2 text-regantify-text hover:border-black/25 transition-colors"
-            >
-              <Camera size={28} />
-              <span className="font-medium">Upload Photos</span>
-            </button>
-            <input
-              ref={photoInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={(e) => {
-                handlePhotoFiles(e.target.files);
-                e.target.value = '';
-              }}
-              className="hidden"
-            />
           </div>
         </SectionCard>
 

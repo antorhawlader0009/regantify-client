@@ -51,9 +51,8 @@ export default function EditProduct() {
     enabled: Boolean(id),
   });
 
-  // Store > Categories' real category list — for the optional "Link to
-  // Category" dropdown (see AddProduct.tsx's own comment on why this
-  // is separate from the free-text Category combobox above it).
+  // Store > Categories' real category tree — drives the Main/Sub Category
+  // selects below (and the separate flat "Link to Category" dropdown).
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.list(),
@@ -75,6 +74,33 @@ export default function EditProduct() {
   const [summary, setSummary] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
+
+  // Main/Sub Category are just two views onto the same `categoryId` FK —
+  // derived from it (and from `categoryOptions`) rather than tracked as
+  // their own state, so there's only ever one source of truth to keep in
+  // sync with "Link to Category" below.
+  const mainCategoryOptions = categoryOptions.filter((c) => !c.parentId);
+  const selectedProductCategory = categoryOptions.find((c) => c.id === categoryId);
+  const mainCategoryId = selectedProductCategory
+    ? (selectedProductCategory.parentId ?? selectedProductCategory.id)
+    : '';
+  const subCategoryId = selectedProductCategory?.parentId ? selectedProductCategory.id : '';
+  const subCategoryOptions = mainCategoryId ? categoryOptions.filter((c) => c.parentId === mainCategoryId) : [];
+
+  // `category` (plain text) is the legacy field the storefront still reads
+  // for filtering/breadcrumbs — picking a Main/Sub Category keeps it in
+  // sync with the chosen name. Only touched by an actual pick here, so an
+  // older product's free-typed category text is left alone until the
+  // vendor deliberately changes it via these selects.
+  const handleMainCategoryChange = (id: string) => {
+    setCategoryId(id);
+    setCategory(categoryOptions.find((c) => c.id === id)?.name ?? '');
+  };
+  const handleSubCategoryChange = (id: string) => {
+    const resolvedId = id || mainCategoryId;
+    setCategoryId(resolvedId);
+    setCategory(categoryOptions.find((c) => c.id === resolvedId)?.name ?? '');
+  };
 
   // Photos / Video
   const [photoSize, setPhotoSize] = useState<PhotoSize>('SQUARE');
@@ -468,13 +494,115 @@ export default function EditProduct() {
               />
             </Field>
 
+            <div id="photos">
+              <Field label="Photos">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-regantify-text mb-2">Photo Size</p>
+                    <div className="flex items-center gap-5">
+                      <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
+                        <input type="radio" checked={photoSize === 'SQUARE'} onChange={() => setPhotoSize('SQUARE')} />
+                        Square
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
+                        <input type="radio" checked={photoSize === 'PORTRAIT'} onChange={() => setPhotoSize('PORTRAIT')} />
+                        Portrait
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+                    {photos.map((photo) => (
+                      <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-regantify-content border border-black/5">
+                        <img src={photo.uploadedUrl || photo.previewUrl} alt="" className="w-full h-full object-cover" />
+                        {photo.uploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {photo.error && (
+                          <div className="absolute inset-0 bg-red-600/70 flex items-center justify-center text-white text-xs text-center px-1">
+                            {photo.error}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(photo.id)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="aspect-square rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
+                        flex flex-col items-center justify-center gap-1 text-regantify-text-muted hover:border-black/25"
+                    >
+                      <Camera size={20} />
+                      <span className="text-xs">Add More</span>
+                    </button>
+                  </div>
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(e) => {
+                      handlePhotoFiles(e.target.files);
+                      e.target.value = '';
+                    }}
+                    className="hidden"
+                  />
+                </div>
+              </Field>
+            </div>
+
             <Field label="Product Description">
               <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" maxLength={10000} />
             </Field>
 
-            <Field label="Category">
-              <CategoryCombobox value={category} onChange={setCategory} placeholder="ie. Women Shoes" />
-            </Field>
+            {mainCategoryOptions.length > 0 && (
+              <Field label="Main Category">
+                <select
+                  value={mainCategoryId}
+                  onChange={(e) => handleMainCategoryChange(e.target.value)}
+                  className={productInputClass}
+                >
+                  <option value="">Select a main category</option>
+                  {mainCategoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+
+            {mainCategoryOptions.length > 0 && (
+              <Field label="Sub Category">
+                <select
+                  value={subCategoryId}
+                  onChange={(e) => handleSubCategoryChange(e.target.value)}
+                  disabled={!mainCategoryId || subCategoryOptions.length === 0}
+                  className={productInputClass}
+                >
+                  <option value="">
+                    {!mainCategoryId
+                      ? 'Select a main category first'
+                      : subCategoryOptions.length > 0
+                        ? 'None'
+                        : 'No subcategories'}
+                  </option>
+                  {subCategoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
 
             {categoryOptions.length > 0 && (
               <Field
@@ -546,70 +674,6 @@ export default function EditProduct() {
                 className={productInputClass}
               />
             </Field>
-          </div>
-        </SectionCard>
-
-        {/* Photos */}
-        <SectionCard title="Photos" id="photos">
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-regantify-text mb-2">Photo Size</p>
-              <div className="flex items-center gap-5">
-                <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
-                  <input type="radio" checked={photoSize === 'SQUARE'} onChange={() => setPhotoSize('SQUARE')} />
-                  Square
-                </label>
-                <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
-                  <input type="radio" checked={photoSize === 'PORTRAIT'} onChange={() => setPhotoSize('PORTRAIT')} />
-                  Portrait
-                </label>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-              {photos.map((photo) => (
-                <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-regantify-content border border-black/5">
-                  <img src={photo.uploadedUrl || photo.previewUrl} alt="" className="w-full h-full object-cover" />
-                  {photo.uploading && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                  {photo.error && (
-                    <div className="absolute inset-0 bg-red-600/70 flex items-center justify-center text-white text-xs text-center px-1">
-                      {photo.error}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(photo.id)}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => photoInputRef.current?.click()}
-                className="aspect-square rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
-                  flex flex-col items-center justify-center gap-1 text-regantify-text-muted hover:border-black/25"
-              >
-                <Camera size={20} />
-                <span className="text-xs">Add More</span>
-              </button>
-            </div>
-            <input
-              ref={photoInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={(e) => {
-                handlePhotoFiles(e.target.files);
-                e.target.value = '';
-              }}
-              className="hidden"
-            />
           </div>
         </SectionCard>
 
