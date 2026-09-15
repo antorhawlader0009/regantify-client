@@ -28,6 +28,20 @@ export interface VariationValuePhoto {
   photoUrls: string[];
 }
 
+// Add/Edit Product's "AI Generate" result — see AiService.generateProductInfo.
+// Deliberately excludes price/stock (the vendor's own business decision,
+// never inferred).
+export interface GeneratedProductInfo {
+  description: string;
+  category: string;
+  brand: string;
+  summary: string;
+  metaTitle: string;
+  metaDescription: string;
+  weight: number | null;
+  weightUnit: 'KG' | 'G' | 'LB';
+}
+
 export interface Product {
   id: string;
   vendorId: string;
@@ -197,6 +211,13 @@ export const productsApi = {
 
   // Distinct category names currently in use, for the "All Categories" filter dropdown.
   categoriesInUse: () => api.get<string[]>('/api/v1/products/categories-in-use').then((r) => r.data),
+
+  // Add/Edit Product's "AI Generate" button — see AiService.generateProductInfo
+  // on the server. photoUrl must already be an uploaded (Cloudinary) URL,
+  // not a local file — the form always uploads a photo before this is
+  // ever callable (see the button's disabled condition).
+  aiGenerate: (name: string, photoUrl: string) =>
+    api.post<GeneratedProductInfo>('/api/v1/products/ai-generate', { name, photoUrl }).then((r) => r.data),
 
   findOne: (id: string) => api.get<Product>(`/api/v1/products/${id}`).then((r) => r.data),
 

@@ -60,6 +60,7 @@ import Sms from './pages/vendor/sms/Sms';
 import Wallet from './pages/vendor/finance/Wallet';
 import Transactions from './pages/vendor/finance/Transactions';
 import AdminDashboard from './pages/admin/Dashboard';
+import AiSettings from './pages/admin/ai/AiSettings';
 
 const queryClient = new QueryClient();
 
@@ -103,7 +104,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/transactions',
 );
-const adminPlaceholderRoutes = flattenRoutes(adminNav);
+const adminPlaceholderRoutes = flattenRoutes(adminNav).filter((r) => r.path !== '/admin/ai-settings');
 
 export default function App() {
   return (
@@ -210,6 +211,7 @@ export default function App() {
             <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/ai-settings" element={<AiSettings />} />
                 {adminPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

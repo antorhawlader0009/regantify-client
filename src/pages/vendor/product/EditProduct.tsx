@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, X, ChevronLeft, Trash2 } from 'lucide-react';
+import { Camera, X, ChevronLeft, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
@@ -255,10 +255,15 @@ export default function EditProduct() {
         sku: v.sku,
         optionValues: v.optionValues,
         stock: v.stock,
-        listPrice: v.listPrice ?? undefined,
-        discountPrice: v.discountPrice ?? undefined,
-        cost: v.cost ?? undefined,
-        weight: v.weight ?? undefined,
+        // The server serializes these Decimal fields as strings (see
+        // ProductVariant); ProductVariantInput (the PATCH payload this
+        // state feeds back into on Save) expects numbers, same
+        // string-in/number-out convention as price/discountPrice/cost
+        // above on the product itself.
+        listPrice: v.listPrice != null ? Number(v.listPrice) : undefined,
+        discountPrice: v.discountPrice != null ? Number(v.discountPrice) : undefined,
+        cost: v.cost != null ? Number(v.cost) : undefined,
+        weight: v.weight != null ? Number(v.weight) : undefined,
       })),
     );
     setVariationPhotos(
@@ -284,6 +289,30 @@ export default function EditProduct() {
     applyProduct(product);
     setFormError(null);
   };
+
+  // "AI Generate" — needs a name and at least one already-uploaded photo
+  // (not still uploading, not a local-only preview) since the server
+  // fetches the photo by URL to hand to a vision model. See
+  // AiService.generateProductInfo for what it does and doesn't fill in —
+  // price/stock are deliberately never touched.
+  const firstUploadedPhotoUrl = photos.find((p) => p.uploadedUrl && !p.uploading)?.uploadedUrl;
+  const canAiGenerate = Boolean(name.trim()) && Boolean(firstUploadedPhotoUrl);
+
+  const aiGenerateMutation = useMutation({
+    mutationFn: () => productsApi.aiGenerate(name.trim(), firstUploadedPhotoUrl!),
+    onSuccess: (info) => {
+      setDescription(info.description);
+      setCategory(info.category);
+      setBrand(info.brand);
+      setSummary(info.summary);
+      setMetaTitle(info.metaTitle);
+      setMetaDescription(info.metaDescription);
+      if (info.weight != null) setWeight(String(info.weight));
+      setWeightUnit(info.weightUnit);
+      toast.success('AI-generated info added — review before saving.');
+    },
+    onError: () => toast.error('Could not generate product info. Please try again.'),
+  });
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -446,26 +475,39 @@ export default function EditProduct() {
             Delete
           </button>
 
-          {isDirty && (
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={updateMutation.isPending}
-                className="px-5 py-2 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-60"
-              >
-                {updateMutation.isPending ? 'Updating…' : 'Update'}
-              </button>
-              <button
-                type="button"
-                onClick={handleDiscard}
-                disabled={updateMutation.isPending}
-                className="px-5 py-2 rounded-xl border border-orange-200 text-orange-500 text-sm font-medium hover:bg-orange-50 disabled:opacity-60"
-              >
-                Discard
-              </button>
-            </div>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => aiGenerateMutation.mutate()}
+              disabled={!canAiGenerate || aiGenerateMutation.isPending}
+              title={canAiGenerate ? undefined : 'Add a product name and at least one photo first'}
+              className="flex items-center gap-1.5 px-5 py-2 rounded-xl border border-regantify-cta/30 bg-regantify-cta/10 text-regantify-cta text-sm font-medium hover:bg-regantify-cta/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {aiGenerateMutation.isPending ? 'Generating…' : 'AI Generate'}
+            </button>
+
+            {isDirty && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={updateMutation.isPending}
+                  className="px-5 py-2 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-60"
+                >
+                  {updateMutation.isPending ? 'Updating…' : 'Update'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDiscard}
+                  disabled={updateMutation.isPending}
+                  className="px-5 py-2 rounded-xl border border-orange-200 text-orange-500 text-sm font-medium hover:bg-orange-50 disabled:opacity-60"
+                >
+                  Discard
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm">

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, X, ChevronLeft, UploadCloud } from 'lucide-react';
+import { Camera, X, ChevronLeft, UploadCloud, Sparkles, Loader2 } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
@@ -125,6 +125,36 @@ export default function AddProduct() {
     setCategoryId(resolvedId);
     setCategory(categoryOptions.find((c) => c.id === resolvedId)?.name ?? '');
   };
+
+  // "AI Generate" — needs a name and at least one already-uploaded photo
+  // (not still uploading) since the server fetches the photo by URL for
+  // a vision model. See AiService.generateProductInfo on the server for
+  // what it does and doesn't fill in — price/stock are never touched.
+  const firstUploadedPhotoUrl = photos.find((p) => p.uploadedUrl && !p.uploading)?.uploadedUrl;
+  const canAiGenerate = Boolean(name.trim()) && Boolean(firstUploadedPhotoUrl);
+
+  const aiGenerateMutation = useMutation({
+    mutationFn: () => productsApi.aiGenerate(name.trim(), firstUploadedPhotoUrl!),
+    onSuccess: (info) => {
+      setDescription(info.description);
+      setCategory(info.category);
+      setBrand(info.brand);
+      setSummary(info.summary);
+      setMetaTitle(info.metaTitle);
+      setMetaDescription(info.metaDescription);
+      if (info.weight != null) setWeight(String(info.weight));
+      setWeightUnit(info.weightUnit);
+      // Reveal the optional sections AI Generate just filled in — they're
+      // collapsed by default (see showCategory/showBrand/showSummary),
+      // so a vendor who never expanded them would otherwise not see the
+      // generated values at all.
+      setShowCategory(true);
+      setShowBrand(true);
+      setShowSummary(true);
+      toast.success('AI-generated info added — review before saving.');
+    },
+    onError: () => toast.error('Could not generate product info. Please try again.'),
+  });
 
   const createMutation = useMutation({
     mutationFn: productsApi.create,
@@ -256,8 +286,18 @@ export default function AddProduct() {
         </select>
         <button
           type="button"
+          onClick={() => aiGenerateMutation.mutate()}
+          disabled={!canAiGenerate || aiGenerateMutation.isPending}
+          title={canAiGenerate ? undefined : 'Add a product name and at least one photo first'}
+          className="ml-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-regantify-cta/30 bg-regantify-cta/10 text-regantify-cta text-sm font-medium hover:bg-regantify-cta/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+          {aiGenerateMutation.isPending ? 'Generating…' : 'AI Generate'}
+        </button>
+        <button
+          type="button"
           onClick={() => setShowImportModal(true)}
-          className="ml-auto flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-black/10 bg-white text-sm text-regantify-text hover:bg-regantify-content"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-black/10 bg-white text-sm text-regantify-text hover:bg-regantify-content"
         >
           <UploadCloud size={15} />
           Import from CSV

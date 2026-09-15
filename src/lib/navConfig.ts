@@ -159,6 +159,7 @@ export const adminNav: NavSection[] = [
   { label: 'Marketing', icon: Megaphone, path: '/admin/marketing' },
   { label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
   { label: 'Reviews', icon: Star, path: '/admin/reviews' },
+  { label: 'AI Settings', icon: Bot, path: '/admin/ai-settings' },
   { label: 'Support', icon: Headphones, path: '/admin/support' },
   { label: 'Staff', icon: UsersRound, path: '/admin/staff' },
   { label: 'Settings', icon: Settings, path: '/admin/settings' },
