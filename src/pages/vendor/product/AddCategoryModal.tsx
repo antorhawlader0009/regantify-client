@@ -19,6 +19,10 @@ interface AddCategoryModalProps {
    * a Main Category, which by definition has no parent. Subcategory
    * add/edit flows always show it (see `SubcategoriesModal`). */
   hideParentField?: boolean;
+  /** Called with the newly created/updated category right before the modal
+   * closes — lets a caller (e.g. the product form's quick-create "+"
+   * button) auto-select it without needing its own success signal. */
+  onCreated?: (category: Category) => void;
 }
 
 type PhotoKind = 'cover' | 'square';
@@ -109,6 +113,8 @@ interface CategoryFormProps {
   hideCloseButton?: boolean;
   onSaved: () => void;
   onCancel: () => void;
+  /** See `AddCategoryModalProps.onCreated`. */
+  onCreated?: (category: Category) => void;
 }
 
 /** The Add/Edit Category form itself — no overlay/backdrop of its own, so
@@ -122,6 +128,7 @@ export function CategoryForm({
   hideCloseButton,
   onSaved,
   onCancel,
+  onCreated,
 }: CategoryFormProps) {
   const queryClient = useQueryClient();
   const isEditing = !!editingCategory;
@@ -161,9 +168,10 @@ export function CategoryForm({
 
   const createMutation = useMutation({
     mutationFn: categoriesApi.create,
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category created.');
+      onCreated?.(created);
       onSaved();
     },
     onError: (err: any) => {
@@ -429,6 +437,7 @@ export function AddCategoryModal({
   initialParentId,
   initialParentName,
   hideParentField,
+  onCreated,
 }: AddCategoryModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
@@ -444,6 +453,7 @@ export function AddCategoryModal({
           hideParentField={hideParentField}
           onSaved={onClose}
           onCancel={onClose}
+          onCreated={onCreated}
         />
       </div>
     </div>

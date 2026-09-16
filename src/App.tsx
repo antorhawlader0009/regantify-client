@@ -38,6 +38,7 @@ import Pages from './pages/vendor/store/Pages';
 import AddPage from './pages/vendor/store/AddPage';
 import Social from './pages/vendor/store/Social';
 import Logo from './pages/vendor/store/Logo';
+import Domain from './pages/vendor/store/Domain';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
@@ -93,6 +94,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/social' &&
     r.path !== '/vendor/store/logo' &&
+    r.path !== '/vendor/store/domain' &&
     r.path !== '/vendor/orders' &&
     r.path !== '/vendor/orders/incomplete' &&
     r.path !== '/vendor/customers' &&
@@ -177,6 +179,7 @@ export default function App() {
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
                 <Route path="/vendor/store/social" element={<Social />} />
                 <Route path="/vendor/store/logo" element={<Logo />} />
+                <Route path="/vendor/store/domain" element={<Domain />} />
                 <Route path="/vendor/orders" element={<Orders />} />
                 <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />

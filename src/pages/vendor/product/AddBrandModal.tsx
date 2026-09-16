@@ -1,11 +1,15 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, ImagePlus } from 'lucide-react';
-import { brandsApi } from '../../../lib/brandsApi';
+import { brandsApi, type Brand } from '../../../lib/brandsApi';
 import { toast } from '../../../lib/toast';
 
 interface AddBrandModalProps {
   onClose: () => void;
+  /** Called with the newly created brand right before the modal closes —
+   * lets a caller (e.g. the product form's quick-create "+" button)
+   * auto-select it without needing its own success signal. */
+  onCreated?: (brand: Brand) => void;
 }
 
 interface LogoState {
@@ -26,7 +30,7 @@ function slugify(input: string): string {
     .replace(/(^-|-$)+/g, '');
 }
 
-export function AddBrandModal({ onClose }: AddBrandModalProps) {
+export function AddBrandModal({ onClose, onCreated }: AddBrandModalProps) {
   const queryClient = useQueryClient();
 
   const [name, setName] = useState('');
@@ -40,9 +44,10 @@ export function AddBrandModal({ onClose }: AddBrandModalProps) {
 
   const createMutation = useMutation({
     mutationFn: brandsApi.create,
-    onSuccess: () => {
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       toast.success('Brand added.');
+      onCreated?.(created);
       onClose();
     },
     onError: (err: any) => {

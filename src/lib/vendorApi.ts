@@ -74,3 +74,20 @@ export async function uploadVendorLogo(file: File): Promise<string | null> {
   });
   return data.logoUrl;
 }
+
+// Store > Domain — a bare hostname, no protocol/path. null = no custom
+// domain connected yet (the store is still reachable at its subdomain
+// either way).
+export async function getVendorDomain(): Promise<string | null> {
+  const { data } = await api.get<{ customDomain: string | null }>('/api/v1/vendor/domain');
+  return data.customDomain;
+}
+
+export async function connectVendorDomain(domain: string): Promise<string | null> {
+  const { data } = await api.patch<{ customDomain: string | null }>('/api/v1/vendor/domain', { domain });
+  return data.customDomain;
+}
+
+export async function removeVendorDomain(): Promise<void> {
+  await api.delete('/api/v1/vendor/domain');
+}

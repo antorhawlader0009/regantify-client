@@ -1,15 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, X, ChevronLeft, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import { Camera, X, ChevronLeft, Trash2, Sparkles, Loader2, Plus } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { categoriesApi } from '../../../lib/categoriesApi';
+import { AddCategoryModal } from './AddCategoryModal';
+import { AddBrandModal } from './AddBrandModal';
 import { productsApi, type VariationOptionInput, type ProductVariantInput, type VariationValuePhotoInput } from '../../../lib/productsApi';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
+
+/** Small ghost circular icon button — matches Categories.tsx's own
+ * "Add subcategory" (+) button — used to quick-create a Main/Sub
+ * Category or Brand without leaving the product form. */
+function QuickAddButton({ title, disabled, onClick }: { title: string; disabled?: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      disabled={disabled}
+      onClick={onClick}
+      className="w-6 h-6 flex items-center justify-center rounded-full border border-black/15
+        text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+    >
+      <Plus size={12} />
+    </button>
+  );
+}
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -52,12 +72,19 @@ export default function EditProduct() {
   });
 
   // Store > Categories' real category tree — drives the Main/Sub Category
-  // selects below (and the separate flat "Link to Category" dropdown).
+  // selects below.
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.list(),
     staleTime: 60_000,
   });
+
+  // Quick-create modals for Main Category / Sub Category / Brand — reuses
+  // the same modals as the Categories/Brands pages, opened inline here so
+  // a vendor doesn't have to leave the product form to add a missing one.
+  const [showAddMainCategory, setShowAddMainCategory] = useState(false);
+  const [showAddSubCategory, setShowAddSubCategory] = useState(false);
+  const [showAddBrand, setShowAddBrand] = useState(false);
 
   // General Information
   const [name, setName] = useState('');
@@ -77,8 +104,7 @@ export default function EditProduct() {
 
   // Main/Sub Category are just two views onto the same `categoryId` FK —
   // derived from it (and from `categoryOptions`) rather than tracked as
-  // their own state, so there's only ever one source of truth to keep in
-  // sync with "Link to Category" below.
+  // their own state, so there's only ever one source of truth.
   const mainCategoryOptions = categoryOptions.filter((c) => !c.parentId);
   const selectedProductCategory = categoryOptions.find((c) => c.id === categoryId);
   const mainCategoryId = selectedProductCategory
@@ -605,8 +631,8 @@ export default function EditProduct() {
               <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" maxLength={10000} />
             </Field>
 
-            {mainCategoryOptions.length > 0 && (
-              <Field label="Main Category">
+            <Field label="Main Category">
+              <div className="flex items-center gap-2">
                 <select
                   value={mainCategoryId}
                   onChange={(e) => handleMainCategoryChange(e.target.value)}
@@ -619,11 +645,12 @@ export default function EditProduct() {
                     </option>
                   ))}
                 </select>
-              </Field>
-            )}
+                <QuickAddButton title="Add main category" onClick={() => setShowAddMainCategory(true)} />
+              </div>
+            </Field>
 
-            {mainCategoryOptions.length > 0 && (
-              <Field label="Sub Category">
+            <Field label="Sub Category">
+              <div className="flex items-center gap-2">
                 <select
                   value={subCategoryId}
                   onChange={(e) => handleSubCategoryChange(e.target.value)}
@@ -643,28 +670,13 @@ export default function EditProduct() {
                     </option>
                   ))}
                 </select>
-              </Field>
-            )}
-
-            {categoryOptions.length > 0 && (
-              <Field
-                label="Link to Category"
-                hint="Optional — lets Marketing > Coupons' category restriction apply to this product"
-              >
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className={productInputClass}
-                >
-                  <option value="">None</option>
-                  {categoryOptions.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            )}
+                <QuickAddButton
+                  title="Add sub category"
+                  disabled={!mainCategoryId}
+                  onClick={() => setShowAddSubCategory(true)}
+                />
+              </div>
+            </Field>
 
             <Field label="Secondary Categories">
               <div className="flex flex-wrap items-center gap-1.5 mb-2">
@@ -699,7 +711,16 @@ export default function EditProduct() {
             </Field>
 
             <Field label="Brand">
-              <input type="text" value={brand} onChange={(e) => setBrand(e.target.value.slice(0, 100))} maxLength={100} className={productInputClass} />
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value.slice(0, 100))}
+                  maxLength={100}
+                  className={productInputClass}
+                />
+                <QuickAddButton title="Add brand" onClick={() => setShowAddBrand(true)} />
+              </div>
             </Field>
 
             <Field label="Note" hint="This note is only visible to staff">
@@ -977,6 +998,27 @@ export default function EditProduct() {
         </section>
       </div>
       </div>
+
+      {showAddMainCategory && (
+        <AddCategoryModal
+          categories={categoryOptions}
+          hideParentField
+          onCreated={(c) => handleMainCategoryChange(c.id)}
+          onClose={() => setShowAddMainCategory(false)}
+        />
+      )}
+      {showAddSubCategory && (
+        <AddCategoryModal
+          categories={categoryOptions}
+          initialParentId={mainCategoryId}
+          initialParentName={mainCategoryOptions.find((c) => c.id === mainCategoryId)?.name}
+          onCreated={(c) => handleSubCategoryChange(c.id)}
+          onClose={() => setShowAddSubCategory(false)}
+        />
+      )}
+      {showAddBrand && (
+        <AddBrandModal onCreated={(b) => setBrand(b.name)} onClose={() => setShowAddBrand(false)} />
+      )}
     </div>
   );
 }
