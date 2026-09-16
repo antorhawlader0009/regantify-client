@@ -1,14 +1,27 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Lock, Camera } from 'lucide-react';
+import { User, Mail, Lock, Camera, Phone, Store, MapPin, Link as LinkIcon } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
+import { getVendorSettings, updateVendorSettings } from '../../lib/vendorApi';
+import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Enter your full name'),
   email: z.string().email('Enter a valid email address').optional().or(z.literal('')),
+});
+
+const subdomainRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+const storeSchema = z.object({
+  storeName: z.string().min(1, 'Enter your store name'),
+  subdomain: z
+    .string()
+    .min(1, 'Enter your store URL')
+    .regex(subdomainRegex, 'Only lowercase letters, numbers, and dashes are allowed'),
+  address: z.string().optional().or(z.literal('')),
 });
 
 const passwordSchema = z
@@ -24,6 +37,7 @@ const passwordSchema = z
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
+type StoreFormValues = z.infer<typeof storeSchema>;
 
 export default function VendorSettings() {
   const user = useAuthStore((s) => s.user);
@@ -43,6 +57,11 @@ export default function VendorSettings() {
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
+  const [storeError, setStoreError] = useState<string | null>(null);
+  const [storeSuccess, setStoreSuccess] = useState<string | null>(null);
+  const [storeSubmitting, setStoreSubmitting] = useState(false);
+  const [storeLoading, setStoreLoading] = useState(true);
+
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -52,6 +71,35 @@ export default function VendorSettings() {
   });
 
   const passwordForm = useForm<PasswordFormValues>({ resolver: zodResolver(passwordSchema) });
+
+  const storeForm = useForm<StoreFormValues>({
+    resolver: zodResolver(storeSchema),
+    defaultValues: { storeName: user?.vendor?.storeName ?? '', subdomain: user?.vendor?.subdomain ?? '', address: '' },
+  });
+
+  // Store name/URL come from authStore already, but address doesn't
+  // live there — fetch all three once on mount anyway so this section
+  // has one consistent source of truth (and isn't blank on a reload vs.
+  // right after a save, which updates it locally instead, below).
+  useEffect(() => {
+    let cancelled = false;
+    getVendorSettings()
+      .then((settings) => {
+        if (cancelled) return;
+        storeForm.reset({ storeName: settings.storeName, subdomain: settings.subdomain, address: settings.address ?? '' });
+      })
+      .catch(() => {
+        // Falls back to authStore's storeName with a blank address —
+        // the vendor can still edit and save either field from there.
+      })
+      .finally(() => {
+        if (!cancelled) setStoreLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAvatarPick = () => avatarInputRef.current?.click();
 
@@ -110,6 +158,34 @@ export default function VendorSettings() {
       setProfileError(err?.response?.data?.message ?? 'Could not update your profile.');
     } finally {
       setProfileSubmitting(false);
+    }
+  };
+
+  const onStoreSubmit = async (values: StoreFormValues) => {
+    setStoreError(null);
+    setStoreSuccess(null);
+    setStoreSubmitting(true);
+    try {
+      const updated = await updateVendorSettings({
+        storeName: values.storeName.trim(),
+        subdomain: values.subdomain.trim(),
+        address: values.address?.trim() ?? '',
+      });
+      storeForm.reset({ storeName: updated.storeName, subdomain: updated.subdomain, address: updated.address ?? '' });
+      // Keep the topbar/authStore's own copy of storeName/subdomain in
+      // sync too — they're read from user.vendor in a few other places
+      // (e.g. the "Visit site" link).
+      if (accessToken && user) {
+        setAuth(accessToken, {
+          ...user,
+          vendor: user.vendor ? { ...user.vendor, storeName: updated.storeName, subdomain: updated.subdomain } : user.vendor,
+        });
+      }
+      setStoreSuccess('Store settings updated.');
+    } catch (err: any) {
+      setStoreError(err?.response?.data?.message ?? 'Could not update store settings.');
+    } finally {
+      setStoreSubmitting(false);
     }
   };
 
@@ -264,6 +340,130 @@ export default function VendorSettings() {
               hover:bg-black transition-colors disabled:opacity-60"
           >
             {profileSubmitting ? 'Saving…' : 'Save profile'}
+          </button>
+        </form>
+      </section>
+
+      {/* Store section */}
+      <section>
+        <h2 className="text-lg font-medium text-regantify-text mb-1">Store</h2>
+        <p className="text-sm text-regantify-text-muted mb-4">
+          Your phone number, store name, store URL, and address.
+        </p>
+        <form onSubmit={storeForm.handleSubmit(onStoreSubmit)} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">
+              Phone number
+            </label>
+            <div className="relative">
+              <Phone
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                value={user?.phone ?? ''}
+                readOnly
+                disabled
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-regantify-search text-regantify-text-muted
+                  cursor-not-allowed"
+              />
+            </div>
+            <p className="text-xs text-regantify-text-muted mt-1.5">
+              This is how you log in — it can't be changed here.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">
+              Store name
+            </label>
+            <div className="relative">
+              <Store
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Your store name"
+                disabled={storeLoading}
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-regantify-search text-regantify-text
+                  placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black
+                  disabled:opacity-60"
+                {...storeForm.register('storeName')}
+              />
+            </div>
+            {storeForm.formState.errors.storeName && (
+              <p className="text-red-500 text-sm mt-1.5">
+                {storeForm.formState.errors.storeName.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">
+              Store URL
+            </label>
+            <div className="relative">
+              <LinkIcon
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="your-store-name"
+                disabled={storeLoading}
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-regantify-search text-regantify-text
+                  placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black
+                  disabled:opacity-60"
+                {...storeForm.register('subdomain')}
+              />
+            </div>
+            {storeForm.formState.errors.subdomain ? (
+              <p className="text-red-500 text-sm mt-1.5">
+                {storeForm.formState.errors.subdomain.message}
+              </p>
+            ) : (
+              <p className="text-xs text-regantify-text-muted mt-1.5 break-all">
+                {storefrontStoreUrl(storeForm.watch('subdomain') || '…')}
+              </p>
+            )}
+            <p className="text-xs text-amber-600 mt-1">
+              Changing this immediately moves your live store — old links to your current URL will stop working.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">
+              Address <span className="text-regantify-text-muted font-normal">(optional)</span>
+            </label>
+            <div className="relative">
+              <MapPin
+                className="absolute left-3.5 top-3.5 text-regantify-text-muted"
+                size={18}
+              />
+              <textarea
+                placeholder="Store or business address"
+                rows={3}
+                disabled={storeLoading}
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-regantify-search text-regantify-text
+                  placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black
+                  disabled:opacity-60 resize-none"
+                {...storeForm.register('address')}
+              />
+            </div>
+          </div>
+
+          {storeError && <p className="text-red-500 text-sm">{storeError}</p>}
+          {storeSuccess && <p className="text-green-600 text-sm">{storeSuccess}</p>}
+
+          <button
+            type="submit"
+            disabled={storeSubmitting || storeLoading}
+            className="bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl
+              hover:bg-black transition-colors disabled:opacity-60"
+          >
+            {storeSubmitting ? 'Saving…' : 'Save store settings'}
           </button>
         </form>
       </section>

@@ -35,6 +35,28 @@ export async function updateVendorSocialLinks(links: Partial<SocialLinks>): Prom
   return data;
 }
 
+// Settings > Store name / Store URL / Address. Store name and Store URL
+// (subdomain) are deliberately separate fields — changing the name is
+// just a display-label edit, while changing the URL immediately moves
+// where the live storefront is reachable (see VendorController.updateSettings).
+export interface VendorSettings {
+  storeName: string;
+  subdomain: string;
+  address: string | null;
+}
+
+export async function getVendorSettings(): Promise<VendorSettings> {
+  const { data } = await api.get<VendorSettings>('/api/v1/vendor/settings');
+  return data;
+}
+
+export async function updateVendorSettings(
+  fields: Partial<Pick<VendorSettings, 'storeName' | 'subdomain' | 'address'>>,
+): Promise<VendorSettings> {
+  const { data } = await api.patch<VendorSettings>('/api/v1/vendor/settings', fields);
+  return data;
+}
+
 export async function getVendorLogo(): Promise<string | null> {
   const { data } = await api.get<{ logoUrl: string | null }>('/api/v1/vendor/logo');
   return data.logoUrl;

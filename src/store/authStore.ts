@@ -19,6 +19,9 @@ export interface AuthUser {
     // "1250.00") — parse with Number(...) before formatting/display.
     balance: string;
   } | null;
+  // Note: Vendor.address is intentionally NOT included here — it's not
+  // part of the login/session payload, only fetched/edited directly on
+  // the Settings page (see getVendorSettings/updateVendorSettings).
 }
 
 interface AuthState {

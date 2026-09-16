@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthShell } from '../../components/AuthShell';
 import { authApi } from '../../lib/authApi';
 import { Phone } from 'lucide-react';
@@ -18,9 +18,20 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-/** Step 1 of forgot-password: enter the phone number to receive a reset code. */
+interface LocationState {
+  phone?: string;
+}
+
+/**
+ * Step 1 of forgot-password: enter the phone number to receive a reset
+ * code. Prefills from location state when reached via the "Reset
+ * password" link on the "account already exists" step of Sign up (see
+ * VendorSignup) — the vendor already typed their number once there.
+ */
 export default function VendorForgotPassword() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefillPhone = (location.state as LocationState | undefined)?.phone;
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,7 +39,7 @@ export default function VendorForgotPassword() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { phone: prefillPhone ?? '' } });
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);

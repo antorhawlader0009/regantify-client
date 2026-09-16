@@ -1,10 +1,13 @@
 import { api } from './api';
 import type { AuthUser } from '../store/authStore';
 
-export interface SendOtpResponse {
-  message: string;
-  expiresInSeconds: number;
-}
+// Signup step 1's response is a discriminated union on accountExists:
+// true means no OTP was sent (see AuthService.sendOtp) and the caller
+// should show the "log in or reset password" state instead of
+// navigating to the OTP-verify screen.
+export type SendOtpResponse =
+  | { accountExists: true }
+  | { accountExists: false; message: string; expiresInSeconds: number };
 
 export interface VerifyOtpResponse {
   isNewUser: boolean;
