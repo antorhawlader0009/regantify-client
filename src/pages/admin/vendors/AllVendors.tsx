@@ -1,23 +1,24 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, LogIn, Search } from 'lucide-react';
-import { adminApi } from '../../../lib/adminApi';
+import { adminApi, type AdminVendor, type VendorStatus } from '../../../lib/adminApi';
 import { toast } from '../../../lib/toast';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
-
-function formatDate(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
+import { StatusBadge } from './StatusBadge';
+import { VendorDetailsDialog } from './VendorDetailsDialog';
+import { ChangeVendorStatusModal } from './ChangeVendorStatusModal';
 
 function copyToClipboard(value: string, label: string) {
   navigator.clipboard.writeText(value).then(() => toast.success(`${label} copied.`));
 }
 
 export default function AllVendors() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(20);
+  const [detailsVendor, setDetailsVendor] = useState<AdminVendor | null>(null);
+  const [statusModalVendor, setStatusModalVendor] = useState<AdminVendor | null>(null);
 
   useEffect(() => setPage(1), [search, perPage]);
 
@@ -35,6 +36,17 @@ export default function AllVendors() {
       window.open(`/vendor-impersonate?token=${encodeURIComponent(token)}`, '_blank', 'noopener');
     },
     onError: () => toast.error('Could not start a vendor session. Please try again.'),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ vendorId, status }: { vendorId: string; status: VendorStatus }) =>
+      adminApi.updateVendorStatus(vendorId, status),
+    onSuccess: (_, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
+      toast.success(`Status changed to ${status.charAt(0) + status.slice(1).toLowerCase()}.`);
+      setStatusModalVendor(null);
+    },
+    onError: () => toast.error('Could not change the status. Please try again.'),
   });
 
   const vendors = data?.vendors ?? [];
@@ -78,27 +90,26 @@ export default function AllVendors() {
               <tr className="bg-regantify-content text-left text-regantify-text-muted">
                 <th className="px-4 py-3 font-medium">VENDOR ID</th>
                 <th className="px-4 py-3 font-medium">STORE</th>
+                <th className="px-4 py-3 font-medium">STATUS</th>
                 <th className="px-4 py-3 font-medium">PHONE</th>
                 <th className="px-4 py-3 font-medium">BALANCE</th>
                 <th className="px-4 py-3 font-medium">SMS LEFT</th>
                 <th className="px-4 py-3 font-medium">PRODUCTS</th>
                 <th className="px-4 py-3 font-medium">ORDERS</th>
-                <th className="px-4 py-3 font-medium">JOINED</th>
-                <th className="px-4 py-3 font-medium">LAST LOGIN</th>
                 <th className="px-4 py-3 font-medium">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-regantify-text-muted">
+                  <td colSpan={9} className="px-4 py-8 text-center text-regantify-text-muted">
                     Loading…
                   </td>
                 </tr>
               )}
               {!isLoading && vendors.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-regantify-text-muted">
+                  <td colSpan={9} className="px-4 py-8 text-center text-regantify-text-muted">
                     No vendors yet.
                   </td>
                 </tr>
@@ -116,34 +127,52 @@ export default function AllVendors() {
                     </button>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-medium text-regantify-text">{v.storeName}</div>
-                    <a
-                      href={storefrontStoreUrl(v.subdomain)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-regantify-cta hover:underline"
+                    <button
+                      onClick={() => setDetailsVendor(v)}
+                      className="font-medium text-regantify-cta hover:underline text-left"
                     >
-                      {v.subdomain}
-                    </a>
+                      {v.storeName}
+                    </button>
+                    <div>
+                      <a
+                        href={storefrontStoreUrl(v.subdomain)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-regantify-text-muted hover:underline"
+                      >
+                        {v.subdomain}
+                      </a>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={v.status} />
                   </td>
                   <td className="px-4 py-3 text-regantify-text">{v.phone ?? '—'}</td>
                   <td className="px-4 py-3 text-regantify-text">৳{Number(v.balance).toLocaleString('en-US')}</td>
                   <td className="px-4 py-3 text-regantify-text">{v.smsCredits}</td>
                   <td className="px-4 py-3 text-regantify-text">{v.productCount}</td>
                   <td className="px-4 py-3 text-regantify-text">{v.orderCount}</td>
-                  <td className="px-4 py-3 text-regantify-text-muted">{formatDate(v.createdAt)}</td>
-                  <td className="px-4 py-3 text-regantify-text-muted">{formatDate(v.lastLoginAt)}</td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => impersonateMutation.mutate(v.id)}
-                      disabled={impersonateMutation.isPending}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-sm
-                        text-regantify-text hover:bg-regantify-content disabled:opacity-50"
-                      title="Open this vendor's dashboard for support/troubleshooting"
-                    >
-                      <LogIn size={14} />
-                      Login as Vendor
-                    </button>
+                    <div className="flex flex-col items-start gap-2">
+                      <button
+                        onClick={() => setStatusModalVendor(v)}
+                        className="px-3 py-1.5 rounded-lg border border-black/10 text-sm
+                          text-regantify-text hover:bg-regantify-content"
+                      >
+                        Change Status
+                      </button>
+                      <button
+                        onClick={() => impersonateMutation.mutate(v.id)}
+                        disabled={impersonateMutation.isPending}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-sm
+                          text-regantify-text hover:bg-regantify-content disabled:opacity-50"
+                        title="Open this vendor's dashboard for support/troubleshooting"
+                      >
+                        <LogIn size={14} />
+                        Login as Vendor
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -176,6 +205,19 @@ export default function AllVendors() {
           )}
         </div>
       </div>
+
+      <VendorDetailsDialog vendor={detailsVendor} onOpenChange={(open) => !open && setDetailsVendor(null)} />
+
+      {statusModalVendor && (
+        <ChangeVendorStatusModal
+          open
+          onOpenChange={(open) => !open && setStatusModalVendor(null)}
+          storeName={statusModalVendor.storeName}
+          currentStatus={statusModalVendor.status}
+          submitting={statusMutation.isPending}
+          onConfirm={(next) => statusMutation.mutate({ vendorId: statusModalVendor.id, status: next })}
+        />
+      )}
     </div>
   );
 }
