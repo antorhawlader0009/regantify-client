@@ -3,10 +3,13 @@ import { Globe, Loader2, Trash2, HelpCircle } from 'lucide-react';
 import { getVendorDomain, connectVendorDomain, removeVendorDomain } from '../../../lib/vendorApi';
 import { toast } from 'sonner';
 
-// Same nameservers shown to every vendor, regardless of domain — DNS
-// resolution for a connected domain isn't per-vendor, it's routed by
-// this platform's own edge once the domain's registrar points at it.
-const NAMESERVERS = ['ns1.regantify.com', 'ns2.regantify.com'];
+// Same IP shown to every vendor, regardless of domain — resolution for a
+// connected domain isn't per-vendor, it's the storefront app's own
+// middleware (see storefront/src/middleware.ts) that looks up the Host
+// header against Vendor.customDomain once the domain's registrar points
+// an A record here. Falls back to a placeholder if the platform hasn't
+// set VITE_PLATFORM_IP yet (see client/.env's own comment on it).
+const PLATFORM_IP = import.meta.env.VITE_PLATFORM_IP ?? 'YOUR_SERVER_IP';
 
 const domainRegex = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
 
@@ -102,7 +105,7 @@ export default function Domain() {
               <h2 className="text-lg font-medium text-regantify-text mb-1">Setup Guide</h2>
               <ol className="text-sm text-regantify-text-muted list-decimal list-inside space-y-1 mb-6">
                 <li>Search your domain name and connect domain. (Use the form below)</li>
-                <li>Update name servers in your domain registrar panel (ie. GoDaddy, NameCheap, etc)</li>
+                <li>Add an A record in your domain registrar panel (ie. GoDaddy, NameCheap, etc) pointing to our server IP</li>
               </ol>
 
               <h2 className="text-lg font-medium text-regantify-text mb-3">Search Domain</h2>
@@ -173,25 +176,22 @@ export default function Domain() {
           </div>
 
           <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6">
-            <h2 className="text-lg font-medium text-regantify-text mb-4">Update Nameserver</h2>
+            <h2 className="text-lg font-medium text-regantify-text mb-4">Update DNS Record</h2>
             <p className="text-sm text-regantify-text-muted mb-1">
               Login to your domain registrar panel (ie. where you bought your domain from)
             </p>
             <p className="text-sm text-regantify-text-muted mb-4">
-              Set the following Nameservers for your domain—
+              Add the following A record for your domain (and for "www") —
             </p>
             <div className="space-y-2">
-              {NAMESERVERS.map((ns) => (
-                <div
-                  key={ns}
-                  className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono"
-                >
-                  {ns}
-                </div>
-              ))}
+              <div className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono flex items-center justify-between gap-3">
+                <span>Type: A</span>
+                <span>Host: @ (and www)</span>
+                <span>Value: {PLATFORM_IP}</span>
+              </div>
             </div>
             <p className="text-xs text-amber-600 mt-4">
-              Nameserver changes can take up to 24–48 hours to fully propagate.
+              DNS changes can take up to 24–48 hours to fully propagate.
             </p>
           </div>
         </>
