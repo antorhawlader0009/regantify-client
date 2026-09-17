@@ -2,7 +2,7 @@ import { useEditor, EditorContent, Extension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
+import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Link from '@tiptap/extension-link';
@@ -120,7 +120,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: false }),
+      StarterKit.configure({ heading: false, link: false, underline: false }),
       Underline,
       TextStyle,
       FontSize,
@@ -157,7 +157,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
   // Keep the editor in sync if `value` is reset from outside (e.g. form reset).
   useEffect(() => {
     if (editor && value !== editor.getHTML() && !showSourceView) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value, { emitUpdate: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -189,7 +189,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
     if (!showSourceView) {
       setSourceHtml(editor.getHTML());
     } else {
-      editor.commands.setContent(sourceHtml, false);
+      editor.commands.setContent(sourceHtml, { emitUpdate: false });
       onChange(sourceHtml);
     }
     setShowSourceView((v) => !v);
