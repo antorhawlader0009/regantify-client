@@ -142,42 +142,42 @@ export interface CreateOrderPayload {
 
 export const ordersApi = {
   list: (params: ListOrdersParams = {}) =>
-    api.get<OrderListResponse>('/api/v1/orders', { params }).then((r) => r.data),
+    api.get<OrderListResponse>('/v1/orders', { params }).then((r) => r.data),
 
-  findOne: (id: string) => api.get<Order>(`/api/v1/orders/${id}`).then((r) => r.data),
+  findOne: (id: string) => api.get<Order>(`/v1/orders/${id}`).then((r) => r.data),
 
   create: (payload: CreateOrderPayload) =>
-    api.post<Order>('/api/v1/orders', payload).then((r) => r.data),
+    api.post<Order>('/v1/orders', payload).then((r) => r.data),
 
   updateStatus: (id: string, status: OrderStatus, note?: string) =>
-    api.patch<Order>(`/api/v1/orders/${id}/status`, { status, note }).then((r) => r.data),
+    api.patch<Order>(`/v1/orders/${id}/status`, { status, note }).then((r) => r.data),
 
   updateLabel: (id: string, label: string | null) =>
-    api.patch<Order>(`/api/v1/orders/${id}/label`, { label }).then((r) => r.data),
+    api.patch<Order>(`/v1/orders/${id}/label`, { label }).then((r) => r.data),
 
   updateCourier: (id: string, courierProvider: CourierProvider) =>
-    api.patch<Order>(`/api/v1/orders/${id}/courier`, { courierProvider }).then((r) => r.data),
+    api.patch<Order>(`/v1/orders/${id}/courier`, { courierProvider }).then((r) => r.data),
 
-  trash: (id: string) => api.post<Order>(`/api/v1/orders/${id}/trash`).then((r) => r.data),
+  trash: (id: string) => api.post<Order>(`/v1/orders/${id}/trash`).then((r) => r.data),
 
-  restore: (id: string) => api.post<Order>(`/api/v1/orders/${id}/restore`).then((r) => r.data),
+  restore: (id: string) => api.post<Order>(`/v1/orders/${id}/restore`).then((r) => r.data),
 
   getHistory: (id: string) =>
-    api.get<OrderStatusHistoryEntry[]>(`/api/v1/orders/${id}/history`).then((r) => r.data),
+    api.get<OrderStatusHistoryEntry[]>(`/v1/orders/${id}/history`).then((r) => r.data),
 
   // Customize Order Status Tabs — the four defaults come back even for a
   // vendor who's never customized anything (server-side fallback).
   getStatusTabs: () =>
-    api.get<{ statuses: OrderStatus[] }>('/api/v1/orders/status-tabs').then((r) => r.data.statuses),
+    api.get<{ statuses: OrderStatus[] }>('/v1/orders/status-tabs').then((r) => r.data.statuses),
 
   updateStatusTabs: (statuses: OrderStatus[]) =>
     api
-      .patch<{ statuses: OrderStatus[] }>('/api/v1/orders/status-tabs', { statuses })
+      .patch<{ statuses: OrderStatus[] }>('/v1/orders/status-tabs', { statuses })
       .then((r) => r.data.statuses),
 
   // Courier delivery-history / success-rate lookup by phone number,
   // platform-wide — powers the small "94% (105)" badges and "Check
   // History" on the Orders list.
   getCustomerHistory: (phone: string) =>
-    api.get<CustomerHistory>(`/api/v1/orders/customer-history/${encodeURIComponent(phone)}`).then((r) => r.data),
+    api.get<CustomerHistory>(`/v1/orders/customer-history/${encodeURIComponent(phone)}`).then((r) => r.data),
 };

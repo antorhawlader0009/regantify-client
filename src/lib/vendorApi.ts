@@ -3,12 +3,12 @@ import { api } from './api';
 export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL';
 
 export async function getVendorTheme(): Promise<StoreTheme> {
-  const { data } = await api.get<{ theme: StoreTheme }>('/api/v1/vendor/theme');
+  const { data } = await api.get<{ theme: StoreTheme }>('/v1/vendor/theme');
   return data.theme;
 }
 
 export async function updateVendorTheme(theme: StoreTheme): Promise<StoreTheme> {
-  const { data } = await api.patch<{ theme: StoreTheme }>('/api/v1/vendor/theme', { theme });
+  const { data } = await api.patch<{ theme: StoreTheme }>('/v1/vendor/theme', { theme });
   return data.theme;
 }
 
@@ -26,12 +26,12 @@ export interface SocialLinks {
 }
 
 export async function getVendorSocialLinks(): Promise<SocialLinks> {
-  const { data } = await api.get<SocialLinks>('/api/v1/vendor/social-links');
+  const { data } = await api.get<SocialLinks>('/v1/vendor/social-links');
   return data;
 }
 
 export async function updateVendorSocialLinks(links: Partial<SocialLinks>): Promise<SocialLinks> {
-  const { data } = await api.patch<SocialLinks>('/api/v1/vendor/social-links', links);
+  const { data } = await api.patch<SocialLinks>('/v1/vendor/social-links', links);
   return data;
 }
 
@@ -46,19 +46,19 @@ export interface VendorSettings {
 }
 
 export async function getVendorSettings(): Promise<VendorSettings> {
-  const { data } = await api.get<VendorSettings>('/api/v1/vendor/settings');
+  const { data } = await api.get<VendorSettings>('/v1/vendor/settings');
   return data;
 }
 
 export async function updateVendorSettings(
   fields: Partial<Pick<VendorSettings, 'storeName' | 'subdomain' | 'address'>>,
 ): Promise<VendorSettings> {
-  const { data } = await api.patch<VendorSettings>('/api/v1/vendor/settings', fields);
+  const { data } = await api.patch<VendorSettings>('/v1/vendor/settings', fields);
   return data;
 }
 
 export async function getVendorLogo(): Promise<string | null> {
-  const { data } = await api.get<{ logoUrl: string | null }>('/api/v1/vendor/logo');
+  const { data } = await api.get<{ logoUrl: string | null }>('/v1/vendor/logo');
   return data.logoUrl;
 }
 
@@ -69,7 +69,7 @@ export async function getVendorLogo(): Promise<string | null> {
 export async function uploadVendorLogo(file: File): Promise<string | null> {
   const formData = new FormData();
   formData.append('logo', file);
-  const { data } = await api.post<{ logoUrl: string | null }>('/api/v1/vendor/logo', formData, {
+  const { data } = await api.post<{ logoUrl: string | null }>('/v1/vendor/logo', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return data.logoUrl;
@@ -79,15 +79,15 @@ export async function uploadVendorLogo(file: File): Promise<string | null> {
 // domain connected yet (the store is still reachable at its subdomain
 // either way).
 export async function getVendorDomain(): Promise<string | null> {
-  const { data } = await api.get<{ customDomain: string | null }>('/api/v1/vendor/domain');
+  const { data } = await api.get<{ customDomain: string | null }>('/v1/vendor/domain');
   return data.customDomain;
 }
 
 export async function connectVendorDomain(domain: string): Promise<string | null> {
-  const { data } = await api.patch<{ customDomain: string | null }>('/api/v1/vendor/domain', { domain });
+  const { data } = await api.patch<{ customDomain: string | null }>('/v1/vendor/domain', { domain });
   return data.customDomain;
 }
 
 export async function removeVendorDomain(): Promise<void> {
-  await api.delete('/api/v1/vendor/domain');
+  await api.delete('/v1/vendor/domain');
 }

@@ -53,21 +53,21 @@ export interface IncompleteOrderListResponse {
 
 export const incompleteOrdersApi = {
   list: (params: ListIncompleteOrdersParams = {}) =>
-    api.get<IncompleteOrderListResponse>('/api/v1/incomplete-orders', { params }).then((r) => r.data),
+    api.get<IncompleteOrderListResponse>('/v1/incomplete-orders', { params }).then((r) => r.data),
 
   updateLabel: (id: string, label: string | null) =>
-    api.patch<IncompleteOrder>(`/api/v1/incomplete-orders/${id}/label`, { label }).then((r) => r.data),
+    api.patch<IncompleteOrder>(`/v1/incomplete-orders/${id}/label`, { label }).then((r) => r.data),
 
   addNote: (id: string, text: string) =>
-    api.post<IncompleteOrder>(`/api/v1/incomplete-orders/${id}/notes`, { text }).then((r) => r.data),
+    api.post<IncompleteOrder>(`/v1/incomplete-orders/${id}/notes`, { text }).then((r) => r.data),
 
-  remove: (id: string) => api.delete(`/api/v1/incomplete-orders/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/incomplete-orders/${id}`).then((r) => r.data),
 
   bulkRemove: (ids: string[]) =>
-    api.post<{ removed: number }>('/api/v1/incomplete-orders/bulk-remove', { ids }).then((r) => r.data),
+    api.post<{ removed: number }>('/v1/incomplete-orders/bulk-remove', { ids }).then((r) => r.data),
 
   bulkChangeLabel: (ids: string[], label: string | null) =>
     api
-      .post<{ updated: number }>('/api/v1/incomplete-orders/bulk-change-label', { ids, label })
+      .post<{ updated: number }>('/v1/incomplete-orders/bulk-change-label', { ids, label })
       .then((r) => r.data),
 };

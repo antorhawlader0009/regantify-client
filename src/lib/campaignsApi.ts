@@ -73,18 +73,18 @@ export interface SkuLookupProduct {
 export const campaignsApi = {
   list: (search?: string) =>
     api
-      .get<CampaignListRow[]>('/api/v1/campaigns', { params: search ? { search } : undefined })
+      .get<CampaignListRow[]>('/v1/campaigns', { params: search ? { search } : undefined })
       .then((r) => r.data),
 
-  findOne: (id: string) => api.get<Campaign>(`/api/v1/campaigns/${id}`).then((r) => r.data),
+  findOne: (id: string) => api.get<Campaign>(`/v1/campaigns/${id}`).then((r) => r.data),
 
   create: (payload: CampaignPayload) =>
-    api.post<Campaign>('/api/v1/campaigns', payload).then((r) => r.data),
+    api.post<Campaign>('/v1/campaigns', payload).then((r) => r.data),
 
   update: (id: string, payload: CampaignPayload) =>
-    api.patch<Campaign>(`/api/v1/campaigns/${id}`, payload).then((r) => r.data),
+    api.patch<Campaign>(`/v1/campaigns/${id}`, payload).then((r) => r.data),
 
-  remove: (id: string) => api.delete(`/api/v1/campaigns/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/campaigns/${id}`).then((r) => r.data),
 
   // Uploads the campaign cover photo and returns its Cloudinary URL —
   // called before Create/Update Campaign is submitted.
@@ -92,7 +92,7 @@ export const campaignsApi = {
     const formData = new FormData();
     formData.append('photo', file);
     return api
-      .post<{ url: string }>('/api/v1/campaigns/cover-photo', formData, {
+      .post<{ url: string }>('/v1/campaigns/cover-photo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data);
@@ -102,6 +102,6 @@ export const campaignsApi = {
   // product AND variant SKUs.
   lookupBySkus: (skus: string[]) =>
     api
-      .get<SkuLookupProduct[]>('/api/v1/campaigns/lookup-by-sku', { params: { skus: skus.join(',') } })
+      .get<SkuLookupProduct[]>('/v1/campaigns/lookup-by-sku', { params: { skus: skus.join(',') } })
       .then((r) => r.data),
 };

@@ -30,7 +30,7 @@ api.interceptors.request.use((config) => {
 // into itself and never resolves instead of just failing cleanly.
 let isRefreshing = false;
 let pendingQueue: Array<() => void> = [];
-const REFRESH_URL = '/api/v1/auth/refresh';
+const REFRESH_URL = '/v1/auth/refresh';
 
 api.interceptors.response.use(
   (response) => response,

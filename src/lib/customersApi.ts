@@ -85,22 +85,22 @@ export interface ExportCsvParams {
 
 export const customersApi = {
   list: (params: ListCustomersParams = {}) =>
-    api.get<CustomerListResponse>('/api/v1/customers', { params }).then((r) => r.data),
+    api.get<CustomerListResponse>('/v1/customers', { params }).then((r) => r.data),
 
-  getStats: () => api.get<CustomerStats>('/api/v1/customers/stats').then((r) => r.data),
+  getStats: () => api.get<CustomerStats>('/v1/customers/stats').then((r) => r.data),
 
   findOne: (phone: string) =>
-    api.get<VendorCustomerDetail>(`/api/v1/customers/${encodeURIComponent(phone)}`).then((r) => r.data),
+    api.get<VendorCustomerDetail>(`/v1/customers/${encodeURIComponent(phone)}`).then((r) => r.data),
 
   create: (payload: CreateCustomerPayload) =>
-    api.post<VendorCustomer>('/api/v1/customers', payload).then((r) => r.data),
+    api.post<VendorCustomer>('/v1/customers', payload).then((r) => r.data),
 
   update: (phone: string, payload: UpdateCustomerPayload) =>
-    api.patch<VendorCustomer>(`/api/v1/customers/${encodeURIComponent(phone)}`, payload).then((r) => r.data),
+    api.patch<VendorCustomer>(`/v1/customers/${encodeURIComponent(phone)}`, payload).then((r) => r.data),
 
   exportCsv: (params: ExportCsvParams = {}) =>
     api
-      .get<VendorCustomer[]>('/api/v1/customers/export', {
+      .get<VendorCustomer[]>('/v1/customers/export', {
         params: {
           search: params.search,
           blacklistedOnly: params.blacklistedOnly,
@@ -112,11 +112,11 @@ export const customersApi = {
   setBlacklisted: (phone: string, blacklisted: boolean) =>
     api
       .patch<{ phone: string; blacklisted: boolean }>(
-        `/api/v1/customers/${encodeURIComponent(phone)}/blacklist`,
+        `/v1/customers/${encodeURIComponent(phone)}/blacklist`,
         { blacklisted },
       )
       .then((r) => r.data),
 
   remove: (phone: string) =>
-    api.delete<{ phone: string; deleted: boolean }>(`/api/v1/customers/${encodeURIComponent(phone)}`).then((r) => r.data),
+    api.delete<{ phone: string; deleted: boolean }>(`/v1/customers/${encodeURIComponent(phone)}`).then((r) => r.data),
 };

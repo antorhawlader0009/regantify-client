@@ -72,11 +72,11 @@ export interface ForgotPasswordVerifyOtpResponse {
 
 export const authApi = {
   sendOtp: (phone: string) =>
-    api.post<SendOtpResponse>('/api/v1/auth/vendor/send-otp', { phone }).then((r) => r.data),
+    api.post<SendOtpResponse>('/v1/auth/vendor/send-otp', { phone }).then((r) => r.data),
 
   verifyOtp: (phone: string, code: string) =>
     api
-      .post<VerifyOtpResponse>('/api/v1/auth/vendor/verify-otp', { phone, code })
+      .post<VerifyOtpResponse>('/v1/auth/vendor/verify-otp', { phone, code })
       .then((r) => r.data),
 
   // Alternative to OTP — password login using EITHER phone or email as the
@@ -85,31 +85,31 @@ export const authApi = {
   // setupToken } instead of real tokens — see VendorLoginResponse.
   vendorLogin: (identifier: string, password: string) =>
     api
-      .post<VendorLoginResponse>('/api/v1/auth/vendor/login', { identifier, password })
+      .post<VendorLoginResponse>('/v1/auth/vendor/login', { identifier, password })
       .then((r) => r.data),
 
   // Sets the vendor's own password in place of the SMS'd temporary one,
   // right after OTP signup. Requires an authenticated session (called
   // right after verify-otp). Skippable at this point — see skipSetPassword.
   setPassword: (password: string) =>
-    api.post('/api/v1/auth/vendor/set-password', { password }).then((r) => r.data),
+    api.post('/v1/auth/vendor/set-password', { password }).then((r) => r.data),
 
   // Explicitly dismisses the "set a password" prompt right after signup.
-  skipSetPassword: () => api.post('/api/v1/auth/vendor/skip-set-password').then((r) => r.data),
+  skipSetPassword: () => api.post('/v1/auth/vendor/skip-set-password').then((r) => r.data),
 
   // One-time onboarding step right after signup, shown after either
   // set-password or skip-set-password. fullName is required; storeName is
   // optional (omit to keep the auto-generated default from signup).
   completeProfile: (fullName: string, storeName?: string) =>
     api
-      .post<{ user: AuthUser }>('/api/v1/auth/vendor/complete-profile', { fullName, storeName })
+      .post<{ user: AuthUser }>('/v1/auth/vendor/complete-profile', { fullName, storeName })
       .then((r) => r.data),
 
   // Settings page: update full name and/or email (either can be omitted
   // to leave it unchanged). Email is not verified — no confirmation link.
   updateSettingsProfile: (fields: { fullName?: string; email?: string }) =>
     api
-      .post<{ user: AuthUser }>('/api/v1/auth/vendor/settings/profile', fields)
+      .post<{ user: AuthUser }>('/v1/auth/vendor/settings/profile', fields)
       .then((r) => r.data),
 
   // Settings page: upload/replace the profile picture. The server resizes
@@ -119,7 +119,7 @@ export const authApi = {
     const formData = new FormData();
     formData.append('avatar', file);
     return api
-      .post<{ user: AuthUser }>('/api/v1/auth/vendor/settings/avatar', formData, {
+      .post<{ user: AuthUser }>('/v1/auth/vendor/settings/avatar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data);
@@ -128,7 +128,7 @@ export const authApi = {
   // Settings page: change password. Requires the current password.
   changePassword: (currentPassword: string, newPassword: string) =>
     api
-      .post<{ message: string }>('/api/v1/auth/vendor/settings/change-password', {
+      .post<{ message: string }>('/v1/auth/vendor/settings/change-password', {
         currentPassword,
         newPassword,
       })
@@ -139,17 +139,17 @@ export const authApi = {
   // real session (tokens) on success.
   completeSetup: (setupToken: string, password: string) =>
     api
-      .post<AuthTokensResponse>('/api/v1/auth/vendor/complete-setup', { setupToken, password })
+      .post<AuthTokensResponse>('/v1/auth/vendor/complete-setup', { setupToken, password })
       .then((r) => r.data),
 
   forgotPasswordSendOtp: (phone: string) =>
     api
-      .post<SendOtpLikeResponse>('/api/v1/auth/vendor/forgot-password/send-otp', { phone })
+      .post<SendOtpLikeResponse>('/v1/auth/vendor/forgot-password/send-otp', { phone })
       .then((r) => r.data),
 
   forgotPasswordVerifyOtp: (phone: string, code: string) =>
     api
-      .post<ForgotPasswordVerifyOtpResponse>('/api/v1/auth/vendor/forgot-password/verify-otp', {
+      .post<ForgotPasswordVerifyOtpResponse>('/v1/auth/vendor/forgot-password/verify-otp', {
         phone,
         code,
       })
@@ -157,16 +157,26 @@ export const authApi = {
 
   resetPassword: (resetToken: string, password: string) =>
     api
-      .post('/api/v1/auth/vendor/forgot-password/reset', { resetToken, password })
+      .post('/v1/auth/vendor/forgot-password/reset', { resetToken, password })
       .then((r) => r.data),
 
   adminLogin: (email: string, password: string) =>
-    api.post<AuthTokensResponse>('/api/v1/auth/admin/login', { email, password }).then((r) => r.data),
+    api.post<AuthTokensResponse>('/v1/auth/admin/login', { email, password }).then((r) => r.data),
 
   // Silently restores a session on app boot using the httpOnly refresh
   // cookie. Rejects (no cookie / expired) if there's nothing to restore —
   // callers should treat that as "not logged in", not an error to surface.
-  refresh: () => api.post<RefreshResponse>('/api/v1/auth/refresh').then((r) => r.data),
+  refresh: () => api.post<RefreshResponse>('/v1/auth/refresh').then((r) => r.data),
 
-  logout: () => api.post('/api/v1/auth/logout'),
+  logout: () => api.post('/v1/auth/logout'),
+
+  // Super Admin > All Vendors > "Login as Vendor" — exchanges the
+  // one-time token from adminApi.impersonateVendor for a 15-min vendor
+  // access token. No refresh token/cookie involved; see
+  // VendorImpersonateEntry.tsx for why this must run before the normal
+  // AuthBootstrap cookie refresh.
+  impersonateExchange: (token: string) =>
+    api
+      .post<{ accessToken: string; user: AuthUser }>('/v1/auth/vendor/impersonate-exchange', { token })
+      .then((r) => r.data),
 };

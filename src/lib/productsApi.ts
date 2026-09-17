@@ -200,38 +200,38 @@ export interface LowStockResponse {
 
 export const productsApi = {
   list: (params: ListProductsParams = {}) =>
-    api.get<ProductListResponse>('/api/v1/products', { params }).then((r) => r.data),
+    api.get<ProductListResponse>('/v1/products', { params }).then((r) => r.data),
 
   // Low Stock page — products with effective stock (variant stock summed,
   // or stockQuantity when no variants) below `threshold` (default 5).
   lowStock: (threshold?: number) =>
     api
-      .get<LowStockResponse>('/api/v1/products/low-stock', { params: threshold ? { threshold } : {} })
+      .get<LowStockResponse>('/v1/products/low-stock', { params: threshold ? { threshold } : {} })
       .then((r) => r.data),
 
   // Distinct category names currently in use, for the "All Categories" filter dropdown.
-  categoriesInUse: () => api.get<string[]>('/api/v1/products/categories-in-use').then((r) => r.data),
+  categoriesInUse: () => api.get<string[]>('/v1/products/categories-in-use').then((r) => r.data),
 
   // Add/Edit Product's "AI Generate" button — see AiService.generateProductInfo
   // on the server. photoUrl must already be an uploaded (Cloudinary) URL,
   // not a local file — the form always uploads a photo before this is
   // ever callable (see the button's disabled condition).
   aiGenerate: (name: string, photoUrl: string) =>
-    api.post<GeneratedProductInfo>('/api/v1/products/ai-generate', { name, photoUrl }).then((r) => r.data),
+    api.post<GeneratedProductInfo>('/v1/products/ai-generate', { name, photoUrl }).then((r) => r.data),
 
-  findOne: (id: string) => api.get<Product>(`/api/v1/products/${id}`).then((r) => r.data),
+  findOne: (id: string) => api.get<Product>(`/v1/products/${id}`).then((r) => r.data),
 
   create: (payload: CreateProductPayload) =>
-    api.post<Product>('/api/v1/products', payload).then((r) => r.data),
+    api.post<Product>('/v1/products', payload).then((r) => r.data),
 
   update: (id: string, payload: UpdateProductPayload) =>
-    api.patch<Product>(`/api/v1/products/${id}`, payload).then((r) => r.data),
+    api.patch<Product>(`/v1/products/${id}`, payload).then((r) => r.data),
 
-  remove: (id: string) => api.delete(`/api/v1/products/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/products/${id}`).then((r) => r.data),
 
   // "Change Status" from the Actions menu — toggles Public/Draft.
   updateVisibility: (id: string, visibility: 'PUBLIC' | 'DRAFT') =>
-    api.patch<Product>(`/api/v1/products/${id}/visibility`, { visibility }).then((r) => r.data),
+    api.patch<Product>(`/v1/products/${id}/visibility`, { visibility }).then((r) => r.data),
 
   // "Create Stock Product" from the Actions menu — clones a pre-order
   // product into a new in-stock product with the given per-combination
@@ -239,7 +239,7 @@ export const productsApi = {
   createStockProduct: (
     id: string,
     payload: { sku?: string; variantStocks: { optionValues: Record<string, string>; stock?: number }[] },
-  ) => api.post<Product>(`/api/v1/products/${id}/stock-product`, payload).then((r) => r.data),
+  ) => api.post<Product>(`/v1/products/${id}/stock-product`, payload).then((r) => r.data),
 
   // Uploads one product photo and returns its Cloudinary URL. Called once
   // per selected file — the Add/Edit Product form collects the resulting
@@ -248,7 +248,7 @@ export const productsApi = {
     const formData = new FormData();
     formData.append('photo', file);
     return api
-      .post<{ url: string }>('/api/v1/products/photos', formData, {
+      .post<{ url: string }>('/v1/products/photos', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data);

@@ -29,20 +29,20 @@ export interface CreateCategoryPayload {
 export const categoriesApi = {
   list: (visibility?: 'PUBLIC' | 'PRIVATE') =>
     api
-      .get<Category[]>('/api/v1/categories', { params: visibility ? { visibility } : undefined })
+      .get<Category[]>('/v1/categories', { params: visibility ? { visibility } : undefined })
       .then((r) => r.data),
 
   create: (payload: CreateCategoryPayload) =>
-    api.post<Category>('/api/v1/categories', payload).then((r) => r.data),
+    api.post<Category>('/v1/categories', payload).then((r) => r.data),
 
   update: (id: string, payload: Partial<CreateCategoryPayload>) =>
-    api.patch<Category>(`/api/v1/categories/${id}`, payload).then((r) => r.data),
+    api.patch<Category>(`/v1/categories/${id}`, payload).then((r) => r.data),
 
-  remove: (id: string) => api.delete(`/api/v1/categories/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/categories/${id}`).then((r) => r.data),
 
   // Persists a new top-to-bottom order for Main Categories after a
   // drag-and-drop reorder — `ids` is the complete new order.
-  reorder: (ids: string[]) => api.patch('/api/v1/categories/reorder', { ids }).then((r) => r.data),
+  reorder: (ids: string[]) => api.patch('/v1/categories/reorder', { ids }).then((r) => r.data),
 
   // Uploads one cover or square photo and returns its Cloudinary URL —
   // called before Create Category is submitted, same pattern as product
@@ -51,7 +51,7 @@ export const categoriesApi = {
     const formData = new FormData();
     formData.append('photo', file);
     return api
-      .post<{ url: string }>(`/api/v1/categories/photos/${kind}`, formData, {
+      .post<{ url: string }>(`/v1/categories/photos/${kind}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data);

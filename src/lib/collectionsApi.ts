@@ -40,18 +40,18 @@ export interface CollectionPayload {
 export const collectionsApi = {
   list: (search?: string) =>
     api
-      .get<Collection[]>('/api/v1/collections', { params: search ? { search } : undefined })
+      .get<Collection[]>('/v1/collections', { params: search ? { search } : undefined })
       .then((r) => r.data),
 
-  findOne: (id: string) => api.get<Collection>(`/api/v1/collections/${id}`).then((r) => r.data),
+  findOne: (id: string) => api.get<Collection>(`/v1/collections/${id}`).then((r) => r.data),
 
   create: (payload: CollectionPayload) =>
-    api.post<Collection>('/api/v1/collections', payload).then((r) => r.data),
+    api.post<Collection>('/v1/collections', payload).then((r) => r.data),
 
   update: (id: string, payload: CollectionPayload) =>
-    api.patch<Collection>(`/api/v1/collections/${id}`, payload).then((r) => r.data),
+    api.patch<Collection>(`/v1/collections/${id}`, payload).then((r) => r.data),
 
-  remove: (id: string) => api.delete(`/api/v1/collections/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/collections/${id}`).then((r) => r.data),
 
   // Uploads the collection cover photo and returns its Cloudinary URL —
   // called before Create/Update Collection is submitted.
@@ -59,7 +59,7 @@ export const collectionsApi = {
     const formData = new FormData();
     formData.append('photo', file);
     return api
-      .post<{ url: string }>('/api/v1/collections/cover-photo', formData, {
+      .post<{ url: string }>('/v1/collections/cover-photo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((r) => r.data);

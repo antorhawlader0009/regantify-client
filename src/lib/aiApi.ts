@@ -18,16 +18,16 @@ export interface AiFeatureSetting {
 
 /** Live from Gemini's own account (ListModels) — see AiService.listModels for why this isn't a hardcoded list. */
 export async function getAiModels(): Promise<AiModelOption[]> {
-  const { data } = await api.get<AiModelOption[]>('/api/v1/admin/ai/models');
+  const { data } = await api.get<AiModelOption[]>('/v1/admin/ai/models');
   return data;
 }
 
 export async function getAiSettings(): Promise<AiFeatureSetting[]> {
-  const { data } = await api.get<AiFeatureSetting[]>('/api/v1/admin/ai/settings');
+  const { data } = await api.get<AiFeatureSetting[]>('/v1/admin/ai/settings');
   return data;
 }
 
 export async function updateAiSetting(feature: AiFeature, modelName: string): Promise<AiFeatureSetting> {
-  const { data } = await api.patch<AiFeatureSetting>('/api/v1/admin/ai/settings', { feature, modelName });
+  const { data } = await api.patch<AiFeatureSetting>('/v1/admin/ai/settings', { feature, modelName });
   return data;
 }

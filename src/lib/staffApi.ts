@@ -33,10 +33,10 @@ export interface CreateStaffMemberResponse {
 }
 
 export const staffApi = {
-  list: (search?: string) => api.get<StaffMember[]>('/api/v1/staff', { params: { search } }).then((r) => r.data),
+  list: (search?: string) => api.get<StaffMember[]>('/v1/staff', { params: { search } }).then((r) => r.data),
 
   create: (payload: CreateStaffMemberPayload) =>
-    api.post<CreateStaffMemberResponse>('/api/v1/staff', payload).then((r) => r.data),
+    api.post<CreateStaffMemberResponse>('/v1/staff', payload).then((r) => r.data),
 
-  remove: (id: string) => api.delete<{ success: boolean }>(`/api/v1/staff/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete<{ success: boolean }>(`/v1/staff/${id}`).then((r) => r.data),
 };

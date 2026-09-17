@@ -76,11 +76,11 @@ export interface StorefrontDetailData {
 
 export const storefrontApi = {
   getStoreProducts: async (subdomain: string): Promise<StorefrontListData> => {
-    const { data } = await api.get(`/api/v1/store/${subdomain}/products`);
+    const { data } = await api.get(`/v1/store/${subdomain}/products`);
     return data;
   },
   getStoreProduct: async (subdomain: string, slug: string): Promise<StorefrontDetailData> => {
-    const { data } = await api.get(`/api/v1/store/${subdomain}/products/${slug}`);
+    const { data } = await api.get(`/v1/store/${subdomain}/products/${slug}`);
     return data;
   },
 };

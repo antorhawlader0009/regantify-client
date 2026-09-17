@@ -17,6 +17,7 @@ import VendorVerifyOtp from './pages/auth/VendorVerifyOtp';
 import VendorSetPassword from './pages/auth/VendorSetPassword';
 import VendorCompleteProfile from './pages/auth/VendorCompleteProfile';
 import VendorCompleteSetup from './pages/auth/VendorCompleteSetup';
+import VendorImpersonateEntry from './pages/auth/VendorImpersonateEntry';
 import VendorForgotPassword from './pages/auth/VendorForgotPassword';
 import VendorForgotPasswordVerify from './pages/auth/VendorForgotPasswordVerify';
 import VendorForgotPasswordReset from './pages/auth/VendorForgotPasswordReset';
@@ -62,6 +63,7 @@ import Wallet from './pages/vendor/finance/Wallet';
 import Transactions from './pages/vendor/finance/Transactions';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
+import AllVendors from './pages/admin/vendors/AllVendors';
 
 const queryClient = new QueryClient();
 
@@ -106,7 +108,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/transactions',
 );
-const adminPlaceholderRoutes = flattenRoutes(adminNav).filter((r) => r.path !== '/admin/ai-settings');
+const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
+  (r) => r.path !== '/admin/ai-settings' && r.path !== '/admin/vendors/all',
+);
 
 export default function App() {
   return (
@@ -147,6 +151,9 @@ export default function App() {
 
             {/* Super Admin auth flow */}
             <Route path="/admin/login" element={<AdminLogin />} />
+
+            {/* Super Admin > All Vendors > "Login as Vendor" landing tab — see VendorImpersonateEntry.tsx */}
+            <Route path="/vendor-impersonate" element={<VendorImpersonateEntry />} />
 
             <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -215,6 +222,7 @@ export default function App() {
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/ai-settings" element={<AiSettings />} />
+                <Route path="/admin/vendors/all" element={<AllVendors />} />
                 {adminPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

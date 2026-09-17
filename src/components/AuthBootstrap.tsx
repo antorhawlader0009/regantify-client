@@ -2,6 +2,15 @@ import { useEffect } from 'react';
 import { authApi } from '../lib/authApi';
 import { useAuthStore } from '../store/authStore';
 
+// /vendor-impersonate is opened in a brand-new tab from Super Admin's
+// "Login as Vendor" (see VendorImpersonateEntry.tsx) — it must NEVER run
+// the cookie-based refresh below. That tab is in the SAME browser as the
+// admin's own session, so a normal refresh() there would silently log
+// the tab in as the ADMIN (whoever's httpOnly refresh cookie is present),
+// not the vendor, defeating the entire point of impersonation.
+// VendorImpersonateEntry does its own auth setup instead.
+const SKIP_COOKIE_REFRESH_PATHS = ['/vendor-impersonate'];
+
 /**
  * The access token and user object only ever live in memory (Zustand) —
  * that's fine for normal navigation, but a hard page reload wipes them,
@@ -19,6 +28,11 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
   const setHasHydrated = useAuthStore((s) => s.setHasHydrated);
 
   useEffect(() => {
+    if (SKIP_COOKIE_REFRESH_PATHS.includes(window.location.pathname)) {
+      setHasHydrated();
+      return;
+    }
+
     let cancelled = false;
 
     authApi

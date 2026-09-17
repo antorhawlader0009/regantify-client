@@ -21,10 +21,10 @@ export interface TransactionsPage {
 }
 
 export const financeApi = {
-  getWallet: () => api.get<{ balance: string }>('/api/v1/finance/wallet').then((r) => r.data),
+  getWallet: () => api.get<{ balance: string }>('/v1/finance/wallet').then((r) => r.data),
 
   getTransactions: (page = 1, perPage = 20) =>
     api
-      .get<TransactionsPage>('/api/v1/finance/transactions', { params: { page, perPage } })
+      .get<TransactionsPage>('/v1/finance/transactions', { params: { page, perPage } })
       .then((r) => r.data),
 };

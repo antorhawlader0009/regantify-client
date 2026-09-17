@@ -70,17 +70,17 @@ export interface CouponPayload {
 
 export const couponsApi = {
   list: (params: ListCouponsParams = {}) =>
-    api.get<CouponListResponse>('/api/v1/coupons', { params }).then((r) => r.data),
+    api.get<CouponListResponse>('/v1/coupons', { params }).then((r) => r.data),
 
-  findOne: (id: string) => api.get<Coupon>(`/api/v1/coupons/${id}`).then((r) => r.data),
+  findOne: (id: string) => api.get<Coupon>(`/v1/coupons/${id}`).then((r) => r.data),
 
-  create: (payload: CouponPayload) => api.post<Coupon>('/api/v1/coupons', payload).then((r) => r.data),
+  create: (payload: CouponPayload) => api.post<Coupon>('/v1/coupons', payload).then((r) => r.data),
 
   update: (id: string, payload: Partial<CouponPayload>) =>
-    api.patch<Coupon>(`/api/v1/coupons/${id}`, payload).then((r) => r.data),
+    api.patch<Coupon>(`/v1/coupons/${id}`, payload).then((r) => r.data),
 
   setActive: (id: string, active: boolean) =>
-    api.patch<Coupon>(`/api/v1/coupons/${id}/active`, { active }).then((r) => r.data),
+    api.patch<Coupon>(`/v1/coupons/${id}/active`, { active }).then((r) => r.data),
 
-  remove: (id: string) => api.delete<{ success: boolean }>(`/api/v1/coupons/${id}`).then((r) => r.data),
+  remove: (id: string) => api.delete<{ success: boolean }>(`/v1/coupons/${id}`).then((r) => r.data),
 };
