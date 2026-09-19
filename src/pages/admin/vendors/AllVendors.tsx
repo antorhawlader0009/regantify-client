@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, LogIn, Search } from 'lucide-react';
 import { adminApi, type AdminVendor, type VendorStatus } from '../../../lib/adminApi';
+import type { PlanCode } from '../../../lib/plansApi';
 import { toast } from '../../../lib/toast';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { StatusBadge } from './StatusBadge';
 import { VendorDetailsDialog } from './VendorDetailsDialog';
 import { ChangeVendorStatusModal } from './ChangeVendorStatusModal';
+import { ChangeVendorPlanModal } from './ChangeVendorPlanModal';
 
 function copyToClipboard(value: string, label: string) {
   navigator.clipboard.writeText(value).then(() => toast.success(`${label} copied.`));
@@ -19,6 +21,7 @@ export default function AllVendors() {
   const [perPage, setPerPage] = useState(20);
   const [detailsVendor, setDetailsVendor] = useState<AdminVendor | null>(null);
   const [statusModalVendor, setStatusModalVendor] = useState<AdminVendor | null>(null);
+  const [planModalVendor, setPlanModalVendor] = useState<AdminVendor | null>(null);
 
   useEffect(() => setPage(1), [search, perPage]);
 
@@ -47,6 +50,17 @@ export default function AllVendors() {
       setStatusModalVendor(null);
     },
     onError: () => toast.error('Could not change the status. Please try again.'),
+  });
+
+  const planMutation = useMutation({
+    mutationFn: ({ vendorId, planCode }: { vendorId: string; planCode: PlanCode }) =>
+      adminApi.assignVendorPlan(vendorId, planCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
+      toast.success('Plan changed.');
+      setPlanModalVendor(null);
+    },
+    onError: () => toast.error('Could not change the plan. Please try again.'),
   });
 
   const vendors = data?.vendors ?? [];
@@ -91,6 +105,7 @@ export default function AllVendors() {
                 <th className="px-4 py-3 font-medium">VENDOR ID</th>
                 <th className="px-4 py-3 font-medium">STORE</th>
                 <th className="px-4 py-3 font-medium">STATUS</th>
+                <th className="px-4 py-3 font-medium">PLAN</th>
                 <th className="px-4 py-3 font-medium">PHONE</th>
                 <th className="px-4 py-3 font-medium">BALANCE</th>
                 <th className="px-4 py-3 font-medium">SMS LEFT</th>
@@ -102,14 +117,14 @@ export default function AllVendors() {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-regantify-text-muted">
+                  <td colSpan={10} className="px-4 py-8 text-center text-regantify-text-muted">
                     Loading…
                   </td>
                 </tr>
               )}
               {!isLoading && vendors.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-regantify-text-muted">
+                  <td colSpan={10} className="px-4 py-8 text-center text-regantify-text-muted">
                     No vendors yet.
                   </td>
                 </tr>
@@ -148,6 +163,7 @@ export default function AllVendors() {
                   <td className="px-4 py-3">
                     <StatusBadge status={v.status} />
                   </td>
+                  <td className="px-4 py-3 text-regantify-text">{v.planName}</td>
                   <td className="px-4 py-3 text-regantify-text">{v.phone ?? '—'}</td>
                   <td className="px-4 py-3 text-regantify-text">৳{Number(v.balance).toLocaleString('en-US')}</td>
                   <td className="px-4 py-3 text-regantify-text">{v.smsCredits}</td>
@@ -161,6 +177,13 @@ export default function AllVendors() {
                           text-regantify-text hover:bg-regantify-content"
                       >
                         Change Status
+                      </button>
+                      <button
+                        onClick={() => setPlanModalVendor(v)}
+                        className="px-3 py-1.5 rounded-lg border border-black/10 text-sm
+                          text-regantify-text hover:bg-regantify-content"
+                      >
+                        Change Plan
                       </button>
                       <button
                         onClick={() => impersonateMutation.mutate(v.id)}
@@ -216,6 +239,17 @@ export default function AllVendors() {
           currentStatus={statusModalVendor.status}
           submitting={statusMutation.isPending}
           onConfirm={(next) => statusMutation.mutate({ vendorId: statusModalVendor.id, status: next })}
+        />
+      )}
+
+      {planModalVendor && (
+        <ChangeVendorPlanModal
+          open
+          onOpenChange={(open) => !open && setPlanModalVendor(null)}
+          storeName={planModalVendor.storeName}
+          currentPlanCode={planModalVendor.planCode}
+          submitting={planMutation.isPending}
+          onConfirm={(next) => planMutation.mutate({ vendorId: planModalVendor.id, planCode: next })}
         />
       )}
     </div>

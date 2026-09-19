@@ -39,6 +39,7 @@ import Pages from './pages/vendor/store/Pages';
 import AddPage from './pages/vendor/store/AddPage';
 import Social from './pages/vendor/store/Social';
 import Logo from './pages/vendor/store/Logo';
+import Media from './pages/vendor/store/Media';
 import Domain from './pages/vendor/store/Domain';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
@@ -54,6 +55,7 @@ import Reviews from './pages/vendor/review/Reviews';
 import AddReview from './pages/vendor/review/AddReview';
 import Staff from './pages/vendor/staff/Staff';
 import AddStaffMember from './pages/vendor/staff/AddStaffMember';
+import Billing from './pages/vendor/Billing';
 import Coupons from './pages/vendor/marketing/Coupons';
 import AddCoupon from './pages/vendor/marketing/AddCoupon';
 import Campaigns from './pages/vendor/marketing/Campaigns';
@@ -61,9 +63,12 @@ import AddCampaign from './pages/vendor/marketing/AddCampaign';
 import Sms from './pages/vendor/sms/Sms';
 import Wallet from './pages/vendor/finance/Wallet';
 import Transactions from './pages/vendor/finance/Transactions';
+import FeeSummary from './pages/vendor/finance/FeeSummary';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
+import PlanManagement from './pages/admin/plans/PlanManagement';
+import PlanRequests from './pages/admin/plans/PlanRequests';
 
 const queryClient = new QueryClient();
 
@@ -96,20 +101,27 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/social' &&
     r.path !== '/vendor/store/logo' &&
+    r.path !== '/vendor/store/media' &&
     r.path !== '/vendor/store/domain' &&
     r.path !== '/vendor/orders' &&
     r.path !== '/vendor/orders/incomplete' &&
     r.path !== '/vendor/customers' &&
     r.path !== '/vendor/reviews' &&
     r.path !== '/vendor/staff' &&
+    r.path !== '/vendor/billing' &&
     r.path !== '/vendor/marketing/coupons' &&
     r.path !== '/vendor/marketing/campaigns' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/finance/wallet' &&
-    r.path !== '/vendor/finance/transactions',
+    r.path !== '/vendor/finance/transactions' &&
+    r.path !== '/vendor/finance/fee-summary',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
-  (r) => r.path !== '/admin/ai-settings' && r.path !== '/admin/vendors/all',
+  (r) =>
+    r.path !== '/admin/ai-settings' &&
+    r.path !== '/admin/vendors/all' &&
+    r.path !== '/admin/plans' &&
+    r.path !== '/admin/plan-requests',
 );
 
 export default function App() {
@@ -186,6 +198,7 @@ export default function App() {
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
                 <Route path="/vendor/store/social" element={<Social />} />
                 <Route path="/vendor/store/logo" element={<Logo />} />
+                <Route path="/vendor/store/media" element={<Media />} />
                 <Route path="/vendor/store/domain" element={<Domain />} />
                 <Route path="/vendor/orders" element={<Orders />} />
                 <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
@@ -202,6 +215,7 @@ export default function App() {
                 <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
                 <Route path="/vendor/staff" element={<Staff />} />
                 <Route path="/vendor/staff/add" element={<AddStaffMember />} />
+                <Route path="/vendor/billing" element={<Billing />} />
                 <Route path="/vendor/marketing/coupons" element={<Coupons />} />
                 <Route path="/vendor/marketing/coupons/add" element={<AddCoupon />} />
                 <Route path="/vendor/marketing/coupons/:id/edit" element={<AddCoupon />} />
@@ -211,6 +225,7 @@ export default function App() {
                 <Route path="/vendor/sms" element={<Sms />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
+                <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}
@@ -223,6 +238,8 @@ export default function App() {
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/ai-settings" element={<AiSettings />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
+                <Route path="/admin/plans" element={<PlanManagement />} />
+                <Route path="/admin/plan-requests" element={<PlanRequests />} />
                 {adminPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

@@ -7,6 +7,7 @@ import { SectionCard, Field, inputClass } from '../../../components/product/Prod
 import { reviewsApi } from '../../../lib/reviewsApi';
 import { ordersApi, type Order } from '../../../lib/ordersApi';
 import { productsApi, type Product } from '../../../lib/productsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface PhotoState {
@@ -134,7 +135,9 @@ export default function AddReview() {
       .then((res) =>
         setPhotos((prev) => prev.map((p, i) => (i === index ? { previewUrl, uploadedUrl: res.url, uploading: false } : p))),
       )
-      .catch(() => setPhotos((prev) => prev.map((p, i) => (i === index ? { ...p, uploading: false, error: 'Upload failed' } : p))));
+      .catch((err) =>
+        setPhotos((prev) => prev.map((p, i) => (i === index ? { ...p, uploading: false, error: apiErrorMessage(err, 'Upload failed') } : p))),
+      );
   };
 
   const removePhoto = (index: number) => {

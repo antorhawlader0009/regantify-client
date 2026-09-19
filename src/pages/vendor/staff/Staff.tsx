@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
 import { staffApi, type StaffMember } from '../../../lib/staffApi';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { useAuthStore } from '../../../store/authStore';
 import { toast } from '../../../lib/toast';
 
@@ -38,6 +40,20 @@ export default function Staff() {
     queryFn: () => staffApi.list(search.trim() || undefined),
   });
 
+  // PLAN.md Step 10 — "X / N staff used" + disable Add New at the cap.
+  // staffApi.list's count includes the synthetic Owner row (isOwner:
+  // true), which never counts against the plan limit (see
+  // StaffService.create's own comment — the limit only counts real
+  // StaffMember rows) — usage.staff.used from this endpoint is already
+  // scoped correctly, so it's used instead of allMembers.length.
+  const { data: planUsage } = useQuery({
+    queryKey: ['vendor-plan-usage'],
+    queryFn: getVendorPlanUsage,
+    enabled: isOwner, // only the owner can add staff, so only the owner needs this
+  });
+  const staffUsage = planUsage?.usage.staff;
+  const atStaffLimit = staffUsage != null && staffUsage.limit !== null && staffUsage.used >= staffUsage.limit;
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => staffApi.remove(id),
     onSuccess: () => {
@@ -63,19 +79,30 @@ export default function Staff() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-semibold text-regantify-text">Staff</h1>
         {isOwner && (
           <button
-            onClick={() => navigate('/vendor/staff/add')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark
-              text-white text-sm font-medium transition-colors"
+            onClick={() => (atStaffLimit ? upgradeToast('add more staff members') : navigate('/vendor/staff/add'))}
+            disabled={atStaffLimit}
+            title={atStaffLimit ? 'Upgrade your plan to add more staff members.' : undefined}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              atStaffLimit
+                ? 'bg-regantify-content text-regantify-text-muted cursor-not-allowed'
+                : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
+            }`}
           >
-            <Plus size={16} />
+            {atStaffLimit ? <LockedBadge size={14} /> : <Plus size={16} />}
             Add New
           </button>
         )}
       </div>
+
+      {isOwner && staffUsage && (
+        <div className="mb-4">
+          <UsageLine label="staff used" used={staffUsage.used} limit={staffUsage.limit} />
+        </div>
+      )}
 
       <div className="relative w-64 mb-5">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />

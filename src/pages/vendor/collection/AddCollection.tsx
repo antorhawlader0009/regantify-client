@@ -7,6 +7,7 @@ import { SectionCard, Field, inputClass } from '../../../components/product/Prod
 import { collectionsApi } from '../../../lib/collectionsApi';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { productsApi, type Product } from '../../../lib/productsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface CoverPhotoState {
@@ -133,7 +134,7 @@ export default function AddCollection() {
     collectionsApi
       .uploadCoverPhoto(file)
       .then((res) => setCoverPhoto({ previewUrl, uploadedUrl: res.url, uploading: false }))
-      .catch(() => setCoverPhoto({ previewUrl, uploading: false, error: 'Upload failed' }));
+      .catch((err) => setCoverPhoto({ previewUrl, uploading: false, error: apiErrorMessage(err, 'Upload failed') }));
   };
 
   const addCategory = (categoryName: string) => {

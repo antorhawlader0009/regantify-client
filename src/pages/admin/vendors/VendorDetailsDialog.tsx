@@ -50,6 +50,7 @@ export function VendorDetailsDialog({
             }
           />
           <Row label="Status" value={<StatusBadge status={vendor.status} />} />
+          <Row label="Plan" value={vendor.planName} />
           <Row label="Owner" value={vendor.ownerName ?? '—'} />
           <Row label="Phone" value={vendor.phone ?? '—'} />
           <Row label="Email" value={vendor.email ?? '—'} />

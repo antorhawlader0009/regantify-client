@@ -2,9 +2,17 @@ import { api } from './api';
 
 export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL';
 
-export async function getVendorTheme(): Promise<StoreTheme> {
-  const { data } = await api.get<{ theme: StoreTheme }>('/v1/vendor/theme');
-  return data.theme;
+export interface VendorThemeInfo {
+  theme: StoreTheme;
+  // Which themes the vendor's current plan unlocks (PLAN.md Step 7) —
+  // Themes.tsx uses this to show locked cards with an "Upgrade to
+  // unlock" badge instead of a plain Select button.
+  allowedThemes: StoreTheme[];
+}
+
+export async function getVendorTheme(): Promise<VendorThemeInfo> {
+  const { data } = await api.get<VendorThemeInfo>('/v1/vendor/theme');
+  return data;
 }
 
 export async function updateVendorTheme(theme: StoreTheme): Promise<StoreTheme> {

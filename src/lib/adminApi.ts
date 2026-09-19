@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { PlanCode } from './plansApi';
 
 // Mirrors server/src/admin — Super Admin > All Vendors.
 export type VendorStatus = 'ACTIVE' | 'PENDING' | 'SUSPENDED';
@@ -19,6 +20,9 @@ export interface AdminVendor {
   lastLoginAt: string | null;
   productCount: number;
   orderCount: number;
+  // PLAN.md Step 15 — 'FREE' for a vendor with no VendorSubscription row, same fallback the server applies for enforcement.
+  planCode: PlanCode;
+  planName: string;
 }
 
 export interface AdminVendorListResponse {
@@ -52,4 +56,10 @@ export const adminApi = {
     api
       .patch<{ id: string; status: VendorStatus }>(`/v1/admin/vendors/${vendorId}/status`, { status })
       .then((r) => r.data),
+
+  // All Vendors > Change Plan (PLAN.md Step 15) — direct manual
+  // assignment, independent of the Plan Requests approve/reject flow
+  // (see adminPlansApi.resolvePlanRequest).
+  assignVendorPlan: (vendorId: string, planCode: PlanCode) =>
+    api.patch(`/v1/admin/vendors/${vendorId}/plan`, { planCode }).then((r) => r.data),
 };

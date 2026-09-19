@@ -10,6 +10,7 @@ import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
 import { AddBrandModal } from './AddBrandModal';
 import { productsApi, type VariationOptionInput, type ProductVariantInput, type VariationValuePhotoInput } from '../../../lib/productsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
 
@@ -430,9 +431,9 @@ export default function EditProduct() {
             prev.map((p) => (p.id === photo.id ? { ...p, uploadedUrl: res.url, uploading: false } : p)),
           );
         })
-        .catch(() => {
+        .catch((err) => {
           setPhotos((prev) =>
-            prev.map((p) => (p.id === photo.id ? { ...p, uploading: false, error: 'Upload failed' } : p)),
+            prev.map((p) => (p.id === photo.id ? { ...p, uploading: false, error: apiErrorMessage(err, 'Upload failed') } : p)),
           );
         });
     });

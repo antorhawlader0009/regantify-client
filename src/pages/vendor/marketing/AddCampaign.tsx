@@ -5,6 +5,7 @@ import { ChevronLeft, X, ImagePlus, Search } from 'lucide-react';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
 import { campaignsApi, type CampaignItemInput, type SkuLookupProduct } from '../../../lib/campaignsApi';
 import { productsApi, type Product } from '../../../lib/productsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface CoverPhotoState {
@@ -193,7 +194,7 @@ export default function AddCampaign() {
     campaignsApi
       .uploadCoverPhoto(file)
       .then((res) => setCoverPhoto({ previewUrl, uploadedUrl: res.url, uploading: false }))
-      .catch(() => setCoverPhoto({ previewUrl, uploading: false, error: 'Upload failed' }));
+      .catch((err) => setCoverPhoto({ previewUrl, uploading: false, error: apiErrorMessage(err, 'Upload failed') }));
   };
 
   const addRowsForProduct = (product: {

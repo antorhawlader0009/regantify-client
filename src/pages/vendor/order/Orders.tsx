@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, ChevronDown, Settings2, Tag } from 'lucide-react';
 import { ordersApi, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, orderStatusLabel } from './orderStatus';
@@ -39,9 +41,14 @@ interface OrderRowProps {
   onCheckHistory: (phone: string) => void;
   onChangeLabel: (order: Order) => void;
   onShowInvoice: (order: Order) => void;
+  // PLAN.md Step 11 — Free: Steadfast only, paid tiers: also Pathao.
+  // Undefined while the vendor's plan hasn't loaded yet, treated the
+  // same as false (locked) so the picker never briefly shows Pathao as
+  // selectable before the real plan is known.
+  otherCouriersAllowed: boolean | undefined;
 }
 
-function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoice }: OrderRowProps) {
+function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoice, otherCouriersAllowed }: OrderRowProps) {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
@@ -165,7 +172,14 @@ function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoi
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onChangeLabel(order)}>Change Label</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => courierMutation.mutate('PATHAO')}>Pathao Courier</DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() =>
+                  otherCouriersAllowed ? courierMutation.mutate('PATHAO') : upgradeToast('use Pathao Courier')
+                }
+              >
+                {!otherCouriersAllowed && <LockedBadge />}
+                Pathao Courier
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => courierMutation.mutate('STEADFAST')}>SteadFast Courier</DropdownMenuItem>
               {order.courierProvider !== 'NONE' && (
                 <DropdownMenuItem onSelect={() => courierMutation.mutate('NONE')}>Clear Courier</DropdownMenuItem>
@@ -204,6 +218,16 @@ export default function Orders() {
     queryKey: ['order-status-tabs'],
     queryFn: () => ordersApi.getStatusTabs(),
   });
+
+  // PLAN.md Step 11 — Free: Steadfast only, paid tiers: also Pathao. No
+  // dedicated Plan column for this (the source-of-truth table shows the
+  // same ✓ for every paid tier, undifferentiated) — plan.code !== 'FREE'
+  // is the exact match for "paid tier unlocks more courier options".
+  const { data: planUsage } = useQuery({
+    queryKey: ['vendor-plan-usage'],
+    queryFn: getVendorPlanUsage,
+  });
+  const otherCouriersAllowed = planUsage ? planUsage.plan.code !== 'FREE' : undefined;
 
   const tabsMutation = useMutation({
     mutationFn: (statuses: OrderStatus[]) => ordersApi.updateStatusTabs(statuses),
@@ -376,6 +400,7 @@ export default function Orders() {
                     onCheckHistory={setHistoryPhone}
                     onChangeLabel={setLabelOrder}
                     onShowInvoice={setInvoiceOrder}
+                    otherCouriersAllowed={otherCouriersAllowed}
                   />
                 ))
               )}

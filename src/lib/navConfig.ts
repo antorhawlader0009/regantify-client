@@ -16,6 +16,7 @@ import {
   GraduationCap,
   Headphones,
   Settings,
+  CreditCard,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -118,6 +119,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Logo', path: '/vendor/store/logo' },
       { label: 'Customize', path: '/vendor/store/customize' },
       { label: 'Pages', path: '/vendor/store/pages' },
+      { label: 'Media', path: '/vendor/store/media' },
       { label: 'Social', path: '/vendor/store/social' },
       { label: 'Navigation', path: '/vendor/store/navigation' },
       { label: 'Domain', path: '/vendor/store/domain' },
@@ -127,6 +129,7 @@ export const vendorNav: NavSection[] = [
   { label: 'Gift Cards', icon: Gift, path: '/vendor/gift-cards' },
   { label: 'SMS', icon: MessageSquare, path: '/vendor/sms' },
   { label: 'Staff', icon: UsersRound, path: '/vendor/staff' },
+  { label: 'Billing', icon: CreditCard, path: '/vendor/billing' },
   { label: 'LMS System', icon: GraduationCap, path: '/vendor/lms' },
   { label: 'Support', icon: Headphones, path: '/vendor/support' },
   { label: 'Settings', icon: Settings, path: '/vendor/settings' },
@@ -142,6 +145,14 @@ export const adminNav: NavSection[] = [
       { label: 'All Vendors', path: '/admin/vendors/all' },
       { label: 'Pending Approval', path: '/admin/vendors/pending' },
       { label: 'Suspended Vendors', path: '/admin/vendors/suspended' },
+    ],
+  },
+  {
+    label: 'Plans',
+    icon: CreditCard,
+    children: [
+      { label: 'Manage Plans', path: '/admin/plans' },
+      { label: 'Plan Requests', path: '/admin/plan-requests' },
     ],
   },
   { label: 'Orders', icon: ClipboardList, path: '/admin/orders' },

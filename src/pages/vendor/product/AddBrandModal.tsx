@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, ImagePlus } from 'lucide-react';
 import { brandsApi, type Brand } from '../../../lib/brandsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface AddBrandModalProps {
@@ -73,7 +74,7 @@ export function AddBrandModal({ onClose, onCreated }: AddBrandModalProps) {
     brandsApi
       .uploadLogo(file)
       .then((res) => setLogo({ previewUrl, uploadedUrl: res.url, uploading: false }))
-      .catch(() => setLogo({ previewUrl, uploading: false, error: 'Upload failed' }));
+      .catch((err) => setLogo({ previewUrl, uploading: false, error: apiErrorMessage(err, 'Upload failed') }));
   };
 
   const isValid = name.trim().length > 0 && slug.trim().length > 0 && Boolean(logo?.uploadedUrl);

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Globe, Loader2, Trash2, HelpCircle } from 'lucide-react';
 import { getVendorDomain, connectVendorDomain, removeVendorDomain } from '../../../lib/vendorApi';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
 import { toast } from 'sonner';
 
 // Same IP shown to every vendor, regardless of domain — resolution for a
@@ -15,6 +17,10 @@ const domainRegex = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9
 
 export default function Domain() {
   const [customDomain, setCustomDomain] = useState<string | null>(null);
+  // null while loading = "don't know yet" — never used to mean "not
+  // allowed" so the page doesn't flash an upgrade prompt before the
+  // real plan is known (same convention as Themes.tsx's allowedThemes).
+  const [customDomainAllowed, setCustomDomainAllowed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [showConnectForm, setShowConnectForm] = useState(false);
 
@@ -24,8 +30,11 @@ export default function Domain() {
   const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
-    getVendorDomain()
-      .then(setCustomDomain)
+    Promise.all([getVendorDomain(), getVendorPlanUsage()])
+      .then(([domain, { plan }]) => {
+        setCustomDomain(domain);
+        setCustomDomainAllowed(plan.customDomainAllowed);
+      })
       .catch(() => toast.error('Could not load your domain settings.'))
       .finally(() => setLoading(false));
   }, []);
@@ -87,20 +96,33 @@ export default function Domain() {
 
       {!customDomain ? (
         <>
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-6 mb-6">
-            <p className="text-sm text-amber-900 mb-3">You have not connected any domain to this store.</p>
-            {!showConnectForm && (
-              <button
-                type="button"
-                onClick={() => setShowConnectForm(true)}
-                className="px-4 py-2 rounded-xl bg-green-700 hover:bg-green-800 text-white text-sm font-medium transition-colors"
-              >
-                Connect Your Domain
-              </button>
-            )}
-          </div>
+          {customDomainAllowed === false ? (
+            // PLAN.md Step 8 — Free tier: upgrade prompt instead of the
+            // connect form, not just a raw 402 after clicking through
+            // (the server still enforces this regardless — see
+            // VendorService.updateDomain — this is purely a better
+            // up-front UX for a vendor who's clearly on Free). Shared
+            // shell component — see Step 16's UpgradePrompt.tsx.
+            <LockedFeatureCard
+              title="Custom domains aren't available on your plan"
+              message="Connecting your own domain is a paid-plan feature. Upgrade your plan to connect one — your free subdomain keeps working either way."
+            />
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-6 mb-6">
+              <p className="text-sm text-amber-900 mb-3">You have not connected any domain to this store.</p>
+              {!showConnectForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowConnectForm(true)}
+                  className="px-4 py-2 rounded-xl bg-green-700 hover:bg-green-800 text-white text-sm font-medium transition-colors"
+                >
+                  Connect Your Domain
+                </button>
+              )}
+            </div>
+          )}
 
-          {showConnectForm && (
+          {showConnectForm && customDomainAllowed !== false && (
             <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6">
               <h2 className="text-lg font-medium text-regantify-text mb-1">Setup Guide</h2>
               <ol className="text-sm text-regantify-text-muted list-decimal list-inside space-y-1 mb-6">

@@ -3,6 +3,7 @@ import { ExternalLink, Check, Loader2 } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { getVendorTheme, updateVendorTheme, type StoreTheme } from '../../../lib/vendorApi';
+import { LockedBadge } from '../../../components/ui/UpgradePrompt';
 import { toast } from 'sonner';
 
 interface ThemeInfo {
@@ -112,12 +113,20 @@ export default function Themes() {
   const storeUrl = subdomain ? storefrontStoreUrl(subdomain) : null;
 
   const [selected, setSelected] = useState<StoreTheme | null>(null);
+  // null while loading = "don't know yet", never used to mean "nothing
+  // unlocked" — every real plan (including Free) unlocks at least 1
+  // theme, so an empty array only ever reflects a load-in-progress/error
+  // state, not a real entitlement of zero.
+  const [allowedThemes, setAllowedThemes] = useState<StoreTheme[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState<StoreTheme | null>(null);
 
   useEffect(() => {
     getVendorTheme()
-      .then(setSelected)
+      .then((info) => {
+        setSelected(info.theme);
+        setAllowedThemes(info.allowedThemes);
+      })
       .catch(() => toast.error('Could not load your current theme.'))
       .finally(() => setLoading(false));
   }, []);
@@ -129,8 +138,15 @@ export default function Themes() {
       const updated = await updateVendorTheme(theme);
       setSelected(updated);
       toast.success(`${theme === 'MINIMAL' ? 'Minimal' : 'Medium'} is now live on your store.`);
-    } catch {
-      toast.error('Could not switch themes. Please try again.');
+    } catch (err: unknown) {
+      // A locked theme (PLAN.md Step 7) surfaces the server's own
+      // upgrade-prompt message here — same generic error.response.data.message
+      // read pattern used throughout client (see e.g. AddProduct.tsx) —
+      // rather than the flat "please try again" this used to always show.
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Could not switch themes. Please try again.';
+      toast.error(message);
     } finally {
       setSwitching(null);
     }
@@ -149,6 +165,11 @@ export default function Themes() {
         {THEMES.map((theme) => {
           const isSelected = theme.id === selected;
           const isSwitching = switching === theme.id;
+          // Locked = this plan's allowedThemes doesn't include it (PLAN.md
+          // Step 7) — while allowedThemes is still loading (null), nothing
+          // is treated as locked yet, so the page doesn't flash a locked
+          // state on every card during the initial load.
+          const isLocked = allowedThemes !== null && !allowedThemes.includes(theme.id);
           return (
             <div
               key={theme.id}
@@ -156,8 +177,16 @@ export default function Themes() {
                 isSelected ? 'border-regantify-cta ring-1 ring-regantify-cta' : 'border-black/5'
               }`}
             >
-              <div className="aspect-[16/10]">
+              <div className="aspect-[16/10] relative">
                 <ThemePreview id={theme.id} />
+                {isLocked && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-white bg-black/50 px-3 py-1.5 rounded-full">
+                      <LockedBadge size={12} className="text-white" />
+                      Locked
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="p-4 flex flex-col flex-1">
@@ -179,11 +208,19 @@ export default function Themes() {
                     className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                       isSelected
                         ? 'bg-regantify-content text-regantify-text-muted cursor-default'
-                        : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed'
+                        : isLocked
+                          ? 'bg-regantify-content text-regantify-text hover:bg-regantify-content/70 disabled:opacity-60 disabled:cursor-not-allowed'
+                          : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed'
                     }`}
                   >
-                    {isSwitching ? <Loader2 size={16} className="animate-spin" /> : isSelected ? <Check size={16} /> : null}
-                    {isSwitching ? 'Switching…' : isSelected ? 'Selected' : 'Select'}
+                    {isSwitching ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : isSelected ? (
+                      <Check size={16} />
+                    ) : isLocked ? (
+                      <LockedBadge size={14} className="text-regantify-text" />
+                    ) : null}
+                    {isSwitching ? 'Switching…' : isSelected ? 'Selected' : isLocked ? 'Upgrade to unlock' : 'Select'}
                   </button>
 
                   {storeUrl && (

@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, ImagePlus } from 'lucide-react';
 import { categoriesApi, type Category } from '../../../lib/categoriesApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface AddCategoryModalProps {
@@ -203,7 +204,7 @@ export function CategoryForm({
     categoriesApi
       .uploadPhoto(file, kind)
       .then((res) => setPhoto({ previewUrl, uploadedUrl: res.url, uploading: false }))
-      .catch(() => setPhoto({ previewUrl, uploading: false, error: 'Upload failed' }));
+      .catch((err) => setPhoto({ previewUrl, uploading: false, error: apiErrorMessage(err, 'Upload failed') }));
   };
 
   const handleSubmit = () => {

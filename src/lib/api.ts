@@ -69,3 +69,23 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+/**
+ * Extracts a backend error's own `message` (see NestJS's default
+ * exception body shape — every thrown HttpException, including
+ * PlanLimitsService's 402 PLAN_LIMIT_EXCEEDED errors, lands here) with a
+ * caller-supplied fallback for anything that isn't a recognizable API
+ * error (a network failure, a CORS issue, etc). class-validator
+ * ValidationPipe errors return `message` as a string[] rather than a
+ * string — this takes the first one in that case, same convention
+ * already used ad hoc in a few places (e.g. Domain.tsx's handleConnect).
+ * Centralized here so every upload/mutation call site shows the real
+ * "you're at your plan's limit, upgrade to continue" message instead of
+ * a hardcoded generic one that discards it.
+ */
+export function apiErrorMessage(err: unknown, fallback: string): string {
+  const data = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data;
+  const message = data?.message;
+  if (Array.isArray(message)) return message[0] ?? fallback;
+  return message ?? fallback;
+}

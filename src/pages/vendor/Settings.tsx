@@ -2,11 +2,15 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Mail, Lock, Camera, Phone, Store, MapPin, Link as LinkIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { User, Mail, Lock, Camera, Phone, Store, MapPin, Link as LinkIcon, CreditCard } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
 import { getVendorSettings, updateVendorSettings } from '../../lib/vendorApi';
+import { getVendorPlanUsage } from '../../lib/plansApi';
+import { upgradeToast } from '../../components/ui/UpgradePrompt';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
+import { toast } from 'sonner';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Enter your full name'),
@@ -468,6 +472,13 @@ export default function VendorSettings() {
         </form>
       </section>
 
+      {/* Payment Gateway section — PLAN.md Step 12. Display + gate only:
+          no real payment gateway exists yet (checkout is COD-only), so
+          this is a settings toggle/contact-request entry point rather
+          than an actual integration flow — see FeeSummary.tsx's own
+          comment for the same framing. */}
+      <PaymentGatewaySection />
+
       {/* Password section */}
       <section>
         <h2 className="text-lg font-medium text-regantify-text mb-1">Change password</h2>
@@ -561,5 +572,61 @@ export default function VendorSettings() {
         </form>
       </section>
     </div>
+  );
+}
+
+/**
+ * Payment Gateway settings card — PLAN.md Step 12. Every plan includes
+ * the free gateway (COD today, see PLAN.md's own note on why no real
+ * fee is deducted yet); Custom Payment Gateway is the paid-tier-only
+ * "option available" row from the source-of-truth table — gated the
+ * same locked/upgrade-prompt way as Domain.tsx (Step 8), not hidden.
+ * There's no real gateway integration to configure yet, so "enabling"
+ * it here is a contact-request action (see button below), not a form —
+ * matches PLAN.md's own framing of this as "a settings toggle/
+ * contact-request flow" until a real gateway exists.
+ */
+function PaymentGatewaySection() {
+  const { data: usage, isLoading } = useQuery({
+    queryKey: ['vendor-plan-usage'],
+    queryFn: getVendorPlanUsage,
+  });
+  const allowed = usage?.plan.customPaymentGatewayAllowed ?? false;
+
+  return (
+    <section>
+      <h2 className="text-lg font-medium text-regantify-text mb-1">Payment Gateway</h2>
+      <p className="text-sm text-regantify-text-muted mb-4">
+        Every plan includes a free payment gateway — see Finance &gt; Fee Summary for the per-transaction fee.
+      </p>
+
+      <div className="rounded-xl bg-regantify-search p-4 flex items-start gap-3">
+        <CreditCard size={18} className="text-regantify-text-muted mt-0.5 shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-regantify-text">Custom Payment Gateway</p>
+          <p className="text-sm text-regantify-text-muted mt-0.5">
+            {allowed
+              ? 'Available on your plan. Contact support to connect your own payment gateway.'
+              : "Not available on your plan. Upgrade to use your own payment gateway."}
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() =>
+            allowed
+              ? toast.success('Request sent — our support team will reach out to set up your custom gateway.')
+              : upgradeToast('use a custom payment gateway')
+          }
+          className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-60 ${
+            allowed
+              ? 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
+              : 'bg-white border border-black/10 text-regantify-text hover:bg-regantify-content'
+          }`}
+        >
+          {allowed ? 'Request Setup' : 'Upgrade to Unlock'}
+        </button>
+      </div>
+    </section>
   );
 }

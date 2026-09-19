@@ -80,37 +80,76 @@ const dict = {
 
     pricing_title: 'Simple pricing',
     pricing_sub: 'Start for free. Pay only when your shop grows.',
-    plan1_name: 'Starter',
+    pricing_toggle_monthly: 'Monthly',
+    pricing_toggle_yearly: 'Yearly',
+    pricing_per_month: '/month',
+    pricing_total_monthly: '12 Month Total',
+    pricing_total_yearly: 'Yearly Total',
+    pricing_feature_col: 'Feature',
+
+    plan1_name: 'Free',
     plan1_tag: 'Try it with your first few products.',
     plan1_cta: 'Start free',
-    plan1_f1: 'Up to 50 products',
-    plan1_f2: '1 staff account',
-    plan1_f3: '20,000 visits a month',
-    plan1_f4: 'Unlimited photos',
-    plan1_f5: '15+ free add-ons',
 
-    plan2_name: 'Growth',
-    plan2_badge: 'Most popular',
-    plan2_tag: 'For shops ready to sell full time.',
-    plan2_cta: 'Start free trial',
-    plan2_f1: '500 products',
-    plan2_f2: '5 staff accounts',
-    plan2_f3: '150,000 visits a month',
-    plan2_f4: 'Unlimited photos',
-    plan2_f5: 'bKash & Nagad wallet built in',
-    plan2_f6: 'AI-written product listings',
-    plan2_f7: '25+ free add-ons',
+    plan2_name: 'Basic',
+    plan2_tag: 'For shops just getting going.',
+    plan2_cta: 'Choose Basic',
 
-    plan3_name: 'Business',
-    plan3_tag: 'For big or multi-shop sellers.',
-    plan3_cta: 'Talk to us',
-    plan3_f1: 'Unlimited products',
-    plan3_f2: '15 staff accounts',
-    plan3_f3: '300,000+ visits a month',
-    plan3_f4: 'Unlimited photos',
-    plan3_f5: 'More than one shop page',
-    plan3_f6: 'API access',
-    plan3_f7: 'A person to help you, always',
+    plan3_name: 'Starter',
+    plan3_badge: 'Most popular',
+    plan3_tag: 'For shops ready to sell full time.',
+    plan3_cta: 'Choose Starter',
+
+    plan4_name: 'Advance',
+    plan4_tag: 'For big or multi-shop sellers.',
+    plan4_cta: 'Choose Advance',
+
+    feat_row_product: 'Product',
+    feat_row_order: 'Order',
+    feat_row_visit: 'Monthly Visit',
+    feat_row_theme: 'Theme',
+    feat_row_domain: 'Custom Domain',
+    feat_row_image: 'Image Upload',
+    feat_row_aichat: 'Store AI Chat',
+    feat_row_subdomain: 'Free Sub Domain',
+    feat_row_courier: 'Courier Integration',
+    feat_row_staff: 'Staff',
+    feat_row_gateway: 'Payment Gateway',
+    feat_row_custom_gateway: 'Custom Payment Gateway',
+    feat_row_lms: 'LMS System',
+    feat_row_pos: 'POS System',
+
+    val_product_free: '5',
+    val_product_unlimited: 'Unlimited',
+    val_order_free: '5 per day',
+    val_order_unlimited: 'Unlimited',
+    val_visit_free: '900',
+    val_visit_basic: '80,000',
+    val_visit_starter: '200,000',
+    val_visit_advance: 'Unlimited',
+    val_theme_free: '1',
+    val_theme_basic: '5',
+    val_theme_starter: '10',
+    val_theme_advance: 'All',
+    val_image_free: '5',
+    val_image_unlimited: 'Unlimited',
+    val_aichat_free: '5 msg/day',
+    val_aichat_basic: '100 msg/day',
+    val_aichat_starter: '500 msg/day',
+    val_aichat_advance: 'Unlimited',
+    val_courier_free: '✓ (Steadfast)',
+    val_courier_paid: '✓',
+    val_staff_free: '1',
+    val_staff_basic: '2',
+    val_staff_starter: '4',
+    val_staff_advance: 'Unlimited',
+    val_gateway_free: 'Free Payment Gateway — Per Transaction Fee: +10৳',
+    val_gateway_basic: 'Free Payment Gateway — Per Transaction Fee: +7৳',
+    val_gateway_starter: 'Free Payment Gateway — Per Transaction Fee: +5৳',
+    val_gateway_advance: 'Free Payment Gateway — Per Transaction Fee: +5৳',
+    val_custom_gateway_option: 'Option available',
+    val_yes: '✓',
+    val_no: '—',
 
     faq_title: 'Questions, answered',
     faq1_q: 'Do I need my own website?',
@@ -145,7 +184,7 @@ const dict = {
     hero_cta: 'ফ্রি শুরু করুন',
     hero_cta_2: 'মূল্য দেখুন',
     hero_note: 'কার্ড লাগবে না · ১৪ দিন ফ্রি ট্রায়াল',
-    hero_tag: '৩ ধরনের দোকান, ১টা অ্যাপ',
+    hero_tag: 'সব ধরনের দোকান, ১টা অ্যাপ',
 
     who_title: 'সব ধরনের দোকানের জন্য তৈরি',
     who_sub: 'আপনি কী বিক্রি করেন বলুন। অ্যাপ নিজেই সাজিয়ে নেবে।',
@@ -192,37 +231,76 @@ const dict = {
 
     pricing_title: 'সহজ মূল্য',
     pricing_sub: 'ফ্রি শুরু করুন। দোকান বড় হলে তখন দিন।',
-    plan1_name: 'স্টার্টার',
+    pricing_toggle_monthly: 'মাসিক',
+    pricing_toggle_yearly: 'বাৎসরিক',
+    pricing_per_month: '/মাস',
+    pricing_total_monthly: '১২ মাসের মোট',
+    pricing_total_yearly: 'বছরের মোট',
+    pricing_feature_col: 'ফিচার',
+
+    plan1_name: 'ফ্রি',
     plan1_tag: 'প্রথম কয়েকটা প্রোডাক্ট দিয়ে চেষ্টা করুন।',
     plan1_cta: 'ফ্রি শুরু করুন',
-    plan1_f1: '৫০টা পর্যন্ত প্রোডাক্ট',
-    plan1_f2: '১টা স্টাফ অ্যাকাউন্ট',
-    plan1_f3: 'মাসে ২০,০০০ ভিজিট',
-    plan1_f4: 'আনলিমিটেড ছবি',
-    plan1_f5: '১৫+ ফ্রি অ্যাড-অন',
 
-    plan2_name: 'গ্রোথ',
-    plan2_badge: 'সবচেয়ে জনপ্রিয়',
-    plan2_tag: 'পুরোদমে বিক্রি শুরু করতে চান যারা।',
-    plan2_cta: 'ফ্রি ট্রায়াল শুরু করুন',
-    plan2_f1: '৫০০টা প্রোডাক্ট',
-    plan2_f2: '৫টা স্টাফ অ্যাকাউন্ট',
-    plan2_f3: 'মাসে ১,৫০,০০০ ভিজিট',
-    plan2_f4: 'আনলিমিটেড ছবি',
-    plan2_f5: 'bKash ও Nagad ওয়ালেট বিল্ট-ইন',
-    plan2_f6: 'AI দিয়ে লেখা প্রোডাক্ট লিস্টিং',
-    plan2_f7: '২৫+ ফ্রি অ্যাড-অন',
+    plan2_name: 'বেসিক',
+    plan2_tag: 'যারা মাত্র শুরু করছেন তাদের জন্য।',
+    plan2_cta: 'বেসিক নিন',
 
-    plan3_name: 'বিজনেস',
-    plan3_tag: 'বড় বা একাধিক দোকানের জন্য।',
-    plan3_cta: 'কথা বলুন',
-    plan3_f1: 'আনলিমিটেড প্রোডাক্ট',
-    plan3_f2: '১৫টা স্টাফ অ্যাকাউন্ট',
-    plan3_f3: 'মাসে ৩,০০,০০০+ ভিজিট',
-    plan3_f4: 'আনলিমিটেড ছবি',
-    plan3_f5: 'একাধিক দোকান পেজ',
-    plan3_f6: 'API অ্যাক্সেস',
-    plan3_f7: 'সবসময় সাহায্যের জন্য একজন মানুষ',
+    plan3_name: 'স্টার্টার',
+    plan3_badge: 'সবচেয়ে জনপ্রিয়',
+    plan3_tag: 'পুরোদমে বিক্রি শুরু করতে চান যারা।',
+    plan3_cta: 'স্টার্টার নিন',
+
+    plan4_name: 'অ্যাডভান্স',
+    plan4_tag: 'বড় বা একাধিক দোকানের জন্য।',
+    plan4_cta: 'অ্যাডভান্স নিন',
+
+    feat_row_product: 'প্রোডাক্ট',
+    feat_row_order: 'অর্ডার',
+    feat_row_visit: 'মাসিক ভিজিট',
+    feat_row_theme: 'থিম',
+    feat_row_domain: 'কাস্টম ডোমেইন',
+    feat_row_image: 'ছবি আপলোড',
+    feat_row_aichat: 'স্টোর AI চ্যাট',
+    feat_row_subdomain: 'ফ্রি সাব ডোমেইন',
+    feat_row_courier: 'কুরিয়ার ইন্টিগ্রেশন',
+    feat_row_staff: 'স্টাফ',
+    feat_row_gateway: 'পেমেন্ট গেটওয়ে',
+    feat_row_custom_gateway: 'কাস্টম পেমেন্ট গেটওয়ে',
+    feat_row_lms: 'LMS সিস্টেম',
+    feat_row_pos: 'POS সিস্টেম',
+
+    val_product_free: '৫',
+    val_product_unlimited: 'আনলিমিটেড',
+    val_order_free: 'দৈনিক ৫টা',
+    val_order_unlimited: 'আনলিমিটেড',
+    val_visit_free: '৯০০',
+    val_visit_basic: '৮০,০০০',
+    val_visit_starter: '২,০০,০০০',
+    val_visit_advance: 'আনলিমিটেড',
+    val_theme_free: '১',
+    val_theme_basic: '৫',
+    val_theme_starter: '১০',
+    val_theme_advance: 'সবগুলো',
+    val_image_free: '৫',
+    val_image_unlimited: 'আনলিমিটেড',
+    val_aichat_free: 'দৈনিক ৫ মেসেজ',
+    val_aichat_basic: 'দৈনিক ১০০ মেসেজ',
+    val_aichat_starter: 'দৈনিক ৫০০ মেসেজ',
+    val_aichat_advance: 'আনলিমিটেড',
+    val_courier_free: '✓ (Steadfast)',
+    val_courier_paid: '✓',
+    val_staff_free: '১',
+    val_staff_basic: '২',
+    val_staff_starter: '৪',
+    val_staff_advance: 'আনলিমিটেড',
+    val_gateway_free: 'ফ্রি পেমেন্ট গেটওয়ে — প্রতি ট্রানজেকশনে +১০৳',
+    val_gateway_basic: 'ফ্রি পেমেন্ট গেটওয়ে — প্রতি ট্রানজেকশনে +৭৳',
+    val_gateway_starter: 'ফ্রি পেমেন্ট গেটওয়ে — প্রতি ট্রানজেকশনে +৫৳',
+    val_gateway_advance: 'ফ্রি পেমেন্ট গেটওয়ে — প্রতি ট্রানজেকশনে +৫৳',
+    val_custom_gateway_option: 'অপশন আছে',
+    val_yes: '✓',
+    val_no: '—',
 
     faq_title: 'প্রশ্ন, উত্তর সহ',
     faq1_q: 'নিজের ওয়েবসাইট লাগবে কি?',
@@ -323,40 +401,115 @@ function HomeInner() {
     },
   ];
 
+  // Mirrors the real 4 subscription tiers (Free/Basic/Starter/Advance —
+  // see server/prisma/seed-plans.ts, the actual source of truth).
+  // Billing: Monthly and Yearly are two different per-month rates (Yearly
+  // is the cheaper rate). No first-month discount — the toggle just picks
+  // which per-month rate applies, and the total for 12 months at that
+  // rate is shown underneath.
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+
   const plans = [
     {
+      key: 'free',
       name: t('plan1_name'),
-      price: '৳0',
-      period: 'forever',
       tagline: t('plan1_tag'),
       cta: t('plan1_cta'),
       highlighted: false,
-      features: [t('plan1_f1'), t('plan1_f2'), t('plan1_f3'), t('plan1_f4'), t('plan1_f5')],
+      badge: undefined as string | undefined,
+      monthlyPrice: 0,
+      yearlyPrice: 0,
     },
     {
+      key: 'basic',
       name: t('plan2_name'),
-      price: '৳12,900',
-      period: '/year',
       tagline: t('plan2_tag'),
       cta: t('plan2_cta'),
-      highlighted: true,
-      badge: t('plan2_badge'),
-      features: [
-        t('plan2_f1'), t('plan2_f2'), t('plan2_f3'), t('plan2_f4'),
-        t('plan2_f5'), t('plan2_f6'), t('plan2_f7'),
-      ],
+      highlighted: false,
+      badge: undefined as string | undefined,
+      monthlyPrice: 490,
+      yearlyPrice: 450,
     },
     {
+      key: 'starter',
       name: t('plan3_name'),
-      price: '৳27,900',
-      period: '/year',
       tagline: t('plan3_tag'),
       cta: t('plan3_cta'),
+      highlighted: true,
+      badge: t('plan3_badge') as string | undefined,
+      monthlyPrice: 850,
+      yearlyPrice: 800,
+    },
+    {
+      key: 'advance',
+      name: t('plan4_name'),
+      tagline: t('plan4_tag'),
+      cta: t('plan4_cta'),
       highlighted: false,
-      features: [
-        t('plan3_f1'), t('plan3_f2'), t('plan3_f3'), t('plan3_f4'),
-        t('plan3_f5'), t('plan3_f6'), t('plan3_f7'),
-      ],
+      badge: undefined as string | undefined,
+      monthlyPrice: 1350,
+      yearlyPrice: 1300,
+    },
+  ];
+
+  // Feature comparison rows — one row per feature, one value per plan
+  // (free, basic, starter, advance), matching the table structure supplied.
+  const featureRows = [
+    {
+      label: t('feat_row_product'),
+      values: [t('val_product_free'), t('val_product_unlimited'), t('val_product_unlimited'), t('val_product_unlimited')],
+    },
+    {
+      label: t('feat_row_order'),
+      values: [t('val_order_free'), t('val_order_unlimited'), t('val_order_unlimited'), t('val_order_unlimited')],
+    },
+    {
+      label: t('feat_row_visit'),
+      values: [t('val_visit_free'), t('val_visit_basic'), t('val_visit_starter'), t('val_visit_advance')],
+    },
+    {
+      label: t('feat_row_theme'),
+      values: [t('val_theme_free'), t('val_theme_basic'), t('val_theme_starter'), t('val_theme_advance')],
+    },
+    {
+      label: t('feat_row_domain'),
+      values: [t('val_no'), t('val_yes'), t('val_yes'), t('val_yes')],
+    },
+    {
+      label: t('feat_row_image'),
+      values: [t('val_image_free'), t('val_image_unlimited'), t('val_image_unlimited'), t('val_image_unlimited')],
+    },
+    {
+      label: t('feat_row_aichat'),
+      values: [t('val_aichat_free'), t('val_aichat_basic'), t('val_aichat_starter'), t('val_aichat_advance')],
+    },
+    {
+      label: t('feat_row_subdomain'),
+      values: [t('val_yes'), t('val_yes'), t('val_yes'), t('val_yes')],
+    },
+    {
+      label: t('feat_row_courier'),
+      values: [t('val_courier_free'), t('val_courier_paid'), t('val_courier_paid'), t('val_courier_paid')],
+    },
+    {
+      label: t('feat_row_staff'),
+      values: [t('val_staff_free'), t('val_staff_basic'), t('val_staff_starter'), t('val_staff_advance')],
+    },
+    {
+      label: t('feat_row_gateway'),
+      values: [t('val_gateway_free'), t('val_gateway_basic'), t('val_gateway_starter'), t('val_gateway_advance')],
+    },
+    {
+      label: t('feat_row_custom_gateway'),
+      values: [t('val_no'), t('val_custom_gateway_option'), t('val_custom_gateway_option'), t('val_custom_gateway_option')],
+    },
+    {
+      label: t('feat_row_lms'),
+      values: [t('val_no'), t('val_no'), t('val_no'), t('val_yes')],
+    },
+    {
+      label: t('feat_row_pos'),
+      values: [t('val_no'), t('val_no'), t('val_no'), t('val_yes')],
     },
   ];
 
@@ -529,49 +682,148 @@ function HomeInner() {
       {/* Pricing */}
       <section id="pricing" className="max-w-6xl mx-auto px-6 py-20">
         <h2 className="text-2xl font-bold mb-2">{t('pricing_title')}</h2>
-        <p className="text-[#1A1A1A]/60 mb-10 max-w-lg">{t('pricing_sub')}</p>
-        <div className="grid md:grid-cols-3 gap-6">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`rounded-2xl p-7 flex flex-col ${
-                plan.highlighted ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#1A1A1A] border border-black/10'
-              }`}
-            >
-              {plan.highlighted && (
-                <span className="text-xs font-medium text-[#95BF47] mb-2">{plan.badge}</span>
-              )}
-              <h3 className="font-semibold">{plan.name}</h3>
-              <p className={`mt-1.5 text-sm ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/60'}`}>
-                {plan.tagline}
-              </p>
-              <div className="mt-6 flex items-baseline gap-1.5">
-                <span className="text-3xl font-bold">{plan.price}</span>
-                <span className={plan.highlighted ? 'text-white/60 text-sm' : 'text-[#1A1A1A]/60 text-sm'}>
-                  {plan.period}
-                </span>
-              </div>
-              <ul className="mt-6 space-y-3 flex-1">
-                {plan.features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2.5 text-sm">
-                    <Check
-                      size={16}
-                      className={plan.highlighted ? 'text-white/70 mt-0.5 shrink-0' : 'text-[#1A1A1A]/50 mt-0.5 shrink-0'}
-                    />
-                    <span>{feat}</span>
-                  </li>
+        <p className="text-[#1A1A1A]/60 mb-6 max-w-lg">{t('pricing_sub')}</p>
+
+        {/* Billing toggle: Monthly vs Yearly — two different per-month
+            rates (Yearly is cheaper). The 12-month total for the selected
+            rate is shown underneath each price. */}
+        <div className="inline-flex items-center p-1 rounded-full bg-[#F1F1F1] mb-10">
+          <button
+            onClick={() => setBilling('monthly')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              billing === 'monthly' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#1A1A1A]/60'
+            }`}
+          >
+            {t('pricing_toggle_monthly')}
+          </button>
+          <button
+            onClick={() => setBilling('yearly')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              billing === 'yearly' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#1A1A1A]/60'
+            }`}
+          >
+            {t('pricing_toggle_yearly')}
+          </button>
+        </div>
+
+        {/* Single table: price + CTA row on top, feature rows below —
+            keeps every plan column the same width throughout, so the
+            pricing cards and the feature comparison line up perfectly. */}
+        <div className="overflow-x-auto rounded-2xl border border-black/10">
+          <table className="w-full text-sm border-collapse min-w-[720px] table-fixed">
+            <colgroup>
+              <col className="w-[22%]" />
+              {plans.map((plan) => (
+                <col key={plan.key} className="w-[19.5%]" />
+              ))}
+            </colgroup>
+            <thead>
+              {/* Plan name / badge / tagline */}
+              <tr>
+                <th className="text-left align-bottom px-5 pt-6 pb-3 border-b border-black/10" />
+                {plans.map((plan) => (
+                  <th
+                    key={plan.key}
+                    className={`text-left align-bottom px-5 pt-6 pb-3 border-b border-black/10 ${
+                      plan.highlighted ? 'bg-[#1A1A1A] text-white' : ''
+                    }`}
+                  >
+                    {plan.highlighted && (
+                      <div className="text-xs font-medium text-[#95BF47] mb-1.5">{plan.badge}</div>
+                    )}
+                    <div className="font-semibold text-base">{plan.name}</div>
+                    <div className={`mt-1 text-xs font-normal ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/60'}`}>
+                      {plan.tagline}
+                    </div>
+                  </th>
                 ))}
-              </ul>
-              <button
-                onClick={() => navigate('/vendor/signup')}
-                className={`mt-7 w-full py-3 rounded-full font-medium transition-colors ${
-                  plan.highlighted ? 'bg-[#95BF47] hover:bg-[#84AD3D] text-[#1A1A1A]' : 'bg-[#008060] text-white hover:bg-[#006B51]'
-                }`}
-              >
-                {plan.cta}
-              </button>
-            </div>
-          ))}
+              </tr>
+              {/* Price, plus 12-month total at the selected rate */}
+              <tr>
+                <td className="px-5 py-4 border-b border-black/10" />
+                {plans.map((plan) => {
+                  const displayPrice = billing === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+                  const totalPrice = displayPrice * 12;
+                  return (
+                    <td
+                      key={plan.key}
+                      className={`px-5 py-4 border-b border-black/10 ${plan.highlighted ? 'bg-[#1A1A1A]' : ''}`}
+                    >
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        <span className={`text-2xl font-bold ${plan.highlighted ? 'text-white' : 'text-[#1A1A1A]'}`}>
+                          {displayPrice === 0 ? '৳0' : `৳${displayPrice}`}
+                        </span>
+                        {displayPrice !== 0 && (
+                          <span className={plan.highlighted ? 'text-white/60 text-xs' : 'text-[#1A1A1A]/60 text-xs'}>
+                            {t('pricing_per_month')}
+                          </span>
+                        )}
+                      </div>
+                      {displayPrice !== 0 && (
+                        <p className={`mt-1 text-xs ${plan.highlighted ? 'text-white/50' : 'text-[#1A1A1A]/45'}`}>
+                          {billing === 'yearly' ? t('pricing_total_yearly') : t('pricing_total_monthly')}: ৳{totalPrice.toLocaleString('en-US')}
+                        </p>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+              {/* CTA buttons */}
+              <tr>
+                <td className="px-5 pb-6 border-b border-black/10" />
+                {plans.map((plan) => (
+                  <td
+                    key={plan.key}
+                    className={`px-5 pb-6 border-b border-black/10 ${plan.highlighted ? 'bg-[#1A1A1A]' : ''}`}
+                  >
+                    <button
+                      onClick={() => navigate('/vendor/signup')}
+                      className={`w-full py-2.5 rounded-full text-sm font-medium transition-colors ${
+                        plan.highlighted ? 'bg-[#95BF47] hover:bg-[#84AD3D] text-[#1A1A1A]' : 'bg-[#008060] text-white hover:bg-[#006B51]'
+                      }`}
+                    >
+                      {plan.cta}
+                    </button>
+                  </td>
+                ))}
+              </tr>
+              {/* Feature column header, resumes below the price block */}
+              <tr className="bg-[#F1F1F1]">
+                <th className="text-left font-semibold px-5 py-3.5 border-b border-black/10">
+                  {t('pricing_feature_col')}
+                </th>
+                {plans.map((plan) => (
+                  <th
+                    key={plan.key}
+                    className={`text-left font-semibold px-5 py-3.5 border-b border-black/10 ${
+                      plan.highlighted ? 'bg-[#1A1A1A] text-white' : ''
+                    }`}
+                  >
+                    {plan.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {featureRows.map((row, i) => (
+                <tr key={row.label} className={i % 2 === 1 ? 'bg-[#F1F1F1]/40' : ''}>
+                  <td className="px-5 py-3.5 border-b border-black/10 text-[#1A1A1A]/80 font-medium">
+                    {row.label}
+                  </td>
+                  {row.values.map((val, j) => (
+                    <td
+                      key={j}
+                      className={`px-5 py-3.5 border-b border-black/10 ${
+                        plans[j].highlighted ? 'bg-[#1A1A1A]/[0.03]' : ''
+                      } ${val === '✓' ? 'text-[#008060] font-medium' : val === '—' ? 'text-[#1A1A1A]/30' : 'text-[#1A1A1A]/75'}`}
+                    >
+                      {val}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
