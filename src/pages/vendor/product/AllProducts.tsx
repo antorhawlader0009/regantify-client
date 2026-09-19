@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, ChevronDown, Infinity as InfinityIcon } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { ChangeStatusModal } from './ChangeStatusModal';
@@ -16,10 +18,12 @@ function ActionsMenu({
   onDelete,
   onChangeStatus,
   onCreateStockProduct,
+  atProductLimit,
 }: {
   onDelete: () => void;
   onChangeStatus: () => void;
   onCreateStockProduct: () => void;
+  atProductLimit: boolean;
 }) {
   return (
     <DropdownMenu
@@ -31,7 +35,12 @@ function ActionsMenu({
       }
     >
       <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>
-      <DropdownMenuItem onSelect={onCreateStockProduct}>Create Stock Product</DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onCreateStockProduct())}>
+        <span className="flex items-center gap-1.5">
+          Create Stock Product
+          {atProductLimit && <LockedBadge size={12} />}
+        </span>
+      </DropdownMenuItem>
       <DropdownMenuItem onSelect={onDelete} danger>
         Delete
       </DropdownMenuItem>
@@ -85,6 +94,19 @@ export default function AllProducts() {
     queryKey: ['products-categories-in-use'],
     queryFn: productsApi.categoriesInUse,
   });
+
+  // PLAN.md Step 3 — Free: 5 products, others: unlimited. Server already
+  // hard-blocks both ProductsService.create and createStockProduct at
+  // the cap — this is purely so a Free vendor at the cap doesn't click
+  // through to the Add Product form (or Create Stock Product action)
+  // only to fail on submit, same precedent as Staff.tsx's Add New
+  // button (Step 10).
+  const { data: planUsage } = useQuery({
+    queryKey: ['vendor-plan-usage'],
+    queryFn: getVendorPlanUsage,
+  });
+  const productsUsage = planUsage?.usage.products;
+  const atProductLimit = productsUsage != null && productsUsage.limit !== null && productsUsage.used >= productsUsage.limit;
 
   // The list rows are lightweight (no variationOptions) — fetch the full
   // record only when the Create Stock Product modal actually needs it.
@@ -174,17 +196,28 @@ export default function AllProducts() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-semibold text-regantify-text">Products</h1>
         <button
-          onClick={() => navigate('/vendor/product/add')}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark
-            text-white text-sm font-medium transition-colors"
+          onClick={() => (atProductLimit ? upgradeToast('add more products') : navigate('/vendor/product/add'))}
+          disabled={atProductLimit}
+          title={atProductLimit ? 'Upgrade your plan to add more products.' : undefined}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            atProductLimit
+              ? 'bg-regantify-content text-regantify-text-muted cursor-not-allowed'
+              : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
+          }`}
         >
-          <Plus size={16} />
+          {atProductLimit ? <LockedBadge size={14} /> : <Plus size={16} />}
           Add New
         </button>
       </div>
+
+      {productsUsage && (
+        <div className="mb-4">
+          <UsageLine label="products used" used={productsUsage.used} limit={productsUsage.limit} />
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
         <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
@@ -335,6 +368,7 @@ export default function AllProducts() {
                     onDelete={() => handleDelete(p.id, p.name)}
                     onChangeStatus={() => setStatusModalProduct(p)}
                     onCreateStockProduct={() => setStockProductModalId(p.id)}
+                    atProductLimit={atProductLimit}
                   />
                 </td>
               </tr>

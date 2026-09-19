@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, ChevronDown, Settings2, Tag } from 'lucide-react';
 import { ordersApi, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
-import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, orderStatusLabel } from './orderStatus';
@@ -229,6 +229,16 @@ export default function Orders() {
   });
   const otherCouriersAllowed = planUsage ? planUsage.plan.code !== 'FREE' : undefined;
 
+  // PLAN.md Step 4 — Free: 5 orders/day, others: unlimited. Server
+  // already hard-blocks both STOREFRONT and MANUAL orders at the cap
+  // (OrdersService.create) — this is purely so a Free vendor at the cap
+  // doesn't click through to the Add Order form only to fail on submit,
+  // same "surface value before the vendor hits the wall" precedent as
+  // Staff.tsx's Add New button (Step 10) and AllProducts.tsx's Add New
+  // button (Step 3 retrofit).
+  const ordersUsage = planUsage?.usage.ordersToday;
+  const atOrderLimit = ordersUsage != null && ordersUsage.limit !== null && ordersUsage.used >= ordersUsage.limit;
+
   const tabsMutation = useMutation({
     mutationFn: (statuses: OrderStatus[]) => ordersApi.updateStatusTabs(statuses),
     onSuccess: (statuses) => {
@@ -276,17 +286,28 @@ export default function Orders() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl font-semibold text-regantify-text">Orders</h1>
         <button
-          onClick={() => navigate('/vendor/orders/add')}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark
-            text-white text-sm font-medium transition-colors"
+          onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
+          disabled={atOrderLimit}
+          title={atOrderLimit ? "Upgrade your plan to add more orders today." : undefined}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            atOrderLimit
+              ? 'bg-regantify-content text-regantify-text-muted cursor-not-allowed'
+              : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
+          }`}
         >
-          <Plus size={16} />
+          {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={16} />}
           Add New
         </button>
       </div>
+
+      {ordersUsage && (
+        <div className="mb-4">
+          <UsageLine label="orders today" used={ordersUsage.used} limit={ordersUsage.limit} />
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
         {!trashView && (
