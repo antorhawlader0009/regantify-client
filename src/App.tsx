@@ -64,6 +64,7 @@ import Sms from './pages/vendor/sms/Sms';
 import AiChatBot from './pages/vendor/ai-automation/AiChatBot';
 import Wallet from './pages/vendor/finance/Wallet';
 import Transactions from './pages/vendor/finance/Transactions';
+import Withdraw from './pages/vendor/finance/Withdraw';
 import FeeSummary from './pages/vendor/finance/FeeSummary';
 import Tracking from './pages/vendor/shipping/Tracking';
 import AdminDashboard from './pages/admin/Dashboard';
@@ -71,6 +72,7 @@ import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
+import Payouts from './pages/admin/finance/Payouts';
 
 const queryClient = new QueryClient();
 
@@ -117,6 +119,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/transactions' &&
+    r.path !== '/vendor/finance/withdraw' &&
     r.path !== '/vendor/finance/fee-summary' &&
     r.path !== '/vendor/shipping/tracking',
 );
@@ -125,7 +128,8 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/ai-settings' &&
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/plans' &&
-    r.path !== '/admin/plan-requests',
+    r.path !== '/admin/plan-requests' &&
+    r.path !== '/admin/finance/payouts',
 );
 
 export default function App() {
@@ -230,6 +234,7 @@ export default function App() {
                 <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
+                <Route path="/vendor/finance/withdraw" element={<Withdraw />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
                 <Route path="/vendor/shipping/tracking" element={<Tracking />} />
                 {vendorPlaceholderRoutes.map((r) => (
@@ -246,6 +251,7 @@ export default function App() {
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />
+                <Route path="/admin/finance/payouts" element={<Payouts />} />
                 {adminPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}
