@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { Dialog } from '../../../components/ui/Dialog';
 import { aiChatBotApi, type ChatBotPackage } from '../../../lib/aiChatBotApi';
+import { paymentsApi } from '../../../lib/paymentsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface BuyChatBotDialogProps {
@@ -12,13 +14,12 @@ interface BuyChatBotDialogProps {
 
 /**
  * "Purchase Credits: AI Chat Bot" — same two-step (pick package -> confirm
- * -> Payment) flow as BuySmsDialog. Payment credits chatBotCredits
- * immediately with no real payment gateway yet (see
- * AiChatBotService.buyPackage's own comment) — real payment is a later
- * task.
+ * -> Payment) flow as BuySmsDialog. Payment starts a real PayStation
+ * checkout for the package's price and redirects the browser there —
+ * chatBotCredits land once PayStation confirms the payment (IPN/
+ * callback, see PaymentsService.reconcile), not immediately on click.
  */
 export function BuyChatBotDialog({ open, onOpenChange }: BuyChatBotDialogProps) {
-  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<ChatBotPackage | null>(null);
 
   const { data: packages } = useQuery({
@@ -28,14 +29,11 @@ export function BuyChatBotDialog({ open, onOpenChange }: BuyChatBotDialogProps) 
   });
 
   const buyMutation = useMutation({
-    mutationFn: (packageId: ChatBotPackage['id']) => aiChatBotApi.buy(packageId),
+    mutationFn: (packageId: ChatBotPackage['id']) => paymentsApi.initiate({ purpose: 'CHATBOT_PACKAGE', packageId }),
     onSuccess: (data) => {
-      queryClient.setQueryData(['chatbot-credits'], data);
-      toast.success('AI Chat Bot credits added to your account.');
-      onOpenChange(false);
-      setSelected(null);
+      window.location.href = data.paymentUrl;
     },
-    onError: () => toast.error('Could not complete the purchase. Please try again.'),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not start the payment. Please try again.')),
   });
 
   const handleOpenChange = (next: boolean) => {
@@ -72,7 +70,7 @@ export function BuyChatBotDialog({ open, onOpenChange }: BuyChatBotDialogProps) 
               className="w-full px-6 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
                 transition-colors disabled:opacity-60"
             >
-              {buyMutation.isPending ? 'Processing…' : 'Payment'}
+              {buyMutation.isPending ? 'Redirecting…' : 'Pay with PayStation'}
             </button>
           </>
         ) : (

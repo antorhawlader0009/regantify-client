@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, Clock, CreditCard } from 'lucide-react';
 import {
@@ -8,6 +9,7 @@ import {
   type Plan,
   type PlanCode,
 } from '../../lib/plansApi';
+import { paymentsApi } from '../../lib/paymentsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 
@@ -37,16 +39,18 @@ function UsageBar({ label, used, limit }: { label: string; used: number; limit: 
 const TIER_ORDER: PlanCode[] = ['FREE', 'BASIC', 'STARTER', 'ADVANCE'];
 
 /**
- * Vendor dashboard's Billing page — PLAN.md Step 14. Current plan +
- * usage (reusing GET /v1/plans/usage from Step 5), and a 4-tier
- * comparison with a "Request Upgrade" action per tier. No self-serve
- * payment: since no real payment gateway exists yet (see PLAN.md's own
- * note), clicking "Request Upgrade" creates a PlanUpgradeRequest a
- * Super Admin manually approves (Step 15's Plan Requests page) — the
- * confirmed stopgap flow, not a placeholder for a future one.
+ * Vendor dashboard's Billing page — a 4-tier comparison with two ways
+ * to move plans: "Pay with PayStation" (self-serve, upgrades
+ * immediately on payment — see PaymentsService's PLAN_UPGRADE purpose)
+ * as the primary action, and "Request Upgrade" underneath it as a
+ * fallback for a vendor who'd rather arrange payment manually with
+ * support (creates a PlanUpgradeRequest a Super Admin reviews — Plan
+ * Requests page). Free has no payment button since it never costs
+ * anything.
  */
 export default function Billing() {
   const queryClient = useQueryClient();
+  const [payingPlan, setPayingPlan] = useState<PlanCode | null>(null);
 
   const { data: usage, isLoading: usageLoading } = useQuery({
     queryKey: ['vendor-plan-usage'],
@@ -71,6 +75,20 @@ export default function Billing() {
       toast.success(`Request sent — we'll review your request to move to ${plan?.name ?? planCode}.`);
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not send the request. Please try again.')),
+  });
+
+  const payMutation = useMutation({
+    mutationFn: (planCode: PlanCode) => {
+      setPayingPlan(planCode);
+      return paymentsApi.initiate({ purpose: 'PLAN_UPGRADE', packageId: planCode });
+    },
+    onSuccess: (data) => {
+      window.location.href = data.paymentUrl;
+    },
+    onError: (err) => {
+      toast.error(apiErrorMessage(err, 'Could not start the payment. Please try again.'));
+      setPayingPlan(null);
+    },
   });
 
   const loading = usageLoading || plansLoading;
@@ -127,7 +145,19 @@ export default function Billing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {sortedPlans.map((plan) => {
               const isCurrent = usage?.plan.code === plan.code;
-              return <PlanCard key={plan.id} plan={plan} isCurrent={isCurrent} pending={pendingRequest} onRequest={requestMutation.mutate} requesting={requestMutation.isPending} />;
+              return (
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  isCurrent={isCurrent}
+                  pending={pendingRequest}
+                  onRequest={requestMutation.mutate}
+                  requesting={requestMutation.isPending}
+                  onPay={payMutation.mutate}
+                  paying={payMutation.isPending && payingPlan === plan.code}
+                  payDisabled={payMutation.isPending}
+                />
+              );
             })}
           </div>
         </>
@@ -146,14 +176,22 @@ function PlanCard({
   pending,
   onRequest,
   requesting,
+  onPay,
+  paying,
+  payDisabled,
 }: {
   plan: Plan;
   isCurrent: boolean;
   pending: { requestedPlan: Plan } | undefined;
   onRequest: (code: PlanCode) => void;
   requesting: boolean;
+  onPay: (code: PlanCode) => void;
+  paying: boolean;
+  payDisabled: boolean;
 }) {
   const isPendingTarget = pending?.requestedPlan.code === plan.code;
+  const price = Number(plan.priceMonthly);
+  const isFree = price <= 0;
 
   return (
     <div
@@ -171,6 +209,11 @@ function PlanCard({
         )}
       </div>
 
+      <p className="text-lg font-semibold text-regantify-text mt-1">
+        {isFree ? 'Free' : `৳${price.toLocaleString('en-US')}`}
+        {!isFree && <span className="text-xs font-normal text-regantify-text-muted">/month</span>}
+      </p>
+
       <ul className="text-xs text-regantify-text-muted space-y-1.5 my-4 flex-1">
         <li>Products: {formatLimit(plan.productLimit)}</li>
         <li>Orders: {formatLimit(plan.orderLimitPerDay, '/day')}</li>
@@ -182,18 +225,36 @@ function PlanCard({
         <li>Custom domain: {plan.customDomainAllowed ? 'Yes' : 'No'}</li>
       </ul>
 
-      <button
-        type="button"
-        disabled={isCurrent || requesting || Boolean(pending)}
-        onClick={() => onRequest(plan.code)}
-        className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-          isCurrent
-            ? 'bg-regantify-content text-regantify-text-muted cursor-default'
-            : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed'
-        }`}
-      >
-        {isCurrent ? 'Current Plan' : isPendingTarget ? 'Requested' : pending ? 'Request Pending' : 'Request Upgrade'}
-      </button>
+      {isCurrent ? (
+        <button
+          type="button"
+          disabled
+          className="px-4 py-2 rounded-xl text-sm font-medium bg-regantify-content text-regantify-text-muted cursor-default"
+        >
+          Current Plan
+        </button>
+      ) : (
+        <div className="space-y-2">
+          {!isFree && (
+            <button
+              type="button"
+              disabled={payDisabled}
+              onClick={() => onPay(plan.code)}
+              className="w-full px-4 py-2 rounded-xl text-sm font-medium bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {paying ? 'Redirecting…' : 'Pay with PayStation'}
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={requesting || Boolean(pending) || payDisabled}
+            onClick={() => onRequest(plan.code)}
+            className="w-full px-4 py-2 rounded-xl text-sm font-medium border border-regantify-cta text-regantify-cta hover:bg-regantify-cta hover:text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          >
+            {isPendingTarget ? 'Requested' : pending ? 'Request Pending' : isFree ? 'Request Downgrade' : 'Request Manually'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

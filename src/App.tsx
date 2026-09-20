@@ -66,6 +66,7 @@ import Wallet from './pages/vendor/finance/Wallet';
 import Transactions from './pages/vendor/finance/Transactions';
 import Withdraw from './pages/vendor/finance/Withdraw';
 import FeeSummary from './pages/vendor/finance/FeeSummary';
+import PaymentCallback from './pages/vendor/finance/PaymentCallback';
 import Tracking from './pages/vendor/shipping/Tracking';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
@@ -236,6 +237,7 @@ export default function App() {
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
                 <Route path="/vendor/finance/withdraw" element={<Withdraw />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
+                <Route path="/vendor/finance/payment-callback" element={<PaymentCallback />} />
                 <Route path="/vendor/shipping/tracking" element={<Tracking />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
