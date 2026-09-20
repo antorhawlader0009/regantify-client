@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Link2 } from 'lucide-react';
 import { couponsApi, type Coupon } from '../../../lib/couponsApi';
 import { toast } from '../../../lib/toast';
+import { useAuthStore } from '../../../store/authStore';
+import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 
 /** "Percent Discount – 10 % (Max 2000)" / "Fixed Discount – 500" / "Free Shipping" — matches the TYPE column in the reference list. */
 function typeLabel(coupon: Coupon): string {
@@ -34,9 +36,10 @@ interface CouponRowProps {
   coupon: Coupon;
   selected: boolean;
   onToggleSelect: () => void;
+  subdomain?: string;
 }
 
-function CouponRow({ coupon, selected, onToggleSelect }: CouponRowProps) {
+function CouponRow({ coupon, selected, onToggleSelect, subdomain }: CouponRowProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -61,12 +64,26 @@ function CouponRow({ coupon, selected, onToggleSelect }: CouponRowProps) {
         <input type="checkbox" checked={selected} onChange={onToggleSelect} />
       </td>
       <td className="p-4">
-        <button
-          onClick={() => navigate(`/vendor/marketing/coupons/${coupon.id}/edit`)}
-          className="text-sm font-medium text-regantify-cta hover:text-regantify-cta-dark"
-        >
-          {coupon.code}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => navigate(`/vendor/marketing/coupons/${coupon.id}/edit`)}
+            className="text-sm font-medium text-regantify-cta hover:text-regantify-cta-dark"
+          >
+            {coupon.code}
+          </button>
+          {coupon.hasCustomLink && coupon.customLink && subdomain && (
+            <button
+              onClick={() => {
+                const url = `${storefrontStoreUrl(subdomain)}?coupon=${encodeURIComponent(coupon.customLink!)}`;
+                navigator.clipboard.writeText(url).then(() => toast.success('Link copied.'));
+              }}
+              className="text-regantify-text-muted hover:text-regantify-cta"
+              title="Copy shareable link"
+            >
+              <Link2 size={13} />
+            </button>
+          )}
+        </div>
       </td>
       <td className="p-4 text-sm text-regantify-text">{coupon.active ? 'active' : 'inactive'}</td>
       <td className="p-4 text-sm text-regantify-text">{typeLabel(coupon)}</td>
@@ -83,6 +100,7 @@ function CouponRow({ coupon, selected, onToggleSelect }: CouponRowProps) {
 
 export default function Coupons() {
   const navigate = useNavigate();
+  const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -196,6 +214,7 @@ export default function Coupons() {
                     coupon={coupon}
                     selected={selected.has(coupon.id)}
                     onToggleSelect={() => toggleSelectOne(coupon.id)}
+                    subdomain={subdomain}
                   />
                 ))
               )}

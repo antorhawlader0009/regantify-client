@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Search, X } from 'lucide-react';
+import { ChevronLeft, Search, X, Copy } from 'lucide-react';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
 import { couponsApi, type DiscountType } from '../../../lib/couponsApi';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { categoriesApi, type Category } from '../../../lib/categoriesApi';
 import { customersApi, type VendorCustomer } from '../../../lib/customersApi';
 import { toast } from '../../../lib/toast';
+import { useAuthStore } from '../../../store/authStore';
+import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 
 /** Same visual pattern as the pin/unpin switches on Orders > Customize Tabs. */
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -41,6 +43,7 @@ export default function AddCoupon() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
 
   const { data: existing } = useQuery({
     queryKey: ['coupons', id],
@@ -250,6 +253,24 @@ export default function AddCoupon() {
                   placeholder="e.g. spring-sale"
                   className={inputClass}
                 />
+                {customLink.trim() && subdomain && (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-regantify-content px-3 py-2">
+                    <span className="flex-1 truncate text-xs text-regantify-text-muted">
+                      {`${storefrontStoreUrl(subdomain)}?coupon=${encodeURIComponent(customLink.trim())}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `${storefrontStoreUrl(subdomain)}?coupon=${encodeURIComponent(customLink.trim())}`;
+                        navigator.clipboard.writeText(url).then(() => toast.success('Link copied.'));
+                      }}
+                      className="shrink-0 text-regantify-text-muted hover:text-regantify-cta"
+                      title="Copy link"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                )}
               </Field>
             )}
           </div>
