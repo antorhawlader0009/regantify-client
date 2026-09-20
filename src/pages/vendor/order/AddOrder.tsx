@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, X, Search } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { ordersApi, type OrderItemInput } from '../../../lib/ordersApi';
+import { getVendorDeliveryCharges } from '../../../lib/vendorApi';
 import { toast } from '../../../lib/toast';
 
 interface CartLine extends OrderItemInput {
@@ -28,11 +29,6 @@ export interface CreateOrderFromIncompleteState {
 function formatPrice(value: number) {
   return `৳${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
-
-const DELIVERY_CHARGE: Record<'DHAKA' | 'OUTSIDE_DHAKA', number> = {
-  DHAKA: 80,
-  OUTSIDE_DHAKA: 150,
-};
 
 export default function AddOrder() {
   const navigate = useNavigate();
@@ -86,6 +82,22 @@ export default function AddOrder() {
     enabled: productSearch.trim().length > 0,
   });
 
+  // Settings > Courier Integration > Delivery Charge — same values the
+  // server actually falls back to below when no custom charge is typed
+  // (OrdersService.create). Add Order always creates a COD order (see
+  // that method's own comment on why ONLINE_PAYMENT is storefront-only),
+  // so codVatCharge is always added server-side too — shown here as a
+  // preview so the total matches what's actually created.
+  const { data: deliveryCharges } = useQuery({
+    queryKey: ['vendor-delivery-charges'],
+    queryFn: getVendorDeliveryCharges,
+  });
+  const DELIVERY_CHARGE: Record<'DHAKA' | 'OUTSIDE_DHAKA', number> = {
+    DHAKA: Number(deliveryCharges?.insideDhakaCharge ?? 70),
+    OUTSIDE_DHAKA: Number(deliveryCharges?.outsideDhakaCharge ?? 130),
+  };
+  const vatAmount = Number(deliveryCharges?.codVatCharge ?? 5);
+
   const addToCart = (product: Product) => {
     const price = Number(product.discountPrice ?? product.price);
     const listPrice = Number(product.price);
@@ -123,7 +135,7 @@ export default function AddOrder() {
   const cartTotal = useMemo(() => cart.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0), [cart]);
   const deliveryCharge = showCustomCharge && customCharge !== null ? customCharge : zone ? DELIVERY_CHARGE[zone] : 0;
   const discount = showDiscount && discountAmount !== null ? discountAmount : 0;
-  const grandTotal = Math.max(0, cartTotal + deliveryCharge - discount);
+  const grandTotal = Math.max(0, cartTotal + deliveryCharge + vatAmount - discount);
 
   const createMutation = useMutation({
     mutationFn: ordersApi.create,
@@ -432,6 +444,11 @@ export default function AddOrder() {
               />
             </div>
           )}
+        </div>
+
+        <div className="flex justify-between text-sm mb-4">
+          <span className="text-regantify-text-muted">VAT (Cash on Delivery)</span>
+          <span className="font-medium text-regantify-text">{formatPrice(vatAmount)}</span>
         </div>
 
         <div className="flex justify-between items-center pt-4 border-t border-black/5">

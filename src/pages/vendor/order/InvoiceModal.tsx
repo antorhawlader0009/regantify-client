@@ -96,6 +96,12 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
                   <span>Delivery</span>
                   <span>{formatPrice(order.deliveryCharge)}</span>
                 </div>
+                {Number(order.vatAmount) > 0 && (
+                  <div className="flex justify-between text-regantify-text-muted">
+                    <span>VAT (COD)</span>
+                    <span>{formatPrice(order.vatAmount)}</span>
+                  </div>
+                )}
                 {Number(order.discountAmount) > 0 && (
                   <div className="flex justify-between text-regantify-text-muted">
                     <span>Discount</span>

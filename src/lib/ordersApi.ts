@@ -78,6 +78,10 @@ export interface Order {
   deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA';
   subtotal: string;
   deliveryCharge: string;
+  // Flat COD fee, shown to shoppers as "VAT" (StorePal) — only ever
+  // non-zero when paymentMethod is "COD". See Vendor.codVatCharge /
+  // Order.vatAmount in schema.prisma.
+  vatAmount: string;
   discountAmount: string;
   discountLabel?: string | null;
   total: string;
