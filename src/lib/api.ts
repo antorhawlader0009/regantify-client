@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { detectApiOrigin } from './detectApiOrigin';
 
 // If VITE_API_URL is set, always use it. Otherwise, derive the API host
 // from whatever host the browser used to load the app itself — this is
@@ -13,6 +14,21 @@ export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? inferredApiUrl,
   withCredentials: true, // send the httpOnly refresh-token cookie
 });
+
+// Auto-detect local-vs-VPS: only when VITE_API_URL wasn't explicitly
+// set (that always wins, unchanged) does this override baseURL — with
+// whichever of the inferred local URL or the real VPS actually answers
+// (see detectApiOrigin's own comment). Runs once per page load,
+// resolved before the very first request goes out; every request after
+// that awaits the same cached promise, so this is a no-op cost once
+// warm. A page that fires no API call before the user navigates away
+// never even pays the probe.
+if (!import.meta.env.VITE_API_URL) {
+  api.interceptors.request.use(async (config) => {
+    config.baseURL = await detectApiOrigin(inferredApiUrl);
+    return config;
+  });
+}
 
 // Attach the in-memory access token to every request.
 api.interceptors.request.use((config) => {
