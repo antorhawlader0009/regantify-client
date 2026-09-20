@@ -61,9 +61,11 @@ import AddCoupon from './pages/vendor/marketing/AddCoupon';
 import Campaigns from './pages/vendor/marketing/Campaigns';
 import AddCampaign from './pages/vendor/marketing/AddCampaign';
 import Sms from './pages/vendor/sms/Sms';
+import AiChatBot from './pages/vendor/ai-automation/AiChatBot';
 import Wallet from './pages/vendor/finance/Wallet';
 import Transactions from './pages/vendor/finance/Transactions';
 import FeeSummary from './pages/vendor/finance/FeeSummary';
+import Tracking from './pages/vendor/shipping/Tracking';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
@@ -112,9 +114,11 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/coupons' &&
     r.path !== '/vendor/marketing/campaigns' &&
     r.path !== '/vendor/sms' &&
+    r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/transactions' &&
-    r.path !== '/vendor/finance/fee-summary',
+    r.path !== '/vendor/finance/fee-summary' &&
+    r.path !== '/vendor/shipping/tracking',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -223,9 +227,11 @@ export default function App() {
                 <Route path="/vendor/marketing/campaigns/add" element={<AddCampaign />} />
                 <Route path="/vendor/marketing/campaigns/:id/edit" element={<AddCampaign />} />
                 <Route path="/vendor/sms" element={<Sms />} />
+                <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
+                <Route path="/vendor/shipping/tracking" element={<Tracking />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

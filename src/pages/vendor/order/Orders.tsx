@@ -4,8 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, ChevronDown, Settings2, Tag } from 'lucide-react';
 import { ordersApi, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { courierApi, notConnectedProvider, type CourierAccountProvider } from '../../../lib/courierApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
+import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CustomizeTabsModal } from './CustomizeTabsModal';
@@ -33,6 +36,14 @@ const COURIER_LABELS: Record<CourierProvider, string> = {
   NONE: 'None',
   PATHAO: 'Pathao Courier',
   STEADFAST: 'SteadFast Courier',
+  REDX: 'RedX Courier',
+};
+
+const BOOKING_STATUS_LABELS: Record<Order['courierBookingStatus'], string> = {
+  NOT_BOOKED: '',
+  BOOKING: 'Booking…',
+  BOOKED: 'Booked',
+  FAILED: 'Booking failed',
 };
 
 interface OrderRowProps {
@@ -46,9 +57,27 @@ interface OrderRowProps {
   // same as false (locked) so the picker never briefly shows Pathao as
   // selectable before the real plan is known.
   otherCouriersAllowed: boolean | undefined;
+  // COURIER-PLAN.md §5.2 — which providers this vendor already has an
+  // active account for. Undefined while still loading, treated the same
+  // as "not connected" so a click never sneaks past the setup popup
+  // before the real connection state is known.
+  connectedProviders: Set<CourierAccountProvider> | undefined;
+  // Called instead of proceeding when the vendor picks/books a provider
+  // they haven't connected yet — the parent owns the actual modal since
+  // it's shared across every row (see COURIER-PLAN.md §5.2).
+  onRequestSetup: (provider: CourierAccountProvider, retry: () => void) => void;
 }
 
-function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoice, otherCouriersAllowed }: OrderRowProps) {
+function OrderRow({
+  order,
+  trashView,
+  onCheckHistory,
+  onChangeLabel,
+  onShowInvoice,
+  otherCouriersAllowed,
+  connectedProviders,
+  onRequestSetup,
+}: OrderRowProps) {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
@@ -73,6 +102,49 @@ function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoi
       );
     },
     onError: () => toast.error('Could not update the courier. Please try again.'),
+  });
+
+  // "Select {Provider}" in the Actions menu — still just the plain label
+  // change (unchanged from before), but now gated behind the "has this
+  // vendor connected {Provider} yet?" check first, per COURIER-PLAN.md
+  // §5.2: an unconnected provider opens the setup popup instead of
+  // silently setting a label the vendor can't actually book later.
+  function selectCourier(provider: Exclude<CourierProvider, 'NONE'>) {
+    if (!connectedProviders?.has(provider)) {
+      onRequestSetup(provider, () => courierMutation.mutate(provider));
+      return;
+    }
+    courierMutation.mutate(provider);
+  }
+
+  // "Book with {Provider}" — the real API call (COURIER-PLAN.md §5.2).
+  // Kept as a mutation separate from courierMutation above since it's a
+  // different, real-side-effect action with its own pending/error state
+  // (courierBookingStatus), not just a label change.
+  const bookMutation = useMutation({
+    mutationFn: () => courierApi.bookOrder(order.id),
+    onSuccess: () => {
+      invalidate();
+      toast.success(`Booked with ${COURIER_LABELS[order.courierProvider]}.`);
+    },
+    onError: (err) => {
+      const notConnected = notConnectedProvider(err);
+      if (notConnected) {
+        onRequestSetup(notConnected, () => bookMutation.mutate());
+        return;
+      }
+      invalidate(); // refresh so the row picks up courierBookingStatus: FAILED + courierBookingError
+      toast.error(apiErrorMessage(err, 'Could not book this order with the courier. Please try again.'));
+    },
+  });
+
+  const refreshStatusMutation = useMutation({
+    mutationFn: () => courierApi.refreshStatus(order.id),
+    onSuccess: () => {
+      invalidate();
+      toast.success('Delivery status refreshed.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not refresh the delivery status. Please try again.')),
   });
 
   const trashMutation = useMutation({
@@ -104,7 +176,25 @@ function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoi
       <td className="p-4">
         <OrderStatusBadge status={order.status} />
         {order.courierProvider !== 'NONE' && (
-          <p className="text-[11px] text-regantify-text-muted mt-1">{COURIER_LABELS[order.courierProvider]}</p>
+          <>
+            <p className="text-[11px] text-regantify-text-muted mt-1">{COURIER_LABELS[order.courierProvider]}</p>
+            {/* Real booking state — COURIER-PLAN.md §5.3. NOT_BOOKED shows
+                nothing extra here (the provider label above already says
+                which courier is chosen; "Book with..." lives in Actions). */}
+            {order.courierBookingStatus === 'BOOKED' && (
+              <p className="text-[11px] text-green-600 mt-0.5">
+                {BOOKING_STATUS_LABELS.BOOKED} · {order.courierTrackingCode ?? order.courierConsignmentId}
+              </p>
+            )}
+            {order.courierBookingStatus === 'FAILED' && (
+              <p className="text-[11px] text-red-500 mt-0.5" title={order.courierBookingError ?? undefined}>
+                {BOOKING_STATUS_LABELS.FAILED}
+              </p>
+            )}
+            {order.courierBookingStatus === 'BOOKING' && (
+              <p className="text-[11px] text-regantify-text-muted mt-0.5">{BOOKING_STATUS_LABELS.BOOKING}</p>
+            )}
+          </>
         )}
       </td>
       <td className="p-4 min-w-[180px]">
@@ -173,16 +263,32 @@ function OrderRow({ order, trashView, onCheckHistory, onChangeLabel, onShowInvoi
               <DropdownMenuItem onSelect={() => onChangeLabel(order)}>Change Label</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onSelect={() =>
-                  otherCouriersAllowed ? courierMutation.mutate('PATHAO') : upgradeToast('use Pathao Courier')
-                }
+                onSelect={() => (otherCouriersAllowed ? selectCourier('PATHAO') : upgradeToast('use Pathao Courier'))}
               >
                 {!otherCouriersAllowed && <LockedBadge />}
                 Pathao Courier
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => courierMutation.mutate('STEADFAST')}>SteadFast Courier</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => selectCourier('STEADFAST')}>SteadFast Courier</DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => (otherCouriersAllowed ? selectCourier('REDX') : upgradeToast('use RedX Courier'))}
+              >
+                {!otherCouriersAllowed && <LockedBadge />}
+                RedX Courier
+              </DropdownMenuItem>
               {order.courierProvider !== 'NONE' && (
                 <DropdownMenuItem onSelect={() => courierMutation.mutate('NONE')}>Clear Courier</DropdownMenuItem>
+              )}
+              {/* "Book with {Provider}" / "Refresh Status" — the real API
+                  actions, only once a courier is actually selected (see
+                  COURIER-PLAN.md §5.2). Booking is offered again after a
+                  FAILED attempt (retry), but not once already BOOKED. */}
+              {order.courierProvider !== 'NONE' && order.courierBookingStatus !== 'BOOKED' && (
+                <DropdownMenuItem onSelect={() => bookMutation.mutate()}>
+                  Book with {COURIER_LABELS[order.courierProvider]}
+                </DropdownMenuItem>
+              )}
+              {order.courierBookingStatus === 'BOOKED' && (
+                <DropdownMenuItem onSelect={() => refreshStatusMutation.mutate()}>Refresh Delivery Status</DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem danger onSelect={() => trashMutation.mutate()}>
@@ -211,6 +317,11 @@ export default function Orders() {
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [labelOrder, setLabelOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
+  // COURIER-PLAN.md §5.2 — the "not connected → setup popup" flow.
+  // setupPending holds the action (courier selection or booking) that
+  // triggered the popup, so it can run automatically once the vendor
+  // connects instead of making them re-click. null closes the modal.
+  const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
   useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView]);
 
@@ -218,6 +329,18 @@ export default function Orders() {
     queryKey: ['order-status-tabs'],
     queryFn: () => ordersApi.getStatusTabs(),
   });
+
+  // Which providers this vendor has already connected — every OrderRow's
+  // courier picker/booking action checks this before proceeding (see
+  // COURIER-PLAN.md §5.2). One shared query for the whole list rather
+  // than each row fetching its own copy.
+  const { data: courierAccounts } = useQuery({
+    queryKey: ['courier-accounts'],
+    queryFn: courierApi.getAccounts,
+  });
+  const connectedProviders = courierAccounts
+    ? new Set(courierAccounts.filter((a) => a.isActive).map((a) => a.provider))
+    : undefined;
 
   // PLAN.md Step 11 — Free: Steadfast only, paid tiers: also Pathao. No
   // dedicated Plan column for this (the source-of-truth table shows the
@@ -422,6 +545,8 @@ export default function Orders() {
                     onChangeLabel={setLabelOrder}
                     onShowInvoice={setInvoiceOrder}
                     otherCouriersAllowed={otherCouriersAllowed}
+                    connectedProviders={connectedProviders}
+                    onRequestSetup={(provider, retry) => setSetupPending({ provider, retry })}
                   />
                 ))
               )}
@@ -493,6 +618,17 @@ export default function Orders() {
         saving={labelMutation.isPending}
       />
       <InvoiceModal order={invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
+      <CourierSetupModal
+        provider={setupPending?.provider ?? null}
+        onOpenChange={(open) => !open && setSetupPending(null)}
+        onConnected={() => {
+          // Re-run whatever action (courier selection or booking)
+          // triggered the popup — the vendor shouldn't have to re-click
+          // after connecting (COURIER-PLAN.md §5.2).
+          setupPending?.retry();
+          setSetupPending(null);
+        }}
+      />
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+import { PathaoLocationPicker } from '../../../components/courier/PathaoLocationPicker';
+import { RedxLocationPicker } from '../../../components/courier/RedxLocationPicker';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -185,6 +187,28 @@ export default function OrderDetail() {
               <p className="text-xs text-regantify-text-muted">District: {order.shippingDistrict}</p>
             )}
             {order.shippingZip && <p className="text-xs text-regantify-text-muted">ZIP: {order.shippingZip}</p>}
+
+            {/* Pathao's order API needs numeric city/zone/area, not the
+                free-text fields above — only relevant once this order is
+                assigned to Pathao (see COURIER-PLAN.md §3.2/§7 Phase 2). */}
+            {order.courierProvider === 'PATHAO' && (
+              <div className="mt-4 pt-4 border-t border-black/5">
+                <PathaoLocationPicker
+                  orderId={order.id}
+                  currentCityId={order.pathaoCityId}
+                  currentZoneId={order.pathaoZoneId}
+                  currentAreaId={order.pathaoAreaId}
+                />
+              </div>
+            )}
+
+            {/* RedX's order API needs a numeric delivery area id — a
+                single tier, unlike Pathao's city/zone/area cascade. */}
+            {order.courierProvider === 'REDX' && (
+              <div className="mt-4 pt-4 border-t border-black/5">
+                <RedxLocationPicker orderId={order.id} currentAreaId={order.redxAreaId} />
+              </div>
+            )}
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-6">

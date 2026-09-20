@@ -33,7 +33,14 @@ export interface OrderItem {
   product?: { slug: string; visibility: 'PUBLIC' | 'DRAFT' } | null;
 }
 
-export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST';
+export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
+
+// Real-booking lifecycle for courierProvider — see COURIER-PLAN.md
+// §2.4/§3.4. Distinct from OrderStatus: courierProvider/
+// courierBookingStatus track the courier API side, OrderStatus is the
+// vendor-facing pipeline stage (which a successful courier sync can also
+// update, via applyStatusUpdate on the server).
+export type CourierBookingStatus = 'NOT_BOOKED' | 'BOOKING' | 'BOOKED' | 'FAILED';
 
 export interface Order {
   id: string;
@@ -43,6 +50,11 @@ export interface Order {
   status: OrderStatus;
   label?: string | null;
   courierProvider: CourierProvider;
+  courierConsignmentId?: string | null;
+  courierTrackingCode?: string | null;
+  courierBookingStatus: CourierBookingStatus;
+  courierBookingError?: string | null;
+  courierLastSyncedAt?: string | null;
   deletedAt?: string | null;
   customerName: string;
   customerPhone: string;
@@ -54,6 +66,15 @@ export interface Order {
   shippingZip?: string | null;
   shippingCity?: string | null;
   shippingDistrict?: string | null;
+  // Pathao-specific numeric location IDs, set via PathaoLocationPicker —
+  // see COURIER-PLAN.md §3.2/§7 Phase 2. Independent of the free-text
+  // shippingCity/shippingDistrict above.
+  pathaoCityId?: number | null;
+  pathaoZoneId?: number | null;
+  pathaoAreaId?: number | null;
+  // RedX's single delivery-area id, set via RedxLocationPicker — RedX
+  // has only one location tier, unlike Pathao's city/zone/area cascade.
+  redxAreaId?: number | null;
   deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA';
   subtotal: string;
   deliveryCharge: string;
