@@ -24,7 +24,4 @@ export const smsApi = {
     api.post<{ smsCredits: number }>('/v1/sms/test', { phone }).then((r) => r.data),
 
   getPackages: () => api.get<SmsPackage[]>('/v1/sms/packages').then((r) => r.data),
-
-  buy: (packageId: SmsPackage['id']) =>
-    api.post<{ smsCredits: number }>('/v1/sms/buy', { packageId }).then((r) => r.data),
 };

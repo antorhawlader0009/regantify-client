@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Wallet as WalletIcon, ArrowRight, Clock, ArrowDownToLine } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowRight, Clock, ArrowDownToLine, CreditCard } from 'lucide-react';
 import { financeApi } from '../../../lib/financeApi';
+import { TestPaymentDialog } from './TestPaymentDialog';
 
 function formatAmount(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
 export default function Wallet() {
+  const [testPaymentOpen, setTestPaymentOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ['finance', 'wallet'],
     queryFn: () => financeApi.getWallet(),
@@ -17,14 +20,27 @@ export default function Wallet() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Wallet</h1>
-        <Link
-          to="/vendor/finance/withdraw"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark
-            text-white text-sm font-medium transition-colors"
-        >
-          Request Withdrawal
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setTestPaymentOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-regantify-cta text-regantify-cta
+              hover:bg-regantify-cta hover:text-white text-sm font-medium transition-colors"
+          >
+            <CreditCard size={15} />
+            Test Payment
+          </button>
+          <Link
+            to="/vendor/finance/withdraw"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark
+              text-white text-sm font-medium transition-colors"
+          >
+            Request Withdrawal
+          </Link>
+        </div>
       </div>
+
+      <TestPaymentDialog open={testPaymentOpen} onOpenChange={setTestPaymentOpen} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-regantify-black rounded-2xl p-6 text-white">

@@ -15,7 +15,4 @@ export const aiChatBotApi = {
   getCredits: () => api.get<{ chatBotCredits: number }>('/v1/ai-chatbot/credits').then((r) => r.data),
 
   getPackages: () => api.get<ChatBotPackage[]>('/v1/ai-chatbot/packages').then((r) => r.data),
-
-  buy: (packageId: ChatBotPackage['id']) =>
-    api.post<{ chatBotCredits: number }>('/v1/ai-chatbot/buy', { packageId }).then((r) => r.data),
 };

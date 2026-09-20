@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { Dialog } from '../../../components/ui/Dialog';
 import { smsApi, type SmsPackage } from '../../../lib/smsApi';
+import { paymentsApi } from '../../../lib/paymentsApi';
+import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 interface BuySmsDialogProps {
@@ -13,12 +15,12 @@ interface BuySmsDialogProps {
 /**
  * "Purchase Credits: SMS" — matches the reference package cards
  * exactly. Picking a package moves to a confirm step; the confirm
- * step's "Payment" button credits the SMS immediately with no real
- * payment gateway yet (see SmsService.buyPackage's own comment) —
- * real payment is a later task.
+ * step's "Payment" button starts a real PayStation checkout for the
+ * package's price and redirects the browser there — SMS credits land
+ * once PayStation confirms the payment (IPN/callback, see
+ * PaymentsService.reconcile), not immediately on click.
  */
 export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
-  const queryClient = useQueryClient();
   const [selected, setSelected] = useState<SmsPackage | null>(null);
 
   const { data: packages } = useQuery({
@@ -28,14 +30,11 @@ export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
   });
 
   const buyMutation = useMutation({
-    mutationFn: (packageId: SmsPackage['id']) => smsApi.buy(packageId),
+    mutationFn: (packageId: SmsPackage['id']) => paymentsApi.initiate({ purpose: 'SMS_PACKAGE', packageId }),
     onSuccess: (data) => {
-      queryClient.setQueryData(['sms-credits'], data);
-      toast.success('SMS credits added to your account.');
-      onOpenChange(false);
-      setSelected(null);
+      window.location.href = data.paymentUrl;
     },
-    onError: () => toast.error('Could not complete the purchase. Please try again.'),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not start the payment. Please try again.')),
   });
 
   const handleOpenChange = (next: boolean) => {
@@ -72,7 +71,7 @@ export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
               className="w-full px-6 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
                 transition-colors disabled:opacity-60"
             >
-              {buyMutation.isPending ? 'Processing…' : 'Payment'}
+              {buyMutation.isPending ? 'Redirecting…' : 'Pay with PayStation'}
             </button>
           </>
         ) : (
