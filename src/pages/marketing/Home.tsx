@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Store,
@@ -10,6 +10,9 @@ import {
   Plus,
   Minus,
   Languages,
+  X,
+  BarChart3,
+  Sparkles,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -83,9 +86,18 @@ const dict = {
     pricing_toggle_monthly: 'Monthly',
     pricing_toggle_yearly: 'Yearly',
     pricing_per_month: '/month',
-    pricing_total_monthly: '12 Month Total',
-    pricing_total_yearly: 'Yearly Total',
+    pricing_per_year: '/year',
+    pricing_sub_monthly: 'Billed monthly',
+    pricing_sub_yearly: 'Billed yearly',
+    pricing_equiv_month: 'Only',
+    pricing_equiv_month_suffix: '/month',
     pricing_feature_col: 'Feature',
+    pricing_view_chart: 'View comparison chart',
+    pricing_chart_title: 'Compare all plans',
+    pricing_chart_sub: 'Every feature, side by side.',
+    pricing_close: 'Close',
+    pricing_save: 'Save',
+    pricing_key_features: 'Highlights',
 
     plan1_name: 'Free',
     plan1_tag: 'Try it with your first few products.',
@@ -234,9 +246,18 @@ const dict = {
     pricing_toggle_monthly: 'মাসিক',
     pricing_toggle_yearly: 'বাৎসরিক',
     pricing_per_month: '/মাস',
-    pricing_total_monthly: '১২ মাসের মোট',
-    pricing_total_yearly: 'বছরের মোট',
+    pricing_per_year: '/বছর',
+    pricing_sub_monthly: 'মাসিক বিল',
+    pricing_sub_yearly: 'বাৎসরিক বিল',
+    pricing_equiv_month: 'মাত্র',
+    pricing_equiv_month_suffix: '/মাস',
     pricing_feature_col: 'ফিচার',
+    pricing_view_chart: 'তুলনা চার্ট দেখুন',
+    pricing_chart_title: 'সব প্ল্যানের তুলনা',
+    pricing_chart_sub: 'সব ফিচার, পাশাপাশি।',
+    pricing_close: 'বন্ধ করুন',
+    pricing_save: 'সাশ্রয়',
+    pricing_key_features: 'মূল সুবিধা',
 
     plan1_name: 'ফ্রি',
     plan1_tag: 'প্রথম কয়েকটা প্রোডাক্ট দিয়ে চেষ্টা করুন।',
@@ -353,6 +374,69 @@ function useLang() {
 }
 
 // ---------------------------------------------------------------------------
+// Small animation helpers (pure React + CSS, no extra dependency)
+// ---------------------------------------------------------------------------
+
+/** Returns [ref, visible] — visible flips to true once the element scrolls into view. */
+function useInView<T extends HTMLElement>(threshold = 0.15) {
+  const ref = useRef<T | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+
+  return [ref, visible] as const;
+}
+
+/** Smoothly counts from the previous value to `value` (ease-out cubic). */
+function AnimatedNumber({ value, duration = 700 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+
+  useEffect(() => {
+    const from = fromRef.current;
+    const to = value;
+    if (from === to) return;
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (p < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        fromRef.current = to;
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      fromRef.current = to;
+    };
+  }, [value, duration]);
+
+  return <>{display.toLocaleString('en-US')}</>;
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -360,6 +444,15 @@ function HomeInner() {
   const navigate = useNavigate();
   const { t, lang, toggle } = useLang();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  // Navbar: fully transparent over the hero, glass effect once scrolled.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const categories = [
     { icon: Boxes, name: t('cat1_name'), detail: t('cat1_detail') },
@@ -408,6 +501,7 @@ function HomeInner() {
   // which per-month rate applies, and the total for 12 months at that
   // rate is shown underneath.
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+  const [chartOpen, setChartOpen] = useState(false);
 
   const plans = [
     {
@@ -513,6 +607,15 @@ function HomeInner() {
     },
   ];
 
+  // Short highlight list shown on each animated pricing card
+  // (the full comparison lives in the popup chart).
+  const highlightRows = [
+    { label: t('feat_row_product'), idx: 0 },
+    { label: t('feat_row_order'), idx: 1 },
+    { label: t('feat_row_staff'), idx: 9 },
+    { label: t('feat_row_aichat'), idx: 6 },
+  ];
+
   const faqs = [
     { q: t('faq1_q'), a: t('faq1_a') },
     { q: t('faq2_q'), a: t('faq2_a') },
@@ -521,41 +624,128 @@ function HomeInner() {
     { q: t('faq5_q'), a: t('faq5_a') },
   ];
 
+  // Scroll-reveal for the pricing block
+  const [pricingRef, pricingVisible] = useInView<HTMLDivElement>(0.1);
+
+  // Lock body scroll + Escape-to-close while the chart popup is open
+  useEffect(() => {
+    if (!chartOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setChartOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [chartOpen]);
+
   return (
     <div className="bg-white text-[#1A1A1A]">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-black/10">
+      {/* Local keyframes for the animated pricing section + chart popup */}
+      <style>{`
+        @keyframes rg-fade-up {
+          from { opacity: 0; transform: translateY(28px) scale(0.98); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes rg-float {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-6px); }
+        }
+        @keyframes rg-glow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(149,191,71,0.45), 0 20px 50px -12px rgba(0,0,0,0.5); }
+          50%      { box-shadow: 0 0 0 10px rgba(149,191,71,0), 0 20px 50px -12px rgba(0,0,0,0.5); }
+        }
+        @keyframes rg-shimmer {
+          0%   { transform: translateX(-120%) skewX(-18deg); }
+          100% { transform: translateX(320%) skewX(-18deg); }
+        }
+        @keyframes rg-blob {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33%      { transform: translate(30px, -20px) scale(1.12); }
+          66%      { transform: translate(-24px, 18px) scale(0.94); }
+        }
+        @keyframes rg-pop-in {
+          from { opacity: 0; transform: translateY(24px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes rg-backdrop-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes rg-row-in {
+          from { opacity: 0; transform: translateX(-12px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes rg-badge-bounce {
+          0%, 100% { transform: translateY(0) rotate(-2deg); }
+          50%      { transform: translateY(-3px) rotate(2deg); }
+        }
+        .rg-fade-up   { animation: rg-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .rg-float     { animation: rg-float 4.5s ease-in-out infinite; }
+        .rg-glow      { animation: rg-glow 2.6s ease-in-out infinite; }
+        .rg-blob      { animation: rg-blob 14s ease-in-out infinite; }
+        .rg-pop-in    { animation: rg-pop-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .rg-backdrop  { animation: rg-backdrop-in 0.3s ease-out both; }
+        .rg-row-in    { animation: rg-row-in 0.4s ease-out both; }
+        .rg-badge     { animation: rg-badge-bounce 2.4s ease-in-out infinite; }
+        .rg-shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0; bottom: 0; left: 0;
+          width: 40%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+          animation: rg-shimmer 2.8s ease-in-out infinite;
+          pointer-events: none;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .rg-fade-up, .rg-float, .rg-glow, .rg-blob, .rg-pop-in,
+          .rg-backdrop, .rg-row-in, .rg-badge { animation: none !important; }
+          .rg-shimmer::after { animation: none !important; }
+        }
+      `}</style>
+
+      {/* Header — fixed + transparent over the hero, glass blur after scroll */}
+      <header
+        className={`fixed top-0 inset-x-0 z-30 transition-all duration-300 ${
+          scrolled
+            ? 'bg-[#1A1A1A]/70 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
+            : 'bg-transparent border-b border-transparent'
+        }`}
+      >
         <div className="max-w-6xl mx-auto h-[76px] flex items-center justify-between px-6">
           <div className="flex items-center gap-2.5">
-            <Store className="text-[#008060]" size={26} strokeWidth={2} />
-            <span className="text-[#1A1A1A] text-xl font-semibold leading-none">Regantify</span>
+            <Store className="text-[#95BF47]" size={26} strokeWidth={2} />
+            <span className="text-white text-xl font-semibold leading-none">Regantify</span>
           </div>
-          <nav className="hidden md:flex items-center gap-7 text-sm text-[#1A1A1A]/70">
-            <a href="#categories" className="hover:text-[#1A1A1A] transition-colors">{t('nav_who')}</a>
-            <a href="#run" className="hover:text-[#1A1A1A] transition-colors">{t('nav_services')}</a>
-            <a href="#features" className="hover:text-[#1A1A1A] transition-colors">{t('nav_features')}</a>
-            <a href="#pricing" className="hover:text-[#1A1A1A] transition-colors">{t('nav_pricing')}</a>
-            <a href="#faq" className="hover:text-[#1A1A1A] transition-colors">{t('nav_faq')}</a>
+          <nav className="hidden md:flex items-center gap-7 text-sm text-white/75">
+            <a href="#categories" className="hover:text-white transition-colors">{t('nav_who')}</a>
+            <a href="#run" className="hover:text-white transition-colors">{t('nav_services')}</a>
+            <a href="#features" className="hover:text-white transition-colors">{t('nav_features')}</a>
+            <a href="#pricing" className="hover:text-white transition-colors">{t('nav_pricing')}</a>
+            <a href="#faq" className="hover:text-white transition-colors">{t('nav_faq')}</a>
           </nav>
           <div className="flex items-center gap-2">
             <button
               onClick={toggle}
               aria-label="Toggle language"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-[#1A1A1A]/75
-                border border-black/15 hover:border-black/30 hover:text-[#1A1A1A] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-white/85
+                border border-white/25 hover:border-white/50 hover:text-white transition-colors"
             >
               <Languages size={15} />
               {lang === 'en' ? 'বাংলা' : 'English'}
             </button>
             <button
               onClick={() => navigate('/vendor/login')}
-              className="hidden sm:inline-flex px-3.5 py-2 rounded-full text-sm font-medium text-[#1A1A1A]/75 hover:text-[#1A1A1A] transition-colors"
+              className="hidden sm:inline-flex px-3.5 py-2 rounded-full text-sm font-medium text-white/85 hover:text-white transition-colors"
             >
               {t('nav_login')}
             </button>
             <button
               onClick={() => navigate('/vendor/signup')}
-              className="px-4 py-2 rounded-full text-sm font-medium bg-[#1A1A1A] text-white hover:bg-black transition-colors"
+              className="px-4 py-2 rounded-full text-sm font-medium bg-[#95BF47] text-[#1A1A1A] hover:bg-[#84AD3D] transition-colors"
             >
               {t('nav_start')}
             </button>
@@ -563,14 +753,16 @@ function HomeInner() {
         </div>
       </header>
 
-      {/* Hero — full-bleed background image, copy overlaid */}
+      {/* Hero — full-bleed background image, copy overlaid.
+          Extra top padding since the navbar is now fixed/transparent
+          and sits on top of the hero instead of taking its own space. */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img src="/hero.png" alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/90 via-[#1A1A1A]/70 to-[#1A1A1A]/20" />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-28">
+        <div className="relative max-w-6xl mx-auto px-6 pt-[156px] pb-28">
           <span className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#008060] px-3 py-1.5 rounded-full mb-6">
             {t('hero_tag')}
           </span>
@@ -679,153 +871,318 @@ function HomeInner() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="max-w-6xl mx-auto px-6 py-20">
-        <h2 className="text-2xl font-bold mb-2">{t('pricing_title')}</h2>
-        <p className="text-[#1A1A1A]/60 mb-6 max-w-lg">{t('pricing_sub')}</p>
-
-        {/* Billing toggle: Monthly vs Yearly — two different per-month
-            rates (Yearly is cheaper). The 12-month total for the selected
-            rate is shown underneath each price. */}
-        <div className="inline-flex items-center p-1 rounded-full bg-[#F1F1F1] mb-10">
-          <button
-            onClick={() => setBilling('monthly')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              billing === 'monthly' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#1A1A1A]/60'
-            }`}
-          >
-            {t('pricing_toggle_monthly')}
-          </button>
-          <button
-            onClick={() => setBilling('yearly')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              billing === 'yearly' ? 'bg-white text-[#1A1A1A] shadow-sm' : 'text-[#1A1A1A]/60'
-            }`}
-          >
-            {t('pricing_toggle_yearly')}
-          </button>
+      {/* Pricing — highly animated. Dark stage with drifting glow blobs,
+          scroll-reveal cards, sliding billing toggle, rolling price
+          numbers, hover-lift, shimmer on the popular plan. The full
+          feature comparison chart is hidden and opens in a popup. */}
+      <section id="pricing" className="relative overflow-hidden bg-[#1A1A1A]">
+        {/* Drifting background glows */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="rg-blob absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-[#95BF47]/20 blur-3xl" />
+          <div
+            className="rg-blob absolute top-1/3 -right-32 w-[460px] h-[460px] rounded-full bg-[#008060]/30 blur-3xl"
+            style={{ animationDelay: '-5s' }}
+          />
+          <div
+            className="rg-blob absolute -bottom-32 left-1/3 w-[380px] h-[380px] rounded-full bg-[#95BF47]/10 blur-3xl"
+            style={{ animationDelay: '-9s' }}
+          />
         </div>
 
-        {/* Single table: price + CTA row on top, feature rows below —
-            keeps every plan column the same width throughout, so the
-            pricing cards and the feature comparison line up perfectly. */}
-        <div className="overflow-x-auto rounded-2xl border border-black/10">
-          <table className="w-full text-sm border-collapse min-w-[720px] table-fixed">
-            <colgroup>
-              <col className="w-[22%]" />
-              {plans.map((plan) => (
-                <col key={plan.key} className="w-[19.5%]" />
-              ))}
-            </colgroup>
-            <thead>
-              {/* Plan name / badge / tagline */}
-              <tr>
-                <th className="text-left align-bottom px-5 pt-6 pb-3 border-b border-black/10" />
-                {plans.map((plan) => (
-                  <th
-                    key={plan.key}
-                    className={`text-left align-bottom px-5 pt-6 pb-3 border-b border-black/10 ${
-                      plan.highlighted ? 'bg-[#1A1A1A] text-white' : ''
-                    }`}
-                  >
-                    {plan.highlighted && (
-                      <div className="text-xs font-medium text-[#95BF47] mb-1.5">{plan.badge}</div>
-                    )}
-                    <div className="font-semibold text-base">{plan.name}</div>
-                    <div className={`mt-1 text-xs font-normal ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/60'}`}>
-                      {plan.tagline}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-              {/* Price, plus 12-month total at the selected rate */}
-              <tr>
-                <td className="px-5 py-4 border-b border-black/10" />
-                {plans.map((plan) => {
-                  const displayPrice = billing === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
-                  const totalPrice = displayPrice * 12;
-                  return (
-                    <td
-                      key={plan.key}
-                      className={`px-5 py-4 border-b border-black/10 ${plan.highlighted ? 'bg-[#1A1A1A]' : ''}`}
+        <div ref={pricingRef} className="relative max-w-6xl mx-auto px-6 py-24">
+          <div className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">{t('pricing_title')}</h2>
+            <p className="mt-3 text-white/60 max-w-lg">{t('pricing_sub')}</p>
+          </div>
+
+          {/* Sliding billing toggle */}
+          <div
+            className={`mt-8 ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
+            style={{ animationDelay: '0.1s' }}
+          >
+            <div className="relative inline-grid grid-cols-2 p-1 rounded-full bg-white/10 backdrop-blur border border-white/10">
+              <span
+                aria-hidden
+                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-[#95BF47] shadow-lg
+                  transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                style={{ transform: billing === 'yearly' ? 'translateX(100%)' : 'translateX(0)' }}
+              />
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`relative z-10 px-6 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
+                  billing === 'monthly' ? 'text-[#1A1A1A]' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                {t('pricing_toggle_monthly')}
+              </button>
+              <button
+                onClick={() => setBilling('yearly')}
+                className={`relative z-10 px-6 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
+                  billing === 'yearly' ? 'text-[#1A1A1A]' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                {t('pricing_toggle_yearly')}
+              </button>
+            </div>
+          </div>
+
+          {/* Animated plan cards */}
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+            {plans.map((plan, i) => {
+              // Monthly mode  -> big number = per-month price
+              // Yearly mode   -> big number = full year price (rate x 12)
+              const isYearly = billing === 'yearly';
+              const displayPrice = isYearly ? plan.yearlyPrice * 12 : plan.monthlyPrice;
+              const savePerYear = (plan.monthlyPrice - plan.yearlyPrice) * 12;
+              const hi = plan.highlighted;
+
+              return (
+                <div
+                  key={plan.key}
+                  className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}
+                  style={{ animationDelay: `${0.2 + i * 0.12}s` }}
+                >
+                  <div className={hi ? 'rg-float h-full' : 'h-full'}>
+                    <div
+                      className={`group relative h-full flex flex-col rounded-3xl p-6 overflow-hidden
+                        transition-all duration-500 ease-out hover:-translate-y-2 ${
+                          hi
+                            ? 'rg-glow rg-shimmer bg-gradient-to-b from-[#95BF47] to-[#7FA83A] text-[#1A1A1A]'
+                            : 'bg-white/[0.06] backdrop-blur border border-white/10 text-white hover:bg-white/[0.1] hover:border-white/25 hover:shadow-[0_24px_60px_-20px_rgba(149,191,71,0.35)]'
+                        }`}
                     >
-                      <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span className={`text-2xl font-bold ${plan.highlighted ? 'text-white' : 'text-[#1A1A1A]'}`}>
-                          {displayPrice === 0 ? '৳0' : `৳${displayPrice}`}
+                      {/* Popular badge */}
+                      {hi && plan.badge && (
+                        <span className="rg-badge absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-semibold bg-[#1A1A1A] text-[#95BF47] px-2.5 py-1 rounded-full">
+                          <Sparkles size={12} />
+                          {plan.badge}
+                        </span>
+                      )}
+
+                      <h3 className="text-lg font-semibold">{plan.name}</h3>
+                      <p className={`mt-1 text-xs leading-relaxed ${hi ? 'text-[#1A1A1A]/70' : 'text-white/55'}`}>
+                        {plan.tagline}
+                      </p>
+
+                      {/* Rolling price — monthly rate in Monthly mode, full-year price in Yearly mode */}
+                      <div className="mt-6 flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-4xl font-bold tracking-tight">
+                          ৳<AnimatedNumber value={displayPrice} />
                         </span>
                         {displayPrice !== 0 && (
-                          <span className={plan.highlighted ? 'text-white/60 text-xs' : 'text-[#1A1A1A]/60 text-xs'}>
-                            {t('pricing_per_month')}
+                          <span className={`text-xs ${hi ? 'text-[#1A1A1A]/65' : 'text-white/55'}`}>
+                            {isYearly ? t('pricing_per_year') : t('pricing_per_month')}
                           </span>
                         )}
                       </div>
-                      {displayPrice !== 0 && (
-                        <p className={`mt-1 text-xs ${plan.highlighted ? 'text-white/50' : 'text-[#1A1A1A]/45'}`}>
-                          {billing === 'yearly' ? t('pricing_total_yearly') : t('pricing_total_monthly')}: ৳{totalPrice.toLocaleString('en-US')}
+
+                      {/* Billing note + savings */}
+                      <div className="mt-2 min-h-[38px]">
+                        {displayPrice !== 0 && (
+                          <>
+                            <p className={`text-xs ${hi ? 'text-[#1A1A1A]/65' : 'text-white/45'}`}>
+                              {isYearly ? t('pricing_sub_yearly') : t('pricing_sub_monthly')}
+                              {isYearly && (
+                                <>
+                                  {' · '}
+                                  {t('pricing_equiv_month')} ৳
+                                  <AnimatedNumber value={plan.yearlyPrice} />
+                                  {t('pricing_equiv_month_suffix')}
+                                </>
+                              )}
+                            </p>
+                            {isYearly && savePerYear > 0 && (
+                              <p
+                                className={`mt-1 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                                  hi ? 'bg-[#1A1A1A] text-[#95BF47]' : 'bg-[#95BF47]/20 text-[#95BF47]'
+                                }`}
+                              >
+                                {t('pricing_save')} ৳{savePerYear.toLocaleString('en-US')}
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* CTA */}
+                      <button
+                        onClick={() => navigate('/vendor/signup')}
+                        className={`mt-5 w-full py-2.5 rounded-full text-sm font-semibold transition-all duration-300
+                          hover:scale-[1.03] active:scale-95 inline-flex items-center justify-center gap-1.5 ${
+                            hi
+                              ? 'bg-[#1A1A1A] text-white hover:bg-black'
+                              : 'bg-[#95BF47] text-[#1A1A1A] hover:bg-[#A6D054]'
+                          }`}
+                      >
+                        {plan.cta}
+                        <ArrowUpRight
+                          size={16}
+                          className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        />
+                      </button>
+
+                      {/* Highlights */}
+                      <div className={`mt-6 pt-5 border-t ${hi ? 'border-[#1A1A1A]/15' : 'border-white/10'}`}>
+                        <p className={`text-[11px] uppercase tracking-wider font-semibold mb-3 ${hi ? 'text-[#1A1A1A]/60' : 'text-white/40'}`}>
+                          {t('pricing_key_features')}
                         </p>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-              {/* CTA buttons */}
-              <tr>
-                <td className="px-5 pb-6 border-b border-black/10" />
-                {plans.map((plan) => (
-                  <td
-                    key={plan.key}
-                    className={`px-5 pb-6 border-b border-black/10 ${plan.highlighted ? 'bg-[#1A1A1A]' : ''}`}
-                  >
-                    <button
-                      onClick={() => navigate('/vendor/signup')}
-                      className={`w-full py-2.5 rounded-full text-sm font-medium transition-colors ${
-                        plan.highlighted ? 'bg-[#95BF47] hover:bg-[#84AD3D] text-[#1A1A1A]' : 'bg-[#008060] text-white hover:bg-[#006B51]'
-                      }`}
-                    >
-                      {plan.cta}
-                    </button>
-                  </td>
-                ))}
-              </tr>
-              {/* Feature column header, resumes below the price block */}
-              <tr className="bg-[#F1F1F1]">
-                <th className="text-left font-semibold px-5 py-3.5 border-b border-black/10">
-                  {t('pricing_feature_col')}
-                </th>
-                {plans.map((plan) => (
-                  <th
-                    key={plan.key}
-                    className={`text-left font-semibold px-5 py-3.5 border-b border-black/10 ${
-                      plan.highlighted ? 'bg-[#1A1A1A] text-white' : ''
-                    }`}
-                  >
-                    {plan.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {featureRows.map((row, i) => (
-                <tr key={row.label} className={i % 2 === 1 ? 'bg-[#F1F1F1]/40' : ''}>
-                  <td className="px-5 py-3.5 border-b border-black/10 text-[#1A1A1A]/80 font-medium">
-                    {row.label}
-                  </td>
-                  {row.values.map((val, j) => (
-                    <td
-                      key={j}
-                      className={`px-5 py-3.5 border-b border-black/10 ${
-                        plans[j].highlighted ? 'bg-[#1A1A1A]/[0.03]' : ''
-                      } ${val === '✓' ? 'text-[#008060] font-medium' : val === '—' ? 'text-[#1A1A1A]/30' : 'text-[#1A1A1A]/75'}`}
-                    >
-                      {val}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        <ul className="space-y-2.5">
+                          {highlightRows.map((row, r) => (
+                            <li
+                              key={row.label}
+                              className={`flex items-start gap-2 text-sm ${pricingVisible ? 'rg-row-in' : 'opacity-0'}`}
+                              style={{ animationDelay: `${0.5 + i * 0.12 + r * 0.08}s` }}
+                            >
+                              <Check
+                                size={15}
+                                className={`mt-0.5 shrink-0 ${hi ? 'text-[#1A1A1A]' : 'text-[#95BF47]'}`}
+                              />
+                              <span className={hi ? 'text-[#1A1A1A]/85' : 'text-white/80'}>
+                                <span className={hi ? 'text-[#1A1A1A]/60' : 'text-white/45'}>{row.label}: </span>
+                                {featureRows[row.idx].values[i]}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* View chart button — chart itself is hidden until clicked */}
+          <div
+            className={`mt-12 flex justify-center ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
+            style={{ animationDelay: '0.9s' }}
+          >
+            <button
+              onClick={() => setChartOpen(true)}
+              className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full border border-white/25 text-white font-medium
+                bg-white/5 backdrop-blur hover:bg-[#95BF47] hover:text-[#1A1A1A] hover:border-[#95BF47]
+                hover:scale-105 active:scale-95 transition-all duration-300"
+            >
+              <BarChart3 size={18} className="transition-transform duration-300 group-hover:rotate-12" />
+              {t('pricing_view_chart')}
+            </button>
+          </div>
         </div>
       </section>
+
+      {/* Comparison chart popup */}
+      {chartOpen && (
+        <div
+          className="rg-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm"
+          onClick={() => setChartOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('pricing_chart_title')}
+        >
+          <div
+            className="rg-pop-in relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Popup header */}
+            <div className="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-4 border-b border-black/10">
+              <div>
+                <h3 className="text-xl font-bold">{t('pricing_chart_title')}</h3>
+                <p className="mt-1 text-sm text-[#1A1A1A]/60">{t('pricing_chart_sub')}</p>
+              </div>
+              <button
+                onClick={() => setChartOpen(false)}
+                aria-label={t('pricing_close')}
+                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#F1F1F1]
+                  hover:bg-[#1A1A1A] hover:text-white hover:rotate-90 transition-all duration-300"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Popup body — same table as before, scrollable */}
+            <div className="overflow-auto">
+              <table className="w-full text-sm border-collapse min-w-[720px] table-fixed">
+                <colgroup>
+                  <col className="w-[22%]" />
+                  {plans.map((plan) => (
+                    <col key={plan.key} className="w-[19.5%]" />
+                  ))}
+                </colgroup>
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-[#F1F1F1]">
+                    <th className="text-left font-semibold px-5 py-3.5 border-b border-black/10">
+                      {t('pricing_feature_col')}
+                    </th>
+                    {plans.map((plan) => (
+                      <th
+                        key={plan.key}
+                        className={`text-left font-semibold px-5 py-3.5 border-b border-black/10 ${
+                          plan.highlighted ? 'bg-[#1A1A1A] text-white' : ''
+                        }`}
+                      >
+                        {plan.highlighted && plan.badge && (
+                          <div className="text-[10px] font-medium text-[#95BF47] mb-0.5">{plan.badge}</div>
+                        )}
+                        {plan.name}
+                        <div className={`mt-0.5 text-xs font-medium ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/50'}`}>
+                          {plan.monthlyPrice === 0
+                            ? '৳0'
+                            : billing === 'yearly'
+                              ? `৳${(plan.yearlyPrice * 12).toLocaleString('en-US')}${t('pricing_per_year')}`
+                              : `৳${plan.monthlyPrice.toLocaleString('en-US')}${t('pricing_per_month')}`}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {featureRows.map((row, i) => (
+                    <tr
+                      key={row.label}
+                      className={`rg-row-in ${i % 2 === 1 ? 'bg-[#F1F1F1]/40' : ''}`}
+                      style={{ animationDelay: `${0.1 + i * 0.035}s` }}
+                    >
+                      <td className="px-5 py-3.5 border-b border-black/10 text-[#1A1A1A]/80 font-medium">
+                        {row.label}
+                      </td>
+                      {row.values.map((val, j) => (
+                        <td
+                          key={j}
+                          className={`px-5 py-3.5 border-b border-black/10 ${
+                            plans[j].highlighted ? 'bg-[#1A1A1A]/[0.03]' : ''
+                          } ${val === '✓' ? 'text-[#008060] font-medium' : val === '—' ? 'text-[#1A1A1A]/30' : 'text-[#1A1A1A]/75'}`}
+                        >
+                          {val}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Popup footer */}
+            <div className="px-6 sm:px-8 py-4 border-t border-black/10 flex items-center justify-end gap-3 bg-white">
+              <button
+                onClick={() => setChartOpen(false)}
+                className="px-5 py-2.5 rounded-full text-sm font-medium border border-black/15 hover:border-black/40 transition-colors"
+              >
+                {t('pricing_close')}
+              </button>
+              <button
+                onClick={() => {
+                  setChartOpen(false);
+                  navigate('/vendor/signup');
+                }}
+                className="px-5 py-2.5 rounded-full text-sm font-medium bg-[#008060] text-white hover:bg-[#006B51] transition-colors inline-flex items-center gap-1.5"
+              >
+                {t('hero_cta')}
+                <ArrowUpRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FAQ */}
       <section id="faq" className="bg-white border-y border-black/10">
