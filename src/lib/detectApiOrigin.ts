@@ -52,14 +52,7 @@ export function detectApiOrigin(inferredLocalUrl: string): Promise<string> {
   if (!cachedPromise) {
     cachedPromise = probeLocalApi(inferredLocalUrl).then((localIsUp) => {
       localIsUpState = localIsUp;
-      const resolved = localIsUp ? inferredLocalUrl : VPS_API_URL;
-      // eslint-disable-next-line no-console
-      console.log(
-        localIsUp
-          ? `[Regantify] Using LOCAL server: ${resolved}`
-          : `[Regantify] Local server not reachable at ${inferredLocalUrl} — falling back to VPS: ${resolved}`,
-      );
-      return resolved;
+      return localIsUp ? inferredLocalUrl : VPS_API_URL;
     });
   }
   return cachedPromise;
