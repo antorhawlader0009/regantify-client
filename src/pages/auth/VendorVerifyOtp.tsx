@@ -24,6 +24,14 @@ export default function VendorVerifyOtp() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+  // Separate from `cooldown` (a once-a-second timer) — guards against a
+  // double-click/double-tap firing two resend requests before `cooldown`
+  // state has actually re-rendered the button as disabled. The server's
+  // own per-phone cooldown (AuthService.enforceOtpCooldown) has a race
+  // window too (read-then-insert, not row-locked) if two requests land
+  // close enough together, so this button-level guard is what actually
+  // stops a real double-send in practice, not just a UI nicety.
+  const [resending, setResending] = useState(false);
 
   // No phone in state (e.g. direct navigation) → bounce back to step 1.
   useEffect(() => {
@@ -81,7 +89,8 @@ export default function VendorVerifyOtp() {
   };
 
   const handleResend = async () => {
-    if (cooldown > 0) return;
+    if (cooldown > 0 || resending) return;
+    setResending(true);
     setError(null);
     try {
       await authApi.sendOtp(state.phone);
@@ -96,6 +105,8 @@ export default function VendorVerifyOtp() {
         setCooldown(retryAfter);
       }
       setError(err?.response?.data?.message ?? 'Could not resend code. Try again shortly.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -120,8 +131,12 @@ export default function VendorVerifyOtp() {
           {cooldown > 0 ? (
             <span className="text-regantify-text-muted">Resend code in {cooldown}s</span>
           ) : (
-            <button onClick={handleResend} className="text-regantify-text font-medium underline">
-              Resend code
+            <button
+              onClick={handleResend}
+              disabled={resending}
+              className="text-regantify-text font-medium underline disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {resending ? 'Sending…' : 'Resend code'}
             </button>
           )}
         </div>
