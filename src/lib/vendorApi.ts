@@ -110,6 +110,58 @@ export async function uploadVendorLogo(file: File): Promise<string | null> {
   return data.logoUrl;
 }
 
+// Store > Branding — see Vendor.accentColor etc in schema.prisma for the
+// full field set this mirrors one-to-one. logoUrl is included read-only
+// (saved via the separate uploadVendorLogo action above) so the
+// Branding page can preview it without a second fetch.
+export interface Branding {
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  accentColor: string | null;
+  bodyBackgroundColor: string | null;
+  brandHeadingFont: string | null;
+  brandBodyFont: string | null;
+  brandCoverImageUrl: string | null;
+  brandMetaTitle: string | null;
+  brandMetaDescription: string | null;
+}
+
+export async function getVendorBranding(): Promise<Branding> {
+  const { data } = await api.get<Branding>('/v1/vendor/branding');
+  return data;
+}
+
+// Store > Branding's "Update Branding" action — colors/fonts/meta only.
+// logoUrl/faviconUrl/brandCoverImageUrl are excluded from the request
+// shape (they're read-only here, saved via their own upload actions
+// below), same split Store > Logo already has.
+export async function updateVendorBranding(
+  branding: Partial<Omit<Branding, 'logoUrl' | 'faviconUrl' | 'brandCoverImageUrl'>>,
+): Promise<Branding> {
+  const { data } = await api.patch<Branding>('/v1/vendor/branding', branding);
+  return data;
+}
+
+// Store > Branding's favicon upload action — same multipart pattern as uploadVendorLogo.
+export async function uploadVendorFavicon(file: File): Promise<string | null> {
+  const formData = new FormData();
+  formData.append('favicon', file);
+  const { data } = await api.post<{ faviconUrl: string | null }>('/v1/vendor/branding/favicon', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data.faviconUrl;
+}
+
+// Store > Branding's cover-photo upload action — same multipart pattern as uploadVendorLogo.
+export async function uploadVendorBrandCover(file: File): Promise<string | null> {
+  const formData = new FormData();
+  formData.append('cover', file);
+  const { data } = await api.post<{ brandCoverImageUrl: string | null }>('/v1/vendor/branding/cover', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data.brandCoverImageUrl;
+}
+
 // Store > Domain — a bare hostname, no protocol/path. null = no custom
 // domain connected yet (the store is still reachable at its subdomain
 // either way).

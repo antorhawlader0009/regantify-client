@@ -31,6 +31,7 @@ import { SectionList } from '../../../../components/landing/SectionList';
 import { SectionSettings } from '../../../../components/landing/SectionSettings';
 import { SectionPreview } from '../../../../components/landing/SectionPreview';
 import { AddSectionModal } from '../../../../components/landing/AddSectionModal';
+import { AiGenerateModal } from '../../../../components/landing/AiGenerateModal';
 import {
   AdvancedPanel,
   ChatButtonPanel,
@@ -85,6 +86,7 @@ export default function LandingPageBuilder() {
   const [openPanel, setOpenPanel] = useState<PanelKey>('sections');
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [aiGenerateOpen, setAiGenerateOpen] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   // The whole page is edited locally and committed on Save. Keeping one
@@ -162,6 +164,7 @@ export default function LandingPageBuilder() {
       coverImageUrl: draft.coverImageUrl ?? undefined,
       metaPixelId: draft.metaPixelId ?? undefined,
       tiktokPixelId: draft.tiktokPixelId ?? undefined,
+      aiGenerated: draft.aiGenerated,
     });
   };
 
@@ -195,6 +198,18 @@ export default function LandingPageBuilder() {
     setSections([...sections, section]);
     setSelectedSectionId(section.id);
     setAddOpen(false);
+  };
+
+  // AI Generate (landing-plan.md §5, Step 10) — appends the drafted
+  // sections to whatever's already on the page (rather than replacing
+  // it), so running Generate on a partially-built page composes instead
+  // of destroying existing work, and marks aiGenerated on the draft so
+  // Save persists that provenance flag. The vendor still reviews/edits
+  // normally afterwards and nothing is saved until they hit Save.
+  const handleGenerated = (generatedSections: LandingPageSection[]) => {
+    setSections([...sections, ...generatedSections]);
+    patchDraft({ aiGenerated: true });
+    toast.success('Draft generated — review the sections and Save when ready.');
   };
 
   const duplicateSection = (sectionId: string) => {
@@ -314,10 +329,9 @@ export default function LandingPageBuilder() {
         </div>
 
         <button
-          disabled
-          title="AI Generate — coming in Step 10"
+          onClick={() => setAiGenerateOpen(true)}
           className="flex shrink-0 items-center gap-1.5 rounded-xl border border-violet-400/30 bg-violet-500/10
-            px-3 py-2 text-[12px] font-medium text-violet-300 opacity-60"
+            px-3 py-2 text-[12px] font-medium text-violet-300 transition-colors hover:bg-violet-500/20"
         >
           <Sparkles size={14} />
           AI Generate
@@ -347,7 +361,27 @@ export default function LandingPageBuilder() {
         </button>
 
         <button
-          onClick={() => publishMutation.mutate(isPublished ? 'DRAFT' : 'PUBLISHED')}
+          onClick={() => {
+            // AI-drafted review placeholders (landing-page-sections.md
+            // §4.1's own render note) must be visibly flagged as needing
+            // real reviews before publish — the preview badge (see
+            // SectionPreview's CustomerReviewsPreview) already shows
+            // this while editing; this confirm is the last checkpoint
+            // right before the page actually goes live, same
+            // "confirm a consequential action" pattern leaveBuilder
+            // already uses above.
+            if (
+              !isPublished &&
+              draft.aiGenerated &&
+              sections.some((s) => s.type === 'customer-reviews') &&
+              !window.confirm(
+                'This page has AI-drafted customer reviews. Replace them with real reviews before publishing?\n\nClick Cancel to go back and edit them, or OK to publish anyway.',
+              )
+            ) {
+              return;
+            }
+            publishMutation.mutate(isPublished ? 'DRAFT' : 'PUBLISHED');
+          }}
           disabled={publishMutation.isPending}
           className={`shrink-0 rounded-xl px-3.5 py-2 text-[12px] font-medium transition-colors disabled:opacity-60 ${
             isPublished
@@ -507,7 +541,7 @@ export default function LandingPageBuilder() {
                           Hidden on {device}
                         </span>
                       )}
-                      <SectionPreview section={section} device={device} />
+                      <SectionPreview section={section} device={device} aiGenerated={draft.aiGenerated} />
                     </div>
                   );
                 })}
@@ -518,6 +552,7 @@ export default function LandingPageBuilder() {
       </div>
 
       {addOpen && <AddSectionModal onPick={addSection} onClose={() => setAddOpen(false)} />}
+      {aiGenerateOpen && <AiGenerateModal onGenerated={handleGenerated} onClose={() => setAiGenerateOpen(false)} />}
     </div>
   );
 }

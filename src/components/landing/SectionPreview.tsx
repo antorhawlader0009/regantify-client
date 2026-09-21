@@ -36,8 +36,23 @@ import { sectionLabel } from '../../lib/landingSections';
  * Every prop read falls back to a sensible default so a half-filled
  * section (the normal state while a vendor is building) previews rather
  * than crashing.
+ *
+ * `aiGenerated` (the page's own LandingPage.aiGenerated flag, landing-
+ * plan.md §5 step 3 / landing-page-sections.md §4.1's own render note)
+ * only ever changes anything for a `customer-reviews` section: AI-
+ * drafted testimonial placeholders must be visibly flagged as needing
+ * real reviews before publish, since they're never real customer data
+ * (see CustomerReviewsPreview below).
  */
-export function SectionPreview({ section, device }: { section: LandingPageSection; device: 'desktop' | 'mobile' }) {
+export function SectionPreview({
+  section,
+  device,
+  aiGenerated,
+}: {
+  section: LandingPageSection;
+  device: 'desktop' | 'mobile';
+  aiGenerated?: boolean;
+}) {
   const p = section.props ?? {};
 
   switch (section.type) {
@@ -66,7 +81,7 @@ export function SectionPreview({ section, device }: { section: LandingPageSectio
     case 'sticky-order-bar':
       return <StickyOrderBarPreview props={p as unknown as StickyOrderBarProps} />;
     case 'customer-reviews':
-      return <CustomerReviewsPreview props={p as unknown as CustomerReviewsProps} device={device} />;
+      return <CustomerReviewsPreview props={p as unknown as CustomerReviewsProps} device={device} aiGenerated={aiGenerated} />;
     case 'trust-badges':
       return <TrustBadgesPreview props={p as unknown as TrustBadgesProps} />;
     case 'stats':
@@ -418,13 +433,21 @@ function StickyOrderBarPreview({ props }: { props: StickyOrderBarProps }) {
 function CustomerReviewsPreview({
   props,
   device,
+  aiGenerated,
 }: {
   props: CustomerReviewsProps;
   device: 'desktop' | 'mobile';
+  aiGenerated?: boolean;
 }) {
   const reviews = props.reviews ?? [];
   return (
     <div className="px-6 py-5">
+      {aiGenerated && (
+        <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-[11.5px] font-medium text-amber-700">
+          <span aria-hidden>&#9888;&#65039;</span>
+          AI-drafted placeholders — replace with real customer reviews before publishing.
+        </div>
+      )}
       {props.title && (
         <h3 className="mb-3 text-center text-lg font-bold text-regantify-text">{props.title}</h3>
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bot, Sparkles, MessageSquareText, Save, Loader2, RefreshCw } from 'lucide-react';
+import { Bot, Sparkles, MessageSquareText, LayoutTemplate, Save, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   getAiModels,
@@ -21,7 +21,7 @@ interface FeatureField {
 // new entry here (and a matching AiFeature enum value on the server)
 // whenever a new AI feature is built. Order matches how they'll be
 // rolled out: Product Information Maker first, then the storefront chat
-// bot.
+// bot, then Landing Pages' AI Generate (landing-plan.md §5, Step 10).
 const FEATURES: FeatureField[] = [
   {
     key: 'PRODUCT_INFO_MAKER',
@@ -34,6 +34,12 @@ const FEATURES: FeatureField[] = [
     label: 'Store AI Chat Bot',
     description: "Shopper-facing chat widget on a vendor's storefront that answers questions about their store.",
     icon: MessageSquareText,
+  },
+  {
+    key: 'LANDING_PAGE_GENERATOR',
+    label: 'Landing Page AI Generate',
+    description: 'Drafts a full landing page (headline, features, FAQ, review placeholders) from a product and a goal.',
+    icon: LayoutTemplate,
   },
 ];
 

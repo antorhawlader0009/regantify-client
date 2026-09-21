@@ -2,7 +2,7 @@ import { api } from './api';
 
 // Mirrors server/src/ai — Super Admin > AI Settings, picking which Gemini
 // model each AI-powered feature calls. Platform-wide, not vendor-scoped.
-export type AiFeature = 'PRODUCT_INFO_MAKER' | 'STORE_CHATBOT';
+export type AiFeature = 'PRODUCT_INFO_MAKER' | 'STORE_CHATBOT' | 'LANDING_PAGE_GENERATOR';
 
 export interface AiModelOption {
   /** Full resource name, e.g. "models/gemini-2.5-flash" — pass back exactly as-is when saving. */

@@ -39,8 +39,9 @@ import Pages from './pages/vendor/store/Pages';
 import AddPage from './pages/vendor/store/AddPage';
 import LandingPages from './pages/vendor/store/landing-pages/LandingPages';
 import LandingPageBuilder from './pages/vendor/store/landing-pages/LandingPageBuilder';
+import Footer from './pages/vendor/store/footer/Footer';
 import Social from './pages/vendor/store/Social';
-import Logo from './pages/vendor/store/Logo';
+import Branding from './pages/vendor/store/Branding';
 import Media from './pages/vendor/store/Media';
 import Domain from './pages/vendor/store/Domain';
 import PaymentGateway from './pages/vendor/store/PaymentGateway';
@@ -109,8 +110,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/landing-pages' &&
+    r.path !== '/vendor/store/footer' &&
     r.path !== '/vendor/store/social' &&
-    r.path !== '/vendor/store/logo' &&
+    r.path !== '/vendor/store/branding' &&
     r.path !== '/vendor/store/media' &&
     r.path !== '/vendor/store/domain' &&
     r.path !== '/vendor/store/payment-gateway' &&
@@ -213,8 +215,9 @@ export default function App() {
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
                 <Route path="/vendor/store/landing-pages" element={<LandingPages />} />
+                <Route path="/vendor/store/footer" element={<Footer />} />
                 <Route path="/vendor/store/social" element={<Social />} />
-                <Route path="/vendor/store/logo" element={<Logo />} />
+                <Route path="/vendor/store/branding" element={<Branding />} />
                 <Route path="/vendor/store/media" element={<Media />} />
                 <Route path="/vendor/store/domain" element={<Domain />} />
                 <Route path="/vendor/store/payment-gateway" element={<PaymentGateway />} />

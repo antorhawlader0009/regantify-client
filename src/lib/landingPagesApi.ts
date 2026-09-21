@@ -64,6 +64,22 @@ export interface LandingPagePayload {
   coverImageUrl?: string;
   metaPixelId?: string;
   tiktokPixelId?: string;
+  aiGenerated?: boolean;
+}
+
+// AI Generate (landing-plan.md §5, Step 10) — either a picked product
+// (productId, name/summary resolved server-side from it) or a free-typed
+// name/summary when there's no product yet. See
+// GenerateLandingPageDto on the backend for the exact same shape.
+export interface GenerateLandingPagePayload {
+  productId?: string;
+  productName?: string;
+  productSummary?: string;
+  goal: 'sell-product' | 'collect-leads' | 'promote-offer';
+}
+
+export interface GeneratedLandingPageDraft {
+  sections: LandingPageSection[];
 }
 
 export const landingPagesApi = {
@@ -83,4 +99,13 @@ export const landingPagesApi = {
   /** Actions > Make a Copy — returns the new DRAFT copy. */
   duplicate: (id: string) =>
     api.post<LandingPage>(`/v1/landing-pages/${id}/duplicate`).then((r) => r.data),
+
+  /**
+   * AI Generate — does NOT persist anything (landing-plan.md §7's own
+   * note); the builder is responsible for merging the returned sections
+   * into the current draft and only saving on the vendor's own Save
+   * click, same as every other builder edit.
+   */
+  generate: (payload: GenerateLandingPagePayload) =>
+    api.post<GeneratedLandingPageDraft>('/v1/landing-pages/generate', payload).then((r) => r.data),
 };

@@ -123,10 +123,11 @@ export const vendorNav: NavSection[] = [
     icon: StoreIcon,
     children: [
       { label: 'Themes', path: '/vendor/store/themes' },
-      { label: 'Logo', path: '/vendor/store/logo' },
+      { label: 'Branding', path: '/vendor/store/branding' },
       { label: 'Customize', path: '/vendor/store/customize' },
       { label: 'Pages', path: '/vendor/store/pages' },
       { label: 'Landing Page', path: '/vendor/store/landing-pages' },
+      { label: 'Footer', path: '/vendor/store/footer' },
       { label: 'Media', path: '/vendor/store/media' },
       { label: 'Social', path: '/vendor/store/social' },
       { label: 'Navigation', path: '/vendor/store/navigation' },
