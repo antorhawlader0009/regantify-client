@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Dialog } from '../../../components/ui/Dialog';
 import { smsApi, type SmsPackage } from '../../../lib/smsApi';
 import { paymentsApi } from '../../../lib/paymentsApi';
+import { financeApi } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
@@ -28,6 +29,16 @@ export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
     queryFn: () => smsApi.getPackages(),
     enabled: open,
   });
+
+  // Only fetched to show the deficit-clearing note below before
+  // charging — the server resolves the real deficit itself at initiate
+  // time (PaymentsService.initiate) regardless of what this reads.
+  const { data: wallet } = useQuery({
+    queryKey: ['finance', 'wallet'],
+    queryFn: () => financeApi.getWallet(),
+    enabled: open,
+  });
+  const deficit = Math.max(0, -Number(wallet?.balance ?? '0'));
 
   const buyMutation = useMutation({
     mutationFn: (packageId: SmsPackage['id']) => paymentsApi.initiate({ purpose: 'SMS_PACKAGE', packageId }),
@@ -62,8 +73,15 @@ export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
 
             <div className="bg-regantify-content rounded-xl p-4 mb-5 flex items-center justify-between">
               <span className="text-sm text-regantify-text">Total</span>
-              <span className="text-lg font-semibold text-regantify-text">৳{selected.price.toLocaleString()}</span>
+              <span className="text-lg font-semibold text-regantify-text">
+                ৳{(selected.price + deficit).toLocaleString()}
+              </span>
             </div>
+            {deficit > 0 && (
+              <p className="text-xs text-amber-700 -mt-3 mb-5">
+                Includes ৳{deficit.toLocaleString()} clearing your negative wallet balance.
+              </p>
+            )}
 
             <button
               onClick={() => buyMutation.mutate(selected.id)}

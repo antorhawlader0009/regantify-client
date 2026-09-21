@@ -1,20 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Wallet as WalletIcon, ArrowRight, Clock, ArrowDownToLine, CreditCard } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowRight, Clock, ArrowDownToLine, CreditCard, AlertTriangle } from 'lucide-react';
 import { financeApi } from '../../../lib/financeApi';
-import { TestPaymentDialog } from './TestPaymentDialog';
+import { AddMoneyDialog } from './AddMoneyDialog';
 
+// `-` prefix instead of the default `৳-95.00` toLocaleString would give —
+// `৳` always leads, negative or not.
 function formatAmount(value: string) {
-  return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  const n = Number(value);
+  const formatted = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  return n < 0 ? `-৳${formatted}` : `৳${formatted}`;
 }
 
 export default function Wallet() {
-  const [testPaymentOpen, setTestPaymentOpen] = useState(false);
+  const [addMoneyOpen, setAddMoneyOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ['finance', 'wallet'],
     queryFn: () => financeApi.getWallet(),
   });
+  const balance = Number(data?.balance ?? '0');
+  const isNegative = balance < 0;
 
   return (
     <div>
@@ -23,12 +29,12 @@ export default function Wallet() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setTestPaymentOpen(true)}
+            onClick={() => setAddMoneyOpen(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-regantify-cta text-regantify-cta
               hover:bg-regantify-cta hover:text-white text-sm font-medium transition-colors"
           >
             <CreditCard size={15} />
-            Test Payment
+            Add Money
           </button>
           <Link
             to="/vendor/finance/withdraw"
@@ -40,7 +46,17 @@ export default function Wallet() {
         </div>
       </div>
 
-      <TestPaymentDialog open={testPaymentOpen} onOpenChange={setTestPaymentOpen} />
+      <AddMoneyDialog open={addMoneyOpen} onOpenChange={setAddMoneyOpen} currentBalance={balance} />
+
+      {isNegative && !isLoading && (
+        <div className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <p>
+            Your wallet balance is negative ({formatAmount(data?.balance ?? '0')}). It'll be cleared automatically
+            the next time you Add Money, buy an SMS/AI Chat Bot package, or upgrade your plan.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-regantify-black rounded-2xl p-6 text-white">
@@ -48,7 +64,7 @@ export default function Wallet() {
             <WalletIcon size={16} />
             Main Balance
           </div>
-          <p className="text-3xl font-semibold mt-3">
+          <p className={`text-3xl font-semibold mt-3 ${isNegative ? 'text-red-400' : ''}`}>
             {isLoading ? '…' : formatAmount(data?.balance ?? '0')}
           </p>
           <p className="text-white/60 text-xs mt-1">Available to withdraw</p>

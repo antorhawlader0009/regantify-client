@@ -1,10 +1,10 @@
 import { api } from './api';
 
-// PayStation — the one payment rail Finance > Wallet's test-payment
-// button, SMS > Buy SMS, AI Chat Bot > Buy, and Billing > Pay with
-// PayStation all go through. Mirrors the server's PaymentPurpose/
-// PaymentStatus enums exactly (STOREFRONT_ORDER isn't listed here since
-// it's initiated from storefront/, not this dashboard — see
+// PayStation — the one payment rail Finance > Wallet's Add Money,
+// SMS > Buy SMS, AI Chat Bot > Buy, and Billing > Pay with PayStation
+// all go through. Mirrors the server's PaymentPurpose/PaymentStatus
+// enums exactly (STOREFRONT_ORDER isn't listed here since it's
+// initiated from storefront/, not this dashboard — see
 // storefront/src/lib/checkoutApi.ts's own copy).
 export type PaymentPurpose = 'WALLET_TOPUP' | 'SMS_PACKAGE' | 'CHATBOT_PACKAGE' | 'PLAN_UPGRADE';
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
@@ -18,7 +18,14 @@ export interface InitiatePaymentPayload {
 export interface InitiatePaymentResult {
   invoiceNumber: string;
   paymentUrl: string;
+  // The real payable total actually sent to PayStation — includes
+  // deficitCleared below on top of whatever's being bought (see
+  // PaymentsService.initiate's own comment on why).
   amount: number;
+  // How much of `amount` is this vendor's own negative Vendor.balance
+  // being paid off as a side effect of this purchase — 0 in the normal
+  // case (balance already >= 0). See PaymentTransaction.deficitCleared.
+  deficitCleared: number;
 }
 
 export interface PaymentTransaction {
@@ -30,6 +37,7 @@ export interface PaymentTransaction {
   status: PaymentStatus;
   packageId: string | null;
   amount: string;
+  deficitCleared: string;
   paymentMethod: string | null;
   fulfilledAt: string | null;
   createdAt: string;
