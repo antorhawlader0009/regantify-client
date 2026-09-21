@@ -15,7 +15,12 @@ export const ALL_ORDER_STATUSES: OrderStatus[] = [
   'STOCK_OUT',
 ];
 
-export const DEFAULT_TABS: OrderStatus[] = ['PENDING', 'PROCESSING', 'SHIPPING', 'COMPLETED'];
+// PAYMENT_INITIATED included by default (mirrors OrdersService's own
+// DEFAULT_TABS server-side) — a storefront order stuck awaiting a
+// gateway redirect the shopper abandoned/never completed otherwise only
+// ever shows under "All", with no dedicated tab a vendor would think to
+// check.
+export const DEFAULT_TABS: OrderStatus[] = ['PENDING', 'PAYMENT_INITIATED', 'PROCESSING', 'SHIPPING', 'COMPLETED'];
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING: 'Pending',
@@ -23,7 +28,10 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   SHIPPING: 'Shipping',
   COMPLETED: 'Completed',
   ON_HOLD: 'On Hold',
-  PAYMENT_INITIATED: 'Payment Initiated',
+  // Shown as its own Orders-page tab (see DEFAULT_TABS) — "Incomplete
+  // Payment" reads clearer to a vendor than "Payment Initiated" (which
+  // sounds like something still actively in progress, not abandoned).
+  PAYMENT_INITIATED: 'Incomplete Payment',
   PARTIAL_PAYMENT_PENDING: 'Partial Payment Pending',
   PAYMENT_FAILED: 'Payment Failed',
   CANCELLED: 'Cancelled',
