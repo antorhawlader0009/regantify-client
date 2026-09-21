@@ -86,8 +86,8 @@ export default function AddOrder() {
   // server actually falls back to below when no custom charge is typed
   // (OrdersService.create). Add Order always creates a COD order (see
   // that method's own comment on why ONLINE_PAYMENT is storefront-only),
-  // so codVatCharge is always added server-side too — shown here as a
-  // preview so the total matches what's actually created.
+  // so the COD Charge (codVatCharge) is always added server-side too —
+  // shown here as a preview so the total matches what's actually created.
   const { data: deliveryCharges } = useQuery({
     queryKey: ['vendor-delivery-charges'],
     queryFn: getVendorDeliveryCharges,
@@ -96,7 +96,7 @@ export default function AddOrder() {
     DHAKA: Number(deliveryCharges?.insideDhakaCharge ?? 70),
     OUTSIDE_DHAKA: Number(deliveryCharges?.outsideDhakaCharge ?? 130),
   };
-  const vatAmount = Number(deliveryCharges?.codVatCharge ?? 5);
+  const vatAmount = Number(deliveryCharges?.codVatCharge ?? 10);
 
   const addToCart = (product: Product) => {
     const price = Number(product.discountPrice ?? product.price);
@@ -447,7 +447,7 @@ export default function AddOrder() {
         </div>
 
         <div className="flex justify-between text-sm mb-4">
-          <span className="text-regantify-text-muted">VAT (Cash on Delivery)</span>
+          <span className="text-regantify-text-muted">COD Charge (Cash on Delivery)</span>
           <span className="font-medium text-regantify-text">{formatPrice(vatAmount)}</span>
         </div>
 

@@ -117,7 +117,7 @@ export default function OrderDetail() {
               </div>
               {Number(order.vatAmount) > 0 && (
                 <div className="flex justify-between text-regantify-text-muted">
-                  <span>VAT (COD)</span>
+                  <span>COD Charge</span>
                   <span>{formatPrice(order.vatAmount)}</span>
                 </div>
               )}

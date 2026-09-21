@@ -819,7 +819,7 @@ type DeliveryChargeFormValues = z.infer<typeof deliveryChargeSchema>;
 
 /**
  * Settings > Courier Integration > Delivery Charge — vendor-editable
- * Inside Dhaka / Outside Dhaka shipping charges plus a flat COD VAT fee
+ * Inside Dhaka / Outside Dhaka shipping charges plus a flat COD Charge fee
  * (see Vendor.insideDhakaCharge etc in schema.prisma). Nested under
  * Courier Integration rather than its own top-level section since it's
  * the "how much do we charge for delivery" counterpart to the courier
@@ -839,7 +839,7 @@ function DeliveryChargeSection() {
 
   const form = useForm<DeliveryChargeFormValues>({
     resolver: zodResolver(deliveryChargeSchema),
-    defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, codVatCharge: 5 },
+    defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, codVatCharge: 10 },
   });
 
   useEffect(() => {
@@ -872,7 +872,7 @@ function DeliveryChargeSection() {
     <div className="mt-6 pt-6 border-t border-black/5">
       <h3 className="text-sm font-medium text-regantify-text mb-1">Delivery Charge</h3>
       <p className="text-sm text-regantify-text-muted mb-4">
-        Set what shoppers pay for delivery, and a flat VAT charged on Cash on Delivery orders only.
+        Set what shoppers pay for delivery, and a flat COD Charge added on Cash on Delivery orders only.
       </p>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid sm:grid-cols-3 gap-4">
@@ -909,7 +909,7 @@ function DeliveryChargeSection() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-regantify-text mb-1.5">Cash on Delivery VAT (৳)</label>
+          <label className="block text-sm font-medium text-regantify-text mb-1.5">Cash on Delivery Charge (৳)</label>
           <input
             type="number"
             min={0}
