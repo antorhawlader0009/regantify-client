@@ -8,12 +8,13 @@ function formatFee(value: string) {
 
 /**
  * Finance > Fee Summary — PLAN.md Step 12. Surfaces the per-tier payment
- * gateway fee (from Plan.paymentGatewayFeeBdt, Step 1) so a vendor can
- * see what they're currently paying and what upgrading would change.
- * Display-only: no real payment gateway exists yet (checkout is
- * COD-only — see PLAN.md's own note), so nothing here actually deducts
- * a fee per transaction. That's flagged as a follow-up project once a
- * real gateway is integrated, not part of this page.
+ * gateway fees (Plan.codGatewayFeeBdt / onlinePaymentGatewayFeeBdt —
+ * split per built-in gateway since COD and Online Payment can charge
+ * different amounts) so a vendor can see what they're currently paying
+ * and what upgrading would change. Display-only here too: the fee
+ * itself is charged at checkout by OrdersService/CreateOrderDto (see
+ * src/payment-gateways/), not by this page — this is just a read-only
+ * summary of the rate per plan.
  */
 export default function FeeSummary() {
   const { data: usage, isLoading: usageLoading } = useQuery({
@@ -32,7 +33,8 @@ export default function FeeSummary() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Fee Summary</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
-          Every plan includes a free payment gateway with a per-transaction fee — higher tiers pay less.
+          Every plan includes Cash On Delivery and Online Payment (Regantify) with their own per-transaction fee —
+          higher tiers pay less.
         </p>
       </div>
 
@@ -43,13 +45,23 @@ export default function FeeSummary() {
       ) : (
         <>
           {usage && (
-            <div className="bg-regantify-black rounded-2xl p-6 max-w-sm text-white mb-6">
-              <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
-                <CreditCard size={16} />
-                Your plan: {usage.plan.name}
+            <div className="grid grid-cols-2 gap-4 max-w-xl mb-6">
+              <div className="bg-regantify-black rounded-2xl p-6 text-white">
+                <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
+                  <CreditCard size={16} />
+                  Cash On Delivery
+                </div>
+                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt)}</p>
+                <p className="text-white/60 text-xs mt-1">per order, on your {usage.plan.name} plan</p>
               </div>
-              <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.paymentGatewayFeeBdt)}</p>
-              <p className="text-white/60 text-xs mt-1">per transaction, on top of the order total</p>
+              <div className="bg-regantify-black rounded-2xl p-6 text-white">
+                <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
+                  <CreditCard size={16} />
+                  Online Payment (Regantify)
+                </div>
+                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.onlinePaymentGatewayFeeBdt)}</p>
+                <p className="text-white/60 text-xs mt-1">per order, on your {usage.plan.name} plan</p>
+              </div>
             </div>
           )}
 
@@ -58,7 +70,8 @@ export default function FeeSummary() {
               <thead>
                 <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide bg-regantify-content border-b border-black/5">
                   <th className="p-4">Plan</th>
-                  <th className="p-4">Fee per transaction</th>
+                  <th className="p-4">Cash On Delivery fee</th>
+                  <th className="p-4">Online Payment fee</th>
                   <th className="p-4">Custom payment gateway</th>
                 </tr>
               </thead>
@@ -76,7 +89,8 @@ export default function FeeSummary() {
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.paymentGatewayFeeBdt)}</td>
+                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.codGatewayFeeBdt)}</td>
+                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.onlinePaymentGatewayFeeBdt)}</td>
                       <td className="p-4 text-sm text-regantify-text-muted">
                         {plan.customPaymentGatewayAllowed ? 'Option available' : '—'}
                       </td>
@@ -88,8 +102,8 @@ export default function FeeSummary() {
           </div>
 
           <p className="text-xs text-regantify-text-muted mt-4">
-            The free gateway is Cash on Delivery today — the per-transaction fee applies once a real online payment
-            gateway is added.
+            Each gateway's fee applies per order paid through it — manage your store's gateways under Store &gt;
+            Payment Gateway.
           </p>
         </>
       )}

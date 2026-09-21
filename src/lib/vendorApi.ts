@@ -65,17 +65,19 @@ export async function updateVendorSettings(
   return data;
 }
 
-// Settings > Courier Integration > Delivery Charge. Values are BDT
-// amounts — insideDhakaCharge/outsideDhakaCharge drive the storefront
-// checkout's zone-based shipping charge, codVatCharge is a flat fee
-// added only to Cash on Delivery orders (see Vendor.codVatCharge in
-// schema.prisma / OrdersService.create). All three ship as strings from
-// the API (Prisma Decimal), same convention as ordersApi's own
-// subtotal/deliveryCharge/total fields.
+// Settings > Courier Integration > Delivery Charge / Settings > VAT.
+// Values are BDT amounts — insideDhakaCharge/outsideDhakaCharge drive the
+// storefront checkout's zone-based shipping charge, vatChargeBdt is a
+// flat fee added to EVERY order regardless of payment method (see
+// Vendor.vatChargeBdt in schema.prisma / OrdersService.create) — a
+// gateway's own Platform Charge (Store > Payment Gateway,
+// paymentGatewaysApi) is a separate, independent setting. All three ship
+// as strings from the API (Prisma Decimal), same convention as
+// ordersApi's own subtotal/deliveryCharge/total fields.
 export interface DeliveryCharges {
   insideDhakaCharge: string;
   outsideDhakaCharge: string;
-  codVatCharge: string;
+  vatChargeBdt: string;
 }
 
 export async function getVendorDeliveryCharges(): Promise<DeliveryCharges> {

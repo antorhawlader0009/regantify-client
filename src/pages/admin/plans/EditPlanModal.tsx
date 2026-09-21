@@ -73,7 +73,12 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   );
   const [lmsEnabled, setLmsEnabled] = useState(plan?.lmsEnabled ?? false);
   const [posEnabled, setPosEnabled] = useState(plan?.posEnabled ?? false);
-  const [paymentGatewayFeeBdt, setPaymentGatewayFeeBdt] = useState(plan ? Number(plan.paymentGatewayFeeBdt) : 0);
+  const [codGatewayFeeBdt, setCodGatewayFeeBdt] = useState(plan ? Number(plan.codGatewayFeeBdt) : 0);
+  const [onlinePaymentGatewayFeeBdt, setOnlinePaymentGatewayFeeBdt] = useState(
+    plan ? Number(plan.onlinePaymentGatewayFeeBdt) : 0,
+  );
+  const [codFeeHidden, setCodFeeHidden] = useState(plan?.codFeeHidden ?? false);
+  const [onlinePaymentFeeHidden, setOnlinePaymentFeeHidden] = useState(plan?.onlinePaymentFeeHidden ?? false);
 
   const handleSave = () => {
     onSave({
@@ -90,7 +95,10 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       customPaymentGatewayAllowed,
       lmsEnabled,
       posEnabled,
-      paymentGatewayFeeBdt,
+      codGatewayFeeBdt,
+      onlinePaymentGatewayFeeBdt,
+      codFeeHidden,
+      onlinePaymentFeeHidden,
     });
   };
 
@@ -108,30 +116,65 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">Price / month (৳)</label>
+            <input
+              type="number"
+              min={0}
+              value={priceMonthly}
+              onChange={(e) => setPriceMonthly(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Price / month (৳)</label>
-              <input
-                type="number"
-                min={0}
-                value={priceMonthly}
-                onChange={(e) => setPriceMonthly(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
-              />
-            </div>
-            <div>
               <label className="block text-xs font-medium text-regantify-text-muted mb-1">
-                Payment gateway fee (৳/txn)
+                Cash On Delivery fee (৳/txn)
               </label>
               <input
                 type="number"
                 min={0}
-                value={paymentGatewayFeeBdt}
-                onChange={(e) => setPaymentGatewayFeeBdt(Number(e.target.value))}
+                value={codGatewayFeeBdt}
+                onChange={(e) => setCodGatewayFeeBdt(Number(e.target.value))}
                 className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
               />
+              <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
+                <input
+                  type="checkbox"
+                  checked={codFeeHidden}
+                  onChange={(e) => setCodFeeHidden(e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                Hide from checkout
+              </label>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">
+                Online Payment (Regantify) fee (৳/txn)
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={onlinePaymentGatewayFeeBdt}
+                onChange={(e) => setOnlinePaymentGatewayFeeBdt(Number(e.target.value))}
+                className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+              />
+              <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
+                <input
+                  type="checkbox"
+                  checked={onlinePaymentFeeHidden}
+                  onChange={(e) => setOnlinePaymentFeeHidden(e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                Hide from checkout
+              </label>
             </div>
           </div>
+          <p className="text-xs text-regantify-text-muted -mt-3">
+            Hidden fees are still charged — they're folded into the order total silently instead of shown as their
+            own line item.
+          </p>
 
           <p className="text-xs text-regantify-text-muted -mb-2">Leave a limit field blank for unlimited.</p>
           <div className="grid grid-cols-2 gap-3">

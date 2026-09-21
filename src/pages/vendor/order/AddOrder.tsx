@@ -82,12 +82,13 @@ export default function AddOrder() {
     enabled: productSearch.trim().length > 0,
   });
 
-  // Settings > Courier Integration > Delivery Charge — same values the
-  // server actually falls back to below when no custom charge is typed
-  // (OrdersService.create). Add Order always creates a COD order (see
-  // that method's own comment on why ONLINE_PAYMENT is storefront-only),
-  // so the COD Charge (codVatCharge) is always added server-side too —
-  // shown here as a preview so the total matches what's actually created.
+  // Settings > Courier Integration > Delivery Charge / Settings > VAT —
+  // same values the server actually falls back to below when no custom
+  // charge is typed (OrdersService.create). Add Order always creates a
+  // COD order (see that method's own comment on why ONLINE_PAYMENT is
+  // storefront-only), and VAT applies regardless of payment method, so
+  // it's always added server-side too — shown here as a preview so the
+  // total matches what's actually created.
   const { data: deliveryCharges } = useQuery({
     queryKey: ['vendor-delivery-charges'],
     queryFn: getVendorDeliveryCharges,
@@ -96,7 +97,7 @@ export default function AddOrder() {
     DHAKA: Number(deliveryCharges?.insideDhakaCharge ?? 70),
     OUTSIDE_DHAKA: Number(deliveryCharges?.outsideDhakaCharge ?? 130),
   };
-  const vatAmount = Number(deliveryCharges?.codVatCharge ?? 10);
+  const vatAmount = Number(deliveryCharges?.vatChargeBdt ?? 10);
 
   const addToCart = (product: Product) => {
     const price = Number(product.discountPrice ?? product.price);

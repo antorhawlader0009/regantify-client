@@ -67,7 +67,8 @@ export default function PlanManagement() {
                   <th className="px-4 py-3 font-medium">VISITS/MO</th>
                   <th className="px-4 py-3 font-medium">THEMES</th>
                   <th className="px-4 py-3 font-medium">STAFF</th>
-                  <th className="px-4 py-3 font-medium">GATEWAY FEE</th>
+                  <th className="px-4 py-3 font-medium">COD FEE</th>
+                  <th className="px-4 py-3 font-medium">ONLINE FEE</th>
                   <th className="px-4 py-3 font-medium"></th>
                 </tr>
               </thead>
@@ -81,7 +82,8 @@ export default function PlanManagement() {
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.monthlyVisitLimit)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.themeAllowance)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.staffLimit)}</td>
-                    <td className="px-4 py-3 text-regantify-text">+{Number(plan.paymentGatewayFeeBdt)}৳</td>
+                    <td className="px-4 py-3 text-regantify-text">+{Number(plan.codGatewayFeeBdt)}৳</td>
+                    <td className="px-4 py-3 text-regantify-text">+{Number(plan.onlinePaymentGatewayFeeBdt)}৳</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setEditingPlan(plan)}

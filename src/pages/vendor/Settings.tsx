@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { User, Mail, Lock, Camera, Phone, Store, MapPin, Link as LinkIcon, CreditCard, Truck } from 'lucide-react';
+import { User, Mail, Lock, Camera, Phone, Store, MapPin, Link as LinkIcon, Truck } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
 import {
   getVendorSettings,
@@ -11,12 +11,10 @@ import {
   getVendorDeliveryCharges,
   updateVendorDeliveryCharges,
 } from '../../lib/vendorApi';
-import { getVendorPlanUsage } from '../../lib/plansApi';
 import { courierApi, type CourierAccount, type CourierAccountProvider } from '../../lib/courierApi';
 import { CourierSetupModal } from '../../components/courier/CourierSetupModal';
 import { PathaoStorePicker } from '../../components/courier/PathaoStorePicker';
 import { RedxStorePicker } from '../../components/courier/RedxStorePicker';
-import { upgradeToast } from '../../components/ui/UpgradePrompt';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
 import { toast } from 'sonner';
@@ -481,17 +479,11 @@ export default function VendorSettings() {
         </form>
       </section>
 
-      {/* Payment Gateway section — PLAN.md Step 12. Display + gate only:
-          no real payment gateway exists yet (checkout is COD-only), so
-          this is a settings toggle/contact-request entry point rather
-          than an actual integration flow — see FeeSummary.tsx's own
-          comment for the same framing. */}
-      <PaymentGatewaySection />
-
       {/* Courier Integration section — COURIER-PLAN.md §5.1. Real API
-          integration (unlike Payment Gateway above): connecting an
-          account here is what lets the Orders page's "Book with
-          {Provider}" action actually call that courier's API. */}
+          integration: connecting an account here is what lets the Orders
+          page's "Book with {Provider}" action actually call that
+          courier's API. (Payment Gateway management moved to its own
+          page — see Store > Payment Gateway / PaymentGateway.tsx.) */}
       <CourierIntegrationSection />
 
       {/* Password section */}
@@ -587,62 +579,6 @@ export default function VendorSettings() {
         </form>
       </section>
     </div>
-  );
-}
-
-/**
- * Payment Gateway settings card — PLAN.md Step 12. Every plan includes
- * the free gateway (COD today, see PLAN.md's own note on why no real
- * fee is deducted yet); Custom Payment Gateway is the paid-tier-only
- * "option available" row from the source-of-truth table — gated the
- * same locked/upgrade-prompt way as Domain.tsx (Step 8), not hidden.
- * There's no real gateway integration to configure yet, so "enabling"
- * it here is a contact-request action (see button below), not a form —
- * matches PLAN.md's own framing of this as "a settings toggle/
- * contact-request flow" until a real gateway exists.
- */
-function PaymentGatewaySection() {
-  const { data: usage, isLoading } = useQuery({
-    queryKey: ['vendor-plan-usage'],
-    queryFn: getVendorPlanUsage,
-  });
-  const allowed = usage?.plan.customPaymentGatewayAllowed ?? false;
-
-  return (
-    <section>
-      <h2 className="text-lg font-medium text-regantify-text mb-1">Payment Gateway</h2>
-      <p className="text-sm text-regantify-text-muted mb-4">
-        Every plan includes a free payment gateway — see Finance &gt; Fee Summary for the per-transaction fee.
-      </p>
-
-      <div className="rounded-xl bg-regantify-search p-4 flex items-start gap-3">
-        <CreditCard size={18} className="text-regantify-text-muted mt-0.5 shrink-0" />
-        <div className="flex-1">
-          <p className="text-sm font-medium text-regantify-text">Custom Payment Gateway</p>
-          <p className="text-sm text-regantify-text-muted mt-0.5">
-            {allowed
-              ? 'Available on your plan. Contact support to connect your own payment gateway.'
-              : "Not available on your plan. Upgrade to use your own payment gateway."}
-          </p>
-        </div>
-        <button
-          type="button"
-          disabled={isLoading}
-          onClick={() =>
-            allowed
-              ? toast.success('Request sent — our support team will reach out to set up your custom gateway.')
-              : upgradeToast('use a custom payment gateway')
-          }
-          className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-60 ${
-            allowed
-              ? 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
-              : 'bg-white border border-black/10 text-regantify-text hover:bg-regantify-content'
-          }`}
-        >
-          {allowed ? 'Request Setup' : 'Upgrade to Unlock'}
-        </button>
-      </div>
-    </section>
   );
 }
 
@@ -813,20 +749,23 @@ function CourierIntegrationSection() {
 const deliveryChargeSchema = z.object({
   insideDhakaCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
   outsideDhakaCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
-  codVatCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
+  vatChargeBdt: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
 });
 type DeliveryChargeFormValues = z.infer<typeof deliveryChargeSchema>;
 
 /**
- * Settings > Courier Integration > Delivery Charge — vendor-editable
- * Inside Dhaka / Outside Dhaka shipping charges plus a flat COD Charge fee
- * (see Vendor.insideDhakaCharge etc in schema.prisma). Nested under
+ * Settings > Courier Integration > Delivery Charge / Settings > VAT —
+ * vendor-editable Inside Dhaka / Outside Dhaka shipping charges plus a
+ * flat VAT fee applied to every order regardless of payment method (see
+ * Vendor.insideDhakaCharge/vatChargeBdt in schema.prisma). Nested under
  * Courier Integration rather than its own top-level section since it's
  * the "how much do we charge for delivery" counterpart to the courier
  * accounts above it. These are the exact numbers checkout uses to price
  * an order — see OrdersService.create and storefront/src/lib/
  * useCheckout.ts, both of which read the vendor's own saved values
- * instead of a shared constant now.
+ * instead of a shared constant now. A gateway's own Platform Charge is a
+ * separate, independent setting — see Store > Payment Gateway
+ * (PaymentGateway.tsx), not this form.
  */
 function DeliveryChargeSection() {
   const queryClient = useQueryClient();
@@ -839,7 +778,7 @@ function DeliveryChargeSection() {
 
   const form = useForm<DeliveryChargeFormValues>({
     resolver: zodResolver(deliveryChargeSchema),
-    defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, codVatCharge: 10 },
+    defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, vatChargeBdt: 10 },
   });
 
   useEffect(() => {
@@ -847,7 +786,7 @@ function DeliveryChargeSection() {
       form.reset({
         insideDhakaCharge: Number(charges.insideDhakaCharge),
         outsideDhakaCharge: Number(charges.outsideDhakaCharge),
-        codVatCharge: Number(charges.codVatCharge),
+        vatChargeBdt: Number(charges.vatChargeBdt),
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -872,7 +811,7 @@ function DeliveryChargeSection() {
     <div className="mt-6 pt-6 border-t border-black/5">
       <h3 className="text-sm font-medium text-regantify-text mb-1">Delivery Charge</h3>
       <p className="text-sm text-regantify-text-muted mb-4">
-        Set what shoppers pay for delivery, and a flat COD Charge added on Cash on Delivery orders only.
+        Set what shoppers pay for delivery, and a flat VAT added to every order.
       </p>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid sm:grid-cols-3 gap-4">
@@ -909,7 +848,7 @@ function DeliveryChargeSection() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-regantify-text mb-1.5">Cash on Delivery Charge (৳)</label>
+          <label className="block text-sm font-medium text-regantify-text mb-1.5">VAT (৳)</label>
           <input
             type="number"
             min={0}
@@ -917,13 +856,13 @@ function DeliveryChargeSection() {
             disabled={isLoading}
             className="w-full px-4 py-2.5 rounded-xl bg-regantify-search text-regantify-text
               focus:outline-none focus:ring-2 focus:ring-regantify-black"
-            {...form.register('codVatCharge')}
+            {...form.register('vatChargeBdt')}
           />
-          {form.formState.errors.codVatCharge && (
-            <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.codVatCharge.message}</p>
+          {form.formState.errors.vatChargeBdt && (
+            <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.vatChargeBdt.message}</p>
           )}
           <p className="text-xs text-regantify-text-muted mt-1.5">
-            Added only when a shopper pays Cash on Delivery — never on Online Payment.
+            Added to every order, regardless of payment method. See Store &gt; Payment Gateway for per-gateway charges.
           </p>
         </div>
 

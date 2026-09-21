@@ -32,3 +32,14 @@ export function storefrontStoreUrl(subdomain: string): string {
 export function storefrontProductUrl(subdomain: string, slug: string): string {
   return `${storefrontOrigin(subdomain)}/product/${slug}`;
 }
+
+/**
+ * Link to one landing page's public URL (Store > Landing Pages' "Visit"
+ * column). Landing pages live under /l/:slug, except the single reserved
+ * slug "/" which means "this page IS the store's homepage" — see
+ * LandingPage.slug's schema comment and landing-plan.md §6.
+ */
+export function storefrontLandingPageUrl(subdomain: string, slug: string): string {
+  const origin = storefrontOrigin(subdomain);
+  return slug === '/' ? origin : `${origin}/l/${slug}`;
+}

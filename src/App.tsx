@@ -37,10 +37,13 @@ import AddCollection from './pages/vendor/collection/AddCollection';
 import Themes from './pages/vendor/store/Themes';
 import Pages from './pages/vendor/store/Pages';
 import AddPage from './pages/vendor/store/AddPage';
+import LandingPages from './pages/vendor/store/landing-pages/LandingPages';
+import LandingPageBuilder from './pages/vendor/store/landing-pages/LandingPageBuilder';
 import Social from './pages/vendor/store/Social';
 import Logo from './pages/vendor/store/Logo';
 import Media from './pages/vendor/store/Media';
 import Domain from './pages/vendor/store/Domain';
+import PaymentGateway from './pages/vendor/store/PaymentGateway';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
@@ -73,6 +76,7 @@ import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
+import PaymentGatewayManagement from './pages/admin/payment-gateway/PaymentGatewayManagement';
 import Payouts from './pages/admin/finance/Payouts';
 
 const queryClient = new QueryClient();
@@ -104,10 +108,12 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/low-stock' &&
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
+    r.path !== '/vendor/store/landing-pages' &&
     r.path !== '/vendor/store/social' &&
     r.path !== '/vendor/store/logo' &&
     r.path !== '/vendor/store/media' &&
     r.path !== '/vendor/store/domain' &&
+    r.path !== '/vendor/store/payment-gateway' &&
     r.path !== '/vendor/orders' &&
     r.path !== '/vendor/orders/incomplete' &&
     r.path !== '/vendor/customers' &&
@@ -130,6 +136,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/plans' &&
     r.path !== '/admin/plan-requests' &&
+    r.path !== '/admin/payment-gateway' &&
     r.path !== '/admin/finance/payouts',
 );
 
@@ -205,10 +212,12 @@ export default function App() {
                 <Route path="/vendor/store/pages" element={<Pages />} />
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
+                <Route path="/vendor/store/landing-pages" element={<LandingPages />} />
                 <Route path="/vendor/store/social" element={<Social />} />
                 <Route path="/vendor/store/logo" element={<Logo />} />
                 <Route path="/vendor/store/media" element={<Media />} />
                 <Route path="/vendor/store/domain" element={<Domain />} />
+                <Route path="/vendor/store/payment-gateway" element={<PaymentGateway />} />
                 <Route path="/vendor/orders" element={<Orders />} />
                 <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
@@ -243,6 +252,12 @@ export default function App() {
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}
               </Route>
+
+              {/* Landing page builder — deliberately OUTSIDE <VendorLayout>
+                  so it renders full-screen with no dashboard sidebar/topbar
+                  (landing-plan.md §4.2), while still sitting inside the same
+                  VENDOR/STAFF ProtectedRoute as every other vendor route. */}
+              <Route path="/vendor/store/landing-pages/:id/builder" element={<LandingPageBuilder />} />
             </Route>
 
             {/* Super Admin dashboard — protected, SUPER_ADMIN role only */}
@@ -253,6 +268,7 @@ export default function App() {
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />
+                <Route path="/admin/payment-gateway" element={<PaymentGatewayManagement />} />
                 <Route path="/admin/finance/payouts" element={<Payouts />} />
                 {adminPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />

@@ -18,7 +18,11 @@ export interface Plan {
   customPaymentGatewayAllowed: boolean;
   lmsEnabled: boolean;
   posEnabled: boolean;
-  paymentGatewayFeeBdt: string;
+  codGatewayFeeBdt: string;
+  onlinePaymentGatewayFeeBdt: string;
+  /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
+  codFeeHidden: boolean;
+  onlinePaymentFeeHidden: boolean;
 }
 
 interface UsageStat {

@@ -25,7 +25,10 @@ export interface UpdatePlanPayload {
   customPaymentGatewayAllowed?: boolean;
   lmsEnabled?: boolean;
   posEnabled?: boolean;
-  paymentGatewayFeeBdt?: number;
+  codGatewayFeeBdt?: number;
+  onlinePaymentGatewayFeeBdt?: number;
+  codFeeHidden?: boolean;
+  onlinePaymentFeeHidden?: boolean;
 }
 
 export const adminPlansApi = {

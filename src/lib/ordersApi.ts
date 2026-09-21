@@ -78,10 +78,17 @@ export interface Order {
   deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA';
   subtotal: string;
   deliveryCharge: string;
-  // Flat COD fee, shown to shoppers as "COD Charge" (StorePal) — only
-  // ever non-zero when paymentMethod is "COD". See Vendor.codVatCharge /
+  // Flat VAT fee, shown to shoppers as "VAT" (StorePal) — applied to
+  // every order regardless of paymentMethod. See Vendor.vatChargeBdt /
   // Order.vatAmount in schema.prisma.
   vatAmount: string;
+  // Store > Payment Gateway's per-gateway Platform Charge — independent
+  // of vatAmount above. See VendorPaymentGateway.platformChargeBdt /
+  // Order.platformChargeAmount in schema.prisma. Always the real amount
+  // charged; platformChargeHidden below is a storefront-display-only
+  // flag (not used anywhere in this vendor dashboard today).
+  platformChargeAmount: string;
+  platformChargeHidden: boolean;
   discountAmount: string;
   discountLabel?: string | null;
   total: string;
