@@ -2,6 +2,11 @@ import { api } from './api';
 
 export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION';
 export type PaymentGatewayStatus = 'ACTIVE' | 'DISABLED' | 'COMING_SOON';
+// Whether platformChargeBdt is a flat BDT amount or a percentage (0-100)
+// of the order's subtotal — mirrors server's PaymentFeeType. For COD/
+// ONLINE_PAYMENT this is fully plan-driven (see Plan.codGatewayFeeType);
+// a custom gateway (SSLCommerz etc.) is always FLAT.
+export type PaymentFeeType = 'FLAT' | 'PERCENTAGE';
 
 export interface VendorPaymentGateway {
   id: string;
@@ -9,6 +14,7 @@ export interface VendorPaymentGateway {
   status: PaymentGatewayStatus;
   displayLabel: string | null;
   platformChargeBdt: string;
+  platformChargeType: PaymentFeeType;
   isConnected: boolean;
   createdAt: string;
   updatedAt: string;

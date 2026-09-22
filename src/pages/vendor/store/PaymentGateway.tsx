@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Loader2, Lock, Trash2 } from 'lucide-react';
-import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType } from '../../../lib/paymentGatewaysApi';
+import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType, type PaymentFeeType } from '../../../lib/paymentGatewaysApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
@@ -106,8 +106,8 @@ export default function PaymentGateway() {
   );
 }
 
-function formatCharge(value: string) {
-  return `৳${Number(value).toLocaleString('en-US')}`;
+function formatCharge(value: string, type: PaymentFeeType = 'FLAT') {
+  return type === 'PERCENTAGE' ? `${Number(value)}%` : `৳${Number(value).toLocaleString('en-US')}`;
 }
 
 /**
@@ -143,7 +143,8 @@ function BuiltinGatewayCard({
         <div className="flex-1">
           <p className="text-sm font-medium text-regantify-text">{gateway.displayLabel ?? DEFAULT_LABELS[gateway.type]}</p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
-            Fee: {formatCharge(gateway.platformChargeBdt)} per order
+            Fee: {formatCharge(gateway.platformChargeBdt, gateway.platformChargeType)}
+            {gateway.platformChargeType === 'PERCENTAGE' ? ' of subtotal' : ' per order'}
           </p>
           {platformHidden && (
             <p className="text-xs text-amber-600 mt-1">Hidden by platform admin — not shown to shoppers regardless of this setting.</p>

@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { PaymentGatewayCatalogEntry, PaymentGatewayStatus, PaymentGatewayType } from './paymentGatewaysApi';
+import type { PaymentGatewayCatalogEntry, PaymentGatewayStatus, PaymentGatewayType, PaymentFeeType } from './paymentGatewaysApi';
 
 // Mirrors server/src/admin/admin-payment-gateways.controller.ts — Super
 // Admin > Payment Gateway (platform-wide catalog switches + oversight).
@@ -21,6 +21,7 @@ export interface AdminVendorGatewayRow {
   status: PaymentGatewayStatus;
   displayLabel: string | null;
   platformChargeBdt: string;
+  platformChargeType: PaymentFeeType;
   updatedAt: string;
 }
 

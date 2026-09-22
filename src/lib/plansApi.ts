@@ -2,6 +2,12 @@ import { api } from './api';
 
 export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
+// Whether codGatewayFeeBdt/onlinePaymentGatewayFeeBdt is a flat BDT
+// amount or a percentage (0-100) of the order's subtotal — mirrors
+// server's PaymentFeeType enum. See Plan.codGatewayFeeType's own schema
+// comment on the server.
+export type PaymentFeeType = 'FLAT' | 'PERCENTAGE';
+
 export interface Plan {
   id: string;
   code: PlanCode;
@@ -18,8 +24,11 @@ export interface Plan {
   customPaymentGatewayAllowed: boolean;
   lmsEnabled: boolean;
   posEnabled: boolean;
+  // The raw number either way — see PaymentFeeType above for how to read it.
   codGatewayFeeBdt: string;
+  codGatewayFeeType: PaymentFeeType;
   onlinePaymentGatewayFeeBdt: string;
+  onlinePaymentGatewayFeeType: PaymentFeeType;
   /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
   codFeeHidden: boolean;
   onlinePaymentFeeHidden: boolean;

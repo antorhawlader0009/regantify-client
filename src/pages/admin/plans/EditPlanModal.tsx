@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '../../../components/ui/Dialog';
-import type { Plan } from '../../../lib/plansApi';
+import type { Plan, PaymentFeeType } from '../../../lib/plansApi';
 import type { UpdatePlanPayload } from '../../../lib/adminPlansApi';
 
 interface EditPlanModalProps {
@@ -48,6 +48,58 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
   );
 }
 
+// Cash On Delivery fee / Online Payment fee — a Flat/Percentage switch
+// next to the amount, so the SAME number field means "৳X per order" or
+// "X% of the order's subtotal" depending which is picked (see server's
+// PaymentFeeType). Percentage is capped at 100 client-side (mirrors
+// AdminService.updatePlan's own server-side check); Flat keeps the
+// existing unbounded-in-the-UI behavior.
+function FeeInputField({
+  label,
+  amount,
+  onAmountChange,
+  type,
+  onTypeChange,
+  hidden,
+  onHiddenChange,
+}: {
+  label: string;
+  amount: number;
+  onAmountChange: (next: number) => void;
+  type: PaymentFeeType;
+  onTypeChange: (next: PaymentFeeType) => void;
+  hidden: boolean;
+  onHiddenChange: (v: boolean) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-regantify-text-muted mb-1">{label}</label>
+      <div className="flex gap-1.5">
+        <input
+          type="number"
+          min={0}
+          max={type === 'PERCENTAGE' ? 100 : undefined}
+          value={amount}
+          onChange={(e) => onAmountChange(Number(e.target.value))}
+          className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+        />
+        <select
+          value={type}
+          onChange={(e) => onTypeChange(e.target.value as PaymentFeeType)}
+          className="shrink-0 px-2 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+        >
+          <option value="FLAT">৳</option>
+          <option value="PERCENTAGE">%</option>
+        </select>
+      </div>
+      <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
+        <input type="checkbox" checked={hidden} onChange={(e) => onHiddenChange(e.target.checked)} className="h-3.5 w-3.5" />
+        Hide from checkout
+      </label>
+    </div>
+  );
+}
+
 /**
  * Super Admin > Plans > Edit — every field from the Plan model (PLAN.md
  * Step 15). Initialized from the plan prop each time it opens (via
@@ -74,8 +126,12 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [lmsEnabled, setLmsEnabled] = useState(plan?.lmsEnabled ?? false);
   const [posEnabled, setPosEnabled] = useState(plan?.posEnabled ?? false);
   const [codGatewayFeeBdt, setCodGatewayFeeBdt] = useState(plan ? Number(plan.codGatewayFeeBdt) : 0);
+  const [codGatewayFeeType, setCodGatewayFeeType] = useState<PaymentFeeType>(plan?.codGatewayFeeType ?? 'FLAT');
   const [onlinePaymentGatewayFeeBdt, setOnlinePaymentGatewayFeeBdt] = useState(
     plan ? Number(plan.onlinePaymentGatewayFeeBdt) : 0,
+  );
+  const [onlinePaymentGatewayFeeType, setOnlinePaymentGatewayFeeType] = useState<PaymentFeeType>(
+    plan?.onlinePaymentGatewayFeeType ?? 'FLAT',
   );
   const [codFeeHidden, setCodFeeHidden] = useState(plan?.codFeeHidden ?? false);
   const [onlinePaymentFeeHidden, setOnlinePaymentFeeHidden] = useState(plan?.onlinePaymentFeeHidden ?? false);
@@ -96,7 +152,9 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       lmsEnabled,
       posEnabled,
       codGatewayFeeBdt,
+      codGatewayFeeType,
       onlinePaymentGatewayFeeBdt,
+      onlinePaymentGatewayFeeType,
       codFeeHidden,
       onlinePaymentFeeHidden,
     });
@@ -128,52 +186,29 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-regantify-text-muted mb-1">
-                Cash On Delivery fee (৳/txn)
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={codGatewayFeeBdt}
-                onChange={(e) => setCodGatewayFeeBdt(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
-              />
-              <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
-                <input
-                  type="checkbox"
-                  checked={codFeeHidden}
-                  onChange={(e) => setCodFeeHidden(e.target.checked)}
-                  className="h-3.5 w-3.5"
-                />
-                Hide from checkout
-              </label>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-regantify-text-muted mb-1">
-                Online Payment (Regantify) fee (৳/txn)
-              </label>
-              <input
-                type="number"
-                min={0}
-                value={onlinePaymentGatewayFeeBdt}
-                onChange={(e) => setOnlinePaymentGatewayFeeBdt(Number(e.target.value))}
-                className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
-              />
-              <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
-                <input
-                  type="checkbox"
-                  checked={onlinePaymentFeeHidden}
-                  onChange={(e) => setOnlinePaymentFeeHidden(e.target.checked)}
-                  className="h-3.5 w-3.5"
-                />
-                Hide from checkout
-              </label>
-            </div>
+            <FeeInputField
+              label="Cash On Delivery fee"
+              amount={codGatewayFeeBdt}
+              onAmountChange={setCodGatewayFeeBdt}
+              type={codGatewayFeeType}
+              onTypeChange={setCodGatewayFeeType}
+              hidden={codFeeHidden}
+              onHiddenChange={setCodFeeHidden}
+            />
+            <FeeInputField
+              label="Online Payment (Regantify) fee"
+              amount={onlinePaymentGatewayFeeBdt}
+              onAmountChange={setOnlinePaymentGatewayFeeBdt}
+              type={onlinePaymentGatewayFeeType}
+              onTypeChange={setOnlinePaymentGatewayFeeType}
+              hidden={onlinePaymentFeeHidden}
+              onHiddenChange={setOnlinePaymentFeeHidden}
+            />
           </div>
           <p className="text-xs text-regantify-text-muted -mt-3">
-            Hidden fees are still charged — they're folded into the order total silently instead of shown as their
-            own line item.
+            ৳ charges a flat amount per order; % charges that percentage of the order's product subtotal (delivery
+            and VAT excluded). Hidden fees are still charged — they're folded into the order total silently instead
+            of shown as their own line item.
           </p>
 
           <p className="text-xs text-regantify-text-muted -mb-2">Leave a limit field blank for unlimited.</p>

@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Plan, PlanUpgradeRequest, PlanUpgradeRequestStatus } from './plansApi';
+import type { Plan, PlanUpgradeRequest, PlanUpgradeRequestStatus, PaymentFeeType } from './plansApi';
 
 // Mirrors server/src/admin/{admin-plans,admin-plan-requests}.controller.ts
 // — Super Admin > Plans + Plan Requests (PLAN.md Step 15).
@@ -25,8 +25,13 @@ export interface UpdatePlanPayload {
   customPaymentGatewayAllowed?: boolean;
   lmsEnabled?: boolean;
   posEnabled?: boolean;
+  // The raw number either way — a BDT amount when the matching *FeeType
+  // is FLAT, or a 0-100 percentage (of the order's subtotal) when
+  // PERCENTAGE. See PaymentFeeType's own comment in plansApi.ts.
   codGatewayFeeBdt?: number;
+  codGatewayFeeType?: PaymentFeeType;
   onlinePaymentGatewayFeeBdt?: number;
+  onlinePaymentGatewayFeeType?: PaymentFeeType;
   codFeeHidden?: boolean;
   onlinePaymentFeeHidden?: boolean;
 }

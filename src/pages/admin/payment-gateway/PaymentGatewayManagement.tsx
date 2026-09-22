@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminPaymentGatewaysApi } from '../../../lib/adminPaymentGatewaysApi';
-import type { PaymentGatewayCatalogEntry, PaymentGatewayType } from '../../../lib/paymentGatewaysApi';
+import type { PaymentGatewayCatalogEntry, PaymentGatewayType, PaymentFeeType } from '../../../lib/paymentGatewaysApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { EditGatewayCatalogModal } from './EditGatewayCatalogModal';
 
 const TYPE_ORDER: PaymentGatewayType[] = ['COD', 'ONLINE_PAYMENT', 'SSLCOMMERZ', 'BKASH_MERCHANT', 'VENDOR_PAYSTATION'];
 
-function formatCharge(value: string) {
-  return `৳${Number(value).toLocaleString('en-US')}`;
+function formatCharge(value: string, type: PaymentFeeType) {
+  return type === 'PERCENTAGE' ? `${Number(value)}%` : `৳${Number(value).toLocaleString('en-US')}`;
 }
 
 /**
@@ -197,7 +197,7 @@ export default function PaymentGatewayManagement() {
                           {row.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-regantify-text">{formatCharge(row.platformChargeBdt)}</td>
+                      <td className="px-4 py-3 text-regantify-text">{formatCharge(row.platformChargeBdt, row.platformChargeType)}</td>
                       <td className="px-4 py-3 text-regantify-text-muted">
                         {new Date(row.updatedAt).toLocaleDateString('en-US')}
                       </td>

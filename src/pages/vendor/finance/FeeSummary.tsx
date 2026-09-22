@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, Check } from 'lucide-react';
 import { getPlans, getVendorPlanUsage } from '../../../lib/plansApi';
+import type { PaymentFeeType } from '../../../lib/plansApi';
 
-function formatFee(value: string) {
-  return `+${Number(value).toLocaleString('en-US')}৳`;
+function formatFee(value: string, type: PaymentFeeType) {
+  return type === 'PERCENTAGE' ? `+${Number(value)}%` : `+${Number(value).toLocaleString('en-US')}৳`;
 }
 
 /**
@@ -51,7 +52,7 @@ export default function FeeSummary() {
                   <CreditCard size={16} />
                   Cash On Delivery
                 </div>
-                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt)}</p>
+                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeeType)}</p>
                 <p className="text-white/60 text-xs mt-1">per order, on your {usage.plan.name} plan</p>
               </div>
               <div className="bg-regantify-black rounded-2xl p-6 text-white">
@@ -59,7 +60,9 @@ export default function FeeSummary() {
                   <CreditCard size={16} />
                   Online Payment (Regantify)
                 </div>
-                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.onlinePaymentGatewayFeeBdt)}</p>
+                <p className="text-3xl font-semibold mt-3">
+                  {formatFee(usage.plan.onlinePaymentGatewayFeeBdt, usage.plan.onlinePaymentGatewayFeeType)}
+                </p>
                 <p className="text-white/60 text-xs mt-1">per order, on your {usage.plan.name} plan</p>
               </div>
             </div>
@@ -89,8 +92,10 @@ export default function FeeSummary() {
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.codGatewayFeeBdt)}</td>
-                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.onlinePaymentGatewayFeeBdt)}</td>
+                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType)}</td>
+                      <td className="p-4 text-sm text-regantify-text">
+                        {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeeType)}
+                      </td>
                       <td className="p-4 text-sm text-regantify-text-muted">
                         {plan.customPaymentGatewayAllowed ? 'Option available' : '—'}
                       </td>

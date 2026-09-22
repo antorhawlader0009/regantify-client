@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminPlansApi } from '../../../lib/adminPlansApi';
-import type { Plan, PlanCode } from '../../../lib/plansApi';
+import type { Plan, PlanCode, PaymentFeeType } from '../../../lib/plansApi';
 import { toast } from '../../../lib/toast';
 import { EditPlanModal } from './EditPlanModal';
 import type { UpdatePlanPayload } from '../../../lib/adminPlansApi';
@@ -10,6 +10,10 @@ const TIER_ORDER: PlanCode[] = ['FREE', 'BASIC', 'STARTER', 'ADVANCE'];
 
 function formatLimit(value: number | null, suffix = '') {
   return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
+}
+
+function formatFee(amount: string, type: PaymentFeeType) {
+  return type === 'PERCENTAGE' ? `+${Number(amount)}%` : `+${Number(amount)}৳`;
 }
 
 /**
@@ -82,8 +86,10 @@ export default function PlanManagement() {
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.monthlyVisitLimit)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.themeAllowance)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.staffLimit)}</td>
-                    <td className="px-4 py-3 text-regantify-text">+{Number(plan.codGatewayFeeBdt)}৳</td>
-                    <td className="px-4 py-3 text-regantify-text">+{Number(plan.onlinePaymentGatewayFeeBdt)}৳</td>
+                    <td className="px-4 py-3 text-regantify-text">{formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType)}</td>
+                    <td className="px-4 py-3 text-regantify-text">
+                      {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeeType)}
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setEditingPlan(plan)}
