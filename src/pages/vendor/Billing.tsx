@@ -8,6 +8,8 @@ import {
   requestPlanUpgrade,
   type Plan,
   type PlanCode,
+  type PaymentFeeType,
+  type PaymentFeePayer,
 } from '../../lib/plansApi';
 import { paymentsApi } from '../../lib/paymentsApi';
 import { apiErrorMessage } from '../../lib/api';
@@ -109,10 +111,21 @@ export default function Billing() {
         <>
           {usage && (
             <div className="bg-white rounded-2xl border border-black/5 p-6 mb-6 max-w-xl">
-              <div className="flex items-center gap-2 text-regantify-text-muted text-sm font-medium mb-4">
+              <div className="flex items-center gap-2 text-regantify-text-muted text-sm font-medium mb-1">
                 <CreditCard size={16} />
                 Current plan: <span className="text-regantify-text font-semibold">{usage.plan.name}</span>
               </div>
+              <p className="text-xs text-regantify-text-muted mb-4">
+                COD fee:{' '}
+                {formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeeType, usage.plan.codGatewayFeePayer, usage.plan.codFeeHidden)}
+                {' · '}Online Payment fee:{' '}
+                {formatFee(
+                  usage.plan.onlinePaymentGatewayFeeBdt,
+                  usage.plan.onlinePaymentGatewayFeeType,
+                  usage.plan.onlinePaymentGatewayFeePayer,
+                  usage.plan.onlinePaymentFeeHidden,
+                )}
+              </p>
               <div className="space-y-4">
                 <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
                 <UsageBar label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
@@ -170,6 +183,18 @@ function formatLimit(value: number | null, suffix = '') {
   return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
 }
 
+// Store > Payment Gateway's per-plan COD/Online Payment fee — same
+// formatting convention as Finance > Fee Summary/Manage Plans (Super
+// Admin), surfaced here too so a vendor comparing plans can see exactly
+// what each tier charges and who pays it before upgrading, not just
+// after (Fee Summary only ever shows the vendor's OWN current plan's
+// fee in that kind of full-page format).
+function formatFee(amount: string, type: PaymentFeeType, payer: PaymentFeePayer, hidden: boolean) {
+  const value = type === 'PERCENTAGE' ? `${Number(amount)}%` : `৳${Number(amount)}`;
+  if (payer === 'VENDOR') return `${value} (you pay, hidden from customer)`;
+  return hidden ? `${value} (hidden from customer)` : value;
+}
+
 function PlanCard({
   plan,
   isCurrent,
@@ -223,6 +248,18 @@ function PlanCard({
         <li>AI chat: {formatLimit(plan.aiChatMessageLimitPerDay, '/day')}</li>
         <li>Staff: {formatLimit(plan.staffLimit)}</li>
         <li>Custom domain: {plan.customDomainAllowed ? 'Yes' : 'No'}</li>
+        <li className="pt-1.5 mt-1.5 border-t border-black/5 text-regantify-text">
+          COD fee: {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType, plan.codGatewayFeePayer, plan.codFeeHidden)}
+        </li>
+        <li>
+          Online Payment fee:{' '}
+          {formatFee(
+            plan.onlinePaymentGatewayFeeBdt,
+            plan.onlinePaymentGatewayFeeType,
+            plan.onlinePaymentGatewayFeePayer,
+            plan.onlinePaymentFeeHidden,
+          )}
+        </li>
       </ul>
 
       {isCurrent ? (
