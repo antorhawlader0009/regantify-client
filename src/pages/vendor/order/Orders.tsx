@@ -22,16 +22,25 @@ function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
-// Orders list's own TOTAL column — deliberately order.total MINUS
-// order.platformChargeAmount, always (regardless of "Fee From" —
-// Order.platformChargePayer), not the raw order.total the shopper was
-// (or wasn't) charged. This is "what this order nets you" at a glance,
-// matching Finance > Transactions' own "Order revenue" CREDIT minus its
-// "Platform Charge" DEBIT for the same order. The full itemized
-// breakdown (subtotal/delivery/VAT/Platform Charge/Total as the shopper
-// actually saw it) still lives on Order Detail / Download Invoice,
-// unchanged — this is only the list's own summary column.
+// Orders list's own TOTAL column — order.total MINUS
+// order.platformChargeAmount, but ONLY once that Platform Charge has
+// actually been deducted server-side (see OrdersService
+// .deductPlatformCharge's two call sites): for COD/any other gateway,
+// that's the COMPLETED transition — nothing is deducted before then, so
+// this must keep showing the full order.total until Completed, same as
+// what Finance > Transactions itself would show (no "Platform Charge"
+// DEBIT row exists yet). ONLINE_PAYMENT is the one exception — its
+// charge is deducted immediately on payment success (leaving
+// PAYMENT_INITIATED), so it's already netted out from PENDING onward.
+// Getting this wrong would show a number Finance > Transactions doesn't
+// back up yet — "what this order nets you" must only ever reflect money
+// that's actually moved.
 function vendorNetTotal(order: Order): string {
+  const alreadyDeducted =
+    order.paymentMethod === 'ONLINE_PAYMENT'
+      ? order.status !== 'PAYMENT_INITIATED' && order.status !== 'PAYMENT_FAILED'
+      : order.status === 'COMPLETED';
+  if (!alreadyDeducted) return order.total;
   return String(Number(order.total) - Number(order.platformChargeAmount));
 }
 
