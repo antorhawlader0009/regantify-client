@@ -20,6 +20,7 @@ import {
   Languages,
   Sun,
   Moon,
+  LucideMonitorSmartphone,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -424,7 +425,7 @@ function VendorPhoneEntryInner() {
 
       {/* Background: hero.png + tinted gradient + drifting glow blobs */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        {/* <img src="/hero.png" alt="" className="w-full h-full object-cover" /> */}
+        <img src="/hero.png" alt="" className="w-full h-full object-cover" />
         <div className={`absolute inset-0 transition-colors duration-500 ${th.overlay}`} />
         <div className={`rg-blob absolute -top-28 -left-24 w-[440px] h-[440px] rounded-full blur-3xl transition-colors duration-500 ${th.blobA}`} />
         <div

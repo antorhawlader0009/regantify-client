@@ -9,7 +9,7 @@ export default function AdminDashboard() {
         Welcome, {user?.fullName ?? 'Super Admin'}
       </h1>
       <p className="text-regantify-text-muted mt-1">
-        Platform-wide overview — real metrics coming in a later phase.
+        Platform-wide overview — real metrics coming in a later phase. rrrrrrrrrrrr
       </p>
     </div>
   );
