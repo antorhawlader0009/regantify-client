@@ -22,28 +22,6 @@ function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
-// Orders list's own TOTAL column — order.total MINUS
-// order.platformChargeAmount, but ONLY once that Platform Charge has
-// actually been deducted server-side (see OrdersService
-// .deductPlatformCharge's two call sites): for COD/any other gateway,
-// that's the COMPLETED transition — nothing is deducted before then, so
-// this must keep showing the full order.total until Completed, same as
-// what Finance > Transactions itself would show (no "Platform Charge"
-// DEBIT row exists yet). ONLINE_PAYMENT is the one exception — its
-// charge is deducted immediately on payment success (leaving
-// PAYMENT_INITIATED), so it's already netted out from PENDING onward.
-// Getting this wrong would show a number Finance > Transactions doesn't
-// back up yet — "what this order nets you" must only ever reflect money
-// that's actually moved.
-function vendorNetTotal(order: Order): string {
-  const alreadyDeducted =
-    order.paymentMethod === 'ONLINE_PAYMENT'
-      ? order.status !== 'PAYMENT_INITIATED' && order.status !== 'PAYMENT_FAILED'
-      : order.status === 'COMPLETED';
-  if (!alreadyDeducted) return order.total;
-  return String(Number(order.total) - Number(order.platformChargeAmount));
-}
-
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', {
     month: 'numeric',
@@ -257,7 +235,7 @@ function OrderRow({
         {extraCount > 0 && <p className="text-xs text-regantify-text-muted mt-1">+{extraCount} more item(s)</p>}
       </td>
       <td className="p-4">
-        <p className="text-sm font-semibold text-regantify-text">{formatPrice(vendorNetTotal(order))}</p>
+        <p className="text-sm font-semibold text-regantify-text">{formatPrice(order.total)}</p>
         <p className="text-xs text-regantify-text-muted mt-0.5">{order.paymentMethod}</p>
       </td>
       <td className="p-4">
