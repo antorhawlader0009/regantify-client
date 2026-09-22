@@ -7,6 +7,12 @@ export type PaymentGatewayStatus = 'ACTIVE' | 'DISABLED' | 'COMING_SOON';
 // ONLINE_PAYMENT this is fully plan-driven (see Plan.codGatewayFeeType);
 // a custom gateway (SSLCommerz etc.) is always FLAT.
 export type PaymentFeeType = 'FLAT' | 'PERCENTAGE';
+// Who pays platformChargeBdt — CUSTOMER (default, added to the order
+// total) or VENDOR (never charged to the shopper, comes out of this
+// vendor's own payout instead). Mirrors server's PaymentFeePayer. For
+// COD/ONLINE_PAYMENT this is fully plan-driven; a custom gateway
+// (SSLCommerz etc.) is always CUSTOMER.
+export type PaymentFeePayer = 'CUSTOMER' | 'VENDOR';
 
 export interface VendorPaymentGateway {
   id: string;
@@ -15,6 +21,7 @@ export interface VendorPaymentGateway {
   displayLabel: string | null;
   platformChargeBdt: string;
   platformChargeType: PaymentFeeType;
+  platformChargePayer: PaymentFeePayer;
   isConnected: boolean;
   createdAt: string;
   updatedAt: string;

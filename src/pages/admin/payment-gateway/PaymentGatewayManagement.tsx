@@ -197,7 +197,12 @@ export default function PaymentGatewayManagement() {
                           {row.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-regantify-text">{formatCharge(row.platformChargeBdt, row.platformChargeType)}</td>
+                      <td className="px-4 py-3 text-regantify-text">
+                        {formatCharge(row.platformChargeBdt, row.platformChargeType)}
+                        {row.platformChargePayer === 'VENDOR' && (
+                          <span className="ml-1 text-[11px] text-regantify-text-muted">(vendor)</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-regantify-text-muted">
                         {new Date(row.updatedAt).toLocaleDateString('en-US')}
                       </td>

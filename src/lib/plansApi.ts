@@ -8,6 +8,14 @@ export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 // comment on the server.
 export type PaymentFeeType = 'FLAT' | 'PERCENTAGE';
 
+// "Fee From" — who pays this fee. CUSTOMER (default): added to the
+// order total, the shopper pays it (shown/folded per codFeeHidden etc).
+// VENDOR: never added to the order total or shown to the shopper
+// anywhere — comes out of the vendor's own payout at completion instead,
+// shown only on the vendor's own invoice. Mirrors server's
+// PaymentFeePayer enum.
+export type PaymentFeePayer = 'CUSTOMER' | 'VENDOR';
+
 export interface Plan {
   id: string;
   code: PlanCode;
@@ -27,8 +35,10 @@ export interface Plan {
   // The raw number either way — see PaymentFeeType above for how to read it.
   codGatewayFeeBdt: string;
   codGatewayFeeType: PaymentFeeType;
+  codGatewayFeePayer: PaymentFeePayer;
   onlinePaymentGatewayFeeBdt: string;
   onlinePaymentGatewayFeeType: PaymentFeeType;
+  onlinePaymentGatewayFeePayer: PaymentFeePayer;
   /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
   codFeeHidden: boolean;
   onlinePaymentFeeHidden: boolean;

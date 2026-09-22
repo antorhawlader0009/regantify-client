@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Plan, PlanUpgradeRequest, PlanUpgradeRequestStatus, PaymentFeeType } from './plansApi';
+import type { Plan, PlanUpgradeRequest, PlanUpgradeRequestStatus, PaymentFeeType, PaymentFeePayer } from './plansApi';
 
 // Mirrors server/src/admin/{admin-plans,admin-plan-requests}.controller.ts
 // — Super Admin > Plans + Plan Requests (PLAN.md Step 15).
@@ -30,8 +30,10 @@ export interface UpdatePlanPayload {
   // PERCENTAGE. See PaymentFeeType's own comment in plansApi.ts.
   codGatewayFeeBdt?: number;
   codGatewayFeeType?: PaymentFeeType;
+  codGatewayFeePayer?: PaymentFeePayer;
   onlinePaymentGatewayFeeBdt?: number;
   onlinePaymentGatewayFeeType?: PaymentFeeType;
+  onlinePaymentGatewayFeePayer?: PaymentFeePayer;
   codFeeHidden?: boolean;
   onlinePaymentFeeHidden?: boolean;
 }

@@ -146,6 +146,16 @@ function BuiltinGatewayCard({
             Fee: {formatCharge(gateway.platformChargeBdt, gateway.platformChargeType)}
             {gateway.platformChargeType === 'PERCENTAGE' ? ' of subtotal' : ' per order'}
           </p>
+          {/* Fee From: Vendor (Plan.codGatewayFeePayer/onlinePaymentGatewayFeePayer)
+              — the fee above is never charged to the shopper at all; it
+              comes out of THIS vendor's own payout at order completion
+              instead. Worth surfacing here since it's real money either
+              way, just from a different source than the default. */}
+          {gateway.platformChargePayer === 'VENDOR' && (
+            <p className="text-xs text-regantify-text-muted mt-0.5">
+              Paid by you — never charged to your customers, deducted from your payout instead.
+            </p>
+          )}
           {platformHidden && (
             <p className="text-xs text-amber-600 mt-1">Hidden by platform admin — not shown to shoppers regardless of this setting.</p>
           )}

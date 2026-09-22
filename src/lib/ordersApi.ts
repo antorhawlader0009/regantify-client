@@ -85,9 +85,19 @@ export interface Order {
   // Store > Payment Gateway's per-gateway Platform Charge — independent
   // of vatAmount above. See VendorPaymentGateway.platformChargeBdt /
   // Order.platformChargeAmount in schema.prisma. Always the real amount
-  // charged; platformChargeHidden below is a storefront-display-only
-  // flag (not used anywhere in this vendor dashboard today).
+  // charged, regardless of who actually paid it (see platformChargePayer)
+  // or platformChargeHidden below (a storefront-display-only flag, only
+  // meaningful when platformChargePayer is CUSTOMER).
   platformChargeAmount: string;
+  // "Fee From" — CUSTOMER (included in `total`, the shopper's own
+  // charge) or VENDOR (never shown to the shopper anywhere, comes out of
+  // this vendor's own payout instead at completion — see
+  // Order.platformChargePayer's own schema comment). InvoiceModal.tsx
+  // always shows platformChargeAmount regardless of this value — it's
+  // the vendor's OWN invoice, so they should always see the real fee,
+  // whether it was charged to their customer or comes out of their own
+  // payout.
+  platformChargePayer: 'CUSTOMER' | 'VENDOR';
   platformChargeHidden: boolean;
   discountAmount: string;
   discountLabel?: string | null;

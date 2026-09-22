@@ -102,6 +102,22 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
                     <span>{formatPrice(order.vatAmount)}</span>
                   </div>
                 )}
+                {/* Platform Charge — always shown here regardless of
+                    "Fee From" (order.platformChargePayer): this is the
+                    VENDOR's own invoice, so they always see the real fee,
+                    whether their customer paid it (already folded into
+                    order.total below) or it comes out of their own payout
+                    instead (Fee From: Vendor — never shown to the
+                    customer anywhere, see storefront's checkout/receipt
+                    views). */}
+                {Number(order.platformChargeAmount) > 0 && (
+                  <div className="flex justify-between text-regantify-text-muted">
+                    <span>
+                      Platform Charge{order.platformChargePayer === 'VENDOR' ? ' (paid by you)' : ''}
+                    </span>
+                    <span>{formatPrice(order.platformChargeAmount)}</span>
+                  </div>
+                )}
                 {Number(order.discountAmount) > 0 && (
                   <div className="flex justify-between text-regantify-text-muted">
                     <span>Discount</span>

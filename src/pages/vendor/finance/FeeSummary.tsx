@@ -1,10 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, Check } from 'lucide-react';
 import { getPlans, getVendorPlanUsage } from '../../../lib/plansApi';
-import type { PaymentFeeType } from '../../../lib/plansApi';
+import type { PaymentFeeType, PaymentFeePayer } from '../../../lib/plansApi';
 
 function formatFee(value: string, type: PaymentFeeType) {
   return type === 'PERCENTAGE' ? `+${Number(value)}%` : `+${Number(value).toLocaleString('en-US')}৳`;
+}
+
+// "Fee From: Vendor" — this plan's fee comes out of the vendor's OWN
+// payout at order completion instead of being added to what the
+// shopper pays (see server's PaymentFeePayer). Worth calling out here
+// specifically since it's the vendor's own money either way.
+function payerNote(payer: PaymentFeePayer) {
+  return payer === 'VENDOR' ? 'paid by you, not the customer' : 'paid by the customer';
 }
 
 /**
@@ -53,7 +61,9 @@ export default function FeeSummary() {
                   Cash On Delivery
                 </div>
                 <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeeType)}</p>
-                <p className="text-white/60 text-xs mt-1">per order, on your {usage.plan.name} plan</p>
+                <p className="text-white/60 text-xs mt-1">
+                  per order, on your {usage.plan.name} plan — {payerNote(usage.plan.codGatewayFeePayer)}
+                </p>
               </div>
               <div className="bg-regantify-black rounded-2xl p-6 text-white">
                 <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
@@ -63,7 +73,9 @@ export default function FeeSummary() {
                 <p className="text-3xl font-semibold mt-3">
                   {formatFee(usage.plan.onlinePaymentGatewayFeeBdt, usage.plan.onlinePaymentGatewayFeeType)}
                 </p>
-                <p className="text-white/60 text-xs mt-1">per order, on your {usage.plan.name} plan</p>
+                <p className="text-white/60 text-xs mt-1">
+                  per order, on your {usage.plan.name} plan — {payerNote(usage.plan.onlinePaymentGatewayFeePayer)}
+                </p>
               </div>
             </div>
           )}
@@ -92,9 +104,17 @@ export default function FeeSummary() {
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-sm text-regantify-text">{formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType)}</td>
+                      <td className="p-4 text-sm text-regantify-text">
+                        {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType)}
+                        {plan.codGatewayFeePayer === 'VENDOR' && (
+                          <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
+                        )}
+                      </td>
                       <td className="p-4 text-sm text-regantify-text">
                         {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeeType)}
+                        {plan.onlinePaymentGatewayFeePayer === 'VENDOR' && (
+                          <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
+                        )}
                       </td>
                       <td className="p-4 text-sm text-regantify-text-muted">
                         {plan.customPaymentGatewayAllowed ? 'Option available' : '—'}

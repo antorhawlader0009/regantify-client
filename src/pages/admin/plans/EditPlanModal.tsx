@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '../../../components/ui/Dialog';
-import type { Plan, PaymentFeeType } from '../../../lib/plansApi';
+import type { Plan, PaymentFeeType, PaymentFeePayer } from '../../../lib/plansApi';
 import type { UpdatePlanPayload } from '../../../lib/adminPlansApi';
 
 interface EditPlanModalProps {
@@ -49,17 +49,25 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
 }
 
 // Cash On Delivery fee / Online Payment fee — a Flat/Percentage switch
-// next to the amount, so the SAME number field means "৳X per order" or
-// "X% of the order's subtotal" depending which is picked (see server's
-// PaymentFeeType). Percentage is capped at 100 client-side (mirrors
-// AdminService.updatePlan's own server-side check); Flat keeps the
-// existing unbounded-in-the-UI behavior.
+// next to the amount (see server's PaymentFeeType), plus a "Fee From"
+// dropdown (see PaymentFeePayer) choosing who actually pays it:
+// Customer (default — added to the order total, shown/folded per "Hide
+// from checkout") or Vendor (never added to the order total or shown to
+// the shopper anywhere — comes out of the vendor's own payout instead,
+// shown only on the vendor's own invoice). "Hide from checkout" is
+// hidden entirely when Fee From is Vendor since it's meaningless then —
+// the fee is already never shown to the shopper regardless. Percentage
+// is capped at 100 client-side (mirrors AdminService.updatePlan's own
+// server-side check); Flat keeps the existing unbounded-in-the-UI
+// behavior.
 function FeeInputField({
   label,
   amount,
   onAmountChange,
   type,
   onTypeChange,
+  payer,
+  onPayerChange,
   hidden,
   onHiddenChange,
 }: {
@@ -68,6 +76,8 @@ function FeeInputField({
   onAmountChange: (next: number) => void;
   type: PaymentFeeType;
   onTypeChange: (next: PaymentFeeType) => void;
+  payer: PaymentFeePayer;
+  onPayerChange: (next: PaymentFeePayer) => void;
   hidden: boolean;
   onHiddenChange: (v: boolean) => void;
 }) {
@@ -92,10 +102,27 @@ function FeeInputField({
           <option value="PERCENTAGE">%</option>
         </select>
       </div>
-      <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
-        <input type="checkbox" checked={hidden} onChange={(e) => onHiddenChange(e.target.checked)} className="h-3.5 w-3.5" />
-        Hide from checkout
-      </label>
+      <div className="mt-1.5">
+        <label className="block text-[11px] text-regantify-text-muted mb-0.5">Fee From</label>
+        <select
+          value={payer}
+          onChange={(e) => onPayerChange(e.target.value as PaymentFeePayer)}
+          className="w-full px-3 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text focus:outline-none"
+        >
+          <option value="CUSTOMER">Customer</option>
+          <option value="VENDOR">Vendor</option>
+        </select>
+      </div>
+      {payer === 'CUSTOMER' ? (
+        <label className="flex items-center gap-1.5 mt-1.5 text-xs text-regantify-text-muted">
+          <input type="checkbox" checked={hidden} onChange={(e) => onHiddenChange(e.target.checked)} className="h-3.5 w-3.5" />
+          Hide from checkout
+        </label>
+      ) : (
+        <p className="mt-1.5 text-[11px] text-regantify-text-muted">
+          Added to the vendor's product price — customer never sees this fee.
+        </p>
+      )}
     </div>
   );
 }
@@ -127,11 +154,15 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [posEnabled, setPosEnabled] = useState(plan?.posEnabled ?? false);
   const [codGatewayFeeBdt, setCodGatewayFeeBdt] = useState(plan ? Number(plan.codGatewayFeeBdt) : 0);
   const [codGatewayFeeType, setCodGatewayFeeType] = useState<PaymentFeeType>(plan?.codGatewayFeeType ?? 'FLAT');
+  const [codGatewayFeePayer, setCodGatewayFeePayer] = useState<PaymentFeePayer>(plan?.codGatewayFeePayer ?? 'CUSTOMER');
   const [onlinePaymentGatewayFeeBdt, setOnlinePaymentGatewayFeeBdt] = useState(
     plan ? Number(plan.onlinePaymentGatewayFeeBdt) : 0,
   );
   const [onlinePaymentGatewayFeeType, setOnlinePaymentGatewayFeeType] = useState<PaymentFeeType>(
     plan?.onlinePaymentGatewayFeeType ?? 'FLAT',
+  );
+  const [onlinePaymentGatewayFeePayer, setOnlinePaymentGatewayFeePayer] = useState<PaymentFeePayer>(
+    plan?.onlinePaymentGatewayFeePayer ?? 'CUSTOMER',
   );
   const [codFeeHidden, setCodFeeHidden] = useState(plan?.codFeeHidden ?? false);
   const [onlinePaymentFeeHidden, setOnlinePaymentFeeHidden] = useState(plan?.onlinePaymentFeeHidden ?? false);
@@ -153,8 +184,10 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       posEnabled,
       codGatewayFeeBdt,
       codGatewayFeeType,
+      codGatewayFeePayer,
       onlinePaymentGatewayFeeBdt,
       onlinePaymentGatewayFeeType,
+      onlinePaymentGatewayFeePayer,
       codFeeHidden,
       onlinePaymentFeeHidden,
     });
@@ -192,6 +225,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
               onAmountChange={setCodGatewayFeeBdt}
               type={codGatewayFeeType}
               onTypeChange={setCodGatewayFeeType}
+              payer={codGatewayFeePayer}
+              onPayerChange={setCodGatewayFeePayer}
               hidden={codFeeHidden}
               onHiddenChange={setCodFeeHidden}
             />
@@ -201,14 +236,17 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
               onAmountChange={setOnlinePaymentGatewayFeeBdt}
               type={onlinePaymentGatewayFeeType}
               onTypeChange={setOnlinePaymentGatewayFeeType}
+              payer={onlinePaymentGatewayFeePayer}
+              onPayerChange={setOnlinePaymentGatewayFeePayer}
               hidden={onlinePaymentFeeHidden}
               onHiddenChange={setOnlinePaymentFeeHidden}
             />
           </div>
           <p className="text-xs text-regantify-text-muted -mt-3">
             ৳ charges a flat amount per order; % charges that percentage of the order's product subtotal (delivery
-            and VAT excluded). Hidden fees are still charged — they're folded into the order total silently instead
-            of shown as their own line item.
+            and VAT excluded). Fee From Customer adds it to what the shopper pays (hidden fees are still charged —
+            just folded into the total silently); Fee From Vendor never charges the shopper at all and comes out of
+            the vendor's own payout instead.
           </p>
 
           <p className="text-xs text-regantify-text-muted -mb-2">Leave a limit field blank for unlimited.</p>
