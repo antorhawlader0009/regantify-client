@@ -22,6 +22,19 @@ function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
+// Orders list's own TOTAL column — deliberately order.total MINUS
+// order.platformChargeAmount, always (regardless of "Fee From" —
+// Order.platformChargePayer), not the raw order.total the shopper was
+// (or wasn't) charged. This is "what this order nets you" at a glance,
+// matching Finance > Transactions' own "Order revenue" CREDIT minus its
+// "Platform Charge" DEBIT for the same order. The full itemized
+// breakdown (subtotal/delivery/VAT/Platform Charge/Total as the shopper
+// actually saw it) still lives on Order Detail / Download Invoice,
+// unchanged — this is only the list's own summary column.
+function vendorNetTotal(order: Order): string {
+  return String(Number(order.total) - Number(order.platformChargeAmount));
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', {
     month: 'numeric',
@@ -235,7 +248,7 @@ function OrderRow({
         {extraCount > 0 && <p className="text-xs text-regantify-text-muted mt-1">+{extraCount} more item(s)</p>}
       </td>
       <td className="p-4">
-        <p className="text-sm font-semibold text-regantify-text">{formatPrice(order.total)}</p>
+        <p className="text-sm font-semibold text-regantify-text">{formatPrice(vendorNetTotal(order))}</p>
         <p className="text-xs text-regantify-text-muted mt-0.5">{order.paymentMethod}</p>
       </td>
       <td className="p-4">
