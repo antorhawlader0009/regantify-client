@@ -22,6 +22,18 @@ function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
+// Orders list's own TOTAL column — for ONLINE_PAYMENT orders only, shows
+// order.total MINUS order.platformChargeAmount (the "Payment Gateway
+// Fee" — see InvoiceModal.tsx/OrdersService.deductPlatformCharge). Its
+// charge is always deducted immediately on payment success regardless
+// of order status (see the immediate-deduction change), so this is
+// unconditional for ONLINE_PAYMENT specifically — unlike COD/any other
+// gateway, which keeps showing the plain order.total here, unchanged.
+function orderListTotal(order: Order): string {
+  if (order.paymentMethod !== 'ONLINE_PAYMENT') return order.total;
+  return String(Number(order.total) - Number(order.platformChargeAmount));
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', {
     month: 'numeric',
@@ -235,7 +247,7 @@ function OrderRow({
         {extraCount > 0 && <p className="text-xs text-regantify-text-muted mt-1">+{extraCount} more item(s)</p>}
       </td>
       <td className="p-4">
-        <p className="text-sm font-semibold text-regantify-text">{formatPrice(order.total)}</p>
+        <p className="text-sm font-semibold text-regantify-text">{formatPrice(orderListTotal(order))}</p>
         <p className="text-xs text-regantify-text-muted mt-0.5">{order.paymentMethod}</p>
       </td>
       <td className="p-4">
