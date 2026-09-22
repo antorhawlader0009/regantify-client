@@ -23,7 +23,7 @@ export function Sidebar({ sections }: SidebarProps) {
   };
 
   return (
-    <aside className="w-[280px] shrink-0 bg-regantify-sidebar h-full overflow-y-auto py-6 px-4">
+    <aside className="w-[280px] shrink-0 bg-[#f8f8f8] border-r border-black/5 h-full overflow-y-auto py-6 px-4">
       <nav className="space-y-1">
         {sections.map((section) => {
           const Icon = section.icon;

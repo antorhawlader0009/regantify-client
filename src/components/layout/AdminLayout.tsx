@@ -9,7 +9,7 @@ export function AdminLayout() {
       <Topbar brandLabel="Regantify Admin" />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar sections={adminNav} />
-        <main className="flex-1 bg-regantify-content overflow-y-auto p-8">
+        <main className="flex-1 bg-white overflow-y-auto p-8">
           <Outlet />
         </main>
       </div>

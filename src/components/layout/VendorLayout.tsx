@@ -9,7 +9,7 @@ export function VendorLayout() {
       <Topbar brandLabel="Regantify" />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar sections={vendorNav} />
-        <main className="flex-1 bg-regantify-content overflow-y-auto p-8 isolate">
+        <main className="flex-1 bg-white overflow-y-auto p-8 isolate">
           <Outlet />
         </main>
       </div>
