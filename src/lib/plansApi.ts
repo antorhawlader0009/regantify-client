@@ -2,12 +2,6 @@ import { api } from './api';
 
 export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
-// Whether codGatewayFeeBdt/onlinePaymentGatewayFeeBdt is a flat BDT
-// amount or a percentage (0-100) of the order's subtotal — mirrors
-// server's PaymentFeeType enum. See Plan.codGatewayFeeType's own schema
-// comment on the server.
-export type PaymentFeeType = 'FLAT' | 'PERCENTAGE';
-
 // "Fee From" — who pays this fee. CUSTOMER (default): added to the
 // order total, the shopper pays it (shown/folded per codFeeHidden etc).
 // VENDOR: never added to the order total or shown to the shopper
@@ -15,6 +9,17 @@ export type PaymentFeeType = 'FLAT' | 'PERCENTAGE';
 // shown only on the vendor's own invoice. Mirrors server's
 // PaymentFeePayer enum.
 export type PaymentFeePayer = 'CUSTOMER' | 'VENDOR';
+
+// "৳10 + 2%", "৳10", "2%" — a fee's flat and percentage parts as one
+// label, dropping whichever part is 0 (a fully-zero fee shows "৳0").
+export function formatFeeParts(flat: string, percent: string): string {
+  const flatValue = Number(flat);
+  const percentValue = Number(percent);
+  const flatText = `৳${flatValue.toLocaleString('en-US')}`;
+  if (percentValue === 0) return flatText;
+  if (flatValue === 0) return `${percentValue}%`;
+  return `${flatText} + ${percentValue}%`;
+}
 
 export interface Plan {
   id: string;
@@ -32,12 +37,13 @@ export interface Plan {
   customPaymentGatewayAllowed: boolean;
   lmsEnabled: boolean;
   posEnabled: boolean;
-  // The raw number either way — see PaymentFeeType above for how to read it.
+  // Each fee = flat BDT part + percent (0-100) of the order total
+  // (incl. delivery, VAT and the flat part), both applied together — see server's Plan.codGatewayFeeBdt comment.
   codGatewayFeeBdt: string;
-  codGatewayFeeType: PaymentFeeType;
+  codGatewayFeePercent: string;
   codGatewayFeePayer: PaymentFeePayer;
   onlinePaymentGatewayFeeBdt: string;
-  onlinePaymentGatewayFeeType: PaymentFeeType;
+  onlinePaymentGatewayFeePercent: string;
   onlinePaymentGatewayFeePayer: PaymentFeePayer;
   /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
   codFeeHidden: boolean;

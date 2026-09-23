@@ -4,11 +4,11 @@ import { Check, Clock, CreditCard } from 'lucide-react';
 import {
   getPlans,
   getVendorPlanUsage,
+  formatFeeParts,
   getOwnPlanRequests,
   requestPlanUpgrade,
   type Plan,
   type PlanCode,
-  type PaymentFeeType,
   type PaymentFeePayer,
 } from '../../lib/plansApi';
 import { paymentsApi } from '../../lib/paymentsApi';
@@ -117,11 +117,11 @@ export default function Billing() {
               </div>
               <p className="text-xs text-regantify-text-muted mb-4">
                 COD fee:{' '}
-                {formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeeType, usage.plan.codGatewayFeePayer, usage.plan.codFeeHidden)}
+                {formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer, usage.plan.codFeeHidden)}
                 {' · '}Online Payment fee:{' '}
                 {formatFee(
                   usage.plan.onlinePaymentGatewayFeeBdt,
-                  usage.plan.onlinePaymentGatewayFeeType,
+                  usage.plan.onlinePaymentGatewayFeePercent,
                   usage.plan.onlinePaymentGatewayFeePayer,
                   usage.plan.onlinePaymentFeeHidden,
                 )}
@@ -189,8 +189,8 @@ function formatLimit(value: number | null, suffix = '') {
 // what each tier charges and who pays it before upgrading, not just
 // after (Fee Summary only ever shows the vendor's OWN current plan's
 // fee in that kind of full-page format).
-function formatFee(amount: string, type: PaymentFeeType, payer: PaymentFeePayer, hidden: boolean) {
-  const value = type === 'PERCENTAGE' ? `${Number(amount)}%` : `৳${Number(amount)}`;
+function formatFee(flat: string, percent: string, payer: PaymentFeePayer, hidden: boolean) {
+  const value = formatFeeParts(flat, percent);
   if (payer === 'VENDOR') return `${value} (you pay, hidden from customer)`;
   return hidden ? `${value} (hidden from customer)` : value;
 }
@@ -249,13 +249,13 @@ function PlanCard({
         <li>Staff: {formatLimit(plan.staffLimit)}</li>
         <li>Custom domain: {plan.customDomainAllowed ? 'Yes' : 'No'}</li>
         <li className="pt-1.5 mt-1.5 border-t border-black/5 text-regantify-text">
-          COD fee: {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType, plan.codGatewayFeePayer, plan.codFeeHidden)}
+          COD fee: {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer, plan.codFeeHidden)}
         </li>
         <li>
           Online Payment fee:{' '}
           {formatFee(
             plan.onlinePaymentGatewayFeeBdt,
-            plan.onlinePaymentGatewayFeeType,
+            plan.onlinePaymentGatewayFeePercent,
             plan.onlinePaymentGatewayFeePayer,
             plan.onlinePaymentFeeHidden,
           )}

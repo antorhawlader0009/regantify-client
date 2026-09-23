@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminPaymentGatewaysApi } from '../../../lib/adminPaymentGatewaysApi';
-import type { PaymentGatewayCatalogEntry, PaymentGatewayType, PaymentFeeType } from '../../../lib/paymentGatewaysApi';
+import type { PaymentGatewayCatalogEntry, PaymentGatewayType } from '../../../lib/paymentGatewaysApi';
+import { formatFeeParts } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { EditGatewayCatalogModal } from './EditGatewayCatalogModal';
 
 const TYPE_ORDER: PaymentGatewayType[] = ['COD', 'ONLINE_PAYMENT', 'SSLCOMMERZ', 'BKASH_MERCHANT', 'VENDOR_PAYSTATION'];
 
-function formatCharge(value: string, type: PaymentFeeType) {
-  return type === 'PERCENTAGE' ? `${Number(value)}%` : `৳${Number(value).toLocaleString('en-US')}`;
-}
 
 /**
  * Super Admin > Payment Gateway — the 5-row platform-wide catalog
@@ -198,7 +196,7 @@ export default function PaymentGatewayManagement() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-regantify-text">
-                        {formatCharge(row.platformChargeBdt, row.platformChargeType)}
+                        {formatFeeParts(row.platformChargeBdt, row.platformChargePercent)}
                         {row.platformChargePayer === 'VENDOR' && (
                           <span className="ml-1 text-[11px] text-regantify-text-muted">(vendor)</span>
                         )}

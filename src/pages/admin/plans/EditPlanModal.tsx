@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog } from '../../../components/ui/Dialog';
-import type { Plan, PaymentFeeType, PaymentFeePayer } from '../../../lib/plansApi';
+import type { Plan, PaymentFeePayer } from '../../../lib/plansApi';
 import type { UpdatePlanPayload } from '../../../lib/adminPlansApi';
 
 interface EditPlanModalProps {
@@ -48,34 +48,63 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
   );
 }
 
-// Cash On Delivery fee / Online Payment fee — a Flat/Percentage switch
-// next to the amount (see server's PaymentFeeType), plus a "Fee From"
-// dropdown (see PaymentFeePayer) choosing who actually pays it:
-// Customer (default — added to the order total, shown/folded per "Hide
-// from checkout") or Vendor (never added to the order total or shown to
-// the shopper anywhere — comes out of the vendor's own payout instead,
-// shown only on the vendor's own invoice). "Hide from checkout" is
-// hidden entirely when Fee From is Vendor since it's meaningless then —
-// the fee is already never shown to the shopper regardless. Percentage
-// is capped at 100 client-side (mirrors AdminService.updatePlan's own
-// server-side check); Flat keeps the existing unbounded-in-the-UI
-// behavior.
+// A small number input with a fixed ৳/% suffix — the flat and percentage
+// parts of FeeInputField below.
+function FeePartInput({
+  value,
+  onChange,
+  suffix,
+  max,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  suffix: string;
+  max?: number;
+}) {
+  return (
+    <div className="relative flex-1 min-w-0">
+      <input
+        type="number"
+        min={0}
+        max={max}
+        step="any"
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="w-full pl-3 pr-7 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+      />
+      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-regantify-text-muted">
+        {suffix}
+      </span>
+    </div>
+  );
+}
+
+// Cash On Delivery fee / Online Payment fee — a flat ৳ part AND a % part
+// side by side, both charged together (fee = flat + (order total + flat) × %; either
+// can be 0 — see server's Plan.codGatewayFeeBdt/codGatewayFeePercent),
+// plus a "Fee From" dropdown (see PaymentFeePayer) choosing who actually
+// pays it: Customer (default — added to the order total, shown/folded per
+// "Hide from checkout") or Vendor (never added to the order total or
+// shown to the shopper anywhere — comes out of the vendor's own payout
+// instead, shown only on the vendor's own invoice). "Hide from checkout"
+// is hidden entirely when Fee From is Vendor since it's meaningless then.
+// The % part is capped at 100 (mirrors UpdatePlanDto's own @Max(100)).
 function FeeInputField({
   label,
-  amount,
-  onAmountChange,
-  type,
-  onTypeChange,
+  flat,
+  onFlatChange,
+  percent,
+  onPercentChange,
   payer,
   onPayerChange,
   hidden,
   onHiddenChange,
 }: {
   label: string;
-  amount: number;
-  onAmountChange: (next: number) => void;
-  type: PaymentFeeType;
-  onTypeChange: (next: PaymentFeeType) => void;
+  flat: number;
+  onFlatChange: (next: number) => void;
+  percent: number;
+  onPercentChange: (next: number) => void;
   payer: PaymentFeePayer;
   onPayerChange: (next: PaymentFeePayer) => void;
   hidden: boolean;
@@ -84,23 +113,10 @@ function FeeInputField({
   return (
     <div>
       <label className="block text-xs font-medium text-regantify-text-muted mb-1">{label}</label>
-      <div className="flex gap-1.5">
-        <input
-          type="number"
-          min={0}
-          max={type === 'PERCENTAGE' ? 100 : undefined}
-          value={amount}
-          onChange={(e) => onAmountChange(Number(e.target.value))}
-          className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
-        />
-        <select
-          value={type}
-          onChange={(e) => onTypeChange(e.target.value as PaymentFeeType)}
-          className="shrink-0 px-2 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
-        >
-          <option value="FLAT">৳</option>
-          <option value="PERCENTAGE">%</option>
-        </select>
+      <div className="flex items-center gap-1.5">
+        <FeePartInput value={flat} onChange={onFlatChange} suffix="৳" />
+        <span className="text-xs text-regantify-text-muted">+</span>
+        <FeePartInput value={percent} onChange={onPercentChange} suffix="%" max={100} />
       </div>
       <div className="mt-1.5">
         <label className="block text-[11px] text-regantify-text-muted mb-0.5">Fee From</label>
@@ -153,13 +169,13 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [lmsEnabled, setLmsEnabled] = useState(plan?.lmsEnabled ?? false);
   const [posEnabled, setPosEnabled] = useState(plan?.posEnabled ?? false);
   const [codGatewayFeeBdt, setCodGatewayFeeBdt] = useState(plan ? Number(plan.codGatewayFeeBdt) : 0);
-  const [codGatewayFeeType, setCodGatewayFeeType] = useState<PaymentFeeType>(plan?.codGatewayFeeType ?? 'FLAT');
+  const [codGatewayFeePercent, setCodGatewayFeePercent] = useState(plan ? Number(plan.codGatewayFeePercent) : 0);
   const [codGatewayFeePayer, setCodGatewayFeePayer] = useState<PaymentFeePayer>(plan?.codGatewayFeePayer ?? 'CUSTOMER');
   const [onlinePaymentGatewayFeeBdt, setOnlinePaymentGatewayFeeBdt] = useState(
     plan ? Number(plan.onlinePaymentGatewayFeeBdt) : 0,
   );
-  const [onlinePaymentGatewayFeeType, setOnlinePaymentGatewayFeeType] = useState<PaymentFeeType>(
-    plan?.onlinePaymentGatewayFeeType ?? 'FLAT',
+  const [onlinePaymentGatewayFeePercent, setOnlinePaymentGatewayFeePercent] = useState(
+    plan ? Number(plan.onlinePaymentGatewayFeePercent) : 0,
   );
   const [onlinePaymentGatewayFeePayer, setOnlinePaymentGatewayFeePayer] = useState<PaymentFeePayer>(
     plan?.onlinePaymentGatewayFeePayer ?? 'CUSTOMER',
@@ -183,10 +199,10 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       lmsEnabled,
       posEnabled,
       codGatewayFeeBdt,
-      codGatewayFeeType,
+      codGatewayFeePercent,
       codGatewayFeePayer,
       onlinePaymentGatewayFeeBdt,
-      onlinePaymentGatewayFeeType,
+      onlinePaymentGatewayFeePercent,
       onlinePaymentGatewayFeePayer,
       codFeeHidden,
       onlinePaymentFeeHidden,
@@ -221,10 +237,10 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
           <div className="grid grid-cols-2 gap-3">
             <FeeInputField
               label="Cash On Delivery fee"
-              amount={codGatewayFeeBdt}
-              onAmountChange={setCodGatewayFeeBdt}
-              type={codGatewayFeeType}
-              onTypeChange={setCodGatewayFeeType}
+              flat={codGatewayFeeBdt}
+              onFlatChange={setCodGatewayFeeBdt}
+              percent={codGatewayFeePercent}
+              onPercentChange={setCodGatewayFeePercent}
               payer={codGatewayFeePayer}
               onPayerChange={setCodGatewayFeePayer}
               hidden={codFeeHidden}
@@ -232,10 +248,10 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             />
             <FeeInputField
               label="Online Payment (Regantify) fee"
-              amount={onlinePaymentGatewayFeeBdt}
-              onAmountChange={setOnlinePaymentGatewayFeeBdt}
-              type={onlinePaymentGatewayFeeType}
-              onTypeChange={setOnlinePaymentGatewayFeeType}
+              flat={onlinePaymentGatewayFeeBdt}
+              onFlatChange={setOnlinePaymentGatewayFeeBdt}
+              percent={onlinePaymentGatewayFeePercent}
+              onPercentChange={setOnlinePaymentGatewayFeePercent}
               payer={onlinePaymentGatewayFeePayer}
               onPayerChange={setOnlinePaymentGatewayFeePayer}
               hidden={onlinePaymentFeeHidden}
@@ -243,8 +259,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             />
           </div>
           <p className="text-xs text-regantify-text-muted -mt-3">
-            ৳ charges a flat amount per order; % charges that percentage of the order's product subtotal (delivery
-            and VAT excluded). Fee From Customer adds it to what the shopper pays (hidden fees are still charged —
+            Fee = flat ৳ + % of (product + delivery + VAT + the flat ৳). E.g. ৳100 + ৳50 delivery + ৳10 flat = ৳160,
+            2% = ৳3.2, customer pays ৳163.2. Leave either at 0 to use only the other. Fee From Customer adds it to what the shopper pays (hidden fees are still charged —
             just folded into the total silently); Fee From Vendor never charges the shopper at all and comes out of
             the vendor's own payout instead.
           </p>

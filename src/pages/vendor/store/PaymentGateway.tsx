@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Loader2, Lock, Trash2 } from 'lucide-react';
-import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType, type PaymentFeeType } from '../../../lib/paymentGatewaysApi';
-import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType } from '../../../lib/paymentGatewaysApi';
+import { getVendorPlanUsage, formatFeeParts } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
@@ -106,8 +106,9 @@ export default function PaymentGateway() {
   );
 }
 
-function formatCharge(value: string, type: PaymentFeeType = 'FLAT') {
-  return type === 'PERCENTAGE' ? `${Number(value)}%` : `৳${Number(value).toLocaleString('en-US')}`;
+function formatCharge(gateway: VendorPaymentGateway) {
+  const label = formatFeeParts(gateway.platformChargeBdt, gateway.platformChargePercent);
+  return Number(gateway.platformChargePercent) > 0 ? `${label} of order total` : `${label} per order`;
 }
 
 /**
@@ -143,8 +144,7 @@ function BuiltinGatewayCard({
         <div className="flex-1">
           <p className="text-sm font-medium text-regantify-text">{gateway.displayLabel ?? DEFAULT_LABELS[gateway.type]}</p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
-            Fee: {formatCharge(gateway.platformChargeBdt, gateway.platformChargeType)}
-            {gateway.platformChargeType === 'PERCENTAGE' ? ' of subtotal' : ' per order'}
+            Fee: {formatCharge(gateway)}
           </p>
           {/* Fee From: Vendor (Plan.codGatewayFeePayer/onlinePaymentGatewayFeePayer)
               — the fee above is never charged to the shopper at all; it
@@ -218,7 +218,7 @@ function SslcommerzCard({ gateway, onSaved }: { gateway: VendorPaymentGateway | 
           <p className="text-sm font-medium text-regantify-text">{gateway?.displayLabel ?? 'SSLCommerz'}</p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
             {isConnected
-              ? `Connected — platform charge ${formatCharge(gateway!.platformChargeBdt)} per order.`
+              ? `Connected — platform charge ${formatCharge(gateway!)}.`
               : 'Connect your own SSLCommerz merchant account.'}
           </p>
         </div>

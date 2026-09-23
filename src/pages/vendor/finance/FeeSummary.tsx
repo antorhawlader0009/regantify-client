@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, Check } from 'lucide-react';
-import { getPlans, getVendorPlanUsage } from '../../../lib/plansApi';
-import type { PaymentFeeType, PaymentFeePayer } from '../../../lib/plansApi';
+import { getPlans, getVendorPlanUsage, formatFeeParts } from '../../../lib/plansApi';
+import type { PaymentFeePayer } from '../../../lib/plansApi';
 
-function formatFee(value: string, type: PaymentFeeType) {
-  return type === 'PERCENTAGE' ? `+${Number(value)}%` : `+${Number(value).toLocaleString('en-US')}৳`;
+function formatFee(flat: string, percent: string) {
+  return `+${formatFeeParts(flat, percent)}`;
 }
 
 // "Fee From: Vendor" — this plan's fee comes out of the vendor's OWN
@@ -60,7 +60,7 @@ export default function FeeSummary() {
                   <CreditCard size={16} />
                   Cash On Delivery
                 </div>
-                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeeType)}</p>
+                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent)}</p>
                 <p className="text-white/60 text-xs mt-1">
                   per order, on your {usage.plan.name} plan — {payerNote(usage.plan.codGatewayFeePayer)}
                 </p>
@@ -71,7 +71,7 @@ export default function FeeSummary() {
                   Online Payment (Regantify)
                 </div>
                 <p className="text-3xl font-semibold mt-3">
-                  {formatFee(usage.plan.onlinePaymentGatewayFeeBdt, usage.plan.onlinePaymentGatewayFeeType)}
+                  {formatFee(usage.plan.onlinePaymentGatewayFeeBdt, usage.plan.onlinePaymentGatewayFeePercent)}
                 </p>
                 <p className="text-white/60 text-xs mt-1">
                   per order, on your {usage.plan.name} plan — {payerNote(usage.plan.onlinePaymentGatewayFeePayer)}
@@ -105,13 +105,13 @@ export default function FeeSummary() {
                         )}
                       </td>
                       <td className="p-4 text-sm text-regantify-text">
-                        {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType)}
+                        {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent)}
                         {plan.codGatewayFeePayer === 'VENDOR' && (
                           <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
                         )}
                       </td>
                       <td className="p-4 text-sm text-regantify-text">
-                        {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeeType)}
+                        {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeePercent)}
                         {plan.onlinePaymentGatewayFeePayer === 'VENDOR' && (
                           <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
                         )}

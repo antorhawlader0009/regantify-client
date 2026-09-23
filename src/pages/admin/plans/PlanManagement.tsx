@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminPlansApi } from '../../../lib/adminPlansApi';
-import type { Plan, PlanCode, PaymentFeeType, PaymentFeePayer } from '../../../lib/plansApi';
+import { formatFeeParts, type Plan, type PlanCode, type PaymentFeePayer } from '../../../lib/plansApi';
 import { toast } from '../../../lib/toast';
 import { EditPlanModal } from './EditPlanModal';
 import type { UpdatePlanPayload } from '../../../lib/adminPlansApi';
@@ -12,8 +12,8 @@ function formatLimit(value: number | null, suffix = '') {
   return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
 }
 
-function formatFee(amount: string, type: PaymentFeeType, payer: PaymentFeePayer) {
-  const value = type === 'PERCENTAGE' ? `+${Number(amount)}%` : `+${Number(amount)}৳`;
+function formatFee(flat: string, percent: string, payer: PaymentFeePayer) {
+  const value = `+${formatFeeParts(flat, percent)}`;
   return payer === 'VENDOR' ? `${value} (vendor)` : value;
 }
 
@@ -88,10 +88,10 @@ export default function PlanManagement() {
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.themeAllowance)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.staffLimit)}</td>
                     <td className="px-4 py-3 text-regantify-text">
-                      {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeeType, plan.codGatewayFeePayer)}
+                      {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer)}
                     </td>
                     <td className="px-4 py-3 text-regantify-text">
-                      {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeeType, plan.onlinePaymentGatewayFeePayer)}
+                      {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeePercent, plan.onlinePaymentGatewayFeePayer)}
                     </td>
                     <td className="px-4 py-3">
                       <button
