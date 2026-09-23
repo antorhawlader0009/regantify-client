@@ -45,6 +45,9 @@ import Branding from './pages/vendor/store/Branding';
 import Media from './pages/vendor/store/Media';
 import Domain from './pages/vendor/store/Domain';
 import PaymentGateway from './pages/vendor/store/PaymentGateway';
+import StockSettings from './pages/vendor/store/StockSettings';
+import GdprPrompt from './pages/vendor/store/GdprPrompt';
+import CodGuard from './pages/vendor/store/CodGuard';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
@@ -116,6 +119,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/media' &&
     r.path !== '/vendor/store/domain' &&
     r.path !== '/vendor/store/payment-gateway' &&
+    r.path !== '/vendor/store/stock-settings' &&
+    r.path !== '/vendor/store/gdpr' &&
+    r.path !== '/vendor/store/cod-guard' &&
     r.path !== '/vendor/orders' &&
     r.path !== '/vendor/orders/incomplete' &&
     r.path !== '/vendor/customers' &&
@@ -221,6 +227,9 @@ export default function App() {
                 <Route path="/vendor/store/media" element={<Media />} />
                 <Route path="/vendor/store/domain" element={<Domain />} />
                 <Route path="/vendor/store/payment-gateway" element={<PaymentGateway />} />
+                <Route path="/vendor/store/stock-settings" element={<StockSettings />} />
+                <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
+                <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
                 <Route path="/vendor/orders" element={<Orders />} />
                 <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
