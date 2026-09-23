@@ -19,7 +19,15 @@ interface ThemeInfo {
 // vendor's live store actually sees — see StoreTheme in schema.prisma
 // and storefront/src/lib/theme.ts, which branches every route on this
 // same value.
+// Listed in the server's unlock order (plan-limits.service.ts's
+// THEME_ORDER) — StorePal first, since it's the one theme Free includes.
 const THEMES: ThemeInfo[] = [
+  {
+    id: 'STOREPAL',
+    name: 'StorePal',
+    description:
+      'A full-featured marketplace layout with a scrolling announcement bar, sidebar-navigation account pages, customer coupons, and a Top Selling/category-grid homepage.',
+  },
   {
     id: 'MEDIUM',
     name: 'Medium',
@@ -31,12 +39,6 @@ const THEMES: ThemeInfo[] = [
     name: 'Minimal',
     description:
       'A spacious, editorial storefront built for speed and a premium, boutique feel — generous whitespace, a quiet monochrome palette, and a fast, distraction-free checkout.',
-  },
-  {
-    id: 'STOREPAL',
-    name: 'StorePal',
-    description:
-      'A full-featured marketplace layout with a scrolling announcement bar, sidebar-navigation account pages, customer coupons, and a Top Selling/category-grid homepage.',
   },
 ];
 
@@ -137,7 +139,7 @@ export default function Themes() {
     try {
       const updated = await updateVendorTheme(theme);
       setSelected(updated);
-      toast.success(`${theme === 'MINIMAL' ? 'Minimal' : 'Medium'} is now live on your store.`);
+      toast.success(`${THEMES.find((t) => t.id === theme)?.name ?? theme} is now live on your store.`);
     } catch (err: unknown) {
       // A locked theme (PLAN.md Step 7) surfaces the server's own
       // upgrade-prompt message here — same generic error.response.data.message
