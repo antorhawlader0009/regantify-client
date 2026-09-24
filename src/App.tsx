@@ -49,6 +49,11 @@ import StockSettings from './pages/vendor/store/StockSettings';
 import GdprPrompt from './pages/vendor/store/GdprPrompt';
 import { CustomCss, CustomHeadScripts } from './pages/vendor/store/design/CustomCodePage';
 import JavaScriptCode from './pages/vendor/store/design/JavaScriptCode';
+import HeaderEditor from './pages/vendor/store/design/HeaderEditor';
+import LayoutSettings from './pages/vendor/store/design/LayoutSettings';
+import SiteBanner from './pages/vendor/store/design/SiteBanner';
+import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
+import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
 import Orders from './pages/vendor/order/Orders';
@@ -123,6 +128,11 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/stock-settings' &&
     r.path !== '/vendor/store/gdpr' &&
     r.path !== '/vendor/store/cod-guard' &&
+    r.path !== '/vendor/store/header-editor' &&
+    r.path !== '/vendor/store/layout-settings' &&
+    r.path !== '/vendor/store/site-banner' &&
+    r.path !== '/vendor/store/product-display' &&
+    r.path !== '/vendor/store/product-card' &&
     r.path !== '/vendor/store/custom-css' &&
     r.path !== '/vendor/store/head-scripts' &&
     r.path !== '/vendor/store/javascript' &&
@@ -234,6 +244,11 @@ export default function App() {
                 <Route path="/vendor/store/stock-settings" element={<StockSettings />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
+                <Route path="/vendor/store/header-editor" element={<HeaderEditor />} />
+                <Route path="/vendor/store/layout-settings" element={<LayoutSettings />} />
+                <Route path="/vendor/store/site-banner" element={<SiteBanner />} />
+                <Route path="/vendor/store/product-display" element={<ProductDisplay />} />
+                <Route path="/vendor/store/product-card" element={<ProductCardDisplay />} />
                 <Route path="/vendor/store/custom-css" element={<CustomCss />} />
                 <Route path="/vendor/store/head-scripts" element={<CustomHeadScripts />} />
                 <Route path="/vendor/store/javascript" element={<JavaScriptCode />} />

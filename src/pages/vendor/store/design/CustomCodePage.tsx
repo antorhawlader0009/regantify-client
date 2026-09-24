@@ -84,7 +84,7 @@ export function CustomHeadScripts() {
       field="headScripts"
       title="Custom Head Scripts"
       language="html"
-      description="HTML added to the <head> of every page of your StorePal storefront, e.g. Google Analytics, Meta Pixel or verification tags. Paste full tags like <script>…</script> or <meta …>."
+      description="Code added to the <head> of every page of your StorePal storefront, e.g. Google Analytics, Meta Pixel or verification tags. Paste full tags like <script>…</script> or <meta …>, or plain JavaScript on its own."
     />
   );
 }
