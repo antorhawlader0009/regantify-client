@@ -60,11 +60,17 @@ export default function StockSettings() {
         <div className="space-y-6">
           <section>
             <h2 className="text-base font-medium text-regantify-text mb-2">Out-of-stock Product Display</h2>
-            <div className="bg-white rounded-2xl border border-black/5 p-5">
+            <div className="bg-white rounded-2xl border border-black/5 p-5 space-y-4">
               <Checkbox
                 checked={form.showOutOfStockProducts}
                 onChange={(v) => set('showOutOfStockProducts', v)}
                 label="Show out-of-stock products in shop pages"
+              />
+              <Checkbox
+                checked={form.showOutOfStockBadge}
+                onChange={(v) => set('showOutOfStockBadge', v)}
+                label='Show "Out of Stock" badge on product cards'
+                hint="Off: sold-out products look like any other product card, without the faded image and label."
               />
             </div>
           </section>

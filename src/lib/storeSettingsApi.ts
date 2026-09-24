@@ -6,6 +6,7 @@ import { api } from './api';
 
 export interface StockSettings {
   showOutOfStockProducts: boolean;
+  showOutOfStockBadge: boolean;
   allowBackorder: boolean;
   backorderPopupMessage: string | null;
   backorderShortMessage: string | null;
