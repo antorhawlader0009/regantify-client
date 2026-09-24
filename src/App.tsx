@@ -56,6 +56,8 @@ import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
+import Integrations from './pages/vendor/store/integrations/Integrations';
+import FacebookPixel from './pages/vendor/store/integrations/FacebookPixel';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
@@ -128,6 +130,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/stock-settings' &&
     r.path !== '/vendor/store/gdpr' &&
     r.path !== '/vendor/store/cod-guard' &&
+    r.path !== '/vendor/store/integrations' &&
     r.path !== '/vendor/store/header-editor' &&
     r.path !== '/vendor/store/layout-settings' &&
     r.path !== '/vendor/store/site-banner' &&
@@ -244,6 +247,8 @@ export default function App() {
                 <Route path="/vendor/store/stock-settings" element={<StockSettings />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
+                <Route path="/vendor/store/integrations" element={<Integrations />} />
+                <Route path="/vendor/store/integrations/facebook-pixel" element={<FacebookPixel />} />
                 <Route path="/vendor/store/header-editor" element={<HeaderEditor />} />
                 <Route path="/vendor/store/layout-settings" element={<LayoutSettings />} />
                 <Route path="/vendor/store/site-banner" element={<SiteBanner />} />

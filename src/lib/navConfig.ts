@@ -163,6 +163,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
       { label: 'GDPR Prompt', path: '/vendor/store/gdpr' },
       { label: 'COD Guard', path: '/vendor/store/cod-guard' },
+      { label: 'Integrations', path: '/vendor/store/integrations' },
       { label: 'SEO', path: '/vendor/store/seo' },
     ],
   },
