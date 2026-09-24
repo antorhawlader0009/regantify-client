@@ -7,7 +7,7 @@ import { AuthBootstrap } from './components/AuthBootstrap';
 import { VendorLayout } from './components/layout/VendorLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { PlaceholderPage } from './components/PlaceholderPage';
-import { vendorNav, adminNav } from './lib/navConfig';
+import { vendorNav, adminNav, navLinks } from './lib/navConfig';
 
 import Home from './pages/marketing/Home';
 
@@ -47,6 +47,9 @@ import Domain from './pages/vendor/store/Domain';
 import PaymentGateway from './pages/vendor/store/PaymentGateway';
 import StockSettings from './pages/vendor/store/StockSettings';
 import GdprPrompt from './pages/vendor/store/GdprPrompt';
+import { CustomCss, CustomHeadScripts } from './pages/vendor/store/design/CustomCodePage';
+import JavaScriptCode from './pages/vendor/store/design/JavaScriptCode';
+import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
@@ -92,10 +95,8 @@ function flattenRoutes(sections: typeof vendorNav) {
     if (section.path && section.label !== 'Dashboard') {
       routes.push({ path: section.path, label: section.label });
     }
-    if (section.children) {
-      for (const child of section.children) {
-        routes.push({ path: child.path, label: child.label });
-      }
+    for (const child of navLinks(section.children)) {
+      routes.push({ path: child.path, label: child.label });
     }
   }
   return routes;
@@ -122,6 +123,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/stock-settings' &&
     r.path !== '/vendor/store/gdpr' &&
     r.path !== '/vendor/store/cod-guard' &&
+    r.path !== '/vendor/store/custom-css' &&
+    r.path !== '/vendor/store/head-scripts' &&
+    r.path !== '/vendor/store/javascript' &&
     r.path !== '/vendor/orders' &&
     r.path !== '/vendor/orders/incomplete' &&
     r.path !== '/vendor/customers' &&
@@ -230,6 +234,11 @@ export default function App() {
                 <Route path="/vendor/store/stock-settings" element={<StockSettings />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
+                <Route path="/vendor/store/custom-css" element={<CustomCss />} />
+                <Route path="/vendor/store/head-scripts" element={<CustomHeadScripts />} />
+                <Route path="/vendor/store/javascript" element={<JavaScriptCode />} />
+                <Route path="/vendor/store/javascript/add" element={<EditJavaScript />} />
+                <Route path="/vendor/store/javascript/edit/:id" element={<EditJavaScript />} />
                 <Route path="/vendor/orders" element={<Orders />} />
                 <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />

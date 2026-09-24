@@ -20,10 +20,24 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-export interface NavChild {
+export interface NavLinkItem {
   label: string;
   path: string;
 }
+
+/** A collapsible sub-group inside a section (e.g. Store > Design). One level deep only. */
+export interface NavGroup {
+  label: string;
+  children: NavLinkItem[];
+}
+
+export type NavChild = NavLinkItem | NavGroup;
+
+export const isNavGroup = (child: NavChild): child is NavGroup => 'children' in child;
+
+/** Every link under a section, with sub-groups flattened out. */
+export const navLinks = (children: NavChild[] = []): NavLinkItem[] =>
+  children.flatMap((c) => (isNavGroup(c) ? c.children : [c]));
 
 export interface NavSection {
   label: string;
@@ -122,15 +136,23 @@ export const vendorNav: NavSection[] = [
     label: 'Store',
     icon: StoreIcon,
     children: [
-      { label: 'Themes', path: '/vendor/store/themes' },
-      { label: 'Branding', path: '/vendor/store/branding' },
-      { label: 'Customize', path: '/vendor/store/customize' },
+      {
+        label: 'Design',
+        children: [
+          { label: 'Themes', path: '/vendor/store/themes' },
+          { label: 'Branding', path: '/vendor/store/branding' },
+          { label: 'Customize', path: '/vendor/store/customize' },
+          { label: 'Navigation', path: '/vendor/store/navigation' },
+          { label: 'Footer', path: '/vendor/store/footer' },
+          { label: 'Custom CSS', path: '/vendor/store/custom-css' },
+          { label: 'Custom Head Scripts', path: '/vendor/store/head-scripts' },
+          { label: 'JavaScript Code', path: '/vendor/store/javascript' },
+        ],
+      },
       { label: 'Pages', path: '/vendor/store/pages' },
       { label: 'Landing Page', path: '/vendor/store/landing-pages' },
-      { label: 'Footer', path: '/vendor/store/footer' },
       { label: 'Media', path: '/vendor/store/media' },
       { label: 'Social', path: '/vendor/store/social' },
-      { label: 'Navigation', path: '/vendor/store/navigation' },
       { label: 'Domain', path: '/vendor/store/domain' },
       { label: 'Payment Gateway', path: '/vendor/store/payment-gateway' },
       { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
