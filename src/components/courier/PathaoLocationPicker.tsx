@@ -3,57 +3,51 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { courierApi } from '../../lib/courierApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
+import { PathaoLocationSelects, type PathaoLocationValue } from './PathaoLocationSelects';
 
 interface PathaoLocationPickerProps {
   orderId: string;
   currentCityId: number | null | undefined;
   currentZoneId: number | null | undefined;
   currentAreaId: number | null | undefined;
+  /** The order's address — suggests a location when none is saved yet. */
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingDistrict?: string | null;
 }
 
 /**
- * City → Zone → Area cascading picker for Pathao's numeric
- * recipient_city/recipient_zone/recipient_area (Pathao's order API
- * requires these; free-text shippingCity/shippingDistrict aren't
- * enough — see COURIER-PLAN.md §3.2/§7 Phase 2). Used on both Order
- * Detail (editing an existing order) and, in read-only-until-saved form,
- * conceptually the same shape would work on Add Order — this component
- * always operates against an existing orderId since Pathao location only
- * matters once an order exists to attach it to.
+ * Order Detail's "Pathao Delivery Location" — saves Pathao's numeric
+ * city/zone/area onto an existing order (the dropdowns themselves are
+ * the shared PathaoLocationSelects). Optional: Pathao can work the
+ * location out from the address, and the booking popup can set it too;
+ * this is for vendors who want it fixed on the order ahead of booking.
  *
  * Requires the vendor to have a connected Pathao account (the location
  * endpoints need a valid OAuth token) — shows a plain notice instead of
  * the picker if not connected yet, rather than a confusing empty
  * dropdown or a 404.
  */
-export function PathaoLocationPicker({ orderId, currentCityId, currentZoneId, currentAreaId }: PathaoLocationPickerProps) {
+export function PathaoLocationPicker({
+  orderId,
+  currentCityId,
+  currentZoneId,
+  currentAreaId,
+  shippingAddress,
+  shippingCity,
+  shippingDistrict,
+}: PathaoLocationPickerProps) {
   const queryClient = useQueryClient();
-  // Local selection state, seeded from the order's saved values —
-  // separate from currentZoneId/currentAreaId props so picking a new
-  // City clears the Zone/Area selects immediately without waiting on a
-  // save round-trip.
-  const [cityId, setCityId] = useState<number | null>(currentCityId ?? null);
-  const [zoneId, setZoneId] = useState<number | null>(currentZoneId ?? null);
-  const [areaId, setAreaId] = useState<number | null>(currentAreaId ?? null);
+  // Local selection, seeded from the order's saved values, so picking a
+  // new City clears Zone/Area immediately without a save round-trip.
+  const [location, setLocation] = useState<PathaoLocationValue>({
+    cityId: currentCityId ?? null,
+    zoneId: currentZoneId ?? null,
+    areaId: currentAreaId ?? null,
+  });
 
   const { data: accounts } = useQuery({ queryKey: ['courier-accounts'], queryFn: courierApi.getAccounts });
   const pathaoConnected = accounts?.some((a) => a.provider === 'PATHAO' && a.isActive) ?? false;
-
-  const { data: cities, isLoading: citiesLoading } = useQuery({
-    queryKey: ['pathao-cities'],
-    queryFn: courierApi.getPathaoCities,
-    enabled: pathaoConnected,
-  });
-  const { data: zones, isLoading: zonesLoading } = useQuery({
-    queryKey: ['pathao-zones', cityId],
-    queryFn: () => courierApi.getPathaoZones(cityId!),
-    enabled: pathaoConnected && cityId != null,
-  });
-  const { data: areas, isLoading: areasLoading } = useQuery({
-    queryKey: ['pathao-areas', zoneId],
-    queryFn: () => courierApi.getPathaoAreas(zoneId!),
-    enabled: pathaoConnected && zoneId != null,
-  });
 
   const saveMutation = useMutation({
     mutationFn: (vars: { cityId: number; zoneId: number; areaId: number }) =>
@@ -68,73 +62,21 @@ export function PathaoLocationPicker({ orderId, currentCityId, currentZoneId, cu
   if (!pathaoConnected) {
     return (
       <p className="text-xs text-regantify-text-muted">
-        Connect your Pathao account in Settings &gt; Courier Integration to set a delivery location for Pathao.
+        Connect your Pathao account in Courier Integration &gt; Pathao to set a delivery location for Pathao.
       </p>
     );
   }
 
-  const selectClass =
-    'w-full px-3 py-2 rounded-lg border border-black/10 text-sm text-regantify-text focus:outline-none disabled:opacity-60';
+  const { cityId, zoneId, areaId } = location;
 
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-regantify-text-muted uppercase tracking-wide">Pathao Delivery Location</p>
-      <div className="grid grid-cols-3 gap-2">
-        <select
-          value={cityId ?? ''}
-          disabled={citiesLoading}
-          onChange={(e) => {
-            const id = Number(e.target.value);
-            setCityId(id);
-            setZoneId(null);
-            setAreaId(null);
-          }}
-          className={selectClass}
-        >
-          <option value="" disabled>
-            City
-          </option>
-          {cities?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={zoneId ?? ''}
-          disabled={!cityId || zonesLoading}
-          onChange={(e) => {
-            const id = Number(e.target.value);
-            setZoneId(id);
-            setAreaId(null);
-          }}
-          className={selectClass}
-        >
-          <option value="" disabled>
-            Zone
-          </option>
-          {zones?.map((z) => (
-            <option key={z.id} value={z.id}>
-              {z.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={areaId ?? ''}
-          disabled={!zoneId || areasLoading}
-          onChange={(e) => setAreaId(Number(e.target.value))}
-          className={selectClass}
-        >
-          <option value="" disabled>
-            Area
-          </option>
-          {areas?.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <PathaoLocationSelects
+        value={location}
+        onChange={setLocation}
+        suggestFrom={{ address: shippingAddress, city: shippingCity, district: shippingDistrict }}
+      />
       <button
         type="button"
         disabled={!cityId || !zoneId || !areaId || saveMutation.isPending}

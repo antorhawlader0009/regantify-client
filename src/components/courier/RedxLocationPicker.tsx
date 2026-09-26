@@ -40,7 +40,7 @@ export function RedxLocationPicker({ orderId, currentAreaId }: RedxLocationPicke
   if (!redxConnected) {
     return (
       <p className="text-xs text-regantify-text-muted">
-        Connect your RedX account in Settings &gt; Courier Integration to set a delivery area for RedX.
+        Connect your RedX account on the Courier Integration page to set a delivery area for RedX.
       </p>
     );
   }

@@ -14,7 +14,7 @@ interface SteadfastConnectFormProps {
 /**
  * SteadFast's connect form (API Key + Secret Key) — the ONE place this
  * field list/validation lives, per COURIER-PLAN.md §5.2. Used both by
- * Settings > Courier Integration (inline) and by CourierSetupModal (in a
+ * the Courier Integration page (inline) and by CourierSetupModal (in a
  * dialog), so the two never drift out of sync with each other.
  */
 export function SteadfastConnectForm({ onConnected, footer }: SteadfastConnectFormProps) {

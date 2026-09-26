@@ -13,7 +13,7 @@ interface RedxConnectFormProps {
  * RedX's connect form — a single Access Token, no OAuth and no separate
  * app-level credential (simpler than Pathao, similar shape to
  * SteadFast). Same "one shared component, two entry points" pattern as
- * the other connect forms — used by both Settings > Courier Integration
+ * the other connect forms — used by both the Courier Integration page
  * and CourierSetupModal.
  */
 export function RedxConnectForm({ onConnected, footer }: RedxConnectFormProps) {

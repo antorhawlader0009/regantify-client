@@ -17,28 +17,28 @@ const PROVIDER_LABELS: Record<CourierAccountProvider, string> = {
 const PROVIDER_INTRO: Record<CourierAccountProvider, string> = {
   STEADFAST: 'Connect your SteadFast merchant account to book real deliveries from the Orders page.',
   PATHAO:
-    'Connect your Pathao merchant account. After connecting, finish setup in Settings > Courier Integration by selecting a pickup store.',
-  REDX: 'Connect your RedX merchant account. After connecting, finish setup in Settings > Courier Integration by selecting a pickup store.',
+    'Connect your Pathao merchant account. After connecting, finish setup on Courier Integration > Pathao by selecting a pickup store.',
+  REDX: 'Connect your RedX merchant account. After connecting, finish setup on the Courier Integration page by selecting a pickup store.',
 };
 
 interface CourierSetupModalProps {
-  /** Which provider to show the connect form for — null closes the modal. Set either by Settings > Courier Integration's own "Connect" button, or by an Orders-page entry point (dropdown item, "Book with {Provider}") that discovered the vendor isn't connected yet — see COURIER-PLAN.md §5.2. */
+  /** Which provider to show the connect form for — null closes the modal. Set either by the Courier Integration page's own "Connect" button, or by an Orders-page entry point (dropdown item, "Book with {Provider}") that discovered the vendor isn't connected yet — see COURIER-PLAN.md §5.2. */
   provider: CourierAccountProvider | null;
   onOpenChange: (open: boolean) => void;
-  /** Called once the account is connected. Settings just closes the modal; an Orders-page caller also re-runs whatever action (courier selection, booking) triggered this popup, so the vendor never has to re-click. */
+  /** Called once the account is connected. The Courier Integration page just closes the modal; an Orders-page caller also re-runs whatever action (courier selection, booking) triggered this popup, so the vendor never has to re-click. */
   onConnected: () => void;
 }
 
 /**
  * The one Courier Integration connect dialog, used from BOTH entry
- * points per COURIER-PLAN.md §5.2: Settings > Courier Integration's own
+ * points per COURIER-PLAN.md §5.2: the Courier Integration page's own
  * "Connect" button, and the Orders page's "not connected yet" popup.
  * Same dialog, same connect-form components inside it — never an inline
  * expanding form on the page, so the two entry points can never drift
  * into looking like different flows.
  *
  * Pathao and RedX each need one extra step this modal can't do inline:
- * picking a pickup store (PathaoStorePicker / RedxStorePicker), which
+ * picking a pickup store (the Pathao page's Pickup Store card / RedxStorePicker), which
  * needs a valid token and so can only happen AFTER connecting — this
  * modal's onConnected still fires immediately (so an Orders-page retry
  * proceeds), but PROVIDER_INTRO's copy tells the vendor to finish store

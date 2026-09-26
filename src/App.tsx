@@ -85,6 +85,9 @@ import Withdraw from './pages/vendor/finance/Withdraw';
 import FeeSummary from './pages/vendor/finance/FeeSummary';
 import PaymentCallback from './pages/vendor/finance/PaymentCallback';
 import Tracking from './pages/vendor/shipping/Tracking';
+import CourierIntegrationPage from './pages/vendor/courier/CourierIntegrationPage';
+import PathaoPage from './pages/vendor/courier/pathao/PathaoPage';
+import PathaoLabelsPrintPage from './pages/vendor/courier/pathao/PathaoLabelsPrintPage';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
@@ -153,7 +156,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/finance/transactions' &&
     r.path !== '/vendor/finance/withdraw' &&
     r.path !== '/vendor/finance/fee-summary' &&
-    r.path !== '/vendor/shipping/tracking',
+    r.path !== '/vendor/shipping/tracking' &&
+    r.path !== '/vendor/courier' &&
+    r.path !== '/vendor/courier/pathao',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -289,6 +294,8 @@ export default function App() {
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
                 <Route path="/vendor/finance/payment-callback" element={<PaymentCallback />} />
                 <Route path="/vendor/shipping/tracking" element={<Tracking />} />
+                <Route path="/vendor/courier" element={<CourierIntegrationPage />} />
+                <Route path="/vendor/courier/pathao" element={<PathaoPage />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}
@@ -299,6 +306,9 @@ export default function App() {
                   (landing-plan.md §4.2), while still sitting inside the same
                   VENDOR/STAFF ProtectedRoute as every other vendor route. */}
               <Route path="/vendor/store/landing-pages/:id/builder" element={<LandingPageBuilder />} />
+              {/* Pathao shipping labels (pathao-plan.md Step 12) — also
+                  outside <VendorLayout>, so only the labels print. */}
+              <Route path="/vendor/courier/pathao/labels" element={<PathaoLabelsPrintPage />} />
             </Route>
 
             {/* Super Admin dashboard — protected, SUPER_ADMIN role only */}

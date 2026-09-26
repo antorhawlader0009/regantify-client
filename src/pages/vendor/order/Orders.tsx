@@ -4,11 +4,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, ChevronDown, Settings2, Tag } from 'lucide-react';
 import { ordersApi, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
-import { courierApi, notConnectedProvider, type CourierAccountProvider } from '../../../lib/courierApi';
+import { courierApi, notConnectedProvider, openPathaoLabels, type CourierAccountProvider } from '../../../lib/courierApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
+import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
+import { PathaoBulkBookDialog } from '../../../components/courier/PathaoBulkBookDialog';
+import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
+import type { PhoneCourierStats } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CustomizeTabsModal } from './CustomizeTabsModal';
@@ -17,6 +21,7 @@ import { ChangeLabelModal } from './ChangeLabelModal';
 import { InvoiceModal } from './InvoiceModal';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -56,6 +61,7 @@ const BOOKING_STATUS_LABELS: Record<Order['courierBookingStatus'], string> = {
   BOOKING: 'Booking…',
   BOOKED: 'Booked',
   FAILED: 'Booking failed',
+  CANCELLED: 'Pickup cancelled',
 };
 
 interface OrderRowProps {
@@ -78,6 +84,16 @@ interface OrderRowProps {
   // they haven't connected yet — the parent owns the actual modal since
   // it's shared across every row (see COURIER-PLAN.md §5.2).
   onRequestSetup: (provider: CourierAccountProvider, retry: () => void) => void;
+  // "Book with Pathao" opens the shared booking popup (pathao-plan.md
+  // Step 4) instead of booking blind; the parent owns it, like the
+  // setup popup above.
+  onBookPathao: (order: Order) => void;
+  // Row checkbox for bulk "Send to Pathao" (pathao-plan.md Step 11).
+  // Undefined in the trash view, which has no bulk actions.
+  selected?: boolean;
+  onToggleSelect?: (orderId: string) => void;
+  // The customer's delivery record lines (pathao-plan.md Step 15); loaded once per page.
+  deliveryStats?: PhoneCourierStats;
 }
 
 function OrderRow({
@@ -89,6 +105,10 @@ function OrderRow({
   otherCouriersAllowed,
   connectedProviders,
   onRequestSetup,
+  onBookPathao,
+  selected,
+  onToggleSelect,
+  deliveryStats,
 }: OrderRowProps) {
   const queryClient = useQueryClient();
 
@@ -150,6 +170,22 @@ function OrderRow({
     },
   });
 
+  // Pathao books through its popup (edit + price preview first);
+  // SteadFast/RedX keep the one-click booking above. An unconnected
+  // Pathao account goes to the setup popup first, then opens the
+  // booking popup once connected.
+  function bookWithCourier() {
+    if (order.courierProvider !== 'PATHAO') {
+      bookMutation.mutate();
+      return;
+    }
+    if (!connectedProviders?.has('PATHAO')) {
+      onRequestSetup('PATHAO', () => onBookPathao(order));
+      return;
+    }
+    onBookPathao(order);
+  }
+
   const refreshStatusMutation = useMutation({
     mutationFn: () => courierApi.refreshStatus(order.id),
     onSuccess: () => {
@@ -172,7 +208,18 @@ function OrderRow({
   const extraCount = order.items.length - 1;
 
   return (
-    <tr className="border-b border-black/5 align-top">
+    <tr className={`border-b border-black/5 align-top ${selected ? 'bg-regantify-cta/5' : ''}`}>
+      {onToggleSelect && (
+        <td className="p-4 pr-0 w-8">
+          <input
+            type="checkbox"
+            checked={Boolean(selected)}
+            onChange={() => onToggleSelect(order.id)}
+            aria-label={`Select ORDER-${order.invoiceNumber}`}
+            className="h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer"
+          />
+        </td>
+      )}
       <td className="p-4">
         <Link to={`/vendor/orders/${order.id}`} className="text-sm font-semibold text-regantify-cta hover:underline">
           ORDER-{order.invoiceNumber}
@@ -198,6 +245,17 @@ function OrderRow({
                 {BOOKING_STATUS_LABELS.BOOKED} · {order.courierTrackingCode ?? order.courierConsignmentId}
               </p>
             )}
+            {/* The courier's own live status (pathao-plan.md Step 6). */}
+            {order.courierBookingStatus === 'BOOKED' && order.courierStatus && (
+              <div className="mt-1">
+                <CourierStatusBadge provider={order.courierProvider} status={order.courierStatus} />
+              </div>
+            )}
+            {order.courierBookingStatus === 'CANCELLED' && (
+              <p className="text-[11px] text-red-500 mt-0.5" title={order.courierBookingError ?? undefined}>
+                {BOOKING_STATUS_LABELS.CANCELLED}
+              </p>
+            )}
             {order.courierBookingStatus === 'FAILED' && (
               <p className="text-[11px] text-red-500 mt-0.5" title={order.courierBookingError ?? undefined}>
                 {BOOKING_STATUS_LABELS.FAILED}
@@ -212,6 +270,7 @@ function OrderRow({
       <td className="p-4 min-w-[180px]">
         <p className="text-sm text-regantify-text">{order.customerName}</p>
         <p className="text-xs text-regantify-text-muted mt-0.5">{order.customerPhone}</p>
+        <CustomerDeliveryStats stats={deliveryStats} />
         <button
           onClick={() => onCheckHistory(order.customerPhone)}
           className="mt-1.5 text-xs px-2.5 py-1 rounded-lg border border-black/10 text-regantify-text-muted hover:bg-regantify-content"
@@ -295,12 +354,15 @@ function OrderRow({
                   COURIER-PLAN.md §5.2). Booking is offered again after a
                   FAILED attempt (retry), but not once already BOOKED. */}
               {order.courierProvider !== 'NONE' && order.courierBookingStatus !== 'BOOKED' && (
-                <DropdownMenuItem onSelect={() => bookMutation.mutate()}>
+                <DropdownMenuItem onSelect={bookWithCourier}>
                   Book with {COURIER_LABELS[order.courierProvider]}
                 </DropdownMenuItem>
               )}
               {order.courierBookingStatus === 'BOOKED' && (
                 <DropdownMenuItem onSelect={() => refreshStatusMutation.mutate()}>Refresh Delivery Status</DropdownMenuItem>
+              )}
+              {order.courierProvider === 'PATHAO' && order.courierBookingStatus === 'BOOKED' && (
+                <DropdownMenuItem onSelect={() => openPathaoLabels([order.id])}>Print Pathao Label</DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem danger onSelect={() => trashMutation.mutate()}>
@@ -329,6 +391,7 @@ export default function Orders() {
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [labelOrder, setLabelOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
+  const [pathaoBookingOrderId, setPathaoBookingOrderId] = useState<string | null>(null);
   // COURIER-PLAN.md §5.2 — the "not connected → setup popup" flow.
   // setupPending holds the action (courier selection or booking) that
   // triggered the popup, so it can run automatically once the vendor
@@ -336,6 +399,21 @@ export default function Orders() {
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
   useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView]);
+
+  // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
+  // per page: changing page or filters clears it, so a vendor never
+  // books orders they can no longer see.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPathaoIds, setBulkPathaoIds] = useState<string[] | null>(null);
+  useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page]);
+  function toggleSelected(orderId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  }
 
   const { data: tabs = DEFAULT_TABS } = useQuery({
     queryKey: ['order-status-tabs'],
@@ -414,6 +492,34 @@ export default function Orders() {
   const orders = data?.orders ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const allOnPageSelected = orders.length > 0 && orders.every((o) => selectedIds.has(o.id));
+
+  // Customer delivery records for this page's phones (Step 15). A number
+  // seen for the first time is looked up in the background (`pending`),
+  // so the list asks again a couple of times until those arrive.
+  const pagePhones = [...new Set(orders.map((o) => o.customerPhone))].sort();
+  const { data: deliveryStats } = useQuery({
+    queryKey: ['customer-courier-stats', pagePhones],
+    queryFn: () => ordersApi.getCustomerCourierStats(pagePhones),
+    enabled: pagePhones.length > 0 && !trashView,
+    staleTime: 60_000,
+    refetchInterval: (query) =>
+      query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending) ? 4000 : false,
+  });
+  const columnCount = trashView ? 7 : 8;
+
+  function sendSelectedToPathao() {
+    if (!otherCouriersAllowed) {
+      upgradeToast('use Pathao Courier');
+      return;
+    }
+    const ids = [...selectedIds];
+    if (!connectedProviders?.has('PATHAO')) {
+      setSetupPending({ provider: 'PATHAO', retry: () => setBulkPathaoIds(ids) });
+      return;
+    }
+    setBulkPathaoIds(ids);
+  }
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).slice(
     Math.max(0, page - 3),
     Math.max(0, page - 3) + 5,
@@ -521,10 +627,67 @@ export default function Orders() {
           </button>
         </div>
 
+        {!trashView && selectedIds.size > 0 && (
+          <div className="px-4 py-2.5 border-b border-black/5 bg-regantify-cta/5 flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-regantify-text">{selectedIds.size} selected</span>
+            <button
+              type="button"
+              onClick={sendSelectedToPathao}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium"
+            >
+              {!otherCouriersAllowed && <LockedBadge />}
+              Send to Pathao ({selectedIds.size})
+            </button>
+            <button
+              type="button"
+              onClick={() => openPathaoLabels([...selectedIds])}
+              className="px-3 py-1.5 rounded-lg border border-black/10 bg-white text-xs font-medium text-regantify-text hover:bg-regantify-content"
+            >
+              Print Pathao labels
+            </button>
+            <button type="button" onClick={() => setSelectedIds(new Set())} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
+              Clear
+            </button>
+          </div>
+        )}
+
+        {!trashView && deliveryStats && (!deliveryStats.pathaoConnected || deliveryStats.pathaoNeedsLogin) && (
+          <div className="px-4 py-2 border-b border-black/5 text-xs text-regantify-text-muted">
+            {!deliveryStats.pathaoConnected ? (
+              <>
+                <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
+                  Connect Pathao
+                </Link>{' '}
+                to see each customer’s delivery history with Pathao — free on every plan.
+              </>
+            ) : (
+              <>
+                Add your Pathao email and password in{' '}
+                <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
+                  Courier Integration › Pathao
+                </Link>{' '}
+                so the Pathao delivery history can load.
+              </>
+            )}
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
+                {!trashView && (
+                  <th className="p-4 pr-0 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allOnPageSelected}
+                      disabled={orders.length === 0}
+                      onChange={() => setSelectedIds(allOnPageSelected ? new Set() : new Set(orders.map((o) => o.id)))}
+                      aria-label="Select all orders on this page"
+                      className="h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer"
+                    />
+                  </th>
+                )}
                 <th className="p-4">Invoice</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Customer</th>
@@ -537,13 +700,13 @@ export default function Orders() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
+                  <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
                     Loading…
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
+                  <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
                     {trashView ? 'Trash is empty.' : 'No orders found.'}
                   </td>
                 </tr>
@@ -559,6 +722,10 @@ export default function Orders() {
                     otherCouriersAllowed={otherCouriersAllowed}
                     connectedProviders={connectedProviders}
                     onRequestSetup={(provider, retry) => setSetupPending({ provider, retry })}
+                    onBookPathao={(o) => setPathaoBookingOrderId(o.id)}
+                    selected={selectedIds.has(order.id)}
+                    deliveryStats={deliveryStats?.byPhone[order.customerPhone]}
+                    onToggleSelect={trashView ? undefined : toggleSelected}
                   />
                 ))
               )}
@@ -630,6 +797,8 @@ export default function Orders() {
         saving={labelMutation.isPending}
       />
       <InvoiceModal order={invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
+      <PathaoBookingModal orderId={pathaoBookingOrderId} onOpenChange={(open) => !open && setPathaoBookingOrderId(null)} />
+      <PathaoBulkBookDialog orderIds={bulkPathaoIds} onClose={() => setBulkPathaoIds(null)} onDone={() => setSelectedIds(new Set())} />
       <CourierSetupModal
         provider={setupPending?.provider ?? null}
         onOpenChange={(open) => !open && setSetupPending(null)}

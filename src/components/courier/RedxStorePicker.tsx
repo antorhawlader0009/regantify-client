@@ -8,8 +8,8 @@ interface RedxStorePickerProps {
 }
 
 /**
- * Settings > Courier Integration's RedX store picker — same "pick a
- * pickup store once, reuse on every booking" shape as PathaoStorePicker.
+ * The Courier Integration page's RedX store picker — same "pick a
+ * pickup store once, reuse on every booking" shape as the Pathao page's Pickup Store card.
  * Picking a store here is what RedxProvider.bookOrder reads as the
  * pickup point for every booking.
  */

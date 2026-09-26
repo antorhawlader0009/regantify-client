@@ -4,6 +4,7 @@ import { courierApi, type CourierAccountProvider, type CourierTrackingRow } from
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { OrderStatusBadge, orderStatusLabel } from '../order/orderStatus';
+import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -31,6 +32,7 @@ const BOOKING_STATUS_LABELS: Record<CourierTrackingRow['courierBookingStatus'], 
   BOOKING: 'Booking…',
   BOOKED: 'Booked',
   FAILED: 'Failed',
+  CANCELLED: 'Pickup cancelled',
 };
 
 function BookingStatusBadge({ status }: { status: CourierTrackingRow['courierBookingStatus'] }) {
@@ -39,6 +41,7 @@ function BookingStatusBadge({ status }: { status: CourierTrackingRow['courierBoo
     BOOKING: 'bg-amber-100 text-amber-700',
     BOOKED: 'bg-green-100 text-green-700',
     FAILED: 'bg-red-100 text-red-600',
+    CANCELLED: 'bg-red-100 text-red-600',
   };
   return (
     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
@@ -74,6 +77,11 @@ function TrackingRow({ row }: { row: CourierTrackingRow }) {
       <td className="p-4">
         <p className="text-sm font-medium text-regantify-text">{PROVIDER_LABELS[row.courierProvider]}</p>
         <BookingStatusBadge status={row.courierBookingStatus} />
+        {row.courierBookingStatus === 'BOOKED' && row.courierStatus && (
+          <div className="mt-1">
+            <CourierStatusBadge provider={row.courierProvider} status={row.courierStatus} />
+          </div>
+        )}
       </td>
       <td className="p-4">
         {row.courierTrackingCode || row.courierConsignmentId ? (
@@ -81,7 +89,7 @@ function TrackingRow({ row }: { row: CourierTrackingRow }) {
         ) : (
           <p className="text-sm text-regantify-text-muted">—</p>
         )}
-        {row.courierBookingStatus === 'FAILED' && row.courierBookingError && (
+        {(row.courierBookingStatus === 'FAILED' || row.courierBookingStatus === 'CANCELLED') && row.courierBookingError && (
           <p className="text-xs text-red-500 mt-0.5">{row.courierBookingError}</p>
         )}
       </td>

@@ -40,7 +40,8 @@ export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
 // courierBookingStatus track the courier API side, OrderStatus is the
 // vendor-facing pipeline stage (which a successful courier sync can also
 // update, via applyStatusUpdate on the server).
-export type CourierBookingStatus = 'NOT_BOOKED' | 'BOOKING' | 'BOOKED' | 'FAILED';
+// CANCELLED = the courier cancelled the pickup on its side; re-bookable.
+export type CourierBookingStatus = 'NOT_BOOKED' | 'BOOKING' | 'BOOKED' | 'FAILED' | 'CANCELLED';
 
 export interface Order {
   id: string;
@@ -55,6 +56,15 @@ export interface Order {
   courierBookingStatus: CourierBookingStatus;
   courierBookingError?: string | null;
   courierLastSyncedAt?: string | null;
+  // Live courier tracking (pathao-plan.md Step 6): the courier's own raw
+  // status ("Pickup_Requested") and the money it reports.
+  courierStatus?: string | null;
+  courierBookedAt?: string | null;
+  courierCodAmount?: string | null;
+  courierDeliveryFee?: string | null;
+  courierCollectedAmount?: string | null;
+  courierInvoiceId?: string | null;
+  courierPaidAt?: string | null;
   deletedAt?: string | null;
   customerName: string;
   customerPhone: string;
@@ -134,6 +144,28 @@ export interface CustomerHistory {
   orders: CustomerHistoryOrder[];
 }
 
+/** One source's delivery record for a phone (pathao-plan.md Step 15). */
+export interface CourierStatLine {
+  successful: number;
+  returned: number;
+  total: number;
+}
+
+export interface PhoneCourierStats {
+  storepal: CourierStatLine;
+  /** null = this vendor has no Pathao account connected. */
+  pathao: (CourierStatLine & { fetchedAt: string | null; pending: boolean; error: string | null }) | null;
+}
+
+/** POST /v1/orders/customer-courier-stats */
+export interface CustomerCourierStats {
+  pathaoConnected: boolean;
+  /** Connected, but no backup email/password saved — Pathao's lookup may refuse the API token. */
+  pathaoNeedsLogin: boolean;
+  loginErrorCode: string;
+  byPhone: Record<string, PhoneCourierStats>;
+}
+
 export interface ListOrdersParams {
   search?: string;
   status?: OrderStatus;
@@ -176,6 +208,10 @@ export interface CreateOrderPayload {
   shippingCity?: string;
   shippingDistrict?: string;
   deliveryZone?: 'DHAKA' | 'OUTSIDE_DHAKA';
+  // Optional Pathao location (Add Order) — City → Zone → Area, may stop early.
+  pathaoCityId?: number;
+  pathaoZoneId?: number;
+  pathaoAreaId?: number;
   items: OrderItemInput[];
   deliveryCharge?: number;
   discountAmount?: number;
@@ -222,4 +258,7 @@ export const ordersApi = {
   // History" on the Orders list.
   getCustomerHistory: (phone: string) =>
     api.get<CustomerHistory>(`/v1/orders/customer-history/${encodeURIComponent(phone)}`).then((r) => r.data),
+
+  getCustomerCourierStats: (phones: string[]) =>
+    api.post<CustomerCourierStats>('/v1/orders/customer-courier-stats', { phones }).then((r) => r.data),
 };

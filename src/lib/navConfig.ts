@@ -77,15 +77,16 @@ export const vendorNav: NavSection[] = [
     label: 'Courier Integration',
     icon: Truck,
     children: [
-      // Steadfast/Pathao/Redx accounts are connected/managed from
-      // Settings > Courier Integration (see COURIER-PLAN.md §5.1) — no
-      // separate page per provider, so these three just deep-link there
-      // rather than duplicating that UI. Real API booking is done from
-      // the Orders page's Actions menu, not from here.
-      { label: 'Steadfast', path: '/vendor/settings' },
-      { label: 'Pathao', path: '/vendor/settings' },
-      { label: 'Redex', path: '/vendor/settings' },
-      // The only real standalone page in this group — see Tracking.tsx.
+      // Steadfast/Redx are connected from the shared Courier Integration
+      // hub page (pages/vendor/courier/CourierIntegrationPage.tsx), so
+      // those two just deep-link there. Pathao has its own full page
+      // (Dashboard/Parcels/Settings — see pages/vendor/courier/pathao/
+      // and pathao-plan.md). Real API booking is done from the Orders
+      // page's Actions menu.
+      { label: 'Steadfast', path: '/vendor/courier' },
+      { label: 'Pathao', path: '/vendor/courier/pathao' },
+      { label: 'Redex', path: '/vendor/courier' },
+      // The only other real standalone page in this group — see Tracking.tsx.
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
     ],
   },

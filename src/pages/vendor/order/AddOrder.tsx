@@ -5,6 +5,8 @@ import { ChevronLeft, X, Search } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { ordersApi, type OrderItemInput } from '../../../lib/ordersApi';
 import { getVendorDeliveryCharges } from '../../../lib/vendorApi';
+import { courierApi } from '../../../lib/courierApi';
+import { PathaoLocationSelects, type PathaoLocationValue } from '../../../components/courier/PathaoLocationSelects';
 import { toast } from '../../../lib/toast';
 
 interface CartLine extends OrderItemInput {
@@ -46,6 +48,11 @@ export default function AddOrder() {
   const [shippingZip, setShippingZip] = useState('');
   const [shippingCity, setShippingCity] = useState('');
   const [shippingDistrict, setShippingDistrict] = useState('');
+  // Optional Pathao location, only offered once Pathao is connected (the
+  // pickers need its token). Pre-filled from the address as it's typed.
+  const [pathaoLocation, setPathaoLocation] = useState<PathaoLocationValue>({ cityId: null, zoneId: null, areaId: null });
+  const { data: courierAccounts } = useQuery({ queryKey: ['courier-accounts'], queryFn: courierApi.getAccounts });
+  const pathaoConnected = courierAccounts?.some((a) => a.provider === 'PATHAO' && a.isActive) ?? false;
 
   // Prefill from "Create Order" on the Incomplete Orders page — runs
   // once on mount only (empty deps), since this page's own field state
@@ -82,7 +89,7 @@ export default function AddOrder() {
     enabled: productSearch.trim().length > 0,
   });
 
-  // Settings > Courier Integration > Delivery Charge / Settings > VAT —
+  // Settings > Delivery Charge / VAT —
   // same values the server actually falls back to below when no custom
   // charge is typed (OrdersService.create). Add Order always creates a
   // COD order (see that method's own comment on why ONLINE_PAYMENT is
@@ -176,6 +183,13 @@ export default function AddOrder() {
       shippingCity: shippingCity.trim() || undefined,
       shippingDistrict: shippingDistrict.trim() || undefined,
       deliveryZone: zone ?? undefined,
+      ...(pathaoConnected
+        ? {
+            pathaoCityId: pathaoLocation.cityId ?? undefined,
+            pathaoZoneId: pathaoLocation.zoneId ?? undefined,
+            pathaoAreaId: pathaoLocation.areaId ?? undefined,
+          }
+        : {}),
       items: cart.map(({ key, ...item }) => item),
       deliveryCharge: showCustomCharge && customCharge !== null ? customCharge : undefined,
       discountAmount: showDiscount && discountAmount !== null ? discountAmount : undefined,
@@ -247,6 +261,18 @@ export default function AddOrder() {
             <label className="block text-sm font-medium text-regantify-text mb-1.5">District</label>
             <input value={shippingDistrict} onChange={(e) => setShippingDistrict(e.target.value)} placeholder="ie. Dhaka, Sylhet, Chattogram" className={inputClass} />
           </div>
+          {pathaoConnected && (
+            <div>
+              <label className="block text-sm font-medium text-regantify-text mb-1.5">Pathao Delivery Location (optional)</label>
+              <PathaoLocationSelects
+                value={pathaoLocation}
+                onChange={setPathaoLocation}
+                selectClassName={inputClass}
+                suggestFrom={{ address: shippingAddress, city: shippingCity, district: shippingDistrict }}
+              />
+              <p className="text-xs text-regantify-text-muted mt-1">Leave empty to let Pathao work it out from the address when you book.</p>
+            </div>
+          )}
         </div>
       </section>
 

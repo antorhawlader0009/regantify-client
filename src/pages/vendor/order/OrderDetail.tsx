@@ -4,11 +4,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
+import { courierApi, openPathaoLabels } from '../../../lib/courierApi';
 import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { PathaoLocationPicker } from '../../../components/courier/PathaoLocationPicker';
+import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
 import { RedxLocationPicker } from '../../../components/courier/RedxLocationPicker';
+import { CourierTimeline } from '../../../components/courier/CourierTimeline';
+import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -30,6 +35,7 @@ export default function OrderDetail() {
   const queryClient = useQueryClient();
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState('');
+  const [bookingPathao, setBookingPathao] = useState(false);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -41,6 +47,18 @@ export default function OrderDetail() {
     queryKey: ['order-history', id],
     queryFn: () => ordersApi.getHistory(id!),
     enabled: Boolean(id),
+  });
+
+  const refreshCourierMutation = useMutation({
+    mutationFn: () => courierApi.refreshStatus(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['order-history', id] });
+      queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Delivery status refreshed.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not refresh the delivery status. Please try again.')),
   });
 
   const statusMutation = useMutation({
@@ -198,12 +216,84 @@ export default function OrderDetail() {
                 free-text fields above — only relevant once this order is
                 assigned to Pathao (see COURIER-PLAN.md §3.2/§7 Phase 2). */}
             {order.courierProvider === 'PATHAO' && (
-              <div className="mt-4 pt-4 border-t border-black/5">
+              <div className="mt-4 pt-4 border-t border-black/5 space-y-4">
+                {/* Booking state + "Book with Pathao" (opens the booking
+                    popup — pathao-plan.md Step 4). Hidden once booked. */}
+                {order.courierBookingStatus === 'BOOKED' ? (
+                  <div className="space-y-1.5">
+                    <p className="text-sm text-regantify-text">
+                      Booked with Pathao
+                      {order.courierConsignmentId && (
+                        <span className="text-regantify-text-muted"> · Consignment {order.courierConsignmentId}</span>
+                      )}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {order.courierStatus && <CourierStatusBadge provider="PATHAO" status={order.courierStatus} prefix="Pathao" />}
+                      <button
+                        type="button"
+                        onClick={() => refreshCourierMutation.mutate()}
+                        disabled={refreshCourierMutation.isPending}
+                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text disabled:opacity-60"
+                      >
+                        {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
+                      </button>
+                      {order.courierConsignmentId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard
+                              .writeText(order.courierConsignmentId!)
+                              .then(() => toast.success('Tracking ID copied — share it with the customer.'))
+                              .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
+                          }}
+                          className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                        >
+                          Copy tracking ID
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openPathaoLabels([order.id])}
+                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                      >
+                        Print label
+                      </button>
+                    </div>
+                    <p className="text-xs text-regantify-text-muted">
+                      {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
+                      {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
+                      {order.courierCollectedAmount != null && <> · Collected {formatPrice(order.courierCollectedAmount)}</>}
+                      {order.courierPaidAt && <> · COD paid out{order.courierInvoiceId ? ` (invoice ${order.courierInvoiceId})` : ''}</>}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBookingPathao(true)}
+                      disabled={order.courierBookingStatus === 'BOOKING'}
+                      className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+                    >
+                      {order.courierBookingStatus === 'BOOKING' ? 'Booking…' : 'Book with Pathao'}
+                    </button>
+                    {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
+                      <p className="text-xs text-red-500">Last attempt failed: {order.courierBookingError}</p>
+                    )}
+                    {order.courierBookingStatus === 'CANCELLED' && (
+                      <p className="text-xs text-red-500">
+                        {order.courierBookingError ?? 'Pathao cancelled the pickup. You can book this order again.'}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <PathaoLocationPicker
                   orderId={order.id}
                   currentCityId={order.pathaoCityId}
                   currentZoneId={order.pathaoZoneId}
                   currentAreaId={order.pathaoAreaId}
+                  shippingAddress={order.shippingAddress}
+                  shippingCity={order.shippingCity}
+                  shippingDistrict={order.shippingDistrict}
                 />
               </div>
             )}
@@ -213,6 +303,12 @@ export default function OrderDetail() {
             {order.courierProvider === 'REDX' && (
               <div className="mt-4 pt-4 border-t border-black/5">
                 <RedxLocationPicker orderId={order.id} currentAreaId={order.redxAreaId} />
+              </div>
+            )}
+
+            {order.courierProvider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED' && (
+              <div className="mt-4 pt-4 border-t border-black/5">
+                <CourierTimeline orderId={order.id} />
               </div>
             )}
           </section>
@@ -245,6 +341,7 @@ export default function OrderDetail() {
         </div>
       </div>
 
+      <PathaoBookingModal orderId={bookingPathao ? order.id : null} onOpenChange={(open) => !open && setBookingPathao(false)} />
       <CheckHistoryModal phone={historyPhone} onOpenChange={(open) => !open && setHistoryPhone(null)} />
     </div>
   );
