@@ -199,7 +199,7 @@ export default function FacebookPixel() {
           <Section title="Catalog Feed">
             <Row
               label="Feed URL"
-              hint="Use this link to import your product catalog into Meta Commerce Manager (Data sources > Data feed > Scheduled feed). The feed is coming soon."
+              hint="Use this link to import your product catalog into Meta Commerce Manager (Data sources > Data feed > Scheduled feed, daily). Public products with a photo are included; products with variants are listed per variant."
             >
               <div className="flex gap-2">
                 <input type="text" value={feedUrl} readOnly className={`${inputClass} text-regantify-text-muted`} />
