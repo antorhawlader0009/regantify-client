@@ -259,7 +259,7 @@ export default function FacebookPixel() {
 
             <Row
               label="Track without JS SDK"
-              hint="Send events as lightweight image requests instead of loading Facebook's script. Faster, but Meta's automatic events and browser-side matching won't work."
+              hint="Send events as lightweight image requests instead of loading Facebook's script. Faster, but Meta's automatic events and browser-side matching won't work, and pixel helper extensions (Meta Pixel Helper, Pixel Helper Pro) can't see these events. Check them in Events Manager instead."
             >
               <Toggle
                 checked={form.imgTagTracking}
