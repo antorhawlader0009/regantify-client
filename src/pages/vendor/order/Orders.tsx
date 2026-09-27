@@ -1,13 +1,46 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, ChevronDown, Settings2, Tag } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+  FileText,
+  History,
+  ListChecks,
+  Plus,
+  Printer,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  Send,
+  Settings2,
+  Tag,
+  Trash2,
+  Truck,
+  Undo2,
+  X,
+  XCircle,
+} from 'lucide-react';
 import { ordersApi, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
-import { courierApi, notConnectedProvider, openPathaoLabels, type CourierAccountProvider } from '../../../lib/courierApi';
+import {
+  courierApi,
+  notConnectedProvider,
+  openPathaoLabels,
+  redxCancellable,
+  redxTrackingUrl,
+  type BulkCourierProvider,
+  type CourierAccountProvider,
+} from '../../../lib/courierApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
-import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
+import { DropdownMenu, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub } from '../../../components/ui/DropdownMenu';
+import { Dialog } from '../../../components/ui/Dialog';
+import { CourierTimeline } from '../../../components/courier/CourierTimeline';
+import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
+import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
 import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
 import { PathaoBulkBookDialog } from '../../../components/courier/PathaoBulkBookDialog';
@@ -56,6 +89,32 @@ const COURIER_LABELS: Record<CourierProvider, string> = {
   REDX: 'RedX Courier',
 };
 
+type BookableCourier = Exclude<CourierProvider, 'NONE'>;
+
+// Order in the "Send to courier" menu: the free one first.
+const BOOKABLE_COURIERS: BookableCourier[] = ['STEADFAST', 'PATHAO', 'REDX'];
+
+const COURIER_SHORT: Record<BookableCourier, string> = {
+  PATHAO: 'Pathao',
+  STEADFAST: 'SteadFast',
+  REDX: 'RedX',
+};
+
+const COURIER_SEND_HINT: Record<BookableCourier, string> = {
+  STEADFAST: 'One click, with your SteadFast defaults',
+  PATHAO: 'Opens the booking window',
+  REDX: 'One click, with your RedX defaults',
+};
+
+async function copyTrackingId(id: string) {
+  try {
+    await navigator.clipboard.writeText(id);
+    toast.success('Tracking ID copied — share it with the customer.');
+  } catch {
+    toast.error('Could not copy. Open the order and copy the ID yourself.');
+  }
+}
+
 const BOOKING_STATUS_LABELS: Record<Order['courierBookingStatus'], string> = {
   NOT_BOOKED: '',
   BOOKING: 'Booking…',
@@ -88,6 +147,10 @@ interface OrderRowProps {
   // Step 4) instead of booking blind; the parent owns it, like the
   // setup popup above.
   onBookPathao: (order: Order) => void;
+  // Courier timeline / SteadFast return / RedX cancel popups — parent-owned, shared by every row.
+  onShowTimeline: (order: Order) => void;
+  onRequestReturn: (order: Order) => void;
+  onCancelRedx: (order: Order) => void;
   // Row checkbox for bulk "Send to Pathao" (pathao-plan.md Step 11).
   // Undefined in the trash view, which has no bulk actions.
   selected?: boolean;
@@ -106,6 +169,9 @@ function OrderRow({
   connectedProviders,
   onRequestSetup,
   onBookPathao,
+  onShowTimeline,
+  onRequestReturn,
+  onCancelRedx,
   selected,
   onToggleSelect,
   deliveryStats,
@@ -133,15 +199,22 @@ function OrderRow({
         courierProvider === 'NONE' ? 'Courier assignment cleared.' : `Marked as sent to ${COURIER_LABELS[courierProvider]}.`,
       );
     },
-    onError: () => toast.error('Could not update the courier. Please try again.'),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not update the courier. Please try again.')),
   });
 
-  // "Select {Provider}" in the Actions menu — still just the plain label
-  // change (unchanged from before), but now gated behind the "has this
-  // vendor connected {Provider} yet?" check first, per COURIER-PLAN.md
-  // §5.2: an unconnected provider opens the setup popup instead of
-  // silently setting a label the vendor can't actually book later.
-  function selectCourier(provider: Exclude<CourierProvider, 'NONE'>) {
+  // Paid-plan couriers (PLAN.md Step 11): SteadFast is free on every plan.
+  function courierLocked(provider: BookableCourier): boolean {
+    return provider !== 'STEADFAST' && !otherCouriersAllowed;
+  }
+
+  // "Only mark as sent to {Provider}" — the plain label (for vendors who
+  // book in the courier's own panel), still gated behind the "connected?"
+  // check (COURIER-PLAN.md §5.2) so it can be booked from here later.
+  function selectCourier(provider: BookableCourier) {
+    if (courierLocked(provider)) {
+      upgradeToast(`use ${COURIER_LABELS[provider]}`);
+      return;
+    }
     if (!connectedProviders?.has(provider)) {
       onRequestSetup(provider, () => courierMutation.mutate(provider));
       return;
@@ -149,20 +222,22 @@ function OrderRow({
     courierMutation.mutate(provider);
   }
 
-  // "Book with {Provider}" — the real API call (COURIER-PLAN.md §5.2).
-  // Kept as a mutation separate from courierMutation above since it's a
-  // different, real-side-effect action with its own pending/error state
-  // (courierBookingStatus), not just a label change.
-  const bookMutation = useMutation({
-    mutationFn: () => courierApi.bookOrder(order.id),
-    onSuccess: () => {
-      invalidate();
-      toast.success(`Booked with ${COURIER_LABELS[order.courierProvider]}.`);
+  // "Send to SteadFast / RedX" — assign (when needed) and book in one go,
+  // the real API call. A FAILED order can be sent again (retry); a
+  // BOOKED one can't.
+  const sendMutation = useMutation({
+    mutationFn: async (provider: Exclude<BookableCourier, 'PATHAO'>) => {
+      if (order.courierProvider !== provider) await ordersApi.updateCourier(order.id, provider);
+      return courierApi.bookOrder(order.id);
     },
-    onError: (err) => {
+    onSuccess: (_, provider) => {
+      invalidate();
+      toast.success(`Booked with ${COURIER_LABELS[provider]}.`);
+    },
+    onError: (err, provider) => {
       const notConnected = notConnectedProvider(err);
       if (notConnected) {
-        onRequestSetup(notConnected, () => bookMutation.mutate());
+        onRequestSetup(notConnected, () => sendMutation.mutate(provider));
         return;
       }
       invalidate(); // refresh so the row picks up courierBookingStatus: FAILED + courierBookingError
@@ -170,26 +245,39 @@ function OrderRow({
     },
   });
 
-  // Pathao books through its popup (edit + price preview first);
-  // SteadFast/RedX keep the one-click booking above. An unconnected
-  // Pathao account goes to the setup popup first, then opens the
-  // booking popup once connected.
-  function bookWithCourier() {
+  // Pathao books through its popup (edit + price preview first), so
+  // "Send" only assigns the order to Pathao and opens it.
+  async function openPathaoBooking() {
     if (order.courierProvider !== 'PATHAO') {
-      bookMutation.mutate();
-      return;
-    }
-    if (!connectedProviders?.has('PATHAO')) {
-      onRequestSetup('PATHAO', () => onBookPathao(order));
-      return;
+      try {
+        await ordersApi.updateCourier(order.id, 'PATHAO');
+        invalidate();
+      } catch (err) {
+        toast.error(apiErrorMessage(err, 'Could not assign this order to Pathao. Please try again.'));
+        return;
+      }
     }
     onBookPathao(order);
+  }
+
+  function sendTo(provider: BookableCourier) {
+    if (courierLocked(provider)) {
+      upgradeToast(`use ${COURIER_LABELS[provider]}`);
+      return;
+    }
+    const go = () => (provider === 'PATHAO' ? void openPathaoBooking() : sendMutation.mutate(provider));
+    if (!connectedProviders?.has(provider)) {
+      onRequestSetup(provider, go);
+      return;
+    }
+    go();
   }
 
   const refreshStatusMutation = useMutation({
     mutationFn: () => courierApi.refreshStatus(order.id),
     onSuccess: () => {
       invalidate();
+      queryClient.invalidateQueries({ queryKey: ['courier-events', order.id] });
       toast.success('Delivery status refreshed.');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not refresh the delivery status. Please try again.')),
@@ -206,6 +294,11 @@ function OrderRow({
 
   const firstItem = order.items[0];
   const extraCount = order.items.length - 1;
+  const assigned = order.courierProvider !== 'NONE';
+  const booked = assigned && order.courierBookingStatus === 'BOOKED';
+  const bookingNow = assigned && order.courierBookingStatus === 'BOOKING';
+  // SteadFast's tracking code is what its tracking page takes; Pathao's consignment id doubles as its tracking id.
+  const trackingId = order.courierTrackingCode ?? order.courierConsignmentId;
 
   return (
     <tr className={`border-b border-black/5 align-top ${selected ? 'bg-regantify-cta/5' : ''}`}>
@@ -311,6 +404,7 @@ function OrderRow({
       </td>
       <td className="p-4">
         <DropdownMenu
+          widthClass="w-64"
           trigger={
             <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
               Actions
@@ -319,53 +413,146 @@ function OrderRow({
           }
         >
           {trashView ? (
-            <DropdownMenuItem onSelect={() => trashMutation.mutate()}>Restore</DropdownMenuItem>
+            <DropdownMenuItem icon={<RotateCcw />} onSelect={() => trashMutation.mutate()}>
+              Restore
+            </DropdownMenuItem>
           ) : (
             <>
-              <DropdownMenuItem onSelect={() => onShowInvoice(order)}>Download Invoice</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onShowInvoice(order)}>Print Invoice</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {ALL_ORDER_STATUSES.filter((s) => s !== order.status).map((status) => (
-                <DropdownMenuItem key={status} onSelect={() => statusMutation.mutate(status)}>
-                  Mark as {orderStatusLabel(status)}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onChangeLabel(order)}>Change Label</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={() => (otherCouriersAllowed ? selectCourier('PATHAO') : upgradeToast('use Pathao Courier'))}
-              >
-                {!otherCouriersAllowed && <LockedBadge />}
-                Pathao Courier
+              <DropdownMenuItem icon={<FileText />} hint="View, print or download" onSelect={() => onShowInvoice(order)}>
+                Invoice
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => selectCourier('STEADFAST')}>SteadFast Courier</DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => (otherCouriersAllowed ? selectCourier('REDX') : upgradeToast('use RedX Courier'))}
-              >
-                {!otherCouriersAllowed && <LockedBadge />}
-                RedX Courier
+              <DropdownMenuSub icon={<ListChecks />} label="Change status" value={orderStatusLabel(order.status)}>
+                {ALL_ORDER_STATUSES.map((status) => (
+                  <DropdownMenuItem
+                    key={status}
+                    disabled={status === order.status || statusMutation.isPending}
+                    icon={status === order.status ? <Check /> : <span className="block w-4" />}
+                    onSelect={() => statusMutation.mutate(status)}
+                  >
+                    {orderStatusLabel(status)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSub>
+              <DropdownMenuItem icon={<Tag />} onSelect={() => onChangeLabel(order)}>
+                Change label
               </DropdownMenuItem>
-              {order.courierProvider !== 'NONE' && (
-                <DropdownMenuItem onSelect={() => courierMutation.mutate('NONE')}>Clear Courier</DropdownMenuItem>
-              )}
-              {/* "Book with {Provider}" / "Refresh Status" — the real API
-                  actions, only once a courier is actually selected (see
-                  COURIER-PLAN.md §5.2). Booking is offered again after a
-                  FAILED attempt (retry), but not once already BOOKED. */}
-              {order.courierProvider !== 'NONE' && order.courierBookingStatus !== 'BOOKED' && (
-                <DropdownMenuItem onSelect={bookWithCourier}>
-                  Book with {COURIER_LABELS[order.courierProvider]}
-                </DropdownMenuItem>
-              )}
-              {order.courierBookingStatus === 'BOOKED' && (
-                <DropdownMenuItem onSelect={() => refreshStatusMutation.mutate()}>Refresh Delivery Status</DropdownMenuItem>
-              )}
-              {order.courierProvider === 'PATHAO' && order.courierBookingStatus === 'BOOKED' && (
-                <DropdownMenuItem onSelect={() => openPathaoLabels([order.id])}>Print Pathao Label</DropdownMenuItem>
-              )}
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem danger onSelect={() => trashMutation.mutate()}>
+              <DropdownMenuLabel>
+                Courier{assigned ? ` · ${COURIER_SHORT[order.courierProvider as BookableCourier]}` : ''}
+              </DropdownMenuLabel>
+
+              {booked ? (
+                <>
+                  <DropdownMenuItem icon={<RefreshCw />} disabled={refreshStatusMutation.isPending} onSelect={() => refreshStatusMutation.mutate()}>
+                    {refreshStatusMutation.isPending ? 'Refreshing…' : 'Refresh delivery status'}
+                  </DropdownMenuItem>
+                  {trackingId && (
+                    <DropdownMenuItem icon={<Copy />} hint={trackingId} onSelect={() => copyTrackingId(trackingId)}>
+                      Copy tracking ID
+                    </DropdownMenuItem>
+                  )}
+                  {order.courierProvider === 'STEADFAST' && order.courierTrackingUrl && (
+                    <DropdownMenuItem
+                      icon={<ExternalLink />}
+                      onSelect={() => window.open(order.courierTrackingUrl!, '_blank', 'noopener')}
+                    >
+                      Track parcel
+                    </DropdownMenuItem>
+                  )}
+                  {order.courierProvider === 'REDX' && order.courierConsignmentId && (
+                    <DropdownMenuItem
+                      icon={<ExternalLink />}
+                      onSelect={() => window.open(redxTrackingUrl(order.courierConsignmentId!), '_blank', 'noopener')}
+                    >
+                      Track parcel
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem icon={<History />} onSelect={() => onShowTimeline(order)}>
+                    Courier timeline
+                  </DropdownMenuItem>
+                  {order.courierProvider === 'PATHAO' && (
+                    <DropdownMenuItem icon={<Printer />} onSelect={() => openPathaoLabels([order.id])}>
+                      Print shipping label
+                    </DropdownMenuItem>
+                  )}
+                  {order.courierProvider === 'STEADFAST' && steadfastReturnable(order.courierStatus) && (
+                    <DropdownMenuItem icon={<Undo2 />} onSelect={() => onRequestReturn(order)}>
+                      Request return
+                    </DropdownMenuItem>
+                  )}
+                  {order.courierProvider === 'REDX' && redxCancellable(order.courierStatus) && (
+                    <DropdownMenuItem icon={<XCircle />} hint="Only before RedX picks it up" onSelect={() => onCancelRedx(order)}>
+                      Cancel parcel
+                    </DropdownMenuItem>
+                  )}
+                </>
+              ) : bookingNow ? (
+                <DropdownMenuItem icon={<Truck />} disabled onSelect={() => undefined}>
+                  Booking…
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  {assigned && (
+                    <DropdownMenuItem
+                      icon={<Send />}
+                      disabled={sendMutation.isPending}
+                      hint={order.courierBookingStatus === 'FAILED' ? (order.courierBookingError ?? 'Last attempt failed') : undefined}
+                      title={order.courierBookingError ?? undefined}
+                      onSelect={() => sendTo(order.courierProvider as BookableCourier)}
+                    >
+                      {sendMutation.isPending
+                        ? 'Booking…'
+                        : `${order.courierBookingStatus === 'FAILED' ? 'Retry booking' : order.courierBookingStatus === 'CANCELLED' ? 'Book again' : 'Book'} with ${COURIER_SHORT[order.courierProvider as BookableCourier]}`}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSub icon={<Truck />} label={assigned ? 'Send to another courier' : 'Send to courier'} widthClass="w-64">
+                    <DropdownMenuLabel>Book now</DropdownMenuLabel>
+                    {BOOKABLE_COURIERS.map((provider) => (
+                      <DropdownMenuItem
+                        key={provider}
+                        icon={<Send />}
+                        hint={COURIER_SEND_HINT[provider]}
+                        disabled={sendMutation.isPending}
+                        onSelect={() => sendTo(provider)}
+                      >
+                        {courierLocked(provider) && <LockedBadge />}
+                        {COURIER_SHORT[provider]}
+                        {!connectedProviders?.has(provider) && <span className="text-[10px] text-regantify-text-muted">(connect)</span>}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Mark only (no booking)</DropdownMenuLabel>
+                    {BOOKABLE_COURIERS.map((provider) => (
+                      <DropdownMenuItem
+                        key={provider}
+                        icon={order.courierProvider === provider ? <Check /> : <span className="block w-4" />}
+                        disabled={order.courierProvider === provider}
+                        onSelect={() => selectCourier(provider)}
+                      >
+                        {courierLocked(provider) && <LockedBadge />}
+                        {COURIER_SHORT[provider]}
+                      </DropdownMenuItem>
+                    ))}
+                    {assigned && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem icon={<X />} onSelect={() => courierMutation.mutate('NONE')}>
+                          Clear courier
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuSub>
+                  {assigned && order.courierBookingStatus !== 'NOT_BOOKED' && (
+                    <DropdownMenuItem icon={<History />} onSelect={() => onShowTimeline(order)}>
+                      Courier timeline
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem danger icon={<Trash2 className="text-red-500" />} onSelect={() => trashMutation.mutate()}>
                 Send to Trash
               </DropdownMenuItem>
             </>
@@ -392,6 +579,9 @@ export default function Orders() {
   const [labelOrder, setLabelOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [pathaoBookingOrderId, setPathaoBookingOrderId] = useState<string | null>(null);
+  const [timelineOrder, setTimelineOrder] = useState<Order | null>(null);
+  const [returnOrder, setReturnOrder] = useState<Order | null>(null);
+  const [cancelRedxOrder, setCancelRedxOrder] = useState<Order | null>(null);
   // COURIER-PLAN.md §5.2 — the "not connected → setup popup" flow.
   // setupPending holds the action (courier selection or booking) that
   // triggered the popup, so it can run automatically once the vendor
@@ -404,7 +594,8 @@ export default function Orders() {
   // per page: changing page or filters clears it, so a vendor never
   // books orders they can no longer see.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkPathaoIds, setBulkPathaoIds] = useState<string[] | null>(null);
+  // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
+  const [bulkBooking, setBulkBooking] = useState<{ provider: BulkCourierProvider; ids: string[] } | null>(null);
   useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page]);
   function toggleSelected(orderId: string) {
     setSelectedIds((prev) => {
@@ -504,7 +695,7 @@ export default function Orders() {
     enabled: pagePhones.length > 0 && !trashView,
     staleTime: 60_000,
     refetchInterval: (query) =>
-      query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending) ? 4000 : false,
+      query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending || s.steadfast?.pending) ? 4000 : false,
   });
   const columnCount = trashView ? 7 : 8;
 
@@ -515,10 +706,33 @@ export default function Orders() {
     }
     const ids = [...selectedIds];
     if (!connectedProviders?.has('PATHAO')) {
-      setSetupPending({ provider: 'PATHAO', retry: () => setBulkPathaoIds(ids) });
+      setSetupPending({ provider: 'PATHAO', retry: () => setBulkBooking({ provider: 'PATHAO', ids }) });
       return;
     }
-    setBulkPathaoIds(ids);
+    setBulkBooking({ provider: 'PATHAO', ids });
+  }
+
+  function sendSelectedToRedx() {
+    if (!otherCouriersAllowed) {
+      upgradeToast('use RedX Courier');
+      return;
+    }
+    const ids = [...selectedIds];
+    if (!connectedProviders?.has('REDX')) {
+      setSetupPending({ provider: 'REDX', retry: () => setBulkBooking({ provider: 'REDX', ids }) });
+      return;
+    }
+    setBulkBooking({ provider: 'REDX', ids });
+  }
+
+  // SteadFast is free on every plan, so no upgrade check here.
+  function sendSelectedToSteadfast() {
+    const ids = [...selectedIds];
+    if (!connectedProviders?.has('STEADFAST')) {
+      setSetupPending({ provider: 'STEADFAST', retry: () => setBulkBooking({ provider: 'STEADFAST', ids }) });
+      return;
+    }
+    setBulkBooking({ provider: 'STEADFAST', ids });
   }
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).slice(
     Math.max(0, page - 3),
@@ -640,6 +854,21 @@ export default function Orders() {
             </button>
             <button
               type="button"
+              onClick={sendSelectedToSteadfast}
+              className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium"
+            >
+              Send to SteadFast ({selectedIds.size})
+            </button>
+            <button
+              type="button"
+              onClick={sendSelectedToRedx}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
+            >
+              {!otherCouriersAllowed && <LockedBadge />}
+              Send to RedX ({selectedIds.size})
+            </button>
+            <button
+              type="button"
               onClick={() => openPathaoLabels([...selectedIds])}
               className="px-3 py-1.5 rounded-lg border border-black/10 bg-white text-xs font-medium text-regantify-text hover:bg-regantify-content"
             >
@@ -723,6 +952,9 @@ export default function Orders() {
                     connectedProviders={connectedProviders}
                     onRequestSetup={(provider, retry) => setSetupPending({ provider, retry })}
                     onBookPathao={(o) => setPathaoBookingOrderId(o.id)}
+                    onShowTimeline={setTimelineOrder}
+                    onRequestReturn={setReturnOrder}
+                    onCancelRedx={setCancelRedxOrder}
                     selected={selectedIds.has(order.id)}
                     deliveryStats={deliveryStats?.byPhone[order.customerPhone]}
                     onToggleSelect={trashView ? undefined : toggleSelected}
@@ -797,8 +1029,23 @@ export default function Orders() {
         saving={labelMutation.isPending}
       />
       <InvoiceModal order={invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
+      <Dialog
+        open={timelineOrder != null}
+        onOpenChange={(open) => !open && setTimelineOrder(null)}
+        title={timelineOrder ? `ORDER-${timelineOrder.invoiceNumber} · Courier timeline` : undefined}
+        maxWidth="max-w-md"
+      >
+        <div className="p-6 pt-4">{timelineOrder && <CourierTimeline orderId={timelineOrder.id} showEmpty />}</div>
+      </Dialog>
+      <SteadfastReturnDialog order={returnOrder} onClose={() => setReturnOrder(null)} />
+      <RedxCancelDialog order={cancelRedxOrder} onClose={() => setCancelRedxOrder(null)} />
       <PathaoBookingModal orderId={pathaoBookingOrderId} onOpenChange={(open) => !open && setPathaoBookingOrderId(null)} />
-      <PathaoBulkBookDialog orderIds={bulkPathaoIds} onClose={() => setBulkPathaoIds(null)} onDone={() => setSelectedIds(new Set())} />
+      <PathaoBulkBookDialog
+        provider={bulkBooking?.provider}
+        orderIds={bulkBooking?.ids ?? null}
+        onClose={() => setBulkBooking(null)}
+        onDone={() => setSelectedIds(new Set())}
+      />
       <CourierSetupModal
         provider={setupPending?.provider ?? null}
         onOpenChange={(open) => !open && setSetupPending(null)}

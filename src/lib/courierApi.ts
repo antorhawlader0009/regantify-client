@@ -306,17 +306,23 @@ export interface PathaoStats {
   };
 }
 
-/** POST /v1/courier/pathao/book-bulk — the dry run (confirm dialog) or the real run (pathao-plan.md Step 11). */
+/** Couriers with a bulk "Send to …" on the Orders list. */
+export type BulkCourierProvider = 'PATHAO' | 'STEADFAST' | 'REDX';
+
+/** POST /v1/courier/{pathao|steadfast|redx}/book-bulk — the dry run (confirm dialog) or the real run (pathao-plan.md Step 11). */
 export type PathaoBulkResult =
   | {
       dryRun: true;
-      pickupStore: { id: number; name: string | null };
+      provider: BulkCourierProvider;
+      /** Pathao and RedX — SteadFast picks up from the merchant's registered address. */
+      pickupStore: { id: number; name: string | null } | null;
       eligible: Array<{ orderId: string; invoiceNumber: number; customerName: string; codAmount: number }>;
       skipped: Array<{ orderId: string; invoiceNumber: number | null; customerName: string | null; reason: string }>;
       totalCod: number;
     }
   | {
       dryRun: false;
+      provider: BulkCourierProvider;
       results: Array<
         | { orderId: string; invoiceNumber: number; ok: true; consignmentId: string | null }
         | { orderId: string; invoiceNumber: number; ok: false; error: string }
@@ -364,12 +370,263 @@ export interface CourierEvent {
   createdAt: string;
 }
 
+/** GET /v1/courier/steadfast/overview — the SteadFast page's connection state. */
+export type SteadfastOverview =
+  | { connected: false }
+  | { connected: true; apiKeyMasked: string | null; lastWebhookAt: string | null; connectedAt: string; updatedAt: string };
+
+/** GET /v1/courier/steadfast/webhook — what the vendor pastes into SteadFast's panel (URL + Bearer token). */
+export type SteadfastWebhookInfo = PathaoWebhookInfo;
+
+/** What a SteadFast status may move an order to — same list as Pathao's. */
+export type SteadfastStatusTarget = PathaoStatusTarget;
+
+/** GET /v1/courier/steadfast/statuses — one row of the Auto Status Update table. */
+export interface SteadfastStatusRow {
+  key: string;
+  label: string;
+  defaultTarget: SteadfastStatusTarget;
+  /** SteadFast has confirmed the outcome (delivered / partial / cancelled). */
+  final: boolean;
+  returning: boolean;
+}
+
+export interface SteadfastAutoBookSettings {
+  enabled: boolean;
+  onStatus: 'PROCESSING';
+  assignUnassigned: boolean;
+  includeManualOrders: boolean;
+}
+
+/** Mirrors server/src/courier/providers/steadfast-settings.ts's SteadfastSettings. */
+export interface SteadfastSettings {
+  defaultBookingStatus: 'SHIPPING' | 'NO_CHANGE';
+  /** 0 = home delivery, 1 = point (hub) delivery. */
+  deliveryType: 0 | 1;
+  itemDescriptionTemplate: string;
+  note: string;
+  sendStaffNoteAsNote: boolean;
+  sendCustomerNoteAsNote: boolean;
+  sendCustomerEmail: boolean;
+  codRule: 'COD_TOTAL_ONLY_FOR_COD';
+  notifyCustomerOnBooking: boolean;
+  autoBook: SteadfastAutoBookSettings;
+  statusMap: Record<string, SteadfastStatusTarget>;
+}
+
+export type SteadfastParcelGroup = 'in_progress' | 'delivered' | 'returned' | 'attention';
+
+/** One row of GET /v1/courier/steadfast/parcels. */
+export type SteadfastParcel = PathaoParcel & { courierTrackingCode: string | null; courierTrackingUrl: string | null };
+
+export interface SteadfastParcelsQuery {
+  group?: SteadfastParcelGroup;
+  q?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface SteadfastParcelsResponse {
+  items: SteadfastParcel[];
+  total: number;
+  page: number;
+  perPage: number;
+  counts: Record<SteadfastParcelGroup | 'all', number>;
+}
+
+/** GET /v1/courier/steadfast/stats — the Dashboard tab. */
+export type SteadfastStats = Omit<PathaoStats, 'bookingsToday' | 'active'> & {
+  bookingsToday: { count: number; cod: number };
+  active: { count: number; cod: number };
+};
+
+/** One SteadFast payout — GET /v1/courier/steadfast/payouts. */
+export interface SteadfastPayout {
+  id: string;
+  amount: number | null;
+  status: string | null;
+  method: string | null;
+  createdAt: string | null;
+}
+
+/** GET /v1/courier/steadfast/orders/:orderId/tracking — SteadFast's own step-by-step history. */
+export interface SteadfastTracking {
+  trackingCode: string | null;
+  trackingUrl: string | null;
+  steps: Array<{ message: string; status: string | null; at: string | null }>;
+}
+
+/** GET /v1/courier/redx/overview — the RedX page's connection state. */
+export type RedxOverview =
+  | { connected: false; planAllowed: boolean }
+  | {
+      connected: true;
+      planAllowed: boolean;
+      tokenMasked: string | null;
+      pickupStore: { id: number; name: string | null } | null;
+      /** The server is pointed at RedX's sandbox (test parcels only). */
+      sandbox: boolean;
+      lastWebhookAt: string | null;
+      connectedAt: string;
+      updatedAt: string;
+    };
+
+/** GET /v1/courier/redx/webhook — the one callback URL (token included) the vendor pastes into RedX. */
+export type RedxWebhookInfo = PathaoWebhookInfo;
+
+export type RedxStatusTarget = PathaoStatusTarget;
+
+/** GET /v1/courier/redx/statuses — one row of the Auto Status Update table. */
+export interface RedxStatusRow {
+  key: string;
+  label: string;
+  defaultTarget: RedxStatusTarget;
+  returning: boolean;
+  paid: boolean;
+  cancelsBooking: boolean;
+}
+
+export interface RedxAutoBookSettings {
+  enabled: boolean;
+  onStatus: 'PROCESSING';
+  assignUnassigned: boolean;
+  includeManualOrders: boolean;
+  requireArea: boolean;
+}
+
+/** Mirrors server/src/courier/providers/redx-settings.ts's RedxSettings. */
+export interface RedxSettings {
+  defaultBookingStatus: 'SHIPPING' | 'NO_CHANGE';
+  defaultWeightGrams: number;
+  useProductWeight: boolean;
+  declaredValue: 'SUBTOTAL' | 'ZERO';
+  sendItemDetails: boolean;
+  itemCategory: string;
+  instruction: string;
+  sendStaffNoteAsInstruction: boolean;
+  sendCustomerNoteAsInstruction: boolean;
+  closedBox: boolean;
+  autoDetectArea: boolean;
+  codRule: 'COD_TOTAL_ONLY_FOR_COD';
+  notifyCustomerOnBooking: boolean;
+  autoBook: RedxAutoBookSettings;
+  statusMap: Record<string, RedxStatusTarget>;
+}
+
+export interface RedxPickupStore {
+  id: number;
+  name: string;
+  address: string | null;
+  areaId: number | null;
+  areaName: string | null;
+  phone: string | null;
+  createdAt: string | null;
+}
+
+export interface RedxArea {
+  id: number;
+  name: string;
+  postCode: number | null;
+  divisionName: string | null;
+}
+
+export interface RedxAreaSuggestion {
+  areaId: number;
+  areaName: string;
+  postCode: number | null;
+  confidence: number;
+  /** Sure enough that booking would use it without asking. */
+  autoApply: boolean;
+}
+
+/** GET /v1/courier/redx/orders/:orderId/quote — what booking this order would send, and RedX's price for it. */
+export interface RedxQuote {
+  area: { id: number; name: string; detected: boolean } | null;
+  areaError: string | null;
+  weightGrams: number;
+  codAmount: number;
+  charge: { deliveryCharge: number; codCharge: number } | null;
+  chargeError: string | null;
+  pickupStore: { id: number; name: string | null } | null;
+}
+
+export type RedxParcelGroup = 'in_progress' | 'delivered' | 'returned' | 'attention' | 'cancelled';
+
+/** One row of GET /v1/courier/redx/parcels. */
+export type RedxParcel = PathaoParcel & { courierTrackingCode: string | null; redxAreaId: number | null };
+
+export interface RedxParcelsQuery {
+  group?: RedxParcelGroup;
+  q?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  perPage?: number;
+}
+
+export interface RedxParcelsResponse {
+  items: RedxParcel[];
+  total: number;
+  page: number;
+  perPage: number;
+  counts: Record<RedxParcelGroup | 'all', number>;
+}
+
+/** GET /v1/courier/redx/stats — the Dashboard tab (same shape as SteadFast's). */
+export type RedxStats = SteadfastStats;
+
+/** GET /v1/courier/redx/orders/:orderId/tracking — RedX's own step-by-step history. */
+export interface RedxTracking {
+  trackingId: string | null;
+  trackingUrl: string | null;
+  steps: Array<{ message: string; messageBn: string | null; at: string | null }>;
+}
+
+/** RedX's public tracking page for a tracking ID. */
+export function redxTrackingUrl(trackingId: string) {
+  return `https://redx.com.bd/track-parcel/?trackingId=${encodeURIComponent(trackingId)}`;
+}
+
+/** Statuses a RedX parcel can still be cancelled in (RedX hasn't picked it up) — mirrors server REDX_CANCELLABLE_STATUSES. */
+export function redxCancellable(courierStatus: string | null | undefined): boolean {
+  if (!courierStatus) return true;
+  const key = courierStatus.trim().toLowerCase().replace(/[\s\-.]+/g, '_');
+  return key === 'pickup_pending' || key === 'pending';
+}
+
 export const courierApi = {
   /** All of the vendor's courier accounts (active or disconnected) — Settings' card states + the setup-popup's "already connected?" check. */
   getAccounts: () => api.get<CourierAccount[]>('/v1/courier/accounts').then((r) => r.data),
 
+  // The server checks the keys with SteadFast before saving; `balance` is
+  // what SteadFast reported owing the vendor at that moment.
   connectSteadfast: (apiKey: string, secretKey: string) =>
-    api.post<CourierAccount>('/v1/courier/accounts/steadfast', { apiKey, secretKey }).then((r) => r.data),
+    api.post<CourierAccount & { balance: number | null }>('/v1/courier/accounts/steadfast', { apiKey, secretKey }).then((r) => r.data),
+
+  // Courier Integration > SteadFast page (pages/vendor/courier/steadfast/).
+  getSteadfastOverview: () => api.get<SteadfastOverview>('/v1/courier/steadfast/overview').then((r) => r.data),
+  getSteadfastBalance: () =>
+    api.get<{ balance: number | null; error: string | null }>('/v1/courier/steadfast/balance').then((r) => r.data),
+  getSteadfastSettings: () => api.get<SteadfastSettings>('/v1/courier/steadfast/settings').then((r) => r.data),
+  updateSteadfastSettings: (patch: Partial<SteadfastSettings>) =>
+    api.put<SteadfastSettings>('/v1/courier/steadfast/settings', patch).then((r) => r.data),
+  getSteadfastStatuses: () => api.get<SteadfastStatusRow[]>('/v1/courier/steadfast/statuses').then((r) => r.data),
+  getSteadfastWebhook: () => api.get<SteadfastWebhookInfo>('/v1/courier/steadfast/webhook').then((r) => r.data),
+  regenerateSteadfastWebhook: () => api.post<SteadfastWebhookInfo>('/v1/courier/steadfast/webhook/regenerate').then((r) => r.data),
+  getSteadfastParcels: (query: SteadfastParcelsQuery) =>
+    api.get<SteadfastParcelsResponse>('/v1/courier/steadfast/parcels', { params: query }).then((r) => r.data),
+  getSteadfastStats: (range: PathaoStatsRange) =>
+    api.get<SteadfastStats>('/v1/courier/steadfast/stats', { params: { range } }).then((r) => r.data),
+  getSteadfastPayouts: (page = 1) => api.get<SteadfastPayout[]>('/v1/courier/steadfast/payouts', { params: { page } }).then((r) => r.data),
+  syncSteadfastPayouts: () => api.post<{ markedPaid: number }>('/v1/courier/steadfast/payouts/sync').then((r) => r.data),
+  bookSteadfastBulk: (orderIds: string[], dryRun: boolean) =>
+    api.post<PathaoBulkResult>('/v1/courier/steadfast/book-bulk', { orderIds, dryRun }).then((r) => r.data),
+  getSteadfastTracking: (orderId: string) =>
+    api.get<SteadfastTracking>(`/v1/courier/steadfast/orders/${orderId}/tracking`).then((r) => r.data),
+  requestSteadfastReturn: (orderId: string, reason?: string) =>
+    api.post<{ id: string | null; status: string }>(`/v1/courier/steadfast/orders/${orderId}/return-request`, { reason }).then((r) => r.data),
 
   // The vendor's own Pathao merchant Client ID/Secret (+ optional email/
   // password fallback). The server verifies them with Pathao before
@@ -403,11 +660,13 @@ export const courierApi = {
     api.post<{ pathaoStoreId: number; pathaoStoreName: string }>('/v1/courier/accounts/pathao/store', { storeId, storeName }).then((r) => r.data),
 
   // RedX's own single access token — no OAuth, no separate app-level
-  // credential (unlike Pathao).
-  connectRedx: (accessToken: string) => api.post<CourierAccount>('/v1/courier/accounts/redx', { accessToken }).then((r) => r.data),
+  // credential (unlike Pathao). The server checks it with RedX first and
+  // picks the pickup store itself when the merchant has only one.
+  connectRedx: (accessToken: string) =>
+    api.post<CourierAccount & { storeCount: number }>('/v1/courier/accounts/redx', { accessToken }).then((r) => r.data),
 
   /** Settings' RedX store picker — only callable once connected. */
-  getRedxStores: () => api.get<PathaoLocation[]>('/v1/courier/accounts/redx/stores').then((r) => r.data),
+  getRedxStores: () => api.get<RedxPickupStore[]>('/v1/courier/accounts/redx/stores').then((r) => r.data),
 
   selectRedxStore: (storeId: number, storeName: string) =>
     api.post<{ redxStoreId: number; redxStoreName: string }>('/v1/courier/accounts/redx/store', { storeId, storeName }).then((r) => r.data),
@@ -444,9 +703,28 @@ export const courierApi = {
   updateOrderPathaoLocation: (orderId: string, cityId: number, zoneId: number, areaId: number) =>
     api.patch(`/v1/orders/${orderId}/pathao-location`, { cityId, zoneId, areaId }).then((r) => r.data),
 
-  // RedxLocationPicker (Order Detail) — RedX has only ONE location tier
-  // (no city/zone cascade like Pathao), so this is a single flat list.
-  getRedxAreas: () => api.get<PathaoLocation[]>('/v1/courier/redx/locations/areas').then((r) => r.data),
+  // Courier Integration > RedX page (pages/vendor/courier/redx/) and
+  // Order Detail's RedX panel. RedX has only ONE location tier (no
+  // city/zone cascade like Pathao), so areas are a single flat list.
+  getRedxOverview: () => api.get<RedxOverview>('/v1/courier/redx/overview').then((r) => r.data),
+  getRedxSettings: () => api.get<RedxSettings>('/v1/courier/redx/settings').then((r) => r.data),
+  updateRedxSettings: (patch: Partial<RedxSettings>) => api.put<RedxSettings>('/v1/courier/redx/settings', patch).then((r) => r.data),
+  getRedxStatuses: () => api.get<RedxStatusRow[]>('/v1/courier/redx/statuses').then((r) => r.data),
+  getRedxWebhook: () => api.get<RedxWebhookInfo>('/v1/courier/redx/webhook').then((r) => r.data),
+  regenerateRedxWebhook: () => api.post<RedxWebhookInfo>('/v1/courier/redx/webhook/regenerate').then((r) => r.data),
+  createRedxStore: (input: { name: string; phone: string; address: string; areaId: number }) =>
+    api.post<{ store: RedxPickupStore; selected: boolean }>('/v1/courier/redx/stores', input).then((r) => r.data),
+  getRedxAreas: () => api.get<RedxArea[]>('/v1/courier/redx/areas').then((r) => r.data),
+  suggestRedxArea: (input: { address?: string; city?: string; district?: string; zip?: string }) =>
+    api.get<RedxAreaSuggestion | null>('/v1/courier/redx/areas/suggest', { params: input }).then((r) => r.data || null),
+  getRedxQuote: (orderId: string) => api.get<RedxQuote>(`/v1/courier/redx/orders/${orderId}/quote`).then((r) => r.data),
+  getRedxParcels: (query: RedxParcelsQuery) => api.get<RedxParcelsResponse>('/v1/courier/redx/parcels', { params: query }).then((r) => r.data),
+  getRedxStats: (range: PathaoStatsRange) => api.get<RedxStats>('/v1/courier/redx/stats', { params: { range } }).then((r) => r.data),
+  bookRedxBulk: (orderIds: string[], dryRun: boolean) =>
+    api.post<PathaoBulkResult>('/v1/courier/redx/book-bulk', { orderIds, dryRun }).then((r) => r.data),
+  getRedxTracking: (orderId: string) => api.get<RedxTracking>(`/v1/courier/redx/orders/${orderId}/tracking`).then((r) => r.data),
+  cancelRedxParcel: (orderId: string, reason?: string) =>
+    api.post<{ courierBookingStatus: CourierBookingStatus; courierStatus: string | null }>(`/v1/courier/redx/orders/${orderId}/cancel`, { reason }).then((r) => r.data),
 
   updateOrderRedxLocation: (orderId: string, areaId: number) =>
     api.patch(`/v1/orders/${orderId}/redx-location`, { areaId }).then((r) => r.data),

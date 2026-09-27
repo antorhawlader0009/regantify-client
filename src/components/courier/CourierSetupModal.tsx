@@ -18,7 +18,7 @@ const PROVIDER_INTRO: Record<CourierAccountProvider, string> = {
   STEADFAST: 'Connect your SteadFast merchant account to book real deliveries from the Orders page.',
   PATHAO:
     'Connect your Pathao merchant account. After connecting, finish setup on Courier Integration > Pathao by selecting a pickup store.',
-  REDX: 'Connect your RedX merchant account. After connecting, finish setup on the Courier Integration page by selecting a pickup store.',
+  REDX: 'Connect your RedX merchant account. If you have more than one RedX pickup store, choose which one to use on Courier Integration > RedX.',
 };
 
 interface CourierSetupModalProps {

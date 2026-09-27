@@ -3,14 +3,24 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Dialog } from '../ui/Dialog';
-import { courierApi, type PathaoBulkResult } from '../../lib/courierApi';
+import { courierApi, type BulkCourierProvider, type PathaoBulkResult } from '../../lib/courierApi';
 import { apiErrorMessage } from '../../lib/api';
 
 function formatTaka(value: number) {
   return `৳${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
+const NAMES: Record<BulkCourierProvider, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX' };
+
+const BOOK: Record<BulkCourierProvider, typeof courierApi.bookPathaoBulk> = {
+  PATHAO: courierApi.bookPathaoBulk,
+  STEADFAST: courierApi.bookSteadfastBulk,
+  REDX: courierApi.bookRedxBulk,
+};
+
 interface PathaoBulkBookDialogProps {
+  /** Which courier to book with. Defaults to Pathao. */
+  provider?: BulkCourierProvider;
   /** The selected orders; null closes the dialog. */
   orderIds: string[] | null;
   onClose: () => void;
@@ -19,21 +29,24 @@ interface PathaoBulkBookDialogProps {
 }
 
 /**
- * The Orders list's bulk "Send to Pathao" (pathao-plan.md Step 11).
+ * The Orders list's bulk "Send to Pathao" / "Send to SteadFast" / "Send to RedX" (pathao-plan.md Step 11).
  * Opens with the server's dry run (which orders will go, which are
  * skipped and why, total COD, pickup store), books on confirm, then shows
  * the outcome with each failure linking to its order.
  */
-export function PathaoBulkBookDialog({ orderIds, onClose, onDone }: PathaoBulkBookDialogProps) {
+export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, onDone }: PathaoBulkBookDialogProps) {
   const queryClient = useQueryClient();
+  const name = NAMES[provider];
+  const book = BOOK[provider];
+  const keyPrefix = provider.toLowerCase();
 
-  const planMutation = useMutation({ mutationFn: (ids: string[]) => courierApi.bookPathaoBulk(ids, true) });
+  const planMutation = useMutation({ mutationFn: (ids: string[]) => book(ids, true) });
   const bookMutation = useMutation({
-    mutationFn: (ids: string[]) => courierApi.bookPathaoBulk(ids, false),
+    mutationFn: (ids: string[]) => book(ids, false),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      queryClient.invalidateQueries({ queryKey: ['pathao-parcels'] });
-      queryClient.invalidateQueries({ queryKey: ['pathao-stats'] });
+      queryClient.invalidateQueries({ queryKey: [`${keyPrefix}-parcels`] });
+      queryClient.invalidateQueries({ queryKey: [`${keyPrefix}-stats`] });
     },
   });
 
@@ -58,7 +71,7 @@ export function PathaoBulkBookDialog({ orderIds, onClose, onDone }: PathaoBulkBo
   }
 
   return (
-    <Dialog open={orderIds != null} onOpenChange={(open) => !open && close()} title="Send to Pathao" maxWidth="max-w-lg">
+    <Dialog open={orderIds != null} onOpenChange={(open) => !open && close()} title={`Send to ${name}`} maxWidth="max-w-lg">
       <div className="p-6 pt-4 space-y-4">
         {outcome ? (
           <>
@@ -94,7 +107,7 @@ export function PathaoBulkBookDialog({ orderIds, onClose, onDone }: PathaoBulkBo
           <p className="text-sm text-red-600">{apiErrorMessage(planMutation.error, 'Could not check these orders. Please try again.')}</p>
         ) : draft ? (
           <>
-            <div className="grid grid-cols-3 gap-2 text-center">
+            <div className={`grid ${draft.pickupStore ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-center`}>
               <div className="rounded-xl bg-regantify-content p-3">
                 <p className="text-xl font-semibold text-regantify-text tabular-nums">{draft.eligible.length}</p>
                 <p className="text-xs text-regantify-text-muted">to book</p>
@@ -103,16 +116,18 @@ export function PathaoBulkBookDialog({ orderIds, onClose, onDone }: PathaoBulkBo
                 <p className="text-xl font-semibold text-regantify-text tabular-nums">{formatTaka(draft.totalCod)}</p>
                 <p className="text-xs text-regantify-text-muted">COD to collect</p>
               </div>
-              <div className="rounded-xl bg-regantify-content p-3">
-                <p className="text-sm font-semibold text-regantify-text truncate" title={draft.pickupStore.name ?? undefined}>
-                  {draft.pickupStore.name ?? `Store #${draft.pickupStore.id}`}
-                </p>
-                <p className="text-xs text-regantify-text-muted">pickup store</p>
-              </div>
+              {draft.pickupStore && (
+                <div className="rounded-xl bg-regantify-content p-3">
+                  <p className="text-sm font-semibold text-regantify-text truncate" title={draft.pickupStore.name ?? undefined}>
+                    {draft.pickupStore.name ?? `Store #${draft.pickupStore.id}`}
+                  </p>
+                  <p className="text-xs text-regantify-text-muted">pickup store</p>
+                </div>
+              )}
             </div>
 
             <p className="text-xs text-regantify-text-muted">
-              Each order is booked with your Default Values (Courier Integration › Pathao). Orders without a courier are assigned to Pathao.
+              Each order is booked with your Default Values (Courier Integration › {name}). Orders without a courier are assigned to {name}.
             </p>
 
             {draft.skipped.length > 0 && (
@@ -150,7 +165,7 @@ export function PathaoBulkBookDialog({ orderIds, onClose, onDone }: PathaoBulkBo
                 disabled={draft.eligible.length === 0 || bookMutation.isPending}
                 className="px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
               >
-                {bookMutation.isPending ? `Booking ${draft.eligible.length}…` : `Book ${draft.eligible.length} with Pathao`}
+                {bookMutation.isPending ? `Booking ${draft.eligible.length}…` : `Book ${draft.eligible.length} with ${name}`}
               </button>
             </div>
           </>

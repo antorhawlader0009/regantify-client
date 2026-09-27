@@ -53,6 +53,8 @@ export interface Order {
   courierProvider: CourierProvider;
   courierConsignmentId?: string | null;
   courierTrackingCode?: string | null;
+  /** SteadFast only: the tracking page link SteadFast gave at booking. Null for parcels booked before it was saved. */
+  courierTrackingUrl?: string | null;
   courierBookingStatus: CourierBookingStatus;
   courierBookingError?: string | null;
   courierLastSyncedAt?: string | null;
@@ -151,15 +153,39 @@ export interface CourierStatLine {
   total: number;
 }
 
+/** One courier's network-wide record for a phone (Pathao / SteadFast). */
+export type CourierCheckLine = CourierStatLine & {
+  fetchedAt: string | null;
+  pending: boolean;
+  error: string | null;
+  /** SteadFast only: merchants who reported this number as fraud. */
+  fraudReports: number;
+  /** SteadFast only (null for Pathao). SteadFast gives percents, not counts, so its successful/returned/total are always 0. */
+  steadfastScore: SteadfastScore | null;
+};
+
+export interface SteadfastScore {
+  /** Whole % of the number's finished parcels delivered; null = nothing has finished (unknown, not a clean record). */
+  deliveryRatio: number | null;
+  cancellationRatio: number | null;
+  /** none / low (1-5) / medium (6-20) / high (21-200) / very_high (200+) finished parcels. */
+  volumeBand: string | null;
+  /** Report code → times reported, worst first. */
+  fraudCategories: Record<string, number>;
+}
+
 export interface PhoneCourierStats {
   storepal: CourierStatLine;
   /** null = this vendor has no Pathao account connected. */
-  pathao: (CourierStatLine & { fetchedAt: string | null; pending: boolean; error: string | null }) | null;
+  pathao: CourierCheckLine | null;
+  /** null = this vendor has no SteadFast account connected. */
+  steadfast: CourierCheckLine | null;
 }
 
 /** POST /v1/orders/customer-courier-stats */
 export interface CustomerCourierStats {
   pathaoConnected: boolean;
+  steadfastConnected: boolean;
   /** Connected, but no backup email/password saved — Pathao's lookup may refuse the API token. */
   pathaoNeedsLogin: boolean;
   loginErrorCode: string;

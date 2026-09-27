@@ -1,5 +1,8 @@
+import { useRef, useState } from 'react';
 import type { Order } from '../../../lib/ordersApi';
 import { Dialog } from '../../../components/ui/Dialog';
+import { printElement } from '../../../lib/printElement';
+import { toast } from '../../../lib/toast';
 
 interface InvoiceModalProps {
   order: Order | null;
@@ -20,20 +23,30 @@ function formatDate(iso: string) {
  * maintain), this renders a clean, print-ready invoice and hands off to
  * the browser's own Print dialog — "Save as PDF" there covers "Download"
  * too, which is the standard pattern for this kind of one-page document.
+ * Only the invoice itself is printed (printElement), never the page or
+ * the dialog around it.
  */
 export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
+  const printAreaRef = useRef<HTMLDivElement>(null);
+  const [printing, setPrinting] = useState(false);
+
+  async function print() {
+    if (!printAreaRef.current || !order) return;
+    setPrinting(true);
+    try {
+      await printElement(printAreaRef.current, `Invoice ORDER-${order.invoiceNumber}`);
+    } catch {
+      toast.error('Could not open the print window. Please try again.');
+    } finally {
+      setPrinting(false);
+    }
+  }
+
   return (
     <Dialog open={Boolean(order)} onOpenChange={onOpenChange} maxWidth="max-w-2xl">
       {order && (
         <>
-          <div className="p-8" id="invoice-print-area">
-            <style>{`
-              @media print {
-                body * { visibility: hidden; }
-                #invoice-print-area, #invoice-print-area * { visibility: visible; }
-                #invoice-print-area { position: absolute; left: 0; top: 0; width: 100%; }
-              }
-            `}</style>
+          <div className="p-8" ref={printAreaRef}>
 
             <div className="flex items-start justify-between mb-8">
               <div>
@@ -145,10 +158,11 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
             </button>
             <button
               type="button"
-              onClick={() => window.print()}
-              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium"
+              onClick={print}
+              disabled={printing}
+              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
             >
-              Print / Save as PDF
+              {printing ? 'Preparing…' : 'Print / Save as PDF'}
             </button>
           </div>
         </>

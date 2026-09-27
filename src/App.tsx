@@ -93,6 +93,8 @@ import PaymentCallback from './pages/vendor/finance/PaymentCallback';
 import Tracking from './pages/vendor/shipping/Tracking';
 import CourierIntegrationPage from './pages/vendor/courier/CourierIntegrationPage';
 import PathaoPage from './pages/vendor/courier/pathao/PathaoPage';
+import SteadfastPage from './pages/vendor/courier/steadfast/SteadfastPage';
+import RedxPage from './pages/vendor/courier/redx/RedxPage';
 import PathaoLabelsPrintPage from './pages/vendor/courier/pathao/PathaoLabelsPrintPage';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
@@ -164,7 +166,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/finance/fee-summary' &&
     r.path !== '/vendor/shipping/tracking' &&
     r.path !== '/vendor/courier' &&
-    r.path !== '/vendor/courier/pathao',
+    r.path !== '/vendor/courier/pathao' &&
+    r.path !== '/vendor/courier/steadfast' &&
+    r.path !== '/vendor/courier/redx',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -308,6 +312,8 @@ export default function App() {
                 <Route path="/vendor/shipping/tracking" element={<Tracking />} />
                 <Route path="/vendor/courier" element={<CourierIntegrationPage />} />
                 <Route path="/vendor/courier/pathao" element={<PathaoPage />} />
+                <Route path="/vendor/courier/steadfast" element={<SteadfastPage />} />
+                <Route path="/vendor/courier/redx" element={<RedxPage />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

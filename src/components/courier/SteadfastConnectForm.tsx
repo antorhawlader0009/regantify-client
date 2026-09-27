@@ -27,6 +27,8 @@ export function SteadfastConnectForm({ onConnected, footer }: SteadfastConnectFo
     mutationFn: () => courierApi.connectSteadfast(apiKey.trim(), secretKey.trim()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courier-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['steadfast-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['steadfast-balance'] });
       toast.success('SteadFast account connected.');
       setApiKey('');
       setSecretKey('');
@@ -68,7 +70,8 @@ export function SteadfastConnectForm({ onConnected, footer }: SteadfastConnectFo
         />
       </div>
       <p className="text-xs text-regantify-text-muted">
-        Find these under your SteadFast merchant panel's API settings.
+        In your SteadFast merchant panel open <strong>More › API guide › Your API keys</strong> and create a key for this store. We
+        check the keys with SteadFast before saving them.
       </p>
       {error && <p className="text-red-500 text-sm">{error}</p>}
       {footer ? footer(mutation.isPending) : (
@@ -77,7 +80,7 @@ export function SteadfastConnectForm({ onConnected, footer }: SteadfastConnectFo
           disabled={mutation.isPending}
           className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
         >
-          {mutation.isPending ? 'Connecting…' : 'Connect SteadFast'}
+          {mutation.isPending ? 'Checking with SteadFast…' : 'Connect SteadFast'}
         </button>
       )}
     </form>

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '../../../components/ui/Dialog';
 import { ordersApi } from '../../../lib/ordersApi';
 import { OrderStatusBadge } from './orderStatus';
-import { SourceMark } from '../../../components/courier/CustomerDeliveryStats';
+import { fraudCategoriesText, SourceMark, steadfastScoreText } from '../../../components/courier/CustomerDeliveryStats';
 
 interface CheckHistoryModalProps {
   phone: string | null;
@@ -32,6 +32,7 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
     enabled: Boolean(phone),
   });
   const pathao = phone ? courierStats?.byPhone[phone]?.pathao : null;
+  const steadfast = phone ? courierStats?.byPhone[phone]?.steadfast : null;
 
   return (
     <Dialog open={Boolean(phone)} onOpenChange={onOpenChange} title="Delivery History" maxWidth="max-w-xl">
@@ -53,6 +54,37 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
               </>
             ) : (
               <p className="text-sm text-regantify-text-muted">{pathao.pending ? 'Checking with Pathao…' : 'No Pathao record yet.'}</p>
+            )}
+          </div>
+        )}
+
+        {steadfast && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 px-4 py-3 rounded-xl border border-black/5">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-regantify-text">
+              <SourceMark letter="SF" className="bg-teal-600" /> SteadFast
+            </p>
+            {steadfast.fetchedAt ? (
+              <>
+                {steadfast.steadfastScore && (
+                  <p className="text-sm text-regantify-text tabular-nums">
+                    {steadfastScoreText(steadfast.steadfastScore)}
+                    {steadfast.steadfastScore.cancellationRatio != null && `, ${steadfast.steadfastScore.cancellationRatio}% cancelled`}
+                  </p>
+                )}
+                {steadfast.fraudReports > 0 && (
+                  <p className="text-sm font-medium text-red-600">
+                    {steadfast.fraudReports} fraud report{steadfast.fraudReports === 1 ? '' : 's'}
+                    {steadfast.steadfastScore && fraudCategoriesText(steadfast.steadfastScore.fraudCategories) && (
+                      <span className="font-normal"> ({fraudCategoriesText(steadfast.steadfastScore.fraudCategories)})</span>
+                    )}
+                  </p>
+                )}
+                <p className="text-xs text-regantify-text-muted">checked on {new Date(steadfast.fetchedAt).toLocaleDateString()}</p>
+              </>
+            ) : (
+              <p className="text-sm text-regantify-text-muted">
+                {steadfast.pending ? 'Checking with SteadFast…' : steadfast.error ? 'SteadFast check not available.' : 'No SteadFast record yet.'}
+              </p>
             )}
           </div>
         )}

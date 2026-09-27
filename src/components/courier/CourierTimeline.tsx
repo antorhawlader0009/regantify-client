@@ -21,6 +21,10 @@ function eventTitle(event: CourierEvent): string {
   if (event.event === 'customer_sms') return 'Customer texted';
   if (event.event === 'customer_sms_failed') return 'Customer SMS not sent';
   if (event.event === 'updated') return 'Details updated';
+  if (event.event === 'payment_invoice' && event.provider === 'STEADFAST') return 'COD paid by SteadFast';
+  if (event.event === 'tracking_update') return 'Tracking update';
+  if (event.event === 'return_requested') return 'Return requested';
+  if (event.event === 'cancel_requested') return 'Cancellation sent';
   return courierStatusInfo(event.provider as CourierProvider, event.event).label;
 }
 

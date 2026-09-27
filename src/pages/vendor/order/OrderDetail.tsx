@@ -5,7 +5,7 @@ import { ChevronLeft } from 'lucide-react';
 import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
-import { courierApi, openPathaoLabels } from '../../../lib/courierApi';
+import { courierApi, notConnectedProvider, openPathaoLabels, redxCancellable, redxTrackingUrl, type CourierAccountProvider } from '../../../lib/courierApi';
 import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
@@ -14,6 +14,11 @@ import { PathaoBookingModal } from '../../../components/courier/PathaoBookingMod
 import { RedxLocationPicker } from '../../../components/courier/RedxLocationPicker';
 import { CourierTimeline } from '../../../components/courier/CourierTimeline';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
+import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
+import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
+import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
+import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
+import { Dialog } from '../../../components/ui/Dialog';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -36,6 +41,12 @@ export default function OrderDetail() {
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState('');
   const [bookingPathao, setBookingPathao] = useState(false);
+  const [requestingReturn, setRequestingReturn] = useState(false);
+  const [cancellingRedx, setCancellingRedx] = useState(false);
+  const [showRedxHistory, setShowRedxHistory] = useState(false);
+  // "Not connected → setup popup" (COURIER-PLAN.md §5.2): the provider to
+  // connect, and the booking to retry once it is. null closes the popup.
+  const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', id],
@@ -49,6 +60,23 @@ export default function OrderDetail() {
     enabled: Boolean(id),
   });
 
+  // Same query (and cache) as the Courier Timeline below — used to tell
+  // whether a SteadFast return was already requested for this parcel.
+  const steadfastBooked = order?.courierProvider === 'STEADFAST' && order.courierBookingStatus === 'BOOKED';
+  const { data: courierEvents } = useQuery({
+    queryKey: ['courier-events', id],
+    queryFn: () => courierApi.getOrderCourierEvents(id!),
+    enabled: Boolean(id) && steadfastBooked,
+  });
+  const returnRequestedAt = steadfastBooked
+    ? courierEvents?.find(
+        (e) =>
+          e.provider === 'STEADFAST' &&
+          e.event === 'return_requested' &&
+          (!order?.courierBookedAt || new Date(e.createdAt) >= new Date(order.courierBookedAt)),
+      )?.createdAt
+    : undefined;
+
   const refreshCourierMutation = useMutation({
     mutationFn: () => courierApi.refreshStatus(id!),
     onSuccess: () => {
@@ -59,6 +87,44 @@ export default function OrderDetail() {
       toast.success('Delivery status refreshed.');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not refresh the delivery status. Please try again.')),
+  });
+
+  // "Book with SteadFast" / "Book with RedX" — one click, with the
+  // vendor's Default Values (no booking popup: SteadFast needs no
+  // location or weight, RedX takes the area set below or the one matched
+  // from the address).
+  const bookOneClickMutation = useMutation({
+    mutationFn: () => courierApi.bookOrder(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['order-history', id] });
+      queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['steadfast-parcels'] });
+      queryClient.invalidateQueries({ queryKey: ['redx-parcels'] });
+      toast.success(order?.courierProvider === 'REDX' ? 'Booked with RedX.' : 'Booked with SteadFast.');
+    },
+    onError: (err) => {
+      const provider = notConnectedProvider(err);
+      if (provider) {
+        setSetupPending({ provider, retry: () => bookOneClickMutation.mutate() });
+        return;
+      }
+      // Refresh so the FAILED state + its reason show under the button.
+      queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
+      toast.error(apiErrorMessage(err, 'Could not book this order with the courier. Please try again.'));
+    },
+  });
+
+  // RedX's view of this order before booking: the delivery area it would
+  // go to, weight, COD and RedX's own price for it.
+  const redxUnbooked = order?.courierProvider === 'REDX' && order.courierBookingStatus !== 'BOOKED';
+  const { data: redxQuote, isLoading: redxQuoteLoading } = useQuery({
+    queryKey: ['redx-quote', id, order?.redxAreaId],
+    queryFn: () => courierApi.getRedxQuote(id!),
+    enabled: Boolean(id) && redxUnbooked,
+    retry: false,
   });
 
   const statusMutation = useMutation({
@@ -298,11 +364,231 @@ export default function OrderDetail() {
               </div>
             )}
 
-            {/* RedX's order API needs a numeric delivery area id — a
-                single tier, unlike Pathao's city/zone/area cascade. */}
-            {order.courierProvider === 'REDX' && (
-              <div className="mt-4 pt-4 border-t border-black/5">
-                <RedxLocationPicker orderId={order.id} currentAreaId={order.redxAreaId} />
+            {order.courierProvider === 'STEADFAST' && order.courierBookingStatus !== 'BOOKED' && (
+              <div className="mt-4 pt-4 border-t border-black/5 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => bookOneClickMutation.mutate()}
+                  disabled={bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'}
+                  className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+                >
+                  {bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING' ? 'Booking…' : 'Book with SteadFast'}
+                </button>
+                {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
+                  <p className="text-xs text-red-500">Last attempt failed: {order.courierBookingError}</p>
+                )}
+              </div>
+            )}
+
+            {/* SteadFast needs no location fields — once booked, this is
+                the parcel's state plus "Request return" (bring it back
+                before it's delivered). */}
+            {order.courierProvider === 'STEADFAST' && order.courierBookingStatus === 'BOOKED' && (
+              <div className="mt-4 pt-4 border-t border-black/5 space-y-1.5">
+                <p className="text-sm text-regantify-text">
+                  Booked with SteadFast
+                  {order.courierTrackingCode && <span className="text-regantify-text-muted"> · Tracking {order.courierTrackingCode}</span>}
+                </p>
+                {order.courierConsignmentId && (
+                  <p className="text-xs text-regantify-text-muted">Consignment {order.courierConsignmentId}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {order.courierStatus && <CourierStatusBadge provider="STEADFAST" status={order.courierStatus} prefix="SteadFast" />}
+                  <button
+                    type="button"
+                    onClick={() => refreshCourierMutation.mutate()}
+                    disabled={refreshCourierMutation.isPending}
+                    className="text-xs underline text-regantify-text-muted hover:text-regantify-text disabled:opacity-60"
+                  >
+                    {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
+                  </button>
+                  {order.courierTrackingCode && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard
+                            .writeText(order.courierTrackingCode!)
+                            .then(() => toast.success('Tracking ID copied — share it with the customer.'))
+                            .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
+                        }}
+                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                      >
+                        Copy tracking ID
+                      </button>
+                      {order.courierTrackingUrl && (
+                        <a
+                          href={order.courierTrackingUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                        >
+                          Tracking page
+                        </a>
+                      )}
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-regantify-text-muted">
+                  {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
+                  {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
+                  {order.courierCollectedAmount != null && <> · Collected {formatPrice(order.courierCollectedAmount)}</>}
+                  {order.courierPaidAt && <> · COD paid out</>}
+                </p>
+                <div className="pt-1">
+                  {returnRequestedAt ? (
+                    <p className="text-xs text-amber-700">
+                      Return requested on {formatDateTime(returnRequestedAt)} — SteadFast will update the status as it comes back.
+                    </p>
+                  ) : steadfastReturnable(order.courierStatus) ? (
+                    <button
+                      type="button"
+                      onClick={() => setRequestingReturn(true)}
+                      className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 text-xs font-medium"
+                    >
+                      Request return
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
+            {/* RedX needs a numeric delivery area — a single tier, unlike
+                Pathao's city/zone/area cascade. Before booking: what RedX
+                would get and charge, "Book with RedX" and the area picker. */}
+            {order.courierProvider === 'REDX' && order.courierBookingStatus !== 'BOOKED' && (
+              <div className="mt-4 pt-4 border-t border-black/5 space-y-4">
+                <div className="space-y-2">
+                  {redxQuoteLoading ? (
+                    <p className="text-xs text-regantify-text-muted">Asking RedX…</p>
+                  ) : redxQuote ? (
+                    <div className="rounded-xl bg-regantify-content p-3 text-xs text-regantify-text-muted space-y-1">
+                      <p>
+                        Area:{' '}
+                        {redxQuote.area ? (
+                          <span className="text-regantify-text">
+                            {redxQuote.area.name}
+                            {redxQuote.area.detected && ' (found from the address)'}
+                          </span>
+                        ) : (
+                          <span className="text-red-500">{redxQuote.areaError ?? 'Not set'}</span>
+                        )}
+                      </p>
+                      <p>
+                        Weight <span className="text-regantify-text">{(redxQuote.weightGrams / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 })} kg</span> · COD{' '}
+                        <span className="text-regantify-text">{formatPrice(String(redxQuote.codAmount))}</span>
+                      </p>
+                      {redxQuote.charge ? (
+                        <p>
+                          RedX charge <span className="text-regantify-text">{formatPrice(String(redxQuote.charge.deliveryCharge))}</span>
+                          {redxQuote.charge.codCharge > 0 && <> + COD fee {formatPrice(String(redxQuote.charge.codCharge))}</>}
+                        </p>
+                      ) : (
+                        redxQuote.chargeError && <p>{redxQuote.chargeError}</p>
+                      )}
+                      {redxQuote.pickupStore ? (
+                        <p>Pickup from {redxQuote.pickupStore.name ?? `store ${redxQuote.pickupStore.id}`}</p>
+                      ) : (
+                        <p className="text-red-500">No pickup store chosen — set one in Courier Integration › RedX.</p>
+                      )}
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => bookOneClickMutation.mutate()}
+                      disabled={bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'}
+                      className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+                    >
+                      {bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'
+                        ? 'Booking…'
+                        : order.courierBookingStatus === 'CANCELLED'
+                          ? 'Book with RedX again'
+                          : 'Book with RedX'}
+                    </button>
+                    {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
+                      <p className="text-xs text-red-500">Last attempt failed: {order.courierBookingError}</p>
+                    )}
+                    {order.courierBookingStatus === 'CANCELLED' && (
+                      <p className="text-xs text-red-500">{order.courierBookingError ?? 'The RedX parcel was cancelled. You can book this order again.'}</p>
+                    )}
+                  </div>
+                </div>
+                <RedxLocationPicker
+                  orderId={order.id}
+                  currentAreaId={order.redxAreaId}
+                  shippingAddress={order.shippingAddress}
+                  shippingCity={order.shippingCity}
+                  shippingDistrict={order.shippingDistrict}
+                  shippingZip={order.shippingZip}
+                />
+              </div>
+            )}
+
+            {order.courierProvider === 'REDX' && order.courierBookingStatus === 'BOOKED' && (
+              <div className="mt-4 pt-4 border-t border-black/5 space-y-1.5">
+                <p className="text-sm text-regantify-text">
+                  Booked with RedX
+                  {order.courierConsignmentId && <span className="text-regantify-text-muted"> · Tracking {order.courierConsignmentId}</span>}
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {order.courierStatus && <CourierStatusBadge provider="REDX" status={order.courierStatus} prefix="RedX" />}
+                  <button
+                    type="button"
+                    onClick={() => refreshCourierMutation.mutate()}
+                    disabled={refreshCourierMutation.isPending}
+                    className="text-xs underline text-regantify-text-muted hover:text-regantify-text disabled:opacity-60"
+                  >
+                    {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
+                  </button>
+                  {order.courierConsignmentId && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard
+                            .writeText(order.courierConsignmentId!)
+                            .then(() => toast.success('Tracking ID copied — share it with the customer.'))
+                            .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
+                        }}
+                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                      >
+                        Copy tracking ID
+                      </button>
+                      <a
+                        href={redxTrackingUrl(order.courierConsignmentId)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                      >
+                        Tracking page
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setShowRedxHistory(true)}
+                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
+                      >
+                        RedX history
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-regantify-text-muted">
+                  {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
+                  {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
+                  {order.courierPaidAt && <> · COD paid out</>}
+                </p>
+                {redxCancellable(order.courierStatus) && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setCancellingRedx(true)}
+                      className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 text-xs font-medium"
+                    >
+                      Cancel parcel
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -341,6 +627,20 @@ export default function OrderDetail() {
         </div>
       </div>
 
+      <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
+      <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
+      <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ORDER-${order.invoiceNumber}`} maxWidth="max-w-md">
+        <div className="p-6 pt-4">{showRedxHistory && <RedxTrackingHistory orderId={order.id} />}</div>
+      </Dialog>
+      <CourierSetupModal
+        provider={setupPending?.provider ?? null}
+        onOpenChange={(open) => !open && setSetupPending(null)}
+        onConnected={() => {
+          const retry = setupPending?.retry;
+          setSetupPending(null);
+          retry?.();
+        }}
+      />
       <PathaoBookingModal orderId={bookingPathao ? order.id : null} onOpenChange={(open) => !open && setBookingPathao(false)} />
       <CheckHistoryModal phone={historyPhone} onOpenChange={(open) => !open && setHistoryPhone(null)} />
     </div>

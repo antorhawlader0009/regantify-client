@@ -1,10 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { Truck } from 'lucide-react';
 import { courierApi, type CourierAccount, type CourierAccountProvider } from '../../../lib/courierApi';
-import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
-import { RedxStorePicker } from '../../../components/courier/RedxStorePicker';
 import { toast } from '../../../lib/toast';
 
 interface CourierProviderCardProps {
@@ -12,20 +10,19 @@ interface CourierProviderCardProps {
   label: string;
   account: CourierAccount | undefined;
   isLoading: boolean;
-  /** Extra copy shown under the connected/not-connected line — e.g. RedX's pickup-store hint. */
+  /** Extra copy shown under the connected/not-connected line — e.g. the chosen pickup store. */
   connectedNote?: string;
   onConnect: () => void;
   onDisconnect: () => void;
   disconnecting: boolean;
-  /** Store picker or other follow-up UI, shown below the card once connected — e.g. RedxStorePicker, or Pathao's "Manage" link. */
+  /** Follow-up UI shown below the card once connected — e.g. the courier page's "Manage" link. */
   children?: ReactNode;
 }
 
 /**
  * One courier's card — extracted since SteadFast/Pathao/RedX are
  * otherwise near-identical blocks (connected/not-connected copy +
- * Connect/Disconnect button), differing only in whether they need a
- * follow-up store picker underneath.
+ * Connect/Disconnect button + a link to the courier's own page).
  */
 function CourierProviderCard({
   label,
@@ -74,23 +71,15 @@ function CourierProviderCard({
 }
 
 /**
- * Courier Integration — the sidebar section's landing page. Connecting
- * an account here is what lets the Orders page's "Book with {Provider}"
- * action actually call that courier's API. "Connect" opens the SAME
- * CourierSetupModal popup the Orders page's setup-popup flow uses (not
- * an inline expanding form) — one popup component, two entry points.
- *
- * Pathao has since moved to its own full page (Dashboard/Parcels/
- * Settings — see pages/vendor/courier/pathao/ and pathao-plan.md), so
- * its card here is just a summary + link there, same shape this page
- * used to live under Settings with. SteadFast/RedX stay here since
- * they're still a single connect-and-done card (RedX also needs a
- * pickup store, picked inline once connected).
+ * Courier Integration — the sidebar section's landing page: one summary
+ * card per courier. Every courier has its own full page
+ * (Dashboard/Parcels/Settings — see pages/vendor/courier/{steadfast,
+ * pathao,redx}/), so "Connect" and "Manage" go there; the Orders page's
+ * "not connected" popup (CourierSetupModal) is the other way in.
  */
 export default function CourierIntegrationPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [connectingProvider, setConnectingProvider] = useState<CourierAccountProvider | null>(null);
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ['courier-accounts'],
@@ -127,10 +116,14 @@ export default function CourierIntegrationPage() {
             account={steadfastAccount}
             isLoading={isLoading}
             connectedNote="Connected — orders can be booked with SteadFast."
-            onConnect={() => setConnectingProvider('STEADFAST')}
+            onConnect={() => navigate('/vendor/courier/steadfast')}
             onDisconnect={() => disconnectMutation.mutate('STEADFAST')}
             disconnecting={disconnectMutation.isPending}
-          />
+          >
+            <Link to="/vendor/courier/steadfast" className="text-sm font-medium text-regantify-cta hover:underline">
+              Manage SteadFast settings →
+            </Link>
+          </CourierProviderCard>
 
           <CourierProviderCard
             provider="PATHAO"
@@ -158,22 +151,18 @@ export default function CourierIntegrationPage() {
             isLoading={isLoading}
             connectedNote={
               redxAccount?.redxStoreName
-                ? `Connected — booking as "${redxAccount.redxStoreName}".`
-                : 'Connected — select a pickup store below to finish setup.'
+                ? `Connected — booking from "${redxAccount.redxStoreName}".`
+                : 'Connected — select a pickup store on the RedX page to finish setup.'
             }
-            onConnect={() => setConnectingProvider('REDX')}
+            onConnect={() => navigate('/vendor/courier/redx')}
             onDisconnect={() => disconnectMutation.mutate('REDX')}
             disconnecting={disconnectMutation.isPending}
           >
-            {redxAccount && <RedxStorePicker currentStoreId={redxAccount.redxStoreId} />}
+            <Link to="/vendor/courier/redx" className="text-sm font-medium text-regantify-cta hover:underline">
+              Manage RedX settings →
+            </Link>
           </CourierProviderCard>
         </div>
-
-        <CourierSetupModal
-          provider={connectingProvider}
-          onOpenChange={(open) => !open && setConnectingProvider(null)}
-          onConnected={() => setConnectingProvider(null)}
-        />
       </div>
     </div>
   );
