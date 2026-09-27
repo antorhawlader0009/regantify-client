@@ -58,6 +58,12 @@ import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
 import Integrations from './pages/vendor/store/integrations/Integrations';
 import FacebookPixel from './pages/vendor/store/integrations/FacebookPixel';
+import MetaConversionsApi from './pages/vendor/store/integrations/MetaConversionsApi';
+import GoogleAnalytics from './pages/vendor/store/integrations/GoogleAnalytics';
+import GoogleTagManager from './pages/vendor/store/integrations/GoogleTagManager';
+import TiktokPixel from './pages/vendor/store/integrations/TiktokPixel';
+import Webhooks from './pages/vendor/store/integrations/Webhooks';
+import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
 import Orders from './pages/vendor/order/Orders';
 import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
@@ -254,6 +260,12 @@ export default function App() {
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
                 <Route path="/vendor/store/integrations" element={<Integrations />} />
                 <Route path="/vendor/store/integrations/facebook-pixel" element={<FacebookPixel />} />
+                <Route path="/vendor/store/integrations/meta-conversions-api" element={<MetaConversionsApi />} />
+                <Route path="/vendor/store/integrations/google-analytics" element={<GoogleAnalytics />} />
+                <Route path="/vendor/store/integrations/google-tag-manager" element={<GoogleTagManager />} />
+                <Route path="/vendor/store/integrations/tiktok-pixel" element={<TiktokPixel />} />
+                <Route path="/vendor/store/integrations/webhooks" element={<Webhooks />} />
+                <Route path="/vendor/store/integrations/external-api" element={<ExternalApi />} />
                 <Route path="/vendor/store/header-editor" element={<HeaderEditor />} />
                 <Route path="/vendor/store/layout-settings" element={<LayoutSettings />} />
                 <Route path="/vendor/store/site-banner" element={<SiteBanner />} />
