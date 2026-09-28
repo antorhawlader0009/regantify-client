@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Check,
@@ -23,7 +23,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { ordersApi, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
+import { ordersApi, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import {
   courierApi,
@@ -49,6 +49,7 @@ import type { PhoneCourierStats } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CustomizeTabsModal } from './CustomizeTabsModal';
+import AbandonedCart from './AbandonedCart';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { ChangeLabelModal } from './ChangeLabelModal';
 import { InvoiceModal } from './InvoiceModal';
@@ -58,18 +59,6 @@ import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-}
-
-// Orders list's own TOTAL column — for ONLINE_PAYMENT orders only, shows
-// order.total MINUS order.platformChargeAmount (the "Payment Gateway
-// Fee" — see InvoiceModal.tsx/OrdersService.deductPlatformCharge). Its
-// charge is always deducted immediately on payment success regardless
-// of order status (see the immediate-deduction change), so this is
-// unconditional for ONLINE_PAYMENT specifically — unlike COD/any other
-// gateway, which keeps showing the plain order.total here, unchanged.
-function orderListTotal(order: Order): string {
-  if (order.paymentMethod !== 'ONLINE_PAYMENT') return order.total;
-  return String(Number(order.total) - Number(order.platformChargeAmount));
 }
 
 function formatDateTime(iso: string) {
@@ -399,7 +388,7 @@ function OrderRow({
         {extraCount > 0 && <p className="text-xs text-regantify-text-muted mt-1">+{extraCount} more item(s)</p>}
       </td>
       <td className="p-4">
-        <p className="text-sm font-semibold text-regantify-text">{formatPrice(orderListTotal(order))}</p>
+        <p className="text-sm font-semibold text-regantify-text">{formatPrice(vendorOrderTotal(order))}</p>
         <p className="text-xs text-regantify-text-muted mt-0.5">{order.paymentMethod}</p>
       </td>
       <td className="p-4">
@@ -568,7 +557,12 @@ export default function Orders() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>('ALL');
+  // 'ABANDONED' is the fixed "Abandoned Cart" tab (IncompleteOrder rows,
+  // not an order status), reachable directly via ?tab=abandoned-cart.
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL' | 'ABANDONED'>(
+    searchParams.get('tab') === 'abandoned-cart' ? 'ABANDONED' : 'ALL',
+  );
   const [perPage, setPerPage] = useState(10);
   const [page, setPage] = useState(1);
   const [dateFrom, setDateFrom] = useState('');
@@ -651,7 +645,7 @@ export default function Orders() {
       toast.success('Tabs updated.');
       // If the currently-active tab was just removed, fall back to All
       // rather than silently showing a filter that's no longer visible.
-      if (activeTab !== 'ALL' && !statuses.includes(activeTab)) setActiveTab('ALL');
+      if (activeTab !== 'ALL' && activeTab !== 'ABANDONED' && !statuses.includes(activeTab)) setActiveTab('ALL');
     },
     onError: () => toast.error('Could not save tabs. Please try again.'),
   });
@@ -671,13 +665,14 @@ export default function Orders() {
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
-        status: activeTab === 'ALL' ? undefined : activeTab,
+        status: activeTab === 'ALL' || activeTab === 'ABANDONED' ? undefined : activeTab,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         trashOnly: trashView,
         page,
         perPage,
       }),
+    enabled: activeTab !== 'ABANDONED',
   });
 
   const orders = data?.orders ?? [];
@@ -791,6 +786,16 @@ export default function Orders() {
               </button>
             ))}
             <button
+              onClick={() => setActiveTab('ABANDONED')}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap ${
+                activeTab === 'ABANDONED'
+                  ? 'border-regantify-cta text-regantify-text'
+                  : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
+              }`}
+            >
+              Abandoned Cart
+            </button>
+            <button
               onClick={() => setCustomizeOpen(true)}
               title="Customize tabs"
               className="px-3 py-2.5 text-regantify-text-muted hover:text-regantify-text"
@@ -800,217 +805,223 @@ export default function Orders() {
           </div>
         )}
 
-        <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
-          <div className="relative w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search order, customer"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm
-                text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
-            />
-          </div>
-          <select
-            value={perPage}
-            onChange={(e) => setPerPage(Number(e.target.value))}
-            className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
-          >
-            {[10, 25, 50, 100].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <DateRangeFilter
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-            onChange={(from, to) => {
-              setDateFrom(from);
-              setDateTo(to);
-            }}
-          />
-          <button
-            onClick={() => setTrashView((v) => !v)}
-            className={`ml-auto text-xs font-medium ${
-              trashView ? 'text-regantify-cta' : 'text-regantify-text-muted hover:text-regantify-text'
-            }`}
-          >
-            {trashView ? '← Back to Orders' : 'Show Trash'}
-          </button>
-        </div>
-
-        {!trashView && selectedIds.size > 0 && (
-          <div className="px-4 py-2.5 border-b border-black/5 bg-regantify-cta/5 flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium text-regantify-text">{selectedIds.size} selected</span>
-            <button
-              type="button"
-              onClick={sendSelectedToPathao}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium"
-            >
-              {!otherCouriersAllowed && <LockedBadge />}
-              Send to Pathao ({selectedIds.size})
-            </button>
-            <button
-              type="button"
-              onClick={sendSelectedToSteadfast}
-              className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium"
-            >
-              Send to SteadFast ({selectedIds.size})
-            </button>
-            <button
-              type="button"
-              onClick={sendSelectedToRedx}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
-            >
-              {!otherCouriersAllowed && <LockedBadge />}
-              Send to RedX ({selectedIds.size})
-            </button>
-            <button
-              type="button"
-              onClick={() => openPathaoLabels([...selectedIds])}
-              className="px-3 py-1.5 rounded-lg border border-black/10 bg-white text-xs font-medium text-regantify-text hover:bg-regantify-content"
-            >
-              Print Pathao labels
-            </button>
-            <button type="button" onClick={() => setSelectedIds(new Set())} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
-              Clear
-            </button>
-          </div>
-        )}
-
-        {!trashView && deliveryStats && (!deliveryStats.pathaoConnected || deliveryStats.pathaoNeedsLogin) && (
-          <div className="px-4 py-2 border-b border-black/5 text-xs text-regantify-text-muted">
-            {!deliveryStats.pathaoConnected ? (
-              <>
-                <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
-                  Connect Pathao
-                </Link>{' '}
-                to see each customer’s delivery history with Pathao — free on every plan.
-              </>
-            ) : (
-              <>
-                Add your Pathao email and password in{' '}
-                <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
-                  Courier Integration › Pathao
-                </Link>{' '}
-                so the Pathao delivery history can load.
-              </>
-            )}
-          </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
-                {!trashView && (
-                  <th className="p-4 pr-0 w-8">
-                    <input
-                      type="checkbox"
-                      checked={allOnPageSelected}
-                      disabled={orders.length === 0}
-                      onChange={() => setSelectedIds(allOnPageSelected ? new Set() : new Set(orders.map((o) => o.id)))}
-                      aria-label="Select all orders on this page"
-                      className="h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer"
-                    />
-                  </th>
-                )}
-                <th className="p-4">Invoice</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Customer</th>
-                <th className="p-4">Address</th>
-                <th className="p-4">Items</th>
-                <th className="p-4">Total</th>
-                <th className="p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
-                    Loading…
-                  </td>
-                </tr>
-              ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
-                    {trashView ? 'Trash is empty.' : 'No orders found.'}
-                  </td>
-                </tr>
-              ) : (
-                orders.map((order) => (
-                  <OrderRow
-                    key={order.id}
-                    order={order}
-                    trashView={trashView}
-                    onCheckHistory={setHistoryPhone}
-                    onChangeLabel={setLabelOrder}
-                    onShowInvoice={setInvoiceOrder}
-                    otherCouriersAllowed={otherCouriersAllowed}
-                    connectedProviders={connectedProviders}
-                    onRequestSetup={(provider, retry) => setSetupPending({ provider, retry })}
-                    onBookPathao={(o) => setPathaoBookingOrderId(o.id)}
-                    onShowTimeline={setTimelineOrder}
-                    onRequestReturn={setReturnOrder}
-                    onCancelRedx={setCancelRedxOrder}
-                    selected={selectedIds.has(order.id)}
-                    deliveryStats={deliveryStats?.byPhone[order.customerPhone]}
-                    onToggleSelect={trashView ? undefined : toggleSelected}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-          <span className="text-xs text-regantify-text-muted">Total: {total}</span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+        {activeTab === 'ABANDONED' ? (
+          <AbandonedCart />
+        ) : (
+          <>
+            <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
+              <div className="relative w-64">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search order, customer"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm
+                    text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+                />
+              </div>
+              <select
+                value={perPage}
+                onChange={(e) => setPerPage(Number(e.target.value))}
+                className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
               >
-                «
-              </button>
+                {[10, 25, 50, 100].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <DateRangeFilter
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onChange={(from, to) => {
+                  setDateFrom(from);
+                  setDateTo(to);
+                }}
+              />
               <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                onClick={() => setTrashView((v) => !v)}
+                className={`ml-auto text-xs font-medium ${
+                  trashView ? 'text-regantify-cta' : 'text-regantify-text-muted hover:text-regantify-text'
+                }`}
               >
-                ‹
-              </button>
-              {pageNumbers.map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`px-3 py-1 rounded-lg text-sm ${
-                    n === page ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-              >
-                ›
-              </button>
-              <button
-                onClick={() => setPage(totalPages)}
-                disabled={page === totalPages}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-              >
-                »
+                {trashView ? '← Back to Orders' : 'Show Trash'}
               </button>
             </div>
-          )}
-        </div>
+
+            {!trashView && selectedIds.size > 0 && (
+              <div className="px-4 py-2.5 border-b border-black/5 bg-regantify-cta/5 flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-regantify-text">{selectedIds.size} selected</span>
+                <button
+                  type="button"
+                  onClick={sendSelectedToPathao}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium"
+                >
+                  {!otherCouriersAllowed && <LockedBadge />}
+                  Send to Pathao ({selectedIds.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={sendSelectedToSteadfast}
+                  className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium"
+                >
+                  Send to SteadFast ({selectedIds.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={sendSelectedToRedx}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
+                >
+                  {!otherCouriersAllowed && <LockedBadge />}
+                  Send to RedX ({selectedIds.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openPathaoLabels([...selectedIds])}
+                  className="px-3 py-1.5 rounded-lg border border-black/10 bg-white text-xs font-medium text-regantify-text hover:bg-regantify-content"
+                >
+                  Print Pathao labels
+                </button>
+                <button type="button" onClick={() => setSelectedIds(new Set())} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {!trashView && deliveryStats && (!deliveryStats.pathaoConnected || deliveryStats.pathaoNeedsLogin) && (
+              <div className="px-4 py-2 border-b border-black/5 text-xs text-regantify-text-muted">
+                {!deliveryStats.pathaoConnected ? (
+                  <>
+                    <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
+                      Connect Pathao
+                    </Link>{' '}
+                    to see each customer’s delivery history with Pathao — free on every plan.
+                  </>
+                ) : (
+                  <>
+                    Add your Pathao email and password in{' '}
+                    <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
+                      Courier Integration › Pathao
+                    </Link>{' '}
+                    so the Pathao delivery history can load.
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
+                    {!trashView && (
+                      <th className="p-4 pr-0 w-8">
+                        <input
+                          type="checkbox"
+                          checked={allOnPageSelected}
+                          disabled={orders.length === 0}
+                          onChange={() => setSelectedIds(allOnPageSelected ? new Set() : new Set(orders.map((o) => o.id)))}
+                          aria-label="Select all orders on this page"
+                          className="h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer"
+                        />
+                      </th>
+                    )}
+                    <th className="p-4">Invoice</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Customer</th>
+                    <th className="p-4">Address</th>
+                    <th className="p-4">Items</th>
+                    <th className="p-4">Total</th>
+                    <th className="p-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
+                        Loading…
+                      </td>
+                    </tr>
+                  ) : orders.length === 0 ? (
+                    <tr>
+                      <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
+                        {trashView ? 'Trash is empty.' : 'No orders found.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    orders.map((order) => (
+                      <OrderRow
+                        key={order.id}
+                        order={order}
+                        trashView={trashView}
+                        onCheckHistory={setHistoryPhone}
+                        onChangeLabel={setLabelOrder}
+                        onShowInvoice={setInvoiceOrder}
+                        otherCouriersAllowed={otherCouriersAllowed}
+                        connectedProviders={connectedProviders}
+                        onRequestSetup={(provider, retry) => setSetupPending({ provider, retry })}
+                        onBookPathao={(o) => setPathaoBookingOrderId(o.id)}
+                        onShowTimeline={setTimelineOrder}
+                        onRequestReturn={setReturnOrder}
+                        onCancelRedx={setCancelRedxOrder}
+                        selected={selectedIds.has(order.id)}
+                        deliveryStats={deliveryStats?.byPhone[order.customerPhone]}
+                        onToggleSelect={trashView ? undefined : toggleSelected}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
+              <span className="text-xs text-regantify-text-muted">Total: {total}</span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                  >
+                    «
+                  </button>
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                  >
+                    ‹
+                  </button>
+                  {pageNumbers.map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setPage(n)}
+                      className={`px-3 py-1 rounded-lg text-sm ${
+                        n === page ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                  >
+                    »
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       <CustomizeTabsModal

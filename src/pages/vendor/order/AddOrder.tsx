@@ -13,8 +13,8 @@ interface CartLine extends OrderItemInput {
   key: string; // productId + variantId, for React keys / dedupe within this form only
 }
 
-// State shape passed via navigate(path, { state }) from the Incomplete
-// Orders page's "Create Order" action — see IncompleteOrders.tsx. Kept
+// State shape passed via navigate(path, { state }) from the Orders page's
+// Abandoned Cart tab's "Create Order" action — see AbandonedCart.tsx. Kept
 // intentionally light: IncompleteOrderItem has no pricing (a shopper's
 // in-progress cart is never treated as a priced snapshot the way a real
 // Order's items are), so cart lines are surfaced as a note for the
@@ -54,7 +54,7 @@ export default function AddOrder() {
   const { data: courierAccounts } = useQuery({ queryKey: ['courier-accounts'], queryFn: courierApi.getAccounts });
   const pathaoConnected = courierAccounts?.some((a) => a.provider === 'PATHAO' && a.isActive) ?? false;
 
-  // Prefill from "Create Order" on the Incomplete Orders page — runs
+  // Prefill from "Create Order" on the Orders page's Abandoned Cart tab — runs
   // once on mount only (empty deps), since this page's own field state
   // should win over the handoff the moment the vendor starts editing.
   useEffect(() => {

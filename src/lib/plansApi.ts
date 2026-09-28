@@ -42,6 +42,9 @@ export interface Plan {
   codGatewayFeeBdt: string;
   codGatewayFeePercent: string;
   codGatewayFeePayer: PaymentFeePayer;
+  // The online* fee fields below only come from /v1/admin/plans (Super
+  // Admin). The vendor's /v1/plans and /v1/plans/usage leave them out: the
+  // Online Payment fee is hidden from vendors (server's orders/hidden-fee.ts).
   onlinePaymentGatewayFeeBdt: string;
   onlinePaymentGatewayFeePercent: string;
   onlinePaymentGatewayFeePayer: PaymentFeePayer;

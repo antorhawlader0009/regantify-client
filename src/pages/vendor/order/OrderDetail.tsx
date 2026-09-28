@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
-import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
+import { ordersApi, vendorOrderTotal, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { courierApi, notConnectedProvider, openPathaoLabels, redxCancellable, redxTrackingUrl, type CourierAccountProvider } from '../../../lib/courierApi';
@@ -213,7 +213,7 @@ export default function OrderDetail() {
               )}
               <div className="flex justify-between text-base font-semibold text-regantify-text pt-1.5 border-t border-black/5">
                 <span>Total</span>
-                <span>{formatPrice(order.total)}</span>
+                <span>{formatPrice(vendorOrderTotal(order))}</span>
               </div>
             </div>
           </section>

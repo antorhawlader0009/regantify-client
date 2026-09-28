@@ -9,7 +9,7 @@ import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
 
 const DEFAULT_LABELS: Record<PaymentGatewayType, string> = {
   COD: 'Cash On Delivery',
-  ONLINE_PAYMENT: 'Online Payment (Regantify)',
+  ONLINE_PAYMENT: 'Online Payment',
   SSLCOMMERZ: 'SSLCommerz',
   BKASH_MERCHANT: 'bKash Merchant (PGW)',
   VENDOR_PAYSTATION: "Vendor's own PayStation",
@@ -136,6 +136,7 @@ function BuiltinGatewayCard({
   });
 
   const enabled = gateway.status === 'ACTIVE';
+  const hideFee = gateway.type === 'ONLINE_PAYMENT';
 
   return (
     <div className="bg-white rounded-2xl border border-black/5 p-5">
@@ -143,15 +144,19 @@ function BuiltinGatewayCard({
         <CreditCard size={18} className="text-regantify-text-muted mt-0.5 shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-medium text-regantify-text">{gateway.displayLabel ?? DEFAULT_LABELS[gateway.type]}</p>
-          <p className="text-sm text-regantify-text-muted mt-0.5">
-            Fee: {formatCharge(gateway)}
-          </p>
-          {/* Fee From: Vendor (Plan.codGatewayFeePayer/onlinePaymentGatewayFeePayer)
-              — the fee above is never charged to the shopper at all; it
-              comes out of THIS vendor's own payout at order completion
-              instead. Worth surfacing here since it's real money either
-              way, just from a different source than the default. */}
-          {gateway.platformChargePayer === 'VENDOR' && (
+          {/* ONLINE_PAYMENT's fee (Payment Gateway Fee) is hidden from the
+              vendor everywhere, so only COD shows its fee here. */}
+          {!hideFee && (
+            <p className="text-sm text-regantify-text-muted mt-0.5">
+              Fee: {formatCharge(gateway)}
+            </p>
+          )}
+          {/* Fee From: Vendor (Plan.codGatewayFeePayer) — the fee above is
+              never charged to the shopper at all; it comes out of THIS
+              vendor's own payout at order completion instead. Worth
+              surfacing here since it's real money either way, just from a
+              different source than the default. */}
+          {!hideFee && gateway.platformChargePayer === 'VENDOR' && (
             <p className="text-xs text-regantify-text-muted mt-0.5">
               Paid by you — never charged to your customers, deducted from your payout instead.
             </p>

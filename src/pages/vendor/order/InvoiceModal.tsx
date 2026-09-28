@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { Order } from '../../../lib/ordersApi';
+import { vendorOrderTotal, type Order } from '../../../lib/ordersApi';
 import { Dialog } from '../../../components/ui/Dialog';
 import { printElement } from '../../../lib/printElement';
 import { toast } from '../../../lib/toast';
@@ -115,20 +115,14 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
                     <span>{formatPrice(order.vatAmount)}</span>
                   </div>
                 )}
-                {/* Platform Charge — always shown here regardless of
-                    "Fee From" (order.platformChargePayer): this is the
-                    VENDOR's own invoice, so they always see the real fee,
-                    whether their customer paid it (already folded into
-                    order.total below) or it comes out of their own payout
-                    instead (Fee From: Vendor — never shown to the
-                    customer anywhere, see storefront's checkout/receipt
-                    views). Labeled "Payment Gateway Fee" specifically for
-                    ONLINE_PAYMENT orders — same "Platform Charge" wording
-                    as every other gateway otherwise. */}
-                {Number(order.platformChargeAmount) > 0 && (
+                {/* Platform Charge — shown regardless of "Fee From"
+                    (order.platformChargePayer). Never for ONLINE_PAYMENT:
+                    its fee (Payment Gateway Fee) is hidden from the vendor
+                    entirely, and vendorOrderTotal takes it out of Total. */}
+                {order.paymentMethod !== 'ONLINE_PAYMENT' && Number(order.platformChargeAmount) > 0 && (
                   <div className="flex justify-between text-regantify-text-muted">
                     <span>
-                      {order.paymentMethod === 'ONLINE_PAYMENT' ? 'Payment Gateway Fee' : 'Platform Charge'}
+                      Platform Charge
                       {order.platformChargePayer === 'VENDOR' ? ' (paid by you)' : ''}
                     </span>
                     <span>{formatPrice(order.platformChargeAmount)}</span>
@@ -142,7 +136,7 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
                 )}
                 <div className="flex justify-between text-base font-bold text-regantify-text pt-1.5 border-t border-black/10">
                   <span>Total</span>
-                  <span>{formatPrice(order.total)}</span>
+                  <span>{formatPrice(vendorOrderTotal(order))}</span>
                 </div>
               </div>
             </div>

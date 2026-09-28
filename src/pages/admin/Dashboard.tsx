@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
       {/* Platform Revenue — the platform's own cut of Store > Payment
           Gateway's per-order "Cash On Delivery fee" / "Online Payment
-          (Regantify) fee" (set per plan tier in Plans > Manage Plans).
+          fee" (set per plan tier in Plans > Manage Plans).
           This is charged to the shopper as part of the order total but
           never lands in any vendor's own Wallet balance — see
           PlatformRevenue's schema comment on the server for why it's

@@ -64,14 +64,8 @@ export const vendorNav: NavSection[] = [
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
     ],
   },
-  {
-    label: 'Order',
-    icon: ClipboardList,
-    children: [
-      { label: 'Orders', path: '/vendor/orders' },
-      { label: 'Incomplete Orders', path: '/vendor/orders/incomplete' },
-    ],
-  },
+  // Abandoned carts are a tab on the Orders page, not a separate nav entry.
+  { label: 'Orders', icon: ClipboardList, path: '/vendor/orders' },
   { label: 'Customers', icon: Users, path: '/vendor/customers' },
   {
     label: 'Courier Integration',
@@ -107,19 +101,10 @@ export const vendorNav: NavSection[] = [
       { label: 'Campaigns', path: '/vendor/marketing/campaigns' },
       { label: 'Discounts', path: '/vendor/marketing/discounts' },
       { label: 'Flash Sale', path: '/vendor/marketing/flash-sale' },
-      { label: 'Abandoned Cart', path: '/vendor/marketing/abandoned-cart' },
     ],
   },
-  {
-    label: 'Analytics',
-    icon: BarChart3,
-    children: [
-      { label: 'Sales', path: '/vendor/analytics/sales' },
-      { label: 'Orders', path: '/vendor/analytics/orders' },
-      { label: 'Products', path: '/vendor/analytics/products' },
-      { label: 'Customers', path: '/vendor/analytics/customers' },
-    ],
-  },
+  // One page with its own tabs (Overview/Sales/Orders/...), see AnalyticsPage.tsx.
+  { label: 'Analytics', icon: BarChart3, path: '/vendor/analytics' },
   { label: 'Reviews', icon: Star, path: '/vendor/reviews' },
   {
     label: 'AI & Automation',

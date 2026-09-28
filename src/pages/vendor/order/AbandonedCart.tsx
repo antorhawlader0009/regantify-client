@@ -224,7 +224,12 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
   );
 }
 
-export default function IncompleteOrders() {
+/**
+ * The Orders page's "Abandoned Cart" tab (Orders.tsx renders it inside its
+ * own card, in place of the order table): IncompleteOrder rows, i.e.
+ * checkouts a shopper started but never placed.
+ */
+export default function AbandonedCart() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
@@ -292,10 +297,8 @@ export default function IncompleteOrders() {
   const liveNotesOrder = notesOrder ? incompleteOrders.find((o) => o.id === notesOrder.id) ?? notesOrder : null;
 
   return (
-    <div className="max-w-7xl">
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">Incomplete Orders</h1>
-
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+    <>
+      <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
         <div className="relative w-64">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
           <input
@@ -331,75 +334,73 @@ export default function IncompleteOrders() {
         </DropdownMenu>
       </div>
 
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
-                <th className="p-4">
-                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
-                </th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Name</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Cart</th>
-                <th className="p-4">Actions</th>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
+              <th className="p-4">
+                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+              </th>
+              <th className="p-4">Date</th>
+              <th className="p-4">Name</th>
+              <th className="p-4">Phone</th>
+              <th className="p-4">Email</th>
+              <th className="p-4">Cart</th>
+              <th className="p-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
+                  Loading…
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
-                    Loading…
-                  </td>
-                </tr>
-              ) : incompleteOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
-                    No incomplete orders found.
-                  </td>
-                </tr>
-              ) : (
-                incompleteOrders.map((order) => (
-                  <IncompleteOrderRow
-                    key={order.id}
-                    order={order}
-                    selected={selectedIds.includes(order.id)}
-                    onToggleSelect={() => toggleSelect(order.id)}
-                    onChangeLabel={() => setLabelOrder(order)}
-                    onOpenNotes={() => setNotesOrder(order)}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            ) : incompleteOrders.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
+                  No abandoned carts found.
+                </td>
+              </tr>
+            ) : (
+              incompleteOrders.map((order) => (
+                <IncompleteOrderRow
+                  key={order.id}
+                  order={order}
+                  selected={selectedIds.includes(order.id)}
+                  onToggleSelect={() => toggleSelect(order.id)}
+                  onChangeLabel={() => setLabelOrder(order)}
+                  onOpenNotes={() => setNotesOrder(order)}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-          <span className="text-xs text-regantify-text-muted">Total: {total}</span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-              >
-                ‹
-              </button>
-              <span className="px-3 py-1 text-sm text-regantify-text">
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-              >
-                ›
-              </button>
-            </div>
-          )}
-        </div>
+      <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
+        <span className="text-xs text-regantify-text-muted">Total: {total}</span>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+            >
+              ‹
+            </button>
+            <span className="px-3 py-1 text-sm text-regantify-text">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+            >
+              ›
+            </button>
+          </div>
+        )}
       </div>
 
       <ChangeLabelModal
@@ -417,6 +418,6 @@ export default function IncompleteOrders() {
         saving={bulkLabelMutation.isPending}
       />
       <NotesPanel order={liveNotesOrder} onOpenChange={(open) => !open && setNotesOrder(null)} />
-    </div>
+    </>
   );
 }

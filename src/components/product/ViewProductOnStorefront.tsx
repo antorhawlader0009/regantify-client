@@ -12,7 +12,7 @@ interface ViewProductOnStorefrontProps {
 /**
  * Small "view on storefront" icon meant to sit right next to a product
  * name anywhere it's shown in the vendor dashboard (All Products, Order
- * line items, Incomplete Orders, Create Stock Product, etc) — opens that
+ * line items, Abandoned Cart, Create Stock Product, etc) — opens that
  * product's real public storefront page in a new tab. Renders nothing if
  * either the vendor has no subdomain yet or the product has no slug to
  * link to (e.g. a snapshot of a since-deleted product on an old order),

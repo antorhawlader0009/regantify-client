@@ -118,13 +118,6 @@ export default function Billing() {
               <p className="text-xs text-regantify-text-muted mb-4">
                 COD fee:{' '}
                 {formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer, usage.plan.codFeeHidden)}
-                {' · '}Online Payment fee:{' '}
-                {formatFee(
-                  usage.plan.onlinePaymentGatewayFeeBdt,
-                  usage.plan.onlinePaymentGatewayFeePercent,
-                  usage.plan.onlinePaymentGatewayFeePayer,
-                  usage.plan.onlinePaymentFeeHidden,
-                )}
               </p>
               <div className="space-y-4">
                 <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
@@ -183,7 +176,8 @@ function formatLimit(value: number | null, suffix = '') {
   return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
 }
 
-// Store > Payment Gateway's per-plan COD/Online Payment fee — same
+// Store > Payment Gateway's per-plan COD fee (the Online Payment fee is
+// hidden from vendors, so it's never listed here) — same
 // formatting convention as Finance > Fee Summary/Manage Plans (Super
 // Admin), surfaced here too so a vendor comparing plans can see exactly
 // what each tier charges and who pays it before upgrading, not just
@@ -250,15 +244,6 @@ function PlanCard({
         <li>Custom domain: {plan.customDomainAllowed ? 'Yes' : 'No'}</li>
         <li className="pt-1.5 mt-1.5 border-t border-black/5 text-regantify-text">
           COD fee: {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer, plan.codFeeHidden)}
-        </li>
-        <li>
-          Online Payment fee:{' '}
-          {formatFee(
-            plan.onlinePaymentGatewayFeeBdt,
-            plan.onlinePaymentGatewayFeePercent,
-            plan.onlinePaymentGatewayFeePayer,
-            plan.onlinePaymentFeeHidden,
-          )}
         </li>
       </ul>
 

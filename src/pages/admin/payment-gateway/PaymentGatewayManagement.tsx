@@ -146,7 +146,7 @@ export default function PaymentGatewayManagement() {
       <h2 className="text-lg font-medium text-regantify-text mb-1">Vendor gateways</h2>
       <p className="text-sm text-regantify-text-muted mb-4">
         Read-only — every vendor's connected/enabled payment gateways, across every store. Cash On Delivery and
-        Online Payment (Regantify) fees follow each vendor's plan automatically — edit a plan's fee at Plans &gt;
+        Online Payment fees follow each vendor's plan automatically — edit a plan's fee at Plans &gt;
         Manage Plans to change them.
       </p>
 

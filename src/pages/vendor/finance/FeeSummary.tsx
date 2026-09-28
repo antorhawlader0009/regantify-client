@@ -17,9 +17,8 @@ function payerNote(payer: PaymentFeePayer) {
 
 /**
  * Finance > Fee Summary — PLAN.md Step 12. Surfaces the per-tier payment
- * gateway fees (Plan.codGatewayFeeBdt / onlinePaymentGatewayFeeBdt —
- * split per built-in gateway since COD and Online Payment can charge
- * different amounts) so a vendor can see what they're currently paying
+ * COD fee (Plan.codGatewayFeeBdt; the Online Payment fee is hidden from
+ * vendors, so it's never shown here) so a vendor can see what they're currently paying
  * and what upgrading would change. Display-only here too: the fee
  * itself is charged at checkout by OrdersService/CreateOrderDto (see
  * src/payment-gateways/), not by this page — this is just a read-only
@@ -42,8 +41,7 @@ export default function FeeSummary() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Fee Summary</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
-          Every plan includes Cash On Delivery and Online Payment (Regantify) with their own per-transaction fee —
-          higher tiers pay less.
+          Every plan includes Cash On Delivery with its own per-transaction fee — higher tiers pay less.
         </p>
       </div>
 
@@ -54,7 +52,7 @@ export default function FeeSummary() {
       ) : (
         <>
           {usage && (
-            <div className="grid grid-cols-2 gap-4 max-w-xl mb-6">
+            <div className="grid grid-cols-1 gap-4 max-w-xs mb-6">
               <div className="bg-regantify-black rounded-2xl p-6 text-white">
                 <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
                   <CreditCard size={16} />
@@ -63,18 +61,6 @@ export default function FeeSummary() {
                 <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent)}</p>
                 <p className="text-white/60 text-xs mt-1">
                   per order, on your {usage.plan.name} plan — {payerNote(usage.plan.codGatewayFeePayer)}
-                </p>
-              </div>
-              <div className="bg-regantify-black rounded-2xl p-6 text-white">
-                <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
-                  <CreditCard size={16} />
-                  Online Payment (Regantify)
-                </div>
-                <p className="text-3xl font-semibold mt-3">
-                  {formatFee(usage.plan.onlinePaymentGatewayFeeBdt, usage.plan.onlinePaymentGatewayFeePercent)}
-                </p>
-                <p className="text-white/60 text-xs mt-1">
-                  per order, on your {usage.plan.name} plan — {payerNote(usage.plan.onlinePaymentGatewayFeePayer)}
                 </p>
               </div>
             </div>
@@ -86,7 +72,6 @@ export default function FeeSummary() {
                 <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide bg-regantify-content border-b border-black/5">
                   <th className="p-4">Plan</th>
                   <th className="p-4">Cash On Delivery fee</th>
-                  <th className="p-4">Online Payment fee</th>
                   <th className="p-4">Custom payment gateway</th>
                 </tr>
               </thead>
@@ -107,12 +92,6 @@ export default function FeeSummary() {
                       <td className="p-4 text-sm text-regantify-text">
                         {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent)}
                         {plan.codGatewayFeePayer === 'VENDOR' && (
-                          <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-regantify-text">
-                        {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeePercent)}
-                        {plan.onlinePaymentGatewayFeePayer === 'VENDOR' && (
                           <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
                         )}
                       </td>

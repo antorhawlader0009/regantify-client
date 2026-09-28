@@ -104,11 +104,8 @@ export interface Order {
   // "Fee From" — CUSTOMER (included in `total`, the shopper's own
   // charge) or VENDOR (never shown to the shopper anywhere, comes out of
   // this vendor's own payout instead at completion — see
-  // Order.platformChargePayer's own schema comment). InvoiceModal.tsx
-  // always shows platformChargeAmount regardless of this value — it's
-  // the vendor's OWN invoice, so they should always see the real fee,
-  // whether it was charged to their customer or comes out of their own
-  // payout.
+  // Order.platformChargePayer's own schema comment). For ONLINE_PAYMENT
+  // the fee is hidden from the vendor entirely — see vendorOrderTotal.
   platformChargePayer: 'CUSTOMER' | 'VENDOR';
   platformChargeHidden: boolean;
   discountAmount: string;
@@ -118,6 +115,19 @@ export interface Order {
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * order.total as the vendor dashboard shows it. The ONLINE_PAYMENT fee
+ * (Payment Gateway Fee) is hidden from the vendor everywhere, so when the
+ * customer paid it (it's inside `total`) it's taken back out. A
+ * vendor-paid fee was never in `total`. Other gateways are unchanged.
+ */
+export function vendorOrderTotal(
+  order: Pick<Order, 'total' | 'paymentMethod' | 'platformChargeAmount' | 'platformChargePayer'>,
+): string {
+  if (order.paymentMethod !== 'ONLINE_PAYMENT' || order.platformChargePayer !== 'CUSTOMER') return order.total;
+  return String(Math.round((Number(order.total) - Number(order.platformChargeAmount)) * 100) / 100);
 }
 
 export interface OrderStatusHistoryEntry {

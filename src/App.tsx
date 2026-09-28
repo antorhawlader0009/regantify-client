@@ -60,12 +60,12 @@ import Integrations from './pages/vendor/store/integrations/Integrations';
 import FacebookPixel from './pages/vendor/store/integrations/FacebookPixel';
 import MetaConversionsApi from './pages/vendor/store/integrations/MetaConversionsApi';
 import GoogleAnalytics from './pages/vendor/store/integrations/GoogleAnalytics';
+import AnalyticsPage, { AnalyticsLegacyRedirect } from './pages/vendor/analytics/AnalyticsPage';
 import GoogleTagManager from './pages/vendor/store/integrations/GoogleTagManager';
 import TiktokPixel from './pages/vendor/store/integrations/TiktokPixel';
 import Webhooks from './pages/vendor/store/integrations/Webhooks';
 import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
 import Orders from './pages/vendor/order/Orders';
-import IncompleteOrders from './pages/vendor/order/IncompleteOrders';
 import AddOrder from './pages/vendor/order/AddOrder';
 import OrderDetail from './pages/vendor/order/OrderDetail';
 import Customers from './pages/vendor/customer/Customers';
@@ -83,6 +83,8 @@ import Coupons from './pages/vendor/marketing/Coupons';
 import AddCoupon from './pages/vendor/marketing/AddCoupon';
 import Campaigns from './pages/vendor/marketing/Campaigns';
 import AddCampaign from './pages/vendor/marketing/AddCampaign';
+import Discounts from './pages/vendor/marketing/Discounts';
+import AddDiscount from './pages/vendor/marketing/AddDiscount';
 import Sms from './pages/vendor/sms/Sms';
 import AiChatBot from './pages/vendor/ai-automation/AiChatBot';
 import Wallet from './pages/vendor/finance/Wallet';
@@ -151,13 +153,13 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/head-scripts' &&
     r.path !== '/vendor/store/javascript' &&
     r.path !== '/vendor/orders' &&
-    r.path !== '/vendor/orders/incomplete' &&
     r.path !== '/vendor/customers' &&
     r.path !== '/vendor/reviews' &&
     r.path !== '/vendor/staff' &&
     r.path !== '/vendor/billing' &&
     r.path !== '/vendor/marketing/coupons' &&
     r.path !== '/vendor/marketing/campaigns' &&
+    r.path !== '/vendor/marketing/discounts' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
@@ -168,7 +170,8 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier' &&
     r.path !== '/vendor/courier/pathao' &&
     r.path !== '/vendor/courier/steadfast' &&
-    r.path !== '/vendor/courier/redx',
+    r.path !== '/vendor/courier/redx' &&
+    r.path !== '/vendor/analytics',
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -281,7 +284,8 @@ export default function App() {
                 <Route path="/vendor/store/javascript/add" element={<EditJavaScript />} />
                 <Route path="/vendor/store/javascript/edit/:id" element={<EditJavaScript />} />
                 <Route path="/vendor/orders" element={<Orders />} />
-                <Route path="/vendor/orders/incomplete" element={<IncompleteOrders />} />
+                {/* Old sidebar link; Abandoned Cart is now a tab on the Orders page. */}
+                <Route path="/vendor/orders/incomplete" element={<Navigate to="/vendor/orders?tab=abandoned-cart" replace />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
@@ -302,6 +306,9 @@ export default function App() {
                 <Route path="/vendor/marketing/campaigns" element={<Campaigns />} />
                 <Route path="/vendor/marketing/campaigns/add" element={<AddCampaign />} />
                 <Route path="/vendor/marketing/campaigns/:id/edit" element={<AddCampaign />} />
+                <Route path="/vendor/marketing/discounts" element={<Discounts />} />
+                <Route path="/vendor/marketing/discounts/add" element={<AddDiscount />} />
+                <Route path="/vendor/marketing/discounts/:id/edit" element={<AddDiscount />} />
                 <Route path="/vendor/sms" element={<Sms />} />
                 <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
@@ -314,6 +321,8 @@ export default function App() {
                 <Route path="/vendor/courier/pathao" element={<PathaoPage />} />
                 <Route path="/vendor/courier/steadfast" element={<SteadfastPage />} />
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
+                <Route path="/vendor/analytics" element={<AnalyticsPage />} />
+                <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

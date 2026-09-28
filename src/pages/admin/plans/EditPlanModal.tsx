@@ -247,7 +247,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
               onHiddenChange={setCodFeeHidden}
             />
             <FeeInputField
-              label="Online Payment (Regantify) fee"
+              label="Online Payment fee"
               flat={onlinePaymentGatewayFeeBdt}
               onFlatChange={setOnlinePaymentGatewayFeeBdt}
               percent={onlinePaymentGatewayFeePercent}
