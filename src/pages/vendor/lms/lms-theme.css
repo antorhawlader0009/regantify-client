@@ -1,0 +1,37 @@
+/*
+ * LMS light theme — LMS-plan.md "Design direction".
+ * The LMS does not follow the current dashboard look on purpose: the whole
+ * dashboard gets redesigned near the end of the project, and this file is
+ * the one place that re-skins the LMS when that happens. Components use the
+ * `lms-*` Tailwind colours (tailwind.config.js), which point at these
+ * variables; never hard-code a hex value in an LMS component.
+ */
+.lms-root {
+  --lms-page: #f3f5f7;
+  --lms-surface: #ffffff;
+  --lms-ink: #172033;
+  --lms-muted: #5a6578;
+  --lms-line: #dde2e8;
+  --lms-call: #16a34a;
+
+  /* Stage colours: they mark a stage, never decorate. */
+  --lms-stage-new: #172033;
+  --lms-stage-trying: #b45309;
+  --lms-stage-talks: #6d28d9;
+  --lms-stage-won: #16a34a;
+  --lms-stage-lost: #64748b;
+  --lms-alert: #b91c1c;
+
+  font-family: 'IBM Plex Sans', 'Hind Siliguri', system-ui, sans-serif;
+  color: var(--lms-ink);
+}
+
+.lms-root :focus-visible {
+  outline: 2px solid var(--lms-ink);
+  outline-offset: 2px;
+}
+
+/* Dim layer behind LMS dialogs and the lead drawer (they render in a portal, so they carry lms-root too). */
+.lms-overlay {
+  background: rgb(23 32 51 / 0.4);
+}

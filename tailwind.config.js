@@ -16,6 +16,22 @@ export default {
         // everywhere else in the app stays black-on-off-white.
         'regantify-cta': '#E4572E',
         'regantify-cta-dark': '#C73F1B',
+        // LMS has its own light theme; the values live in
+        // pages/vendor/lms/lms-theme.css so a redesign swaps them there.
+        lms: {
+          page: 'var(--lms-page)',
+          surface: 'var(--lms-surface)',
+          ink: 'var(--lms-ink)',
+          muted: 'var(--lms-muted)',
+          line: 'var(--lms-line)',
+          call: 'var(--lms-call)',
+          alert: 'var(--lms-alert)',
+          'stage-new': 'var(--lms-stage-new)',
+          'stage-trying': 'var(--lms-stage-trying)',
+          'stage-talks': 'var(--lms-stage-talks)',
+          'stage-won': 'var(--lms-stage-won)',
+          'stage-lost': 'var(--lms-stage-lost)',
+        },
       },
       fontFamily: {
         brand: ['"Irish Grover"', 'cursive'],

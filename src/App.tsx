@@ -105,6 +105,11 @@ import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
 import PaymentGatewayManagement from './pages/admin/payment-gateway/PaymentGatewayManagement';
 import Payouts from './pages/admin/finance/Payouts';
+import LeadsPage from './pages/vendor/lms/LeadsPage';
+import CallDeskPage from './pages/vendor/lms/CallDeskPage';
+import TasksPage from './pages/vendor/lms/TasksPage';
+import ReportsPage from './pages/vendor/lms/ReportsPage';
+import LmsSettingsPage from './pages/vendor/lms/LmsSettingsPage';
 
 const queryClient = new QueryClient();
 
@@ -171,7 +176,8 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/pathao' &&
     r.path !== '/vendor/courier/steadfast' &&
     r.path !== '/vendor/courier/redx' &&
-    r.path !== '/vendor/analytics',
+    r.path !== '/vendor/analytics' &&
+    !r.path.startsWith('/vendor/lms/'),
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -323,6 +329,12 @@ export default function App() {
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
                 <Route path="/vendor/analytics" element={<AnalyticsPage />} />
                 <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
+                <Route path="/vendor/lms" element={<Navigate to="/vendor/lms/leads" replace />} />
+                <Route path="/vendor/lms/leads" element={<LeadsPage />} />
+                <Route path="/vendor/lms/desk" element={<CallDeskPage />} />
+                <Route path="/vendor/lms/tasks" element={<TasksPage />} />
+                <Route path="/vendor/lms/reports" element={<ReportsPage />} />
+                <Route path="/vendor/lms/settings" element={<LmsSettingsPage />} />
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}

@@ -13,7 +13,7 @@ import {
   Gift,
   MessageSquare,
   UsersRound,
-  GraduationCap,
+  PhoneCall,
   Headphones,
   Settings,
   CreditCard,
@@ -155,7 +155,18 @@ export const vendorNav: NavSection[] = [
   { label: 'SMS', icon: MessageSquare, path: '/vendor/sms' },
   { label: 'Staff', icon: UsersRound, path: '/vendor/staff' },
   { label: 'Billing', icon: CreditCard, path: '/vendor/billing' },
-  { label: 'LMS System', icon: GraduationCap, path: '/vendor/lms' },
+  // LMS: see LMS-plan.md. /vendor/lms itself redirects to the list.
+  {
+    label: 'LMS',
+    icon: PhoneCall,
+    children: [
+      { label: 'Leads', path: '/vendor/lms/leads' },
+      { label: 'Call Desk', path: '/vendor/lms/desk' },
+      { label: 'Tasks', path: '/vendor/lms/tasks' },
+      { label: 'Reports', path: '/vendor/lms/reports' },
+      { label: 'Settings', path: '/vendor/lms/settings' },
+    ],
+  },
   { label: 'Support', icon: Headphones, path: '/vendor/support' },
   { label: 'Settings', icon: Settings, path: '/vendor/settings' },
 ];

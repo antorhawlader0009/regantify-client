@@ -283,7 +283,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
               checked={customPaymentGatewayAllowed}
               onChange={setCustomPaymentGatewayAllowed}
             />
-            <ToggleField label="LMS System enabled" checked={lmsEnabled} onChange={setLmsEnabled} />
+            <ToggleField label="LMS enabled" checked={lmsEnabled} onChange={setLmsEnabled} />
             <ToggleField label="POS System enabled" checked={posEnabled} onChange={setPosEnabled} />
           </div>
         </div>
