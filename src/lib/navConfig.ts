@@ -10,7 +10,6 @@ import {
   Star,
   Bot,
   Store as StoreIcon,
-  Gift,
   MessageSquare,
   UsersRound,
   PhoneCall,
@@ -101,6 +100,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Campaigns', path: '/vendor/marketing/campaigns' },
       { label: 'Discounts', path: '/vendor/marketing/discounts' },
       { label: 'Flash Sale', path: '/vendor/marketing/flash-sale' },
+      { label: 'Gift Cards', path: '/vendor/marketing/gift-cards' },
     ],
   },
   // One page with its own tabs (Overview/Sales/Orders/...), see AnalyticsPage.tsx.
@@ -151,7 +151,6 @@ export const vendorNav: NavSection[] = [
       { label: 'SEO', path: '/vendor/store/seo' },
     ],
   },
-  { label: 'Gift Cards', icon: Gift, path: '/vendor/gift-cards' },
   { label: 'SMS', icon: MessageSquare, path: '/vendor/sms' },
   { label: 'Staff', icon: UsersRound, path: '/vendor/staff' },
   { label: 'Billing', icon: CreditCard, path: '/vendor/billing' },

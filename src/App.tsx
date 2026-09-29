@@ -87,6 +87,9 @@ import Discounts from './pages/vendor/marketing/Discounts';
 import AddDiscount from './pages/vendor/marketing/AddDiscount';
 import FlashSales from './pages/vendor/marketing/FlashSales';
 import AddFlashSale from './pages/vendor/marketing/AddFlashSale';
+import GiftCards from './pages/vendor/marketing/GiftCards';
+import AddGiftCard from './pages/vendor/marketing/AddGiftCard';
+import GiftCardDetail from './pages/vendor/marketing/GiftCardDetail';
 import Sms from './pages/vendor/sms/Sms';
 import AiChatBot from './pages/vendor/ai-automation/AiChatBot';
 import Wallet from './pages/vendor/finance/Wallet';
@@ -168,6 +171,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/campaigns' &&
     r.path !== '/vendor/marketing/discounts' &&
     r.path !== '/vendor/marketing/flash-sale' &&
+    r.path !== '/vendor/marketing/gift-cards' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
@@ -321,6 +325,9 @@ export default function App() {
                 <Route path="/vendor/marketing/flash-sale" element={<FlashSales />} />
                 <Route path="/vendor/marketing/flash-sale/add" element={<AddFlashSale />} />
                 <Route path="/vendor/marketing/flash-sale/:id/edit" element={<AddFlashSale />} />
+                <Route path="/vendor/marketing/gift-cards" element={<GiftCards />} />
+                <Route path="/vendor/marketing/gift-cards/add" element={<AddGiftCard />} />
+                <Route path="/vendor/marketing/gift-cards/:id" element={<GiftCardDetail />} />
                 <Route path="/vendor/sms" element={<Sms />} />
                 <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
