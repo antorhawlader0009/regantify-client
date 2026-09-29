@@ -67,12 +67,14 @@ export function ShiftSwitch({ me, className = '' }: { me: LmsMe; className?: str
 export function AgentSelect({
   me,
   extra,
+  placeholder,
   ...props
-}: SelectHTMLAttributes<HTMLSelectElement> & { me: LmsMe; extra: ('AUTO' | 'ME' | 'POOL')[] }) {
+}: SelectHTMLAttributes<HTMLSelectElement> & { me: LmsMe; extra: ('AUTO' | 'ME' | 'POOL')[]; placeholder?: string }) {
   const agents = useLmsAgents();
   const labels = { AUTO: 'Share out in turn', ME: 'Me', POOL: 'Unassigned pool' };
   return (
     <LmsSelect {...props}>
+      {placeholder !== undefined && <option value="">{placeholder}</option>}
       {extra.map((e) => (
         <option key={e} value={e}>
           {labels[e]}

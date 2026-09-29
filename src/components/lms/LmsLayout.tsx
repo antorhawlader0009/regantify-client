@@ -21,6 +21,7 @@ import { formatPhone } from './format';
 import { STAGE_RULE } from './stageStyles';
 import { Panel } from './LmsPage';
 import { StageMark } from './ui';
+import { BrowserAlerts, NavBadge, NotificationBell, useLmsSummary } from './Notifications';
 import '../../pages/vendor/lms/lms-theme.css';
 
 export const LMS_ME_KEY = ['lms', 'me'] as const;
@@ -77,6 +78,7 @@ export function LmsLayout() {
       <TopBar me={me} storeName={storeName} role={meQuery.data ? roleLabel(meQuery.data) : null} />
       <main className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-12">{body}</main>
       {me && <BottomTabs />}
+      {me && <BrowserAlerts />}
     </div>
   );
 }
@@ -132,6 +134,7 @@ function TopBar({ me, storeName, role }: { me: LmsMe | null; storeName: string; 
                 }
               >
                 {s.label}
+                <SectionBadge path={s.path} />
               </NavLink>
             ))}
           </nav>
@@ -139,6 +142,7 @@ function TopBar({ me, storeName, role }: { me: LmsMe | null; storeName: string; 
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
           {me && <LeadSearch me={me} />}
+          {me && <NotificationBell />}
           <AccountMenu name={me?.name ?? ''} role={role} />
         </div>
       </div>
@@ -399,6 +403,20 @@ function AccountMenu({ name, role }: { name: string; role: string | null }) {
   );
 }
 
+/**
+ * The section counts, from the one notifications poll (Step 8): Leads =
+ * new leads waiting for your first call (ink: yours to do), Tasks = your
+ * overdue tasks (red: late).
+ */
+function SectionBadge({ path, dot = false }: { path: string; dot?: boolean }) {
+  const summary = useLmsSummary();
+  const badges = summary.data?.badges;
+  if (!badges) return null;
+  if (path === '/vendor/lms/leads') return <NavBadge count={badges.leads} tone="ink" dot={dot} label={`${badges.leads} new for you`} />;
+  if (path === '/vendor/lms/tasks') return <NavBadge count={badges.tasks} tone="alert" dot={dot} label={`${badges.tasks} overdue`} />;
+  return null;
+}
+
 /* ---------------------------------------------------- phone bottom tabs */
 
 function BottomTabs() {
@@ -420,7 +438,10 @@ function BottomTabs() {
           {({ isActive }) => (
             <>
               {isActive && <span aria-hidden className="absolute inset-x-4 top-0 h-0.5 rounded-b bg-lms-ink" />}
-              <Icon size={20} strokeWidth={isActive ? 2 : 1.75} />
+              <span className="relative">
+                <Icon size={20} strokeWidth={isActive ? 2 : 1.75} />
+                <SectionBadge path={path} dot />
+              </span>
               {label}
             </>
           )}

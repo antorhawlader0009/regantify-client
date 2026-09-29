@@ -35,6 +35,7 @@ const SECTIONS = [
   { id: 'team', label: 'Team' },
   { id: 'attendance', label: 'Attendance' },
   { id: 'sources', label: 'Where leads come from' },
+  { id: 'retries', label: 'Retry rules' },
   { id: 'stages', label: 'Stages' },
   { id: 'lost-reasons', label: 'Lost reasons' },
   { id: 'templates', label: 'Message templates' },
@@ -62,6 +63,7 @@ function SettingsBody({ me }: { me: LmsMe }) {
             <TeamSection me={me} settings={settingsQuery.data} />
             <AttendanceSection />
             <SourcesSection me={me} settings={settingsQuery.data} />
+            <RetrySection settings={settingsQuery.data} />
             <StagesSection settings={settingsQuery.data} />
             <LostReasonsSection settings={settingsQuery.data} />
             <TemplatesSection />
@@ -168,7 +170,7 @@ function OnOffSection({ me }: { me: LmsMe }) {
 // ----------------------------------------------------------------- sources
 
 // Only the sources that exist so far; store forms and the API arrive in later steps.
-const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM'; label: string; text: string }[] = [
+const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM' | 'STORE_FORM'; label: string; text: string }[] = [
   { key: 'ORDER', label: 'New orders from your store', text: 'Cash on delivery orders waiting for a confirmation call.' },
   {
     key: 'ABANDONED_CHECKOUT',
@@ -176,6 +178,11 @@ const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM'; label: st
     text: "People who filled in checkout with their phone number but didn't order.",
   },
   { key: 'LANDING_FORM', label: 'Landing page forms', text: 'People who asked you to contact them from a landing page.' },
+  {
+    key: 'STORE_FORM',
+    label: 'Product page forms (StorePal theme)',
+    text: 'Requests from your product pages. Products you set to "Price on request" always show a Request a price form.',
+  },
 ];
 
 function SourcesSection({ me, settings }: { me: LmsMe; settings: LmsSettings }) {
@@ -183,6 +190,7 @@ function SourcesSection({ me, settings }: { me: LmsMe; settings: LmsSettings }) 
   const [sources, setSources] = useState(() => Object.fromEntries(SOURCES.map((s) => [s.key, settings.sources[s.key]])));
   const [callPrepaid, setCallPrepaid] = useState(settings.callPrepaidOrders);
   const [abandonedAfter, setAbandonedAfter] = useState(String(settings.abandonedAfterMinutes));
+  const [storeForms, setStoreForms] = useState(settings.storeForms);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -191,7 +199,7 @@ function SourcesSection({ me, settings }: { me: LmsMe; settings: LmsSettings }) 
       toast.error('Abandoned checkouts: pick between 5 and 1440 minutes.');
       return;
     }
-    save.mutate({ sources, callPrepaidOrders: callPrepaid, abandonedAfterMinutes: minutes });
+    save.mutate({ sources, callPrepaidOrders: callPrepaid, abandonedAfterMinutes: minutes, storeForms });
   };
 
   return (
@@ -234,6 +242,31 @@ function SourcesSection({ me, settings }: { me: LmsMe; settings: LmsSettings }) 
                   minutes without an order
                 </label>
               )}
+              {s.key === 'STORE_FORM' && sources.STORE_FORM && (
+                <div className="ml-7 mt-2 space-y-2 text-sm">
+                  <label className="flex cursor-pointer items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 accent-[var(--lms-ink)]"
+                      checked={storeForms.notifyMe}
+                      onChange={(e) => setStoreForms((f) => ({ ...f, notifyMe: e.target.checked }))}
+                    />
+                    <span>
+                      "Notify me when it's back" on sold-out products
+                      <span className="block text-lms-muted">When it's back in stock you get a task, and you can text everyone waiting in one go from Leads.</span>
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 accent-[var(--lms-ink)]"
+                      checked={storeForms.callMeBack}
+                      onChange={(e) => setStoreForms((f) => ({ ...f, callMeBack: e.target.checked }))}
+                    />
+                    <span>"Ask us to call you back" on every product</span>
+                  </label>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -257,6 +290,137 @@ function splitMinutes(total: number): { amount: string; unit: Unit } {
   if (total % 1440 === 0) return { amount: String(total / 1440), unit: 'days' };
   if (total % 60 === 0) return { amount: String(total / 60), unit: 'hours' };
   return { amount: String(total), unit: 'minutes' };
+}
+
+// ------------------------------------------------------------- retry rules
+
+const MISSED_CALL_DEFAULT =
+  'Assalamu alaikum {name}, we tried to call you from {store} about {product}. Please call us back when you can. Thank you.';
+
+/**
+ * How unreached calls are retried (LMS-plan.md Step 7). With N tries there
+ * are N-1 waits: after a miss, the lead comes back to the same person
+ * after the next wait. The last miss closes it as "Not reachable" if on.
+ */
+function RetrySection({ settings }: { settings: LmsSettings }) {
+  const save = useSaveSettings('Retry rules saved');
+  const [tries, setTries] = useState(settings.maxAttempts);
+  const [gaps, setGaps] = useState(() =>
+    Array.from({ length: 9 }, (_, i) => splitMinutes(settings.retryMinutes[Math.min(i, settings.retryMinutes.length - 1)] ?? 60)),
+  );
+  const [autoClose, setAutoClose] = useState(settings.autoCloseUnreachable);
+  const [smsOn, setSmsOn] = useState(settings.missedCallSmsAfter !== null);
+  const [smsAfter, setSmsAfter] = useState(settings.missedCallSmsAfter ?? 1);
+  const [smsText, setSmsText] = useState(settings.missedCallSmsText ?? '');
+  const waits = Math.max(1, tries - 1);
+
+  const submit = () => {
+    const retryMinutes: number[] = [];
+    for (let i = 0; i < waits; i++) {
+      const minutes = Math.round(Number(gaps[i].amount) * UNIT_MINUTES[gaps[i].unit]);
+      if (!Number.isFinite(minutes) || minutes < 1 || minutes > 43200) {
+        toast.error(`Wait ${i + 1}: pick between 1 minute and 30 days.`);
+        return;
+      }
+      retryMinutes.push(minutes);
+    }
+    save.mutate({
+      maxAttempts: tries,
+      retryMinutes,
+      autoCloseUnreachable: autoClose,
+      missedCallSmsAfter: smsOn ? Math.min(smsAfter, tries) : null,
+      missedCallSmsText: smsText.trim() || null,
+    });
+  };
+
+  return (
+    <Section
+      id="retries"
+      title="Retry rules"
+      text="When nobody picks up, the lead comes back to the same person after a wait, as a task on their list and the Call Desk."
+    >
+      <div className="space-y-4">
+        <label className="flex flex-wrap items-center gap-2 text-sm">
+          Try each person up to
+          <LmsSelect value={tries} onChange={(e) => setTries(Number(e.target.value))} className="!w-auto tabular-nums">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </LmsSelect>
+          times
+        </label>
+
+        {tries > 1 && (
+          <ul className="space-y-2">
+            {Array.from({ length: waits }, (_, i) => (
+              <li key={i} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="w-32 text-lms-muted">After try {i + 1}, wait</span>
+                <LmsInput
+                  type="number"
+                  min={1}
+                  aria-label={`Wait after try ${i + 1}`}
+                  value={gaps[i].amount}
+                  onChange={(e) => setGaps((g) => g.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))}
+                  className="!w-20 tabular-nums"
+                />
+                <LmsSelect
+                  aria-label={`Unit for try ${i + 1}`}
+                  value={gaps[i].unit}
+                  onChange={(e) => setGaps((g) => g.map((x, j) => (j === i ? { ...x, unit: e.target.value as Unit } : x)))}
+                  className="!w-auto"
+                >
+                  <option value="minutes">minutes</option>
+                  <option value="hours">hours</option>
+                  <option value="days">days</option>
+                </LmsSelect>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <label className="flex cursor-pointer items-start gap-3 text-sm">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--lms-ink)]" checked={autoClose} onChange={(e) => setAutoClose(e.target.checked)} />
+          <span>
+            <span className="block font-medium">Close as "Not reachable" after the last try</span>
+            <span className="block text-lms-muted">Off: the lead stays in Trying to reach for someone to decide. An order is never cancelled by this.</span>
+          </span>
+        </label>
+
+        <div className="rounded-md bg-lms-page p-4">
+          <label className="flex cursor-pointer items-start gap-3 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[var(--lms-ink)]" checked={smsOn} onChange={(e) => setSmsOn(e.target.checked)} />
+            <span>
+              <span className="block font-medium">Send a "We tried to call you" SMS</span>
+              <span className="block text-lms-muted">Goes out by itself after a missed call and uses your SMS credits. Never to people marked do not contact.</span>
+            </span>
+          </label>
+          {smsOn && (
+            <div className="mt-3 space-y-3 pl-7">
+              <label className="flex flex-wrap items-center gap-2 text-sm">
+                After try
+                <LmsSelect value={Math.min(smsAfter, tries)} onChange={(e) => setSmsAfter(Number(e.target.value))} className="!w-auto tabular-nums">
+                  {Array.from({ length: tries }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </LmsSelect>
+              </label>
+              <Field label="Message" hint="Leave it empty to use this one. You can use {name} {product} {total} {order} {store} {agent}.">
+                <LmsTextarea rows={3} value={smsText} onChange={(e) => setSmsText(e.target.value)} maxLength={500} placeholder={MISSED_CALL_DEFAULT} />
+              </Field>
+            </div>
+          )}
+        </div>
+
+        <LmsButton variant="primary" disabled={save.isPending} onClick={submit}>
+          {save.isPending ? 'Saving…' : 'Save retry rules'}
+        </LmsButton>
+      </div>
+    </Section>
+  );
 }
 
 function StagesSection({ settings }: { settings: LmsSettings }) {

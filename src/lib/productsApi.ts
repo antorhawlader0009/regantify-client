@@ -73,6 +73,7 @@ export interface Product {
   freeShipping: boolean;
   sku: string;
   isPreOrder: boolean;
+  quoteOnly?: boolean;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -105,6 +106,7 @@ export interface CreateProductPayload {
   cost?: number;
   sku: string;
   isPreOrder?: boolean;
+  quoteOnly?: boolean;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -162,6 +164,7 @@ export interface UpdateProductPayload {
   cost?: number;
   sku?: string;
   isPreOrder?: boolean;
+  quoteOnly?: boolean;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';

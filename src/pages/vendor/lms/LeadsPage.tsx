@@ -11,6 +11,7 @@ import { STAGE_RULE } from '../../../components/lms/stageStyles';
 import { orderStatusWord } from '../../../components/lms/CustomerPanel';
 import { LeadsBoard } from '../../../components/lms/LeadsBoard';
 import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
+import { RestockNotice } from '../../../components/lms/RestockNotice';
 import { formatExtraValue, useLmsFields } from '../../../components/lms/ExtraFields';
 import { AgentSelect } from '../../../components/lms/Team';
 import { apiErrorMessage } from '../../../lib/api';
@@ -55,6 +56,7 @@ export default function LeadsPage() {
       {(me) => (
         <>
           <LandingBacklogNotice me={me} className="mb-4" />
+          <RestockNotice me={me} className="mb-4" />
           <LeadsList me={me} params={params} setParams={setParams} onOpenLead={openLead} onAdd={() => setAddOpen(true)} />
           <AddLeadDialog me={me} open={addOpen} onOpenChange={setAddOpen} onOpenLead={openLead} />
           <LeadDrawer leadId={params.get('lead')} me={me} onClose={() => openLead(null)} />

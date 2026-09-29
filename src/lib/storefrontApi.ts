@@ -8,6 +8,8 @@ export interface StorefrontInfo {
   storeName: string;
   subdomain: string;
   theme: 'MEDIUM' | 'MINIMAL' | 'STOREPAL';
+  /** LMS store forms (Step 9), StorePal only; null when off. Same shape as the storefront app's copy. */
+  lmsForms?: { notifyMe: boolean; callMeBack: boolean } | null;
 }
 
 export interface StorefrontVariationOption {
@@ -52,6 +54,8 @@ export interface StorefrontProduct {
   price: string;
   discountPrice?: string | null;
   isPreOrder: boolean;
+  /** Price on request (LMS-plan.md Step 9); the price comes back as 0 on StorePal stores with the LMS forms on. */
+  quoteOnly?: boolean;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: string;

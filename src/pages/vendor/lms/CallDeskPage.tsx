@@ -7,12 +7,14 @@ import { LeadDrawer } from '../../../components/lms/LeadDrawer';
 import { MessageButtons } from '../../../components/lms/MessageComposer';
 import { CustomerPanel } from '../../../components/lms/CustomerPanel';
 import { ShiftSwitch } from '../../../components/lms/Team';
+import { DuePicker, RemindPicker } from '../../../components/lms/DuePicker';
 import { LmsButton, LmsInput, StageMark } from '../../../components/lms/ui';
 import { fillTemplate, formatDateTime, formatMoney, formatPhone, leadTemplateVars, minutesSince, timeAgo } from '../../../components/lms/format';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
   LMS_KIND_LABELS,
+  LMS_REMIND_DAYS,
   lmsApi,
   type LmsDeskFilter,
   type LmsDeskNext,
@@ -118,6 +120,7 @@ function Desk({ me }: { me: LmsMe }) {
 
   const onSaved = (lead: LmsLeadDetail, createOrder: boolean) => {
     queryClient.invalidateQueries({ queryKey: ['lms', 'leads'] });
+    queryClient.invalidateQueries({ queryKey: ['lms', 'notifications'] });
     if (createOrder) {
       setCreatingOrder(lead);
       return;
@@ -284,6 +287,8 @@ function CallSheet({
   const isOrder = lead.kind === 'ORDER' && !!lead.order;
   const [picked, setPicked] = useState<OutcomeKey | null>(null);
   const [reason, setReason] = useState<string | null>(null);
+  // "Not now": the lead closes and reopens by itself after these days (not for order leads: their order is cancelled).
+  const [remindDays, setRemindDays] = useState<number | null>(null);
   const [callbackAt, setCallbackAt] = useState<string>('');
   const [note, setNote] = useState('');
   const noteRef = useRef<HTMLInputElement>(null);
@@ -291,6 +296,7 @@ function CallSheet({
   const pick = (key: OutcomeKey | null) => {
     setPicked(key);
     setReason(null);
+    setRemindDays(null);
     if (key?.outcome !== 'CALL_LATER') setCallbackAt('');
   };
 
@@ -300,6 +306,7 @@ function CallSheet({
         outcome: picked!.outcome,
         note: note.trim() || undefined,
         reason: picked!.outcome === 'LOSE' ? (reason ?? undefined) : undefined,
+        remindInDays: picked!.outcome === 'LOSE' && !isOrder && remindDays ? remindDays : undefined,
         callbackAt: picked!.outcome === 'CALL_LATER' && callbackAt ? new Date(callbackAt).toISOString() : undefined,
       }),
     onSuccess: ({ lead: fresh, createOrder }) => {
@@ -478,7 +485,14 @@ function CallSheet({
         {/* What the picked key needs, and what it will do */}
         {picked && (
           <div className="mt-4 max-w-2xl">
-            {picked.outcome === 'CALL_LATER' && <CallbackPicker value={callbackAt} onChange={setCallbackAt} />}
+            {picked.outcome === 'CALL_LATER' && (
+              <DuePicker
+                label="When should we call back?"
+                value={callbackAt}
+                onChange={setCallbackAt}
+                pickedClass="border-lms-stage-talks bg-lms-stage-talks text-white"
+              />
+            )}
             {picked.outcome === 'LOSE' && (
               <div>
                 <p className="mb-2 text-[13px] font-medium">Why?</p>
@@ -490,7 +504,10 @@ function CallSheet({
                         key={r}
                         type="button"
                         aria-pressed={reason === r}
-                        onClick={() => setReason(r)}
+                        onClick={() => {
+                          setReason(r);
+                          setRemindDays(r === 'Not now' && !isOrder ? 7 : null);
+                        }}
                         className={`h-9 rounded-md border px-3 text-sm ${
                           reason === r ? 'border-lms-stage-lost bg-lms-stage-lost text-white' : 'border-lms-line bg-lms-surface hover:bg-lms-page'
                         }`}
@@ -499,6 +516,11 @@ function CallSheet({
                       </button>
                     ))}
                 </div>
+              </div>
+            )}
+            {picked.outcome === 'LOSE' && reason === 'Not now' && !isOrder && (
+              <div className="mt-4">
+                <RemindPicker days={remindDays} onChange={setRemindDays} options={LMS_REMIND_DAYS} />
               </div>
             )}
             <p className="mt-3 text-sm text-lms-muted">{consequence(picked, lead, isOrder)}</p>
@@ -546,61 +568,6 @@ function savedMessage(key: OutcomeKey, lead: LmsLeadDetail, isOrder: boolean): s
   if (key.outcome === 'CALL_LATER') return 'Callback saved';
   if (lead.stage === 'LOST') return lead.lostReason === 'Not reachable' ? 'Closed: not reachable after the last try' : 'Closed as lost';
   return 'Saved';
-}
-
-// --------------------------------------------------------------- callback time
-
-function toLocalInput(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function quickTimes(now = new Date()): { label: string; at: Date }[] {
-  const inHour = new Date(now.getTime() + 60 * 60_000);
-  const evening = new Date(now);
-  evening.setHours(19, 0, 0, 0);
-  const morning = new Date(now);
-  morning.setDate(morning.getDate() + 1);
-  morning.setHours(10, 0, 0, 0);
-  const times = [{ label: 'In 1 hour', at: inHour }];
-  if (evening.getTime() - now.getTime() > 90 * 60_000) times.push({ label: 'This evening, 7 pm', at: evening });
-  times.push({ label: 'Tomorrow, 10 am', at: morning });
-  return times;
-}
-
-function CallbackPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const times = quickTimes();
-  return (
-    <div>
-      <p className="mb-2 text-[13px] font-medium">When should we call back?</p>
-      <div className="flex flex-wrap items-center gap-2">
-        {times.map((t) => {
-          const v = toLocalInput(t.at);
-          return (
-            <button
-              key={t.label}
-              type="button"
-              aria-pressed={value === v}
-              onClick={() => onChange(v)}
-              className={`h-9 rounded-md border px-3 text-sm ${
-                value === v ? 'border-lms-stage-talks bg-lms-stage-talks text-white' : 'border-lms-line bg-lms-surface hover:bg-lms-page'
-              }`}
-            >
-              {t.label}
-            </button>
-          );
-        })}
-        <LmsInput
-          type="datetime-local"
-          aria-label="Pick a time"
-          value={value}
-          min={toLocalInput(new Date())}
-          onChange={(e) => onChange(e.target.value)}
-          className="!w-auto tabular-nums"
-        />
-      </div>
-    </div>
-  );
 }
 
 // --------------------------------------------------------------- create order

@@ -6,6 +6,7 @@ import { toast } from '../../lib/toast';
 import {
   LMS_KIND_LABELS,
   LMS_SOURCE_LABELS,
+  LMS_REMIND_DAYS,
   LMS_STAGES,
   lmsApi,
   type LmsActivity,
@@ -20,6 +21,8 @@ import { DashboardLink } from './LmsLayout';
 import { agoPhrase, formatDateTime, formatMoney, formatPhone } from './format';
 import { MessageButtons } from './MessageComposer';
 import { AgentSelect } from './Team';
+import { FollowUps } from './FollowUps';
+import { RemindPicker } from './DuePicker';
 import { STAGE_RULE } from './stageStyles';
 import { Field, LmsButton, LmsDrawer, LmsInput, LmsSelect, LmsTextarea, StageMark } from './ui';
 import { changedExtraValues, ExtraFieldInputs, formatExtraValue, toExtraValues, useLmsFields } from './ExtraFields';
@@ -37,7 +40,25 @@ export function LeadDrawer({ leadId, me, onClose }: { leadId: string | null; me:
   );
 }
 
-type Panel = 'none' | 'edit' | 'lost' | 'cancel' | 'merge';
+type Panel = 'none' | 'edit' | 'lost' | 'notNow' | 'cancel' | 'merge';
+
+/** "Not now": close the lead and pick when it reopens by itself. */
+function NotNowPicker({ busy, onClose, onCancel }: { busy: boolean; onClose: (days: number | null) => void; onCancel: () => void }) {
+  const [days, setDays] = useState<number | null>(7);
+  return (
+    <section className="space-y-3 border-b border-lms-line bg-lms-page px-5 py-4">
+      <RemindPicker days={days} onChange={setDays} options={LMS_REMIND_DAYS} />
+      <div className="flex gap-2">
+        <LmsButton variant="primary" disabled={busy} onClick={() => onClose(days)}>
+          {days ? `Close, remind in ${days} days` : 'Close without a reminder'}
+        </LmsButton>
+        <LmsButton variant="quiet" onClick={onCancel}>
+          Cancel
+        </LmsButton>
+      </div>
+    </section>
+  );
+}
 
 function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onGone: () => void }) {
   const queryClient = useQueryClient();
@@ -59,11 +80,15 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
     onError: onError("The change wasn't saved. Try again."),
   });
   const close = useMutation({
-    mutationFn: ({ outcome, reason }: { outcome: 'WON' | 'LOST'; reason?: string }) => lmsApi.closeLead(leadId, outcome, reason),
-    onSuccess: (lead) => {
+    mutationFn: ({ outcome, reason, remindInDays }: { outcome: 'WON' | 'LOST'; reason?: string; remindInDays?: number }) =>
+      lmsApi.closeLead(leadId, outcome, reason, remindInDays),
+    onSuccess: (lead, vars) => {
       apply(lead);
       setPanel('none');
-      toast.success(lead.stage === 'WON' ? 'Marked as won' : 'Marked as lost');
+      queryClient.invalidateQueries({ queryKey: ['lms', 'lead-tasks', leadId] });
+      toast.success(
+        lead.stage === 'WON' ? 'Marked as won' : vars.remindInDays ? `Closed. It reopens in ${vars.remindInDays} days.` : 'Marked as lost',
+      );
     },
     onError: onError("The lead wasn't closed. Try again."),
   });
@@ -219,9 +244,11 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
             reasons={me.lostReasons}
             busy={close.isPending}
             onCancel={() => setPanel('none')}
-            onPick={(reason) => close.mutate({ outcome: 'LOST', reason })}
+            // "Not now" asks when to try again before closing.
+            onPick={(reason) => (reason === 'Not now' ? setPanel('notNow') : close.mutate({ outcome: 'LOST', reason }))}
           />
         )}
+        {panel === 'notNow' && <NotNowPicker busy={close.isPending} onCancel={() => setPanel('none')} onClose={(days) => close.mutate({ outcome: 'LOST', reason: 'Not now', remindInDays: days ?? undefined })} />}
         {panel === 'cancel' && (
           <LostReasonPicker
             title={`Why is order #${lead.order?.invoiceNumber} cancelled?`}
@@ -300,6 +327,7 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
           </label>
         </section>
 
+        <FollowUps lead={lead} me={me} onChanged={() => void leadQuery.refetch()} />
         <NoteBox leadId={leadId} onSaved={apply} />
         <Timeline activities={lead.activities} me={me} />
       </div>

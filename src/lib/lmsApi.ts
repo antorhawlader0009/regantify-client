@@ -53,6 +53,10 @@ export interface LmsSettings {
   maxAttempts: number;
   retryMinutes: number[];
   autoCloseUnreachable: boolean;
+  /** Send the missed-call SMS after this unreached try; null = off. */
+  missedCallSmsAfter: number | null;
+  /** null = the built-in text. */
+  missedCallSmsText: string | null;
   abandonedAfterMinutes: number;
   reclaimAfterMinutes: number | null;
   staleMinutes: Record<LmsStaleStage, number>;
@@ -300,7 +304,84 @@ export interface RecordLmsContact {
   note?: string;
   reason?: string;
   callbackAt?: string;
+  /** LOSE only: reopen by itself after this many days ("Not now"). */
+  remindInDays?: number;
 }
+
+// ------------------------------------------------------------ Tasks (Step 7)
+
+export type LmsTaskType = 'CALL' | 'WHATSAPP' | 'MEETING' | 'VISIT' | 'OTHER';
+export type LmsTaskView = 'OVERDUE' | 'TODAY' | 'UPCOMING' | 'DONE';
+
+export const LMS_TASK_TYPE_LABELS: Record<LmsTaskType, string> = {
+  CALL: 'Call',
+  WHATSAPP: 'WhatsApp',
+  MEETING: 'Meeting',
+  VISIT: 'Visit',
+  OTHER: 'Other',
+};
+
+export interface LmsTask {
+  id: string;
+  type: LmsTaskType;
+  dueAt: string;
+  note: string | null;
+  isAutoRetry: boolean;
+  reopensLead: boolean;
+  doneAt: string | null;
+  createdAt: string;
+  assignee: { id: string; name: string } | null;
+  lead: {
+    id: string;
+    name: string;
+    phone: string;
+    stage: LmsStage;
+    kind: LmsLeadKind;
+    attemptCount: number;
+    order: { invoiceNumber: number } | null;
+    open: boolean;
+  };
+}
+
+export interface LmsTaskList {
+  total: number;
+  page: number;
+  perPage: number;
+  tasks: LmsTask[];
+}
+
+export type LmsTaskCounts = Record<'OVERDUE' | 'TODAY' | 'UPCOMING', number> & { due: number };
+
+// ------------------------------------------------------------ Notifications (Step 8)
+
+export type LmsNotificationType = 'ASSIGNED' | 'CAME_AGAIN' | 'TASK_DUE' | 'STALE';
+
+export interface LmsNotification {
+  id: string;
+  type: LmsNotificationType;
+  text: string;
+  leadId: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+/** The one poll behind the bell, the badges and the browser alerts. */
+export interface LmsNotificationSummary {
+  unread: number;
+  latest: LmsNotification[];
+  /** leads = new leads waiting for your first call; tasks = your overdue tasks. */
+  badges: { leads: number; tasks: number };
+}
+
+/** A product people asked to hear about that's back in stock (Step 9). */
+export interface LmsRestockItem {
+  productId: string;
+  name: string;
+  waiting: number;
+}
+
+/** "Not now" reminder choices, in days. */
+export const LMS_REMIND_DAYS = [3, 7, 14, 30];
 
 export interface LmsCustomerPanel {
   orders: {
@@ -363,8 +444,24 @@ export const lmsApi = {
     api.post<{ merged: boolean; leadId: string | null }>('/v1/lms/leads', body).then((r) => r.data),
   updateLead: (id: string, body: UpdateLmsLead) => api.patch<LmsLeadDetail>(`/v1/lms/leads/${id}`, body).then((r) => r.data),
   addNote: (id: string, text: string) => api.post<LmsLeadDetail>(`/v1/lms/leads/${id}/notes`, { text }).then((r) => r.data),
-  closeLead: (id: string, outcome: 'WON' | 'LOST', reason?: string) =>
-    api.post<LmsLeadDetail>(`/v1/lms/leads/${id}/close`, { outcome, reason }).then((r) => r.data),
+  closeLead: (id: string, outcome: 'WON' | 'LOST', reason?: string, remindInDays?: number) =>
+    api.post<LmsLeadDetail>(`/v1/lms/leads/${id}/close`, { outcome, reason, remindInDays }).then((r) => r.data),
+
+  restock: () => api.get<LmsRestockItem[]>('/v1/lms/restock').then((r) => r.data),
+  textWaiting: (productId: string, text?: string) =>
+    api.post<{ sent: number; skipped: number; error: string | null }>(`/v1/lms/restock/${productId}/sms`, { text }).then((r) => r.data),
+  notificationSummary: () => api.get<LmsNotificationSummary>('/v1/lms/notifications/summary').then((r) => r.data),
+  markNotificationsRead: (body: { ids?: string[]; all?: boolean }) =>
+    api.post<LmsNotificationSummary>('/v1/lms/notifications/read', body).then((r) => r.data),
+
+  tasks: (params: { view: LmsTaskView; who?: string; page?: number }) =>
+    api.get<LmsTaskList>('/v1/lms/tasks', { params }).then((r) => r.data),
+  taskCounts: (who?: string) => api.get<LmsTaskCounts>('/v1/lms/tasks/counts', { params: { who } }).then((r) => r.data),
+  leadTasks: (leadId: string) => api.get<LmsTask[]>(`/v1/lms/leads/${leadId}/tasks`).then((r) => r.data),
+  createTask: (leadId: string, body: { type: LmsTaskType; dueAt: string; note?: string; assigneeId?: string }) =>
+    api.post<LmsTask[]>(`/v1/lms/leads/${leadId}/tasks`, body).then((r) => r.data),
+  completeTask: (id: string) => api.post<LmsTask[]>(`/v1/lms/tasks/${id}/done`).then((r) => r.data),
+  removeTask: (id: string) => api.delete<LmsTask[]>(`/v1/lms/tasks/${id}`).then((r) => r.data),
   reopenLead: (id: string) => api.post<LmsLeadDetail>(`/v1/lms/leads/${id}/reopen`).then((r) => r.data),
   moveStage: (id: string, stage: 'NEW' | 'TRYING' | 'IN_TALKS') =>
     api.post<LmsLeadDetail>(`/v1/lms/leads/${id}/stage`, { stage }).then((r) => r.data),

@@ -102,6 +102,8 @@ export default function AddProduct() {
   // Stock
   const [sku, setSku] = useState('');
   const [isPreOrder, setIsPreOrder] = useState(false);
+  // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
+  const [quoteOnly, setQuoteOnly] = useState(false);
   const [stockQuantity, setStockQuantity] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('KG');
@@ -272,6 +274,7 @@ export default function AddProduct() {
       cost: cost.trim() ? Number(cost) : undefined,
       sku: sku.trim(),
       isPreOrder,
+      quoteOnly,
       stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
       weight: weight.trim() ? Number(weight) : undefined,
       weightUnit,
@@ -638,6 +641,16 @@ export default function AddProduct() {
                   No
                 </label>
               </div>
+            </Field>
+
+            <Field
+              label="Price on request"
+              tooltip="On the StorePal theme, hides the price and Buy buttons and shows a Request a price form instead. Requests come into your LMS as leads."
+            >
+              <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
+                <input type="checkbox" checked={quoteOnly} onChange={(e) => setQuoteOnly(e.target.checked)} />
+                Ask for the price instead of showing it (for wholesale or high-value items)
+              </label>
             </Field>
 
             <Field label="Stock Quantity" tooltip="Leave blank for unlimited stock.">
