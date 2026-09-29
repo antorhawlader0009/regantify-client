@@ -251,6 +251,9 @@ export const lmsApi = {
   deleteField: (id: string) => api.delete(`/v1/lms/fields/${id}`).then((r) => r.data),
   reorderFields: (ids: string[]) => api.post<LmsFieldDef[]>('/v1/lms/fields/order', { ids }).then((r) => r.data),
 
+  landingBacklog: () => api.get<{ count: number }>('/v1/lms/capture/landing-backlog').then((r) => r.data),
+  importLandingBacklog: () => api.post<{ imported: number }>('/v1/lms/capture/landing-backlog').then((r) => r.data),
+
   agents: () => api.get<LmsAgentSummary[]>('/v1/lms/agents').then((r) => r.data),
   views: () => api.get<LmsSavedView[]>('/v1/lms/views').then((r) => r.data),
   saveView: (name: string, filters: LmsLeadFilters) =>

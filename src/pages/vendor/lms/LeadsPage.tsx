@@ -9,6 +9,7 @@ import { Field, LmsButton, LmsDialog, LmsInput, LmsSelect } from '../../../compo
 import { formatDateTime, formatMoney, formatPhone, minutesSince, timeAgo } from '../../../components/lms/format';
 import { STAGE_RULE } from '../../../components/lms/stageStyles';
 import { LeadsBoard } from '../../../components/lms/LeadsBoard';
+import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
 import { formatExtraValue, useLmsFields } from '../../../components/lms/ExtraFields';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
@@ -50,6 +51,7 @@ export default function LeadsPage() {
     >
       {(me) => (
         <>
+          <LandingBacklogNotice me={me} className="mb-4" />
           <LeadsList me={me} params={params} setParams={setParams} onOpenLead={openLead} onAdd={() => setAddOpen(true)} />
           <AddLeadDialog open={addOpen} onOpenChange={setAddOpen} onOpenLead={openLead} />
           <LeadDrawer leadId={params.get('lead')} me={me} onClose={() => openLead(null)} />
@@ -383,7 +385,8 @@ function LeadRow({
       <td className={`${td} max-w-[240px]`}>
         <span className="block truncate">
           {lead.productSummary ?? ''}
-          {lead.quantity ? <span className="text-lms-muted"> × {lead.quantity}</span> : null}
+          {/* Order and checkout summaries already say "2 × Kurti"; only a hand-typed product needs the count. */}
+          {lead.quantity && lead.kind === 'ENQUIRY' ? <span className="text-lms-muted"> × {lead.quantity}</span> : null}
         </span>
         {lead.tags.length > 0 && (
           <span className="mt-0.5 flex flex-wrap gap-1">

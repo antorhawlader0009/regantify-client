@@ -5,6 +5,7 @@ import { LmsPage, Panel } from '../../../components/lms/LmsPage';
 import { Field, LmsButton, LmsInput, LmsSelect, LmsTextarea } from '../../../components/lms/ui';
 import { useLmsFields } from '../../../components/lms/ExtraFields';
 import { STAGE_RULE } from '../../../components/lms/stageStyles';
+import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -38,6 +39,7 @@ function SettingsBody({ me }: { me: LmsMe }) {
         <p className="text-sm">{apiErrorMessage(settingsQuery.error, "Settings couldn't load. Refresh the page to try again.")}</p>
       ) : (
         <>
+          <SourcesSection me={me} settings={settingsQuery.data} />
           <StagesSection settings={settingsQuery.data} />
           <LostReasonsSection settings={settingsQuery.data} />
           <ExtraFieldsSection />
@@ -89,6 +91,86 @@ function OnOffSection({ me }: { me: LmsMe }) {
         )}
       </div>
     </Panel>
+  );
+}
+
+// ----------------------------------------------------------------- sources
+
+// Only the sources that exist so far; store forms and the API arrive in later steps.
+const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM'; label: string; text: string }[] = [
+  { key: 'ORDER', label: 'New orders from your store', text: 'Cash on delivery orders waiting for a confirmation call.' },
+  {
+    key: 'ABANDONED_CHECKOUT',
+    label: 'Abandoned checkouts',
+    text: "People who filled in checkout with their phone number but didn't order.",
+  },
+  { key: 'LANDING_FORM', label: 'Landing page forms', text: 'People who asked you to contact them from a landing page.' },
+];
+
+function SourcesSection({ me, settings }: { me: LmsMe; settings: LmsSettings }) {
+  const save = useSaveSettings('Sources saved');
+  const [sources, setSources] = useState(() => Object.fromEntries(SOURCES.map((s) => [s.key, settings.sources[s.key]])));
+  const [callPrepaid, setCallPrepaid] = useState(settings.callPrepaidOrders);
+  const [abandonedAfter, setAbandonedAfter] = useState(String(settings.abandonedAfterMinutes));
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const minutes = Number(abandonedAfter);
+    if (!Number.isInteger(minutes) || minutes < 5 || minutes > 1440) {
+      toast.error('Abandoned checkouts: pick between 5 and 1440 minutes.');
+      return;
+    }
+    save.mutate({ sources, callPrepaidOrders: callPrepaid, abandonedAfterMinutes: minutes });
+  };
+
+  return (
+    <Section title="Where leads come from" text="These come into the LMS by themselves. Turn off any you don't want your team to follow up.">
+      <LandingBacklogNotice me={me} className="mb-4" />
+      <form onSubmit={submit}>
+        <ul className="divide-y divide-lms-line border-y border-lms-line">
+          {SOURCES.map((s) => (
+            <li key={s.key} className="py-3">
+              <label className="flex cursor-pointer items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-[var(--lms-ink)]"
+                  checked={sources[s.key]}
+                  onChange={(e) => setSources((v) => ({ ...v, [s.key]: e.target.checked }))}
+                />
+                <span>
+                  <span className="block font-medium">{s.label}</span>
+                  <span className="block text-lms-muted">{s.text}</span>
+                </span>
+              </label>
+              {s.key === 'ORDER' && sources.ORDER && (
+                <label className="ml-7 mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                  <input type="checkbox" className="h-4 w-4 accent-[var(--lms-ink)]" checked={callPrepaid} onChange={(e) => setCallPrepaid(e.target.checked)} />
+                  Also call orders that were paid online
+                </label>
+              )}
+              {s.key === 'ABANDONED_CHECKOUT' && sources.ABANDONED_CHECKOUT && (
+                <label className="ml-7 mt-2 flex flex-wrap items-center gap-2 text-sm">
+                  Add it as a lead after
+                  <LmsInput
+                    type="number"
+                    min={5}
+                    max={1440}
+                    className="!w-20 tabular-nums"
+                    value={abandonedAfter}
+                    onChange={(e) => setAbandonedAfter(e.target.value)}
+                    aria-label="Minutes before an abandoned checkout becomes a lead"
+                  />
+                  minutes without an order
+                </label>
+              )}
+            </li>
+          ))}
+        </ul>
+        <LmsButton type="submit" variant="primary" className="mt-4" disabled={save.isPending}>
+          {save.isPending ? 'Saving…' : 'Save sources'}
+        </LmsButton>
+      </form>
+    </Section>
   );
 }
 
