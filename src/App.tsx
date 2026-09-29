@@ -85,6 +85,8 @@ import Campaigns from './pages/vendor/marketing/Campaigns';
 import AddCampaign from './pages/vendor/marketing/AddCampaign';
 import Discounts from './pages/vendor/marketing/Discounts';
 import AddDiscount from './pages/vendor/marketing/AddDiscount';
+import FlashSales from './pages/vendor/marketing/FlashSales';
+import AddFlashSale from './pages/vendor/marketing/AddFlashSale';
 import Sms from './pages/vendor/sms/Sms';
 import AiChatBot from './pages/vendor/ai-automation/AiChatBot';
 import Wallet from './pages/vendor/finance/Wallet';
@@ -165,6 +167,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/coupons' &&
     r.path !== '/vendor/marketing/campaigns' &&
     r.path !== '/vendor/marketing/discounts' &&
+    r.path !== '/vendor/marketing/flash-sale' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
@@ -315,6 +318,9 @@ export default function App() {
                 <Route path="/vendor/marketing/discounts" element={<Discounts />} />
                 <Route path="/vendor/marketing/discounts/add" element={<AddDiscount />} />
                 <Route path="/vendor/marketing/discounts/:id/edit" element={<AddDiscount />} />
+                <Route path="/vendor/marketing/flash-sale" element={<FlashSales />} />
+                <Route path="/vendor/marketing/flash-sale/add" element={<AddFlashSale />} />
+                <Route path="/vendor/marketing/flash-sale/:id/edit" element={<AddFlashSale />} />
                 <Route path="/vendor/sms" element={<Sms />} />
                 <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
