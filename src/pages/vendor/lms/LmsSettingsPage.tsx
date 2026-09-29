@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, X } from 'lucide-react';
 import { LmsPage, Panel } from '../../../components/lms/LmsPage';
@@ -6,6 +6,8 @@ import { Field, LmsButton, LmsInput, LmsSelect, LmsTextarea } from '../../../com
 import { useLmsFields } from '../../../components/lms/ExtraFields';
 import { STAGE_RULE } from '../../../components/lms/stageStyles';
 import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
+import { LMS_TEMPLATES_KEY } from '../../../components/lms/MessageComposer';
+import { AttendanceSection, TeamSection } from '../../../components/lms/TeamSettings';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -17,6 +19,8 @@ import {
   type LmsMe,
   type LmsSettings,
   type LmsStaleStage,
+  type LmsTemplate,
+  type LmsTemplateChannel,
   type UpdateLmsSettings,
 } from '../../../lib/lmsApi';
 
@@ -25,33 +29,101 @@ export default function LmsSettingsPage() {
   return <LmsPage title="Settings">{(me) => <SettingsBody me={me} />}</LmsPage>;
 }
 
+// The shell has no sidebar, so Settings lists its own sections on the left (large screens).
+const SECTIONS = [
+  { id: 'status', label: 'LMS status' },
+  { id: 'team', label: 'Team' },
+  { id: 'attendance', label: 'Attendance' },
+  { id: 'sources', label: 'Where leads come from' },
+  { id: 'stages', label: 'Stages' },
+  { id: 'lost-reasons', label: 'Lost reasons' },
+  { id: 'templates', label: 'Message templates' },
+  { id: 'script', label: 'Call script' },
+  { id: 'extra-fields', label: 'Extra fields' },
+];
+
 function SettingsBody({ me }: { me: LmsMe }) {
   const settingsQuery = useQuery({ queryKey: ['lms', 'settings'], queryFn: lmsApi.getSettings });
+  const showAll = me.isManager && settingsQuery.isSuccess;
 
   return (
-    <div className="max-w-3xl space-y-5">
-      <OnOffSection me={me} />
-      {!me.isManager ? (
-        <p className="text-sm text-lms-muted">Only the store owner or a lead manager can change the other LMS settings.</p>
-      ) : settingsQuery.isPending ? (
-        <p className="text-sm text-lms-muted">Loading…</p>
-      ) : settingsQuery.isError ? (
-        <p className="text-sm">{apiErrorMessage(settingsQuery.error, "Settings couldn't load. Refresh the page to try again.")}</p>
-      ) : (
-        <>
-          <SourcesSection me={me} settings={settingsQuery.data} />
-          <StagesSection settings={settingsQuery.data} />
-          <LostReasonsSection settings={settingsQuery.data} />
-          <ExtraFieldsSection />
-        </>
-      )}
+    <div className="lg:grid lg:grid-cols-[13rem_minmax(0,48rem)] lg:gap-10">
+      {showAll && <SectionNav />}
+      <div className="space-y-5">
+        <OnOffSection me={me} />
+        {!me.isManager ? (
+          <p className="text-sm text-lms-muted">Only the store owner or a lead manager can change the other LMS settings.</p>
+        ) : settingsQuery.isPending ? (
+          <p className="text-sm text-lms-muted">Loading…</p>
+        ) : settingsQuery.isError ? (
+          <p className="text-sm">{apiErrorMessage(settingsQuery.error, "Settings couldn't load. Refresh the page to try again.")}</p>
+        ) : (
+          <>
+            <TeamSection me={me} settings={settingsQuery.data} />
+            <AttendanceSection />
+            <SourcesSection me={me} settings={settingsQuery.data} />
+            <StagesSection settings={settingsQuery.data} />
+            <LostReasonsSection settings={settingsQuery.data} />
+            <TemplatesSection />
+            <ScriptSection settings={settingsQuery.data} />
+            <ExtraFieldsSection />
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function Section({ title, text, children }: { title: string; text: string; children: ReactNode }) {
+/** The section list, marking the one in view. */
+function SectionNav() {
+  const [current, setCurrent] = useState(SECTIONS[0].id);
+
+  useEffect(() => {
+    const els = SECTIONS.map((s) => document.getElementById(s.id)).filter((el): el is HTMLElement => !!el);
+    // A section counts as "in view" once it reaches the band just under the top bar.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setCurrent(visible[0].target.id);
+      },
+      { rootMargin: '-72px 0px -60% 0px' },
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <Panel>
+    <nav aria-label="Settings sections" className="hidden lg:block">
+      <ul className="sticky top-[5.5rem] space-y-0.5 border-l border-lms-line">
+        {SECTIONS.map((s) => (
+          <li key={s.id}>
+            <a
+              href={`#${s.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(s.id)?.scrollIntoView({
+                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                  block: 'start',
+                });
+                setCurrent(s.id);
+              }}
+              aria-current={current === s.id ? 'true' : undefined}
+              className={`-ml-px block border-l-2 py-1.5 pl-4 text-sm ${
+                current === s.id ? 'border-lms-ink font-medium text-lms-ink' : 'border-transparent text-lms-muted hover:text-lms-ink'
+              }`}
+            >
+              {s.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function Section({ id, title, text, children }: { id: string; title: string; text: string; children: ReactNode }) {
+  return (
+    <Panel id={id} className="scroll-mt-20">
       <h2 className="text-base font-semibold">{title}</h2>
       <p className="mt-1 max-w-xl text-sm leading-6 text-lms-muted">{text}</p>
       <div className="mt-5">{children}</div>
@@ -59,7 +131,6 @@ function Section({ title, text, children }: { title: string; text: string; child
   );
 }
 
-/** Saves part of the settings, then refreshes everything that shows them (stage names are on every page). */
 function useSaveSettings(successMessage: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -75,7 +146,7 @@ function useSaveSettings(successMessage: string) {
 function OnOffSection({ me }: { me: LmsMe }) {
   const save = useSaveSettings('LMS turned off');
   return (
-    <Panel>
+    <Panel id="status" className="scroll-mt-20">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-base font-semibold">LMS is on</h2>
@@ -124,7 +195,7 @@ function SourcesSection({ me, settings }: { me: LmsMe; settings: LmsSettings }) 
   };
 
   return (
-    <Section title="Where leads come from" text="These come into the LMS by themselves. Turn off any you don't want your team to follow up.">
+    <Section id="sources" title="Where leads come from" text="These come into the LMS by themselves. Turn off any you don't want your team to follow up.">
       <LandingBacklogNotice me={me} className="mb-4" />
       <form onSubmit={submit}>
         <ul className="divide-y divide-lms-line border-y border-lms-line">
@@ -212,6 +283,7 @@ function StagesSection({ settings }: { settings: LmsSettings }) {
 
   return (
     <Section
+      id="stages"
       title="Stages"
       text="Every lead moves through these five stages. You can rename them, for example Won to Confirmed. A lead is marked stale when it waits in a stage longer than the time you set."
     >
@@ -290,6 +362,7 @@ function LostReasonsSection({ settings }: { settings: LmsSettings }) {
 
   return (
     <Section
+      id="lost-reasons"
       title="Lost reasons"
       text="The list your team picks from when a lead is lost. Reports use it to show why sales slip away. Leads already lost keep their reason even if you remove it here."
     >
@@ -323,6 +396,159 @@ function LostReasonsSection({ settings }: { settings: LmsSettings }) {
 }
 
 // ------------------------------------------------------------ extra fields
+
+// ----------------------------------------------------------- templates
+
+const VARIABLES = '{name} {product} {total} {order} {store} {agent}';
+const CHANNEL_LABEL: Record<LmsTemplateChannel, string> = { WHATSAPP: 'WhatsApp', SMS: 'SMS' };
+
+function TemplatesSection() {
+  const templates = useQuery({ queryKey: LMS_TEMPLATES_KEY, queryFn: lmsApi.templates });
+  const [editing, setEditing] = useState<LmsTemplate | 'new' | null>(null);
+
+  return (
+    <Section
+      id="templates"
+      title="Message templates"
+      text={`Ready-made WhatsApp and SMS messages for the lead's message keys. Your team picks one, the lead's details fill in, and they can still edit it before it goes. You can use ${VARIABLES}.`}
+    >
+      {templates.isPending ? (
+        <p className="text-sm text-lms-muted">Loading…</p>
+      ) : templates.isError ? (
+        <p className="text-sm">{apiErrorMessage(templates.error, "The templates couldn't load.")}</p>
+      ) : (
+        <ul className="divide-y divide-lms-line border-y border-lms-line">
+          {templates.data.map((t) => (
+            <li key={t.id} className="py-3">
+              {editing !== 'new' && editing?.id === t.id ? (
+                <TemplateForm template={t} onDone={() => setEditing(null)} />
+              ) : (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 text-sm">
+                    <p>
+                      <span className="font-medium">{t.name}</span>
+                      <span className="ml-2 text-lms-muted">{CHANNEL_LABEL[t.channel]}</span>
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-lms-muted">{t.body}</p>
+                  </div>
+                  <LmsButton variant="quiet" onClick={() => setEditing(t)}>
+                    Edit
+                  </LmsButton>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {editing === 'new' ? (
+        <div className="mt-4">
+          <TemplateForm onDone={() => setEditing(null)} />
+        </div>
+      ) : (
+        <LmsButton className="mt-4" onClick={() => setEditing('new')}>
+          Add a template
+        </LmsButton>
+      )}
+    </Section>
+  );
+}
+
+function TemplateForm({ template, onDone }: { template?: LmsTemplate; onDone: () => void }) {
+  const queryClient = useQueryClient();
+  const [channel, setChannel] = useState<LmsTemplateChannel>(template?.channel ?? 'WHATSAPP');
+  const [name, setName] = useState(template?.name ?? '');
+  const [body, setBody] = useState(template?.body ?? '');
+  const done = (message: string) => {
+    toast.success(message);
+    queryClient.invalidateQueries({ queryKey: LMS_TEMPLATES_KEY });
+    onDone();
+  };
+  const save = useMutation({
+    mutationFn: () => {
+      const payload = { channel, name: name.trim(), body: body.trim() };
+      return template ? lmsApi.updateTemplate(template.id, payload) : lmsApi.createTemplate(payload);
+    },
+    onSuccess: () => done('Template saved'),
+    onError: (err) => toast.error(apiErrorMessage(err, "The template wasn't saved. Try again.")),
+  });
+  const remove = useMutation({
+    mutationFn: () => lmsApi.deleteTemplate(template!.id),
+    onSuccess: () => done('Template deleted'),
+    onError: (err) => toast.error(apiErrorMessage(err, "The template wasn't deleted. Try again.")),
+  });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        save.mutate();
+      }}
+      className="space-y-3 rounded-md bg-lms-page p-4"
+    >
+      <div className="grid gap-3 sm:grid-cols-[1fr_10rem]">
+        <Field label="Name">
+          <LmsInput value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder="e.g. Delivery date" />
+        </Field>
+        <Field label="Sent by">
+          <LmsSelect value={channel} onChange={(e) => setChannel(e.target.value as LmsTemplateChannel)}>
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="SMS">SMS</option>
+          </LmsSelect>
+        </Field>
+      </div>
+      <Field
+        label="Message"
+        hint={channel === 'SMS' ? `Write "Tk" instead of the taka sign, and English letters: Bangla letters make each SMS cost more. You can use ${VARIABLES}.` : `You can use ${VARIABLES}.`}
+      >
+        <LmsTextarea rows={4} value={body} onChange={(e) => setBody(e.target.value)} maxLength={1000} required />
+      </Field>
+      <div className="flex flex-wrap gap-2">
+        <LmsButton type="submit" variant="primary" disabled={save.isPending || !name.trim() || !body.trim()}>
+          {save.isPending ? 'Saving…' : 'Save template'}
+        </LmsButton>
+        <LmsButton variant="quiet" onClick={onDone}>
+          Cancel
+        </LmsButton>
+        {template && (
+          <LmsButton variant="danger" className="ml-auto" disabled={remove.isPending} onClick={() => remove.mutate()}>
+            Delete
+          </LmsButton>
+        )}
+      </div>
+    </form>
+  );
+}
+
+// -------------------------------------------------------------- script
+
+const DEFAULT_SCRIPT_HINT =
+  'Leave it empty to use ours: an order confirmation script for order leads and a helpful one for everyone else.';
+
+function ScriptSection({ settings }: { settings: LmsSettings }) {
+  const save = useSaveSettings('Call script saved');
+  const [script, setScript] = useState(settings.callScript ?? '');
+  const dirty = script.trim() !== (settings.callScript ?? '');
+
+  return (
+    <Section
+      id="script"
+      title="Call script"
+      text={`What your team says on the call, shown next to the keypad on the Call Desk with the lead's details filled in. You can use ${VARIABLES}.`}
+    >
+      <LmsTextarea
+        rows={6}
+        value={script}
+        onChange={(e) => setScript(e.target.value)}
+        maxLength={5000}
+        placeholder={'Assalamu alaikum, am I speaking with {name}?\nI\'m {agent}, calling from {store} about your order {order}…'}
+      />
+      <p className="mt-1 text-xs text-lms-muted">{DEFAULT_SCRIPT_HINT}</p>
+      <LmsButton variant="primary" className="mt-4" disabled={!dirty || save.isPending} onClick={() => save.mutate({ callScript: script.trim() || null })}>
+        {save.isPending ? 'Saving…' : 'Save call script'}
+      </LmsButton>
+    </Section>
+  );
+}
 
 function ExtraFieldsSection() {
   const queryClient = useQueryClient();
@@ -359,6 +585,7 @@ function ExtraFieldsSection() {
 
   return (
     <Section
+      id="extra-fields"
       title="Extra fields"
       text="Optional. Add details your business needs on every lead, like Company, Size or Preferred date. They show on the lead, in Add lead, and as table columns if you want."
     >

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, X, Search } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
@@ -8,6 +8,8 @@ import { getVendorDeliveryCharges } from '../../../lib/vendorApi';
 import { courierApi } from '../../../lib/courierApi';
 import { PathaoLocationSelects, type PathaoLocationValue } from '../../../components/courier/PathaoLocationSelects';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
+import { lmsApi } from '../../../lib/lmsApi';
 
 interface CartLine extends OrderItemInput {
   key: string; // productId + variantId, for React keys / dedupe within this form only
@@ -69,6 +71,33 @@ export default function AddOrder() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // -- From an LMS lead (?fromLead=, opened by the LMS's "Create order") --
+  // Fills in the customer and the cart at today's prices; saving the order
+  // then closes the lead as won (LMS-plan.md Step 5).
+  const [searchParams] = useSearchParams();
+  const fromLead = searchParams.get('fromLead');
+  const prefillQuery = useQuery({
+    queryKey: ['lms', 'order-prefill', fromLead],
+    queryFn: () => lmsApi.orderPrefill(fromLead!),
+    enabled: !!fromLead,
+    retry: false,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    const p = prefillQuery.data;
+    if (!p) return;
+    setCustomerName(p.customerName);
+    setCustomerPhone(p.customerPhone);
+    if (p.customerPhoneAlt) setCustomerPhoneAlt(p.customerPhoneAlt);
+    if (p.customerEmail) setCustomerEmail(p.customerEmail);
+    if (p.shippingAddress) setShippingAddress(p.shippingAddress);
+    if (p.shippingDistrict) setShippingDistrict(p.shippingDistrict);
+    if (p.shippingCity) setShippingCity(p.shippingCity);
+    if (p.customerNote) setCustomerNote(p.customerNote);
+    setStaffNote(p.staffNote);
+    setCart(p.items.map((item) => ({ ...item, key: `${item.productId}:${item.variantId ?? ''}` })));
+  }, [prefillQuery.data]);
 
   // -- Cart --
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -147,9 +176,17 @@ export default function AddOrder() {
 
   const createMutation = useMutation({
     mutationFn: ordersApi.create,
-    onSuccess: (order) => {
+    onSuccess: async (order) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success(`Order ORDER-${order.invoiceNumber} created.`);
+      if (fromLead) {
+        try {
+          await lmsApi.linkOrder(fromLead, order.id);
+          toast.success('The LMS lead is closed as won.');
+        } catch (err) {
+          toast.error(apiErrorMessage(err, "The order was created, but the LMS lead wasn't closed. Close it from the lead."));
+        }
+      }
       navigate('/vendor/orders');
     },
     onError: (err: any) => {
@@ -211,6 +248,16 @@ export default function AddOrder() {
       </button>
 
       <h1 className="text-2xl font-semibold text-regantify-text mb-6">Add Order</h1>
+
+      {fromLead && (
+        <p className="mb-4 rounded-xl border border-black/10 bg-regantify-content px-4 py-3 text-sm text-regantify-text">
+          {prefillQuery.isPending
+            ? 'Loading the lead…'
+            : prefillQuery.isError
+              ? apiErrorMessage(prefillQuery.error, "The lead's details couldn't load. Fill in the order by hand.")
+              : `From an LMS lead. Check the cart and delivery, then create the order: the lead closes as won by itself.`}
+        </p>
+      )}
 
       <section className="bg-white rounded-2xl border border-black/5 p-6 mb-6">
         <h2 className="text-base font-semibold text-regantify-text mb-4">Customer</h2>

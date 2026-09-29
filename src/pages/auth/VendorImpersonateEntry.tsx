@@ -15,6 +15,7 @@ export default function VendorImpersonateEntry() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const markImpersonated = useAuthStore((s) => s.markImpersonated);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function VendorImpersonateEntry() {
       .then((data) => {
         if (cancelled) return;
         setAuth(data.accessToken, data.user);
+        markImpersonated();
         navigate('/vendor/dashboard', { replace: true });
       })
       .catch(() => {

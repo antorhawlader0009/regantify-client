@@ -115,6 +115,7 @@ import CallDeskPage from './pages/vendor/lms/CallDeskPage';
 import TasksPage from './pages/vendor/lms/TasksPage';
 import ReportsPage from './pages/vendor/lms/ReportsPage';
 import LmsSettingsPage from './pages/vendor/lms/LmsSettingsPage';
+import { LmsLayout } from './components/lms/LmsLayout';
 
 const queryClient = new QueryClient();
 
@@ -184,7 +185,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/steadfast' &&
     r.path !== '/vendor/courier/redx' &&
     r.path !== '/vendor/analytics' &&
-    !r.path.startsWith('/vendor/lms/'),
+    !r.path.startsWith('/vendor/lms'),
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -342,15 +343,23 @@ export default function App() {
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
                 <Route path="/vendor/analytics" element={<AnalyticsPage />} />
                 <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
+                {vendorPlaceholderRoutes.map((r) => (
+                  <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
+                ))}
+              </Route>
+
+              {/* LMS — its own app, opened in its own tab from the sidebar
+                  (LMS-plan.md Step 4). OUTSIDE <VendorLayout> on purpose:
+                  LmsLayout is the LMS's own shell (top bar, no dashboard
+                  sidebar), still inside the VENDOR/STAFF ProtectedRoute. */}
+              <Route element={<LmsLayout />}>
                 <Route path="/vendor/lms" element={<Navigate to="/vendor/lms/leads" replace />} />
                 <Route path="/vendor/lms/leads" element={<LeadsPage />} />
                 <Route path="/vendor/lms/desk" element={<CallDeskPage />} />
                 <Route path="/vendor/lms/tasks" element={<TasksPage />} />
                 <Route path="/vendor/lms/reports" element={<ReportsPage />} />
                 <Route path="/vendor/lms/settings" element={<LmsSettingsPage />} />
-                {vendorPlaceholderRoutes.map((r) => (
-                  <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
-                ))}
+                <Route path="/vendor/lms/*" element={<Navigate to="/vendor/lms/leads" replace />} />
               </Route>
 
               {/* Landing page builder — deliberately OUTSIDE <VendorLayout>

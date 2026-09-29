@@ -35,3 +35,23 @@
 .lms-overlay {
   background: rgb(23 32 51 / 0.4);
 }
+
+/* The Call Desk's one motion: the next lead slides in. Off for people who ask for less motion. */
+@keyframes lms-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lms-slide-in {
+  animation: lms-slide-in 220ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lms-slide-in {
+    animation: none;
+  }
+}

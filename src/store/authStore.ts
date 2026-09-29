@@ -32,7 +32,13 @@ interface AuthState {
   // ProtectedRoute waits for this before deciding to redirect to login,
   // so a hard page reload doesn't bounce a still-logged-in vendor out.
   hasHydrated: boolean;
+  // True in a Super Admin "Login as vendor" tab. That session has no
+  // refresh cookie of its own, so it can't be carried into a new tab
+  // (a new tab would refresh with the admin's cookie instead). The LMS
+  // opens in the same tab when this is set (lib/lmsWindow.ts).
+  impersonated: boolean;
   setAuth: (accessToken: string, user: AuthUser) => void;
+  markImpersonated: () => void;
   clearAuth: () => void;
   setHasHydrated: () => void;
 }
@@ -46,7 +52,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   user: null,
   hasHydrated: false,
+  impersonated: false,
   setAuth: (accessToken, user) => set({ accessToken, user }),
-  clearAuth: () => set({ accessToken: null, user: null }),
+  markImpersonated: () => set({ impersonated: true }),
+  clearAuth: () => set({ accessToken: null, user: null, impersonated: false }),
   setHasHydrated: () => set({ hasHydrated: true }),
 }));

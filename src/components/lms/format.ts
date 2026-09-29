@@ -6,8 +6,38 @@ export function formatPhone(phone: string): string {
 }
 
 /** The 8801… form a wa.me link needs. */
-export function whatsappLink(phone: string): string {
-  return `https://wa.me/88${phone}`;
+export function whatsappLink(phone: string, text?: string): string {
+  return `https://wa.me/88${phone}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
+}
+
+/** The values a template or call script can use. */
+export interface TemplateVars {
+  name: string;
+  product: string;
+  total: string;
+  order: string;
+  store: string;
+  agent: string;
+}
+
+/** Fills {name}, {product}, {total}, {order}, {store}, {agent}; unknown {words} stay as typed. */
+export function fillTemplate(text: string, vars: TemplateVars): string {
+  return text.replace(/\{(name|product|total|order|store|agent)\}/g, (_, key: keyof TemplateVars) => vars[key]);
+}
+
+/** The template values for one lead. Totals are plain numbers ("1,450"), since templates write "Tk" themselves. */
+export function leadTemplateVars(
+  lead: { name: string; productSummary: string | null; value: number | null; order: { invoiceNumber: number } | null },
+  me: { name: string; storeName: string },
+): TemplateVars {
+  return {
+    name: lead.name,
+    product: lead.productSummary || 'your order',
+    total: lead.value !== null ? lead.value.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '',
+    order: lead.order ? `#${lead.order.invoiceNumber}` : '',
+    store: me.storeName,
+    agent: me.name,
+  };
 }
 
 export function formatMoney(value: number): string {

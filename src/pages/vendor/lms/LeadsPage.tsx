@@ -8,9 +8,11 @@ import { LeadDrawer } from '../../../components/lms/LeadDrawer';
 import { Field, LmsButton, LmsDialog, LmsInput, LmsSelect } from '../../../components/lms/ui';
 import { formatDateTime, formatMoney, formatPhone, minutesSince, timeAgo } from '../../../components/lms/format';
 import { STAGE_RULE } from '../../../components/lms/stageStyles';
+import { orderStatusWord } from '../../../components/lms/CustomerPanel';
 import { LeadsBoard } from '../../../components/lms/LeadsBoard';
 import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
 import { formatExtraValue, useLmsFields } from '../../../components/lms/ExtraFields';
+import { AgentSelect } from '../../../components/lms/Team';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -24,6 +26,7 @@ import {
   type LmsLeadFilters,
   type LmsLeadRow,
   type LmsMe,
+  type LmsStage,
 } from '../../../lib/lmsApi';
 
 /** LMS > Leads: the call sheet. Filters live in the URL, so a view can be bookmarked or saved. */
@@ -53,7 +56,7 @@ export default function LeadsPage() {
         <>
           <LandingBacklogNotice me={me} className="mb-4" />
           <LeadsList me={me} params={params} setParams={setParams} onOpenLead={openLead} onAdd={() => setAddOpen(true)} />
-          <AddLeadDialog open={addOpen} onOpenChange={setAddOpen} onOpenLead={openLead} />
+          <AddLeadDialog me={me} open={addOpen} onOpenChange={setAddOpen} onOpenLead={openLead} />
           <LeadDrawer leadId={params.get('lead')} me={me} onClose={() => openLead(null)} />
         </>
       )}
@@ -137,10 +140,11 @@ function LeadsList({
   const extraFilterCount = (['kind', 'source', 'agent', 'from', 'to', 'stale', 'hasTask', 'tag'] as const).filter((k) => filters[k]).length;
   const hasAnyFilter = LMS_FILTER_KEYS.some((k) => k !== 'sort' && k !== 'perPage' && filters[k]);
 
-  const tabs: { id: string | undefined; label: string; count?: number }[] = [
+  const tabs: { id: LmsStage | undefined; label: string; count?: number }[] = [
     { id: undefined, label: 'All', count: countsQuery.data?.ALL },
     ...LMS_STAGES.map((stage) => ({ id: stage, label: me.stageLabels[stage], count: countsQuery.data?.[stage] })),
   ];
+  const total = countsQuery.data?.ALL ?? 0;
 
   const allOnPageSelected = leads.length > 0 && leads.every((l) => selected.has(l.id));
   const toggleAll = () => setSelected(allOnPageSelected ? new Set() : new Set(leads.map((l) => l.id)));
@@ -199,25 +203,37 @@ function LeadsList({
         <LeadsBoard me={me} filters={filters} onOpenLead={onOpenLead} />
       ) : (
         <>
-      <div role="tablist" aria-label="Stages" className="mb-3 flex gap-5 overflow-x-auto border-b border-lms-line">
-        {tabs.map((t) => {
-          const active = filters.stage === t.id;
-          return (
-            <button
-              key={t.id ?? 'ALL'}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setFilter('stage', t.id)}
-              className={`-mb-px whitespace-nowrap border-b-2 pb-2.5 text-sm ${
-                active ? 'border-lms-ink font-medium text-lms-ink' : 'border-transparent text-lms-muted hover:text-lms-ink'
-              }`}
-            >
-              {t.label}
-              {t.count !== undefined && <span className="ml-1.5 tabular-nums text-lms-muted">{t.count}</span>}
-            </button>
-          );
-        })}
+      {/* The stage tabs as one joined strip: count and share of all leads (the old LMS's status cards). */}
+      <div role="tablist" aria-label="Stages" className="mb-4 overflow-x-auto rounded-[10px] border border-lms-line bg-lms-surface">
+        <div className="grid min-w-[640px] grid-cols-6 divide-x divide-lms-line">
+          {tabs.map((t) => {
+            const active = filters.stage === t.id;
+            const share = t.id && total ? Math.round(((t.count ?? 0) / total) * 1000) / 10 : null;
+            return (
+              <button
+                key={t.id ?? 'ALL'}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter('stage', t.id)}
+                className={`relative px-4 pb-3 pt-2.5 text-left ${active ? 'shadow-[inset_0_-2px_0_var(--lms-ink)]' : 'hover:bg-lms-page'}`}
+              >
+                <span className={`flex items-center gap-2 text-[13px] ${active ? 'font-medium text-lms-ink' : 'text-lms-muted'}`}>
+                  {t.id && <span aria-hidden className={`h-3 w-1 rounded-full ${STAGE_RULE[t.id]}`} />}
+                  {t.label}
+                </span>
+                <span className="mt-1 block text-xl font-semibold leading-tight tabular-nums">{t.count ?? '\u2013'}</span>
+                <span className="block text-xs text-lms-muted tabular-nums">
+                  {t.id === undefined
+                    ? 'leads'
+                    : t.id === 'LOST' && countsQuery.data?.FAKE
+                      ? `${share ?? 0}%, ${countsQuery.data.FAKE} fake`
+                      : `${share ?? 0}% of all`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {selected.size > 0 && (
@@ -272,10 +288,11 @@ function LeadsList({
                   <Th>Kind</Th>
                   <Th>Product</Th>
                   <Th className="text-right">Value</Th>
+                  <Th>Logistics</Th>
                   {me.isManager && <Th>Agent</Th>}
                   <Th className="text-right">Tries</Th>
                   <Th>Next task</Th>
-                  <Th>Waiting or last activity</Th>
+                  <Th>Waiting or last update</Th>
                   {tableFields.map((f) => (
                     <Th key={f.key}>{f.label}</Th>
                   ))}
@@ -313,6 +330,25 @@ function LeadsList({
       )}
     </>
   );
+}
+
+/** The Logistics column's second line: where the parcel is with the courier. */
+const COURIER_NAMES: Record<string, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX' };
+
+function courierWords(order: NonNullable<LmsLeadRow['order']>): string {
+  const courier = (order.courierProvider && COURIER_NAMES[order.courierProvider]) || 'the courier';
+  switch (order.courierBookingStatus) {
+    case 'BOOKED':
+      return order.courierStatus ? `${courier}: ${order.courierStatus}` : `Booked with ${courier}`;
+    case 'BOOKING':
+      return `Booking with ${courier}`;
+    case 'FAILED':
+      return 'Courier booking failed';
+    case 'CANCELLED':
+      return `${courier} cancelled the pickup`;
+    default:
+      return 'Not booked yet';
+  }
 }
 
 function Th({ children, className = '' }: { children?: ReactNode; className?: string }) {
@@ -408,13 +444,23 @@ function LeadRow({
         )}
       </td>
       <td className={`${td} whitespace-nowrap text-right tabular-nums`}>{lead.value !== null ? formatMoney(lead.value) : ''}</td>
+      <td className={`${td} whitespace-nowrap`}>
+        {lead.order && (
+          <>
+            {orderStatusWord(lead.order.status)}
+            <span className="block text-lms-muted">{courierWords(lead.order)}</span>
+          </>
+        )}
+      </td>
       {me.isManager && <td className={`${td} whitespace-nowrap`}>{lead.assignedTo?.name ?? <span className="text-lms-muted">Nobody yet</span>}</td>}
       <td className={`${td} text-right tabular-nums`}>{lead.attemptCount || ''}</td>
       <td className={`${td} whitespace-nowrap tabular-nums`}>
         {lead.nextTaskAt ? formatDateTime(lead.nextTaskAt) : ''}
       </td>
       <td className={`${td} whitespace-nowrap tabular-nums ${waitingTone}`}>
-        {waiting !== null ? `waiting ${timeAgo(lead.createdAt)}` : timeAgo(lead.lastActivityAt)}
+        {waiting !== null ? `waiting ${timeAgo(lead.createdAt)}` : timeAgo(lead.lastUpdate.at)}
+        {/* Who touched it last (the old LMS's status updater). */}
+        {lead.lastUpdate.by && <span className="block font-normal text-lms-muted">{lead.lastUpdate.by}</span>}
       </td>
       {extraFields.map((f) => (
         <td key={f.key} className={`${td} max-w-[200px] truncate ${f.type === 'NUMBER' || f.type === 'PHONE' ? 'tabular-nums' : ''}`}>
@@ -611,14 +657,16 @@ function SavedViews({ filters, onApply }: { filters: LmsLeadFilters; onApply: (f
   );
 }
 
-type BulkDialog = 'none' | 'lost' | 'addTag' | 'removeTag' | 'delete';
+type BulkDialog = 'none' | 'lost' | 'addTag' | 'removeTag' | 'delete' | 'assign';
 
 function BulkBar({ me, ids, onDone, onClear }: { me: LmsMe; ids: string[]; onDone: () => void; onClear: () => void }) {
   const [dialog, setDialog] = useState<BulkDialog>('none');
   const [tag, setTag] = useState('');
+  const [assignTo, setAssignTo] = useState('POOL');
 
   const run = useMutation({
-    mutationFn: ({ action, reason, tag }: { action: LmsBulkAction; reason?: string; tag?: string }) => lmsApi.bulk(ids, action, { reason, tag }),
+    mutationFn: ({ action, reason, tag, assignTo }: { action: LmsBulkAction; reason?: string; tag?: string; assignTo?: string | null }) =>
+      lmsApi.bulk(ids, action, { reason, tag, assignTo }),
     onSuccess: ({ done, skipped }) => {
       setDialog('none');
       setTag('');
@@ -638,6 +686,7 @@ function BulkBar({ me, ids, onDone, onClear }: { me: LmsMe; ids: string[]; onDon
       <LmsButton onClick={() => setDialog('lost')}>Mark as lost</LmsButton>
       <LmsButton onClick={() => setDialog('addTag')}>Add tag</LmsButton>
       <LmsButton onClick={() => setDialog('removeTag')}>Remove tag</LmsButton>
+      {me.isManager && <LmsButton onClick={() => setDialog('assign')}>Assign to…</LmsButton>}
       {me.isManager && (
         <LmsButton variant="danger" onClick={() => setDialog('delete')}>
           Delete
@@ -676,6 +725,25 @@ function BulkBar({ me, ids, onDone, onClear }: { me: LmsMe; ids: string[]; onDon
             <LmsButton onClick={() => setDialog('none')}>Cancel</LmsButton>
             <LmsButton type="submit" variant="primary" disabled={run.isPending || !tag.trim()}>
               {dialog === 'addTag' ? 'Add tag' : 'Remove tag'}
+            </LmsButton>
+          </div>
+        </form>
+      </LmsDialog>
+
+      <LmsDialog open={dialog === 'assign'} onOpenChange={(o) => !o && setDialog('none')} title={`Assign ${ids.length} lead${ids.length === 1 ? '' : 's'} to`} width="max-w-sm">
+        <form
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            run.mutate({ action: 'ASSIGN', assignTo: assignTo === 'POOL' ? null : assignTo });
+          }}
+        >
+          <Field label="Who calls them" hint="Their open follow-ups move with them.">
+            <AgentSelect me={me} extra={['POOL']} value={assignTo} onChange={(e) => setAssignTo(e.target.value)} autoFocus />
+          </Field>
+          <div className="mt-4 flex justify-end gap-2">
+            <LmsButton onClick={() => setDialog('none')}>Cancel</LmsButton>
+            <LmsButton type="submit" variant="primary" disabled={run.isPending}>
+              {run.isPending ? 'Assigning…' : 'Assign'}
             </LmsButton>
           </div>
         </form>

@@ -2,10 +2,11 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
-import { lmsApi, type CreateLmsLead } from '../../lib/lmsApi';
+import { lmsApi, type CreateLmsLead, type LmsMe } from '../../lib/lmsApi';
 import { BD_DISTRICTS, divisionOf } from '../../lib/bdDistricts';
 import { Field, LmsButton, LmsDialog, LmsInput, LmsSelect, LmsTextarea } from './ui';
 import { ExtraFieldInputs, useLmsFields, type ExtraValues } from './ExtraFields';
+import { AgentSelect } from './Team';
 
 const EMPTY = { name: '', phone: '', productSummary: '', quantity: '', value: '', address: '', district: '', note: '' };
 
@@ -15,16 +16,20 @@ const EMPTY = { name: '', phone: '', productSummary: '', quantity: '', value: ''
  * existing lead's history instead, and we open that lead.
  */
 export function AddLeadDialog({
+  me,
   open,
   onOpenChange,
   onOpenLead,
 }: {
+  me: LmsMe;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenLead: (id: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
+  // Managers pick who works it; agents always keep what they add (the server enforces this too).
+  const [assignTo, setAssignTo] = useState(me.autoAssign === 'ROUND_ROBIN' ? 'AUTO' : 'ME');
   const [extra, setExtra] = useState<ExtraValues>({});
   const fieldsQuery = useLmsFields();
   const set = (key: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -61,6 +66,7 @@ export function AddLeadDialog({
       district: form.district || undefined,
       note: form.note.trim() || undefined,
       customFields: Object.fromEntries(Object.entries(extra).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()])),
+      ...(me.isManager ? { assignTo } : {}),
     });
   };
 
@@ -118,6 +124,12 @@ export function AddLeadDialog({
         <Field label="Note">
           <LmsTextarea rows={3} value={form.note} onChange={set('note')} maxLength={2000} placeholder="Anything the team should know" />
         </Field>
+
+        {me.isManager && (
+          <Field label="Who calls them" hint={assignTo === 'AUTO' ? 'Goes to the next person on shift, in turn.' : undefined}>
+            <AgentSelect me={me} extra={['AUTO', 'ME']} value={assignTo} onChange={(e) => setAssignTo(e.target.value)} />
+          </Field>
+        )}
 
         <div className="flex justify-end gap-2 border-t border-lms-line pt-4">
           <LmsButton onClick={() => onOpenChange(false)}>Cancel</LmsButton>

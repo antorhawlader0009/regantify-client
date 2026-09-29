@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Phone, X } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
@@ -7,15 +6,20 @@ import { toast } from '../../lib/toast';
 import {
   LMS_KIND_LABELS,
   LMS_SOURCE_LABELS,
+  LMS_STAGES,
   lmsApi,
   type LmsActivity,
   type LmsFieldDef,
   type LmsLeadDetail,
   type LmsMe,
+  type LmsStage,
   type UpdateLmsLead,
 } from '../../lib/lmsApi';
 import { BD_DISTRICTS, divisionOf } from '../../lib/bdDistricts';
-import { agoPhrase, formatDateTime, formatMoney, formatPhone, whatsappLink } from './format';
+import { DashboardLink } from './LmsLayout';
+import { agoPhrase, formatDateTime, formatMoney, formatPhone } from './format';
+import { MessageButtons } from './MessageComposer';
+import { AgentSelect } from './Team';
 import { STAGE_RULE } from './stageStyles';
 import { Field, LmsButton, LmsDrawer, LmsInput, LmsSelect, LmsTextarea, StageMark } from './ui';
 import { changedExtraValues, ExtraFieldInputs, formatExtraValue, toExtraValues, useLmsFields } from './ExtraFields';
@@ -33,7 +37,7 @@ export function LeadDrawer({ leadId, me, onClose }: { leadId: string | null; me:
   );
 }
 
-type Panel = 'none' | 'edit' | 'lost' | 'merge';
+type Panel = 'none' | 'edit' | 'lost' | 'cancel' | 'merge';
 
 function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onGone: () => void }) {
   const queryClient = useQueryClient();
@@ -71,6 +75,29 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
     },
     onError: onError("The lead wasn't reopened. Try again."),
   });
+  // An order lead is confirmed or cancelled the same way as on the Call Desk: the order itself changes.
+  const orderOutcome = useMutation({
+    mutationFn: ({ outcome, reason }: { outcome: 'WIN' | 'LOSE'; reason?: string }) => lmsApi.recordContact(leadId, { outcome, reason }),
+    onSuccess: ({ lead }) => {
+      apply(lead);
+      setPanel('none');
+      toast.success(lead.stage === 'WON' ? `Order #${lead.order?.invoiceNumber} confirmed` : `Order #${lead.order?.invoiceNumber} cancelled`);
+    },
+    onError: onError("The order wasn't changed. Try again."),
+  });
+  const reassign = useMutation({
+    mutationFn: (userId: string | null) => lmsApi.assignLead(leadId, userId),
+    onSuccess: (lead) => {
+      apply(lead);
+      toast.success(lead.assignedTo ? `Assigned to ${lead.assignedTo.name}` : 'Moved to the unassigned pool');
+    },
+    onError: onError("The lead wasn't reassigned. Try again."),
+  });
+  const move = useMutation({
+    mutationFn: (stage: 'NEW' | 'TRYING' | 'IN_TALKS') => lmsApi.moveStage(leadId, stage),
+    onSuccess: apply,
+    onError: onError("The stage wasn't changed. Try again."),
+  });
 
   if (leadQuery.isPending) return <p className="p-6 text-sm text-lms-muted">Loading…</p>;
   if (leadQuery.isError) {
@@ -86,6 +113,15 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
 
   const lead = leadQuery.data;
   const isClosed = lead.stage === 'WON' || lead.stage === 'LOST';
+  const isOrderLead = !!lead.order;
+
+  // The old LMS's status dropdown, through the same rules as the board.
+  const pickStage = (stage: LmsStage) => {
+    if (stage === lead.stage) return;
+    if (stage === 'WON') close.mutate({ outcome: 'WON' });
+    else if (stage === 'LOST') setPanel('lost');
+    else move.mutate(stage);
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -110,40 +146,65 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
             >
               <Phone size={16} /> Call
             </a>
-            <a
-              href={whatsappLink(lead.phone)}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-10 items-center rounded-md border border-lms-line px-4 text-sm font-medium hover:bg-lms-page"
-            >
-              WhatsApp
-            </a>
+            <MessageButtons lead={lead} me={me} onSent={apply} />
           </div>
         )}
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {/* Actions */}
-        <section className="flex flex-wrap gap-2 border-b border-lms-line px-5 py-3">
-          {lead.order ? (
-            <p className="text-sm text-lms-muted">
-              This lead is{' '}
-              <Link to={`/vendor/orders/${lead.order.id}`} className="font-medium text-lms-ink underline">
-                order #{lead.order.invoiceNumber}
-              </Link>
-              . Confirm or cancel it on the order.
-            </p>
+        <section className="flex flex-wrap items-center gap-2 border-b border-lms-line px-5 py-3">
+          {isOrderLead && lead.order ? (
+            <>
+              <p className="w-full text-sm text-lms-muted">
+                This lead is{' '}
+                {/* Opens the order in the dashboard, in a new tab so the LMS stays open. */}
+                <DashboardLink to={`/vendor/orders/${lead.order.id}`} className="font-medium text-lms-ink underline">
+                  order #{lead.order.invoiceNumber}
+                </DashboardLink>
+                {isClosed ? '.' : ', waiting for its confirmation call.'}
+              </p>
+              {!isClosed && (
+                <>
+                  <LmsButton variant="primary" disabled={orderOutcome.isPending} onClick={() => orderOutcome.mutate({ outcome: 'WIN' })}>
+                    Confirm order
+                  </LmsButton>
+                  <LmsButton onClick={() => setPanel(panel === 'cancel' ? 'none' : 'cancel')}>Cancel order</LmsButton>
+                </>
+              )}
+            </>
           ) : isClosed ? (
             <LmsButton onClick={() => reopen.mutate()} disabled={reopen.isPending}>
               Reopen
             </LmsButton>
           ) : (
             <>
-              <LmsButton variant="primary" onClick={() => close.mutate({ outcome: 'WON' })} disabled={close.isPending}>
+              <DashboardLink
+                to={`/vendor/orders/add?fromLead=${lead.id}`}
+                className="inline-flex h-9 items-center rounded-md bg-lms-ink px-3.5 text-sm font-medium text-white hover:opacity-90"
+              >
+                Create order
+              </DashboardLink>
+              <LmsButton onClick={() => close.mutate({ outcome: 'WON' })} disabled={close.isPending}>
                 Mark as won
               </LmsButton>
               <LmsButton onClick={() => setPanel(panel === 'lost' ? 'none' : 'lost')}>Mark as lost</LmsButton>
             </>
+          )}
+          {!(isOrderLead && isClosed) && (
+            <LmsSelect
+              aria-label="Stage"
+              className="!w-auto"
+              value={lead.stage}
+              disabled={move.isPending || close.isPending}
+              onChange={(e) => pickStage(e.target.value as LmsStage)}
+            >
+              {LMS_STAGES.filter((st) => !isOrderLead || st === lead.stage || (st !== 'WON' && st !== 'LOST')).map((st) => (
+                <option key={st} value={st}>
+                  {me.stageLabels[st]}
+                </option>
+              ))}
+            </LmsSelect>
           )}
           <LmsButton variant="quiet" onClick={() => setPanel(panel === 'edit' ? 'none' : 'edit')}>
             Edit
@@ -161,6 +222,15 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
             onPick={(reason) => close.mutate({ outcome: 'LOST', reason })}
           />
         )}
+        {panel === 'cancel' && (
+          <LostReasonPicker
+            title={`Why is order #${lead.order?.invoiceNumber} cancelled?`}
+            reasons={me.lostReasons.filter((r) => r !== 'Not reachable')}
+            busy={orderOutcome.isPending}
+            onCancel={() => setPanel('none')}
+            onPick={(reason) => orderOutcome.mutate({ outcome: 'LOSE', reason })}
+          />
+        )}
         {panel === 'edit' && (
           <EditLead lead={lead} fieldDefs={fieldDefs} busy={update.isPending} onCancel={() => setPanel('none')} onSave={(body) => update.mutate(body, { onSuccess: () => setPanel('none') })} />
         )}
@@ -175,12 +245,25 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
             <Detail label="Second phone">{lead.phoneAlt ? <span className="tabular-nums">{formatPhone(lead.phoneAlt)}</span> : null}</Detail>
             <Detail label="Email">{lead.email}</Detail>
             <Detail label="Address">{lead.address}</Detail>
-            <Detail label="District">
-              {lead.district ? [lead.district, divisionOf(lead.district)].filter((v, i, all) => v && all.indexOf(v) === i).join(', ') : null}
-            </Detail>
+            <Detail label="District">{lead.district}</Detail>
+            <Detail label="Division">{lead.division ?? divisionOf(lead.district)}</Detail>
             <Detail label="Area">{lead.area}</Detail>
             <Detail label="They wrote">{lead.message}</Detail>
-            <Detail label="Assigned to">{lead.assignedTo?.name ?? 'Nobody yet'}</Detail>
+            <Detail label="Assigned to">
+              {me.isManager ? (
+                <AgentSelect
+                  me={me}
+                  extra={['POOL']}
+                  aria-label="Assigned to"
+                  className="!h-8 !w-auto"
+                  value={lead.assignedTo?.id ?? 'POOL'}
+                  disabled={reassign.isPending}
+                  onChange={(e) => reassign.mutate(e.target.value === 'POOL' ? null : e.target.value)}
+                />
+              ) : (
+                (lead.assignedTo?.name ?? 'Nobody yet')
+              )}
+            </Detail>
             <Detail label="Came from">{`${LMS_SOURCE_LABELS[lead.source]}, ${agoPhrase(lead.createdAt)}`}</Detail>
             <Detail label="Tries">{lead.attemptCount ? String(lead.attemptCount) : null}</Detail>
           </dl>
@@ -235,11 +318,13 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function LostReasonPicker({
+  title = 'Why was it lost?',
   reasons,
   busy,
   onPick,
   onCancel,
 }: {
+  title?: string;
   reasons: string[];
   busy: boolean;
   onPick: (reason: string) => void;
@@ -247,7 +332,7 @@ function LostReasonPicker({
 }) {
   return (
     <section className="border-b border-lms-line bg-lms-page px-5 py-4">
-      <p className="text-sm font-medium">Why was it lost?</p>
+      <p className="text-sm font-medium">{title}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {reasons.map((reason) => (
           <LmsButton key={reason} disabled={busy} onClick={() => onPick(reason)}>
@@ -288,7 +373,8 @@ function EditLead({
     area: lead.area ?? '',
   });
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
-  const contactLocked = !!lead.order;
+  // An order lead's contact changes are saved on the order too (before it ships); its email stays the order's.
+  const onOrder = !!lead.order;
   const extraBefore = toExtraValues(fieldDefs, lead.customFields);
   const [extra, setExtra] = useState(extraBefore);
 
@@ -297,17 +383,15 @@ function EditLead({
     const text = (v: string) => v.trim() || null;
     const num = (v: string) => (v.trim() === '' ? null : Number(v));
     const body: UpdateLmsLead = { productSummary: text(form.productSummary), quantity: num(form.quantity), value: num(form.value) };
-    if (!contactLocked) {
-      Object.assign(body, {
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        phoneAlt: text(form.phoneAlt),
-        email: text(form.email),
-        address: text(form.address),
-        district: form.district || null,
-        area: text(form.area),
-      });
-    }
+    Object.assign(body, {
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      phoneAlt: text(form.phoneAlt),
+      ...(onOrder ? {} : { email: text(form.email) }),
+      address: text(form.address),
+      district: form.district || null,
+      area: text(form.area),
+    });
     const changedExtra = changedExtraValues(extraBefore, extra);
     if (Object.keys(changedExtra).length) body.customFields = changedExtra;
     onSave(body);
@@ -315,44 +399,43 @@ function EditLead({
 
   return (
     <form onSubmit={submit} className="space-y-3 border-b border-lms-line bg-lms-page px-5 py-4">
-      {contactLocked ? (
-        <p className="text-sm text-lms-muted">The contact details come from the order. Change them on the order.</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Name">
-              <LmsInput value={form.name} onChange={set('name')} required maxLength={120} />
-            </Field>
-            <Field label="Phone">
-              <LmsInput value={form.phone} onChange={set('phone')} required inputMode="tel" className="tabular-nums" />
-            </Field>
-            <Field label="Second phone">
-              <LmsInput value={form.phoneAlt} onChange={set('phoneAlt')} inputMode="tel" className="tabular-nums" />
-            </Field>
-            <Field label="Email">
-              <LmsInput type="email" value={form.email} onChange={set('email')} />
-            </Field>
-          </div>
-          <Field label="Address">
-            <LmsInput value={form.address} onChange={set('address')} maxLength={1000} />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="District">
-              <LmsSelect value={form.district} onChange={set('district')}>
-                <option value="">Not known yet</option>
-                {BD_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </LmsSelect>
-            </Field>
-            <Field label="Area">
-              <LmsInput value={form.area} onChange={set('area')} maxLength={120} />
-            </Field>
-          </div>
-        </>
+      {onOrder && (
+        <p className="text-sm text-lms-muted">Contact changes are saved on order #{lead.order?.invoiceNumber} too, until it ships.</p>
       )}
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Name">
+          <LmsInput value={form.name} onChange={set('name')} required maxLength={120} />
+        </Field>
+        <Field label="Phone">
+          <LmsInput value={form.phone} onChange={set('phone')} required inputMode="tel" className="tabular-nums" />
+        </Field>
+        <Field label="Second phone">
+          <LmsInput value={form.phoneAlt} onChange={set('phoneAlt')} inputMode="tel" className="tabular-nums" />
+        </Field>
+        {!onOrder && (
+          <Field label="Email">
+            <LmsInput type="email" value={form.email} onChange={set('email')} />
+          </Field>
+        )}
+      </div>
+      <Field label="Address">
+        <LmsInput value={form.address} onChange={set('address')} maxLength={1000} />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="District" hint={form.district ? `Division: ${divisionOf(form.district) ?? 'not known'}` : undefined}>
+          <LmsSelect value={form.district} onChange={set('district')}>
+            <option value="">Not known yet</option>
+            {BD_DISTRICTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </LmsSelect>
+        </Field>
+        <Field label="Area">
+          <LmsInput value={form.area} onChange={set('area')} maxLength={120} />
+        </Field>
+      </div>
       <ExtraFieldInputs defs={fieldDefs} values={extra} onChange={(key, value) => setExtra((x) => ({ ...x, [key]: value }))} />
       <Field label="Product or interest">
         <LmsInput value={form.productSummary} onChange={set('productSummary')} maxLength={500} />

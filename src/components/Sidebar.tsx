@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import { isNavGroup, navLinks, type NavLinkItem, type NavSection } from '../lib/navConfig';
+import { LMS_WINDOW, openLms } from '../lib/lmsWindow';
 
 interface SidebarProps {
   sections: NavSection[];
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export function Sidebar({ sections }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const containsCurrent = (links: NavLinkItem[]) =>
     links.some((c) => location.pathname.startsWith(c.path));
 
@@ -54,6 +56,30 @@ export function Sidebar({ sections }: SidebarProps) {
           const Icon = section.icon;
           const hasChildren = !!section.children?.length;
           const isOpen = openSections.includes(section.label);
+
+          if (section.newWindow && section.path) {
+            // A real link, so middle-click and "open in new tab" still work.
+            return (
+              <a
+                key={section.label}
+                href={section.path}
+                target={LMS_WINDOW}
+                title="Opens in a new tab"
+                onClick={(e) => {
+                  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+                  e.preventDefault();
+                  // In-app navigation in the same tab when the session can't move
+                  // to a new one (impersonation): a full page load would lose it.
+                  if (!openLms()) navigate(section.path!);
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg font-medium text-[15px] text-regantify-text hover:bg-black/5"
+              >
+                <Icon size={20} strokeWidth={1.8} />
+                {section.label}
+                <ExternalLink size={14} strokeWidth={1.8} className="ml-auto text-regantify-text-muted" aria-hidden />
+              </a>
+            );
+          }
 
           if (!hasChildren && section.path) {
             return (

@@ -43,6 +43,8 @@ export interface NavSection {
   icon: LucideIcon;
   path?: string; // present when the top-level item itself is a page (e.g. Dashboard, Customers)
   children?: NavChild[];
+  /** Opens `path` in its own browser tab instead of inside the dashboard (the LMS). */
+  newWindow?: boolean;
 }
 
 /**
@@ -154,18 +156,9 @@ export const vendorNav: NavSection[] = [
   { label: 'SMS', icon: MessageSquare, path: '/vendor/sms' },
   { label: 'Staff', icon: UsersRound, path: '/vendor/staff' },
   { label: 'Billing', icon: CreditCard, path: '/vendor/billing' },
-  // LMS: see LMS-plan.md. /vendor/lms itself redirects to the list.
-  {
-    label: 'LMS',
-    icon: PhoneCall,
-    children: [
-      { label: 'Leads', path: '/vendor/lms/leads' },
-      { label: 'Call Desk', path: '/vendor/lms/desk' },
-      { label: 'Tasks', path: '/vendor/lms/tasks' },
-      { label: 'Reports', path: '/vendor/lms/reports' },
-      { label: 'Settings', path: '/vendor/lms/settings' },
-    ],
-  },
+  // LMS: its own app in its own tab (LMS-plan.md Step 4). Its sections
+  // (Leads, Call Desk, Tasks, Reports, Settings) are in the LMS's top bar.
+  { label: 'LMS', icon: PhoneCall, path: '/vendor/lms/leads', newWindow: true },
   { label: 'Support', icon: Headphones, path: '/vendor/support' },
   { label: 'Settings', icon: Settings, path: '/vendor/settings' },
 ];
