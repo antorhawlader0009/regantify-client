@@ -40,8 +40,8 @@ function GiftCardRow({ card }: { card: GiftCard }) {
 
 /**
  * Marketing > Gift Cards — prepaid store credit the vendor issues (see the
- * GiftCard model's schema comment). Shoppers can't redeem a code at
- * checkout yet, so the vendor records usage by hand on each card's page.
+ * GiftCard model's schema comment). A shopper can redeem a code at a StorePal
+ * checkout; the vendor can still record usage by hand on each card's page.
  */
 export default function GiftCards() {
   const navigate = useNavigate();

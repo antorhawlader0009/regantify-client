@@ -56,6 +56,8 @@ export interface StorefrontProduct {
   isPreOrder: boolean;
   /** Price on request (LMS-plan.md Step 9); the price comes back as 0 on StorePal stores with the LMS forms on. */
   quoteOnly?: boolean;
+  /** When a running Flash Sale that is lowering this product's price ends (ISO); null/absent = no sale. */
+  flashSaleEndsAt?: string | null;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: string;
