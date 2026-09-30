@@ -7,6 +7,7 @@ import { LeadDrawer } from '../../../components/lms/LeadDrawer';
 import { MessageButtons } from '../../../components/lms/MessageComposer';
 import { CustomerPanel } from '../../../components/lms/CustomerPanel';
 import { ShiftSwitch } from '../../../components/lms/Team';
+import { MyDay } from '../../../components/lms/Reports';
 import { DuePicker, RemindPicker } from '../../../components/lms/DuePicker';
 import { LmsButton, LmsInput, StageMark } from '../../../components/lms/ui';
 import { fillTemplate, formatDateTime, formatMoney, formatPhone, leadTemplateVars, minutesSince, timeAgo } from '../../../components/lms/format';
@@ -121,6 +122,7 @@ function Desk({ me }: { me: LmsMe }) {
   const onSaved = (lead: LmsLeadDetail, createOrder: boolean) => {
     queryClient.invalidateQueries({ queryKey: ['lms', 'leads'] });
     queryClient.invalidateQueries({ queryKey: ['lms', 'notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['lms', 'my-day'] });
     if (createOrder) {
       setCreatingOrder(lead);
       return;
@@ -144,11 +146,14 @@ function Desk({ me }: { me: LmsMe }) {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-lms-muted tabular-nums" aria-live="polite">
-          {queue
-            ? `${queue.waiting} waiting, ${queue.callbacksDue} callback${queue.callbacksDue === 1 ? '' : 's'} due`
-            : 'Loading the queue…'}
-        </p>
+        <div>
+          <p className="text-sm text-lms-muted tabular-nums" aria-live="polite">
+            {queue
+              ? `${queue.waiting} waiting, ${queue.callbacksDue} callback${queue.callbacksDue === 1 ? '' : 's'} due`
+              : 'Loading the queue…'}
+          </p>
+          <MyDay />
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <ShiftSwitch me={me} />
           <div role="group" aria-label="Which leads" className="inline-flex rounded-md border border-lms-line bg-lms-surface p-0.5">

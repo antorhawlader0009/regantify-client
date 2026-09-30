@@ -22,6 +22,9 @@
   --lms-stage-lost: #64748b;
   --lms-alert: #b91c1c;
 
+  /* Report charts: one hue for magnitude (dataviz reference slot 1, checked on white). */
+  --lms-chart: #2a78d6;
+
   font-family: 'IBM Plex Sans', 'Hind Siliguri', system-ui, sans-serif;
   color: var(--lms-ink);
 }

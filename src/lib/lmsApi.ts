@@ -509,6 +509,61 @@ export interface LmsExport {
   rows: LmsExportRow[];
 }
 
+export type LmsReportRange = '7D' | '30D' | '90D';
+
+/** A number for this period and the one before it (null = nothing to divide). */
+export interface LmsCompared {
+  current: number | null;
+  previous: number | null;
+}
+
+export interface LmsReportAgentRow {
+  userId: string;
+  name: string;
+  leadsHandled: number;
+  contacts: number;
+  calls: number;
+  reached: number;
+  reachRate: number | null;
+  won: number;
+  lost: number;
+  winRate: number | null;
+  firstContactMinutes: number | null;
+  overdueTasks: number;
+  confirmedOrders: number;
+  delivered: number;
+  returned: number;
+  deliveredRate: number | null;
+}
+
+export interface LmsReport {
+  range: LmsReportRange;
+  period: { from: string; to: string; prevFrom: string; prevTo: string };
+  agent: { userId: string; name: string } | null;
+  team: {
+    newLeads: LmsCompared;
+    contacts: LmsCompared;
+    reachRate: LmsCompared;
+    winRate: LmsCompared;
+    won: LmsCompared;
+    firstContactMinutes: LmsCompared;
+    openBacklog: number;
+    staleNow: number;
+  };
+  agents: LmsReportAgentRow[];
+  sources: { key: string; source: LmsLeadSource; form: string | null; leads: number; won: number; lost: number; winRate: number | null; valueWon: number }[];
+  stageFlow: { stage: LmsStage; leads: number; avgMinutes: number | null }[];
+  lostReasons: { reason: string; leads: number }[];
+  outcomes: { outcome: string; calls: number }[];
+  byHour: { hour: number; calls: number; reached: number; reachRate: number | null }[];
+}
+
+export interface LmsMyDay {
+  contacts: number;
+  won: number;
+  tasksDue: number;
+}
+
 export const lmsApi = {
   me: () => api.get<LmsMe>('/v1/lms/me').then((r) => r.data),
   getSettings: () => api.get<LmsSettings>('/v1/lms/settings').then((r) => r.data),
@@ -521,6 +576,9 @@ export const lmsApi = {
   exportLeads: (filters: LmsLeadFilters, limit?: number) =>
     api.get<LmsExport>('/v1/lms/leads/export', { params: { ...filters, limit } }).then((r) => r.data),
   importLeads: (body: LmsImportBody) => api.post<LmsImportResult>('/v1/lms/leads/import', body).then((r) => r.data),
+  report: (range: LmsReportRange, agent?: string) =>
+    api.get<LmsReport>('/v1/lms/reports', { params: { range, agent } }).then((r) => r.data),
+  myDay: () => api.get<LmsMyDay>('/v1/lms/reports/my-day').then((r) => r.data),
   getLead: (id: string) => api.get<LmsLeadDetail>(`/v1/lms/leads/${id}`).then((r) => r.data),
   createLead: (body: CreateLmsLead) =>
     api.post<{ merged: boolean; leadId: string | null }>('/v1/lms/leads', body).then((r) => r.data),

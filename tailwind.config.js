@@ -26,6 +26,7 @@ export default {
           line: 'var(--lms-line)',
           call: 'var(--lms-call)',
           alert: 'var(--lms-alert)',
+          chart: 'var(--lms-chart)',
           'stage-new': 'var(--lms-stage-new)',
           'stage-trying': 'var(--lms-stage-trying)',
           'stage-talks': 'var(--lms-stage-talks)',
