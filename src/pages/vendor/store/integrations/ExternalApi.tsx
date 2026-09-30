@@ -21,7 +21,27 @@ const ENDPOINTS: { method: string; path: string; description: string; write?: bo
   { method: 'GET', path: '/products', description: 'List products: ?search=, ?page=, ?limit=' },
   { method: 'GET', path: '/products/{id}', description: 'One product with its variants and stock' },
   { method: 'PATCH', path: '/products/{id}/stock', description: 'Set stock: { stock_quantity, variant_id? }', write: true },
+  {
+    method: 'POST',
+    path: '/leads',
+    description:
+      'Add a lead to your LMS (Zapier, Make, Pabbly: Facebook Lead Ads, Google Forms, website forms). The same external_ref twice never makes a second lead',
+    write: true,
+  },
 ];
+
+// POST /leads, the call a Zap or Make scenario sends (LMS-plan.md Step 14).
+const LEAD_EXAMPLE = `{
+  "name": "Rahim Uddin",
+  "phone": "01712345678",
+  "product": "Cotton Panjabi",
+  "quantity": 2,
+  "value": 2900,
+  "message": "Size L available?",
+  "source_label": "Facebook Lead Ads",
+  "external_ref": "fb-leadgen-1234567890",
+  "fields": { "company": "Rahim Traders" }
+}`;
 
 const ACCESS_OPTIONS: { value: ApiKeyAccess; label: string; hint: string }[] = [
   { value: 'READ_ONLY', label: 'Read only', hint: 'Can read orders and products. Best for reports and Google Sheets.' },
@@ -183,6 +203,18 @@ export default function ExternalApi() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="space-y-1.5">
+                <p className="font-medium text-regantify-text">Send leads to your LMS</p>
+                <p className="text-regantify-text-muted">
+                  POST this to <span className="font-mono text-xs">{baseUrl}/leads</span> with a Read &amp; write key. Only{' '}
+                  <span className="font-mono text-xs">phone</span> is needed. Put your form&apos;s own id (e.g. Facebook&apos;s
+                  leadgen_id) in <span className="font-mono text-xs">external_ref</span>, so a retry never makes a second lead;
+                  a number that already has an open lead is added to it. <span className="font-mono text-xs">fields</span> are
+                  your LMS extra fields, by key. Facebook keeps Lead Ads leads for 90 days, so connect your Zap soon after the form
+                  goes live. The LMS must be on, with API leads switched on in LMS &gt; Settings.
+                </p>
+                <pre className="text-[11px] bg-black/[0.03] rounded-lg p-3 overflow-auto">{LEAD_EXAMPLE}</pre>
               </div>
               <a
                 href={`${apiBaseUrl()}/api/docs#/external-api`}

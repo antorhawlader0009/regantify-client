@@ -9,6 +9,7 @@ import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
 import { LMS_TEMPLATES_KEY } from '../../../components/lms/MessageComposer';
 import { AttendanceSection, TeamSection } from '../../../components/lms/TeamSettings';
 import { AutomationsSection } from '../../../components/lms/Automations';
+import { PrivacySection } from '../../../components/lms/PrivacySettings';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -43,6 +44,7 @@ const SECTIONS = [
   { id: 'script', label: 'Call script' },
   { id: 'extra-fields', label: 'Extra fields' },
   { id: 'automations', label: 'Automations' },
+  { id: 'privacy', label: 'Privacy' },
 ];
 
 function SettingsBody({ me }: { me: LmsMe }) {
@@ -77,6 +79,9 @@ function SettingsBody({ me }: { me: LmsMe }) {
               text="Simple rules that run by themselves: when something happens to a lead that matches, assign it, tag it, plan a task, send an SMS or tell someone. They never move a lead's stage."
             >
               <AutomationsSection me={me} />
+            </Section>
+            <Section id="privacy" title="Privacy" text="What the LMS keeps, for how long, and erasing one person's leads when they ask.">
+              <PrivacySection settings={settingsQuery.data} />
             </Section>
           </>
         )}
@@ -178,8 +183,7 @@ function OnOffSection({ me }: { me: LmsMe }) {
 
 // ----------------------------------------------------------------- sources
 
-// Only the sources that exist so far; store forms and the API arrive in later steps.
-const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM' | 'STORE_FORM'; label: string; text: string }[] = [
+const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM' | 'STORE_FORM' | 'API'; label: string; text: string }[] = [
   { key: 'ORDER', label: 'New orders from your store', text: 'Cash on delivery orders waiting for a confirmation call.' },
   {
     key: 'ABANDONED_CHECKOUT',
@@ -191,6 +195,11 @@ const SOURCES: { key: 'ORDER' | 'ABANDONED_CHECKOUT' | 'LANDING_FORM' | 'STORE_F
     key: 'STORE_FORM',
     label: 'Product page forms (StorePal theme)',
     text: 'Requests from your product pages. Products you set to "Price on request" always show a Request a price form.',
+  },
+  {
+    key: 'API',
+    label: 'The API (Zapier, Make, Pabbly)',
+    text: 'Leads your other tools send with an API key, e.g. Facebook Lead Ads or Google Forms. See Store > Integrations > External API.',
   },
 ];
 

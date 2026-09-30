@@ -594,6 +594,18 @@ export interface LmsChatRead {
   usage: LmsAiUsage;
 }
 
+/** An order's confirmation call, from its LMS lead (Order detail, Step 14). */
+export interface LmsOrderCall {
+  leadId: string;
+  stage: LmsStage;
+  stageLabel: string;
+  lostReason: string | null;
+  attempts: number;
+  agent: string | null;
+  closedBy: string | null;
+  closedAt: string | null;
+}
+
 /** LMS > Settings > Automations (LMS-plan.md Step 13). */
 export type LmsAutomationTrigger = 'LEAD_CREATED' | 'STAGE_CHANGED' | 'WON' | 'LOST' | 'NO_ACTIVITY' | 'TASK_OVERDUE';
 
@@ -655,6 +667,11 @@ export const lmsApi = {
   aiSummary: (id: string) => api.post<{ lines: string[]; usage: LmsAiUsage }>(`/v1/lms/leads/${id}/ai/summary`).then((r) => r.data),
   aiDraft: (id: string, body: { channel: LmsTemplateChannel; templateId?: string; instruction?: string }) =>
     api.post<{ text: string; usage: LmsAiUsage }>(`/v1/lms/leads/${id}/ai/draft`, body).then((r) => r.data),
+  privacyLookup: (phone: string) => api.post<{ phone: string; leads: number }>('/v1/lms/privacy/lookup', { phone }).then((r) => r.data),
+  privacyErase: (phone: string, confirm: string) =>
+    api.post<{ phone: string; deleted: number }>('/v1/lms/privacy/erase', { phone, confirm }).then((r) => r.data),
+  /** The Orders page's "Call" line; null when the order has no LMS lead. */
+  callForOrder: (orderId: string) => api.get<LmsOrderCall | ''>(`/v1/lms/orders/${orderId}/call`).then((r) => r.data || null),
   automations: () => api.get<LmsAutomation[]>('/v1/lms/automations').then((r) => r.data),
   createAutomation: (body: LmsAutomationInput) => api.post<LmsAutomation>('/v1/lms/automations', body).then((r) => r.data),
   updateAutomation: (id: string, body: LmsAutomationInput) => api.put<LmsAutomation>(`/v1/lms/automations/${id}`, body).then((r) => r.data),

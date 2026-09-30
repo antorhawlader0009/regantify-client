@@ -16,6 +16,7 @@ import { CourierTimeline } from '../../../components/courier/CourierTimeline';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
+import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
 import { Dialog } from '../../../components/ui/Dialog';
@@ -256,6 +257,7 @@ export default function OrderDetail() {
             >
               Check History
             </button>
+            <OrderCallLine orderId={order.id} />
             {order.customerNote && (
               <p className="mt-3 text-xs text-regantify-text-muted bg-regantify-content rounded-lg p-2.5">
                 {order.customerNote}

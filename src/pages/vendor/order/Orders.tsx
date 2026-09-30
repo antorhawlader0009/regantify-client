@@ -23,7 +23,8 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { ordersApi, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider } from '../../../lib/ordersApi';
+import { ordersApi, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
+import { lmsApi } from '../../../lib/lmsApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import {
   courierApi,
@@ -568,6 +569,10 @@ export default function Orders() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [trashView, setTrashView] = useState(false);
+  // LMS "Call status" filter (LMS-plan.md Step 14), only offered when the store uses the LMS.
+  const [callStatus, setCallStatus] = useState<ListOrdersParams['callStatus'] | ''>('');
+  const lmsMe = useQuery({ queryKey: ['lms', 'me'], queryFn: lmsApi.me, retry: false, staleTime: 5 * 60_000 });
+  const lmsOn = !!lmsMe.data?.enabled;
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [labelOrder, setLabelOrder] = useState<Order | null>(null);
@@ -582,7 +587,7 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -661,7 +666,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '' }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -669,6 +674,7 @@ export default function Orders() {
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         trashOnly: trashView,
+        callStatus: (lmsOn && callStatus) || undefined,
         page,
         perPage,
       }),
@@ -840,6 +846,20 @@ export default function Orders() {
                   setDateTo(to);
                 }}
               />
+              {lmsOn && (
+                <select
+                  aria-label="Call status"
+                  value={callStatus}
+                  onChange={(e) => setCallStatus(e.target.value as ListOrdersParams['callStatus'] | '')}
+                  className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
+                >
+                  <option value="">Any call status</option>
+                  <option value="WAITING">Call: waiting</option>
+                  <option value="CONFIRMED">Call: confirmed</option>
+                  <option value="CANCELLED">Call: cancelled</option>
+                  <option value="NONE">No call in the LMS</option>
+                </select>
+              )}
               <button
                 onClick={() => setTrashView((v) => !v)}
                 className={`ml-auto text-xs font-medium ${

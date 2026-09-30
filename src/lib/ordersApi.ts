@@ -209,6 +209,8 @@ export interface ListOrdersParams {
   dateFrom?: string;
   dateTo?: string;
   trashOnly?: boolean;
+  /** LMS confirmation call (LMS-plan.md Step 14). */
+  callStatus?: 'WAITING' | 'CONFIRMED' | 'CANCELLED' | 'NONE';
   page?: number;
   perPage?: number;
 }
