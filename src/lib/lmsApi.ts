@@ -220,10 +220,12 @@ export interface CreateLmsLead {
   customFields?: Record<string, string | number | null>;
   /** Managers: "ME", "AUTO" (share out in turn) or a team member's userId. */
   assignTo?: string;
+  /** Made from a pasted chat (AI assist): the chat and the products read from it. */
+  chat?: { text: string; items: LmsChatItem[] };
 }
 
 export type UpdateLmsLead = Partial<{
-  [K in keyof Omit<CreateLmsLead, 'note' | 'name' | 'phone' | 'tags'>]: CreateLmsLead[K] | null;
+  [K in keyof Omit<CreateLmsLead, 'note' | 'name' | 'phone' | 'tags' | 'chat'>]: CreateLmsLead[K] | null;
 }> & {
   name?: string;
   phone?: string;
@@ -564,6 +566,34 @@ export interface LmsMyDay {
   tasksDue: number;
 }
 
+/** AI assist uses this month (LMS-plan.md Step 12). */
+export interface LmsAiUsage {
+  used: number;
+  limit: number;
+}
+
+/** A product read out of a pasted chat: matched to the catalog (productId), or as the customer said it. */
+export interface LmsChatItem {
+  productId: string | null;
+  name: string;
+  quantity: number;
+  unitPrice?: number | null;
+}
+
+export interface LmsChatRead {
+  name: string | null;
+  phone: string | null;
+  phoneAlt: string | null;
+  address: string | null;
+  district: string | null;
+  area: string | null;
+  note: string | null;
+  items: LmsChatItem[];
+  productSummary: string | null;
+  value: number | null;
+  usage: LmsAiUsage;
+}
+
 export const lmsApi = {
   me: () => api.get<LmsMe>('/v1/lms/me').then((r) => r.data),
   getSettings: () => api.get<LmsSettings>('/v1/lms/settings').then((r) => r.data),
@@ -579,6 +609,11 @@ export const lmsApi = {
   report: (range: LmsReportRange, agent?: string) =>
     api.get<LmsReport>('/v1/lms/reports', { params: { range, agent } }).then((r) => r.data),
   myDay: () => api.get<LmsMyDay>('/v1/lms/reports/my-day').then((r) => r.data),
+  aiUsage: () => api.get<LmsAiUsage>('/v1/lms/ai/usage').then((r) => r.data),
+  readChat: (text: string) => api.post<LmsChatRead>('/v1/lms/ai/chat', { text }).then((r) => r.data),
+  aiSummary: (id: string) => api.post<{ lines: string[]; usage: LmsAiUsage }>(`/v1/lms/leads/${id}/ai/summary`).then((r) => r.data),
+  aiDraft: (id: string, body: { channel: LmsTemplateChannel; templateId?: string; instruction?: string }) =>
+    api.post<{ text: string; usage: LmsAiUsage }>(`/v1/lms/leads/${id}/ai/draft`, body).then((r) => r.data),
   getLead: (id: string) => api.get<LmsLeadDetail>(`/v1/lms/leads/${id}`).then((r) => r.data),
   createLead: (body: CreateLmsLead) =>
     api.post<{ merged: boolean; leadId: string | null }>('/v1/lms/leads', body).then((r) => r.data),

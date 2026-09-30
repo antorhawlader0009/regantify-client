@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { MessageCircle, MessageSquareText } from 'lucide-react';
+import { MessageCircle, MessageSquareText, Sparkles } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { lmsApi, type LmsLeadDetail, type LmsMe, type LmsTemplate, type LmsTemplateChannel } from '../../lib/lmsApi';
 import { fillTemplate, leadTemplateVars, whatsappLink } from './format';
-import { LmsButton, LmsDialog, LmsTextarea } from './ui';
+import { LmsButton, LmsDialog, LmsInput, LmsTextarea } from './ui';
+import { AiUsageLine, useSetAiUsage } from './AiAssist';
 
 export const LMS_TEMPLATES_KEY = ['lms', 'templates'] as const;
 
@@ -118,6 +119,15 @@ function Composer({
           )}
         </div>
 
+        <AiDraftRow
+          leadId={lead.id}
+          channel={channel}
+          templateId={picked?.id}
+          onDraft={(draft) => {
+            setText(draft);
+          }}
+        />
+
         <label className="block">
           <span className="mb-1 block text-[13px] font-medium">Message to {lead.name}</span>
           <LmsTextarea rows={5} value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} placeholder="Write the message" />
@@ -147,4 +157,54 @@ function smsCount(text: string): number {
   const gsm7 = /^[\x00-\x7F£¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ!"#¤%&'()*+,\-./0-9:;<=>?¡A-Z¿a-zÄÖÑÜ§äöñüà]*$/.test(text);
   const [single, multi] = gsm7 ? [160, 153] : [70, 67];
   return text.length <= single ? 1 : Math.ceil(text.length / multi);
+}
+
+/**
+ * "Write with AI" (LMS AI assist): a draft from the lead's details and
+ * history, based on the picked template when there is one, and on what
+ * the agent says they want. It replaces the text box for the agent to edit.
+ */
+function AiDraftRow({
+  leadId,
+  channel,
+  templateId,
+  onDraft,
+}: {
+  leadId: string;
+  channel: LmsTemplateChannel;
+  templateId?: string;
+  onDraft: (text: string) => void;
+}) {
+  const [instruction, setInstruction] = useState('');
+  const setUsage = useSetAiUsage();
+  const draft = useMutation({
+    mutationFn: () => lmsApi.aiDraft(leadId, { channel, templateId, instruction: instruction.trim() || undefined }),
+    onSuccess: (result) => {
+      setUsage(result.usage);
+      onDraft(result.text);
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, "The AI couldn't write a draft. Try again, or write it yourself.")),
+  });
+  return (
+    <div className="rounded-md border border-lms-line bg-lms-page p-3">
+      <div className="flex flex-wrap gap-2">
+        <LmsInput
+          aria-label="What should the message say?"
+          value={instruction}
+          onChange={(e) => setInstruction(e.target.value)}
+          maxLength={300}
+          placeholder={templateId ? 'Anything to add? (optional)' : 'What should it say? e.g. remind about the advance payment'}
+          className="min-w-0 flex-1"
+        />
+        <LmsButton disabled={draft.isPending} onClick={() => draft.mutate()}>
+          <Sparkles size={15} />
+          {draft.isPending ? 'Writing…' : 'Write with AI'}
+        </LmsButton>
+      </div>
+      <p className="mt-1.5 flex flex-wrap justify-between gap-2 text-xs text-lms-muted">
+        <span>Read it before you send: the AI can get things wrong.</span>
+        <AiUsageLine />
+      </p>
+    </div>
+  );
 }

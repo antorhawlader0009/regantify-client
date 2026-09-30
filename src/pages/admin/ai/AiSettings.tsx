@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bot, Sparkles, MessageSquareText, LayoutTemplate, Save, Loader2, RefreshCw } from 'lucide-react';
+import { Bot, Sparkles, MessageSquareText, LayoutTemplate, PhoneCall, Save, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   getAiModels,
@@ -41,6 +41,12 @@ const FEATURES: FeatureField[] = [
     description: 'Drafts a full landing page (headline, features, FAQ, review placeholders) from a product and a goal.',
     icon: LayoutTemplate,
   },
+  {
+    key: 'LMS_ASSISTANT',
+    label: 'LMS AI assist',
+    description: 'In the LMS: fills a lead or order from a pasted chat, summarises a lead, and drafts WhatsApp/SMS messages.',
+    icon: PhoneCall,
+  },
 ];
 
 export default function AiSettings() {
@@ -50,6 +56,9 @@ export default function AiSettings() {
   const [fetchingModels, setFetchingModels] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [savingFeature, setSavingFeature] = useState<AiFeature | null>(null);
+  // LMS AI assist's uses per store per month: the saved number, and what's typed.
+  const [lmsLimit, setLmsLimit] = useState<number | null>(null);
+  const [lmsLimitDraft, setLmsLimitDraft] = useState('');
 
   // Saved settings load automatically (so the page shows what's already
   // configured), but the model list itself is only ever pulled live from
@@ -67,6 +76,11 @@ export default function AiSettings() {
             {} as Record<AiFeature, string>,
           ),
         );
+        const lms = settingList.find((s) => s.feature === 'LMS_ASSISTANT');
+        if (lms?.monthlyLimitPerStore != null) {
+          setLmsLimit(lms.monthlyLimitPerStore);
+          setLmsLimitDraft(String(lms.monthlyLimitPerStore));
+        }
       })
       .catch(() => toast.error('Could not load saved AI settings.'))
       .finally(() => setLoading(false));
@@ -96,6 +110,26 @@ export default function AiSettings() {
       toast.success('Model updated.');
     } catch {
       setSettings((prev) => ({ ...prev, [feature]: previous }));
+      toast.error('Could not save this change. Please try again.');
+    } finally {
+      setSavingFeature(null);
+    }
+  };
+
+  const saveLmsLimit = async () => {
+    const next = Number(lmsLimitDraft);
+    if (!Number.isInteger(next) || next < 1 || next > 100000) {
+      toast.error('Enter a whole number from 1 to 100,000.');
+      return;
+    }
+    const modelName = settings.LMS_ASSISTANT;
+    if (!modelName) return;
+    setSavingFeature('LMS_ASSISTANT');
+    try {
+      const saved = await updateAiSetting('LMS_ASSISTANT', modelName, next);
+      setLmsLimit(saved.monthlyLimitPerStore);
+      toast.success('Monthly limit updated.');
+    } catch {
       toast.error('Could not save this change. Please try again.');
     } finally {
       setSavingFeature(null);
@@ -172,6 +206,32 @@ export default function AiSettings() {
                       />
                     )}
                   </div>
+                  {field.key === 'LMS_ASSISTANT' && (
+                    <div className="mt-3 flex flex-wrap items-end gap-2">
+                      <label className="block">
+                        <span className="block text-xs text-regantify-text-muted mb-1">Uses per store per month</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={100000}
+                          value={lmsLimitDraft}
+                          onChange={(e) => setLmsLimitDraft(e.target.value)}
+                          className="w-40 px-3.5 py-2 rounded-xl border border-black/10 text-sm text-regantify-text bg-white focus:outline-none focus:border-regantify-cta tabular-nums"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={saveLmsLimit}
+                        disabled={isSaving || lmsLimitDraft === String(lmsLimit ?? '')}
+                        className="px-4 py-2 rounded-xl border border-black/10 text-sm font-medium text-regantify-text hover:bg-black/[0.03] disabled:opacity-50"
+                      >
+                        Save limit
+                      </button>
+                      <p className="w-full text-xs text-regantify-text-muted">
+                        Every read chat, summary and draft is one use. When a store runs out, the LMS says so until the 1st of next month.
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })

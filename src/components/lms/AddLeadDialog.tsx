@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
-import { lmsApi, type CreateLmsLead, type LmsMe } from '../../lib/lmsApi';
+import { lmsApi, type CreateLmsLead, type LmsChatRead, type LmsMe } from '../../lib/lmsApi';
 import { BD_DISTRICTS, divisionOf } from '../../lib/bdDistricts';
 import { Field, LmsButton, LmsDialog, LmsInput, LmsSelect, LmsTextarea } from './ui';
 import { ExtraFieldInputs, useLmsFields, type ExtraValues } from './ExtraFields';
 import { AgentSelect } from './Team';
+import { ChatItems, ChatReader } from './AiAssist';
 
 const EMPTY = { name: '', phone: '', productSummary: '', quantity: '', value: '', address: '', district: '', note: '' };
 
@@ -31,6 +32,8 @@ export function AddLeadDialog({
   // Managers pick who works it; agents always keep what they add (the server enforces this too).
   const [assignTo, setAssignTo] = useState(me.autoAssign === 'ROUND_ROBIN' ? 'AUTO' : 'ME');
   const [extra, setExtra] = useState<ExtraValues>({});
+  // Set when the form was filled from a pasted chat (AI assist): the lead is saved as "Pasted chat" with its products.
+  const [chat, setChat] = useState<{ text: string; read: LmsChatRead } | null>(null);
   const fieldsQuery = useLmsFields();
   const set = (key: keyof typeof EMPTY) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -40,6 +43,7 @@ export function AddLeadDialog({
       queryClient.invalidateQueries({ queryKey: ['lms', 'leads'] });
       setForm(EMPTY);
       setExtra({});
+      setChat(null);
       onOpenChange(false);
       if (!result.merged) {
         toast.success('Lead added');
@@ -67,7 +71,27 @@ export function AddLeadDialog({
       note: form.note.trim() || undefined,
       customFields: Object.fromEntries(Object.entries(extra).filter(([, v]) => v.trim()).map(([k, v]) => [k, v.trim()])),
       ...(me.isManager ? { assignTo } : {}),
+      ...(chat
+        ? { chat: { text: chat.text, items: chat.read.items.map((i) => ({ productId: i.productId, name: i.name, quantity: i.quantity })) } }
+        : {}),
     });
+  };
+
+  /** The AI's reading goes into the form, for the agent to check before saving. Empty answers keep what was typed. */
+  const fillFromChat = (read: LmsChatRead, text: string) => {
+    setChat({ text, read });
+    setForm((f) => ({
+      ...f,
+      name: read.name ?? f.name,
+      phone: read.phone ?? f.phone,
+      productSummary: read.productSummary ?? f.productSummary,
+      // The summary already says "2 × …", so the quantity stays empty.
+      quantity: read.productSummary ? '' : f.quantity,
+      value: read.value !== null ? String(read.value) : f.value,
+      address: [read.address, read.area].filter(Boolean).join(', ') || f.address,
+      district: read.district ?? f.district,
+      note: read.note ?? f.note,
+    }));
   };
 
   const division = divisionOf(form.district);
@@ -75,6 +99,9 @@ export function AddLeadDialog({
   return (
     <LmsDialog open={open} onOpenChange={onOpenChange} title="Add lead">
       <form onSubmit={submit} className="space-y-4">
+        <ChatReader onRead={fillFromChat} />
+        {chat && <ChatItems items={chat.read.items} value={chat.read.value} />}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Name">
             <LmsInput value={form.name} onChange={set('name')} required maxLength={120} autoFocus />

@@ -20,6 +20,7 @@ import { BD_DISTRICTS, divisionOf } from '../../lib/bdDistricts';
 import { DashboardLink } from './LmsLayout';
 import { agoPhrase, formatDateTime, formatMoney, formatPhone } from './format';
 import { MessageButtons } from './MessageComposer';
+import { LeadSummary } from './AiAssist';
 import { AgentSelect } from './Team';
 import { FollowUps } from './FollowUps';
 import { RemindPicker } from './DuePicker';
@@ -177,6 +178,13 @@ function LeadDrawerBody({ leadId, me, onGone }: { leadId: string; me: LmsMe; onG
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* AI summary of a long timeline (AI assist); a fresh one per lead, never saved. */}
+        {lead.activities.length >= 4 && (
+          <section className="border-b border-lms-line px-5 py-3">
+            <LeadSummary key={lead.id} leadId={lead.id} activityCount={lead.activities.length} />
+          </section>
+        )}
+
         {/* Actions */}
         <section className="flex flex-wrap items-center gap-2 border-b border-lms-line px-5 py-3">
           {isOrderLead && lead.order ? (
