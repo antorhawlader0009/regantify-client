@@ -7,6 +7,7 @@ import { authApi } from '../lib/authApi';
 import { financeApi } from '../lib/financeApi';
 import { storefrontStoreUrl } from '../lib/storefrontUrl';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from './ui/DropdownMenu';
+import { NotificationBell } from './NotificationBell';
 
 interface TopbarProps {
   brandLabel?: string; // "Regantify" for vendor, "Regantify Admin" for admin
@@ -137,6 +138,9 @@ export function Topbar({ brandLabel = 'Regantify' }: TopbarProps) {
             {balanceRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
+
+        {/* Notifications — vendor-only live digest, sits just left of the avatar. */}
+        {isVendor && <NotificationBell />}
 
         {/* Account menu — avatar opens a small dialog with Settings + Log out. */}
         <DropdownMenu
