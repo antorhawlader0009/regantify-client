@@ -109,6 +109,9 @@ import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
+import SupportInbox from './pages/admin/support/SupportInbox';
+import Support from './pages/vendor/support/Support';
+import SupportTicket from './pages/vendor/support/SupportTicket';
 import PaymentGatewayManagement from './pages/admin/payment-gateway/PaymentGatewayManagement';
 import Payouts from './pages/admin/finance/Payouts';
 import LeadsPage from './pages/vendor/lms/LeadsPage';
@@ -138,6 +141,7 @@ function flattenRoutes(sections: typeof vendorNav) {
 const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
   (r) =>
     r.path !== '/vendor/settings' &&
+    r.path !== '/vendor/support' &&
     r.path !== '/vendor/product/all' &&
     r.path !== '/vendor/product/add' &&
     r.path !== '/vendor/product/categories' &&
@@ -196,6 +200,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/plans' &&
     r.path !== '/admin/plan-requests' &&
+    r.path !== '/admin/support' &&
     r.path !== '/admin/payment-gateway' &&
     r.path !== '/admin/finance/payouts',
 );
@@ -259,6 +264,8 @@ export default function App() {
               <Route element={<VendorLayout />}>
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                 <Route path="/vendor/settings" element={<VendorSettings />} />
+                <Route path="/vendor/support" element={<Support />} />
+                <Route path="/vendor/support/:id" element={<SupportTicket />} />
                 <Route path="/vendor/product/add" element={<AddProduct />} />
                 <Route path="/vendor/product/edit/:id" element={<EditProduct />} />
                 <Route path="/vendor/product/all" element={<AllProducts />} />
@@ -385,6 +392,8 @@ export default function App() {
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />
+                <Route path="/admin/support" element={<SupportInbox />} />
+                <Route path="/admin/support/:id" element={<SupportInbox />} />
                 <Route path="/admin/payment-gateway" element={<PaymentGatewayManagement />} />
                 <Route path="/admin/finance/payouts" element={<Payouts />} />
                 {adminPlaceholderRoutes.map((r) => (

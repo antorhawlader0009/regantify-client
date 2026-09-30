@@ -3,6 +3,24 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ExternalLink } from 'lucide-react';
 import { isNavGroup, navLinks, type NavLinkItem, type NavSection } from '../lib/navConfig';
 import { LMS_WINDOW, openLms } from '../lib/lmsWindow';
+import { useQuery } from '@tanstack/react-query';
+import { adminSupportApi, supportApi } from '../lib/supportApi';
+
+/** Tickets with a reply the viewer hasn't opened: support replies for a store, new store messages for Super Admin. */
+function SupportUnreadBadge({ admin }: { admin: boolean }) {
+  const { data: count = 0 } = useQuery({
+    queryKey: ['support-unread', admin ? 'admin' : 'vendor'],
+    queryFn: admin ? adminSupportApi.unreadCount : supportApi.unreadCount,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  if (!count) return null;
+  return (
+    <span className="ml-auto min-w-[20px] rounded-full bg-regantify-cta px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
 
 interface SidebarProps {
   sections: NavSection[];
@@ -96,6 +114,7 @@ export function Sidebar({ sections }: SidebarProps) {
               >
                 <Icon size={20} strokeWidth={1.8} />
                 {section.label}
+                {section.path.endsWith('/support') && <SupportUnreadBadge admin={section.path.startsWith('/admin')} />}
               </NavLink>
             );
           }

@@ -12,6 +12,7 @@ import {
   Star,
   Wallet,
   Info,
+  LifeBuoy,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -36,6 +37,7 @@ const TYPE_ICON: Record<NotificationType, ReactNode> = {
   WALLET: <Wallet size={16} />,
   SUBSCRIPTION: <CreditCard size={16} />,
   REVIEW: <Star size={16} />,
+  SUPPORT: <LifeBuoy size={16} />,
   SYSTEM: <Info size={16} />,
 };
 

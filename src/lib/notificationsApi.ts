@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type NotificationType = 'ORDER' | 'WITHDRAW' | 'WALLET' | 'SUBSCRIPTION' | 'REVIEW' | 'SYSTEM';
+export type NotificationType = 'ORDER' | 'WITHDRAW' | 'WALLET' | 'SUBSCRIPTION' | 'REVIEW' | 'SUPPORT' | 'SYSTEM';
 export type NotificationTone = 'INFO' | 'SUCCESS' | 'WARNING' | 'DANGER';
 
 export interface VendorNotification {
