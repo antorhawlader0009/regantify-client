@@ -356,7 +356,7 @@ export type LmsTaskCounts = Record<'OVERDUE' | 'TODAY' | 'UPCOMING', number> & {
 
 // ------------------------------------------------------------ Notifications (Step 8)
 
-export type LmsNotificationType = 'ASSIGNED' | 'CAME_AGAIN' | 'TASK_DUE' | 'STALE';
+export type LmsNotificationType = 'ASSIGNED' | 'CAME_AGAIN' | 'TASK_DUE' | 'STALE' | 'AUTOMATION';
 
 export interface LmsNotification {
   id: string;
@@ -594,6 +594,47 @@ export interface LmsChatRead {
   usage: LmsAiUsage;
 }
 
+/** LMS > Settings > Automations (LMS-plan.md Step 13). */
+export type LmsAutomationTrigger = 'LEAD_CREATED' | 'STAGE_CHANGED' | 'WON' | 'LOST' | 'NO_ACTIVITY' | 'TASK_OVERDUE';
+
+export interface LmsAutomationConditions {
+  kind?: LmsLeadKind;
+  source?: LmsLeadSource;
+  stage?: LmsStage;
+  productId?: string;
+  tag?: string;
+  valueAtLeast?: number;
+  district?: string;
+  lostReason?: string;
+}
+
+export type LmsAutomationAction =
+  | { type: 'ASSIGN'; to: string }
+  | { type: 'ADD_TAG'; tag: string }
+  | { type: 'CREATE_TASK'; taskType: LmsTaskType; inMinutes: number; note?: string; person: string }
+  | { type: 'SEND_SMS'; templateId: string }
+  | { type: 'NOTIFY'; person: string };
+
+export interface LmsAutomationInput {
+  name: string;
+  enabled?: boolean;
+  trigger: LmsAutomationTrigger;
+  hours?: number;
+  toStage?: LmsStage;
+  conditions: LmsAutomationConditions;
+  actions: LmsAutomationAction[];
+}
+
+export interface LmsAutomation extends Required<Pick<LmsAutomationInput, 'name' | 'trigger' | 'conditions' | 'actions'>> {
+  id: string;
+  enabled: boolean;
+  hours: number | null;
+  toStage: LmsStage | null;
+  runCount: number;
+  lastRunAt: string | null;
+  createdAt: string;
+}
+
 export const lmsApi = {
   me: () => api.get<LmsMe>('/v1/lms/me').then((r) => r.data),
   getSettings: () => api.get<LmsSettings>('/v1/lms/settings').then((r) => r.data),
@@ -614,6 +655,12 @@ export const lmsApi = {
   aiSummary: (id: string) => api.post<{ lines: string[]; usage: LmsAiUsage }>(`/v1/lms/leads/${id}/ai/summary`).then((r) => r.data),
   aiDraft: (id: string, body: { channel: LmsTemplateChannel; templateId?: string; instruction?: string }) =>
     api.post<{ text: string; usage: LmsAiUsage }>(`/v1/lms/leads/${id}/ai/draft`, body).then((r) => r.data),
+  automations: () => api.get<LmsAutomation[]>('/v1/lms/automations').then((r) => r.data),
+  createAutomation: (body: LmsAutomationInput) => api.post<LmsAutomation>('/v1/lms/automations', body).then((r) => r.data),
+  updateAutomation: (id: string, body: LmsAutomationInput) => api.put<LmsAutomation>(`/v1/lms/automations/${id}`, body).then((r) => r.data),
+  toggleAutomation: (id: string, enabled: boolean) =>
+    api.patch<LmsAutomation>(`/v1/lms/automations/${id}/enabled`, { enabled }).then((r) => r.data),
+  deleteAutomation: (id: string) => api.delete(`/v1/lms/automations/${id}`).then((r) => r.data),
   getLead: (id: string) => api.get<LmsLeadDetail>(`/v1/lms/leads/${id}`).then((r) => r.data),
   createLead: (body: CreateLmsLead) =>
     api.post<{ merged: boolean; leadId: string | null }>('/v1/lms/leads', body).then((r) => r.data),

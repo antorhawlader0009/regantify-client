@@ -35,6 +35,7 @@ const TYPE_WORDS: Record<LmsNotificationType, string> = {
   CAME_AGAIN: 'Came in again',
   TASK_DUE: 'Due now',
   STALE: 'Gone quiet',
+  AUTOMATION: 'Automation',
 };
 
 /** Where a notification leads: the lead's drawer, keeping the Leads filters when already there. */

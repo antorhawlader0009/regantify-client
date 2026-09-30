@@ -8,6 +8,7 @@ import { STAGE_RULE } from '../../../components/lms/stageStyles';
 import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
 import { LMS_TEMPLATES_KEY } from '../../../components/lms/MessageComposer';
 import { AttendanceSection, TeamSection } from '../../../components/lms/TeamSettings';
+import { AutomationsSection } from '../../../components/lms/Automations';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -41,6 +42,7 @@ const SECTIONS = [
   { id: 'templates', label: 'Message templates' },
   { id: 'script', label: 'Call script' },
   { id: 'extra-fields', label: 'Extra fields' },
+  { id: 'automations', label: 'Automations' },
 ];
 
 function SettingsBody({ me }: { me: LmsMe }) {
@@ -69,6 +71,13 @@ function SettingsBody({ me }: { me: LmsMe }) {
             <TemplatesSection />
             <ScriptSection settings={settingsQuery.data} />
             <ExtraFieldsSection />
+            <Section
+              id="automations"
+              title="Automations"
+              text="Simple rules that run by themselves: when something happens to a lead that matches, assign it, tag it, plan a task, send an SMS or tell someone. They never move a lead's stage."
+            >
+              <AutomationsSection me={me} />
+            </Section>
           </>
         )}
       </div>
