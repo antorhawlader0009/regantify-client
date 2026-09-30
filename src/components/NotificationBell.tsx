@@ -1,104 +1,97 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { type ReactNode } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as RadixDropdown from '@radix-ui/react-dropdown-menu';
-import { Bell, BellOff, CheckCheck, ShoppingBag, Star, ChevronRight } from 'lucide-react';
+import {
+  Bell,
+  BellOff,
+  CheckCheck,
+  ChevronRight,
+  CreditCard,
+  Landmark,
+  ShoppingBag,
+  Star,
+  Wallet,
+  Info,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { ordersApi, vendorOrderTotal } from '../lib/ordersApi';
-import { reviewsApi } from '../lib/reviewsApi';
+import {
+  notificationsApi,
+  type NotificationList,
+  type NotificationTone,
+  type NotificationType,
+  type VendorNotification,
+} from '../lib/notificationsApi';
 import { agoPhrase } from './lms/format';
 
-// There is no notification table on the server: the bell is a live digest of
-// things in the vendor's store that need attention, built from the existing
-// orders and reviews endpoints and refreshed every minute. "Unread" means
-// newer than the moment the vendor last pressed "Mark all as read" (kept per
-// user in this browser only).
+// The feed is written by the server where events really happen (withdraw
+// approved/rejected/paid, wallet top-up, plan changes, new orders, reviews...),
+// see server/src/notifications. The bell just polls it once a minute.
 
 const POLL_MS = 60_000;
-const MAX_ITEMS = 12;
+const QUERY_KEY = ['notifications'];
 
-interface NotificationItem {
-  id: string;
-  kind: 'order' | 'review';
-  title: string;
-  body: string;
-  at: string;
-  to: string;
-}
+const TYPE_ICON: Record<NotificationType, ReactNode> = {
+  ORDER: <ShoppingBag size={16} />,
+  WITHDRAW: <Landmark size={16} />,
+  WALLET: <Wallet size={16} />,
+  SUBSCRIPTION: <CreditCard size={16} />,
+  REVIEW: <Star size={16} />,
+  SYSTEM: <Info size={16} />,
+};
 
-const seenKey = (userId?: string) => `regantify.notifications.seenAt.${userId ?? 'anon'}`;
-
-function readSeenAt(userId?: string): number {
-  try {
-    return Number(localStorage.getItem(seenKey(userId))) || 0;
-  } catch {
-    return 0;
-  }
-}
-
-function formatTaka(value: string): string {
-  return `৳${Number(value).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-}
-
-const KIND_STYLE: Record<NotificationItem['kind'], { tile: string; icon: ReactNode }> = {
-  order: { tile: 'bg-orange-50 text-regantify-cta', icon: <ShoppingBag size={16} /> },
-  review: { tile: 'bg-amber-50 text-amber-500', icon: <Star size={16} /> },
+const TONE_TILE: Record<NotificationTone, string> = {
+  INFO: 'bg-sky-50 text-sky-600',
+  SUCCESS: 'bg-emerald-50 text-emerald-600',
+  WARNING: 'bg-amber-50 text-amber-600',
+  DANGER: 'bg-red-50 text-red-600',
 };
 
 export function NotificationBell() {
   const navigate = useNavigate();
-  const userId = useAuthStore((s) => s.user?.id);
-  const [seenAt, setSeenAt] = useState(() => readSeenAt(userId));
+  const queryClient = useQueryClient();
 
-  const orders = useQuery({
-    queryKey: ['notifications', 'orders'],
-    queryFn: () => ordersApi.list({ status: 'PENDING', perPage: 10 }),
+  const { data, isLoading } = useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: () => notificationsApi.list(),
     refetchInterval: POLL_MS,
-    retry: false,
-  });
-  const reviews = useQuery({
-    queryKey: ['notifications', 'reviews'],
-    queryFn: () => reviewsApi.list({ perPage: 20 }),
-    refetchInterval: POLL_MS,
+    refetchOnWindowFocus: true,
     retry: false,
   });
 
-  const items = useMemo<NotificationItem[]>(() => {
-    const fromOrders: NotificationItem[] = (orders.data?.orders ?? []).map((o) => ({
-      id: `order-${o.id}`,
-      kind: 'order',
-      title: `New order #${o.invoiceNumber}`,
-      body: `${o.customerName} · ${formatTaka(vendorOrderTotal(o))} · waiting to be processed`,
-      at: o.createdAt,
-      to: `/vendor/orders/${o.id}`,
-    }));
-    const fromReviews: NotificationItem[] = (reviews.data?.reviews ?? [])
-      .filter((r) => !r.approved)
-      .map((r) => ({
-        id: `review-${r.id}`,
-        kind: 'review',
-        title: `${r.rating}★ review needs approval`,
-        body: `${r.customerName ?? 'A customer'}: ${r.title}`,
-        at: r.createdAt,
-        to: `/vendor/reviews/${r.id}/edit`,
+  const items = data?.items ?? [];
+  const unreadCount = data?.unreadCount ?? 0;
+
+  // Flip read state in the cache right away; the next poll confirms it.
+  const patchCache = (fn: (list: NotificationList) => NotificationList) =>
+    queryClient.setQueryData<NotificationList>(QUERY_KEY, (old) => (old ? fn(old) : old));
+
+  const markAllRead = useMutation({
+    mutationFn: notificationsApi.markAllRead,
+    onMutate: () => {
+      const now = new Date().toISOString();
+      patchCache((l) => ({
+        unreadCount: 0,
+        items: l.items.map((i) => (i.readAt ? i : { ...i, readAt: now })),
       }));
-    return [...fromOrders, ...fromReviews]
-      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
-      .slice(0, MAX_ITEMS);
-  }, [orders.data, reviews.data]);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
 
-  const unreadCount = items.filter((i) => new Date(i.at).getTime() > seenAt).length;
-  const loading = orders.isLoading && reviews.isLoading;
+  const markRead = useMutation({
+    mutationFn: notificationsApi.markRead,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+  });
 
-  const markAllRead = useCallback(() => {
-    const now = Date.now();
-    setSeenAt(now);
-    try {
-      localStorage.setItem(seenKey(userId), String(now));
-    } catch {
-      // storage blocked — the dots just come back on reload
+  const open = (item: VendorNotification) => {
+    if (!item.readAt) {
+      patchCache((l) => ({
+        unreadCount: Math.max(0, l.unreadCount - 1),
+        items: l.items.map((i) => (i.id === item.id ? { ...i, readAt: new Date().toISOString() } : i)),
+      }));
+      markRead.mutate(item.id);
     }
-  }, [userId]);
+    if (item.link) navigate(item.link);
+  };
 
   return (
     <RadixDropdown.Root>
@@ -146,7 +139,7 @@ export function NotificationBell() {
               )}
             </div>
             <button
-              onClick={markAllRead}
+              onClick={() => markAllRead.mutate()}
               disabled={unreadCount === 0}
               className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium
                 text-regantify-text-muted transition-colors hover:bg-regantify-content hover:text-regantify-text
@@ -158,7 +151,7 @@ export function NotificationBell() {
           </div>
 
           <div className="max-h-[420px] overflow-y-auto">
-            {loading ? (
+            {isLoading ? (
               <div className="space-y-1 p-3">
                 {[0, 1, 2].map((n) => (
                   <div key={n} className="flex animate-pulse gap-3 rounded-xl p-2.5">
@@ -177,48 +170,51 @@ export function NotificationBell() {
                 </div>
                 <p className="text-sm font-semibold text-regantify-text">You're all caught up</p>
                 <p className="mt-1 text-xs text-regantify-text-muted">
-                  New orders and reviews will show up here.
+                  Orders, payments, withdrawals and plan updates will show up here.
                 </p>
               </div>
             ) : (
               <ul className="p-2">
                 {items.map((item) => {
-                  const unread = new Date(item.at).getTime() > seenAt;
-                  const style = KIND_STYLE[item.kind];
+                  const unread = !item.readAt;
                   return (
                     <li key={item.id}>
                       <RadixDropdown.Item
-                        onSelect={() => navigate(item.to)}
+                        onSelect={() => open(item)}
                         className="group/item relative flex cursor-pointer select-none items-start gap-3 rounded-xl
                           p-2.5 outline-none transition-colors data-[highlighted]:bg-regantify-content"
                       >
                         <span
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${style.tile}`}
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${TONE_TILE[item.tone]}`}
                         >
-                          {style.icon}
+                          {TYPE_ICON[item.type]}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span
-                            className={`block truncate text-[13px] text-regantify-text ${
+                            className={`block text-[13px] leading-snug text-regantify-text ${
                               unread ? 'font-semibold' : 'font-medium'
                             }`}
                           >
                             {item.title}
                           </span>
-                          <span className="mt-0.5 block truncate text-xs text-regantify-text-muted">
-                            {item.body}
-                          </span>
+                          {item.body && (
+                            <span className="mt-0.5 block line-clamp-2 text-xs text-regantify-text-muted">
+                              {item.body}
+                            </span>
+                          )}
                           <span className="mt-1 block text-[11px] text-regantify-text-muted/70">
-                            {agoPhrase(item.at)}
+                            {agoPhrase(item.createdAt)}
                           </span>
                         </span>
                         {unread ? (
                           <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-regantify-cta" />
                         ) : (
-                          <ChevronRight
-                            size={14}
-                            className="mt-1.5 shrink-0 text-regantify-text-muted opacity-0 transition-opacity group-data-[highlighted]/item:opacity-100"
-                          />
+                          item.link && (
+                            <ChevronRight
+                              size={14}
+                              className="mt-1.5 shrink-0 text-regantify-text-muted opacity-0 transition-opacity group-data-[highlighted]/item:opacity-100"
+                            />
+                          )
                         )}
                       </RadixDropdown.Item>
                     </li>
@@ -226,17 +222,6 @@ export function NotificationBell() {
                 })}
               </ul>
             )}
-          </div>
-
-          <div className="border-t border-black/5 bg-regantify-content/50 p-2">
-            <RadixDropdown.Item
-              onSelect={() => navigate('/vendor/orders')}
-              className="flex cursor-pointer items-center justify-center gap-1 rounded-xl py-2 text-[13px]
-                font-medium text-regantify-text outline-none transition-colors data-[highlighted]:bg-regantify-content"
-            >
-              View all orders
-              <ChevronRight size={14} />
-            </RadixDropdown.Item>
           </div>
         </RadixDropdown.Content>
       </RadixDropdown.Portal>
