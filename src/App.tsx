@@ -115,6 +115,7 @@ import CallDeskPage from './pages/vendor/lms/CallDeskPage';
 import TasksPage from './pages/vendor/lms/TasksPage';
 import ReportsPage from './pages/vendor/lms/ReportsPage';
 import LmsSettingsPage from './pages/vendor/lms/LmsSettingsPage';
+import ImportLeadsPage from './pages/vendor/lms/ImportLeadsPage';
 import { LmsLayout } from './components/lms/LmsLayout';
 
 const queryClient = new QueryClient();
@@ -355,6 +356,7 @@ export default function App() {
               <Route element={<LmsLayout />}>
                 <Route path="/vendor/lms" element={<Navigate to="/vendor/lms/leads" replace />} />
                 <Route path="/vendor/lms/leads" element={<LeadsPage />} />
+                <Route path="/vendor/lms/leads/import" element={<ImportLeadsPage />} />
                 <Route path="/vendor/lms/desk" element={<CallDeskPage />} />
                 <Route path="/vendor/lms/tasks" element={<TasksPage />} />
                 <Route path="/vendor/lms/reports" element={<ReportsPage />} />

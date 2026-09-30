@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, Upload } from 'lucide-react';
 import { EmptyState, LmsPage, Panel } from '../../../components/lms/LmsPage';
 import { AddLeadDialog } from '../../../components/lms/AddLeadDialog';
 import { LeadDrawer } from '../../../components/lms/LeadDrawer';
@@ -14,6 +14,7 @@ import { LandingBacklogNotice } from '../../../components/lms/LandingBacklog';
 import { RestockNotice } from '../../../components/lms/RestockNotice';
 import { formatExtraValue, useLmsFields } from '../../../components/lms/ExtraFields';
 import { AgentSelect } from '../../../components/lms/Team';
+import { ExportButton, PrintButton } from '../../../components/lms/LeadsExport';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -34,6 +35,8 @@ import {
 export default function LeadsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [params, setParams] = useSearchParams();
+  const me = useOutletContext<LmsMe>();
+  const filters = useMemo(() => readFilters(params), [params]);
   const openLead = (id: string | null) =>
     setParams(
       (p) => {
@@ -48,9 +51,22 @@ export default function LeadsPage() {
     <LmsPage
       title="Leads"
       actions={
-        <LmsButton variant="primary" onClick={() => setAddOpen(true)}>
-          Add lead
-        </LmsButton>
+        <>
+          {me.isManager && (
+            <Link
+              to="/vendor/lms/leads/import"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md border border-lms-line bg-lms-surface px-3.5 text-sm font-medium hover:bg-lms-page"
+            >
+              <Upload size={15} />
+              Import
+            </Link>
+          )}
+          <ExportButton me={me} filters={filters} />
+          <PrintButton me={me} filters={filters} />
+          <LmsButton variant="primary" onClick={() => setAddOpen(true)}>
+            Add lead
+          </LmsButton>
+        </>
       }
     >
       {(me) => (

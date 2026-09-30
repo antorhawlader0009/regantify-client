@@ -430,6 +430,85 @@ export interface LmsOrderPrefill {
   }[];
 }
 
+/** One import row, already matched to our columns (LMS > Leads > Import). */
+export interface LmsImportRow {
+  /** The row's line in the file (the header is line 1). */
+  line: number;
+  date?: string;
+  name?: string;
+  phone: string;
+  phoneAlt?: string;
+  email?: string;
+  product?: string;
+  price?: number;
+  quantity?: number;
+  address?: string;
+  district?: string;
+  area?: string;
+  note?: string;
+  ref?: string;
+  fields?: Record<string, string>;
+}
+
+export interface LmsImportBody {
+  rows: LmsImportRow[];
+  assignTo: string;
+  stage: 'NEW' | 'WON' | 'LOST';
+  reason?: string;
+  tag?: string;
+  fileName?: string;
+}
+
+export interface LmsImportResult {
+  inserted: number;
+  merged: number;
+  skipped: { line: number; reason: string }[];
+}
+
+/** Rows the server takes per import call. */
+export const LMS_IMPORT_CHUNK = 2000;
+
+/** One lead in full, for Export CSV and Print. */
+export interface LmsExportRow {
+  id: string;
+  createdAt: string;
+  stage: LmsStage;
+  lostReason: string | null;
+  kind: LmsLeadKind;
+  source: LmsLeadSource;
+  name: string;
+  phone: string;
+  phoneAlt: string | null;
+  email: string | null;
+  address: string | null;
+  district: string | null;
+  division: string | null;
+  area: string | null;
+  productSummary: string | null;
+  quantity: number | null;
+  value: number | null;
+  tags: string[];
+  attemptCount: number;
+  nextTaskAt: string | null;
+  lastActivityAt: string;
+  closedAt: string | null;
+  doNotContact: boolean;
+  customFields: Record<string, string | number>;
+  externalRef: string | null;
+  message: string | null;
+  agent: string | null;
+  order: { invoiceNumber: number; status: string } | null;
+  lastOutcome: string | null;
+  lastNote: string | null;
+}
+
+export interface LmsExport {
+  total: number;
+  /** More leads match than were sent (the limit). */
+  truncated: boolean;
+  rows: LmsExportRow[];
+}
+
 export const lmsApi = {
   me: () => api.get<LmsMe>('/v1/lms/me').then((r) => r.data),
   getSettings: () => api.get<LmsSettings>('/v1/lms/settings').then((r) => r.data),
@@ -439,6 +518,9 @@ export const lmsApi = {
     api.get<LmsLeadList>('/v1/lms/leads', { params: { ...filters, page } }).then((r) => r.data),
   counts: (filters: LmsLeadFilters) =>
     api.get<LmsStageCounts>('/v1/lms/leads/counts', { params: { ...filters, stage: undefined } }).then((r) => r.data),
+  exportLeads: (filters: LmsLeadFilters, limit?: number) =>
+    api.get<LmsExport>('/v1/lms/leads/export', { params: { ...filters, limit } }).then((r) => r.data),
+  importLeads: (body: LmsImportBody) => api.post<LmsImportResult>('/v1/lms/leads/import', body).then((r) => r.data),
   getLead: (id: string) => api.get<LmsLeadDetail>(`/v1/lms/leads/${id}`).then((r) => r.data),
   createLead: (body: CreateLmsLead) =>
     api.post<{ merged: boolean; leadId: string | null }>('/v1/lms/leads', body).then((r) => r.data),

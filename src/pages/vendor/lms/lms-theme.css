@@ -55,3 +55,71 @@
     animation: none;
   }
 }
+
+/*
+ * Leads > Print (LMS-plan.md Step 10). The sheet is rendered straight under
+ * <body> only while printing; everything else on the page is hidden, so no
+ * bars, buttons or dialogs reach the paper. Black on white, ruled rows.
+ */
+.lms-print-sheet {
+  display: none;
+}
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  body > *:not(.lms-print-sheet) {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .lms-print-sheet {
+    display: block;
+    color: #000;
+    font-size: 9pt;
+  }
+  .lms-print-sheet header {
+    margin-bottom: 4mm;
+  }
+  .lms-print-sheet h1 {
+    font-size: 13pt;
+    font-weight: 600;
+  }
+  .lms-print-sheet header p {
+    color: #333;
+  }
+  .lms-print-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .lms-print-sheet thead {
+    display: table-header-group;
+  }
+  .lms-print-sheet tr {
+    break-inside: avoid;
+  }
+  .lms-print-sheet th,
+  .lms-print-sheet td {
+    border-bottom: 0.5pt solid #999;
+    padding: 1.5mm 1.5mm;
+    text-align: left;
+    vertical-align: top;
+  }
+  .lms-print-sheet th {
+    border-bottom: 1pt solid #000;
+    font-weight: 600;
+  }
+  .lms-print-sheet .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .lms-print-sheet .nowrap {
+    white-space: nowrap;
+  }
+  .lms-print-sheet .mark {
+    width: 22mm;
+    border-left: 0.5pt solid #999;
+  }
+}
