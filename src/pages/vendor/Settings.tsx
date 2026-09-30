@@ -8,8 +8,6 @@ import { authApi } from '../../lib/authApi';
 import {
   getVendorSettings,
   updateVendorSettings,
-  getVendorDeliveryCharges,
-  updateVendorDeliveryCharges,
 } from '../../lib/vendorApi';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
@@ -475,16 +473,6 @@ export default function VendorSettings() {
         </form>
       </section>
 
-      {/* Delivery Charge / VAT — courier account connections themselves
-          moved to their own top-level "Courier Integration" sidebar
-          section (pages/vendor/courier/), since they aren't really a
-          per-store "setting" so much as a separate integration; this
-          stays here since it's pure store pricing config, same family as
-          Store's other fields above. */}
-      <section>
-        <DeliveryChargeSection />
-      </section>
-
       {/* Password section */}
       <section>
         <h2 className="text-lg font-medium text-regantify-text mb-1">Change password</h2>
@@ -577,139 +565,6 @@ export default function VendorSettings() {
           </button>
         </form>
       </section>
-    </div>
-  );
-}
-
-const deliveryChargeSchema = z.object({
-  insideDhakaCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
-  outsideDhakaCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
-  vatChargeBdt: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
-});
-type DeliveryChargeFormValues = z.infer<typeof deliveryChargeSchema>;
-
-/**
- * Settings > Delivery Charge / VAT — vendor-editable Inside Dhaka /
- * Outside Dhaka shipping charges plus a flat VAT fee applied to every
- * order regardless of payment method (see Vendor.insideDhakaCharge/
- * vatChargeBdt in schema.prisma). These are the exact numbers checkout
- * uses to price an order — see OrdersService.create and
- * storefront/src/lib/useCheckout.ts, both of which read the vendor's own
- * saved values instead of a shared constant now. A gateway's own
- * Platform Charge is a separate, independent setting — see Store >
- * Payment Gateway (PaymentGateway.tsx), not this form.
- */
-function DeliveryChargeSection() {
-  const queryClient = useQueryClient();
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const { data: charges, isLoading } = useQuery({
-    queryKey: ['vendor-delivery-charges'],
-    queryFn: getVendorDeliveryCharges,
-  });
-
-  const form = useForm<DeliveryChargeFormValues>({
-    resolver: zodResolver(deliveryChargeSchema),
-    defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, vatChargeBdt: 10 },
-  });
-
-  useEffect(() => {
-    if (charges) {
-      form.reset({
-        insideDhakaCharge: Number(charges.insideDhakaCharge),
-        outsideDhakaCharge: Number(charges.outsideDhakaCharge),
-        vatChargeBdt: Number(charges.vatChargeBdt),
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [charges]);
-
-  const saveMutation = useMutation({
-    mutationFn: updateVendorDeliveryCharges,
-    onSuccess: (updated) => {
-      queryClient.setQueryData(['vendor-delivery-charges'], updated);
-      setSaveError(null);
-      toast.success('Delivery charges saved.');
-    },
-    onError: () => setSaveError('Could not save delivery charges. Please try again.'),
-  });
-
-  const onSubmit = (values: DeliveryChargeFormValues) => {
-    setSaveError(null);
-    saveMutation.mutate(values);
-  };
-
-  return (
-    <div>
-      <h2 className="text-lg font-medium text-regantify-text mb-1">Delivery Charge</h2>
-      <p className="text-sm text-regantify-text-muted mb-4">
-        Set what shoppers pay for delivery, and a flat VAT added to every order.
-      </p>
-
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-regantify-text mb-1.5">Inside Dhaka (৳)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            disabled={isLoading}
-            className="w-full px-4 py-2.5 rounded-xl bg-regantify-search text-regantify-text
-              focus:outline-none focus:ring-2 focus:ring-regantify-black"
-            {...form.register('insideDhakaCharge')}
-          />
-          {form.formState.errors.insideDhakaCharge && (
-            <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.insideDhakaCharge.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-regantify-text mb-1.5">Outside Dhaka (৳)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            disabled={isLoading}
-            className="w-full px-4 py-2.5 rounded-xl bg-regantify-search text-regantify-text
-              focus:outline-none focus:ring-2 focus:ring-regantify-black"
-            {...form.register('outsideDhakaCharge')}
-          />
-          {form.formState.errors.outsideDhakaCharge && (
-            <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.outsideDhakaCharge.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-regantify-text mb-1.5">VAT (৳)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            disabled={isLoading}
-            className="w-full px-4 py-2.5 rounded-xl bg-regantify-search text-regantify-text
-              focus:outline-none focus:ring-2 focus:ring-regantify-black"
-            {...form.register('vatChargeBdt')}
-          />
-          {form.formState.errors.vatChargeBdt && (
-            <p className="text-red-500 text-sm mt-1.5">{form.formState.errors.vatChargeBdt.message}</p>
-          )}
-          <p className="text-xs text-regantify-text-muted mt-1.5">
-            Added to every order, regardless of payment method. See Store &gt; Payment Gateway for per-gateway charges.
-          </p>
-        </div>
-
-        <div className="sm:col-span-3 flex items-center gap-3">
-          {saveError && <p className="text-red-500 text-sm">{saveError}</p>}
-          <button
-            type="submit"
-            disabled={saveMutation.isPending || isLoading}
-            className="bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl
-              hover:bg-black transition-colors disabled:opacity-60"
-          >
-            {saveMutation.isPending ? 'Saving…' : 'Save delivery charges'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }

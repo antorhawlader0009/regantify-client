@@ -244,7 +244,7 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
  * defaults (after-booking status, delivery/item type, weight fallback,
  * description template, instructions, COD rule). Local form state is
  * seeded from the loaded settings and only sent to the server on Save,
- * same pattern as the Delivery Charge form elsewhere in Settings.
+ * same pattern as the Delivery Charge form in Store > Delivery Charge.
  */
 function DefaultValuesCard() {
   const queryClient = useQueryClient();

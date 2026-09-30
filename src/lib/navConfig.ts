@@ -146,6 +146,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Social', path: '/vendor/store/social' },
       { label: 'Domain', path: '/vendor/store/domain' },
       { label: 'Payment Gateway', path: '/vendor/store/payment-gateway' },
+      { label: 'Delivery Charge', path: '/vendor/store/delivery-charge' },
       { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
       { label: 'GDPR Prompt', path: '/vendor/store/gdpr' },
       { label: 'COD Guard', path: '/vendor/store/cod-guard' },

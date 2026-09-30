@@ -65,7 +65,7 @@ export async function updateVendorSettings(
   return data;
 }
 
-// Settings > Delivery Charge / VAT.
+// Store > Delivery Charge / VAT.
 // Values are BDT amounts — insideDhakaCharge/outsideDhakaCharge drive the
 // storefront checkout's zone-based shipping charge, vatChargeBdt is a
 // flat fee added to EVERY order regardless of payment method (see

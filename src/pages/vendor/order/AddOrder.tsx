@@ -118,7 +118,7 @@ export default function AddOrder() {
     enabled: productSearch.trim().length > 0,
   });
 
-  // Settings > Delivery Charge / VAT —
+  // Store > Delivery Charge / VAT —
   // same values the server actually falls back to below when no custom
   // charge is typed (OrdersService.create). Add Order always creates a
   // COD order (see that method's own comment on why ONLINE_PAYMENT is
