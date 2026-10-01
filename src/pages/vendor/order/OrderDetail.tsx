@@ -1,43 +1,78 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
-import { ordersApi, vendorOrderTotal, type OrderStatus } from '../../../lib/ordersApi';
+import { CheckCircle2, ChevronDown, ChevronLeft, FileText, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
+import { ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
-import { courierApi, notConnectedProvider, openPathaoLabels, redxCancellable, redxTrackingUrl, type CourierAccountProvider } from '../../../lib/courierApi';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import {
+  courierApi,
+  notConnectedProvider,
+  openPathaoLabels,
+  redxCancellable,
+  redxTrackingUrl,
+  type CourierAccountProvider,
+} from '../../../lib/courierApi';
 import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
 import { CheckHistoryModal } from './CheckHistoryModal';
+import { InvoiceModal } from './InvoiceModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { PathaoLocationPicker } from '../../../components/courier/PathaoLocationPicker';
 import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
 import { RedxLocationPicker } from '../../../components/courier/RedxLocationPicker';
-import { CourierTimeline } from '../../../components/courier/CourierTimeline';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
+import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
+import { OrderTimeline } from '../../../components/order/OrderTimeline';
 import { Dialog } from '../../../components/ui/Dialog';
+import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
+import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { productInputClass } from '../../../components/product/ProductFormPieces';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
 function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
+  return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dhaka' });
+}
+
+/** "01712345678" -> "8801712345678", for a wa.me link. */
+function whatsappNumber(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('880')) return digits;
+  if (digits.startsWith('0')) return `88${digits}`;
+  return digits;
+}
+
+const COURIER_NAMES: Record<Exclude<CourierProvider, 'NONE'>, string> = { STEADFAST: 'SteadFast', PATHAO: 'Pathao', REDX: 'RedX' };
+const BOOKABLE: Exclude<CourierProvider, 'NONE'>[] = ['STEADFAST', 'PATHAO', 'REDX'];
+
+/** A white card with a 15px title (the page's sections). */
+function Card({ title, id, action, children }: { title: string; id?: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section id={id} className="scroll-mt-20 rounded-xl border border-line bg-white p-4 sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-[15px] font-semibold text-regantify-text">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function linkBtn(extra = '') {
+  return `text-xs font-medium text-brand underline-offset-2 hover:underline disabled:opacity-60 ${extra}`;
 }
 
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState('');
@@ -45,6 +80,7 @@ export default function OrderDetail() {
   const [requestingReturn, setRequestingReturn] = useState(false);
   const [cancellingRedx, setCancellingRedx] = useState(false);
   const [showRedxHistory, setShowRedxHistory] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
   // "Not connected → setup popup" (COURIER-PLAN.md §5.2): the provider to
   // connect, and the booking to retry once it is. null closes the popup.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
@@ -61,8 +97,22 @@ export default function OrderDetail() {
     enabled: Boolean(id),
   });
 
-  // Same query (and cache) as the Courier Timeline below — used to tell
-  // whether a SteadFast return was already requested for this parcel.
+  // The customer's delivery record (same lookup as the Orders list).
+  const { data: deliveryStats } = useQuery({
+    queryKey: ['customer-courier-stats', order ? [order.customerPhone] : []],
+    queryFn: () => ordersApi.getCustomerCourierStats([order!.customerPhone]),
+    enabled: Boolean(order),
+    staleTime: 60_000,
+  });
+
+  // For "Send to courier": which couriers are connected, and whether the plan allows the paid ones.
+  const { data: courierAccounts } = useQuery({ queryKey: ['courier-accounts'], queryFn: courierApi.getAccounts });
+  const connected = new Set((courierAccounts ?? []).filter((a) => a.isActive).map((a) => a.provider));
+  const { data: planUsage } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
+  const paidCouriersAllowed = planUsage ? planUsage.plan.code !== 'FREE' : false;
+
+  // Same query (and cache) as the timeline — used to tell whether a
+  // SteadFast return was already requested for this parcel.
   const steadfastBooked = order?.courierProvider === 'STEADFAST' && order.courierBookingStatus === 'BOOKED';
   const { data: courierEvents } = useQuery({
     queryKey: ['courier-events', id],
@@ -78,29 +128,29 @@ export default function OrderDetail() {
       )?.createdAt
     : undefined;
 
+  const invalidateOrder = () => {
+    queryClient.invalidateQueries({ queryKey: ['order', id] });
+    queryClient.invalidateQueries({ queryKey: ['order-history', id] });
+    queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+  };
+
   const refreshCourierMutation = useMutation({
     mutationFn: () => courierApi.refreshStatus(id!),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['order', id] });
-      queryClient.invalidateQueries({ queryKey: ['order-history', id] });
-      queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      invalidateOrder();
       toast.success('Delivery status refreshed.');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not refresh the delivery status. Please try again.')),
   });
 
   // "Book with SteadFast" / "Book with RedX" — one click, with the
-  // vendor's Default Values (no booking popup: SteadFast needs no
-  // location or weight, RedX takes the area set below or the one matched
-  // from the address).
+  // vendor's default values (no popup: SteadFast needs no location or
+  // weight, RedX takes the area set below or the one matched from the address).
   const bookOneClickMutation = useMutation({
     mutationFn: () => courierApi.bookOrder(id!),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['order', id] });
-      queryClient.invalidateQueries({ queryKey: ['order-history', id] });
-      queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      invalidateOrder();
       queryClient.invalidateQueries({ queryKey: ['steadfast-parcels'] });
       queryClient.invalidateQueries({ queryKey: ['redx-parcels'] });
       toast.success(order?.courierProvider === 'REDX' ? 'Booked with RedX.' : 'Booked with SteadFast.');
@@ -118,8 +168,44 @@ export default function OrderDetail() {
     },
   });
 
-  // RedX's view of this order before booking: the delivery area it would
-  // go to, weight, COD and RedX's own price for it.
+  // "Send to courier" for an order with no courier yet: assign it, then
+  // book (SteadFast / RedX in one click; Pathao opens its booking popup).
+  const sendToCourierMutation = useMutation({
+    mutationFn: async (provider: Exclude<CourierProvider, 'NONE'>) => {
+      await ordersApi.updateCourier(id!, provider);
+      if (provider === 'PATHAO') return provider;
+      await courierApi.bookOrder(id!);
+      return provider;
+    },
+    onSuccess: (provider) => {
+      invalidateOrder();
+      if (provider === 'PATHAO') setBookingPathao(true);
+      else toast.success(`Booked with ${COURIER_NAMES[provider]}.`);
+    },
+    onError: (err, provider) => {
+      const notConnected = notConnectedProvider(err);
+      if (notConnected) {
+        setSetupPending({ provider: notConnected, retry: () => sendToCourierMutation.mutate(provider) });
+        return;
+      }
+      invalidateOrder();
+      toast.error(apiErrorMessage(err, 'Could not send this order to the courier. Please try again.'));
+    },
+  });
+
+  const sendTo = (provider: Exclude<CourierProvider, 'NONE'>) => {
+    if (provider !== 'STEADFAST' && !paidCouriersAllowed) {
+      upgradeToast(`use ${COURIER_NAMES[provider]}`);
+      return;
+    }
+    if (!connected.has(provider)) {
+      setSetupPending({ provider, retry: () => sendToCourierMutation.mutate(provider) });
+      return;
+    }
+    sendToCourierMutation.mutate(provider);
+  };
+
+  // RedX's view of this order before booking: area, weight, COD and price.
   const redxUnbooked = order?.courierProvider === 'REDX' && order.courierBookingStatus !== 'BOOKED';
   const { data: redxQuote, isLoading: redxQuoteLoading } = useQuery({
     queryKey: ['redx-quote', id, order?.redxAreaId],
@@ -130,204 +216,284 @@ export default function OrderDetail() {
 
   const statusMutation = useMutation({
     mutationFn: (status: OrderStatus) => ordersApi.updateStatus(id!, status, statusNote.trim() || undefined),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['order', id] });
-      queryClient.invalidateQueries({ queryKey: ['order-history', id] });
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    onSuccess: (_, status) => {
+      invalidateOrder();
       setStatusNote('');
-      toast.success('Order status updated.');
+      toast.success(status === 'PROCESSING' ? 'Order confirmed.' : `Status changed to ${orderStatusLabel(status)}.`);
     },
     onError: () => toast.error('Could not update the order status. Please try again.'),
   });
 
   if (isLoading || !order) {
-    return <p className="text-sm text-regantify-text-muted">Loading…</p>;
+    return (
+      <div className="mx-auto max-w-6xl space-y-4" aria-busy="true" aria-label="Loading order">
+        <div className="h-8 w-56 animate-pulse rounded-md bg-neutral-200" />
+        <div className="h-20 animate-pulse rounded-xl border border-line bg-white" />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="h-80 animate-pulse rounded-xl border border-line bg-white lg:col-span-2" />
+          <div className="h-80 animate-pulse rounded-xl border border-line bg-white" />
+        </div>
+      </div>
+    );
+  }
+
+  const provider = order.courierProvider;
+  const booked = order.courierBookingStatus === 'BOOKED';
+  const canSendToCourier = order.status === 'PROCESSING' && !booked && order.courierBookingStatus !== 'BOOKING';
+  const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
+  const copyTracking = (code: string) =>
+    navigator.clipboard
+      .writeText(code)
+      .then(() => toast.success('Tracking ID copied. Share it with the customer.'))
+      .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
+
+  const courierMenu = (label: string) => (
+    <DropdownMenu
+      widthClass="w-60"
+      trigger={
+        <button type="button" disabled={sendToCourierMutation.isPending} className={primaryBtn}>
+          <Send size={15} />
+          {sendToCourierMutation.isPending ? 'Sending…' : label}
+          <ChevronDown size={14} />
+        </button>
+      }
+    >
+      {BOOKABLE.map((p) => (
+        <DropdownMenuItem
+          key={p}
+          onSelect={() => sendTo(p)}
+          icon={<Truck />}
+          hint={p === 'PATHAO' ? 'Opens the booking window' : 'Books now with your default values'}
+        >
+          {p !== 'STEADFAST' && !paidCouriersAllowed && <LockedBadge />}
+          {COURIER_NAMES[p]}
+          {!connected.has(p) && <span className="text-[11px] text-neutral-500">(connect first)</span>}
+        </DropdownMenuItem>
+      ))}
+    </DropdownMenu>
+  );
+
+  // The one next step this order is waiting for.
+  let nextStep: React.ReactNode = null;
+  if (order.status === 'PENDING') {
+    nextStep = (
+      <button type="button" onClick={() => statusMutation.mutate('PROCESSING')} disabled={statusMutation.isPending} className={primaryBtn}>
+        <CheckCircle2 size={15} />
+        {statusMutation.isPending ? 'Confirming…' : 'Confirm order'}
+      </button>
+    );
+  } else if (canSendToCourier) {
+    nextStep =
+      provider === 'NONE' ? (
+        courierMenu('Send to courier')
+      ) : (
+        <button
+          type="button"
+          onClick={() => (provider === 'PATHAO' ? setBookingPathao(true) : bookOneClickMutation.mutate())}
+          disabled={bookOneClickMutation.isPending}
+          className={primaryBtn}
+        >
+          <Send size={15} />
+          {bookOneClickMutation.isPending ? 'Booking…' : `Book with ${COURIER_NAMES[provider]}`}
+        </button>
+      );
   }
 
   return (
-    <div className="max-w-4xl">
-      <button
-        onClick={() => navigate('/vendor/orders')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
+    <div className="mx-auto max-w-6xl">
+      <Link to="/vendor/orders" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
         <ChevronLeft size={16} />
-        Orders
-      </button>
+        All orders
+      </Link>
 
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">ORDER-{order.invoiceNumber}</h1>
-        <OrderStatusBadge status={order.status} />
-        <span className="text-sm text-regantify-text-muted">{formatDateTime(order.createdAt)}</span>
+      {/* Header + the next step */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="mr-auto min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-semibold text-regantify-text">ORDER-{order.invoiceNumber}</h1>
+            <OrderStatusBadge status={order.status} />
+            {order.label && (
+              <span className="rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-xs font-medium text-brand">{order.label}</span>
+            )}
+          </div>
+          <p className="mt-0.5 text-sm text-neutral-500">
+            Placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : 'added by hand'}
+          </p>
+        </div>
+        <button type="button" onClick={() => setShowInvoice(true)} className={outlineBtn}>
+          <FileText size={15} />
+          Invoice
+        </button>
+        {nextStep}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <section className="bg-white rounded-2xl border border-black/5 p-6">
-            <h2 className="text-base font-semibold text-regantify-text mb-4">Items</h2>
-            <div className="space-y-3">
+      {/* Summary strip */}
+      <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
+        {[
+          { label: 'Total', value: formatPrice(vendorOrderTotal(order)), icon: ReceiptText },
+          { label: 'Payment', value: order.paymentMethod === 'COD' ? 'Cash on delivery' : order.paymentMethod.replace(/_/g, ' ').toLowerCase(), icon: ReceiptText },
+          { label: 'Items', value: `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`, icon: Package },
+          {
+            label: 'Delivery',
+            value: provider === 'NONE' ? 'Not sent yet' : booked ? `${COURIER_NAMES[provider]}, booked` : `${COURIER_NAMES[provider]}, not booked`,
+            icon: Truck,
+          },
+        ].map((s) => (
+          <div key={s.label} className="min-w-0 bg-white px-4 py-3">
+            <p className="text-xs text-neutral-500">{s.label}</p>
+            <p className="mt-0.5 truncate text-sm font-semibold capitalize text-regantify-text">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        {/* Main column */}
+        <div className="min-w-0 space-y-4 lg:col-span-2">
+          <Card title="Items">
+            <ul className="divide-y divide-line">
               {order.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 pb-3 border-b border-black/5 last:border-0 last:pb-0">
+                <li key={item.id} className="flex items-center gap-3 py-3 first:pt-0">
                   {item.productImage ? (
-                    <img src={item.productImage} alt="" className="w-12 h-12 rounded-lg object-cover bg-regantify-content" />
+                    <img src={item.productImage} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-line bg-neutral-100 object-cover" />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-regantify-content" />
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-400">
+                      <Package size={16} aria-hidden />
+                    </span>
                   )}
-                  <div className="flex-1">
-                    <p className="text-sm text-regantify-text flex items-center gap-1.5">
-                      {item.productName}
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-1.5 text-sm text-regantify-text">
+                      <span className="truncate">{item.productName}</span>
                       {item.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={item.product.slug} />}
                     </p>
-                    <p className="text-xs text-regantify-text-muted">
+                    <p className="truncate text-xs text-neutral-500">
                       {item.productSku}
                       {Object.entries(item.selectedOptions).length > 0 &&
                         ` · ${Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(', ')}`}
                     </p>
-                    <p className="text-xs text-regantify-text-muted">
+                    <p className="text-xs text-neutral-500">
                       {formatPrice(item.unitPrice)} × {item.quantity}
                     </p>
                   </div>
-                  <p className="text-sm font-medium text-regantify-text">{formatPrice(item.lineTotal)}</p>
-                </div>
+                  <p className="shrink-0 text-sm font-medium tabular-nums text-regantify-text">{formatPrice(item.lineTotal)}</p>
+                </li>
               ))}
-            </div>
+            </ul>
 
-            <div className="mt-4 pt-4 border-t border-black/5 space-y-1.5 text-sm">
-              <div className="flex justify-between text-regantify-text-muted">
-                <span>Subtotal</span>
-                <span>{formatPrice(order.subtotal)}</span>
+            <dl className="mt-3 space-y-1.5 border-t border-line pt-3 text-sm">
+              <div className="flex justify-between text-neutral-600">
+                <dt>Subtotal</dt>
+                <dd className="tabular-nums">{formatPrice(order.subtotal)}</dd>
               </div>
-              <div className="flex justify-between text-regantify-text-muted">
-                <span>Delivery charge</span>
-                <span>{formatPrice(order.deliveryCharge)}</span>
+              <div className="flex justify-between text-neutral-600">
+                <dt>Delivery charge</dt>
+                <dd className="tabular-nums">{formatPrice(order.deliveryCharge)}</dd>
               </div>
               {Number(order.vatAmount) > 0 && (
-                <div className="flex justify-between text-regantify-text-muted">
-                  <span>COD Charge</span>
-                  <span>{formatPrice(order.vatAmount)}</span>
+                <div className="flex justify-between text-neutral-600">
+                  <dt>COD charge</dt>
+                  <dd className="tabular-nums">{formatPrice(order.vatAmount)}</dd>
                 </div>
               )}
               {Number(order.discountAmount) > 0 && (
-                <div className="flex justify-between text-regantify-text-muted">
-                  <span>Discount{order.discountLabel ? ` — ${order.discountLabel}` : ''}</span>
-                  <span>−{formatPrice(order.discountAmount)}</span>
+                <div className="flex justify-between text-neutral-600">
+                  <dt>Discount{order.discountLabel ? `: ${order.discountLabel}` : ''}</dt>
+                  <dd className="tabular-nums">−{formatPrice(order.discountAmount)}</dd>
                 </div>
               )}
-              <div className="flex justify-between text-base font-semibold text-regantify-text pt-1.5 border-t border-black/5">
-                <span>Total</span>
-                <span>{formatPrice(vendorOrderTotal(order))}</span>
+              <div className="flex justify-between border-t border-line pt-2 text-base font-semibold text-regantify-text">
+                <dt>Total</dt>
+                <dd className="tabular-nums">{formatPrice(vendorOrderTotal(order))}</dd>
               </div>
-            </div>
-          </section>
+            </dl>
+          </Card>
 
-          <section className="bg-white rounded-2xl border border-black/5 p-6">
-            <h2 className="text-base font-semibold text-regantify-text mb-4">Status History</h2>
-            {history.length === 0 ? (
-              <p className="text-sm text-regantify-text-muted">No history yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {history.map((entry) => (
-                  <div key={entry.id} className="flex items-start gap-3 text-sm">
-                    <div className="w-2 h-2 rounded-full bg-regantify-cta mt-1.5 shrink-0" />
-                    <div>
-                      <p className="text-regantify-text">
-                        {entry.fromStatus ? `${orderStatusLabel(entry.fromStatus)} → ` : ''}
-                        {orderStatusLabel(entry.toStatus)}
-                        {entry.changedBy ? ` · ${entry.changedBy}` : ''}
-                      </p>
-                      {entry.note && <p className="text-regantify-text-muted text-xs mt-0.5">{entry.note}</p>}
-                      <p className="text-regantify-text-muted text-xs mt-0.5">{formatDateTime(entry.createdAt)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          <Card title="Timeline">
+            <OrderTimeline orderId={order.id} history={history} hasCourier={provider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED'} />
+          </Card>
         </div>
 
-        <div className="space-y-6">
-          <section className="bg-white rounded-2xl border border-black/5 p-6">
-            <h2 className="text-base font-semibold text-regantify-text mb-4">Customer</h2>
-            <p className="text-sm text-regantify-text">{order.customerName}</p>
-            <p className="text-sm text-regantify-text-muted">{order.customerPhone}</p>
-            {order.customerPhoneAlt && <p className="text-sm text-regantify-text-muted">{order.customerPhoneAlt}</p>}
-            {order.customerEmail && <p className="text-sm text-regantify-text-muted">{order.customerEmail}</p>}
-            <button
-              onClick={() => setHistoryPhone(order.customerPhone)}
-              className="mt-2 text-xs px-2.5 py-1 rounded-lg border border-black/10 text-regantify-text-muted hover:bg-regantify-content"
-            >
-              Check History
-            </button>
+        {/* Side column */}
+        <div className="min-w-0 space-y-4">
+          <Card title="Customer">
+            <p className="text-sm font-medium text-regantify-text">{order.customerName}</p>
+            <p className="text-sm text-neutral-600">{order.customerPhone}</p>
+            {order.customerPhoneAlt && <p className="text-sm text-neutral-600">{order.customerPhoneAlt} (other number)</p>}
+            {order.customerEmail && <p className="truncate text-sm text-neutral-600">{order.customerEmail}</p>}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href={`tel:${order.customerPhone}`} className={outlineBtn}>
+                <Phone size={14} />
+                Call
+              </a>
+              <a href={`https://wa.me/${whatsappNumber(order.customerPhone)}`} target="_blank" rel="noopener noreferrer" className={outlineBtn}>
+                <MessageCircle size={14} />
+                WhatsApp
+              </a>
+              <button type="button" onClick={() => setHistoryPhone(order.customerPhone)} className={outlineBtn}>
+                Order history
+              </button>
+            </div>
+
+            <div className="mt-3">
+              <CustomerDeliveryStats stats={deliveryStats?.byPhone[order.customerPhone]} />
+            </div>
             <OrderCallLine orderId={order.id} />
+
             {order.customerNote && (
-              <p className="mt-3 text-xs text-regantify-text-muted bg-regantify-content rounded-lg p-2.5">
-                {order.customerNote}
-              </p>
+              <div className="mt-3">
+                <p className="mb-1 text-xs font-medium text-neutral-500">Note from the customer</p>
+                <p className="rounded-lg bg-neutral-50 p-2.5 text-xs text-neutral-700">{order.customerNote}</p>
+              </div>
             )}
             {order.staffNote && (
               <div className="mt-3">
-                <p className="text-xs font-medium text-regantify-text-muted mb-1">Staff Note</p>
-                <p className="text-xs text-regantify-text-muted bg-regantify-content rounded-lg p-2.5">{order.staffNote}</p>
+                <p className="mb-1 text-xs font-medium text-neutral-500">Staff note</p>
+                <p className="rounded-lg bg-neutral-50 p-2.5 text-xs text-neutral-700">{order.staffNote}</p>
               </div>
             )}
-          </section>
+          </Card>
 
-          <section className="bg-white rounded-2xl border border-black/5 p-6">
-            <h2 className="text-base font-semibold text-regantify-text mb-4">Shipping</h2>
+          <Card title="Delivery" id="delivery">
             <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
-            {order.shippingCity && <p className="text-xs text-regantify-text-muted mt-1">City: {order.shippingCity}</p>}
-            {order.shippingDistrict && (
-              <p className="text-xs text-regantify-text-muted">District: {order.shippingDistrict}</p>
-            )}
-            {order.shippingZip && <p className="text-xs text-regantify-text-muted">ZIP: {order.shippingZip}</p>}
+            <p className="mt-1 text-xs text-neutral-500">
+              {[order.shippingCity && `City: ${order.shippingCity}`, order.shippingDistrict && `District: ${order.shippingDistrict}`, order.shippingZip && `ZIP: ${order.shippingZip}`]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
 
-            {/* Pathao's order API needs numeric city/zone/area, not the
-                free-text fields above — only relevant once this order is
-                assigned to Pathao (see COURIER-PLAN.md §3.2/§7 Phase 2). */}
-            {order.courierProvider === 'PATHAO' && (
-              <div className="mt-4 pt-4 border-t border-black/5 space-y-4">
-                {/* Booking state + "Book with Pathao" (opens the booking
-                    popup — pathao-plan.md Step 4). Hidden once booked. */}
-                {order.courierBookingStatus === 'BOOKED' ? (
+            {provider === 'NONE' && (
+              <div className="mt-4 border-t border-line pt-4">
+                <p className="text-sm text-neutral-600">Not sent to a courier yet.</p>
+                {order.status !== 'PROCESSING' && order.status !== 'PENDING' ? null : (
+                  <div className="mt-2">{order.status === 'PENDING' ? <p className="text-xs text-neutral-500">Confirm the order first, then send it.</p> : courierMenu('Send to courier')}</div>
+                )}
+              </div>
+            )}
+
+            {/* Pathao needs numeric city/zone/area, not the free-text address above. */}
+            {provider === 'PATHAO' && (
+              <div className="mt-4 space-y-4 border-t border-line pt-4">
+                {booked ? (
                   <div className="space-y-1.5">
                     <p className="text-sm text-regantify-text">
                       Booked with Pathao
-                      {order.courierConsignmentId && (
-                        <span className="text-regantify-text-muted"> · Consignment {order.courierConsignmentId}</span>
-                      )}
+                      {order.courierConsignmentId && <span className="text-neutral-500"> · Consignment {order.courierConsignmentId}</span>}
                     </p>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-3">
                       {order.courierStatus && <CourierStatusBadge provider="PATHAO" status={order.courierStatus} prefix="Pathao" />}
-                      <button
-                        type="button"
-                        onClick={() => refreshCourierMutation.mutate()}
-                        disabled={refreshCourierMutation.isPending}
-                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text disabled:opacity-60"
-                      >
+                      <button type="button" onClick={() => refreshCourierMutation.mutate()} disabled={refreshCourierMutation.isPending} className={linkBtn()}>
                         {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
                       </button>
                       {order.courierConsignmentId && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard
-                              .writeText(order.courierConsignmentId!)
-                              .then(() => toast.success('Tracking ID copied — share it with the customer.'))
-                              .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
-                          }}
-                          className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                        >
+                        <button type="button" onClick={() => copyTracking(order.courierConsignmentId!)} className={linkBtn()}>
                           Copy tracking ID
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => openPathaoLabels([order.id])}
-                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                      >
+                      <button type="button" onClick={() => openPathaoLabels([order.id])} className={linkBtn()}>
                         Print label
                       </button>
                     </div>
-                    <p className="text-xs text-regantify-text-muted">
+                    <p className="text-xs text-neutral-500">
                       {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
                       {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
                       {order.courierCollectedAmount != null && <> · Collected {formatPrice(order.courierCollectedAmount)}</>}
@@ -336,21 +502,14 @@ export default function OrderDetail() {
                   </div>
                 ) : (
                   <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setBookingPathao(true)}
-                      disabled={order.courierBookingStatus === 'BOOKING'}
-                      className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
-                    >
+                    <button type="button" onClick={() => setBookingPathao(true)} disabled={order.courierBookingStatus === 'BOOKING'} className={primaryBtn}>
                       {order.courierBookingStatus === 'BOOKING' ? 'Booking…' : 'Book with Pathao'}
                     </button>
                     {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
-                      <p className="text-xs text-red-500">Last attempt failed: {order.courierBookingError}</p>
+                      <p className="text-xs text-red-600">Last attempt failed: {order.courierBookingError}</p>
                     )}
                     {order.courierBookingStatus === 'CANCELLED' && (
-                      <p className="text-xs text-red-500">
-                        {order.courierBookingError ?? 'Pathao cancelled the pickup. You can book this order again.'}
-                      </p>
+                      <p className="text-xs text-red-600">{order.courierBookingError ?? 'Pathao cancelled the pickup. You can book this order again.'}</p>
                     )}
                   </div>
                 )}
@@ -366,72 +525,49 @@ export default function OrderDetail() {
               </div>
             )}
 
-            {order.courierProvider === 'STEADFAST' && order.courierBookingStatus !== 'BOOKED' && (
-              <div className="mt-4 pt-4 border-t border-black/5 flex flex-wrap items-center gap-3">
+            {provider === 'STEADFAST' && !booked && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
                 <button
                   type="button"
                   onClick={() => bookOneClickMutation.mutate()}
                   disabled={bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'}
-                  className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+                  className={primaryBtn}
                 >
                   {bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING' ? 'Booking…' : 'Book with SteadFast'}
                 </button>
                 {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
-                  <p className="text-xs text-red-500">Last attempt failed: {order.courierBookingError}</p>
+                  <p className="text-xs text-red-600">Last attempt failed: {order.courierBookingError}</p>
                 )}
               </div>
             )}
 
-            {/* SteadFast needs no location fields — once booked, this is
-                the parcel's state plus "Request return" (bring it back
-                before it's delivered). */}
-            {order.courierProvider === 'STEADFAST' && order.courierBookingStatus === 'BOOKED' && (
-              <div className="mt-4 pt-4 border-t border-black/5 space-y-1.5">
+            {/* SteadFast needs no location fields. Once booked: the parcel's state plus "Request return". */}
+            {provider === 'STEADFAST' && booked && (
+              <div className="mt-4 space-y-1.5 border-t border-line pt-4">
                 <p className="text-sm text-regantify-text">
                   Booked with SteadFast
-                  {order.courierTrackingCode && <span className="text-regantify-text-muted"> · Tracking {order.courierTrackingCode}</span>}
+                  {order.courierTrackingCode && <span className="text-neutral-500"> · Tracking {order.courierTrackingCode}</span>}
                 </p>
-                {order.courierConsignmentId && (
-                  <p className="text-xs text-regantify-text-muted">Consignment {order.courierConsignmentId}</p>
-                )}
-                <div className="flex flex-wrap items-center gap-2">
+                {order.courierConsignmentId && <p className="text-xs text-neutral-500">Consignment {order.courierConsignmentId}</p>}
+                <div className="flex flex-wrap items-center gap-3">
                   {order.courierStatus && <CourierStatusBadge provider="STEADFAST" status={order.courierStatus} prefix="SteadFast" />}
-                  <button
-                    type="button"
-                    onClick={() => refreshCourierMutation.mutate()}
-                    disabled={refreshCourierMutation.isPending}
-                    className="text-xs underline text-regantify-text-muted hover:text-regantify-text disabled:opacity-60"
-                  >
+                  <button type="button" onClick={() => refreshCourierMutation.mutate()} disabled={refreshCourierMutation.isPending} className={linkBtn()}>
                     {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
                   </button>
                   {order.courierTrackingCode && (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard
-                            .writeText(order.courierTrackingCode!)
-                            .then(() => toast.success('Tracking ID copied — share it with the customer.'))
-                            .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
-                        }}
-                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                      >
+                      <button type="button" onClick={() => copyTracking(order.courierTrackingCode!)} className={linkBtn()}>
                         Copy tracking ID
                       </button>
                       {order.courierTrackingUrl && (
-                        <a
-                          href={order.courierTrackingUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                        >
+                        <a href={order.courierTrackingUrl} target="_blank" rel="noreferrer" className={linkBtn()}>
                           Tracking page
                         </a>
                       )}
                     </>
                   )}
                 </div>
-                <p className="text-xs text-regantify-text-muted">
+                <p className="text-xs text-neutral-500">
                   {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
                   {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
                   {order.courierCollectedAmount != null && <> · Collected {formatPrice(order.courierCollectedAmount)}</>}
@@ -440,13 +576,13 @@ export default function OrderDetail() {
                 <div className="pt-1">
                   {returnRequestedAt ? (
                     <p className="text-xs text-amber-700">
-                      Return requested on {formatDateTime(returnRequestedAt)} — SteadFast will update the status as it comes back.
+                      Return requested on {formatDateTime(returnRequestedAt)}. SteadFast will update the status as it comes back.
                     </p>
                   ) : steadfastReturnable(order.courierStatus) ? (
                     <button
                       type="button"
                       onClick={() => setRequestingReturn(true)}
-                      className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 text-xs font-medium"
+                      className="inline-flex h-8 items-center rounded-lg border border-red-200 bg-white px-3 text-xs font-medium text-red-600 hover:bg-red-50"
                     >
                       Request return
                     </button>
@@ -455,16 +591,14 @@ export default function OrderDetail() {
               </div>
             )}
 
-            {/* RedX needs a numeric delivery area — a single tier, unlike
-                Pathao's city/zone/area cascade. Before booking: what RedX
-                would get and charge, "Book with RedX" and the area picker. */}
-            {order.courierProvider === 'REDX' && order.courierBookingStatus !== 'BOOKED' && (
-              <div className="mt-4 pt-4 border-t border-black/5 space-y-4">
+            {/* RedX needs a numeric delivery area. Before booking: what RedX would get and charge. */}
+            {provider === 'REDX' && !booked && (
+              <div className="mt-4 space-y-4 border-t border-line pt-4">
                 <div className="space-y-2">
                   {redxQuoteLoading ? (
-                    <p className="text-xs text-regantify-text-muted">Asking RedX…</p>
+                    <p className="text-xs text-neutral-500">Asking RedX…</p>
                   ) : redxQuote ? (
-                    <div className="rounded-xl bg-regantify-content p-3 text-xs text-regantify-text-muted space-y-1">
+                    <div className="space-y-1 rounded-lg bg-neutral-50 p-3 text-xs text-neutral-600">
                       <p>
                         Area:{' '}
                         {redxQuote.area ? (
@@ -473,12 +607,15 @@ export default function OrderDetail() {
                             {redxQuote.area.detected && ' (found from the address)'}
                           </span>
                         ) : (
-                          <span className="text-red-500">{redxQuote.areaError ?? 'Not set'}</span>
+                          <span className="text-red-600">{redxQuote.areaError ?? 'Not set'}</span>
                         )}
                       </p>
                       <p>
-                        Weight <span className="text-regantify-text">{(redxQuote.weightGrams / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 })} kg</span> · COD{' '}
-                        <span className="text-regantify-text">{formatPrice(String(redxQuote.codAmount))}</span>
+                        Weight{' '}
+                        <span className="text-regantify-text">
+                          {(redxQuote.weightGrams / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 })} kg
+                        </span>{' '}
+                        · COD <span className="text-regantify-text">{formatPrice(String(redxQuote.codAmount))}</span>
                       </p>
                       {redxQuote.charge ? (
                         <p>
@@ -491,7 +628,7 @@ export default function OrderDetail() {
                       {redxQuote.pickupStore ? (
                         <p>Pickup from {redxQuote.pickupStore.name ?? `store ${redxQuote.pickupStore.id}`}</p>
                       ) : (
-                        <p className="text-red-500">No pickup store chosen — set one in Courier Integration › RedX.</p>
+                        <p className="text-red-600">No pickup store chosen. Set one in Courier Integration › RedX.</p>
                       )}
                     </div>
                   ) : null}
@@ -500,7 +637,7 @@ export default function OrderDetail() {
                       type="button"
                       onClick={() => bookOneClickMutation.mutate()}
                       disabled={bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'}
-                      className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+                      className={primaryBtn}
                     >
                       {bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'
                         ? 'Booking…'
@@ -509,10 +646,10 @@ export default function OrderDetail() {
                           : 'Book with RedX'}
                     </button>
                     {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
-                      <p className="text-xs text-red-500">Last attempt failed: {order.courierBookingError}</p>
+                      <p className="text-xs text-red-600">Last attempt failed: {order.courierBookingError}</p>
                     )}
                     {order.courierBookingStatus === 'CANCELLED' && (
-                      <p className="text-xs text-red-500">{order.courierBookingError ?? 'The RedX parcel was cancelled. You can book this order again.'}</p>
+                      <p className="text-xs text-red-600">{order.courierBookingError ?? 'The RedX parcel was cancelled. You can book this order again.'}</p>
                     )}
                   </div>
                 </div>
@@ -527,55 +664,32 @@ export default function OrderDetail() {
               </div>
             )}
 
-            {order.courierProvider === 'REDX' && order.courierBookingStatus === 'BOOKED' && (
-              <div className="mt-4 pt-4 border-t border-black/5 space-y-1.5">
+            {provider === 'REDX' && booked && (
+              <div className="mt-4 space-y-1.5 border-t border-line pt-4">
                 <p className="text-sm text-regantify-text">
                   Booked with RedX
-                  {order.courierConsignmentId && <span className="text-regantify-text-muted"> · Tracking {order.courierConsignmentId}</span>}
+                  {order.courierConsignmentId && <span className="text-neutral-500"> · Tracking {order.courierConsignmentId}</span>}
                 </p>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   {order.courierStatus && <CourierStatusBadge provider="REDX" status={order.courierStatus} prefix="RedX" />}
-                  <button
-                    type="button"
-                    onClick={() => refreshCourierMutation.mutate()}
-                    disabled={refreshCourierMutation.isPending}
-                    className="text-xs underline text-regantify-text-muted hover:text-regantify-text disabled:opacity-60"
-                  >
+                  <button type="button" onClick={() => refreshCourierMutation.mutate()} disabled={refreshCourierMutation.isPending} className={linkBtn()}>
                     {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
                   </button>
                   {order.courierConsignmentId && (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard
-                            .writeText(order.courierConsignmentId!)
-                            .then(() => toast.success('Tracking ID copied — share it with the customer.'))
-                            .catch(() => toast.error('Could not copy. Select the ID and copy it yourself.'));
-                        }}
-                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                      >
+                      <button type="button" onClick={() => copyTracking(order.courierConsignmentId!)} className={linkBtn()}>
                         Copy tracking ID
                       </button>
-                      <a
-                        href={redxTrackingUrl(order.courierConsignmentId)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                      >
+                      <a href={redxTrackingUrl(order.courierConsignmentId)} target="_blank" rel="noreferrer" className={linkBtn()}>
                         Tracking page
                       </a>
-                      <button
-                        type="button"
-                        onClick={() => setShowRedxHistory(true)}
-                        className="text-xs underline text-regantify-text-muted hover:text-regantify-text"
-                      >
+                      <button type="button" onClick={() => setShowRedxHistory(true)} className={linkBtn()}>
                         RedX history
                       </button>
                     </>
                   )}
                 </div>
-                <p className="text-xs text-regantify-text-muted">
+                <p className="text-xs text-neutral-500">
                   {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
                   {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
                   {order.courierPaidAt && <> · COD paid out</>}
@@ -585,7 +699,7 @@ export default function OrderDetail() {
                     <button
                       type="button"
                       onClick={() => setCancellingRedx(true)}
-                      className="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-600 hover:bg-red-50 text-xs font-medium"
+                      className="inline-flex h-8 items-center rounded-lg border border-red-200 bg-white px-3 text-xs font-medium text-red-600 hover:bg-red-50"
                     >
                       Cancel parcel
                     </button>
@@ -593,31 +707,18 @@ export default function OrderDetail() {
                 )}
               </div>
             )}
+          </Card>
 
-            {order.courierProvider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED' && (
-              <div className="mt-4 pt-4 border-t border-black/5">
-                <CourierTimeline orderId={order.id} />
-              </div>
-            )}
-          </section>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-6">
-            <h2 className="text-base font-semibold text-regantify-text mb-3">Update Status</h2>
-            <textarea
-              value={statusNote}
-              onChange={(e) => setStatusNote(e.target.value)}
-              placeholder="Optional note (e.g. Confirmed by Bayazid)"
-              rows={2}
-              className="w-full mb-3 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm resize-y focus:outline-none"
-            />
+          <Card title="Change status">
             <select
               value=""
               onChange={(e) => e.target.value && statusMutation.mutate(e.target.value as OrderStatus)}
               disabled={statusMutation.isPending}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
+              aria-label="Change status"
+              className={productInputClass}
             >
               <option value="" disabled>
-                Change status to…
+                Move this order to…
               </option>
               {ALL_ORDER_STATUSES.filter((s) => s !== order.status).map((status) => (
                 <option key={status} value={status}>
@@ -625,10 +726,19 @@ export default function OrderDetail() {
                 </option>
               ))}
             </select>
-          </section>
+            <textarea
+              value={statusNote}
+              onChange={(e) => setStatusNote(e.target.value)}
+              placeholder="Note for the timeline (optional), e.g. Confirmed on the phone"
+              rows={2}
+              className={`${productInputClass} mt-2 resize-y`}
+            />
+            <p className="mt-1.5 text-xs text-neutral-500">Write the note first; it’s saved with the next status change.</p>
+          </Card>
         </div>
       </div>
 
+      <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
       <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ORDER-${order.invoiceNumber}`} maxWidth="max-w-md">

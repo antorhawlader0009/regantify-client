@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Check } from 'lucide-react';
 import { Dialog } from '../../../components/ui/Dialog';
+import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, orderStatusLabel } from './orderStatus';
 import type { OrderStatus } from '../../../lib/ordersApi';
 
@@ -11,11 +13,31 @@ interface CustomizeTabsModalProps {
   saving: boolean;
 }
 
-// The four statuses always offered as the "pin/unpin with a switch" set
-// at the top — everything else lives in the plain checkbox grid below,
-// matching the reference's split between "Pending/Processing/Shipping/
-// Completed" (with toggles) and "Available Statuses" (plain checkboxes).
+// The four everyday statuses come first; the rest are listed below them.
 const PINNABLE = DEFAULT_TABS;
+
+function StatusChip({ status, checked, onToggle }: { status: OrderStatus; checked: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={onToggle}
+      className={`flex h-10 items-center gap-2 rounded-lg border px-3 text-left text-sm transition-colors ${
+        checked ? 'border-brand bg-brand-lime/30 text-regantify-text' : 'border-line text-neutral-600 hover:bg-neutral-50'
+      }`}
+    >
+      <span
+        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+          checked ? 'border-brand bg-brand text-white' : 'border-neutral-300 bg-white'
+        }`}
+      >
+        {checked && <Check size={11} strokeWidth={3} />}
+      </span>
+      <span className="truncate">{orderStatusLabel(status)}</span>
+    </button>
+  );
+}
 
 export function CustomizeTabsModal({ open, onOpenChange, currentTabs, onSave, saving }: CustomizeTabsModalProps) {
   const [selected, setSelected] = useState<OrderStatus[]>(currentTabs);
@@ -33,85 +55,44 @@ export function CustomizeTabsModal({ open, onOpenChange, currentTabs, onSave, sa
   const otherStatuses = ALL_ORDER_STATUSES.filter((s) => !PINNABLE.includes(s));
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Customize Order Status Tabs" maxWidth="max-w-lg">
-      <div className="p-6 space-y-5">
-        <p className="text-sm text-regantify-text-muted -mt-2">
-          Select and reorder the status tabs you want to display:
+    <Dialog open={open} onOpenChange={onOpenChange} title="Order tabs" maxWidth="max-w-lg">
+      <div className="space-y-5 px-6 pb-2 pt-3">
+        <p className="text-sm text-neutral-500">
+          Pick the statuses that get their own tab on the Orders page. “All” is always there. Tabs show in the order you pick them.
         </p>
 
-        <label className="flex items-center gap-2 text-sm font-medium text-regantify-text opacity-60">
-          <input type="checkbox" checked disabled className="rounded" />
-          All (Always shown)
-        </label>
-
-        <div className="space-y-2">
-          {PINNABLE.map((status) => {
-            const checked = selected.includes(status);
-            return (
-              <div
-                key={status}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-black/10"
-              >
-                <label className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
-                  <input type="checkbox" checked={checked} onChange={() => toggle(status)} className="rounded" />
-                  {orderStatusLabel(status)}
-                </label>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={checked}
-                  onClick={() => toggle(status)}
-                  className={`w-9 h-5 rounded-full relative transition-colors ${
-                    checked ? 'bg-regantify-cta' : 'bg-black/15'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                      checked ? 'translate-x-4' : 'translate-x-0.5'
-                    }`}
-                  />
-                </button>
-              </div>
-            );
-          })}
+        <div>
+          <p className="mb-2 text-xs font-medium text-neutral-500">Everyday</p>
+          <div className="grid grid-cols-2 gap-2">
+            {PINNABLE.map((status) => (
+              <StatusChip key={status} status={status} checked={selected.includes(status)} onToggle={() => toggle(status)} />
+            ))}
+          </div>
         </div>
 
-        <div className="border-t border-black/5 pt-4">
-          <p className="text-sm font-medium text-regantify-text mb-3">Available Statuses:</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+        <div>
+          <p className="mb-2 text-xs font-medium text-neutral-500">Other statuses</p>
+          <div className="grid grid-cols-2 gap-2">
             {otherStatuses.map((status) => (
-              <label
-                key={status}
-                className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(status)}
-                  onChange={() => toggle(status)}
-                  className="rounded"
-                />
-                {orderStatusLabel(status)}
-              </label>
+              <StatusChip key={status} status={status} checked={selected.includes(status)} onToggle={() => toggle(status)} />
             ))}
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 px-6 py-4 border-t border-black/5">
+      <div className="flex flex-wrap items-center justify-end gap-2 px-6 pb-5 pt-4">
         <button
           type="button"
-          onClick={() => onOpenChange(false)}
-          className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
+          onClick={() => setSelected(DEFAULT_TABS)}
+          className="mr-auto text-sm text-neutral-500 underline-offset-2 hover:text-regantify-text hover:underline"
         >
+          Reset to default
+        </button>
+        <button type="button" onClick={() => onOpenChange(false)} className={outlineBtn}>
           Cancel
         </button>
-        <button
-          type="button"
-          onClick={() => onSave(selected)}
-          disabled={saving}
-          className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : 'Save Tabs'}
+        <button type="button" onClick={() => onSave(selected)} disabled={saving} className={primaryBtn}>
+          {saving ? 'Saving…' : `Save ${selected.length + 1} tabs`}
         </button>
       </div>
     </Dialog>

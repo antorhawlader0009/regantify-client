@@ -46,7 +46,7 @@ function SupportUnreadBadge({ admin, collapsed }: { admin: boolean; collapsed: b
   );
 }
 
-/** The vendor's plan name in a small outlined pill next to the logo. */
+/** The vendor's plan name in a small filled pill next to the logo. */
 function PlanBadge() {
   const { data } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage, retry: false });
   if (!data) return null;
@@ -55,7 +55,7 @@ function PlanBadge() {
 
 function Badge({ children }: { children: string }) {
   return (
-    <span className="animate-pop-in inline-flex translate-y-[3px] items-center rounded-full border border-brand/25 bg-white px-1.5 py-px text-[8.5px] font-semibold uppercase leading-tight tracking-wider text-brand">
+    <span className="animate-pop-in inline-flex translate-y-[3px] items-center rounded-full border border-[#d9ed94] bg-[#d9ed94] px-1.5 py-px text-[8.5px] font-semibold uppercase leading-tight tracking-wider text-brand">
       {children}
     </span>
   );

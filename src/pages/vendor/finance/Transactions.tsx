@@ -46,7 +46,7 @@ export default function Transactions() {
               <th className="px-5 py-3 font-medium">DESCRIPTION</th>
               <th className="px-5 py-3 font-medium">TYPE</th>
               <th className="px-5 py-3 font-medium">AMOUNT</th>
-              <th className="px-5 py-3 font-medium">BALANCE AFTER</th>
+              <th className="px-5 py-3 font-medium">RUNNING BALANCE</th>
             </tr>
           </thead>
           <tbody>

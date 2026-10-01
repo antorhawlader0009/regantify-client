@@ -20,10 +20,10 @@ interface ImportCsvModalProps {
 type Step = 'upload' | 'map' | 'preview' | 'importing' | 'done';
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black text-sm';
+  'w-full px-3.5 py-2.5 rounded-lg bg-white border border-line text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand/15 focus:border-brand text-sm';
 
 const selectClass =
-  'w-full px-3 py-2 rounded-lg border border-black/10 bg-white text-sm text-regantify-text focus:outline-none focus:ring-2 focus:ring-regantify-black';
+  'w-full px-3 py-2 rounded-lg border border-line bg-white text-sm text-regantify-text focus:outline-none focus:ring-2 focus:ring-brand/15 focus:border-brand';
 
 interface RowResult {
   rowNumber: number;
@@ -137,11 +137,11 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={step === 'importing' ? undefined : onClose}>
       <div
-        className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-black/5 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line shrink-0">
           <div className="flex items-center gap-2">
             {(step === 'map' || step === 'preview') && (
               <button
@@ -172,16 +172,16 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                 <span
                   className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold ${
                     isCurrent
-                      ? 'bg-regantify-black text-white'
+                      ? 'bg-brand text-white'
                       : isDone
                         ? 'bg-regantify-black/70 text-white'
-                        : 'bg-regantify-content text-regantify-text-muted'
+                        : 'bg-neutral-50 text-regantify-text-muted'
                   }`}
                 >
                   {i + 1}
                 </span>
                 <span className={isCurrent ? 'text-regantify-text font-medium' : ''}>{label}</span>
-                {i < 3 && <span className="w-4 h-px bg-black/10" />}
+                {i < 3 && <span className="w-4 h-px bg-line" />}
               </div>
             );
           })}
@@ -199,8 +199,8 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full py-14 rounded-2xl border-2 border-dashed border-black/15 bg-regantify-content
-                  flex flex-col items-center justify-center gap-2 text-regantify-text hover:border-black/25 transition-colors"
+                className="w-full py-14 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50
+                  flex flex-col items-center justify-center gap-2 text-regantify-text hover:border-neutral-300 transition-colors"
               >
                 <UploadCloud size={28} />
                 <span className="font-medium">Upload CSV File</span>
@@ -219,12 +219,12 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
 
               {parseError && <p className="text-red-500 text-sm">{parseError}</p>}
 
-              <div className="flex items-center justify-between pt-2 border-t border-black/5">
+              <div className="flex items-center justify-between pt-2 border-t border-line">
                 <p className="text-xs text-regantify-text-muted">Not sure where to start?</p>
                 <button
                   type="button"
                   onClick={handleDownloadTemplate}
-                  className="flex items-center gap-1.5 text-sm text-regantify-cta hover:underline"
+                  className="flex items-center gap-1.5 text-sm text-brand hover:underline"
                 >
                   <Download size={14} />
                   Download example CSV
@@ -240,7 +240,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                 . We've guessed a few based on your headers — check them and adjust anything that's wrong.
               </p>
 
-              <div className="rounded-xl border border-black/10 divide-y divide-black/5">
+              <div className="rounded-lg border border-line divide-y divide-line">
                 {IMPORT_FIELDS.map((field) => (
                   <div key={field.key} className="flex items-center gap-4 px-4 py-3">
                     <div className="w-40 shrink-0">
@@ -290,10 +290,10 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                 )}
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-black/10 max-h-[360px] overflow-y-auto">
+              <div className="overflow-x-auto rounded-lg border border-line max-h-[360px] overflow-y-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0">
-                    <tr className="bg-regantify-content text-left text-regantify-text-muted">
+                    <tr className="bg-neutral-50 text-left text-regantify-text-muted">
                       <th className="px-3 py-2.5 font-medium">Row</th>
                       <th className="px-3 py-2.5 font-medium">Name</th>
                       <th className="px-3 py-2.5 font-medium">SKU</th>
@@ -303,7 +303,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                   </thead>
                   <tbody>
                     {parsedRows.map((row) => (
-                      <tr key={row.rowNumber} className="border-t border-black/5 align-top">
+                      <tr key={row.rowNumber} className="border-t border-line align-top">
                         <td className="px-3 py-2 text-regantify-text-muted">{row.rowNumber}</td>
                         <td className="px-3 py-2 text-regantify-text">{row.payload?.name || row.raw[mapping.name] || '—'}</td>
                         <td className="px-3 py-2 text-regantify-text">{row.payload?.sku || row.raw[mapping.sku] || '—'}</td>
@@ -343,9 +343,9 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                     {progress} / {validRows.length}
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-regantify-content overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-neutral-50 overflow-hidden">
                   <div
-                    className="h-full bg-regantify-black transition-all"
+                    className="h-full bg-brand transition-all"
                     style={{ width: `${validRows.length ? (progress / validRows.length) * 100 : 0}%` }}
                   />
                 </div>
@@ -364,7 +364,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                 </div>
               )}
 
-              <div className="overflow-y-auto max-h-[280px] rounded-xl border border-black/10 divide-y divide-black/5">
+              <div className="overflow-y-auto max-h-[280px] rounded-lg border border-line divide-y divide-line">
                 {results.map((r) => (
                   <div key={r.rowNumber} className="flex items-start gap-2 px-4 py-2.5 text-sm">
                     {r.status === 'success' ? (
@@ -386,12 +386,12 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-black/5 px-6 py-4 flex justify-end gap-3 shrink-0">
+        <div className="border-t border-line px-6 py-4 flex justify-end gap-3 shrink-0">
           {step === 'upload' && (
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text hover:bg-regantify-content"
+              className="px-5 py-2.5 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50"
             >
               Cancel
             </button>
@@ -402,7 +402,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               type="button"
               onClick={handleContinueToPreview}
               disabled={!requiredFieldsMapped}
-              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue to Preview
             </button>
@@ -413,7 +413,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               type="button"
               onClick={handleImport}
               disabled={validRows.length === 0}
-              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Import {validRows.length} Product{validRows.length === 1 ? '' : 's'}
             </button>
@@ -424,7 +424,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               type="button"
               onClick={() => setCancelRequested(true)}
               disabled={cancelRequested}
-              className="px-5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-40"
+              className="px-5 py-2.5 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-40"
             >
               {cancelRequested ? 'Stopping…' : 'Stop Import'}
             </button>
@@ -437,7 +437,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                 toast.success(`${successCount} product${successCount === 1 ? '' : 's'} imported.`);
                 onClose();
               }}
-              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors"
+              className="px-6 py-2.5 rounded-lg bg-brand text-white text-sm font-medium hover:bg-brand-dark transition-colors"
             >
               Done
             </button>

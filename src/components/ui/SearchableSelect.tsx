@@ -103,7 +103,7 @@ export function SearchableSelect({ value, options, onChange, placeholder, loadin
         <RadixPopover.Content
           align="start"
           sideOffset={4}
-          className="z-[60] w-[var(--radix-popover-trigger-width)] min-w-[220px] bg-white rounded-xl shadow-lg border border-black/10 p-1.5 focus:outline-none"
+          className="z-[60] w-[var(--radix-popover-trigger-width)] min-w-[220px] bg-white rounded-lg shadow-lg border border-line p-1.5 focus:outline-none"
           onOpenAutoFocus={(e) => {
             // Focus the search box, not the first list item.
             e.preventDefault();
@@ -131,7 +131,7 @@ export function SearchableSelect({ value, options, onChange, placeholder, loadin
               }
             }}
             placeholder="Type to search…"
-            className="w-full px-2.5 py-1.5 mb-1.5 rounded-lg border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+            className="w-full px-2.5 py-1.5 mb-1.5 rounded-md border border-line text-sm text-regantify-text placeholder:text-neutral-400 outline-none focus:border-brand"
           />
           <ul ref={listRef} role="listbox" className="max-h-60 overflow-y-auto">
             {filtered.length === 0 ? (
@@ -146,14 +146,14 @@ export function SearchableSelect({ value, options, onChange, placeholder, loadin
                   onMouseDown={(e) => e.preventDefault()} // keep focus in the search box
                   onClick={() => pick(option.id)}
                   className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-sm cursor-pointer ${
-                    i === highlight ? 'bg-regantify-content' : ''
+                    i === highlight ? 'bg-neutral-100' : ''
                   } text-regantify-text`}
                 >
                   <span className="truncate">
                     {option.label}
                     {option.suffix && <span className="text-regantify-text-muted"> {option.suffix}</span>}
                   </span>
-                  {option.id === value && <Check size={14} className="shrink-0" />}
+                  {option.id === value && <Check size={14} className="shrink-0 text-brand" />}
                 </li>
               ))
             )}

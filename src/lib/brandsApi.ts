@@ -6,6 +6,8 @@ export interface Brand {
   name: string;
   slug: string;
   logoUrl: string;
+  /** Products with this brand name; only on the list response. */
+  productCount?: number;
   createdAt: string;
   updatedAt: string;
 }

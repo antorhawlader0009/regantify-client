@@ -4,10 +4,10 @@ import { HelpCircle } from 'lucide-react';
 export function Tooltip({ text }: { text: string }) {
   return (
     <span className="group relative inline-flex">
-      <HelpCircle size={14} className="text-regantify-text-muted cursor-help" />
+      <HelpCircle size={14} className="text-neutral-400 cursor-help" />
       <span
         className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 hidden group-hover:block
-          w-max max-w-[220px] bg-regantify-black text-white text-xs rounded-lg px-2.5 py-1.5 z-10"
+          w-max max-w-[220px] bg-neutral-900 text-white text-xs rounded-md px-2.5 py-1.5 z-10"
       >
         {text}
       </span>
@@ -15,65 +15,78 @@ export function Tooltip({ text }: { text: string }) {
   );
 }
 
-export function SectionCard({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
+/** A form section in the dashboard theme: hairline card, 15px title, optional one-line help and a right-side action. */
+export function SectionCard({
+  title,
+  children,
+  id,
+  description,
+  action,
+}: {
+  title: string;
+  children: ReactNode;
+  id?: string;
+  description?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
-    <section id={id} className="bg-white rounded-2xl border border-black/5 p-6">
-      <h2 className="text-base font-semibold text-regantify-text mb-5">{title}</h2>
+    <section id={id} className="scroll-mt-20 rounded-xl border border-line bg-white p-4 sm:p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold text-regantify-text">{title}</h2>
+          {description && <p className="mt-0.5 text-sm text-neutral-500">{description}</p>}
+        </div>
+        {action}
+      </div>
       {children}
     </section>
   );
 }
 
+/**
+ * A labelled field. Required fields get a red asterisk; the field only
+ * turns red when there's an actual problem (`error`), so a fresh form
+ * doesn't look full of mistakes.
+ */
 export function Field({
   label,
   required,
   tooltip,
   children,
   hint,
+  error,
 }: {
   label: string;
   required?: boolean;
   tooltip?: string;
   children: ReactNode;
-  hint?: string;
+  hint?: ReactNode;
+  error?: string | null;
 }) {
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-sm font-medium text-regantify-text mb-1.5">
+      <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-regantify-text">
         {label}
-        {required && <span className="text-red-500">*</span>}
+        {required && (
+          <span className="text-red-500" aria-hidden>
+            *
+          </span>
+        )}
         {tooltip && <Tooltip text={tooltip} />}
       </label>
-      {/* When required, every text-style input/select/textarea inside
-          this field (at any nesting depth — e.g. the price fields' ৳
-          prefix wrapper) gets a red border, so a vendor can see at a
-          glance which fields still need filling in without touching
-          every individual Field usage. Radio/checkbox inputs are
-          excluded — a red border around a small circle reads as broken,
-          not "required". */}
-      <div
-        className={
-          required
-            ? '[&_input:not([type="radio"]):not([type="checkbox"])]:border [&_input:not([type="radio"]):not([type="checkbox"])]:border-red-400 [&_select]:border [&_select]:border-red-400 [&_textarea]:border [&_textarea]:border-red-400'
-            : undefined
-        }
-      >
-        {children}
-      </div>
-      {hint && <p className="text-xs text-regantify-text-muted mt-1.5">{hint}</p>}
+      <div className={error ? '[&_input]:border-red-400 [&_select]:border-red-400 [&_textarea]:border-red-400' : undefined}>{children}</div>
+      {error ? (
+        <p className="mt-1.5 text-xs text-red-600">{error}</p>
+      ) : (
+        hint && <div className="mt-1.5 text-xs text-neutral-500">{hint}</div>
+      )}
     </div>
   );
 }
 
-// Used across the Add/Edit Product forms (General Information, Pricing,
-// Stock, Variations) — a light grey fill so the input reads as an empty
-// field to fill in. Distinct from regantify-content (the page's own
-// background, #F1F1F1) and from regantify-search (the pink shade used
-// for the Topbar search bar and most other forms in the app —
-// deliberately left alone here so this change stays scoped to product
-// forms only).
+/** Text inputs, selects and textareas on every product form: white with a hairline, green focus ring. */
 export const productInputClass =
-  'w-full px-3.5 py-2.5 rounded-xl bg-[#E9E9E9] text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black text-sm';
+  'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
-export const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black text-sm';
+/** Same look; kept as its own name because other forms import it. */
+export const inputClass = productInputClass;

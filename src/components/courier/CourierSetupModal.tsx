@@ -50,14 +50,14 @@ export function CourierSetupModal({ provider, onOpenChange, onConnected }: Couri
       <button
         type="button"
         onClick={() => onOpenChange(false)}
-        className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
+        className="px-4 py-2 rounded-lg border border-line bg-white text-regantify-text text-sm font-medium hover:bg-neutral-50"
       >
         Cancel
       </button>
       <button
         type="submit"
         disabled={submitting}
-        className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+        className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium disabled:opacity-60"
       >
         {submitting ? 'Connecting…' : 'Connect'}
       </button>

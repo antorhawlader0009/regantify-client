@@ -95,7 +95,7 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
           <p className="text-xs text-regantify-text-muted">New Slug: {newSlugPreview}</p>
         </div>
 
-        <div className="text-sm bg-blue-50 text-blue-900 rounded-xl px-4 py-3">
+        <div className="text-sm bg-blue-50 text-blue-900 rounded-lg px-4 py-3">
           This will create a new in-stock product ({newSku}) from this pre-order product. Prices are copied
           from the source. Set stock quantity per variation.
         </div>
@@ -134,7 +134,7 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
                             value={quantities[key] ?? ''}
                             onChange={(e) => setQuantities((prev) => ({ ...prev, [key]: e.target.value }))}
                             placeholder="0"
-                            className="w-20 px-2.5 py-1.5 rounded-lg bg-regantify-search text-sm text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                            className="w-20 px-2.5 py-1.5 rounded-lg bg-white border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                           />
                         </td>
                       );
@@ -158,7 +158,7 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
                     value={quantities[key] ?? ''}
                     onChange={(e) => setQuantities((prev) => ({ ...prev, [key]: e.target.value }))}
                     placeholder="0"
-                    className="w-24 px-2.5 py-1.5 rounded-lg bg-regantify-search text-sm text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                    className="w-24 px-2.5 py-1.5 rounded-lg bg-white border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                   />
                 </div>
               );
@@ -171,11 +171,11 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
         )}
       </div>
 
-      <div className="border-t border-black/5 px-6 py-4 flex justify-end gap-2">
+      <div className="border-t border-line px-6 py-4 flex justify-end gap-2">
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="px-5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text hover:bg-regantify-content"
+          className="px-5 py-2.5 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50"
         >
           Cancel
         </button>
@@ -183,7 +183,7 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
           type="button"
           onClick={() => createMutation.mutate()}
           disabled={createMutation.isPending}
-          className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
+          className="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white font-medium
             transition-colors disabled:opacity-60"
         >
           {createMutation.isPending ? 'Creating…' : 'Create Stock Product'}

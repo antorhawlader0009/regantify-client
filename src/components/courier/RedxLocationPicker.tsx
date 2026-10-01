@@ -67,10 +67,10 @@ export function RedxLocationPicker({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-regantify-text-muted uppercase tracking-wide">RedX delivery area</p>
+      <p className="text-xs font-medium text-regantify-text-muted">RedX delivery area</p>
       {currentAreaId == null && suggestion && (
         <p className="flex items-start gap-1.5 text-xs text-regantify-text-muted">
-          <Sparkles size={13} className="mt-0.5 shrink-0 text-regantify-cta" />
+          <Sparkles size={13} className="mt-0.5 shrink-0 text-brand" />
           <span>
             From the address: <span className="text-regantify-text">{suggestion.areaName}</span>
             {suggestion.autoApply ? ' (pre-selected — save to keep it).' : ' — not sure, please check.'}
@@ -89,7 +89,7 @@ export function RedxLocationPicker({
             type="button"
             disabled={!areaId || areaId === currentAreaId || saveMutation.isPending}
             onClick={() => areaId && saveMutation.mutate(areaId)}
-            className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+            className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-60"
           >
             {saveMutation.isPending ? 'Saving…' : 'Save area'}
           </button>

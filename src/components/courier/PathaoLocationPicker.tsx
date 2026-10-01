@@ -71,7 +71,7 @@ export function PathaoLocationPicker({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-regantify-text-muted uppercase tracking-wide">Pathao Delivery Location</p>
+      <p className="text-xs font-medium text-regantify-text-muted">Pathao delivery location</p>
       <PathaoLocationSelects
         value={location}
         onChange={setLocation}
@@ -81,7 +81,7 @@ export function PathaoLocationPicker({
         type="button"
         disabled={!cityId || !zoneId || !areaId || saveMutation.isPending}
         onClick={() => cityId && zoneId && areaId && saveMutation.mutate({ cityId, zoneId, areaId })}
-        className="px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium disabled:opacity-60"
+        className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-medium disabled:opacity-60"
       >
         {saveMutation.isPending ? 'Saving…' : 'Save Location'}
       </button>

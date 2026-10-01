@@ -15,7 +15,7 @@ interface DropdownMenuProps {
 // upwards instead of running off-screen.
 const COLLISION_PADDING = 12;
 
-const panelClass = 'bg-white rounded-xl shadow-lg border border-black/10 py-1.5 z-30 focus:outline-none';
+const panelClass = 'bg-white rounded-lg shadow-lg border border-line py-1.5 z-30 focus:outline-none';
 
 /**
  * Radix-backed dropdown — handles keyboard navigation, click-outside,
@@ -52,7 +52,7 @@ interface DropdownMenuItemProps {
 }
 
 const itemClass = `flex items-center gap-2.5 px-4 py-2 text-sm cursor-pointer outline-none select-none
-  hover:bg-regantify-content focus:bg-regantify-content data-[highlighted]:bg-regantify-content
+  hover:bg-neutral-50 focus:bg-neutral-50 data-[highlighted]:bg-neutral-50
   data-[disabled]:opacity-45 data-[disabled]:cursor-not-allowed data-[disabled]:hover:bg-transparent`;
 
 export function DropdownMenuItem({ onSelect, children, danger, disabled, icon, hint, title }: DropdownMenuItemProps) {
@@ -72,12 +72,12 @@ export function DropdownMenuItem({ onSelect, children, danger, disabled, icon, h
   );
 }
 
-export const DropdownMenuSeparator = () => <RadixDropdown.Separator className="h-px bg-black/5 my-1" />;
+export const DropdownMenuSeparator = () => <RadixDropdown.Separator className="h-px bg-line my-1" />;
 
-/** Small uppercase heading for a group of items. */
+/** Small heading for a group of items (sentence case, like every label in the theme). */
 export function DropdownMenuLabel({ children }: { children: ReactNode }) {
   return (
-    <RadixDropdown.Label className="px-4 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-regantify-text-muted">
+    <RadixDropdown.Label className="px-4 pt-1.5 pb-1 text-xs font-medium text-neutral-500">
       {children}
     </RadixDropdown.Label>
   );
@@ -96,7 +96,7 @@ interface DropdownMenuSubProps {
 export function DropdownMenuSub({ label, icon, value, children, widthClass = 'w-56' }: DropdownMenuSubProps) {
   return (
     <RadixDropdown.Sub>
-      <RadixDropdown.SubTrigger className={`${itemClass} text-regantify-text data-[state=open]:bg-regantify-content`}>
+      <RadixDropdown.SubTrigger className={`${itemClass} text-regantify-text data-[state=open]:bg-neutral-50`}>
         {icon && <span className="shrink-0 text-regantify-text-muted [&>svg]:w-4 [&>svg]:h-4">{icon}</span>}
         <span className="flex-1 min-w-0 whitespace-nowrap">{label}</span>
         {value && <span className="text-[11px] text-regantify-text-muted truncate max-w-[6rem]">{value}</span>}

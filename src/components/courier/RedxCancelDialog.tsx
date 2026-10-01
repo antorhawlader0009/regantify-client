@@ -50,14 +50,14 @@ export function RedxCancelDialog({ order, onClose }: RedxCancelDialogProps) {
           maxLength={300}
           rows={3}
           placeholder="Reason (optional), e.g. Customer cancelled"
-          className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+          className="w-full px-3.5 py-2.5 rounded-lg border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
         />
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
             disabled={mutation.isPending}
-            className="px-4 py-2 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-60"
+            className="px-4 py-2 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
           >
             Keep parcel
           </button>

@@ -22,11 +22,11 @@ export function Checkbox({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer disabled:cursor-not-allowed"
+        className="mt-0.5 h-4 w-4 rounded accent-brand cursor-pointer disabled:cursor-not-allowed"
       />
       <span>
         <span className="block text-sm text-regantify-text">{label}</span>
-        {hint && <span className="block text-xs text-regantify-text-muted mt-0.5 leading-relaxed">{hint}</span>}
+        {hint && <span className="block text-xs text-neutral-500 mt-0.5 leading-relaxed">{hint}</span>}
       </span>
     </label>
   );

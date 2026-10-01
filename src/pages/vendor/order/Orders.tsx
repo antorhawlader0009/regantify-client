@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
-  ArrowRight,
   Check,
   ChevronDown,
   ClipboardList,
@@ -17,7 +16,6 @@ import {
   Printer,
   RefreshCw,
   RotateCcw,
-  Search,
   Send,
   Settings2,
   Tag,
@@ -60,13 +58,11 @@ import { ChangeLabelModal } from './ChangeLabelModal';
 import { InvoiceModal } from './InvoiceModal';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+import { SearchBox, TableFooter, outlineBtn, td, th } from '../../../components/ui/PageKit';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
-// Table + toolbar pieces from the dashboard theme (hairline grid, outline buttons).
-const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
-const td = 'border-r border-line p-3 last:border-r-0';
-const toolbarBtn =
-  'inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50';
+// Table + toolbar pieces come from PageKit; the bulk bar's smaller buttons are Orders' own.
+const toolbarBtn = outlineBtn;
 const bulkBtn =
   'inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:border-neutral-300';
 
@@ -715,7 +711,6 @@ export default function Orders() {
 
   const orders = data?.orders ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
   const allOnPageSelected = orders.length > 0 && orders.every((o) => selectedIds.has(o.id));
 
   // Customer delivery records for this page's phones (Step 15). A number
@@ -767,10 +762,6 @@ export default function Orders() {
     }
     setBulkBooking({ provider: 'STEADFAST', ids });
   }
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).slice(
-    Math.max(0, page - 3),
-    Math.max(0, page - 3) + 5,
-  );
 
   return (
     <div>
@@ -788,16 +779,7 @@ export default function Orders() {
 
           {activeTab !== 'ABANDONED' && (
             <>
-              <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
-                <Search size={15} className="shrink-0" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search order, customer"
-                  className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
-                />
-              </div>
+              <SearchBox value={search} onChange={setSearch} placeholder="Search order, customer" />
               <DateRangeFilter
                 dateFrom={dateFrom}
                 dateTo={dateTo}
@@ -1020,64 +1002,7 @@ export default function Orders() {
               </table>
             </div>
 
-            {/* Footer */}
-            <div className="mt-4 flex flex-col gap-3 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2 text-sm text-neutral-700">
-                Show
-                <div className="relative">
-                  <select
-                    value={perPage}
-                    onChange={(e) => setPerPage(Number(e.target.value))}
-                    className="h-9 appearance-none rounded-lg border border-line bg-white pl-3 pr-8 text-xs text-regantify-text outline-none focus:border-brand"
-                  >
-                    {[10, 25, 50, 100].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
-                </div>
-                <span className="text-xs">per page</span>
-              </div>
-
-              <div className="flex items-center gap-3 text-sm">
-                <span className="mr-2 text-xs text-neutral-600">
-                  {total === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of {total}
-                </span>
-                {totalPages > 1 && (
-                  <>
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      aria-label="Previous page"
-                      className="disabled:opacity-30"
-                    >
-                      <ArrowLeft size={16} />
-                    </button>
-                    {pageNumbers.map((n) => (
-                      <button
-                        key={n}
-                        onClick={() => setPage(n)}
-                        className={`h-8 min-w-8 rounded-md px-1 ${
-                          n === page ? 'bg-neutral-100 font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-50'
-                        }`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
-                      aria-label="Next page"
-                      className="disabled:opacity-30"
-                    >
-                      <ArrowRight size={16} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+            <TableFooter page={page} perPage={perPage} total={total} onPageChange={setPage} onPerPageChange={setPerPage} />
           </>
         )}
       </section>

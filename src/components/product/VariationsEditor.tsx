@@ -220,7 +220,7 @@ export function VariationsEditor({
             type="button"
             onClick={() => addOption('Size')}
             disabled={options.some((o) => o.name === 'Size')}
-            className="px-4 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-1.5 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Size
           </button>
@@ -228,14 +228,14 @@ export function VariationsEditor({
             type="button"
             onClick={() => addOption('Color')}
             disabled={options.some((o) => o.name === 'Color')}
-            className="px-4 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-1.5 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Color
           </button>
           <button
             type="button"
             onClick={() => setAddingCustom(true)}
-            className="px-4 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content"
+            className="px-4 py-1.5 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50"
           >
             Custom
           </button>
@@ -265,7 +265,7 @@ export function VariationsEditor({
                 setCustomName('');
                 setAddingCustom(false);
               }}
-              className="px-4 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium whitespace-nowrap"
+              className="px-4 py-2.5 rounded-lg bg-brand text-white text-sm font-medium whitespace-nowrap"
             >
               Add
             </button>
@@ -274,7 +274,7 @@ export function VariationsEditor({
       </div>
 
       {options.length > 0 && (
-        <div className="rounded-xl border border-black/10 divide-y divide-black/10">
+        <div className="rounded-lg border border-line divide-y divide-line">
           {options.map((option) => (
             <div key={option.name} className="flex items-start gap-3 p-3">
               <button
@@ -290,7 +290,7 @@ export function VariationsEditor({
                 {option.values.map((value) => (
                   <span
                     key={value}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-regantify-black text-white text-xs font-medium"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white text-xs font-medium"
                   >
                     {value}
                     <button type="button" onClick={() => removeValue(option.name, value)}>
@@ -311,7 +311,7 @@ export function VariationsEditor({
                     }}
                     placeholder="Add value"
                     maxLength={50}
-                    className="px-2.5 py-1 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none w-24"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none w-24"
                   />
                   <button type="button" onClick={() => addValue(option.name)} className="text-regantify-text-muted hover:text-regantify-text">
                     <Plus size={14} />
@@ -338,7 +338,7 @@ export function VariationsEditor({
                 setPhotoOptionName(e.target.value || null);
                 setPhotoOptionTouched(true);
               }}
-              className="px-3 py-1.5 rounded-lg border border-black/10 bg-white text-sm text-regantify-text"
+              className="px-3 py-1.5 rounded-lg border border-line bg-white text-sm text-regantify-text"
             >
               <option value="">— Select a variation —</option>
               {photoEligibleOptions.map((o) => (
@@ -350,7 +350,7 @@ export function VariationsEditor({
           </div>
 
           {photoOption && (
-            <div className="rounded-xl border border-black/10 divide-y divide-black/10">
+            <div className="rounded-lg border border-line divide-y divide-line">
               {photoOption.values.map((value) => {
                 const photos = getPhotosFor(value);
                 const key = `${photoOptionName}:${value}`;
@@ -364,7 +364,7 @@ export function VariationsEditor({
                       {photos.map((url) => (
                         <div
                           key={url}
-                          className="relative w-14 h-14 rounded-lg overflow-hidden bg-regantify-content border border-black/5"
+                          className="relative w-14 h-14 rounded-lg overflow-hidden bg-neutral-50 border border-line"
                         >
                           <img src={url} alt="" className="w-full h-full object-cover" />
                           <button
@@ -380,8 +380,8 @@ export function VariationsEditor({
                         type="button"
                         onClick={() => fileInputRefs.current[key]?.click()}
                         disabled={isUploading}
-                        className="w-14 h-14 rounded-lg border-2 border-dashed border-black/15 bg-regantify-content
-                          flex items-center justify-center text-regantify-text-muted hover:border-black/25 disabled:opacity-50"
+                        className="w-14 h-14 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
+                          flex items-center justify-center text-regantify-text-muted hover:border-neutral-300 disabled:opacity-50"
                         title={`Add photos for ${value}`}
                       >
                         {isUploading ? (
@@ -415,10 +415,10 @@ export function VariationsEditor({
       {variants.length > 0 && (
         <div>
           <p className="text-sm font-medium text-regantify-text mb-2">Variation Stocks</p>
-          <div className="overflow-x-auto rounded-xl border border-black/10">
+          <div className="overflow-x-auto rounded-lg border border-line">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-regantify-content text-left text-regantify-text-muted">
+                <tr className="bg-neutral-50 text-left text-regantify-text-muted">
                   <th className="px-3 py-2.5 font-medium">SKU</th>
                   <th className="px-3 py-2.5 font-medium">Stock</th>
                   <th className="px-3 py-2.5 font-medium">List Price</th>
@@ -429,14 +429,14 @@ export function VariationsEditor({
               </thead>
               <tbody>
                 {variants.map((v) => (
-                  <tr key={v.sku} className="border-t border-black/5">
+                  <tr key={v.sku} className="border-t border-line">
                     <td className="px-3 py-2">
                       <input
                         type="text"
                         value={v.sku}
                         onChange={(e) => updateVariantField(v.sku, 'sku', e.target.value.slice(0, 60))}
                         maxLength={60}
-                        className="w-full px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text focus:outline-none"
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -446,7 +446,7 @@ export function VariationsEditor({
                         onChange={(e) => updateVariantField(v.sku, 'stock', e.target.value)}
                         min={0}
                         max={1000000}
-                        className="w-20 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text focus:outline-none"
+                        className="w-20 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -457,7 +457,7 @@ export function VariationsEditor({
                         placeholder="Variation price"
                         min={0}
                         max={10000000}
-                        className="w-28 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                        className="w-28 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -468,7 +468,7 @@ export function VariationsEditor({
                         placeholder="Variation price"
                         min={0}
                         max={10000000}
-                        className="w-28 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                        className="w-28 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -479,7 +479,7 @@ export function VariationsEditor({
                         placeholder="Cost"
                         min={0}
                         max={10000000}
-                        className="w-24 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                        className="w-24 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -491,7 +491,7 @@ export function VariationsEditor({
                           placeholder="ie. 100"
                           min={0}
                           max={10000}
-                          className="w-20 px-2.5 py-1.5 rounded-lg bg-regantify-search text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                          className="w-20 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
                         />
                         <span className="text-xs text-regantify-text-muted">{weightUnit}</span>
                       </div>

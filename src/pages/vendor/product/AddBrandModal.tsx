@@ -21,7 +21,7 @@ interface LogoState {
 }
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black text-sm';
+  'w-full px-3.5 py-2.5 rounded-lg bg-white border border-line text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand/15 focus:border-brand text-sm';
 
 function slugify(input: string): string {
   return input
@@ -109,7 +109,7 @@ export function AddBrandModal({ onClose, onCreated }: AddBrandModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 space-y-5">
@@ -158,8 +158,8 @@ export function AddBrandModal({ onClose, onCreated }: AddBrandModalProps) {
             <button
               type="button"
               onClick={() => logoInputRef.current?.click()}
-              className="w-24 h-24 rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
-                flex items-center justify-center overflow-hidden hover:border-black/25"
+              className="w-24 h-24 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
+                flex items-center justify-center overflow-hidden hover:border-neutral-300"
             >
               {logo ? (
                 <div className="relative w-full h-full">
@@ -190,12 +190,12 @@ export function AddBrandModal({ onClose, onCreated }: AddBrandModalProps) {
           {formError && <p className="text-red-500 text-sm">{formError}</p>}
         </div>
 
-        <div className="border-t border-black/5 px-6 py-4 flex justify-end">
+        <div className="border-t border-line px-6 py-4 flex justify-end">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!isValid || createMutation.isPending}
-            className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
+            className="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white font-medium
               transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {createMutation.isPending ? 'Adding…' : 'Add Brand'}

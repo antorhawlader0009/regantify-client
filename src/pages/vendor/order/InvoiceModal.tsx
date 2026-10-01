@@ -1,6 +1,10 @@
 import { useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Printer } from 'lucide-react';
 import { vendorOrderTotal, type Order } from '../../../lib/ordersApi';
+import { getVendorSettings } from '../../../lib/vendorApi';
 import { Dialog } from '../../../components/ui/Dialog';
+import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { printElement } from '../../../lib/printElement';
 import { toast } from '../../../lib/toast';
 
@@ -14,7 +18,13 @@ function formatPrice(value: string) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Dhaka' });
+}
+
+function paymentLabel(method: string) {
+  if (method === 'COD') return 'Cash on delivery';
+  if (method === 'ONLINE_PAYMENT') return 'Paid online';
+  return method.replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase());
 }
 
 /**
@@ -29,6 +39,15 @@ function formatDate(iso: string) {
 export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
   const printAreaRef = useRef<HTMLDivElement>(null);
   const [printing, setPrinting] = useState(false);
+  // The store's name and address for the invoice header. Owner-only
+  // route: for staff it fails quietly and the header just says "Invoice".
+  const { data: store } = useQuery({
+    queryKey: ['vendor-settings'],
+    queryFn: getVendorSettings,
+    enabled: Boolean(order),
+    retry: false,
+    staleTime: 5 * 60_000,
+  });
 
   async function print() {
     if (!printAreaRef.current || !order) return;
@@ -42,120 +61,136 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
     }
   }
 
+  const label = 'text-[11px] font-medium uppercase tracking-wider text-neutral-500';
+
   return (
-    <Dialog open={Boolean(order)} onOpenChange={onOpenChange} maxWidth="max-w-2xl">
+    <Dialog open={Boolean(order)} onOpenChange={onOpenChange} title="Invoice" maxWidth="max-w-2xl">
       {order && (
         <>
-          <div className="p-8" ref={printAreaRef}>
+          <div className="px-4 pb-2 pt-4 sm:px-6">
+            <div className="rounded-lg border border-line">
+              <div className="p-6 sm:p-8" ref={printAreaRef}>
+                <div className="mb-8 flex items-start justify-between gap-6">
+                  <div className="min-w-0">
+                    {store?.storeName && <p className="text-lg font-semibold text-regantify-text">{store.storeName}</p>}
+                    {store?.address && <p className="mt-0.5 max-w-xs whitespace-pre-line text-sm text-neutral-600">{store.address}</p>}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-2xl font-semibold tracking-tight text-regantify-text">Invoice</p>
+                    <p className="mt-1 text-sm text-neutral-600">ORDER-{order.invoiceNumber}</p>
+                    <p className="text-sm text-neutral-600">{formatDate(order.createdAt)}</p>
+                  </div>
+                </div>
 
-            <div className="flex items-start justify-between mb-8">
-              <div>
-                <h1 className="text-2xl font-bold text-regantify-text">Invoice</h1>
-                <p className="text-sm text-regantify-text-muted mt-1">ORDER-{order.invoiceNumber}</p>
-                <p className="text-sm text-regantify-text-muted">{formatDate(order.createdAt)}</p>
-              </div>
-            </div>
+                <div className="mb-8 grid grid-cols-2 gap-6 border-y border-line py-5">
+                  <div className="min-w-0">
+                    <p className={`${label} mb-1.5`}>Bill to</p>
+                    <p className="text-sm font-medium text-regantify-text">{order.customerName}</p>
+                    <p className="text-sm text-neutral-600">{order.customerPhone}</p>
+                    <p className="text-sm text-neutral-600">{order.shippingAddress}</p>
+                    {(order.shippingCity || order.shippingDistrict) && (
+                      <p className="text-sm text-neutral-600">{[order.shippingCity, order.shippingDistrict].filter(Boolean).join(', ')}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className={`${label} mb-1.5`}>Payment</p>
+                    <p className="text-sm text-regantify-text">{paymentLabel(order.paymentMethod)}</p>
+                    {order.paymentMethod === 'COD' && (
+                      <p className="mt-0.5 text-sm text-neutral-600">
+                        Due on delivery: <span className="font-medium text-regantify-text">{formatPrice(vendorOrderTotal(order))}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-6 mb-8">
-              <div>
-                <p className="text-xs font-semibold text-regantify-text-muted uppercase mb-1.5">Bill To</p>
-                <p className="text-sm text-regantify-text">{order.customerName}</p>
-                <p className="text-sm text-regantify-text-muted">{order.customerPhone}</p>
-                <p className="text-sm text-regantify-text-muted">{order.shippingAddress}</p>
-                {order.shippingCity && <p className="text-sm text-regantify-text-muted">{order.shippingCity}</p>}
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-semibold text-regantify-text-muted uppercase mb-1.5">Payment</p>
-                <p className="text-sm text-regantify-text">{order.paymentMethod}</p>
-              </div>
-            </div>
+                <table className="mb-6 w-full">
+                  <thead>
+                    <tr className="border-b border-neutral-300 text-left">
+                      <th className={`${label} py-2 font-medium`}>Item</th>
+                      <th className={`${label} py-2 text-right font-medium`}>Price</th>
+                      <th className={`${label} py-2 text-right font-medium`}>Qty</th>
+                      <th className={`${label} py-2 text-right font-medium`}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.items.map((item) => (
+                      <tr key={item.id} className="border-b border-line">
+                        <td className="py-2.5 pr-3 text-sm text-regantify-text">
+                          {item.productName}
+                          {Object.entries(item.selectedOptions).length > 0 && (
+                            <span className="text-xs text-neutral-500">
+                              {' '}
+                              ({Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(', ')})
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 text-right text-sm tabular-nums text-neutral-600">{formatPrice(item.unitPrice)}</td>
+                        <td className="py-2.5 text-right text-sm tabular-nums text-neutral-600">{item.quantity}</td>
+                        <td className="py-2.5 text-right text-sm tabular-nums text-regantify-text">{formatPrice(item.lineTotal)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-            <table className="w-full mb-6">
-              <thead>
-                <tr className="border-b-2 border-black/10 text-left text-xs font-semibold text-regantify-text-muted uppercase">
-                  <th className="py-2">Item</th>
-                  <th className="py-2 text-right">Price</th>
-                  <th className="py-2 text-right">Qty</th>
-                  <th className="py-2 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item) => (
-                  <tr key={item.id} className="border-b border-black/5">
-                    <td className="py-2.5 text-sm text-regantify-text">
-                      {item.productName}
-                      {Object.entries(item.selectedOptions).length > 0 && (
-                        <span className="text-xs text-regantify-text-muted">
-                          {' '}
-                          ({Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(', ')})
+                <div className="avoid-break flex justify-end">
+                  <div className="w-64 space-y-1.5 text-sm">
+                    <div className="flex justify-between text-neutral-600">
+                      <span>Subtotal</span>
+                      <span className="tabular-nums">{formatPrice(order.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-neutral-600">
+                      <span>Delivery</span>
+                      <span className="tabular-nums">{formatPrice(order.deliveryCharge)}</span>
+                    </div>
+                    {Number(order.vatAmount) > 0 && (
+                      <div className="flex justify-between text-neutral-600">
+                        <span>COD charge</span>
+                        <span className="tabular-nums">{formatPrice(order.vatAmount)}</span>
+                      </div>
+                    )}
+                    {/* Platform Charge — shown regardless of "Fee From"
+                        (order.platformChargePayer). Never for ONLINE_PAYMENT:
+                        its fee (Payment Gateway Fee) is hidden from the vendor
+                        entirely, and vendorOrderTotal takes it out of Total. */}
+                    {order.paymentMethod !== 'ONLINE_PAYMENT' && Number(order.platformChargeAmount) > 0 && (
+                      <div className="flex justify-between text-neutral-600">
+                        <span>
+                          Platform charge
+                          {order.platformChargePayer === 'VENDOR' ? ' (paid by you)' : ''}
                         </span>
-                      )}
-                    </td>
-                    <td className="py-2.5 text-sm text-right text-regantify-text-muted">{formatPrice(item.unitPrice)}</td>
-                    <td className="py-2.5 text-sm text-right text-regantify-text-muted">{item.quantity}</td>
-                    <td className="py-2.5 text-sm text-right text-regantify-text">{formatPrice(item.lineTotal)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <span className="tabular-nums">{formatPrice(order.platformChargeAmount)}</span>
+                      </div>
+                    )}
+                    {Number(order.discountAmount) > 0 && (
+                      <div className="flex justify-between text-neutral-600">
+                        <span>Discount</span>
+                        <span className="tabular-nums">−{formatPrice(order.discountAmount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-t border-neutral-300 pt-2 text-base font-semibold text-regantify-text">
+                      <span>Total</span>
+                      <span className="tabular-nums">{formatPrice(vendorOrderTotal(order))}</span>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="flex justify-end">
-              <div className="w-56 space-y-1.5 text-sm">
-                <div className="flex justify-between text-regantify-text-muted">
-                  <span>Subtotal</span>
-                  <span>{formatPrice(order.subtotal)}</span>
-                </div>
-                <div className="flex justify-between text-regantify-text-muted">
-                  <span>Delivery</span>
-                  <span>{formatPrice(order.deliveryCharge)}</span>
-                </div>
-                {Number(order.vatAmount) > 0 && (
-                  <div className="flex justify-between text-regantify-text-muted">
-                    <span>COD Charge</span>
-                    <span>{formatPrice(order.vatAmount)}</span>
+                {order.customerNote && (
+                  <div className="avoid-break mt-8">
+                    <p className={`${label} mb-1`}>Note</p>
+                    <p className="text-sm text-neutral-700">{order.customerNote}</p>
                   </div>
                 )}
-                {/* Platform Charge — shown regardless of "Fee From"
-                    (order.platformChargePayer). Never for ONLINE_PAYMENT:
-                    its fee (Payment Gateway Fee) is hidden from the vendor
-                    entirely, and vendorOrderTotal takes it out of Total. */}
-                {order.paymentMethod !== 'ONLINE_PAYMENT' && Number(order.platformChargeAmount) > 0 && (
-                  <div className="flex justify-between text-regantify-text-muted">
-                    <span>
-                      Platform Charge
-                      {order.platformChargePayer === 'VENDOR' ? ' (paid by you)' : ''}
-                    </span>
-                    <span>{formatPrice(order.platformChargeAmount)}</span>
-                  </div>
-                )}
-                {Number(order.discountAmount) > 0 && (
-                  <div className="flex justify-between text-regantify-text-muted">
-                    <span>Discount</span>
-                    <span>−{formatPrice(order.discountAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-base font-bold text-regantify-text pt-1.5 border-t border-black/10">
-                  <span>Total</span>
-                  <span>{formatPrice(vendorOrderTotal(order))}</span>
-                </div>
+                <p className="mt-10 text-center text-sm text-neutral-500">Thank you for your order.</p>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 px-6 py-4 border-t border-black/5 print:hidden">
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
-            >
+          <div className="flex justify-end gap-2 px-4 pb-5 pt-3 sm:px-6">
+            <button type="button" onClick={() => onOpenChange(false)} className={outlineBtn}>
               Close
             </button>
-            <button
-              type="button"
-              onClick={print}
-              disabled={printing}
-              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
-            >
+            <button type="button" onClick={print} disabled={printing} className={primaryBtn}>
+              <Printer size={15} />
               {printing ? 'Preparing…' : 'Print / Save as PDF'}
             </button>
           </div>

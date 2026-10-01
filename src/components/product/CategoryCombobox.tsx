@@ -115,7 +115,7 @@ export function CategoryCombobox({ value, onChange, placeholder, exclude = [], m
         autoComplete="off"
       />
       {open && suggestions.length > 0 && (
-        <div className="absolute z-20 mt-1.5 w-full rounded-xl border border-black/10 bg-white shadow-lg overflow-hidden">
+        <div className="absolute z-20 mt-1.5 w-full rounded-lg border border-line bg-white shadow-lg overflow-hidden">
           {suggestions.map((name, i) => (
             <button
               key={name}
@@ -123,7 +123,7 @@ export function CategoryCombobox({ value, onChange, placeholder, exclude = [], m
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(name)}
               className={`w-full text-left px-3.5 py-2.5 text-sm text-regantify-text ${
-                i === highlighted ? 'bg-regantify-content' : 'hover:bg-regantify-content'
+                i === highlighted ? 'bg-neutral-50' : 'hover:bg-neutral-50'
               }`}
             >
               {name}

@@ -34,7 +34,7 @@ interface PathaoLocationSelectsProps {
 }
 
 const DEFAULT_SELECT_CLASS =
-  'w-full px-3 py-2 rounded-lg border border-black/10 text-sm text-regantify-text focus:outline-none disabled:opacity-60';
+  'w-full px-3 py-2 rounded-lg border border-line text-sm text-regantify-text focus:outline-none disabled:opacity-60';
 
 // Pathao's lists barely change, and the server caches them for a day too.
 const LOCATION_STALE_MS = 24 * 60 * 60_000;
@@ -183,7 +183,7 @@ export function PathaoLocationSelects({ value, onChange, disabled, selectClassNa
       {suggestFrom && isEmpty && !manual && suggestion && suggestion.confidence < PATHAO_SUGGESTION_AUTO_APPLY && (
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-regantify-text-muted">
           <Sparkles size={12} /> From the address: {describe(suggestion)}
-          <button type="button" onClick={() => pick(toValue(suggestion))} className="underline text-regantify-text hover:text-regantify-cta">
+          <button type="button" onClick={() => pick(toValue(suggestion))} className="underline text-regantify-text hover:text-brand">
             Use it
           </button>
         </p>

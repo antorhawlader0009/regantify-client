@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as RadixDropdown from '@radix-ui/react-dropdown-menu';
 import {
   Plus,
-  Search,
   Upload,
   Columns3,
   Filter,
@@ -12,9 +11,6 @@ import {
   MoreVertical,
   ArrowUp,
   ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
   ChevronsUpDown,
   Check,
   Package,
@@ -31,6 +27,8 @@ import { ChangeStatusModal } from './ChangeStatusModal';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/PageKit';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'DRAFT';
 type StockFilter = 'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'UNLIMITED';
@@ -78,17 +76,15 @@ function loadPrefs(): { columns: Record<ColumnKey, boolean>; density: Density } 
   return { columns: DEFAULT_COLUMNS, density: 'compact' };
 }
 
-const toolbarBtn =
-  'inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50';
+const toolbarBtn = outlineBtn;
 
 const filterSelect =
   'h-9 w-full rounded-lg border border-line bg-white px-3 text-sm text-regantify-text outline-none focus:border-brand focus:ring-2 focus:ring-brand/15';
 
-// Table cell: hairline on the right, like the design reference.
-const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
+// Body cells get their padding from the Compact / Comfortable switch, so not PageKit's `td`.
 const td = 'border-r border-line px-3 last:border-r-0';
 
-const menuPanel = 'bg-white rounded-xl shadow-lg border border-black/10 py-1.5 z-30 focus:outline-none';
+const menuPanel = 'bg-white rounded-lg shadow-lg border border-line py-1.5 z-30 focus:outline-none';
 
 function ActionsMenu({
   onEdit,
@@ -150,9 +146,7 @@ function ColumnsMenu({
       </RadixDropdown.Trigger>
       <RadixDropdown.Portal>
         <RadixDropdown.Content align="end" sideOffset={8} collisionPadding={12} className={`w-52 ${menuPanel}`}>
-          <RadixDropdown.Label className="px-4 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-regantify-text-muted">
-            Visible Columns
-          </RadixDropdown.Label>
+          <RadixDropdown.Label className="px-4 pb-1 pt-1.5 text-xs font-medium text-neutral-500">Columns to show</RadixDropdown.Label>
           {COLUMN_OPTIONS.map((c) => (
             <RadixDropdown.CheckboxItem
               key={c.key}
@@ -162,11 +156,11 @@ function ColumnsMenu({
                 e.preventDefault();
                 onToggle(c.key);
               }}
-              className="flex cursor-pointer select-none items-center gap-2.5 px-4 py-2 text-sm text-regantify-text outline-none data-[highlighted]:bg-regantify-content"
+              className="flex cursor-pointer select-none items-center gap-2.5 px-4 py-2 text-sm text-regantify-text outline-none data-[highlighted]:bg-neutral-50"
             >
               <span
                 className={`flex h-4 w-4 items-center justify-center rounded border ${
-                  columns[c.key] ? 'border-regantify-black bg-regantify-black text-white' : 'border-black/20'
+                  columns[c.key] ? 'border-brand bg-brand text-white' : 'border-neutral-300'
                 }`}
               >
                 {columns[c.key] && <Check size={11} strokeWidth={3} />}
@@ -174,15 +168,15 @@ function ColumnsMenu({
               {c.label}
             </RadixDropdown.CheckboxItem>
           ))}
-          <RadixDropdown.Separator className="my-1 h-px bg-black/5" />
+          <RadixDropdown.Separator className="my-1 h-px bg-line" />
           <RadixDropdown.Item
             onSelect={(e) => {
               e.preventDefault();
               onReset();
             }}
-            className="mx-2 mb-1 cursor-pointer rounded-lg border border-black/10 py-1.5 text-center text-xs font-medium text-regantify-text outline-none data-[highlighted]:bg-regantify-content"
+            className="mx-2 mb-1 cursor-pointer rounded-lg border border-line py-1.5 text-center text-xs font-medium text-regantify-text outline-none data-[highlighted]:bg-neutral-50"
           >
-            Reset Columns
+            Reset columns
           </RadixDropdown.Item>
         </RadixDropdown.Content>
       </RadixDropdown.Portal>
@@ -313,7 +307,6 @@ export default function AllProducts() {
 
   const rawProducts = data?.products ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   // Sorting is applied to the rows of the current page only (the list API
   // has no sort parameter), so pagination / filters keep working as before.
@@ -358,6 +351,7 @@ export default function AllProducts() {
     mutationFn: productsApi.remove,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      setPendingDelete(null);
       toast.success('Product deleted.');
     },
     onError: () => toast.error('Could not delete the product. Please try again.'),
@@ -374,11 +368,11 @@ export default function AllProducts() {
     onError: () => toast.error('Could not change the status. Please try again.'),
   });
 
-  const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(id);
-    }
-  };
+  // Asked in a ConfirmDialog (below) before anything is deleted.
+  const [pendingDelete, setPendingDelete] = useState<{ kind: 'one'; id: string; name: string } | { kind: 'bulk' } | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const handleDelete = (id: string, name: string) => setPendingDelete({ kind: 'one', id, name });
 
   const toggleSelectAll = () => {
     if (selected.size === products.length) {
@@ -398,29 +392,31 @@ export default function AllProducts() {
   };
 
   const handleBulkDelete = () => {
-    if (selected.size === 0) return;
+    if (selected.size > 0) setPendingDelete({ kind: 'bulk' });
+  };
+
+  const runBulkDelete = () => {
     const count = selected.size;
-    if (window.confirm(`Delete ${count} selected product(s)? This cannot be undone.`)) {
-      // Promise.allSettled, not Promise.all: with N independent DELETE
-      // calls, one failing (e.g. a network blip) must not hide that the
-      // others already succeeded server-side. Promise.all's catch would
-      // skip invalidating the query below entirely, leaving the list
-      // showing products that are actually already gone — this always
-      // refreshes the list and reports exactly how many succeeded.
-      Promise.allSettled(Array.from(selected).map((id) => productsApi.remove(id))).then((results) => {
-        const succeeded = results.filter((r) => r.status === 'fulfilled').length;
-        const failed = results.length - succeeded;
-        setSelected(new Set());
-        queryClient.invalidateQueries({ queryKey: ['products'] });
-        if (failed === 0) {
-          toast.success(`${succeeded} product(s) deleted.`);
-        } else if (succeeded === 0) {
-          toast.error('Could not delete the selected products. Please try again.');
-        } else {
-          toast.error(`Deleted ${succeeded} of ${count} — ${failed} failed. Please try again for the rest.`);
-        }
-      });
-    }
+    setBulkDeleting(true);
+    // Promise.allSettled, not Promise.all: with N independent DELETE calls,
+    // one failing (e.g. a network blip) must not hide that the others
+    // already succeeded server-side. This always refreshes the list and
+    // reports exactly how many succeeded.
+    Promise.allSettled(Array.from(selected).map((id) => productsApi.remove(id))).then((results) => {
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.length - succeeded;
+      setSelected(new Set());
+      setBulkDeleting(false);
+      setPendingDelete(null);
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      if (failed === 0) {
+        toast.success(`${succeeded} ${succeeded === 1 ? 'product' : 'products'} deleted.`);
+      } else if (succeeded === 0) {
+        toast.error('Could not delete the selected products. Please try again.');
+      } else {
+        toast.error(`Deleted ${succeeded} of ${count}; ${failed} failed. Please try again for the rest.`);
+      }
+    });
   };
 
   const activeFilterCount = (category ? 1 : 0) + (visibility !== 'ALL' ? 1 : 0) + (stockType !== 'ALL' ? 1 : 0);
@@ -431,14 +427,6 @@ export default function AllProducts() {
     setVisibility('ALL');
     setStockType('ALL');
   };
-
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).slice(
-    Math.max(0, page - 3),
-    Math.max(0, page - 3) + 5,
-  );
-
-  const rangeFrom = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const rangeTo = Math.min(page * perPage, total);
 
   const compact = density === 'compact';
   const cellY = compact ? 'py-2.5' : 'py-4';
@@ -478,16 +466,7 @@ export default function AllProducts() {
             onReset={() => setColumns(DEFAULT_COLUMNS)}
           />
 
-          <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
-            <Search size={15} className="shrink-0" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search"
-              className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
-            />
-          </div>
+          <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
 
           <button
             onClick={() => setShowFilters((v) => !v)}
@@ -760,64 +739,7 @@ export default function AllProducts() {
           </table>
         </div>
 
-        {/* Footer */}
-        <div className="mt-4 flex flex-col gap-3 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 text-sm text-neutral-700">
-            Show
-            <div className="relative">
-              <select
-                value={perPage}
-                onChange={(e) => setPerPage(Number(e.target.value))}
-                className="h-9 appearance-none rounded-lg border border-line bg-white pl-3 pr-8 text-xs text-regantify-text outline-none focus:border-brand"
-              >
-                {[10, 25, 50, 100].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
-            </div>
-            <span className="text-xs">per page</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-sm">
-            <span className="mr-2 text-xs text-neutral-600">
-              {rangeFrom}-{rangeTo} of {total}
-            </span>
-            {totalPages > 1 && (
-              <>
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  aria-label="Previous page"
-                  className="disabled:opacity-30"
-                >
-                  <ArrowLeft size={16} />
-                </button>
-                {pageNumbers.map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setPage(n)}
-                    className={`h-8 min-w-8 rounded-md px-1 ${
-                      n === page ? 'bg-neutral-100 font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-50'
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  aria-label="Next page"
-                  className="disabled:opacity-30"
-                >
-                  <ArrowRight size={16} />
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+        <TableFooter page={page} perPage={perPage} total={total} onPageChange={setPage} onPerPageChange={setPerPage} />
       </section>
 
       {statusModalProduct && (
@@ -840,6 +762,24 @@ export default function AllProducts() {
       )}
 
       {showImportModal && <ImportCsvModal onClose={() => setShowImportModal(false)} />}
+
+      <ConfirmDialog
+        open={pendingDelete != null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title={
+          pendingDelete?.kind === 'bulk'
+            ? `Delete ${selected.size} ${selected.size === 1 ? 'product' : 'products'}?`
+            : `Delete ${pendingDelete?.kind === 'one' ? pendingDelete.name : 'product'}?`
+        }
+        message="They disappear from your store and your product list. This can’t be undone. Orders that already have them keep their details."
+        confirmLabel={pendingDelete?.kind === 'bulk' ? `Delete ${selected.size} ${selected.size === 1 ? 'product' : 'products'}` : 'Delete product'}
+        onConfirm={() => {
+          if (pendingDelete?.kind === 'bulk') runBulkDelete();
+          else if (pendingDelete?.kind === 'one') deleteMutation.mutate(pendingDelete.id);
+        }}
+        busy={deleteMutation.isPending || bulkDeleting}
+        danger
+      />
     </div>
   );
 }

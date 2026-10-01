@@ -4,7 +4,7 @@ import type { CourierProvider } from '../../lib/ordersApi';
 import { orderStatusLabel } from '../../pages/vendor/order/orderStatus';
 import { courierStatusInfo } from './courierStatus';
 
-const SOURCE_LABELS: Record<CourierEvent['source'], string> = {
+export const SOURCE_LABELS: Record<CourierEvent['source'], string> = {
   BOOKING: 'Booking',
   POLL: 'Auto check',
   MANUAL: 'Refreshed',
@@ -15,7 +15,7 @@ function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
-function eventTitle(event: CourierEvent): string {
+export function eventTitle(event: CourierEvent): string {
   if (event.event === 'booked') return 'Booked';
   if (event.event === 'booking_failed') return 'Booking failed';
   if (event.event === 'customer_sms') return 'Customer texted';
@@ -47,13 +47,13 @@ export function CourierTimeline({ orderId, showEmpty }: { orderId: string; /** S
 
   return (
     <div>
-      <p className="text-xs font-medium text-regantify-text-muted uppercase tracking-wide mb-2">Courier Timeline</p>
-      <ol className="relative border-l border-black/10 ml-1.5 space-y-3">
+      <p className="text-xs font-medium text-regantify-text-muted mb-2">Courier timeline</p>
+      <ol className="relative border-l border-line ml-1.5 space-y-3">
         {events.map((event, i) => (
           <li key={event.id} className="pl-4 relative">
             <span
               className={`absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full ${
-                event.event === 'booking_failed' ? 'bg-red-500' : i === 0 ? 'bg-regantify-cta' : 'bg-black/20'
+                event.event === 'booking_failed' ? 'bg-red-500' : i === 0 ? 'bg-brand' : 'bg-black/20'
               }`}
             />
             <p className="text-sm text-regantify-text">

@@ -1,31 +1,55 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, ChevronDown, Download, MoreVertical, Plus, Search, Upload, Users, X } from 'lucide-react';
+import { ChevronRight, Download, MoreVertical, Plus, Upload, Users, X } from 'lucide-react';
 import { customersApi, type VendorCustomer } from '../../../lib/customersApi';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import {
+  EmptyState,
+  PageHeader,
+  PageSection,
+  SearchBox,
+  SelectBox,
+  StackedList,
+  TableFooter,
+  TableFrame,
+  TableSkeleton,
+  iconBtn,
+  outlineBtn,
+  primaryBtn,
+  secondaryBtn,
+  tableCheckbox,
+  td,
+  th,
+  theadRow,
+  trClass,
+} from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
 
-// Table + toolbar pieces from the dashboard theme (hairline grid, outline buttons).
-const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
-const td = 'border-r border-line p-3 last:border-r-0';
-const toolbarBtn =
-  'inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50';
-
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-interface CustomerRowProps {
-  customer: VendorCustomer;
-  selected: boolean;
-  onToggleSelect: () => void;
+function Initial({ name }: { name: string }) {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-lime/60 text-xs font-semibold uppercase text-brand">
+      {name.trim().charAt(0) || '?'}
+    </span>
+  );
 }
 
-function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
-  const queryClient = useQueryClient();
+function BlacklistedBadge() {
+  return (
+    <span className="inline-block rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">Blacklisted</span>
+  );
+}
 
+/** Blacklist / delete for one customer, with a real confirm step for delete. */
+function useCustomerActions(customer: VendorCustomer) {
+  const queryClient = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['customers'] });
 
   const blacklistMutation = useMutation({
@@ -41,40 +65,70 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
     mutationFn: () => customersApi.remove(customer.phone),
     onSuccess: () => {
       invalidate();
+      setConfirmDelete(false);
       toast.success('Customer deleted.');
     },
     onError: () => toast.error('Could not delete this customer. Please try again.'),
   });
 
-  const handleDelete = () => {
-    if (window.confirm(`Delete ${customer.name}? This sends all of their orders to trash.`)) {
-      deleteMutation.mutate();
-    }
-  };
-
-  return (
-    <tr
-      className={`border-t border-line align-top text-regantify-text transition-colors ${
-        selected ? 'bg-brand-lime/20' : 'hover:bg-neutral-50/70'
-      }`}
+  const menu = (
+    <DropdownMenu
+      trigger={
+        <button aria-label="Actions" title="Actions" className={iconBtn}>
+          <MoreVertical size={14} />
+        </button>
+      }
     >
+      <DropdownMenuItem onSelect={() => blacklistMutation.mutate(!customer.blacklisted)}>
+        {customer.blacklisted ? 'Remove from blacklist' : 'Blacklist customer'}
+      </DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => setConfirmDelete(true)} danger>
+        Delete customer
+      </DropdownMenuItem>
+    </DropdownMenu>
+  );
+
+  const dialog = (
+    <ConfirmDialog
+      open={confirmDelete}
+      onOpenChange={setConfirmDelete}
+      title={`Delete ${customer.name}?`}
+      message="This sends all of their orders to Trash. You can restore the orders from Trash later."
+      confirmLabel="Delete customer"
+      onConfirm={() => deleteMutation.mutate()}
+      busy={deleteMutation.isPending}
+      danger
+    />
+  );
+
+  return { menu, dialog };
+}
+
+interface CustomerRowProps {
+  customer: VendorCustomer;
+  selected: boolean;
+  onToggleSelect: () => void;
+}
+
+function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
+  const { menu, dialog } = useCustomerActions(customer);
+  return (
+    <tr className={trClass(selected)}>
       <td className={`${td} w-10`}>
-        <input type="checkbox" checked={selected} onChange={onToggleSelect} className="h-4 w-4 cursor-pointer accent-brand" />
+        <input type="checkbox" checked={selected} onChange={onToggleSelect} className={tableCheckbox} aria-label={`Select ${customer.name}`} />
       </td>
       <td className={`${td} min-w-[200px]`}>
         <div className="flex items-start gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-lime/60 text-xs font-semibold uppercase text-brand">
-            {customer.name.trim().charAt(0) || '?'}
-          </span>
+          <Initial name={customer.name} />
           <div className="min-w-0">
             <Link to={`/vendor/customers/${encodeURIComponent(customer.phone)}`} className="font-medium text-brand hover:underline">
               {customer.name}
             </Link>
             <p className="mt-0.5 text-xs text-neutral-500">{customer.phone}</p>
             {customer.blacklisted && (
-              <span className="mt-1.5 inline-block rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
-                Blacklisted
-              </span>
+              <div className="mt-1.5">
+                <BlacklistedBadge />
+              </div>
             )}
           </div>
         </div>
@@ -89,26 +143,34 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
       <td className={`${td} whitespace-nowrap font-medium`}>{formatMoney(customer.totalSpent)}</td>
       <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDate(customer.lastOrderAt)}</td>
       <td className={td}>
-        <DropdownMenu
-          trigger={
-            <button
-              aria-label="Actions"
-              title="Actions"
-              className="rounded-md border border-line bg-white p-1.5 text-regantify-text transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50"
-            >
-              <MoreVertical size={14} />
-            </button>
-          }
-        >
-          <DropdownMenuItem onSelect={() => blacklistMutation.mutate(!customer.blacklisted)}>
-            {customer.blacklisted ? 'Remove from blacklist' : 'Blacklist customer'}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleDelete} danger>
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenu>
+        {menu}
+        {dialog}
       </td>
     </tr>
+  );
+}
+
+/** Phones: one tappable row per customer. */
+function CustomerListItem({ customer }: { customer: VendorCustomer }) {
+  const { menu, dialog } = useCustomerActions(customer);
+  return (
+    <li className="flex items-center gap-3 px-3 py-3">
+      <Initial name={customer.name} />
+      <Link to={`/vendor/customers/${encodeURIComponent(customer.phone)}`} className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-brand">{customer.name}</p>
+        <p className="truncate text-xs text-neutral-500">
+          {customer.phone} · {customer.orderCount} {customer.orderCount === 1 ? 'order' : 'orders'} · {formatMoney(customer.totalSpent)}
+        </p>
+        {customer.blacklisted && (
+          <div className="mt-1">
+            <BlacklistedBadge />
+          </div>
+        )}
+      </Link>
+      {menu}
+      {dialog}
+      <ChevronRight size={16} className="shrink-0 text-neutral-400" aria-hidden />
+    </li>
   );
 }
 
@@ -159,19 +221,10 @@ export default function Customers() {
 
   const customers = data?.customers ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).slice(
-    Math.max(0, page - 3),
-    Math.max(0, page - 3) + 5,
-  );
   const allSelected = customers.length > 0 && selected.size === customers.length;
 
   const toggleSelectAll = () => {
-    if (allSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(customers.map((c) => c.phone)));
-    }
+    setSelected(allSelected ? new Set() : new Set(customers.map((c) => c.phone)));
   };
 
   const toggleSelectOne = (phone: string) => {
@@ -206,61 +259,53 @@ export default function Customers() {
     }
   };
 
-  return (
-    <section className="rounded-xl border border-line bg-white p-3.5">
-      {/* Toolbar */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="mr-auto flex flex-wrap items-center gap-3">
-          <div>
-            <h1 className="text-[15px] font-semibold text-regantify-text">Customers</h1>
-            <p className="mt-0.5 text-xs text-neutral-500">{total.toLocaleString()} total</p>
-          </div>
-          <CustomerTabs />
-        </div>
+  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : search ? 'No customers match your search' : 'No customers yet';
+  const emptyHint =
+    filter === 'BLACKLISTED'
+      ? 'Customers you blacklist show up here, and can’t order with Cash on Delivery.'
+      : search
+        ? 'Try a different name or phone number.'
+        : 'Customers appear here after their first order. You can also add them yourself.';
+  const emptyAction =
+    filter === 'ALL' && !search ? (
+      <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
+        <Plus size={15} />
+        Add customer
+      </button>
+    ) : undefined;
 
-        <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
-          <Search size={15} className="shrink-0" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search customer"
-            className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
-          />
-        </div>
-        <div className="relative">
-          <select
-            aria-label="Filter customers"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as CustomerFilter)}
-            className={`${toolbarBtn} appearance-none pr-8`}
-          >
-            <option value="ALL">All Customers</option>
-            <option value="BLACKLISTED">Blacklisted</option>
-          </select>
-          <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
-        </div>
-        <button type="button" onClick={handleExportCsv} disabled={exporting} className={toolbarBtn}>
-          <Download size={15} />
-          {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/vendor/customers/bulk-upload')}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-blue px-3 text-sm text-white transition hover:opacity-90"
-        >
-          <Upload size={15} />
-          Bulk Upload
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/vendor/customers/add')}
-          className="flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-sm text-white transition-colors hover:bg-brand-dark"
-        >
-          <Plus size={15} />
-          Add Customer
-        </button>
-      </div>
+  return (
+    <PageSection>
+      <PageHeader
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            Customers
+            <CustomerTabs />
+          </span>
+        }
+        description={`${total.toLocaleString()} total`}
+        actions={
+          <>
+            <SearchBox value={search} onChange={setSearch} placeholder="Search customer" />
+            <SelectBox ariaLabel="Filter customers" value={filter} onChange={(v) => setFilter(v as CustomerFilter)}>
+              <option value="ALL">All customers</option>
+              <option value="BLACKLISTED">Blacklisted</option>
+            </SelectBox>
+            <button type="button" onClick={handleExportCsv} disabled={exporting} className={outlineBtn}>
+              <Download size={15} />
+              {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
+            </button>
+            <button type="button" onClick={() => navigate('/vendor/customers/bulk-upload')} className={secondaryBtn}>
+              <Upload size={15} />
+              Bulk upload
+            </button>
+            <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
+              <Plus size={15} />
+              Add customer
+            </button>
+          </>
+        }
+      />
 
       {/* Selection bar */}
       {selected.size > 0 && (
@@ -276,116 +321,62 @@ export default function Customers() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-line">
-        <table className="w-full min-w-[960px] border-collapse text-[14px]">
-          <thead>
-            <tr className="bg-neutral-50 text-neutral-600">
-              <th className="w-10 border-r border-line p-3">
-                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="h-4 w-4 cursor-pointer accent-brand" />
-              </th>
-              <th className={th}>Customer</th>
-              <th className={th}>Email</th>
-              <th className={th}>Address</th>
-              <th className={th}>Orders</th>
-              <th className={th}>Total Spent</th>
-              <th className={th}>Last Order</th>
-              <th className={`${th} w-16`}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: Math.min(perPage, 5) }).map((_, i) => (
-                <tr key={`sk-${i}`} className="border-t border-line">
-                  <td colSpan={COLUMN_COUNT} className="p-3">
-                    <div className="h-8 w-full animate-pulse rounded-md bg-neutral-100" />
-                  </td>
-                </tr>
-              ))
-            ) : customers.length === 0 ? (
-              <tr className="border-t border-line">
-                <td colSpan={COLUMN_COUNT} className="px-3 py-16 text-center">
-                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
-                    <Users size={20} />
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-regantify-text">
-                    {filter === 'BLACKLISTED' ? 'No blacklisted customers.' : 'No customers yet.'}
-                  </p>
-                  {search && <p className="mt-1 text-xs text-neutral-500">Try changing your search.</p>}
-                </td>
-              </tr>
-            ) : (
-              customers.map((customer) => (
-                <CustomerRow
-                  key={customer.phone}
-                  customer={customer}
-                  selected={selected.has(customer.phone)}
-                  onToggleSelect={() => toggleSelectOne(customer.phone)}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-4 flex flex-col gap-3 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 text-sm text-neutral-700">
-          Show
-          <div className="relative">
-            <select
-              value={perPage}
-              onChange={(e) => setPerPage(Number(e.target.value))}
-              className="h-9 appearance-none rounded-lg border border-line bg-white pl-3 pr-8 text-xs text-regantify-text outline-none focus:border-brand"
-            >
-              {[10, 25, 50, 100].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
-          </div>
-          <span className="text-xs">per page</span>
-        </div>
-
-        <div className="flex items-center gap-3 text-sm">
-          <span className="mr-2 text-xs text-neutral-600">
-            {total === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of {total}
-          </span>
-          {totalPages > 1 && (
-            <>
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                aria-label="Previous page"
-                className="disabled:opacity-30"
-              >
-                <ArrowLeft size={16} />
-              </button>
-              {pageNumbers.map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  className={`h-8 min-w-8 rounded-md px-1 ${
-                    n === page ? 'bg-neutral-100 font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-50'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                aria-label="Next page"
-                className="disabled:opacity-30"
-              >
-                <ArrowRight size={16} />
-              </button>
-            </>
+      {/* Wide screens: table */}
+      <TableFrame minWidth="min-w-[960px]" className="hidden md:block">
+        <thead>
+          <tr className={theadRow}>
+            <th className="w-10 border-r border-line p-3">
+              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className={tableCheckbox} aria-label="Select all customers on this page" />
+            </th>
+            <th className={th}>Customer</th>
+            <th className={th}>Email</th>
+            <th className={th}>Address</th>
+            <th className={th}>Orders</th>
+            <th className={th}>Total spent</th>
+            <th className={th}>Last order</th>
+            <th className={`${th} w-16`}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading ? (
+            <TableSkeleton rows={Math.min(perPage, 5)} colSpan={COLUMN_COUNT} />
+          ) : customers.length === 0 ? (
+            <EmptyState as="row" colSpan={COLUMN_COUNT} icon={Users} title={emptyTitle} hint={emptyHint} action={emptyAction} />
+          ) : (
+            customers.map((customer) => (
+              <CustomerRow
+                key={customer.phone}
+                customer={customer}
+                selected={selected.has(customer.phone)}
+                onToggleSelect={() => toggleSelectOne(customer.phone)}
+              />
+            ))
           )}
-        </div>
+        </tbody>
+      </TableFrame>
+
+      {/* Phones: stacked list */}
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-14 animate-pulse rounded-lg bg-neutral-100" />
+            ))}
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="rounded-lg border border-line">
+            <EmptyState icon={Users} title={emptyTitle} hint={emptyHint} action={emptyAction} />
+          </div>
+        ) : (
+          <StackedList>
+            {customers.map((customer) => (
+              <CustomerListItem key={customer.phone} customer={customer} />
+            ))}
+          </StackedList>
+        )}
       </div>
-    </section>
+
+      <TableFooter page={page} perPage={perPage} total={total} onPageChange={setPage} onPerPageChange={setPerPage} />
+    </PageSection>
   );
 }

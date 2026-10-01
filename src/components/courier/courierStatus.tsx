@@ -159,18 +159,18 @@ export function courierStatusInfo(provider: CourierProvider, raw: string | null 
 }
 
 const TONE_CLASSES: Record<Tone, string> = {
-  neutral: 'bg-regantify-content text-regantify-text-muted',
-  progress: 'bg-blue-50 text-blue-700',
-  success: 'bg-green-50 text-green-700',
-  warning: 'bg-amber-50 text-amber-700',
-  danger: 'bg-red-50 text-red-600',
+  neutral: 'border-neutral-200 bg-neutral-50 text-neutral-600',
+  progress: 'border-sky-200 bg-sky-50 text-sky-700',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  warning: 'border-amber-200 bg-amber-50 text-amber-700',
+  danger: 'border-red-200 bg-red-50 text-red-700',
 };
 
 /** The courier's own status as a small pill, e.g. "Pathao: In transit". */
 export function CourierStatusBadge({ provider, status, prefix }: { provider: CourierProvider; status: string; prefix?: string }) {
   const info = courierStatusInfo(provider, status);
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${TONE_CLASSES[info.tone]}`} title={status}>
+    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-medium ${TONE_CLASSES[info.tone]}`} title={status}>
       {prefix ? `${prefix}: ` : ''}
       {info.label}
     </span>

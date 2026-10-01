@@ -19,14 +19,14 @@ export function RedxTrackingHistory({ orderId }: { orderId: string }) {
   return (
     <div className="space-y-3">
       {data.trackingUrl && (
-        <a href={data.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-regantify-cta hover:underline">
+        <a href={data.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline">
           Open RedX’s tracking page <ExternalLink size={13} />
         </a>
       )}
       {data.steps.length === 0 ? (
         <p className="text-sm text-regantify-text-muted">RedX has no steps for this parcel yet.</p>
       ) : (
-        <ol className="space-y-2.5 border-l border-black/10 pl-4">
+        <ol className="space-y-2.5 border-l border-line pl-4">
           {[...data.steps].reverse().map((step, i) => (
             <li key={i} className="text-sm">
               <p className="text-regantify-text">{step.message || step.messageBn}</p>

@@ -9,7 +9,7 @@ import { toast } from '../../lib/toast';
 import { PathaoLocationSelects } from './PathaoLocationSelects';
 
 const inputClass =
-  'w-full px-3 py-2 rounded-lg border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none disabled:opacity-60';
+  'w-full px-3 py-2 rounded-lg border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none disabled:opacity-60';
 
 function formatTaka(value: number) {
   return `৳${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
@@ -131,7 +131,7 @@ function PriceEstimate({ form }: { form: PathaoBookingDraft }) {
           <span className="text-regantify-text">≈ {formatTaka(codFee)}</span>
         </div>
       )}
-      <div className="flex justify-between pt-1 border-t border-black/5 font-medium">
+      <div className="flex justify-between pt-1 border-t border-line font-medium">
         <span className="text-regantify-text">Pathao charge</span>
         <span className="text-regantify-text">≈ {formatTaka(price.finalPrice + codFee)}</span>
       </div>
@@ -213,7 +213,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
       className="p-6 pt-4 space-y-4"
     >
       {data.order.courierBookingStatus === 'FAILED' && data.order.courierBookingError && (
-        <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700">
+        <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <p>Last attempt failed: {data.order.courierBookingError}</p>
         </div>
@@ -369,7 +369,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
         </Field>
       </div>
 
-      <div className="rounded-xl bg-regantify-search p-3">
+      <div className="rounded-lg bg-white border border-line p-3">
         <PriceEstimate form={form} />
       </div>
 
@@ -379,14 +379,14 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
+          className="px-4 py-2 rounded-lg border border-line bg-white text-regantify-text text-sm font-medium hover:bg-neutral-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={bookMutation.isPending}
-          className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+          className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium disabled:opacity-60"
         >
           {bookMutation.isPending ? 'Booking…' : 'Book with Pathao'}
         </button>
@@ -434,7 +434,7 @@ export function PathaoBookingModal({ orderId, onOpenChange }: PathaoBookingModal
       ) : notConnected ? (
         <p className="p-6 pt-4 text-sm text-regantify-text-muted">
           Connect your Pathao account first on the{' '}
-          <Link to="/vendor/courier/pathao" className="text-regantify-cta underline" onClick={() => onOpenChange(false)}>
+          <Link to="/vendor/courier/pathao" className="text-brand underline" onClick={() => onOpenChange(false)}>
             Pathao page
           </Link>
           .

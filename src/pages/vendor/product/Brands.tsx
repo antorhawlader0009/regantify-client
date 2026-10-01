@@ -1,14 +1,36 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search } from 'lucide-react';
-import { brandsApi } from '../../../lib/brandsApi';
+import { MoreVertical, Plus, Tag } from 'lucide-react';
+import { brandsApi, type Brand } from '../../../lib/brandsApi';
 import { AddBrandModal } from './AddBrandModal';
+import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import {
+  EmptyState,
+  PageHeader,
+  PageSection,
+  SearchBox,
+  StackedList,
+  TableFrame,
+  TableSkeleton,
+  iconBtn,
+  primaryBtn,
+  td,
+  th,
+  theadRow,
+  trClass,
+} from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
+
+function BrandLogo({ brand }: { brand: Brand }) {
+  return <img src={brand.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-neutral-100 object-cover" loading="lazy" />;
+}
 
 export default function Brands() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleting, setDeleting] = useState<Brand | null>(null);
 
   const { data: brands = [], isLoading } = useQuery({
     queryKey: ['brands'],
@@ -19,6 +41,7 @@ export default function Brands() {
     mutationFn: brandsApi.remove,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
+      setDeleting(null);
       toast.success('Brand deleted.');
     },
     onError: () => toast.error('Could not delete the brand. Please try again.'),
@@ -30,87 +53,109 @@ export default function Brands() {
     return brands.filter((b) => b.name.toLowerCase().includes(q));
   }, [brands, search]);
 
-  const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(id);
-    }
-  };
+  const menu = (b: Brand) => (
+    <DropdownMenu
+      trigger={
+        <button aria-label="Actions" title="Actions" className={iconBtn}>
+          <MoreVertical size={14} />
+        </button>
+      }
+    >
+      <DropdownMenuItem onSelect={() => setDeleting(b)} danger>
+        Delete brand
+      </DropdownMenuItem>
+    </DropdownMenu>
+  );
+
+  const addButton = (
+    <button type="button" onClick={() => setShowAddModal(true)} className={primaryBtn}>
+      <Plus size={15} />
+      Add brand
+    </button>
+  );
+  const emptyTitle = search ? 'No brands match your search' : 'No brands yet';
+  const emptyHint = search ? 'Try a different name.' : 'Add the brands you sell, with their logo. Shoppers can then shop by brand.';
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Brands</h1>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark
-            text-white text-sm font-medium transition-colors"
-        >
-          <Plus size={16} />
-          Add New
-        </button>
-      </div>
+    <PageSection>
+      <PageHeader
+        title="Brands"
+        description={`${brands.length.toLocaleString()} ${brands.length === 1 ? 'brand' : 'brands'}`}
+        actions={
+          <>
+            <SearchBox value={search} onChange={setSearch} placeholder="Search brands" />
+            {addButton}
+          </>
+        }
+      />
 
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <div className="p-4 border-b border-black/5">
-          <div className="relative w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search brands"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm
-                text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-regantify-content text-left text-regantify-text-muted">
-              <th className="px-5 py-3 font-medium">NAME</th>
-              <th className="px-5 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={2} className="px-5 py-8 text-center text-regantify-text-muted">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!isLoading && filtered.length === 0 && (
-              <tr>
-                <td colSpan={2} className="px-5 py-8 text-center text-regantify-text-muted">
-                  No brands yet.
-                </td>
-              </tr>
-            )}
-            {filtered.map((b) => (
-              <tr key={b.id} className="border-t border-black/5">
-                <td className="px-5 py-3.5">
+      <TableFrame minWidth="min-w-[520px]" className="hidden md:block">
+        <thead>
+          <tr className={theadRow}>
+            <th className={th}>Brand</th>
+            <th className={`${th} w-32`}>Products</th>
+            <th className={`${th} w-16`}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading ? (
+            <TableSkeleton rows={4} colSpan={3} />
+          ) : filtered.length === 0 ? (
+            <EmptyState as="row" colSpan={3} icon={Tag} title={emptyTitle} hint={emptyHint} action={search ? undefined : addButton} />
+          ) : (
+            filtered.map((b) => (
+              <tr key={b.id} className={trClass()}>
+                <td className={td}>
                   <div className="flex items-center gap-3">
-                    <img src={b.logoUrl} alt="" className="w-8 h-8 rounded-lg object-cover bg-regantify-content" />
-                    <span className="text-regantify-cta font-medium">{b.name}</span>
+                    <BrandLogo brand={b} />
+                    <span className="font-medium">{b.name}</span>
                   </div>
                 </td>
-                <td className="px-5 py-3.5 text-right">
-                  <button onClick={() => handleDelete(b.id, b.name)} className="text-red-600 hover:underline text-sm">
-                    Delete
-                  </button>
-                </td>
+                <td className={`${td} tabular-nums`}>{b.productCount ?? 0}</td>
+                <td className={td}>{menu(b)}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            ))
+          )}
+        </tbody>
+      </TableFrame>
 
-        <div className="px-5 py-3 text-xs text-regantify-text-muted border-t border-black/5">
-          Total: {filtered.length}
-        </div>
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="h-32 animate-pulse rounded-lg bg-neutral-100" />
+        ) : filtered.length === 0 ? (
+          <div className="rounded-lg border border-line">
+            <EmptyState icon={Tag} title={emptyTitle} hint={emptyHint} action={search ? undefined : addButton} />
+          </div>
+        ) : (
+          <StackedList>
+            {filtered.map((b) => (
+              <li key={b.id} className="flex items-center gap-3 px-3 py-3">
+                <BrandLogo brand={b} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-regantify-text">{b.name}</p>
+                  <p className="text-xs text-neutral-500">
+                    {b.productCount ?? 0} {(b.productCount ?? 0) === 1 ? 'product' : 'products'}
+                  </p>
+                </div>
+                {menu(b)}
+              </li>
+            ))}
+          </StackedList>
+        )}
       </div>
 
+      <ConfirmDialog
+        open={deleting != null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={`Delete ${deleting?.name ?? 'brand'}?`}
+        message="Products with this brand stay in your store; only the brand and its logo are removed. This can’t be undone."
+        confirmLabel="Delete brand"
+        onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
+        busy={deleteMutation.isPending}
+        danger
+      />
+
       {showAddModal && <AddBrandModal onClose={() => setShowAddModal(false)} />}
-    </div>
+    </PageSection>
   );
 }

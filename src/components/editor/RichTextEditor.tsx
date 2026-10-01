@@ -98,7 +98,7 @@ function ToolbarButton({
       onClick={onClick}
       title={title}
       className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors shrink-0 ${
-        active ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'
+        active ? 'bg-brand-lime text-brand' : 'text-regantify-text hover:bg-white'
       }`}
     >
       {children}
@@ -117,6 +117,9 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showSourceView, setShowSourceView] = useState(false);
   const [sourceHtml, setSourceHtml] = useState(value);
+  // Kept in state: content loaded from outside (setContent without an
+  // update event) doesn't re-render, so a counter read during render stayed at 0.
+  const [charCount, setCharCount] = useState(0);
 
   const editor = useEditor({
     extensions: [
@@ -133,6 +136,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
       Placeholder.configure({ placeholder: placeholder ?? '' }),
     ],
     content: value,
+    onCreate: ({ editor }) => setCharCount(editor.getText().length),
     onUpdate: ({ editor }) => {
       // Counts visible text only (getText() strips tags/attributes), so
       // formatting marks (bold, links, colors) never eat into the limit —
@@ -144,6 +148,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
         editor.commands.undo();
         return;
       }
+      setCharCount(editor.getText().length);
       onChange(editor.getHTML());
     },
     editorProps: {
@@ -158,6 +163,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
   useEffect(() => {
     if (editor && value !== editor.getHTML() && !showSourceView) {
       editor.commands.setContent(value, { emitUpdate: false });
+      setCharCount(editor.getText().length);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -190,15 +196,16 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
       setSourceHtml(editor.getHTML());
     } else {
       editor.commands.setContent(sourceHtml, { emitUpdate: false });
+      setCharCount(editor.getText().length);
       onChange(sourceHtml);
     }
     setShowSourceView((v) => !v);
   };
 
   return (
-    <div className="rounded-xl border border-black/10 bg-white overflow-hidden">
+    <div className="rounded-lg border border-line bg-white overflow-hidden transition focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/15">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-black/10 bg-regantify-content">
+      <div className="flex flex-wrap items-center gap-0.5 p-1.5 border-b border-line bg-neutral-50">
         <ToolbarButton
           title="Bold"
           active={editor.isActive('bold')}
@@ -228,7 +235,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
           <Strikethrough size={16} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-black/10 mx-1" />
+        <div className="w-px h-5 bg-line mx-1" />
 
         <ToolbarButton
           title="Align left"
@@ -259,7 +266,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
           <AlignJustify size={16} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-black/10 mx-1" />
+        <div className="w-px h-5 bg-line mx-1" />
 
         <ToolbarButton
           title="Bullet list"
@@ -276,12 +283,12 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
           <ListOrdered size={16} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-black/10 mx-1" />
+        <div className="w-px h-5 bg-line mx-1" />
 
         {/* Font size */}
         <select
           title="Font size"
-          className="h-8 px-1.5 rounded-md text-sm bg-white border border-black/10 text-regantify-text"
+          className="h-8 px-1.5 rounded-md text-sm bg-white border border-line text-regantify-text"
           onChange={(e) => {
             const size = FONT_SIZES.find((f) => f.label === e.target.value);
             if (size) {
@@ -297,7 +304,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
           ))}
         </select>
 
-        <div className="w-px h-5 bg-black/10 mx-1" />
+        <div className="w-px h-5 bg-line mx-1" />
 
         {/* Text color */}
         <div className="relative">
@@ -313,7 +320,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
             </span>
           </ToolbarButton>
           {showColorPicker && (
-            <div className="absolute top-9 left-0 z-20 bg-white rounded-lg shadow-lg border border-black/10 p-2 flex gap-1.5">
+            <div className="absolute top-9 left-0 z-20 bg-white rounded-lg shadow-lg border border-line p-2 flex gap-1.5">
               {TEXT_COLORS.map((c) => (
                 <button
                   key={c}
@@ -343,7 +350,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
             <span className="text-xs font-bold px-0.5 bg-yellow-200 rounded-sm">A</span>
           </ToolbarButton>
           {showHighlightPicker && (
-            <div className="absolute top-9 left-0 z-20 bg-white rounded-lg shadow-lg border border-black/10 p-2 flex gap-1.5">
+            <div className="absolute top-9 left-0 z-20 bg-white rounded-lg shadow-lg border border-line p-2 flex gap-1.5">
               {HIGHLIGHT_COLORS.map((c) => (
                 <button
                   key={c}
@@ -365,7 +372,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
           )}
         </div>
 
-        <div className="w-px h-5 bg-black/10 mx-1" />
+        <div className="w-px h-5 bg-line mx-1" />
 
         <ToolbarButton title="Insert link" onClick={setLink} active={editor.isActive('link')}>
           <LinkIcon size={16} />
@@ -412,8 +419,8 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
       )}
 
       {maxLength !== undefined && !showSourceView && (
-        <p className="text-xs text-regantify-text-muted px-4 py-2 border-t border-black/5">
-          {editor.getText().length} of {maxLength} characters used
+        <p className="text-xs text-neutral-500 px-4 py-2 border-t border-line">
+          {charCount.toLocaleString()} of {maxLength.toLocaleString()} characters
         </p>
       )}
     </div>

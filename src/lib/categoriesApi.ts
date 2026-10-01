@@ -12,6 +12,8 @@ export interface Category {
   squarePhotoUrl?: string | null;
   facebookCategory?: string | null;
   googleCategory?: string | null;
+  /** Products directly in this category; only on the list response. */
+  _count?: { products: number };
   createdAt: string;
   updatedAt: string;
 }

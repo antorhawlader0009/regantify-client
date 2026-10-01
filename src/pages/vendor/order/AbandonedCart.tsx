@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, ChevronDown, Search, MessageSquare, MoreVertical, Plus, Copy } from 'lucide-react';
+import { ChevronDown, Search, MessageSquare, MoreVertical, Plus, Copy } from 'lucide-react';
+import { TableFooter } from '../../../components/ui/PageKit';
 import { incompleteOrdersApi, type IncompleteOrder } from '../../../lib/incompleteOrdersApi';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
@@ -261,7 +262,6 @@ export default function AbandonedCart() {
 
   const incompleteOrders = data?.incompleteOrders ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   const labelMutation = useMutation({
     mutationFn: ({ id, label }: { id: string; label: string | null }) => incompleteOrdersApi.updateLabel(id, label),
@@ -381,34 +381,7 @@ export default function AbandonedCart() {
         </table>
       </div>
 
-      <div className="mt-4 flex items-center justify-end gap-3 px-2 pb-1 text-sm">
-        <span className="mr-2 text-xs text-neutral-600">
-          {total === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of {total}
-        </span>
-        {totalPages > 1 && (
-          <>
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              aria-label="Previous page"
-              className="disabled:opacity-30"
-            >
-              <ArrowLeft size={16} />
-            </button>
-            <span className="flex h-8 min-w-8 items-center justify-center rounded-md bg-neutral-100 px-2 font-medium text-regantify-text">
-              {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              aria-label="Next page"
-              className="disabled:opacity-30"
-            >
-              <ArrowRight size={16} />
-            </button>
-          </>
-        )}
-      </div>
+      <TableFooter page={page} perPage={perPage} total={total} onPageChange={setPage} />
 
       <ChangeLabelModal
         open={Boolean(labelOrder)}

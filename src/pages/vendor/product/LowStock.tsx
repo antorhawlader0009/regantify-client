@@ -1,12 +1,32 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { CheckCircle2, ChevronRight, Package } from 'lucide-react';
 import { productsApi } from '../../../lib/productsApi';
+import { PageHeader, PageSection, StackedList, TableFrame, TableSkeleton, outlineBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
 
 const DEFAULT_THRESHOLD = 5;
 
+function StockBadge({ stock }: { stock: number }) {
+  return stock <= 0 ? (
+    <span className="inline-block whitespace-nowrap rounded border border-red-200 bg-red-50 px-2 py-0.5 text-sm text-red-700">Out of stock</span>
+  ) : (
+    <span className="inline-block whitespace-nowrap rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-sm text-amber-700">{stock} left</span>
+  );
+}
+
+function Thumb({ src }: { src?: string }) {
+  return src ? (
+    <img src={src} alt="" className="h-9 w-9 shrink-0 rounded border border-line bg-neutral-100 object-cover" loading="lazy" />
+  ) : (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-neutral-100 text-neutral-400">
+      <Package size={15} aria-hidden />
+    </span>
+  );
+}
+
+/** Products about to run out, lowest stock first, so the vendor knows what to restock. */
 export default function LowStock() {
-  const navigate = useNavigate();
   const [thresholdInput, setThresholdInput] = useState(String(DEFAULT_THRESHOLD));
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
 
@@ -22,90 +42,111 @@ export default function LowStock() {
     setThreshold(n > 0 ? n : DEFAULT_THRESHOLD);
   };
 
-  return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Low Stock</h1>
+  const empty = (
+    <div className="flex flex-col items-center px-4 py-12 text-center">
+      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+        <CheckCircle2 size={20} aria-hidden />
       </div>
+      <p className="mt-2 text-sm font-medium text-regantify-text">Nothing is running low</p>
+      <p className="mt-1 max-w-sm text-xs text-neutral-500">Every product with stock tracking has {threshold} or more left. Products with unlimited stock aren’t listed.</p>
+    </div>
+  );
 
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
-          <label className="text-sm text-regantify-text-muted">Show products with stock below</label>
-          <input
-            type="number"
-            min={1}
-            value={thresholdInput}
-            onChange={(e) => setThresholdInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && applyThreshold()}
-            className="w-24 px-3 py-2 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
-          />
-          <button
-            onClick={applyThreshold}
-            className="px-3.5 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium"
+  return (
+    <PageSection>
+      <PageHeader
+        title="Low stock"
+        description={
+          isLoading ? 'Checking stock…' : `${(data?.total ?? 0).toLocaleString()} ${(data?.total ?? 0) === 1 ? 'product' : 'products'} under ${data?.threshold ?? threshold} in stock`
+        }
+        actions={
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              applyThreshold();
+            }}
           >
-            Apply
-          </button>
-        </div>
+            <label htmlFor="threshold" className="text-sm text-neutral-600">
+              Show stock under
+            </label>
+            <input
+              id="threshold"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={thresholdInput}
+              onChange={(e) => setThresholdInput(e.target.value)}
+              className="h-9 w-20 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text outline-none focus:border-brand"
+            />
+            <button type="submit" className={outlineBtn}>
+              Apply
+            </button>
+          </form>
+        }
+      />
 
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-regantify-content text-left text-regantify-text-muted">
-              <th className="px-2 py-3 font-medium">PRODUCT</th>
-              <th className="px-4 py-3 font-medium">CATEGORY</th>
-              <th className="px-4 py-3 font-medium">SKU</th>
-              <th className="px-4 py-3 font-medium">STOCK</th>
+      <TableFrame minWidth="min-w-[720px]" className="hidden md:block">
+        <thead>
+          <tr className={theadRow}>
+            <th className={th}>Product</th>
+            <th className={th}>Category</th>
+            <th className={th}>SKU</th>
+            <th className={`${th} w-36`}>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading ? (
+            <TableSkeleton rows={4} colSpan={4} />
+          ) : products.length === 0 ? (
+            <tr className="border-t border-line">
+              <td colSpan={4}>{empty}</td>
             </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-regantify-text-muted">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!isLoading && products.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-regantify-text-muted">
-                  No products below this threshold.
-                </td>
-              </tr>
-            )}
-            {products.map((p) => (
-              <tr key={p.id} className="border-t border-black/5">
-                <td className="px-2 py-3">
+          ) : (
+            products.map((p) => (
+              <tr key={p.id} className={trClass()}>
+                <td className={td}>
                   <div className="flex items-center gap-3">
-                    <img
-                      src={p.photoUrls[0] ?? ''}
-                      alt=""
-                      className="w-10 h-10 rounded-lg object-cover bg-regantify-content shrink-0"
-                    />
-                    <button
-                      onClick={() => navigate(`/vendor/product/edit/${p.id}`)}
-                      className="text-regantify-cta font-medium hover:underline line-clamp-2 max-w-xs text-left"
-                    >
+                    <Thumb src={p.photoUrls[0]} />
+                    <Link to={`/vendor/product/edit/${p.id}#stock`} className="line-clamp-2 max-w-xs font-medium text-brand hover:underline">
                       {p.name}
-                    </button>
+                    </Link>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-regantify-text">{p.category ?? '—'}</td>
-                <td className="px-4 py-3 text-regantify-text">{p.sku}</td>
-                <td className="px-4 py-3">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-md bg-red-100 text-red-700">
-                    {p.stock}
-                  </span>
+                <td className={td}>{p.category ?? '—'}</td>
+                <td className={td}>{p.sku}</td>
+                <td className={td}>
+                  <StockBadge stock={p.stock ?? 0} />
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            ))
+          )}
+        </tbody>
+      </TableFrame>
 
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-          <span className="text-xs text-regantify-text-muted">
-            Total: {data?.total ?? 0} (threshold: {data?.threshold ?? threshold})
-          </span>
-        </div>
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="h-32 animate-pulse rounded-lg bg-neutral-100" />
+        ) : products.length === 0 ? (
+          <div className="rounded-lg border border-line">{empty}</div>
+        ) : (
+          <StackedList>
+            {products.map((p) => (
+              <li key={p.id}>
+                <Link to={`/vendor/product/edit/${p.id}#stock`} className="flex items-center gap-3 px-3 py-3 active:bg-neutral-50">
+                  <Thumb src={p.photoUrls[0]} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-brand">{p.name}</p>
+                    <p className="truncate text-xs text-neutral-500">{p.sku}</p>
+                  </div>
+                  <StockBadge stock={p.stock ?? 0} />
+                  <ChevronRight size={16} className="shrink-0 text-neutral-400" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </StackedList>
+        )}
       </div>
-    </div>
+    </PageSection>
   );
 }

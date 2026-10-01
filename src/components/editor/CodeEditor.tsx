@@ -15,7 +15,7 @@ interface CodeEditorProps {
  */
 export function CodeEditor({ value, onChange, language, height = 560 }: CodeEditorProps) {
   return (
-    <div className="rounded-xl overflow-hidden border border-black/10 bg-[#1e1e1e]">
+    <div className="rounded-lg overflow-hidden border border-line bg-[#1e1e1e]">
       <Editor
         height={height}
         language={language}

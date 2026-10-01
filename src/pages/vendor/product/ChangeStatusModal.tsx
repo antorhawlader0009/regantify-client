@@ -31,7 +31,7 @@ export function ChangeStatusModal({
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as 'PUBLIC' | 'DRAFT')}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text text-sm focus:outline-none"
+            className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-line text-regantify-text text-sm focus:outline-none"
           >
             <option value="PUBLIC">Public</option>
             <option value="DRAFT">Draft</option>
@@ -39,12 +39,12 @@ export function ChangeStatusModal({
         </div>
       </div>
 
-      <div className="border-t border-black/5 px-6 py-4 flex justify-end">
+      <div className="border-t border-line px-6 py-4 flex justify-end">
         <button
           type="button"
           onClick={() => onConfirm(status)}
           disabled={submitting}
-          className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
+          className="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white font-medium
             transition-colors disabled:opacity-60"
         >
           {submitting ? 'Changing…' : 'Change Status'}

@@ -1,42 +1,63 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, X, ChevronDown, GripVertical } from 'lucide-react';
+import { FolderTree, GripVertical, MoreVertical, Plus, X } from 'lucide-react';
 import { categoriesApi, type Category } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
 import { SubcategoriesModal } from './SubcategoriesModal';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import {
+  EmptyState,
+  PageHeader,
+  PageSection,
+  SearchBox,
+  SelectBox,
+  StackedList,
+  TableFrame,
+  TableSkeleton,
+  iconBtn,
+  primaryBtn,
+  td,
+  th,
+  theadRow,
+} from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
 
-// Two distinct drag payload types on the same table so a row's onDrop can
-// tell "reorder these two main categories" apart from "reparent this
-// subcategory chip onto this main".
+// Two drag payload types on the same table, so a row's onDrop can tell
+// "reorder these two main categories" from "move this sub category here".
 const MAIN_DRAG_TYPE = 'application/x-main-category-id';
 const SUB_DRAG_TYPE = 'application/x-sub-category-id';
 
-/** Every descendant of `parentId`, at any depth, flattened — so a
- * category nested more than one level deep still shows up as a chip on
- * its top-level ancestor's row instead of silently disappearing from
- * this (deliberately 2-column, not tree-indented) layout. */
+/** Every descendant of `parentId`, at any depth, flattened — so a deeper
+ * category still shows as a chip on its top-level ancestor's row. */
 function getDescendants(categories: Category[], parentId: string): Category[] {
   const direct = categories.filter((c) => c.parentId === parentId);
   return direct.flatMap((c) => [c, ...getDescendants(categories, c.id)]);
 }
 
-function ActionsMenu({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function VisibilityBadge({ visibility }: { visibility: Category['visibility'] }) {
+  return visibility === 'PUBLIC' ? (
+    <span className="inline-block rounded border border-green-200 bg-green-50 px-2 py-0.5 text-sm text-green-700">Public</span>
+  ) : (
+    <span className="inline-block rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-sm text-neutral-600">Hidden</span>
+  );
+}
+
+function ActionsMenu({ onEdit, onAddSub, onDelete }: { onEdit: () => void; onAddSub: () => void; onDelete: () => void }) {
   return (
     <DropdownMenu
       trigger={
-        <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
-          Actions
-          <ChevronDown size={14} />
+        <button aria-label="Actions" title="Actions" className={iconBtn}>
+          <MoreVertical size={14} />
         </button>
       }
     >
-      <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
+      <DropdownMenuItem onSelect={onEdit}>Edit category</DropdownMenuItem>
+      <DropdownMenuItem onSelect={onAddSub}>Add sub category</DropdownMenuItem>
       <DropdownMenuItem onSelect={onDelete} danger>
-        Delete
+        Delete category
       </DropdownMenuItem>
     </DropdownMenu>
   );
@@ -49,10 +70,10 @@ export default function Categories() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [addingSubcategoryFor, setAddingSubcategoryFor] = useState<Category | null>(null);
+  const [deleting, setDeleting] = useState<Category | null>(null);
   const [dragOverMainId, setDragOverMainId] = useState<string | null>(null);
   // Optimistic main-category order while a drag's reorder request is in
-  // flight — cleared once the mutation settles and refetched data (with
-  // real persisted positions) takes over.
+  // flight — cleared once the mutation settles and refetched data takes over.
   const [orderOverride, setOrderOverride] = useState<string[] | null>(null);
 
   const { data: categories = [], isLoading } = useQuery({
@@ -64,6 +85,7 @@ export default function Categories() {
     mutationFn: categoriesApi.remove,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      setDeleting(null);
       toast.success('Category deleted.');
     },
     onError: () => toast.error('Could not delete the category. Please try again.'),
@@ -73,9 +95,9 @@ export default function Categories() {
     mutationFn: ({ id, parentId }: { id: string; parentId: string }) => categoriesApi.update(id, { parentId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
-      toast.success('Subcategory moved.');
+      toast.success('Sub category moved.');
     },
-    onError: () => toast.error('Could not move the subcategory. Please try again.'),
+    onError: () => toast.error('Could not move the sub category. Please try again.'),
   });
 
   const reorderMutation = useMutation({
@@ -103,23 +125,21 @@ export default function Categories() {
       if (visibilityFilter !== 'ALL' && main.visibility !== visibilityFilter) return false;
       if (!query) return true;
       const subcategories = getDescendants(categories, main.id);
-      return (
-        main.name.toLowerCase().includes(query) ||
-        subcategories.some((sub) => sub.name.toLowerCase().includes(query))
-      );
+      return main.name.toLowerCase().includes(query) || subcategories.some((sub) => sub.name.toLowerCase().includes(query));
     });
   }, [mainCategories, categories, visibilityFilter, search]);
 
-  const handleDelete = (id: string, name: string) => {
-    // A category with subcategories can't be deleted out from under them —
-    // move or delete every child first, or they'd be silently orphaned.
-    if (categories.some((c) => c.parentId === id)) {
-      toast.error(`Move or delete "${name}"'s subcategories first.`);
+  /** Products in a main category and all its sub categories. */
+  const productCount = (main: Category) =>
+    (main._count?.products ?? 0) + getDescendants(categories, main.id).reduce((sum, c) => sum + (c._count?.products ?? 0), 0);
+
+  const askDelete = (category: Category) => {
+    // A category with sub categories can't be deleted out from under them.
+    if (categories.some((c) => c.parentId === category.id)) {
+      toast.error(`Move or delete the sub categories of “${category.name}” first.`);
       return;
     }
-    if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
-      deleteMutation.mutate(id);
-    }
+    setDeleting(category);
   };
 
   const handleDropOnMain = (targetMainId: string, e: React.DragEvent) => {
@@ -148,71 +168,87 @@ export default function Categories() {
     reparentMutation.mutate({ id: subId, parentId: targetMainId });
   };
 
+  const addButton = (
+    <button type="button" onClick={() => setShowAddModal(true)} className={primaryBtn}>
+      <Plus size={15} />
+      Add category
+    </button>
+  );
+  const emptyTitle = search || visibilityFilter !== 'ALL' ? 'No categories match' : 'No categories yet';
+  const emptyHint =
+    search || visibilityFilter !== 'ALL'
+      ? 'Try a different name or filter.'
+      : 'Categories group your products so shoppers can find them, e.g. Men, Women, Kids.';
+
+  const subChip = (sub: Category, draggable: boolean) => (
+    <span
+      key={sub.id}
+      draggable={draggable}
+      onDragStart={
+        draggable
+          ? (e) => {
+              e.dataTransfer.setData(SUB_DRAG_TYPE, sub.id);
+              e.dataTransfer.effectAllowed = 'move';
+            }
+          : undefined
+      }
+      title={draggable ? `Drag “${sub.name}” onto another main category to move it there` : undefined}
+      className={`inline-flex items-center gap-1.5 rounded-full border border-brand-lime bg-brand-lime/40 py-0.5 pl-2.5 pr-1 text-xs font-medium text-brand ${
+        draggable ? 'cursor-grab active:cursor-grabbing' : ''
+      }`}
+    >
+      <button type="button" onClick={() => setEditingCategory(sub)} className="hover:underline" title={`Edit ${sub.name}`}>
+        {sub.name}
+        {sub._count?.products ? <span className="ml-1 font-normal text-brand/70">{sub._count.products}</span> : null}
+      </button>
+      <button
+        type="button"
+        onClick={() => askDelete(sub)}
+        className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-white/70"
+        aria-label={`Delete ${sub.name}`}
+      >
+        <X size={11} />
+      </button>
+    </span>
+  );
+
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Categories</h1>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark
-            text-white text-sm font-medium transition-colors"
-        >
-          <Plus size={16} />
-          Add New
-        </button>
-      </div>
+    <PageSection>
+      <PageHeader
+        title="Categories"
+        description={rawMainCategories.length > 1 ? 'Drag rows to change the order shoppers see. Drag a sub category onto another row to move it.' : undefined}
+        actions={
+          <>
+            <SearchBox value={search} onChange={setSearch} placeholder="Search categories" />
+            <SelectBox ariaLabel="Filter categories" value={visibilityFilter} onChange={(v) => setVisibilityFilter(v as VisibilityFilter)}>
+              <option value="ALL">All categories</option>
+              <option value="PUBLIC">Public</option>
+              <option value="PRIVATE">Hidden</option>
+            </SelectBox>
+            {addButton}
+          </>
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative w-64">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search product category"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-black/10 text-sm
-              text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
-          />
-        </div>
-        <select
-          value={visibilityFilter}
-          onChange={(e) => setVisibilityFilter(e.target.value as VisibilityFilter)}
-          className="px-4 py-2.5 rounded-xl bg-white border border-black/10 text-sm text-regantify-text focus:outline-none"
-        >
-          <option value="ALL">All Categories</option>
-          <option value="PUBLIC">Public</option>
-          <option value="PRIVATE">Private</option>
-        </select>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-regantify-content text-left text-regantify-text-muted">
-              <th className="px-5 py-3 font-medium">MAIN CATEGORIES</th>
-              <th className="px-5 py-3 font-medium">SUB CATEGORIES</th>
-              <th className="px-5 py-3 font-medium">VISIBILITY</th>
-              <th className="px-5 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-regantify-text-muted">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!isLoading && filtered.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-5 py-8 text-center text-regantify-text-muted">
-                  No categories yet.
-                </td>
-              </tr>
-            )}
-            {filtered.map((main) => {
+      {/* Wide screens: table with drag and drop */}
+      <TableFrame minWidth="min-w-[760px]" className="hidden md:block">
+        <thead>
+          <tr className={theadRow}>
+            <th className={th}>Main category</th>
+            <th className={th}>Sub categories</th>
+            <th className={`${th} w-28`}>Products</th>
+            <th className={`${th} w-28`}>Visibility</th>
+            <th className={`${th} w-16`}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading ? (
+            <TableSkeleton rows={4} colSpan={5} />
+          ) : filtered.length === 0 ? (
+            <EmptyState as="row" colSpan={5} icon={FolderTree} title={emptyTitle} hint={emptyHint} action={!search && visibilityFilter === 'ALL' ? addButton : undefined} />
+          ) : (
+            filtered.map((main) => {
               const subcategories = getDescendants(categories, main.id);
-
               return (
                 <tr
                   key={main.id}
@@ -226,104 +262,122 @@ export default function Categories() {
                     setDragOverMainId((prev) => (prev === main.id ? null : prev));
                   }}
                   onDrop={(e) => handleDropOnMain(main.id, e)}
-                  className={`border-t border-black/5 align-top transition-colors ${
-                    dragOverMainId === main.id ? 'bg-regantify-cta/10 ring-2 ring-inset ring-regantify-cta' : ''
+                  className={`border-t border-line align-top text-regantify-text transition-colors ${
+                    dragOverMainId === main.id ? 'bg-brand-lime/25 ring-2 ring-inset ring-brand' : 'hover:bg-neutral-50/70'
                   }`}
                 >
-                  <td className="px-5 py-3.5 whitespace-nowrap">
+                  <td className={`${td} whitespace-nowrap`}>
                     <div className="flex items-center gap-2">
                       <span
                         draggable
                         onDragStart={(e) => {
                           e.dataTransfer.setData(MAIN_DRAG_TYPE, main.id);
                           e.dataTransfer.effectAllowed = 'move';
-                          // The grip icon alone is the draggable element, but the
-                          // ghost image shown while dragging should be the whole
-                          // icon+name group, not just the tiny icon.
+                          // Drag ghost: the icon + name group, not just the tiny icon.
                           const preview = e.currentTarget.parentElement;
                           if (preview) e.dataTransfer.setDragImage(preview, 10, 14);
                         }}
                         title="Drag to reorder"
-                        className="text-regantify-text-muted/50 hover:text-regantify-text-muted cursor-grab active:cursor-grabbing"
+                        className="cursor-grab text-neutral-300 hover:text-neutral-500 active:cursor-grabbing"
                       >
-                        <GripVertical size={14} />
+                        <GripVertical size={15} />
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingCategory(main)}
-                        className="text-regantify-cta font-medium hover:underline"
-                      >
+                      <button type="button" onClick={() => setEditingCategory(main)} className="font-medium text-brand hover:underline">
                         {main.name}
                       </button>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {subcategories.map((sub) => (
-                        <span
-                          key={sub.id}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData(SUB_DRAG_TYPE, sub.id);
-                            e.dataTransfer.effectAllowed = 'move';
-                          }}
-                          title={`Drag "${sub.name}" onto another main category to move it there`}
-                          className="inline-flex items-center gap-1.5 bg-regantify-black text-white text-xs font-medium pl-2.5 pr-1.5 py-1 rounded-full cursor-grab active:cursor-grabbing"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => setEditingCategory(sub)}
-                            className="hover:underline"
-                            title={`Edit ${sub.name}`}
-                          >
-                            {sub.name}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(sub.id, sub.name)}
-                            className="hover:opacity-70"
-                            title={`Remove ${sub.name}`}
-                          >
-                            <X size={12} />
-                          </button>
-                        </span>
-                      ))}
-
+                  <td className={td}>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {subcategories.map((sub) => subChip(sub, true))}
                       <button
                         type="button"
                         onClick={() => setAddingSubcategoryFor(main)}
-                        title="Add subcategory"
-                        className="w-6 h-6 flex items-center justify-center rounded-full border border-black/15
-                          text-regantify-text-muted hover:bg-regantify-content"
+                        title="Add sub category"
+                        aria-label={`Add sub category to ${main.name}`}
+                        className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-neutral-300 text-neutral-500 hover:border-brand hover:text-brand"
                       >
                         <Plus size={12} />
                       </button>
                     </div>
                   </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className={`text-xs font-semibold px-2 py-1 rounded-md ${
-                        main.visibility === 'PUBLIC' ? 'bg-green-100 text-green-700' : 'bg-regantify-content text-regantify-text-muted'
-                      }`}
-                    >
-                      {main.visibility}
-                    </span>
+                  <td className={`${td} whitespace-nowrap tabular-nums`}>{productCount(main)}</td>
+                  <td className={td}>
+                    <VisibilityBadge visibility={main.visibility} />
                   </td>
-                  <td className="px-5 py-3.5 text-right">
+                  <td className={td}>
                     <ActionsMenu
                       onEdit={() => setEditingCategory(main)}
-                      onDelete={() => handleDelete(main.id, main.name)}
+                      onAddSub={() => setAddingSubcategoryFor(main)}
+                      onDelete={() => askDelete(main)}
                     />
                   </td>
                 </tr>
               );
+            })
+          )}
+        </tbody>
+      </TableFrame>
+
+      {/* Phones: stacked list (no drag and drop on touch) */}
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-lg bg-neutral-100" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-lg border border-line">
+            <EmptyState icon={FolderTree} title={emptyTitle} hint={emptyHint} action={!search && visibilityFilter === 'ALL' ? addButton : undefined} />
+          </div>
+        ) : (
+          <StackedList>
+            {filtered.map((main) => {
+              const subcategories = getDescendants(categories, main.id);
+              return (
+                <li key={main.id} className="px-3 py-3">
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setEditingCategory(main)} className="min-w-0 flex-1 truncate text-left text-sm font-medium text-brand">
+                      {main.name}
+                    </button>
+                    <span className="text-xs text-neutral-500">{productCount(main)} products</span>
+                    <ActionsMenu
+                      onEdit={() => setEditingCategory(main)}
+                      onAddSub={() => setAddingSubcategoryFor(main)}
+                      onDelete={() => askDelete(main)}
+                    />
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <VisibilityBadge visibility={main.visibility} />
+                    {subcategories.map((sub) => subChip(sub, false))}
+                  </div>
+                </li>
+              );
             })}
-          </tbody>
-        </table>
+          </StackedList>
+        )}
       </div>
 
+      {!isLoading && filtered.length > 0 && (
+        <p className="mt-4 px-2 text-xs text-neutral-600">
+          {filtered.length} of {rawMainCategories.length} main {rawMainCategories.length === 1 ? 'category' : 'categories'}
+        </p>
+      )}
+
+      <ConfirmDialog
+        open={deleting != null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={`Delete ${deleting?.name ?? 'category'}?`}
+        message="Products in it stay in your store; only the category is removed. This can’t be undone."
+        confirmLabel="Delete category"
+        onConfirm={() => deleting && deleteMutation.mutate(deleting.id)}
+        busy={deleteMutation.isPending}
+        danger
+      />
+
       {showAddModal && (
-        // "Add New" here always creates a Main Category, which has no parent.
+        // "Add category" here always creates a main category, which has no parent.
         <AddCategoryModal categories={categories} hideParentField onClose={() => setShowAddModal(false)} />
       )}
 
@@ -337,12 +391,8 @@ export default function Categories() {
       )}
 
       {addingSubcategoryFor && (
-        <SubcategoriesModal
-          mainCategory={addingSubcategoryFor}
-          categories={categories}
-          onClose={() => setAddingSubcategoryFor(null)}
-        />
+        <SubcategoriesModal mainCategory={addingSubcategoryFor} categories={categories} onClose={() => setAddingSubcategoryFor(null)} />
       )}
-    </div>
+    </PageSection>
   );
 }

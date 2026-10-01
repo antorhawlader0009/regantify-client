@@ -193,7 +193,7 @@ export default function AddCollection() {
         Collection
       </button>
 
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">{isEdit ? 'Edit Collection' : 'Add Collection'}</h1>
+      <h1 className="text-xl font-semibold text-regantify-text mb-6">{isEdit ? 'Edit Collection' : 'Add Collection'}</h1>
 
       <div className="space-y-6">
         <SectionCard title="General Information">
@@ -203,7 +203,7 @@ export default function AddCollection() {
             </Field>
 
             <Field label="Collection Link" required hint="Dedicated shop listing page for this collection">
-              <div className="flex items-center rounded-xl bg-regantify-search overflow-hidden">
+              <div className="flex items-center rounded-lg bg-white border border-line overflow-hidden">
                 <span className="pl-3.5 pr-1 text-sm text-regantify-text-muted whitespace-nowrap">
                   https://storepal.com.bd/shop/collections/
                 </span>
@@ -223,8 +223,8 @@ export default function AddCollection() {
           <button
             type="button"
             onClick={() => coverInputRef.current?.click()}
-            className="w-full max-w-xs aspect-[4/3] rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
-              flex items-center justify-center overflow-hidden hover:border-black/25"
+            className="w-full max-w-xs aspect-[4/3] rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
+              flex items-center justify-center overflow-hidden hover:border-neutral-300"
           >
             {coverPhoto ? (
               <div className="relative w-full h-full">
@@ -286,7 +286,7 @@ export default function AddCollection() {
           </p>
           <div className="flex flex-wrap items-center gap-1.5 mb-2">
             {categoryNames.map((c) => (
-              <span key={c} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-regantify-black text-white text-xs font-medium">
+              <span key={c} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand text-white text-xs font-medium">
                 {c}
                 <button type="button" onClick={() => setCategoryNames(categoryNames.filter((x) => x !== c))}>
                   <X size={11} />
@@ -306,13 +306,13 @@ export default function AddCollection() {
               className={inputClass}
             />
             {categoryFocused && categoryMatches.length > 0 && (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-xl shadow-lg border border-black/10 max-h-48 overflow-y-auto py-1">
+              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-lg shadow-lg border border-line max-h-48 overflow-y-auto py-1">
                 {categoryMatches.map((c) => (
                   <button
                     key={c.id}
                     type="button"
                     onMouseDown={() => addCategory(c.name)}
-                    className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-regantify-content"
+                    className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-neutral-50"
                   >
                     {c.name}
                   </button>
@@ -337,14 +337,14 @@ export default function AddCollection() {
             <button
               type="button"
               onClick={handleAddBySku}
-              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium"
+              className="px-4 py-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-sm font-medium"
             >
               Add to List
             </button>
             <button
               type="button"
               onClick={() => setSkuInput('')}
-              className="px-4 py-2 rounded-xl border border-black/10 text-sm text-regantify-text hover:bg-regantify-content"
+              className="px-4 py-2 rounded-lg border border-line text-sm text-regantify-text hover:bg-neutral-50"
             >
               Clear
             </button>
@@ -355,7 +355,7 @@ export default function AddCollection() {
           <p className="text-sm font-medium text-regantify-text mb-2">Products</p>
           <div className="space-y-2 mb-3">
             {selectedProducts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-3 p-2 rounded-xl bg-regantify-content">
+              <div key={p.id} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-neutral-50">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <img src={p.photoUrls[0] ?? ''} alt="" className="w-8 h-8 rounded-lg object-cover bg-white shrink-0" />
                   <span className="text-sm text-regantify-text truncate">{p.name}</span>
@@ -380,15 +380,15 @@ export default function AddCollection() {
               className={`${inputClass} pl-10`}
             />
             {productFocused && productMatches.length > 0 && (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-xl shadow-lg border border-black/10 max-h-56 overflow-y-auto py-1">
+              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-lg shadow-lg border border-line max-h-56 overflow-y-auto py-1">
                 {productMatches.map((p) => (
                   <button
                     key={p.id}
                     type="button"
                     onMouseDown={() => addProduct(p)}
-                    className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-regantify-content flex items-center gap-2.5"
+                    className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-neutral-50 flex items-center gap-2.5"
                   >
-                    <img src={p.photoUrls[0] ?? ''} alt="" className="w-6 h-6 rounded object-cover bg-regantify-content" />
+                    <img src={p.photoUrls[0] ?? ''} alt="" className="w-6 h-6 rounded object-cover bg-neutral-50" />
                     <span className="truncate">{p.name}</span>
                     <span className="text-xs text-regantify-text-muted ml-auto shrink-0">{p.sku}</span>
                   </button>
@@ -404,7 +404,7 @@ export default function AddCollection() {
           type="button"
           onClick={handleSubmit}
           disabled={createMutation.isPending}
-          className="px-8 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium transition-colors disabled:opacity-60"
+          className="px-8 py-3 rounded-lg bg-brand hover:bg-brand-dark text-white font-medium transition-colors disabled:opacity-60"
         >
           {createMutation.isPending ? 'Saving…' : isEdit ? 'Update Collection' : 'Add Collection'}
         </button>

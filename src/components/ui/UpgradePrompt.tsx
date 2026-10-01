@@ -45,9 +45,9 @@ export function LockedFeatureCard({
   action?: { label: string; onClick: () => void };
 }) {
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-6 flex items-start gap-3">
+    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5 flex flex-wrap items-start gap-3">
       <Lock size={18} className="text-amber-700 mt-0.5 shrink-0" />
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-amber-900 mb-1">{title}</p>
         <p className="text-sm text-amber-800">{message}</p>
       </div>
@@ -55,7 +55,7 @@ export function LockedFeatureCard({
         <button
           type="button"
           onClick={action.onClick}
-          className="shrink-0 px-4 py-2 rounded-xl bg-white border border-amber-300 text-amber-900 text-sm font-medium
+          className="shrink-0 inline-flex h-9 items-center px-3 rounded-lg bg-white border border-amber-300 text-amber-900 text-sm font-medium
             hover:bg-amber-100 transition-colors"
         >
           {action.label}

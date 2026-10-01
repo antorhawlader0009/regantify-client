@@ -36,7 +36,7 @@ interface PhotoState {
 }
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black text-sm';
+  'w-full px-3.5 py-2.5 rounded-lg bg-white border border-line text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-brand/15 focus:border-brand text-sm';
 
 /** A text input that shows a dropdown of matching options as you type, and lets you pick one. */
 function SearchSelect({
@@ -78,13 +78,13 @@ function SearchSelect({
         className={inputClass}
       />
       {focused && query.trim() && matches.length > 0 && (
-        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-xl shadow-lg border border-black/10 max-h-48 overflow-y-auto py-1">
+        <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-lg shadow-lg border border-line max-h-48 overflow-y-auto py-1">
           {matches.map((m) => (
             <button
               key={m.id}
               type="button"
               onMouseDown={() => onSelect(m)}
-              className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-regantify-content"
+              className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-neutral-50"
             >
               {m.label}
             </button>
@@ -285,12 +285,12 @@ export function CategoryForm({
             </div>
           )}
 
-          <div className="border-t border-black/5 pt-5">
+          <div className="border-t border-line pt-5">
             <label className="block text-sm font-medium text-regantify-text mb-1.5">Visibility</label>
             <select
               value={visibility}
               onChange={(e) => setVisibility(e.target.value as 'PUBLIC' | 'PRIVATE')}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text text-sm focus:outline-none"
+              className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-line text-regantify-text text-sm focus:outline-none"
             >
               <option value="PUBLIC">Public</option>
               <option value="PRIVATE">Private</option>
@@ -328,14 +328,14 @@ export function CategoryForm({
             targeting.
           </p>
 
-          <div className="border-t border-black/5 pt-5 grid grid-cols-2 gap-5">
+          <div className="border-t border-line pt-5 grid grid-cols-2 gap-5">
             <div>
               <p className="text-sm font-medium text-regantify-text mb-1.5">Cover Photo</p>
               <button
                 type="button"
                 onClick={() => coverInputRef.current?.click()}
-                className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
-                  flex items-center justify-center overflow-hidden hover:border-black/25"
+                className="w-full aspect-[4/3] rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
+                  flex items-center justify-center overflow-hidden hover:border-neutral-300"
               >
                 {coverPhoto ? (
                   <div className="relative w-full h-full">
@@ -371,8 +371,8 @@ export function CategoryForm({
               <button
                 type="button"
                 onClick={() => squareInputRef.current?.click()}
-                className="w-full aspect-square rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
-                  flex items-center justify-center overflow-hidden hover:border-black/25"
+                className="w-full aspect-square rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
+                  flex items-center justify-center overflow-hidden hover:border-neutral-300"
               >
                 {squarePhoto ? (
                   <div className="relative w-full h-full">
@@ -407,12 +407,12 @@ export function CategoryForm({
           {formError && <p className="text-red-500 text-sm">{formError}</p>}
       </div>
 
-      <div className="border-t border-black/5 px-6 py-4 flex justify-end">
+      <div className="border-t border-line px-6 py-4 flex justify-end">
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isSaving}
-          className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
+          className="px-6 py-2.5 rounded-lg bg-brand hover:bg-brand-dark text-white font-medium
             transition-colors disabled:opacity-60"
         >
           {isEditing
@@ -443,7 +443,7 @@ export function AddCategoryModal({
   return (
     <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <CategoryForm

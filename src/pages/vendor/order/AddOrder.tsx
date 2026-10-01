@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, X, Search } from 'lucide-react';
+import { ChevronLeft, Minus, Package, Plus, Search, ShoppingCart, Trash2, UserCheck } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
-import { ordersApi, type OrderItemInput } from '../../../lib/ordersApi';
+import { ordersApi, type Order, type OrderItemInput } from '../../../lib/ordersApi';
 import { getVendorDeliveryCharges } from '../../../lib/vendorApi';
 import { courierApi } from '../../../lib/courierApi';
+import { BD_DISTRICTS } from '../../../lib/bdDistricts';
 import { PathaoLocationSelects, type PathaoLocationValue } from '../../../components/courier/PathaoLocationSelects';
+import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
+import { SearchableSelect } from '../../../components/ui/SearchableSelect';
+import { Field, SectionCard, productInputClass } from '../../../components/product/ProductFormPieces';
+import { MoneyInput, SaveBar, Segmented, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
+import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { lmsApi } from '../../../lib/lmsApi';
@@ -30,8 +36,26 @@ export interface CreateOrderFromIncompleteState {
   itemsSummary?: string; // e.g. "2x Men's Dress Shoes (wbie1158-brown-43)"
 }
 
+type ChargeMode = 'DHAKA' | 'OUTSIDE_DHAKA' | 'CUSTOM';
+
 function formatPrice(value: number) {
   return `৳${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+}
+
+/** "+880 1712-345678" -> "01712345678"; null until it's a full BD mobile number. */
+function fullBdPhone(raw: string): string | null {
+  let digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('880')) digits = digits.slice(2);
+  return /^01\d{9}$/.test(digits) ? digits : null;
+}
+
+function useDebounced<T>(value: T, ms: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebounced(value), ms);
+    return () => window.clearTimeout(t);
+  }, [value, ms]);
+  return debounced;
 }
 
 export default function AddOrder() {
@@ -50,6 +74,7 @@ export default function AddOrder() {
   const [shippingZip, setShippingZip] = useState('');
   const [shippingCity, setShippingCity] = useState('');
   const [shippingDistrict, setShippingDistrict] = useState('');
+  const [triedSave, setTriedSave] = useState(false);
   // Optional Pathao location, only offered once Pathao is connected (the
   // pickers need its token). Pre-filled from the address as it's typed.
   const [pathaoLocation, setPathaoLocation] = useState<PathaoLocationValue>({ cityId: null, zoneId: null, areaId: null });
@@ -99,23 +124,69 @@ export default function AddOrder() {
     setCart(p.items.map((item) => ({ ...item, key: `${item.productId}:${item.variantId ?? ''}` })));
   }, [prefillQuery.data]);
 
+  // -- Returning customer: a full phone number looks up this store's own
+  // latest order for it and fills in the fields that are still empty.
+  const phone = fullBdPhone(customerPhone);
+  const debouncedPhone = useDebounced(phone, 400);
+  const { data: pastOrder } = useQuery({
+    queryKey: ['add-order-phone-lookup', debouncedPhone],
+    queryFn: () =>
+      ordersApi
+        .list({ search: debouncedPhone!, perPage: 5 })
+        .then((r) => r.orders.find((o) => fullBdPhone(o.customerPhone) === debouncedPhone) ?? null),
+    enabled: Boolean(debouncedPhone),
+    staleTime: 60_000,
+  });
+  const lastOrder: Order | null = pastOrder && phone === debouncedPhone ? pastOrder : null;
+  const filledFor = useRef<string | null>(null);
+  const [filledFrom, setFilledFrom] = useState<number | null>(null);
+  useEffect(() => {
+    if (!lastOrder || filledFor.current === lastOrder.id) return;
+    filledFor.current = lastOrder.id;
+    let filled = false;
+    const fill = (current: string, next: string | null | undefined, set: (v: string) => void) => {
+      if (!current.trim() && next) {
+        set(next);
+        filled = true;
+      }
+    };
+    fill(customerName, lastOrder.customerName, setCustomerName);
+    fill(customerPhoneAlt, lastOrder.customerPhoneAlt, setCustomerPhoneAlt);
+    fill(customerEmail, lastOrder.customerEmail, setCustomerEmail);
+    fill(shippingAddress, lastOrder.shippingAddress, setShippingAddress);
+    fill(shippingCity, lastOrder.shippingCity, setShippingCity);
+    fill(shippingDistrict, lastOrder.shippingDistrict, setShippingDistrict);
+    fill(shippingZip, lastOrder.shippingZip, setShippingZip);
+    setFilledFrom(filled ? lastOrder.invoiceNumber : null);
+    // Only when a new past order is found; the vendor's typing must win after that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastOrder]);
+
+  const { data: deliveryStats } = useQuery({
+    queryKey: ['customer-courier-stats', debouncedPhone ? [debouncedPhone] : []],
+    queryFn: () => ordersApi.getCustomerCourierStats([debouncedPhone!]),
+    enabled: Boolean(debouncedPhone),
+    staleTime: 60_000,
+  });
+
   // -- Cart --
   const [cart, setCart] = useState<CartLine[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [activeResult, setActiveResult] = useState(0);
+  const searchTerm = useDebounced(productSearch.trim(), 250);
 
   // -- Charges / Discounts --
-  const [zone, setZone] = useState<'DHAKA' | 'OUTSIDE_DHAKA' | null>(null);
-  const [customCharge, setCustomCharge] = useState<number | null>(null);
-  const [showCustomCharge, setShowCustomCharge] = useState(false);
-  const [discountAmount, setDiscountAmount] = useState<number | null>(null);
-  const [discountLabel, setDiscountLabel] = useState('');
+  const [chargeMode, setChargeMode] = useState<ChargeMode | null>(null);
+  const [customCharge, setCustomCharge] = useState('');
   const [showDiscount, setShowDiscount] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState('');
+  const [discountLabel, setDiscountLabel] = useState('');
 
-  const { data: searchResults = [] } = useQuery({
-    queryKey: ['orders-product-search', productSearch],
-    queryFn: () => productsApi.list({ search: productSearch, perPage: 8 }).then((r) => r.products),
-    enabled: productSearch.trim().length > 0,
+  const { data: searchResults = [], isFetching: searching } = useQuery({
+    queryKey: ['orders-product-search', searchTerm],
+    queryFn: () => productsApi.list({ search: searchTerm, perPage: 8 }).then((r) => r.products),
+    enabled: searchTerm.length > 0,
   });
 
   // Store > Delivery Charge / VAT —
@@ -159,6 +230,7 @@ export default function AddOrder() {
     });
     setProductSearch('');
     setSearchOpen(false);
+    setActiveResult(0);
   };
 
   const updateQuantity = (key: string, quantity: number) => {
@@ -169,14 +241,23 @@ export default function AddOrder() {
     setCart((prev) => prev.map((l) => (l.key === key ? { ...l, quantity } : l)));
   };
 
+  const itemCount = cart.reduce((n, l) => n + l.quantity, 0);
   const cartTotal = useMemo(() => cart.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0), [cart]);
-  const deliveryCharge = showCustomCharge && customCharge !== null ? customCharge : zone ? DELIVERY_CHARGE[zone] : 0;
-  const discount = showDiscount && discountAmount !== null ? discountAmount : 0;
+  const customChargeValue = customCharge === '' ? null : Number(customCharge);
+  const deliveryCharge =
+    chargeMode === 'CUSTOM' ? (customChargeValue ?? 0) : chargeMode ? DELIVERY_CHARGE[chargeMode] : 0;
+  const discountValue = showDiscount && discountAmount !== '' ? Number(discountAmount) : null;
+  const discount = discountValue ?? 0;
   const grandTotal = Math.max(0, cartTotal + deliveryCharge + vatAmount - discount);
+
+  const dirty = cart.length > 0 || Boolean(customerName.trim() || customerPhone.trim() || shippingAddress.trim());
+  const [submitted, setSubmitted] = useState(false);
+  useUnsavedChangesWarning(dirty && !submitted);
 
   const createMutation = useMutation({
     mutationFn: ordersApi.create,
     onSuccess: async (order) => {
+      setSubmitted(true);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       toast.success(`Order ORDER-${order.invoiceNumber} created.`);
       if (fromLead) {
@@ -187,24 +268,27 @@ export default function AddOrder() {
           toast.error(apiErrorMessage(err, "The order was created, but the LMS lead wasn't closed. Close it from the lead."));
         }
       }
-      navigate('/vendor/orders');
+      navigate(`/vendor/orders/${order.id}`);
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message ?? 'Could not create the order. Please try again.');
+    onError: (err) => {
+      toast.error(apiErrorMessage(err, 'Could not create the order. Please try again.'));
     },
   });
 
+  const errors = {
+    customerName: !customerName.trim() ? 'Enter the customer’s name.' : null,
+    customerPhone: !customerPhone.trim() ? 'Enter a phone number.' : null,
+    shippingAddress: !shippingAddress.trim() ? 'Enter the delivery address.' : null,
+    cart: cart.length === 0 ? 'Add at least one product.' : null,
+  };
+  const shownError = (key: keyof typeof errors) => (triedSave ? errors[key] : null);
+
   const handleSubmit = () => {
-    if (!customerName.trim() || !customerPhone.trim()) {
-      toast.error('Customer name and phone are required.');
-      return;
-    }
-    if (!shippingAddress.trim()) {
-      toast.error('Shipping address is required.');
-      return;
-    }
-    if (cart.length === 0) {
-      toast.error('Add at least one product to the cart.');
+    setTriedSave(true);
+    const first = (Object.keys(errors) as (keyof typeof errors)[]).find((k) => errors[k]);
+    if (first) {
+      toast.error(errors[first]!);
+      document.getElementById(first === 'cart' ? 'products' : first === 'shippingAddress' ? 'delivery' : 'customer')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -219,7 +303,7 @@ export default function AddOrder() {
       shippingZip: shippingZip.trim() || undefined,
       shippingCity: shippingCity.trim() || undefined,
       shippingDistrict: shippingDistrict.trim() || undefined,
-      deliveryZone: zone ?? undefined,
+      deliveryZone: chargeMode === 'DHAKA' || chargeMode === 'OUTSIDE_DHAKA' ? chargeMode : undefined,
       ...(pathaoConnected
         ? {
             pathaoCityId: pathaoLocation.cityId ?? undefined,
@@ -228,29 +312,78 @@ export default function AddOrder() {
           }
         : {}),
       items: cart.map(({ key, ...item }) => item),
-      deliveryCharge: showCustomCharge && customCharge !== null ? customCharge : undefined,
-      discountAmount: showDiscount && discountAmount !== null ? discountAmount : undefined,
+      deliveryCharge: chargeMode === 'CUSTOM' && customChargeValue !== null ? customChargeValue : undefined,
+      discountAmount: discountValue ?? undefined,
       discountLabel: showDiscount ? discountLabel.trim() || undefined : undefined,
     });
   };
 
-  const inputClass =
-    'w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none';
+  // Districts: the 64 plus whatever is already in the field (a lead or a past order may say it differently).
+  const districtOptions = useMemo(() => {
+    const names = shippingDistrict && !BD_DISTRICTS.includes(shippingDistrict) ? [shippingDistrict, ...BD_DISTRICTS] : BD_DISTRICTS;
+    return names.map((label, id) => ({ id, label }));
+  }, [shippingDistrict]);
+  const districtId = districtOptions.find((o) => o.label === shippingDistrict)?.id ?? null;
+
+  const showResults = searchOpen && productSearch.trim().length > 0;
+  const onSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showResults || searchResults.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveResult((i) => Math.min(i + 1, searchResults.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveResult((i) => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      addToCart(searchResults[activeResult] ?? searchResults[0]);
+    } else if (e.key === 'Escape') {
+      setSearchOpen(false);
+    }
+  };
+
+  const summaryRows = (
+    <dl className="space-y-2 text-sm">
+      <div className="flex justify-between text-neutral-600">
+        <dt>
+          Products{itemCount > 0 && <span className="text-neutral-400"> ({itemCount})</span>}
+        </dt>
+        <dd className="tabular-nums">{formatPrice(cartTotal)}</dd>
+      </div>
+      <div className="flex justify-between text-neutral-600">
+        <dt>Delivery</dt>
+        <dd className="tabular-nums">{chargeMode ? formatPrice(deliveryCharge) : <span className="text-neutral-400">Not chosen</span>}</dd>
+      </div>
+      <div className="flex justify-between text-neutral-600">
+        <dt>COD charge</dt>
+        <dd className="tabular-nums">{formatPrice(vatAmount)}</dd>
+      </div>
+      {discount > 0 && (
+        <div className="flex justify-between text-emerald-700">
+          <dt>Discount{discountLabel.trim() ? `: ${discountLabel.trim()}` : ''}</dt>
+          <dd className="tabular-nums">−{formatPrice(discount)}</dd>
+        </div>
+      )}
+      <div className="flex items-baseline justify-between border-t border-line pt-3">
+        <dt className="font-semibold text-regantify-text">Customer pays</dt>
+        <dd className="text-lg font-semibold tabular-nums text-regantify-text">{formatPrice(grandTotal)}</dd>
+      </div>
+    </dl>
+  );
 
   return (
-    <div className="max-w-3xl">
-      <button
-        onClick={() => navigate('/vendor/orders')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
+    <div className="mx-auto max-w-6xl">
+      <Link to="/vendor/orders" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
         <ChevronLeft size={16} />
-        Orders
-      </button>
-
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">Add Order</h1>
+        All orders
+      </Link>
+      <div className="mb-4">
+        <h1 className="text-xl font-semibold text-regantify-text">Add order</h1>
+        <p className="mt-0.5 text-sm text-neutral-500">For an order taken on the phone, Facebook or in the shop. It’s saved as cash on delivery.</p>
+      </div>
 
       {fromLead && (
-        <p className="mb-4 rounded-xl border border-black/10 bg-regantify-content px-4 py-3 text-sm text-regantify-text">
+        <p className="mb-4 rounded-xl border border-line bg-white px-4 py-3 text-sm text-regantify-text">
           {prefillQuery.isPending
             ? 'Loading the lead…'
             : prefillQuery.isError
@@ -259,285 +392,323 @@ export default function AddOrder() {
         </p>
       )}
 
-      <section className="bg-white rounded-2xl border border-black/5 p-6 mb-6">
-        <h2 className="text-base font-semibold text-regantify-text mb-4">Customer</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Name</label>
-            <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Customer Name" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Phone</label>
-            <input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Mobile phone number" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Phone Alternative</label>
-            <input value={customerPhoneAlt} onChange={(e) => setCustomerPhoneAlt(e.target.value)} placeholder="Alternative phone number" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Email</label>
-            <input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Valid email address" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Customer Note</label>
-            <textarea value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} rows={2} placeholder="Special instructions for this order" className={`${inputClass} resize-y`} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Staff Note</label>
-            <textarea value={staffNote} onChange={(e) => setStaffNote(e.target.value)} rows={2} placeholder="Internal note (visible to staff only)" className={`${inputClass} resize-y`} />
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white rounded-2xl border border-black/5 p-6 mb-6">
-        <h2 className="text-base font-semibold text-regantify-text mb-4">Shipping</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Address</label>
-            <textarea value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} rows={2} placeholder="Full address" className={`${inputClass} resize-y`} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Zip Code</label>
-            <input value={shippingZip} onChange={(e) => setShippingZip(e.target.value)} placeholder="####" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">City/Thana</label>
-            <input value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} placeholder="ie Dhaka, Gazipur, Savar" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">District</label>
-            <input value={shippingDistrict} onChange={(e) => setShippingDistrict(e.target.value)} placeholder="ie. Dhaka, Sylhet, Chattogram" className={inputClass} />
-          </div>
-          {pathaoConnected && (
-            <div>
-              <label className="block text-sm font-medium text-regantify-text mb-1.5">Pathao Delivery Location (optional)</label>
-              <PathaoLocationSelects
-                value={pathaoLocation}
-                onChange={setPathaoLocation}
-                selectClassName={inputClass}
-                suggestFrom={{ address: shippingAddress, city: shippingCity, district: shippingDistrict }}
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
+          {/* Products first: it's what the order is about. */}
+          <SectionCard title="Products" id="products" description="Search by name or SKU. ↑ ↓ and Enter work too.">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
+              <input
+                type="text"
+                value={productSearch}
+                autoFocus={!fromLead}
+                onChange={(e) => {
+                  setProductSearch(e.target.value);
+                  setSearchOpen(true);
+                  setActiveResult(0);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
+                onKeyDown={onSearchKey}
+                placeholder="Search products to add"
+                aria-label="Search products to add"
+                className={`${productInputClass} pl-10`}
               />
-              <p className="text-xs text-regantify-text-muted mt-1">Leave empty to let Pathao work it out from the address when you book.</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="bg-white rounded-2xl border border-black/5 p-6 mb-6">
-        <h2 className="text-base font-semibold text-regantify-text mb-4">Cart</h2>
-
-        {cart.length === 0 ? (
-          <p className="text-sm text-regantify-text-muted py-4 text-center border border-dashed border-black/10 rounded-xl mb-4">
-            No items in cart. Use the search below to add products.
-          </p>
-        ) : (
-          <div className="mb-4 overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase border-b border-black/5">
-                  <th className="py-2 pr-3">Product</th>
-                  <th className="py-2 pr-3">List Price</th>
-                  <th className="py-2 pr-3">Price</th>
-                  <th className="py-2 pr-3">Qty</th>
-                  <th className="py-2 pr-3 text-right">Total</th>
-                  <th className="py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((line) => (
-                  <tr key={line.key} className="border-b border-black/5">
-                    <td className="py-2.5 pr-3">
-                      <div className="flex items-center gap-2.5">
-                        {line.productImage ? (
-                          <img src={line.productImage} alt="" className="w-9 h-9 rounded-lg object-cover bg-regantify-content" />
-                        ) : (
-                          <div className="w-9 h-9 rounded-lg bg-regantify-content" />
-                        )}
-                        <div>
-                          <p className="text-sm text-regantify-text leading-tight">{line.productName}</p>
-                          <p className="text-xs text-regantify-text-muted">{line.productSku}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-2.5 pr-3 text-sm text-regantify-text-muted">{formatPrice(line.listPrice)}</td>
-                    <td className="py-2.5 pr-3">
-                      <input
-                        type="number"
-                        value={line.unitPrice}
-                        onChange={(e) =>
-                          setCart((prev) =>
-                            prev.map((l) => (l.key === line.key ? { ...l, unitPrice: Number(e.target.value) } : l)),
-                          )
-                        }
-                        className="w-24 px-2 py-1.5 rounded-lg border border-black/10 text-sm"
-                      />
-                    </td>
-                    <td className="py-2.5 pr-3">
-                      <input
-                        type="number"
-                        min={1}
-                        value={line.quantity}
-                        onChange={(e) => updateQuantity(line.key, Number(e.target.value))}
-                        className="w-16 px-2 py-1.5 rounded-lg border border-black/10 text-sm"
-                      />
-                    </td>
-                    <td className="py-2.5 pr-3 text-sm font-medium text-regantify-text text-right">
-                      {formatPrice(line.unitPrice * line.quantity)}
-                    </td>
-                    <td className="py-2.5">
-                      <button onClick={() => updateQuantity(line.key, 0)} className="text-regantify-text-muted hover:text-red-600">
-                        <X size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-          <input
-            type="text"
-            value={productSearch}
-            onChange={(e) => {
-              setProductSearch(e.target.value);
-              setSearchOpen(true);
-            }}
-            onFocus={() => setSearchOpen(true)}
-            placeholder="Search products to add"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
-          />
-          {searchOpen && productSearch.trim() && searchResults.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white rounded-xl border border-black/10 shadow-lg max-h-64 overflow-y-auto">
-              {searchResults.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => addToCart(product)}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-regantify-content text-left"
-                >
-                  {product.photoUrls[0] ? (
-                    <img src={product.photoUrls[0]} alt="" className="w-8 h-8 rounded-lg object-cover bg-regantify-content" />
+              {showResults && (
+                <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-line bg-white p-1 shadow-lg">
+                  {searchResults.length === 0 ? (
+                    <p className="px-3 py-3 text-sm text-neutral-500">{searching || searchTerm !== productSearch.trim() ? 'Searching…' : 'No product matches that.'}</p>
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-regantify-content" />
+                    searchResults.map((product, i) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => setActiveResult(i)}
+                        onClick={() => addToCart(product)}
+                        className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left ${i === activeResult ? 'bg-neutral-100' : ''}`}
+                      >
+                        {product.photoUrls[0] ? (
+                          <img src={product.photoUrls[0]} alt="" className="h-9 w-9 shrink-0 rounded-md border border-line object-cover" />
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-400">
+                            <Package size={14} aria-hidden />
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-regantify-text">{product.name}</span>
+                          <span className="block text-xs text-neutral-500">
+                            {product.sku} · {formatPrice(Number(product.discountPrice ?? product.price))}
+                            {product.stockQuantity != null && ` · ${product.stockQuantity} in stock`}
+                          </span>
+                        </span>
+                        <Plus size={15} className="shrink-0 text-neutral-400" aria-hidden />
+                      </button>
+                    ))
                   )}
-                  <div>
-                    <p className="text-sm text-regantify-text">{product.name}</p>
-                    <p className="text-xs text-regantify-text-muted">
-                      {product.sku} · {formatPrice(Number(product.discountPrice ?? product.price))}
-                    </p>
-                  </div>
-                </button>
-              ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </section>
 
-      <section className="bg-white rounded-2xl border border-black/5 p-6 mb-6">
-        <h2 className="text-base font-semibold text-regantify-text mb-4">Amount</h2>
+            {cart.length === 0 ? (
+              <div className={`mt-3 rounded-lg border border-dashed px-4 py-6 text-center ${shownError('cart') ? 'border-red-300 bg-red-50/40' : 'border-line'}`}>
+                <ShoppingCart size={20} className="mx-auto text-neutral-400" aria-hidden />
+                <p className={`mt-1.5 text-sm ${shownError('cart') ? 'text-red-600' : 'text-neutral-500'}`}>
+                  {shownError('cart') ?? 'No products yet. Search above to add one.'}
+                </p>
+              </div>
+            ) : (
+              <ul className="mt-3 divide-y divide-line rounded-lg border border-line">
+                {cart.map((line) => (
+                  <li key={line.key} className="flex flex-wrap items-center gap-3 p-3 sm:flex-nowrap">
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                      {line.productImage ? (
+                        <img src={line.productImage} alt="" className="h-10 w-10 shrink-0 rounded-md border border-line object-cover" />
+                      ) : (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-400">
+                          <Package size={14} aria-hidden />
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-regantify-text">{line.productName}</p>
+                        <p className="truncate text-xs text-neutral-500">
+                          {line.productSku}
+                          {line.unitPrice !== line.listPrice && <> · list price {formatPrice(line.listPrice)}</>}
+                        </p>
+                      </div>
+                    </div>
 
-        <div className="flex justify-between text-sm mb-4">
-          <span className="text-regantify-text-muted">Cart Total</span>
-          <span className="font-medium text-regantify-text">{formatPrice(cartTotal)}</span>
-        </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-28">
+                        <MoneyInput
+                          value={String(line.unitPrice)}
+                          onChange={(v) => setCart((prev) => prev.map((l) => (l.key === line.key ? { ...l, unitPrice: Number(v) } : l)))}
+                          ariaLabel={`Price of ${line.productName}`}
+                        />
+                      </div>
+                      <div className="flex h-10 items-center rounded-lg border border-line">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(line.key, line.quantity - 1)}
+                          aria-label="One less"
+                          className="flex h-full w-8 items-center justify-center text-neutral-500 hover:text-regantify-text"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          value={line.quantity}
+                          onChange={(e) => updateQuantity(line.key, Number(e.target.value))}
+                          aria-label={`Quantity of ${line.productName}`}
+                          className="h-full w-10 border-x border-line text-center text-sm tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(line.key, line.quantity + 1)}
+                          aria-label="One more"
+                          className="flex h-full w-8 items-center justify-center text-neutral-500 hover:text-regantify-text"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
 
-        <div className="mb-4">
-          <p className="text-sm font-medium text-regantify-text mb-2">Charges</p>
-          <div className="flex flex-wrap gap-2 mb-2">
-            <button
-              onClick={() => {
-                setZone('DHAKA');
-                setShowCustomCharge(false);
-              }}
-              className={`px-3.5 py-2 rounded-xl text-sm border ${
-                zone === 'DHAKA' && !showCustomCharge
-                  ? 'border-regantify-cta bg-regantify-cta/10 text-regantify-cta'
-                  : 'border-black/10 text-regantify-text hover:bg-regantify-content'
-              }`}
-            >
-              Inside Dhaka ({DELIVERY_CHARGE.DHAKA})
-            </button>
-            <button
-              onClick={() => {
-                setZone('OUTSIDE_DHAKA');
-                setShowCustomCharge(false);
-              }}
-              className={`px-3.5 py-2 rounded-xl text-sm border ${
-                zone === 'OUTSIDE_DHAKA' && !showCustomCharge
-                  ? 'border-regantify-cta bg-regantify-cta/10 text-regantify-cta'
-                  : 'border-black/10 text-regantify-text hover:bg-regantify-content'
-              }`}
-            >
-              Outside Dhaka ({DELIVERY_CHARGE.OUTSIDE_DHAKA})
-            </button>
-            {!showCustomCharge && (
-              <button
-                onClick={() => setShowCustomCharge(true)}
-                className="px-3.5 py-2 rounded-xl text-sm border border-black/10 text-regantify-text hover:bg-regantify-content"
-              >
-                Add Charge
-              </button>
+                    <p className="w-24 text-right text-sm font-medium tabular-nums text-regantify-text">{formatPrice(line.unitPrice * line.quantity)}</p>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(line.key, 0)}
+                      aria-label={`Remove ${line.productName}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-400 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
-          </div>
-          {showCustomCharge && (
-            <input
-              type="number"
-              value={customCharge ?? ''}
-              onChange={(e) => setCustomCharge(e.target.value === '' ? null : Number(e.target.value))}
-              placeholder="Custom delivery charge"
-              className={inputClass}
-            />
-          )}
-        </div>
+          </SectionCard>
 
-        <div className="mb-4">
-          <p className="text-sm font-medium text-regantify-text mb-2">Discounts</p>
-          {!showDiscount ? (
-            <button
-              onClick={() => setShowDiscount(true)}
-              className="px-3.5 py-2 rounded-xl text-sm border border-black/10 text-regantify-text hover:bg-regantify-content"
-            >
-              Add Discount
-            </button>
-          ) : (
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={discountAmount ?? ''}
-                onChange={(e) => setDiscountAmount(e.target.value === '' ? null : Number(e.target.value))}
-                placeholder="Amount"
-                className={`${inputClass} w-32`}
-              />
-              <input
-                value={discountLabel}
-                onChange={(e) => setDiscountLabel(e.target.value)}
-                placeholder="Reason (optional)"
-                className={inputClass}
-              />
+          <SectionCard title="Customer" id="customer" description="Type the phone first: a returning customer’s details fill in by themselves.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Phone" required error={shownError('customerPhone')}>
+                <input
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                  inputMode="tel"
+                  autoComplete="off"
+                  className={productInputClass}
+                />
+              </Field>
+              <Field label="Name" required error={shownError('customerName')}>
+                <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Customer’s name" className={productInputClass} />
+              </Field>
             </div>
-          )}
+
+            {lastOrder && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-brand-lime bg-brand-lime/25 px-3 py-2.5 text-sm">
+                <UserCheck size={16} className="shrink-0 text-brand" aria-hidden />
+                <span className="text-regantify-text">
+                  Ordered before: last order{' '}
+                  <Link to={`/vendor/orders/${lastOrder.id}`} target="_blank" className="font-medium underline-offset-2 hover:underline">
+                    ORDER-{lastOrder.invoiceNumber}
+                  </Link>{' '}
+                  on {new Date(lastOrder.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}.
+                  {filledFrom === lastOrder.invoiceNumber && ' Empty fields were filled from it.'}
+                </span>
+              </div>
+            )}
+            {debouncedPhone && phone === debouncedPhone && (
+              <div className="mt-3">
+                <CustomerDeliveryStats stats={deliveryStats?.byPhone[debouncedPhone]} />
+              </div>
+            )}
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field label="Other phone">
+                <input value={customerPhoneAlt} onChange={(e) => setCustomerPhoneAlt(e.target.value)} placeholder="Optional" inputMode="tel" className={productInputClass} />
+              </Field>
+              <Field label="Email">
+                <input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Optional" type="email" className={productInputClass} />
+              </Field>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Delivery address" id="delivery">
+            <div className="space-y-4">
+              <Field label="Address" required error={shownError('shippingAddress')}>
+                <textarea
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  rows={2}
+                  placeholder="House, road, area"
+                  className={`${productInputClass} resize-y`}
+                />
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="District">
+                  <SearchableSelect
+                    value={districtId}
+                    options={districtOptions}
+                    onChange={(id) => setShippingDistrict(districtOptions.find((o) => o.id === id)?.label ?? '')}
+                    placeholder="Choose a district"
+                    ariaLabel="District"
+                    className={productInputClass}
+                  />
+                </Field>
+                <Field label="City / thana">
+                  <input value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} placeholder="e.g. Mirpur, Savar" className={productInputClass} />
+                </Field>
+                <Field label="ZIP code">
+                  <input value={shippingZip} onChange={(e) => setShippingZip(e.target.value)} placeholder="Optional" inputMode="numeric" className={productInputClass} />
+                </Field>
+              </div>
+              {pathaoConnected && (
+                <Field label="Pathao delivery location" hint="Optional. Leave it empty and Pathao works it out from the address when you book.">
+                  <PathaoLocationSelects
+                    value={pathaoLocation}
+                    onChange={setPathaoLocation}
+                    selectClassName={productInputClass}
+                    suggestFrom={{ address: shippingAddress, city: shippingCity, district: shippingDistrict }}
+                  />
+                </Field>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Notes">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Note from the customer" hint="Printed on the invoice.">
+                <textarea value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} rows={3} placeholder="e.g. Call before delivery" className={`${productInputClass} resize-y`} />
+              </Field>
+              <Field label="Staff note" hint="Only your team sees this.">
+                <textarea value={staffNote} onChange={(e) => setStaffNote(e.target.value)} rows={3} placeholder="Internal note" className={`${productInputClass} resize-y`} />
+              </Field>
+            </div>
+          </SectionCard>
         </div>
 
-        <div className="flex justify-between text-sm mb-4">
-          <span className="text-regantify-text-muted">COD Charge (Cash on Delivery)</span>
-          <span className="font-medium text-regantify-text">{formatPrice(vatAmount)}</span>
-        </div>
+        {/* Side: charges and the total, kept in view while the form scrolls. */}
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-4">
+          <SectionCard title="Charges">
+            <div className="space-y-4">
+              <Field label="Delivery charge">
+                <Segmented<ChargeMode | 'NONE'>
+                  ariaLabel="Delivery charge"
+                  value={chargeMode ?? 'NONE'}
+                  onChange={(id) => setChargeMode(id === 'NONE' ? null : id)}
+                  options={[
+                    { id: 'DHAKA', label: `Dhaka ৳${DELIVERY_CHARGE.DHAKA}` },
+                    { id: 'OUTSIDE_DHAKA', label: `Outside ৳${DELIVERY_CHARGE.OUTSIDE_DHAKA}` },
+                    { id: 'CUSTOM', label: 'Other' },
+                  ]}
+                />
+                {chargeMode === 'CUSTOM' && (
+                  <div className="mt-2">
+                    <MoneyInput value={customCharge} onChange={setCustomCharge} placeholder="Delivery charge" ariaLabel="Custom delivery charge" />
+                  </div>
+                )}
+              </Field>
 
-        <div className="flex justify-between items-center pt-4 border-t border-black/5">
-          <span className="text-base font-semibold text-regantify-text">Total</span>
-          <span className="text-lg font-bold text-regantify-text">{formatPrice(grandTotal)}</span>
-        </div>
-      </section>
+              {showDiscount ? (
+                <Field label="Discount">
+                  <div className="flex gap-2">
+                    <div className="w-28 shrink-0">
+                      <MoneyInput value={discountAmount} onChange={setDiscountAmount} placeholder="0" ariaLabel="Discount amount" />
+                    </div>
+                    <input
+                      value={discountLabel}
+                      onChange={(e) => setDiscountLabel(e.target.value)}
+                      placeholder="Reason (optional)"
+                      className={productInputClass}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDiscount(false);
+                      setDiscountAmount('');
+                      setDiscountLabel('');
+                    }}
+                    className="mt-1.5 text-xs text-neutral-500 hover:text-regantify-text"
+                  >
+                    Remove discount
+                  </button>
+                </Field>
+              ) : (
+                <button type="button" onClick={() => setShowDiscount(true)} className={outlineBtn}>
+                  <Plus size={14} />
+                  Add discount
+                </button>
+              )}
+            </div>
+          </SectionCard>
 
-      <button
-        onClick={handleSubmit}
-        disabled={createMutation.isPending}
-        className="px-8 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium disabled:opacity-60"
-      >
-        {createMutation.isPending ? 'Creating…' : 'Add Order'}
-      </button>
+          <SectionCard title="Summary">
+            {summaryRows}
+            <button type="button" onClick={handleSubmit} disabled={createMutation.isPending} className={`${primaryBtn} mt-4 hidden w-full justify-center lg:flex`}>
+              {createMutation.isPending ? 'Creating…' : 'Create order'}
+            </button>
+          </SectionCard>
+        </div>
+      </div>
+
+      {/* Phones and tablets: the total and the button stay at the bottom. */}
+      <div className="lg:hidden">
+        <SaveBar
+          message={
+            <span>
+              <span className="font-semibold tabular-nums text-regantify-text">{formatPrice(grandTotal)}</span>
+              <span className="text-neutral-500"> · {itemCount} {itemCount === 1 ? 'item' : 'items'}</span>
+            </span>
+          }
+        >
+          <button type="button" onClick={handleSubmit} disabled={createMutation.isPending} className={primaryBtn}>
+            {createMutation.isPending ? 'Creating…' : 'Create order'}
+          </button>
+        </SaveBar>
+      </div>
     </div>
   );
 }
