@@ -167,6 +167,8 @@ export default function AddOrder() {
     queryFn: () => ordersApi.getCustomerCourierStats([debouncedPhone!]),
     enabled: Boolean(debouncedPhone),
     staleTime: 60_000,
+    refetchInterval: (query) =>
+      query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending || s.steadfast?.pending) ? 4000 : false,
   });
 
   // -- Cart --

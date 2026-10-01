@@ -30,7 +30,7 @@ const VOLUME_LABEL: Record<string, string> = {
 /** "92% delivered · 21-200 parcels" — SteadFast's score, which has percents and a volume band but no counts. */
 export function steadfastScoreText(score: SteadfastScore): string {
   const volume = score.volumeBand ? VOLUME_LABEL[score.volumeBand] ?? score.volumeBand : null;
-  if (score.deliveryRatio == null) return volume && score.volumeBand !== 'none' ? `No finished parcels · ${volume}` : 'No finished parcels';
+  if (score.deliveryRatio == null) return volume && score.volumeBand !== 'none' ? `Nothing delivered yet · ${volume}` : 'New number: no SteadFast history';
   return [`${score.deliveryRatio}% delivered`, volume].filter(Boolean).join(' · ');
 }
 

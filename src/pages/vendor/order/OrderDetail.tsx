@@ -103,6 +103,8 @@ export default function OrderDetail() {
     queryFn: () => ordersApi.getCustomerCourierStats([order!.customerPhone]),
     enabled: Boolean(order),
     staleTime: 60_000,
+    refetchInterval: (query) =>
+      query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending || s.steadfast?.pending) ? 4000 : false,
   });
 
   // For "Send to courier": which couriers are connected, and whether the plan allows the paid ones.
