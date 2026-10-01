@@ -51,7 +51,7 @@ export function BalanceButton() {
       aria-label={visible ? 'Hide balance' : 'Show balance'}
       className={`relative flex h-10 w-[148px] shrink-0 sm:w-[160px] items-center gap-2.5 overflow-hidden rounded-full border pl-1.5 pr-4 text-sm transition-all duration-500 active:scale-95 disabled:cursor-wait ${
         visible
-          ? 'border-transparent bg-gradient-to-r from-brand to-emerald-600 text-white shadow-lg shadow-emerald-900/20'
+          ? 'border-brand/25 bg-white text-brand'
           : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:shadow-sm'
       }`}
     >
@@ -78,14 +78,11 @@ export function BalanceButton() {
       )}
 
       {visible && (
-        <>
-          <span className="animate-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-white/20" />
-          {/* auto-hide countdown line */}
-          <span
-            className="animate-shrink absolute bottom-0 left-0 h-[2px] bg-brand-lime"
-            style={{ animationDuration: `${SHOW_MS}ms` }}
-          />
-        </>
+        // auto-hide countdown line
+        <span
+          className="animate-shrink absolute bottom-0 left-0 h-[2px] bg-brand/40"
+          style={{ animationDuration: `${SHOW_MS}ms` }}
+        />
       )}
     </button>
   );

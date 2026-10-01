@@ -15,10 +15,6 @@ body {
 }
 
 /* Balance button + plan badge animations (dashboard theme) */
-@keyframes shimmer {
-  0% { transform: translateX(-120%) skewX(-20deg); }
-  100% { transform: translateX(420%) skewX(-20deg); }
-}
 @keyframes pop-in {
   0% { opacity: 0; transform: translateY(8px) scale(0.96); }
   100% { opacity: 1; transform: none; }
@@ -27,7 +23,6 @@ body {
   from { width: 100%; }
   to { width: 0; }
 }
-.animate-shimmer { animation: shimmer 1.8s ease-in-out infinite; }
 .animate-pop-in { animation: pop-in 0.35s ease-out; }
 .animate-shrink { animation-name: shrink; animation-timing-function: linear; animation-fill-mode: forwards; }
 
