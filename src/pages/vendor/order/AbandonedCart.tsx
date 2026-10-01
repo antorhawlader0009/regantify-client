@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, Search, MessageSquare, Plus, Copy } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, Search, MessageSquare, MoreVertical, Plus, Copy } from 'lucide-react';
 import { incompleteOrdersApi, type IncompleteOrder } from '../../../lib/incompleteOrdersApi';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { ChangeLabelModal } from './ChangeLabelModal';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+
+const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', {
@@ -131,14 +133,14 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
   const extraCount = order.items.length - 1;
 
   return (
-    <tr className="border-b border-black/5 align-top">
-      <td className="p-4">
-        <input type="checkbox" checked={selected} onChange={onToggleSelect} className="mt-1" />
+    <tr className={`border-t border-line align-top text-regantify-text transition-colors ${selected ? 'bg-brand-lime/20' : 'hover:bg-neutral-50/70'}`}>
+      <td className="w-10 border-r border-line p-3">
+        <input type="checkbox" checked={selected} onChange={onToggleSelect} className="h-4 w-4 cursor-pointer accent-brand" />
       </td>
-      <td className="p-4 min-w-[110px]">
+      <td className="border-r border-line p-3 last:border-r-0 min-w-[130px]">
         <p className="text-xs text-regantify-text-muted">{formatDateTime(order.updatedAt)}</p>
         {order.label && (
-          <span className="inline-flex items-center mt-1 text-[11px] font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
+          <span className="mt-1.5 inline-flex items-center rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-[11px] font-medium text-brand">
             {order.label}
           </span>
         )}
@@ -150,22 +152,22 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
         )}
         <button
           onClick={onOpenNotes}
-          className="mt-1.5 flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border border-black/10 text-regantify-text-muted hover:bg-regantify-content"
+          className="mt-1.5 flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50"
         >
           <MessageSquare size={11} />
           See All
         </button>
-        <button onClick={onOpenNotes} className="mt-1.5 flex items-center gap-1 text-xs text-regantify-cta hover:underline">
+        <button onClick={onOpenNotes} className="mt-1.5 flex items-center gap-1 text-xs text-brand hover:underline">
           <Plus size={11} />
           Note
         </button>
       </td>
-      <td className="p-4 min-w-[140px]">
-        <p className="text-sm text-regantify-text">{order.customerName || <span className="text-regantify-text-muted">—</span>}</p>
+      <td className="border-r border-line p-3 last:border-r-0 min-w-[140px]">
+        <p>{order.customerName || <span className="text-regantify-text-muted">—</span>}</p>
       </td>
-      <td className="p-4 min-w-[150px]">
+      <td className="border-r border-line p-3 last:border-r-0 min-w-[150px]">
         {order.customerPhone ? (
-          <span className="flex items-center gap-1.5 text-sm text-regantify-cta">
+          <span className="flex items-center gap-1.5">
             {order.customerPhone}
             <button onClick={copyPhone} title="Copy phone number">
               <Copy size={12} className="text-regantify-text-muted hover:text-regantify-text" />
@@ -175,20 +177,20 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
           <span className="text-sm text-regantify-text-muted">—</span>
         )}
       </td>
-      <td className="p-4 min-w-[140px]">
-        <p className="text-sm text-regantify-text">{order.customerEmail || <span className="text-regantify-text-muted">—</span>}</p>
+      <td className="border-r border-line p-3 last:border-r-0 min-w-[140px]">
+        <p>{order.customerEmail || <span className="text-regantify-text-muted">—</span>}</p>
       </td>
-      <td className="p-4 min-w-[220px]">
+      <td className="border-r border-line p-3 last:border-r-0 min-w-[220px]">
         {firstItem ? (
           <>
             <div className="flex items-center gap-2.5">
               {firstItem.productImage ? (
-                <img src={firstItem.productImage} alt="" className="w-10 h-10 rounded-lg object-cover bg-regantify-content" />
+                <img src={firstItem.productImage} alt="" className="h-10 w-10 shrink-0 rounded border border-line bg-neutral-100 object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-lg bg-regantify-content" />
+                <div className="h-10 w-10 shrink-0 rounded bg-neutral-100" />
               )}
               <div>
-                <p className="text-sm text-regantify-text leading-tight flex items-center gap-1.5">
+                <p className="flex items-center gap-1.5 leading-tight">
                   {firstItem.productName}
                   {firstItem.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={firstItem.product.slug} />}
                 </p>
@@ -203,12 +205,15 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
           <span className="text-sm text-regantify-text-muted">Empty cart</span>
         )}
       </td>
-      <td className="p-4">
+      <td className="border-r border-line p-3 last:border-r-0">
         <DropdownMenu
           trigger={
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
-              Actions
-              <ChevronDown size={14} />
+            <button
+              aria-label="Actions"
+              title="Actions"
+              className="rounded-md border border-line bg-white p-1.5 text-regantify-text transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50"
+            >
+              <MoreVertical size={14} />
             </button>
           }
         >
@@ -298,9 +303,9 @@ export default function AbandonedCart() {
 
   return (
     <>
-      <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
-        <div className="relative w-64">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
+          <Search size={15} className="shrink-0" />
           <input
             type="text"
             value={search}
@@ -309,8 +314,7 @@ export default function AbandonedCart() {
               setPage(1);
             }}
             placeholder="Search by title"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm
-              text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+            className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
           />
         </div>
 
@@ -319,10 +323,9 @@ export default function AbandonedCart() {
           trigger={
             <button
               disabled={selectedIds.length === 0}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-regantify-cta text-regantify-cta text-sm font-medium
-                hover:bg-regantify-cta/5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Bulk Actions
+              Bulk Actions{selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
               <ChevronDown size={14} />
             </button>
           }
@@ -334,31 +337,31 @@ export default function AbandonedCart() {
         </DropdownMenu>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-lg border border-line">
+        <table className="w-full min-w-[900px] border-collapse text-[14px]">
           <thead>
-            <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
-              <th className="p-4">
-                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+            <tr className="bg-neutral-50 text-neutral-600">
+              <th className="w-10 border-r border-line p-3">
+                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="h-4 w-4 cursor-pointer accent-brand" />
               </th>
-              <th className="p-4">Date</th>
-              <th className="p-4">Name</th>
-              <th className="p-4">Phone</th>
-              <th className="p-4">Email</th>
-              <th className="p-4">Cart</th>
-              <th className="p-4">Actions</th>
+              <th className={th}>Date</th>
+              <th className={th}>Name</th>
+              <th className={th}>Phone</th>
+              <th className={th}>Email</th>
+              <th className={th}>Cart</th>
+              <th className={`${th} w-16`}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
+              <tr className="border-t border-line">
+                <td colSpan={7} className="p-8 text-center text-sm text-neutral-500">
                   Loading…
                 </td>
               </tr>
             ) : incompleteOrders.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-sm text-regantify-text-muted">
+              <tr className="border-t border-line">
+                <td colSpan={7} className="px-3 py-16 text-center text-sm font-medium text-regantify-text">
                   No abandoned carts found.
                 </td>
               </tr>
@@ -378,28 +381,32 @@ export default function AbandonedCart() {
         </table>
       </div>
 
-      <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-        <span className="text-xs text-regantify-text-muted">Total: {total}</span>
+      <div className="mt-4 flex items-center justify-end gap-3 px-2 pb-1 text-sm">
+        <span className="mr-2 text-xs text-neutral-600">
+          {total === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of {total}
+        </span>
         {totalPages > 1 && (
-          <div className="flex items-center gap-1">
+          <>
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+              aria-label="Previous page"
+              className="disabled:opacity-30"
             >
-              ‹
+              <ArrowLeft size={16} />
             </button>
-            <span className="px-3 py-1 text-sm text-regantify-text">
+            <span className="flex h-8 min-w-8 items-center justify-center rounded-md bg-neutral-100 px-2 font-medium text-regantify-text">
               {page} / {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+              aria-label="Next page"
+              className="disabled:opacity-30"
             >
-              ›
+              <ArrowRight size={16} />
             </button>
-          </div>
+          </>
         )}
       </div>
 

@@ -267,7 +267,7 @@ export function DateRangePicker({
                   onApply({ from: draftFrom, to: draftTo }, draftPreset);
                   setOpen(false);
                 }}
-                className="rounded-lg bg-regantify-black px-4 py-2 text-sm font-medium text-white hover:bg-black disabled:opacity-40"
+                className="rounded-lg bg-regantify-black px-4 py-2 text-sm font-medium text-white hover:bg-regantify-cta-dark disabled:opacity-40"
               >
                 Apply
               </button>

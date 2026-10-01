@@ -4,18 +4,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Pulled directly from the Regantify Figma reference
-        'regantify-black': '#0E0D0D',
-        'regantify-topbar': '#000000',
-        'regantify-sidebar': '#EBEBEB',
-        'regantify-content': '#F1F1F1',
-        'regantify-search': '#FFEFEF',
-        'regantify-text': '#302A2A',
-        'regantify-text-muted': '#6B5A5A',
-        // Reserved for primary CTAs on the marketing/landing page only —
-        // everywhere else in the app stays black-on-off-white.
-        'regantify-cta': '#E4572E',
-        'regantify-cta-dark': '#C73F1B',
+        // Dashboard palette, from the final theme (regantify-new-theme/):
+        // dark green primary, lime for the active nav item and highlights,
+        // blue for a secondary action, #ececec hairlines on white.
+        brand: {
+          DEFAULT: '#1F4A44',
+          dark: '#173A35',
+          lime: '#D9EE94',
+          blue: '#1D6BF3',
+        },
+        line: '#ECECEC',
+        // The older token names stay (every page uses them) but now carry
+        // the palette above: black and cta are both the green primary.
+        'regantify-black': '#1F4A44',
+        'regantify-topbar': '#1F4A44',
+        'regantify-sidebar': '#FFFFFF',
+        'regantify-content': '#F5F5F5',
+        'regantify-search': '#F5F5F5',
+        'regantify-text': '#1A1A1A',
+        'regantify-text-muted': '#737373',
+        'regantify-cta': '#1F4A44',
+        'regantify-cta-dark': '#173A35',
         // LMS has its own light theme; the values live in
         // pages/vendor/lms/lms-theme.css so a redesign swaps them there.
         lms: {

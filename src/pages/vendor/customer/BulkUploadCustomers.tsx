@@ -351,7 +351,7 @@ export default function BulkUploadCustomers() {
                   toast.success(`${successCount} customer${successCount === 1 ? '' : 's'} added.`);
                   navigate('/vendor/customers');
                 }}
-                className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors"
+                className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors"
               >
                 Done
               </button>

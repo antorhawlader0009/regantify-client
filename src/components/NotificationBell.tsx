@@ -99,10 +99,10 @@ export function NotificationBell() {
     <RadixDropdown.Root>
       <RadixDropdown.Trigger asChild>
         <button
-          className="group relative flex h-10 w-10 items-center justify-center rounded-full
-            bg-white/10 text-white transition-all duration-200 hover:bg-white/20 hover:scale-105
-            focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40
-            data-[state=open]:bg-white/20"
+          className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line
+            bg-white text-regantify-text transition-all duration-200 hover:border-neutral-300 hover:shadow-sm
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/20
+            data-[state=open]:border-neutral-300 data-[state=open]:bg-neutral-50"
           title="Notifications"
           aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         >
@@ -113,10 +113,10 @@ export function NotificationBell() {
           {unreadCount > 0 && (
             <span
               className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center
-                rounded-full bg-regantify-cta px-1 text-[10px] font-bold leading-none text-white
-                ring-2 ring-black"
+                rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white
+                ring-2 ring-white"
             >
-              <span className="absolute inset-0 animate-ping rounded-full bg-regantify-cta/60" />
+              <span className="absolute inset-0 animate-ping rounded-full bg-orange-500/60" />
               <span className="relative">{unreadCount > 9 ? '9+' : unreadCount}</span>
             </span>
           )}

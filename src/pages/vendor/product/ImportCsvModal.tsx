@@ -402,7 +402,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               type="button"
               onClick={handleContinueToPreview}
               disabled={!requiredFieldsMapped}
-              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Continue to Preview
             </button>
@@ -413,7 +413,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               type="button"
               onClick={handleImport}
               disabled={validRows.length === 0}
-              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Import {validRows.length} Product{validRows.length === 1 ? '' : 's'}
             </button>
@@ -437,7 +437,7 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
                 toast.success(`${successCount} product${successCount === 1 ? '' : 's'} imported.`);
                 onClose();
               }}
-              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors"
+              className="px-6 py-2.5 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors"
             >
               Done
             </button>

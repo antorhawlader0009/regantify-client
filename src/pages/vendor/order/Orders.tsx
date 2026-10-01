@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowLeft,
+  ArrowRight,
   Check,
   ChevronDown,
+  ClipboardList,
   Copy,
   ExternalLink,
   FileText,
   History,
+  MoreVertical,
   ListChecks,
   Plus,
   Printer,
@@ -57,6 +61,14 @@ import { InvoiceModal } from './InvoiceModal';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
+
+// Table + toolbar pieces from the dashboard theme (hairline grid, outline buttons).
+const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
+const td = 'border-r border-line p-3 last:border-r-0';
+const toolbarBtn =
+  'inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50';
+const bulkBtn =
+  'inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:border-neutral-300';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -291,35 +303,35 @@ function OrderRow({
   const trackingId = order.courierTrackingCode ?? order.courierConsignmentId;
 
   return (
-    <tr className={`border-b border-black/5 align-top ${selected ? 'bg-regantify-cta/5' : ''}`}>
+    <tr className={`border-t border-line align-top text-regantify-text transition-colors ${selected ? 'bg-brand-lime/20' : 'hover:bg-neutral-50/70'}`}>
       {onToggleSelect && (
-        <td className="p-4 pr-0 w-8">
+        <td className={`${td} w-10`}>
           <input
             type="checkbox"
             checked={Boolean(selected)}
             onChange={() => onToggleSelect(order.id)}
             aria-label={`Select ORDER-${order.invoiceNumber}`}
-            className="h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer"
+            className="h-4 w-4 cursor-pointer accent-brand"
           />
         </td>
       )}
-      <td className="p-4">
-        <Link to={`/vendor/orders/${order.id}`} className="text-sm font-semibold text-regantify-cta hover:underline">
+      <td className={`${td} whitespace-nowrap`}>
+        <Link to={`/vendor/orders/${order.id}`} className="font-medium text-brand hover:underline">
           ORDER-{order.invoiceNumber}
         </Link>
-        <p className="text-xs text-regantify-text-muted mt-0.5">{formatDateTime(order.createdAt)}</p>
+        <p className="mt-0.5 text-xs text-neutral-500">{formatDateTime(order.createdAt)}</p>
         {order.label && (
-          <span className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
+          <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-[11px] font-medium text-brand">
             <Tag size={10} />
             {order.label}
           </span>
         )}
       </td>
-      <td className="p-4">
+      <td className={td}>
         <OrderStatusBadge status={order.status} />
         {order.courierProvider !== 'NONE' && (
           <>
-            <p className="text-[11px] text-regantify-text-muted mt-1">{COURIER_LABELS[order.courierProvider]}</p>
+            <p className="mt-1.5 text-xs text-neutral-500">{COURIER_LABELS[order.courierProvider]}</p>
             {/* Real booking state — COURIER-PLAN.md §5.3. NOT_BOOKED shows
                 nothing extra here (the provider label above already says
                 which courier is chosen; "Book with..." lives in Actions). */}
@@ -350,55 +362,59 @@ function OrderRow({
           </>
         )}
       </td>
-      <td className="p-4 min-w-[180px]">
-        <p className="text-sm text-regantify-text">{order.customerName}</p>
-        <p className="text-xs text-regantify-text-muted mt-0.5">{order.customerPhone}</p>
+      <td className={`${td} min-w-[180px]`}>
+        <p>{order.customerName}</p>
+        <p className="mt-0.5 text-xs text-neutral-500">{order.customerPhone}</p>
         <CustomerDeliveryStats stats={deliveryStats} />
         <button
           onClick={() => onCheckHistory(order.customerPhone)}
-          className="mt-1.5 text-xs px-2.5 py-1 rounded-lg border border-black/10 text-regantify-text-muted hover:bg-regantify-content"
+          className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50"
         >
           Check History
         </button>
       </td>
-      <td className="p-4 min-w-[200px]">
-        <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
+      <td className={`${td} min-w-[200px]`}>
+        <p>{order.shippingAddress}</p>
         {order.shippingCity && (
-          <p className="text-xs text-regantify-text-muted mt-0.5">City: {order.shippingCity}</p>
+          <p className="mt-0.5 text-xs text-neutral-500">City: {order.shippingCity}</p>
         )}
         {order.shippingDistrict && (
-          <p className="text-xs text-regantify-text-muted">District: {order.shippingDistrict}</p>
+          <p className="text-xs text-neutral-500">District: {order.shippingDistrict}</p>
         )}
       </td>
-      <td className="p-4 min-w-[180px]">
-        <div className="flex items-center gap-2.5">
+      <td className={`${td} min-w-[200px]`}>
+        <div className="flex items-center gap-3">
           {firstItem?.productImage ? (
-            <img src={firstItem.productImage} alt="" className="w-10 h-10 rounded-lg object-cover bg-regantify-content" />
+            <img src={firstItem.productImage} alt="" className="h-10 w-10 shrink-0 rounded border border-line bg-neutral-100 object-cover" />
           ) : (
-            <div className="w-10 h-10 rounded-lg bg-regantify-content" />
+            <div className="h-10 w-10 shrink-0 rounded bg-neutral-100" />
           )}
           <div>
-            <p className="text-sm text-regantify-text leading-tight flex items-center gap-1.5">
+            <p className="flex items-center gap-1.5 leading-tight">
               {firstItem?.productName}
               {firstItem?.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={firstItem.product.slug} />}
             </p>
-            <p className="text-xs text-regantify-text-muted">{firstItem?.productSku}</p>
-            <p className="text-xs text-regantify-text-muted">x{firstItem?.quantity}</p>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              {firstItem?.productSku} · x{firstItem?.quantity}
+            </p>
           </div>
         </div>
-        {extraCount > 0 && <p className="text-xs text-regantify-text-muted mt-1">+{extraCount} more item(s)</p>}
+        {extraCount > 0 && <p className="mt-1.5 text-xs text-neutral-500">+{extraCount} more item(s)</p>}
       </td>
-      <td className="p-4">
-        <p className="text-sm font-semibold text-regantify-text">{formatPrice(vendorOrderTotal(order))}</p>
-        <p className="text-xs text-regantify-text-muted mt-0.5">{order.paymentMethod}</p>
+      <td className={`${td} whitespace-nowrap`}>
+        <p className="font-medium">{formatPrice(vendorOrderTotal(order))}</p>
+        <p className="mt-0.5 text-xs text-neutral-500">{order.paymentMethod}</p>
       </td>
-      <td className="p-4">
+      <td className={td}>
         <DropdownMenu
           widthClass="w-64"
           trigger={
-            <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
-              Actions
-              <ChevronDown size={14} />
+            <button
+              aria-label="Actions"
+              title="Actions"
+              className="rounded-md border border-line bg-white p-1.5 text-regantify-text transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50"
+            >
+              <MoreVertical size={14} />
             </button>
           }
         >
@@ -508,7 +524,7 @@ function OrderRow({
                       >
                         {courierLocked(provider) && <LockedBadge />}
                         {COURIER_SHORT[provider]}
-                        {!connectedProviders?.has(provider) && <span className="text-[10px] text-regantify-text-muted">(connect)</span>}
+                        {!connectedProviders?.has(provider) && <span className="text-[10px] text-neutral-500">(connect)</span>}
                       </DropdownMenuItem>
                     ))}
                     <DropdownMenuSeparator />
@@ -560,10 +576,25 @@ export default function Orders() {
   const [search, setSearch] = useState('');
   // 'ABANDONED' is the fixed "Abandoned Cart" tab (IncompleteOrder rows,
   // not an order status), reachable directly via ?tab=abandoned-cart.
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL' | 'ABANDONED'>(
-    searchParams.get('tab') === 'abandoned-cart' ? 'ABANDONED' : 'ALL',
-  );
+  // ?status=PENDING (any order status) opens that status, and
+  // ?courierBooking=NOT_BOOKED|FAILED adds the courier filter: the
+  // Dashboard's "Needs your attention" links (dashboard-plan.md Step 5).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL' | 'ABANDONED'>(() => {
+    if (searchParams.get('tab') === 'abandoned-cart') return 'ABANDONED';
+    const status = searchParams.get('status') as OrderStatus | null;
+    return status && ALL_ORDER_STATUSES.includes(status) ? status : 'ALL';
+  });
+  const [courierBooking, setCourierBooking] = useState<ListOrdersParams['courierBooking']>(() => {
+    const value = searchParams.get('courierBooking');
+    return value === 'NOT_BOOKED' || value === 'FAILED' ? value : undefined;
+  });
+  const clearCourierBooking = () => {
+    setCourierBooking(undefined);
+    const next = new URLSearchParams(searchParams);
+    next.delete('courierBooking');
+    setSearchParams(next, { replace: true });
+  };
   const [perPage, setPerPage] = useState(10);
   const [page, setPage] = useState(1);
   const [dateFrom, setDateFrom] = useState('');
@@ -587,7 +618,7 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -595,7 +626,7 @@ export default function Orders() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
   const [bulkBooking, setBulkBooking] = useState<{ provider: BulkCourierProvider; ids: string[] } | null>(null);
-  useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page]);
+  useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page, courierBooking]);
   function toggleSelected(orderId: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -666,7 +697,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '' }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -675,6 +706,7 @@ export default function Orders() {
         dateTo: dateTo || undefined,
         trashOnly: trashView,
         callStatus: (lmsOn && callStatus) || undefined,
+        courierBooking,
         page,
         perPage,
       }),
@@ -742,102 +774,30 @@ export default function Orders() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl font-semibold text-regantify-text">Orders</h1>
-        <button
-          onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
-          disabled={atOrderLimit}
-          title={atOrderLimit ? "Upgrade your plan to add more orders today." : undefined}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-            atOrderLimit
-              ? 'bg-regantify-content text-regantify-text-muted cursor-not-allowed'
-              : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
-          }`}
-        >
-          {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={16} />}
-          Add New
-        </button>
-      </div>
-
-      {ordersUsage && (
-        <div className="mb-4">
-          <UsageLine label="orders today" used={ordersUsage.used} limit={ordersUsage.limit} />
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        {!trashView && (
-          <div className="flex items-center gap-1 px-2 pt-2 border-b border-black/5 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('ALL')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap ${
-                activeTab === 'ALL'
-                  ? 'border-regantify-cta text-regantify-text'
-                  : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
-              }`}
-            >
-              All
-            </button>
-            {tabs.map((status) => (
-              <button
-                key={status}
-                onClick={() => setActiveTab(status)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap ${
-                  activeTab === status
-                    ? 'border-regantify-cta text-regantify-text'
-                    : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
-                }`}
-              >
-                {orderStatusLabel(status)}
-              </button>
-            ))}
-            <button
-              onClick={() => setActiveTab('ABANDONED')}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap ${
-                activeTab === 'ABANDONED'
-                  ? 'border-regantify-cta text-regantify-text'
-                  : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
-              }`}
-            >
-              Abandoned Cart
-            </button>
-            <button
-              onClick={() => setCustomizeOpen(true)}
-              title="Customize tabs"
-              className="px-3 py-2.5 text-regantify-text-muted hover:text-regantify-text"
-            >
-              <Settings2 size={16} />
-            </button>
+      <section className="rounded-xl border border-line bg-white p-3.5">
+        {/* Toolbar */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="mr-auto">
+            <h1 className="text-[15px] font-semibold text-regantify-text">{trashView ? 'Orders · Trash' : 'Orders'}</h1>
+            {ordersUsage && (
+              <div className="mt-0.5 [&_p]:text-xs">
+                <UsageLine label="orders today" used={ordersUsage.used} limit={ordersUsage.limit} />
+              </div>
+            )}
           </div>
-        )}
 
-        {activeTab === 'ABANDONED' ? (
-          <AbandonedCart />
-        ) : (
-          <>
-            <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
-              <div className="relative w-64">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
+          {activeTab !== 'ABANDONED' && (
+            <>
+              <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
+                <Search size={15} className="shrink-0" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search order, customer"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm
-                    text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+                  className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
                 />
               </div>
-              <select
-                value={perPage}
-                onChange={(e) => setPerPage(Number(e.target.value))}
-                className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
-              >
-                {[10, 25, 50, 100].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
               <DateRangeFilter
                 dateFrom={dateFrom}
                 dateTo={dateTo}
@@ -847,73 +807,128 @@ export default function Orders() {
                 }}
               />
               {lmsOn && (
-                <select
-                  aria-label="Call status"
-                  value={callStatus}
-                  onChange={(e) => setCallStatus(e.target.value as ListOrdersParams['callStatus'] | '')}
-                  className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
-                >
-                  <option value="">Any call status</option>
-                  <option value="WAITING">Call: waiting</option>
-                  <option value="CONFIRMED">Call: confirmed</option>
-                  <option value="CANCELLED">Call: cancelled</option>
-                  <option value="NONE">No call in the LMS</option>
-                </select>
+                <div className="relative">
+                  <select
+                    aria-label="Call status"
+                    value={callStatus}
+                    onChange={(e) => setCallStatus(e.target.value as ListOrdersParams['callStatus'] | '')}
+                    className={`${toolbarBtn} appearance-none pr-8`}
+                  >
+                    <option value="">Any call status</option>
+                    <option value="WAITING">Call: waiting</option>
+                    <option value="CONFIRMED">Call: confirmed</option>
+                    <option value="CANCELLED">Call: cancelled</option>
+                    <option value="NONE">No call in the LMS</option>
+                  </select>
+                  <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
+                </div>
               )}
               <button
                 onClick={() => setTrashView((v) => !v)}
-                className={`ml-auto text-xs font-medium ${
-                  trashView ? 'text-regantify-cta' : 'text-regantify-text-muted hover:text-regantify-text'
+                className={`${toolbarBtn} ${trashView ? 'border-neutral-300 bg-neutral-50' : ''}`}
+              >
+                {trashView ? <ArrowLeft size={15} /> : <Trash2 size={15} />}
+                {trashView ? 'Back to Orders' : 'Trash'}
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
+            disabled={atOrderLimit}
+            title={atOrderLimit ? 'Upgrade your plan to add more orders today.' : undefined}
+            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
+              atOrderLimit ? 'cursor-not-allowed bg-neutral-100 text-regantify-text-muted' : 'bg-brand text-white hover:bg-brand-dark'
+            }`}
+          >
+            {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
+            Add Order
+          </button>
+        </div>
+
+        {/* Status tabs */}
+        {!trashView && (
+          <div className="mb-3 flex items-center gap-1 overflow-x-auto rounded-lg border border-line p-1">
+            {/* A status opened from a link but not among the vendor's tabs still shows, as the active one. */}
+            {(['ALL', ...tabs, ...(activeTab !== 'ALL' && activeTab !== 'ABANDONED' && !tabs.includes(activeTab) ? [activeTab] : []), 'ABANDONED'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`h-8 shrink-0 whitespace-nowrap rounded-md px-3 text-sm transition-colors ${
+                  activeTab === t ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-100'
                 }`}
               >
-                {trashView ? '← Back to Orders' : 'Show Trash'}
+                {t === 'ALL' ? 'All' : t === 'ABANDONED' ? 'Abandoned Cart' : orderStatusLabel(t)}
               </button>
-            </div>
+            ))}
+            <button
+              onClick={() => setCustomizeOpen(true)}
+              title="Customize tabs"
+              aria-label="Customize tabs"
+              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
+            >
+              <Settings2 size={15} />
+            </button>
+          </div>
+        )}
 
+        {activeTab === 'ABANDONED' ? (
+          <AbandonedCart />
+        ) : (
+          <>
+            {courierBooking && !trashView && (
+              <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-neutral-50 px-3 py-2 text-sm">
+                <Truck size={15} className="text-neutral-500" aria-hidden />
+                <span className="text-neutral-600">Showing only</span>
+                <span className="font-medium text-regantify-text">
+                  {courierBooking === 'NOT_BOOKED' ? 'orders not sent to a courier yet' : 'orders whose courier booking failed'}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearCourierBooking}
+                  className="ml-auto inline-flex h-7 items-center gap-1 rounded-md px-2 text-neutral-600 hover:bg-white hover:text-regantify-text"
+                >
+                  <X size={13} />
+                  Clear filter
+                </button>
+              </div>
+            )}
+            {/* Bulk action bar */}
             {!trashView && selectedIds.size > 0 && (
-              <div className="px-4 py-2.5 border-b border-black/5 bg-regantify-cta/5 flex flex-wrap items-center gap-3">
-                <span className="text-sm font-medium text-regantify-text">{selectedIds.size} selected</span>
-                <button
-                  type="button"
-                  onClick={sendSelectedToPathao}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-xs font-medium"
-                >
-                  {!otherCouriersAllowed && <LockedBadge />}
-                  Send to Pathao ({selectedIds.size})
+              <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-brand-lime bg-brand-lime/30 px-3 py-2">
+                <span className="mr-1 text-sm font-medium text-regantify-text">{selectedIds.size} selected</span>
+                <button type="button" onClick={sendSelectedToPathao} className={bulkBtn}>
+                  {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
+                  Send to Pathao
                 </button>
-                <button
-                  type="button"
-                  onClick={sendSelectedToSteadfast}
-                  className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium"
-                >
-                  Send to SteadFast ({selectedIds.size})
+                <button type="button" onClick={sendSelectedToSteadfast} className={bulkBtn}>
+                  <Send size={13} />
+                  Send to SteadFast
                 </button>
-                <button
-                  type="button"
-                  onClick={sendSelectedToRedx}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium"
-                >
-                  {!otherCouriersAllowed && <LockedBadge />}
-                  Send to RedX ({selectedIds.size})
+                <button type="button" onClick={sendSelectedToRedx} className={bulkBtn}>
+                  {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
+                  Send to RedX
                 </button>
-                <button
-                  type="button"
-                  onClick={() => openPathaoLabels([...selectedIds])}
-                  className="px-3 py-1.5 rounded-lg border border-black/10 bg-white text-xs font-medium text-regantify-text hover:bg-regantify-content"
-                >
+                <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
+                  <Printer size={13} />
                   Print Pathao labels
                 </button>
-                <button type="button" onClick={() => setSelectedIds(new Set())} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  className="ml-auto inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm text-neutral-600 hover:bg-white"
+                >
+                  <X size={13} />
                   Clear
                 </button>
               </div>
             )}
 
             {!trashView && deliveryStats && (!deliveryStats.pathaoConnected || deliveryStats.pathaoNeedsLogin) && (
-              <div className="px-4 py-2 border-b border-black/5 text-xs text-regantify-text-muted">
+              <div className="mb-3 rounded-lg border border-line bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
                 {!deliveryStats.pathaoConnected ? (
                   <>
-                    <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
+                    <Link to="/vendor/courier/pathao" className="font-medium text-brand underline">
                       Connect Pathao
                     </Link>{' '}
                     to see each customer’s delivery history with Pathao — free on every plan.
@@ -921,7 +936,7 @@ export default function Orders() {
                 ) : (
                   <>
                     Add your Pathao email and password in{' '}
-                    <Link to="/vendor/courier/pathao" className="underline text-regantify-text">
+                    <Link to="/vendor/courier/pathao" className="font-medium text-brand underline">
                       Courier Integration › Pathao
                     </Link>{' '}
                     so the Pathao delivery history can load.
@@ -930,42 +945,53 @@ export default function Orders() {
               </div>
             )}
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            {/* Table */}
+            <div className="overflow-x-auto rounded-lg border border-line">
+              <table className="w-full min-w-[1000px] border-collapse text-[14px]">
                 <thead>
-                  <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
+                  <tr className="bg-neutral-50 text-neutral-600">
                     {!trashView && (
-                      <th className="p-4 pr-0 w-8">
+                      <th className="w-10 border-r border-line p-3">
                         <input
                           type="checkbox"
                           checked={allOnPageSelected}
                           disabled={orders.length === 0}
                           onChange={() => setSelectedIds(allOnPageSelected ? new Set() : new Set(orders.map((o) => o.id)))}
                           aria-label="Select all orders on this page"
-                          className="h-4 w-4 rounded border-black/20 accent-regantify-cta cursor-pointer"
+                          className="h-4 w-4 cursor-pointer accent-brand"
                         />
                       </th>
                     )}
-                    <th className="p-4">Invoice</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4">Customer</th>
-                    <th className="p-4">Address</th>
-                    <th className="p-4">Items</th>
-                    <th className="p-4">Total</th>
-                    <th className="p-4">Actions</th>
+                    <th className={th}>Invoice</th>
+                    <th className={th}>Status</th>
+                    <th className={th}>Customer</th>
+                    <th className={th}>Address</th>
+                    <th className={th}>Items</th>
+                    <th className={th}>Total</th>
+                    <th className={`${th} w-16`}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoading ? (
-                    <tr>
-                      <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
-                        Loading…
-                      </td>
-                    </tr>
+                    Array.from({ length: Math.min(perPage, 5) }).map((_, i) => (
+                      <tr key={`sk-${i}`} className="border-t border-line">
+                        <td colSpan={columnCount} className="p-3">
+                          <div className="h-10 w-full animate-pulse rounded-md bg-neutral-100" />
+                        </td>
+                      </tr>
+                    ))
                   ) : orders.length === 0 ? (
-                    <tr>
-                      <td colSpan={columnCount} className="p-8 text-center text-sm text-regantify-text-muted">
-                        {trashView ? 'Trash is empty.' : 'No orders found.'}
+                    <tr className="border-t border-line">
+                      <td colSpan={columnCount} className="px-3 py-16 text-center">
+                        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+                          {trashView ? <Trash2 size={20} /> : <ClipboardList size={20} />}
+                        </div>
+                        <p className="mt-2 text-sm font-medium text-regantify-text">
+                          {trashView ? 'Trash is empty.' : 'No orders found.'}
+                        </p>
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking) && (
+                          <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
+                        )}
                       </td>
                     </tr>
                   ) : (
@@ -994,55 +1020,67 @@ export default function Orders() {
               </table>
             </div>
 
-            <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-              <span className="text-xs text-regantify-text-muted">Total: {total}</span>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+            {/* Footer */}
+            <div className="mt-4 flex flex-col gap-3 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 text-sm text-neutral-700">
+                Show
+                <div className="relative">
+                  <select
+                    value={perPage}
+                    onChange={(e) => setPerPage(Number(e.target.value))}
+                    className="h-9 appearance-none rounded-lg border border-line bg-white pl-3 pr-8 text-xs text-regantify-text outline-none focus:border-brand"
                   >
-                    «
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-                  >
-                    ‹
-                  </button>
-                  {pageNumbers.map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setPage(n)}
-                      className={`px-3 py-1 rounded-lg text-sm ${
-                        n === page ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-                  >
-                    ›
-                  </button>
-                  <button
-                    onClick={() => setPage(totalPages)}
-                    disabled={page === totalPages}
-                    className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-                  >
-                    »
-                  </button>
+                    {[10, 25, 50, 100].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
                 </div>
-              )}
+                <span className="text-xs">per page</span>
+              </div>
+
+              <div className="flex items-center gap-3 text-sm">
+                <span className="mr-2 text-xs text-neutral-600">
+                  {total === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of {total}
+                </span>
+                {totalPages > 1 && (
+                  <>
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      aria-label="Previous page"
+                      className="disabled:opacity-30"
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    {pageNumbers.map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => setPage(n)}
+                        className={`h-8 min-w-8 rounded-md px-1 ${
+                          n === page ? 'bg-neutral-100 font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-50'
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      aria-label="Next page"
+                      className="disabled:opacity-30"
+                    >
+                      <ArrowRight size={16} />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </>
         )}
-      </div>
+      </section>
 
       <CustomizeTabsModal
         open={customizeOpen}

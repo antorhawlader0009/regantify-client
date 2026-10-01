@@ -44,28 +44,27 @@ export function orderStatusLabel(status: OrderStatus): string {
   return STATUS_LABELS[status] ?? status;
 }
 
-// Tailwind classes for the pill badge shown per order/status tab —
-// matches the color language used across the reference screenshots
-// (amber pending, green completed/shipping-active, red failure states).
+// Bordered badge from the dashboard theme (border-200 / bg-50 / text-700):
+// amber pending, green done/active, red failure states.
 const STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
-  PENDING: 'bg-amber-100 text-amber-700',
-  PROCESSING: 'bg-emerald-100 text-emerald-700',
-  SHIPPING: 'bg-sky-100 text-sky-700',
-  COMPLETED: 'bg-green-100 text-green-700',
-  ON_HOLD: 'bg-gray-200 text-gray-700',
-  PAYMENT_INITIATED: 'bg-indigo-100 text-indigo-700',
-  PARTIAL_PAYMENT_PENDING: 'bg-orange-100 text-orange-700',
-  PAYMENT_FAILED: 'bg-red-100 text-red-700',
-  CANCELLED: 'bg-red-100 text-red-700',
-  RETURN: 'bg-red-100 text-red-700',
-  REFUNDED: 'bg-purple-100 text-purple-700',
-  STOCK_OUT: 'bg-red-100 text-red-700',
+  PENDING: 'border-amber-200 bg-amber-50 text-amber-700',
+  PROCESSING: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  SHIPPING: 'border-sky-200 bg-sky-50 text-sky-700',
+  COMPLETED: 'border-green-200 bg-green-50 text-green-700',
+  ON_HOLD: 'border-neutral-200 bg-neutral-50 text-neutral-700',
+  PAYMENT_INITIATED: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+  PARTIAL_PAYMENT_PENDING: 'border-orange-200 bg-orange-50 text-orange-700',
+  PAYMENT_FAILED: 'border-red-200 bg-red-50 text-red-700',
+  CANCELLED: 'border-red-200 bg-red-50 text-red-700',
+  RETURN: 'border-red-200 bg-red-50 text-red-700',
+  REFUNDED: 'border-purple-200 bg-purple-50 text-purple-700',
+  STOCK_OUT: 'border-red-200 bg-red-50 text-red-700',
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
   return (
     <span
-      className={`inline-block px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wide ${STATUS_BADGE_CLASSES[status]}`}
+      className={`inline-block whitespace-nowrap rounded border px-2 py-0.5 text-sm ${STATUS_BADGE_CLASSES[status]}`}
     >
       {orderStatusLabel(status)}
     </span>

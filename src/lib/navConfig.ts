@@ -45,6 +45,10 @@ export interface NavSection {
   children?: NavChild[];
   /** Opens `path` in its own browser tab instead of inside the dashboard (the LMS). */
   newWindow?: boolean;
+  /** Sidebar heading; consecutive sections with the same group share one heading. */
+  group?: string;
+  /** Pinned to the sidebar's bottom bar, which never scrolls. */
+  bottom?: boolean;
 }
 
 /**
@@ -52,10 +56,19 @@ export interface NavSection {
  * placeholder page (just a heading) for now — see PlaceholderPage.tsx.
  */
 export const vendorNav: NavSection[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/vendor/dashboard' },
+  { label: 'Dashboard', icon: LayoutDashboard, group: 'Main Menu', path: '/vendor/dashboard' },
+  // One page with its own tabs (Overview/Sales/Orders/...), see AnalyticsPage.tsx.
+  { label: 'Analytics', icon: BarChart3, group: 'Main Menu', path: '/vendor/analytics' },
+  // Abandoned carts are a tab on the Orders page, not a separate nav entry.
+  { label: 'Orders', icon: ClipboardList, group: 'Main Menu', path: '/vendor/orders' },
+  { label: 'Customers', icon: Users, group: 'Main Menu', path: '/vendor/customers' },
+  // LMS: its own app in its own tab (LMS-plan.md Step 4). Its sections
+  // (Leads, Call Desk, Tasks, Reports, Settings) are in the LMS's top bar.
+  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms/leads', newWindow: true },
   {
     label: 'Product',
     icon: PackageSearch,
+    group: 'Product',
     children: [
       { label: 'All Products', path: '/vendor/product/all' },
       { label: 'Add Product', path: '/vendor/product/add' },
@@ -65,38 +78,11 @@ export const vendorNav: NavSection[] = [
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
     ],
   },
-  // Abandoned carts are a tab on the Orders page, not a separate nav entry.
-  { label: 'Orders', icon: ClipboardList, path: '/vendor/orders' },
-  { label: 'Customers', icon: Users, path: '/vendor/customers' },
-  {
-    label: 'Courier Integration',
-    icon: Truck,
-    children: [
-      // Each courier has its own full page (Dashboard/Parcels/Settings —
-      // see pages/vendor/courier/{steadfast,pathao,redx}/); the shared
-      // hub (CourierIntegrationPage) lists all three. Real API booking
-      // is done from the Orders page's Actions menu.
-      { label: 'Steadfast', path: '/vendor/courier/steadfast' },
-      { label: 'Pathao', path: '/vendor/courier/pathao' },
-      { label: 'RedX', path: '/vendor/courier/redx' },
-      // The only other real standalone page in this group — see Tracking.tsx.
-      { label: 'Tracking', path: '/vendor/shipping/tracking' },
-    ],
-  },
-  {
-    label: 'Finance',
-    icon: Wallet,
-    children: [
-      { label: 'Wallet', path: '/vendor/finance/wallet' },
-      { label: 'Transactions', path: '/vendor/finance/transactions' },
-      { label: 'Earnings', path: '/vendor/finance/earnings' },
-      { label: 'Withdraw', path: '/vendor/finance/withdraw' },
-      { label: 'Fee Summary', path: '/vendor/finance/fee-summary' },
-    ],
-  },
+  { label: 'Reviews', icon: Star, group: 'Product', path: '/vendor/reviews' },
   {
     label: 'Marketing',
     icon: Megaphone,
+    group: 'Sales Marketing',
     children: [
       { label: 'Coupons', path: '/vendor/marketing/coupons' },
       { label: 'Campaigns', path: '/vendor/marketing/campaigns' },
@@ -105,12 +91,11 @@ export const vendorNav: NavSection[] = [
       { label: 'Gift Cards', path: '/vendor/marketing/gift-cards' },
     ],
   },
-  // One page with its own tabs (Overview/Sales/Orders/...), see AnalyticsPage.tsx.
-  { label: 'Analytics', icon: BarChart3, path: '/vendor/analytics' },
-  { label: 'Reviews', icon: Star, path: '/vendor/reviews' },
+  { label: 'SMS', icon: MessageSquare, group: 'Sales Marketing', path: '/vendor/sms' },
   {
     label: 'AI & Automation',
     icon: Bot,
+    group: 'Sales Marketing',
     children: [
       { label: 'AI Tools', path: '/vendor/ai-automation/ai-tools' },
       { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot' },
@@ -121,6 +106,7 @@ export const vendorNav: NavSection[] = [
   {
     label: 'Store',
     icon: StoreIcon,
+    group: 'Store',
     children: [
       {
         label: 'Design',
@@ -154,22 +140,50 @@ export const vendorNav: NavSection[] = [
       { label: 'SEO', path: '/vendor/store/seo' },
     ],
   },
-  { label: 'SMS', icon: MessageSquare, path: '/vendor/sms' },
-  { label: 'Staff', icon: UsersRound, path: '/vendor/staff' },
-  { label: 'Billing', icon: CreditCard, path: '/vendor/billing' },
-  // LMS: its own app in its own tab (LMS-plan.md Step 4). Its sections
-  // (Leads, Call Desk, Tasks, Reports, Settings) are in the LMS's top bar.
-  { label: 'LMS', icon: PhoneCall, path: '/vendor/lms/leads', newWindow: true },
-  { label: 'Support', icon: Headphones, path: '/vendor/support' },
-  { label: 'Settings', icon: Settings, path: '/vendor/settings' },
+  {
+    label: 'Courier Integration',
+    icon: Truck,
+    group: 'Store',
+    children: [
+      // Each courier has its own full page (Dashboard/Parcels/Settings —
+      // see pages/vendor/courier/{steadfast,pathao,redx}/); the shared
+      // hub (CourierIntegrationPage) lists all three. Real API booking
+      // is done from the Orders page's Actions menu.
+      { label: 'Steadfast', path: '/vendor/courier/steadfast' },
+      { label: 'Pathao', path: '/vendor/courier/pathao' },
+      { label: 'RedX', path: '/vendor/courier/redx' },
+      // The only other real standalone page in this group — see Tracking.tsx.
+      { label: 'Tracking', path: '/vendor/shipping/tracking' },
+    ],
+  },
+  {
+    label: 'Finance',
+    icon: Wallet,
+    group: 'Account',
+    children: [
+      { label: 'Wallet', path: '/vendor/finance/wallet' },
+      { label: 'Transactions', path: '/vendor/finance/transactions' },
+      { label: 'Earnings', path: '/vendor/finance/earnings' },
+      { label: 'Withdraw', path: '/vendor/finance/withdraw' },
+      { label: 'Fee Summary', path: '/vendor/finance/fee-summary' },
+    ],
+  },
+  { label: 'Billing', icon: CreditCard, group: 'Account', path: '/vendor/billing' },
+  { label: 'Staff', icon: UsersRound, group: 'Account', path: '/vendor/staff' },
+  { label: 'Support', icon: Headphones, bottom: true, path: '/vendor/support' },
+  { label: 'Settings', icon: Settings, bottom: true, path: '/vendor/settings' },
 ];
 
 /** Section 7 of the brief — Super Admin's own, simpler nav. */
 export const adminNav: NavSection[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+  { label: 'Dashboard', icon: LayoutDashboard, group: 'Main Menu', path: '/admin/dashboard' },
+  { label: 'Analytics', icon: BarChart3, group: 'Main Menu', path: '/admin/analytics' },
+  { label: 'Orders', icon: ClipboardList, group: 'Main Menu', path: '/admin/orders' },
+  { label: 'Customers', icon: UsersRound, group: 'Main Menu', path: '/admin/customers' },
   {
     label: 'Vendors',
     icon: Users,
+    group: 'Vendors',
     children: [
       { label: 'All Vendors', path: '/admin/vendors/all' },
       { label: 'Pending Approval', path: '/admin/vendors/pending' },
@@ -179,28 +193,27 @@ export const adminNav: NavSection[] = [
   {
     label: 'Plans',
     icon: CreditCard,
+    group: 'Vendors',
     children: [
       { label: 'Manage Plans', path: '/admin/plans' },
       { label: 'Plan Requests', path: '/admin/plan-requests' },
     ],
   },
-  { label: 'Payment Gateway', icon: CreditCard, path: '/admin/payment-gateway' },
-  { label: 'Orders', icon: ClipboardList, path: '/admin/orders' },
-  { label: 'Customers', icon: UsersRound, path: '/admin/customers' },
+  { label: 'Payment Gateway', icon: CreditCard, group: 'Vendors', path: '/admin/payment-gateway' },
   {
     label: 'Finance',
     icon: Wallet,
+    group: 'Operations',
     children: [
       { label: 'Platform Revenue', path: '/admin/finance/revenue' },
       { label: 'Commission Settings', path: '/admin/finance/commission' },
       { label: 'Payouts', path: '/admin/finance/payouts' },
     ],
   },
-  { label: 'Marketing', icon: Megaphone, path: '/admin/marketing' },
-  { label: 'Analytics', icon: BarChart3, path: '/admin/analytics' },
-  { label: 'Reviews', icon: Star, path: '/admin/reviews' },
-  { label: 'AI Settings', icon: Bot, path: '/admin/ai-settings' },
-  { label: 'Support', icon: Headphones, path: '/admin/support' },
-  { label: 'Staff', icon: UsersRound, path: '/admin/staff' },
-  { label: 'Settings', icon: Settings, path: '/admin/settings' },
+  { label: 'Marketing', icon: Megaphone, group: 'Operations', path: '/admin/marketing' },
+  { label: 'Reviews', icon: Star, group: 'Operations', path: '/admin/reviews' },
+  { label: 'AI Settings', icon: Bot, group: 'Operations', path: '/admin/ai-settings' },
+  { label: 'Staff', icon: UsersRound, group: 'Operations', path: '/admin/staff' },
+  { label: 'Support', icon: Headphones, bottom: true, path: '/admin/support' },
+  { label: 'Settings', icon: Settings, bottom: true, path: '/admin/settings' },
 ];

@@ -7,20 +7,19 @@ import {
   Search,
   Upload,
   Columns3,
-  ListFilter,
-  Rows3,
+  Filter,
+  Table2,
   MoreVertical,
   ArrowUp,
   ArrowDown,
-  ArrowUpDown,
+  ArrowLeft,
+  ArrowRight,
+  ChevronDown,
+  ChevronsUpDown,
   Check,
   Package,
   PackageX,
   X,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   Infinity as InfinityIcon,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
@@ -80,10 +79,14 @@ function loadPrefs(): { columns: Record<ColumnKey, boolean>; density: Density } 
 }
 
 const toolbarBtn =
-  'inline-flex h-9 items-center gap-1.5 rounded-lg border border-black/10 bg-white px-3 text-xs font-medium text-regantify-text transition-colors hover:bg-regantify-content';
+  'inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50';
 
 const filterSelect =
-  'h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-xs text-regantify-text focus:outline-none focus:ring-2 focus:ring-regantify-black/20';
+  'h-9 w-full rounded-lg border border-line bg-white px-3 text-sm text-regantify-text outline-none focus:border-brand focus:ring-2 focus:ring-brand/15';
+
+// Table cell: hairline on the right, like the design reference.
+const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
+const td = 'border-r border-line px-3 last:border-r-0';
 
 const menuPanel = 'bg-white rounded-xl shadow-lg border border-black/10 py-1.5 z-30 focus:outline-none';
 
@@ -106,9 +109,9 @@ function ActionsMenu({
       trigger={
         <button
           aria-label="Actions"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-regantify-text-muted transition-colors hover:bg-regantify-content hover:text-regantify-text"
+          className="inline-flex items-center justify-center rounded-md border border-line p-1.5 text-regantify-text transition-colors hover:bg-neutral-50"
         >
-          <MoreVertical size={15} />
+          <MoreVertical size={14} />
         </button>
       }
     >
@@ -200,32 +203,27 @@ function SortHeader({
   dir: SortDir;
   onSort: (key: SortKey) => void;
 }) {
-  const Icon = !active ? ArrowUpDown : dir === 'asc' ? ArrowUp : ArrowDown;
+  const Icon = !active ? ChevronsUpDown : dir === 'asc' ? ArrowUp : ArrowDown;
   return (
     <button
       onClick={() => onSort(sortKey)}
-      className={`inline-flex items-center gap-1 whitespace-nowrap uppercase tracking-wide transition-colors hover:text-regantify-text ${
-        active ? 'text-regantify-text' : ''
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap transition-colors hover:text-regantify-text ${
+        active ? 'font-medium text-regantify-text' : ''
       }`}
     >
       {label}
-      <Icon size={11} className={active ? '' : 'opacity-40'} />
+      <Icon size={12} />
     </button>
   );
 }
 
+const badge = 'inline-block whitespace-nowrap rounded border px-2 py-0.5 text-sm';
+
 function StatusBadge({ visibility }: { visibility: Product['visibility'] }) {
-  const isPublic = visibility === 'PUBLIC';
-  return (
-    <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold ${
-        isPublic
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          : 'border-black/10 bg-regantify-content text-regantify-text-muted'
-      }`}
-    >
-      {visibility}
-    </span>
+  return visibility === 'PUBLIC' ? (
+    <span className={`${badge} border-green-200 bg-green-50 text-green-700`}>Public</span>
+  ) : (
+    <span className={`${badge} border-neutral-200 bg-neutral-50 text-neutral-600`}>Draft</span>
   );
 }
 
@@ -443,8 +441,8 @@ export default function AllProducts() {
   const rangeTo = Math.min(page * perPage, total);
 
   const compact = density === 'compact';
-  const cellY = compact ? 'py-2' : 'py-4';
-  const thumb = compact ? 'w-8 h-8' : 'w-11 h-11';
+  const cellY = compact ? 'py-2.5' : 'py-4';
+  const thumb = compact ? 'h-7 w-7' : 'h-10 w-10';
 
   // Product + checkbox + actions are always shown; the rest follow `columns`.
   const visibleColumnCount = 3 + COLUMN_OPTIONS.filter((c) => columns[c.key]).length;
@@ -453,92 +451,90 @@ export default function AllProducts() {
 
   return (
     <div>
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        {/* Header */}
-        <div className="flex flex-col gap-3 border-b border-black/5 px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-xl font-semibold text-regantify-text">Products</h1>
-              {productsUsage && (
-                <div className="mt-0.5 [&_p]:text-xs">
-                  <UsageLine label="products used" used={productsUsage.used} limit={productsUsage.limit} />
-                </div>
-              )}
-            </div>
+      <section className="rounded-xl border border-line bg-white p-3.5">
+        {/* Toolbar */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="mr-auto">
+            <h1 className="text-[15px] font-semibold text-regantify-text">All Products</h1>
+            {productsUsage && (
+              <div className="mt-0.5 [&_p]:text-xs">
+                <UsageLine label="products used" used={productsUsage.used} limit={productsUsage.limit} />
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
-              className={toolbarBtn}
-              title="Toggle table density"
-            >
-              <Rows3 size={14} />
-              <span>{compact ? 'Compact' : 'Comfortable'}</span>
-            </button>
+          <button
+            onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+            className={toolbarBtn}
+            title={compact ? 'Compact rows (click for comfortable)' : 'Comfortable rows (click for compact)'}
+          >
+            <Table2 size={15} />
+            {compact ? 'Compact' : 'Comfortable'}
+          </button>
 
-            <ColumnsMenu
-              columns={columns}
-              onToggle={(key) => setColumns((prev) => ({ ...prev, [key]: !prev[key] }))}
-              onReset={() => setColumns(DEFAULT_COLUMNS)}
+          <ColumnsMenu
+            columns={columns}
+            onToggle={(key) => setColumns((prev) => ({ ...prev, [key]: !prev[key] }))}
+            onReset={() => setColumns(DEFAULT_COLUMNS)}
+          />
+
+          <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
+            <Search size={15} className="shrink-0" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search"
+              className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
             />
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={14} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search product"
-                className="h-9 w-40 rounded-lg border border-black/10 bg-white pl-8 pr-3 text-xs text-regantify-text
-                  placeholder:text-regantify-text-muted focus:outline-none focus:ring-2 focus:ring-regantify-black/20 sm:w-52"
-              />
-            </div>
-
-            <button
-              onClick={() => setShowFilters((v) => !v)}
-              className={`${toolbarBtn} ${showFilters ? 'bg-regantify-content' : ''}`}
-            >
-              <ListFilter size={14} />
-              <span>Filter</span>
-              {activeFilterCount > 0 && (
-                <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-regantify-black px-1 text-[10px] font-semibold text-white">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => (atProductLimit ? upgradeToast('add more products') : setShowImportModal(true))}
-              title={atProductLimit ? 'Upgrade your plan to add more products.' : 'Import products from CSV'}
-              className={`${toolbarBtn} ${atProductLimit ? 'text-regantify-text-muted' : ''}`}
-            >
-              {atProductLimit ? <LockedBadge size={14} /> : <Upload size={14} />}
-              <span>Import Product</span>
-            </button>
-
-            <button
-              onClick={() => (atProductLimit ? upgradeToast('add more products') : navigate('/vendor/product/add'))}
-              disabled={atProductLimit}
-              title={atProductLimit ? 'Upgrade your plan to add more products.' : undefined}
-              className={`inline-flex h-9 items-center gap-1.5 rounded-lg px-3.5 text-xs font-medium transition-colors ${
-                atProductLimit
-                  ? 'bg-regantify-content text-regantify-text-muted cursor-not-allowed'
-                  : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white'
-              }`}
-            >
-              {atProductLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
-              Add New
-            </button>
           </div>
+
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className={`${toolbarBtn} ${showFilters ? 'border-neutral-300 bg-neutral-50' : ''}`}
+          >
+            Filter
+            {activeFilterCount > 0 ? (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
+                {activeFilterCount}
+              </span>
+            ) : (
+              <Filter size={14} />
+            )}
+          </button>
+
+          <button
+            onClick={() => (atProductLimit ? upgradeToast('add more products') : navigate('/vendor/product/add'))}
+            disabled={atProductLimit}
+            title={atProductLimit ? 'Upgrade your plan to add more products.' : undefined}
+            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
+              atProductLimit
+                ? 'cursor-not-allowed bg-neutral-100 text-regantify-text-muted'
+                : 'bg-brand text-white hover:bg-brand-dark'
+            }`}
+          >
+            {atProductLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
+            Add Product
+          </button>
+
+          <button
+            onClick={() => (atProductLimit ? upgradeToast('add more products') : setShowImportModal(true))}
+            title={atProductLimit ? 'Upgrade your plan to add more products.' : 'Import products from CSV'}
+            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
+              atProductLimit ? 'bg-neutral-100 text-regantify-text-muted' : 'bg-brand-blue text-white hover:opacity-90'
+            }`}
+          >
+            {atProductLimit ? <LockedBadge size={14} /> : <Upload size={15} />}
+            Import Product
+          </button>
         </div>
 
         {/* Filter panel */}
         {showFilters && (
-          <div className="border-b border-black/5 bg-regantify-content/50 px-5 py-3">
+          <div className="mb-3 rounded-lg border border-line bg-neutral-50 p-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <label className="mb-1 block text-[10px] font-medium text-regantify-text-muted">Category</label>
+                <label className="mb-1 block text-xs text-neutral-600">Category</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className={filterSelect}>
                   <option value="">All Categories</option>
                   {categories.map((c) => (
@@ -550,7 +546,7 @@ export default function AllProducts() {
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-medium text-regantify-text-muted">Products</label>
+                <label className="mb-1 block text-xs text-neutral-600">Products</label>
                 <select
                   value={visibility}
                   onChange={(e) => setVisibility(e.target.value as VisibilityFilter)}
@@ -563,7 +559,7 @@ export default function AllProducts() {
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-medium text-regantify-text-muted">Stock Type</label>
+                <label className="mb-1 block text-xs text-neutral-600">Stock Type</label>
                 <select
                   value={stockType}
                   onChange={(e) => setStockType(e.target.value as StockFilter)}
@@ -577,10 +573,7 @@ export default function AllProducts() {
               </div>
 
               <div className="flex items-end">
-                <button
-                  onClick={clearFilters}
-                  className="h-9 w-full rounded-lg border border-black/10 bg-white text-xs font-medium text-regantify-text hover:bg-regantify-content"
-                >
+                <button onClick={clearFilters} className={`${toolbarBtn} w-full justify-center`}>
                   Clear Filters
                 </button>
               </div>
@@ -590,19 +583,19 @@ export default function AllProducts() {
 
         {/* Bulk action bar */}
         {selected.size > 0 && (
-          <div className="flex items-center justify-between border-b border-black/5 bg-regantify-search/60 px-5 py-2">
-            <span className="text-xs font-medium text-regantify-text">{selected.size} selected</span>
+          <div className="mb-3 flex items-center justify-between rounded-lg border border-brand-lime bg-brand-lime/30 px-3 py-2">
+            <span className="text-sm font-medium text-regantify-text">{selected.size} selected</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSelected(new Set())}
-                className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs text-regantify-text-muted hover:bg-white"
+                className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm text-neutral-600 hover:bg-white"
               >
                 <X size={13} />
                 Clear
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="h-8 rounded-lg border border-red-200 bg-white px-3 text-xs font-medium text-red-600 hover:bg-red-50"
+                className="h-8 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 hover:bg-red-50"
               >
                 Delete Selected ({selected.size})
               </button>
@@ -611,11 +604,11 @@ export default function AllProducts() {
         )}
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+        <div className="overflow-x-auto rounded-lg border border-line">
+          <table className="w-full min-w-[900px] border-collapse text-[14px]">
             <thead>
-              <tr className="border-b border-black/5 bg-regantify-content text-[11px] font-medium text-regantify-text-muted">
-                <th className="w-10 px-4 py-3">
+              <tr className="bg-neutral-50 text-neutral-600">
+                <th className="w-10 border-r border-line p-3">
                   <input
                     type="checkbox"
                     checked={allOnPageSelected}
@@ -623,58 +616,58 @@ export default function AllProducts() {
                       if (el) el.indeterminate = someOnPageSelected;
                     }}
                     onChange={toggleSelectAll}
-                    className="h-3.5 w-3.5 cursor-pointer rounded accent-regantify-black"
+                    className="h-4 w-4 cursor-pointer accent-brand"
                   />
                 </th>
-                <th className="min-w-[260px] px-2 py-3 font-medium">
+                <th className={`${th} min-w-[260px]`}>
                   <SortHeader label="Product" sortKey="name" active={sort.key === 'name'} dir={sort.dir} onSort={handleSort} />
                 </th>
                 {columns.category && (
-                  <th className="px-4 py-3 font-medium">
+                  <th className={th}>
                     <SortHeader label="Category" sortKey="category" active={sort.key === 'category'} dir={sort.dir} onSort={handleSort} />
                   </th>
                 )}
                 {columns.sku && (
-                  <th className="px-4 py-3 font-medium">
+                  <th className={th}>
                     <SortHeader label="SKU" sortKey="sku" active={sort.key === 'sku'} dir={sort.dir} onSort={handleSort} />
                   </th>
                 )}
-                {columns.status && (
-                  <th className="px-4 py-3 font-medium">
-                    <SortHeader label="Status" sortKey="status" active={sort.key === 'status'} dir={sort.dir} onSort={handleSort} />
-                  </th>
-                )}
-                {columns.price && (
-                  <th className="px-4 py-3 font-medium">
-                    <SortHeader label="Price" sortKey="price" active={sort.key === 'price'} dir={sort.dir} onSort={handleSort} />
-                  </th>
-                )}
                 {columns.stock && (
-                  <th className="px-4 py-3 font-medium">
+                  <th className={th}>
                     <SortHeader label="Stock" sortKey="stock" active={sort.key === 'stock'} dir={sort.dir} onSort={handleSort} />
                   </th>
                 )}
-                <th className="w-16 px-4 py-3 text-center font-medium uppercase tracking-wide">Actions</th>
+                {columns.price && (
+                  <th className={th}>
+                    <SortHeader label="Price" sortKey="price" active={sort.key === 'price'} dir={sort.dir} onSort={handleSort} />
+                  </th>
+                )}
+                {columns.status && (
+                  <th className={th}>
+                    <SortHeader label="Status" sortKey="status" active={sort.key === 'status'} dir={sort.dir} onSort={handleSort} />
+                  </th>
+                )}
+                <th className={`${th} w-16`}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading &&
                 Array.from({ length: Math.min(perPage, 6) }).map((_, i) => (
-                  <tr key={`sk-${i}`} className="border-t border-black/5">
-                    <td colSpan={visibleColumnCount} className={`px-4 ${cellY}`}>
-                      <div className="h-6 w-full animate-pulse rounded-md bg-regantify-content" />
+                  <tr key={`sk-${i}`} className="border-t border-line">
+                    <td colSpan={visibleColumnCount} className={`px-3 ${cellY}`}>
+                      <div className="h-6 w-full animate-pulse rounded-md bg-neutral-100" />
                     </td>
                   </tr>
                 ))}
               {!isLoading && products.length === 0 && (
-                <tr>
-                  <td colSpan={visibleColumnCount} className="px-4 py-16 text-center">
-                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-regantify-content text-regantify-text-muted">
+                <tr className="border-t border-line">
+                  <td colSpan={visibleColumnCount} className="px-3 py-16 text-center">
+                    <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
                       <PackageX size={20} />
                     </div>
                     <p className="mt-2 text-sm font-medium text-regantify-text">No products yet.</p>
                     {(search || activeFilterCount > 0) && (
-                      <p className="mt-1 text-xs text-regantify-text-muted">Try changing your search or filters.</p>
+                      <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                     )}
                   </td>
                 </tr>
@@ -682,74 +675,53 @@ export default function AllProducts() {
               {products.map((p) => (
                 <tr
                   key={p.id}
-                  className={`border-t border-black/5 transition-colors hover:bg-regantify-content/40 ${
-                    selected.has(p.id) ? 'bg-regantify-search/40' : ''
+                  className={`border-t border-line text-regantify-text transition-colors ${
+                    selected.has(p.id) ? 'bg-brand-lime/20' : 'hover:bg-neutral-50/70'
                   }`}
                 >
-                  <td className={`px-4 ${cellY}`}>
+                  <td className={`${td} ${cellY}`}>
                     <input
                       type="checkbox"
                       checked={selected.has(p.id)}
                       onChange={() => toggleSelectOne(p.id)}
-                      className="h-3.5 w-3.5 cursor-pointer rounded accent-regantify-black"
+                      className="h-4 w-4 cursor-pointer accent-brand"
                     />
                   </td>
-                  <td className={`px-2 ${cellY}`}>
+                  <td className={`${td} ${cellY}`}>
                     <div className="flex items-center gap-3">
                       {p.photoUrls[0] ? (
                         <img
                           src={p.photoUrls[0]}
                           alt=""
-                          className={`${thumb} shrink-0 rounded-lg border border-black/5 bg-regantify-content object-cover`}
+                          className={`${thumb} shrink-0 rounded border border-line bg-neutral-100 object-cover`}
                         />
                       ) : (
-                        <div
-                          className={`${thumb} flex shrink-0 items-center justify-center rounded-lg bg-regantify-content text-regantify-text-muted`}
-                        >
-                          <Package size={15} />
+                        <div className={`${thumb} flex shrink-0 items-center justify-center rounded bg-neutral-100 text-neutral-400`}>
+                          <Package size={14} />
                         </div>
                       )}
                       <button
                         onClick={() => navigate(`/vendor/product/edit/${p.id}`)}
                         title={p.name}
-                        className="line-clamp-2 max-w-xs text-left text-[13px] font-medium text-regantify-cta hover:underline"
+                        className="line-clamp-2 max-w-xs text-left hover:text-brand hover:underline"
                       >
                         {p.name}
                       </button>
                       {p.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={p.slug} />}
                     </div>
                   </td>
-                  {columns.category && (
-                    <td className={`whitespace-nowrap px-4 ${cellY} text-[13px] text-regantify-text`}>{p.category ?? '—'}</td>
-                  )}
+                  {columns.category && <td className={`${td} ${cellY} whitespace-nowrap`}>{p.category ?? '—'}</td>}
                   {columns.sku && (
-                    <td className={`px-4 ${cellY} text-[13px] text-regantify-text`}>
+                    <td className={`${td} ${cellY}`}>
                       <span className="block max-w-[220px] truncate" title={p.sku}>
                         {p.sku}
                       </span>
                     </td>
                   )}
-                  {columns.status && (
-                    <td className={`whitespace-nowrap px-4 ${cellY}`}>
-                      <div className="flex items-center gap-1.5">
-                        <StatusBadge visibility={p.visibility} />
-                        {p.isPreOrder && (
-                          <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
-                            PRE-ORDER
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  )}
-                  {columns.price && (
-                    <td className={`whitespace-nowrap px-4 ${cellY} text-[13px] font-semibold text-regantify-text`}>
-                      ৳{Number(p.price).toLocaleString('en-US')}
-                    </td>
-                  )}
                   {columns.stock && (
-                    <td className={`whitespace-nowrap px-4 ${cellY} text-[13px] text-regantify-text`}>
+                    <td className={`${td} ${cellY} whitespace-nowrap`}>
                       {p.stockQuantity === null || p.stockQuantity === undefined ? (
-                        <InfinityIcon size={16} className="text-regantify-text-muted" />
+                        <InfinityIcon size={16} className="text-neutral-500" aria-label="Unlimited" />
                       ) : p.stockQuantity === 0 ? (
                         <span className="font-medium text-red-600">0</span>
                       ) : (
@@ -757,7 +729,23 @@ export default function AllProducts() {
                       )}
                     </td>
                   )}
-                  <td className={`px-4 ${cellY} text-center`}>
+                  {columns.price && (
+                    <td className={`${td} ${cellY} whitespace-nowrap font-medium`}>
+                      ৳{Number(p.price).toLocaleString('en-US')}
+                    </td>
+                  )}
+                  {columns.status && (
+                    <td className={`${td} ${cellY} whitespace-nowrap`}>
+                      <div className="flex items-center gap-1.5">
+                        <StatusBadge visibility={p.visibility} />
+                        {p.isPreOrder && <span className={`${badge} border-amber-200 bg-amber-50 text-amber-700`}>Pre-Order</span>}
+                        {p.stockQuantity === 0 && (
+                          <span className={`${badge} border-red-200 bg-red-50 text-red-700`}>Out of Stock</span>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  <td className={`${td} ${cellY}`}>
                     <ActionsMenu
                       onEdit={() => navigate(`/vendor/product/edit/${p.id}`)}
                       onDelete={() => handleDelete(p.id, p.name)}
@@ -773,51 +761,46 @@ export default function AllProducts() {
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col gap-2 border-t border-black/5 px-5 py-3 text-xs text-regantify-text-muted sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span>Show</span>
-            <select
-              value={perPage}
-              onChange={(e) => setPerPage(Number(e.target.value))}
-              className="h-7 rounded-md border border-black/10 bg-white px-2 text-xs text-regantify-text focus:outline-none"
-            >
-              {[10, 25, 50, 100].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-            <span>per page</span>
+        <div className="mt-4 flex flex-col gap-3 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 text-sm text-neutral-700">
+            Show
+            <div className="relative">
+              <select
+                value={perPage}
+                onChange={(e) => setPerPage(Number(e.target.value))}
+                className="h-9 appearance-none rounded-lg border border-line bg-white pl-3 pr-8 text-xs text-regantify-text outline-none focus:border-brand"
+              >
+                {[10, 25, 50, 100].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
+            </div>
+            <span className="text-xs">per page</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="mr-2 text-xs text-neutral-600">
               {rangeFrom}-{rangeTo} of {total}
             </span>
             {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage(1)}
-                  disabled={page === 1}
-                  aria-label="First page"
-                  className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-regantify-content disabled:opacity-40 disabled:hover:bg-transparent"
-                >
-                  <ChevronsLeft size={14} />
-                </button>
+              <>
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
                   aria-label="Previous page"
-                  className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-regantify-content disabled:opacity-40 disabled:hover:bg-transparent"
+                  className="disabled:opacity-30"
                 >
-                  <ChevronLeft size={14} />
+                  <ArrowLeft size={16} />
                 </button>
                 {pageNumbers.map((n) => (
                   <button
                     key={n}
                     onClick={() => setPage(n)}
-                    className={`h-7 min-w-7 rounded-md px-2 text-xs ${
-                      n === page ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'
+                    className={`h-8 min-w-8 rounded-md px-1 ${
+                      n === page ? 'bg-neutral-100 font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-50'
                     }`}
                   >
                     {n}
@@ -827,23 +810,15 @@ export default function AllProducts() {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                   aria-label="Next page"
-                  className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-regantify-content disabled:opacity-40 disabled:hover:bg-transparent"
+                  className="disabled:opacity-30"
                 >
-                  <ChevronRight size={14} />
+                  <ArrowRight size={16} />
                 </button>
-                <button
-                  onClick={() => setPage(totalPages)}
-                  disabled={page === totalPages}
-                  aria-label="Last page"
-                  className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-regantify-content disabled:opacity-40 disabled:hover:bg-transparent"
-                >
-                  <ChevronsRight size={14} />
-                </button>
-              </div>
+              </>
             )}
           </div>
         </div>
-      </div>
+      </section>
 
       {statusModalProduct && (
         <ChangeStatusModal

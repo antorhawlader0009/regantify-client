@@ -194,7 +194,7 @@ export default function Branding() {
                 onClick={() => logoInputRef.current?.click()}
                 disabled={logoUploading}
                 className="text-sm font-medium bg-regantify-black text-white py-2 px-4 rounded-xl
-                  hover:bg-black transition-colors disabled:opacity-60"
+                  hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
               >
                 {logoUploading ? 'Uploading…' : 'Upload logo'}
               </button>
@@ -258,7 +258,7 @@ export default function Branding() {
                 onClick={() => faviconInputRef.current?.click()}
                 disabled={faviconUploading}
                 className="text-sm font-medium bg-regantify-black text-white py-2 px-4 rounded-xl
-                  hover:bg-black transition-colors disabled:opacity-60"
+                  hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
               >
                 {faviconUploading ? 'Uploading…' : 'Upload favicon'}
               </button>

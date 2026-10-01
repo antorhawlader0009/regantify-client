@@ -526,7 +526,7 @@ export default function EditProduct() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={updateMutation.isPending}
-                  className="px-5 py-2 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-60"
+                  className="px-5 py-2 rounded-xl bg-regantify-black text-white text-sm font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
                 >
                   {updateMutation.isPending ? 'Updating…' : 'Update'}
                 </button>
@@ -925,7 +925,7 @@ export default function EditProduct() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={updateMutation.isPending}
-                className="px-8 py-3 rounded-xl bg-regantify-black text-white font-medium hover:bg-black transition-colors disabled:opacity-60"
+                className="px-8 py-3 rounded-xl bg-regantify-black text-white font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
               >
                 {updateMutation.isPending ? 'Updating…' : 'Update'}
               </button>

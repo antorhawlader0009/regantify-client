@@ -211,6 +211,8 @@ export interface ListOrdersParams {
   trashOnly?: boolean;
   /** LMS confirmation call (LMS-plan.md Step 14). */
   callStatus?: 'WAITING' | 'CONFIRMED' | 'CANCELLED' | 'NONE';
+  /** Not sent to a courier yet, or a failed booking still to fix (finished orders left out). */
+  courierBooking?: 'NOT_BOOKED' | 'FAILED';
   page?: number;
   perPage?: number;
 }

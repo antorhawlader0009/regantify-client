@@ -10,8 +10,26 @@ body,
 
 body {
   font-family: 'Inter', sans-serif;
-  background: #f1f1f1;
+  color: #1a1a1a;
+  background: #fafafa;
 }
+
+/* Balance button + plan badge animations (dashboard theme) */
+@keyframes shimmer {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(420%) skewX(-20deg); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0; }
+}
+.animate-shimmer { animation: shimmer 1.8s ease-in-out infinite; }
+.animate-pop-in { animation: pop-in 0.35s ease-out; }
+.animate-shrink { animation-name: shrink; animation-timing-function: linear; animation-fill-mode: forwards; }
 
 /* Scroll still works everywhere — the scrollbar itself is just hidden,
    since a visible scrollbar clashes with the design. Applies to every
@@ -24,4 +42,11 @@ body {
 
 *::-webkit-scrollbar {
   display: none; /* Chrome, Safari, new Edge */
+}
+
+/* Dashboard "Hide numbers": blurs every money figure (marked .dash-money)
+   so the screen can be shown to someone without showing the amounts. */
+[data-hide-numbers] .dash-money {
+  filter: blur(7px);
+  user-select: none;
 }

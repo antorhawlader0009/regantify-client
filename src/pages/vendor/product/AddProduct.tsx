@@ -694,7 +694,7 @@ export default function AddProduct() {
           type="button"
           onClick={handleSubmit}
           disabled={createMutation.isPending}
-          className="px-8 py-3 rounded-xl bg-regantify-black text-white font-medium hover:bg-black transition-colors disabled:opacity-60"
+          className="px-8 py-3 rounded-xl bg-regantify-black text-white font-medium hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
         >
           {createMutation.isPending ? 'Creating…' : 'Create'}
         </button>

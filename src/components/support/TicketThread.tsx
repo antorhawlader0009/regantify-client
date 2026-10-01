@@ -156,7 +156,7 @@ export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', no
             onClick={() => void send()}
             disabled={!body.trim() || sending}
             className="inline-flex items-center gap-2 rounded-xl bg-regantify-black px-4 py-2 text-sm font-medium text-white
-              transition-colors hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-black focus-visible:ring-offset-2
+              transition-colors hover:bg-regantify-cta-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-black focus-visible:ring-offset-2
               disabled:opacity-40"
           >
             {sending ? <Loader2 size={15} className="animate-spin" /> : <SendHorizontal size={15} />}

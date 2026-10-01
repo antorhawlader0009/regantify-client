@@ -26,6 +26,7 @@ import Unauthorized from './pages/Unauthorized';
 
 import VendorDashboard from './pages/vendor/Dashboard';
 import VendorSettings from './pages/vendor/Settings';
+import VendorProfile from './pages/vendor/Profile';
 import AddProduct from './pages/vendor/product/AddProduct';
 import EditProduct from './pages/vendor/product/EditProduct';
 import AllProducts from './pages/vendor/product/AllProducts';
@@ -264,6 +265,7 @@ export default function App() {
               <Route element={<VendorLayout />}>
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                 <Route path="/vendor/settings" element={<VendorSettings />} />
+                <Route path="/vendor/profile" element={<VendorProfile />} />
                 <Route path="/vendor/support" element={<Support />} />
                 <Route path="/vendor/support/:id" element={<SupportTicket />} />
                 <Route path="/vendor/product/add" element={<AddProduct />} />

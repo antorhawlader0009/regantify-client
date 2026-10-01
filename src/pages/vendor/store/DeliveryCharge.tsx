@@ -106,7 +106,7 @@ export default function DeliveryCharge() {
               type="submit"
               disabled={saveMutation.isPending || isLoading}
               className="bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl
-                hover:bg-black transition-colors disabled:opacity-60"
+                hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
             >
               {saveMutation.isPending ? 'Saving…' : 'Save delivery charges'}
             </button>

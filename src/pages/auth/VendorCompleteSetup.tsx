@@ -135,7 +135,7 @@ export default function VendorCompleteSetup() {
           type="submit"
           disabled={submitting}
           className="w-full bg-regantify-black text-white font-medium py-3 rounded-xl
-            hover:bg-black transition-colors disabled:opacity-60"
+            hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
         >
           {submitting ? 'Saving…' : 'Set password & continue'}
         </button>

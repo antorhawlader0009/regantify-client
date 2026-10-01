@@ -43,7 +43,7 @@ export default function Support() {
         <button
           onClick={() => setComposing(true)}
           className="inline-flex items-center gap-2 rounded-xl bg-regantify-black px-4 py-2.5 text-sm font-medium text-white
-            transition-colors hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-black focus-visible:ring-offset-2"
+            transition-colors hover:bg-regantify-cta-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-black focus-visible:ring-offset-2"
         >
           <Plus size={16} />
           New ticket
@@ -345,7 +345,7 @@ function NewTicketDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
           <button
             type="submit"
             disabled={create.isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-regantify-black px-4 py-2.5 text-sm font-medium text-white hover:bg-black disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-regantify-black px-4 py-2.5 text-sm font-medium text-white hover:bg-regantify-cta-dark disabled:opacity-60"
           >
             {create.isPending && <Loader2 size={15} className="animate-spin" />}
             Open ticket

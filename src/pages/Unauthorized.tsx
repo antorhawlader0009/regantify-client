@@ -17,7 +17,7 @@ export default function Unauthorized() {
         </p>
         <button
           onClick={() => navigate('/')}
-          className="bg-regantify-black text-white font-medium px-6 py-2.5 rounded-xl hover:bg-black"
+          className="bg-regantify-black text-white font-medium px-6 py-2.5 rounded-xl hover:bg-regantify-cta-dark"
         >
           Go back home
         </button>

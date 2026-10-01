@@ -33,7 +33,7 @@ export function DateRangeFilter({ dateFrom, dateTo, onChange }: DateRangeFilterP
       }}
     >
       <RadixPopover.Trigger asChild>
-        <button className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
+        <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50">
           <Calendar size={15} />
           {formatLabel(dateFrom, dateTo)}
         </button>

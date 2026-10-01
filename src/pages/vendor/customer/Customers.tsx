@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, ChevronDown, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, Download, MoreVertical, Plus, Search, Upload, Users, X } from 'lucide-react';
 import { customersApi, type VendorCustomer } from '../../../lib/customersApi';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
+
+// Table + toolbar pieces from the dashboard theme (hairline grid, outline buttons).
+const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
+const td = 'border-r border-line p-3 last:border-r-0';
+const toolbarBtn =
+  'inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50';
+
+const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 interface CustomerRowProps {
   customer: VendorCustomer;
@@ -44,36 +53,50 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
   };
 
   return (
-    <tr className="border-b border-black/5 align-top">
-      <td className="p-4 w-10">
-        <input type="checkbox" checked={selected} onChange={onToggleSelect} />
+    <tr
+      className={`border-t border-line align-top text-regantify-text transition-colors ${
+        selected ? 'bg-brand-lime/20' : 'hover:bg-neutral-50/70'
+      }`}
+    >
+      <td className={`${td} w-10`}>
+        <input type="checkbox" checked={selected} onChange={onToggleSelect} className="h-4 w-4 cursor-pointer accent-brand" />
       </td>
-      <td className="p-4 min-w-[180px]">
-        <Link
-          to={`/vendor/customers/${encodeURIComponent(customer.phone)}`}
-          className="text-sm font-medium text-regantify-cta hover:underline"
-        >
-          {customer.name}
-        </Link>
-        <p className="text-xs text-regantify-text-muted mt-0.5">{customer.phone}</p>
-        {customer.blacklisted && (
-          <span className="inline-flex items-center mt-1 text-[11px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-            Blacklisted
+      <td className={`${td} min-w-[200px]`}>
+        <div className="flex items-start gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-lime/60 text-xs font-semibold uppercase text-brand">
+            {customer.name.trim().charAt(0) || '?'}
           </span>
-        )}
+          <div className="min-w-0">
+            <Link to={`/vendor/customers/${encodeURIComponent(customer.phone)}`} className="font-medium text-brand hover:underline">
+              {customer.name}
+            </Link>
+            <p className="mt-0.5 text-xs text-neutral-500">{customer.phone}</p>
+            {customer.blacklisted && (
+              <span className="mt-1.5 inline-block rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">
+                Blacklisted
+              </span>
+            )}
+          </div>
+        </div>
       </td>
-      <td className="p-4 text-sm text-regantify-text-muted">{customer.email ?? '—'}</td>
-      <td className="p-4 min-w-[220px]">
-        <p className="text-sm text-regantify-text">{customer.address}</p>
-        {customer.city && <p className="text-xs text-regantify-text-muted mt-0.5">City: {customer.city}</p>}
-        <p className="text-xs text-regantify-text-muted">Zip: {customer.zip ?? '—'}</p>
+      <td className={`${td} text-neutral-600`}>{customer.email ?? '—'}</td>
+      <td className={`${td} min-w-[220px]`}>
+        <p>{customer.address}</p>
+        {customer.city && <p className="mt-0.5 text-xs text-neutral-500">City: {customer.city}</p>}
+        <p className="text-xs text-neutral-500">Zip: {customer.zip ?? '—'}</p>
       </td>
-      <td className="p-4 text-sm text-regantify-text-muted">—</td>
-      <td className="p-4">
+      <td className={`${td} whitespace-nowrap`}>{customer.orderCount}</td>
+      <td className={`${td} whitespace-nowrap font-medium`}>{formatMoney(customer.totalSpent)}</td>
+      <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDate(customer.lastOrderAt)}</td>
+      <td className={td}>
         <DropdownMenu
           trigger={
-            <button className="px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content">
-              Actions
+            <button
+              aria-label="Actions"
+              title="Actions"
+              className="rounded-md border border-line bg-white p-1.5 text-regantify-text transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50"
+            >
+              <MoreVertical size={14} />
             </button>
           }
         >
@@ -91,7 +114,7 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
 
 type CustomerFilter = 'ALL' | 'BLACKLISTED';
 
-/** One row of the exported CSV — same column set shown in the table. */
+/** One row of the exported CSV. */
 const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Blacklisted'];
 
 function toExportRow(c: VendorCustomer): string[] {
@@ -108,6 +131,8 @@ function toExportRow(c: VendorCustomer): string[] {
     c.blacklisted ? 'Yes' : 'No',
   ];
 }
+
+const COLUMN_COUNT = 8;
 
 export default function Customers() {
   const navigate = useNavigate();
@@ -139,9 +164,10 @@ export default function Customers() {
     Math.max(0, page - 3),
     Math.max(0, page - 3) + 5,
   );
+  const allSelected = customers.length > 0 && selected.size === customers.length;
 
   const toggleSelectAll = () => {
-    if (selected.size === customers.length) {
+    if (allSelected) {
       setSelected(new Set());
     } else {
       setSelected(new Set(customers.map((c) => c.phone)));
@@ -181,147 +207,168 @@ export default function Customers() {
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Customers</h1>
-        <div className="flex items-stretch rounded-xl bg-regantify-cta overflow-hidden">
-          <button
-            onClick={() => navigate('/vendor/customers/add')}
-            className="flex items-center gap-1.5 pl-4 pr-3 py-2 hover:bg-regantify-cta-dark text-white text-sm font-medium transition-colors"
-          >
-            <Plus size={16} />
-            Add New
-          </button>
-          <DropdownMenu
-            trigger={
-              <button className="px-2 border-l border-white/20 hover:bg-regantify-cta-dark text-white transition-colors">
-                <ChevronDown size={16} />
-              </button>
-            }
-            align="start"
-          >
-            <DropdownMenuItem onSelect={() => navigate('/vendor/customers/bulk-upload')}>Bulk Upload</DropdownMenuItem>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <CustomerTabs />
-
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <div className="p-4 border-b border-black/5 flex flex-wrap items-center gap-3">
-          <div className="relative w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search customer"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-black/10 text-sm
-                text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
-            />
+    <section className="rounded-xl border border-line bg-white p-3.5">
+      {/* Toolbar */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="mr-auto flex flex-wrap items-center gap-3">
+          <div>
+            <h1 className="text-[15px] font-semibold text-regantify-text">Customers</h1>
+            <p className="mt-0.5 text-xs text-neutral-500">{total.toLocaleString()} total</p>
           </div>
+          <CustomerTabs />
+        </div>
+
+        <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
+          <Search size={15} className="shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search customer"
+            className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
+          />
+        </div>
+        <div className="relative">
           <select
+            aria-label="Filter customers"
             value={filter}
             onChange={(e) => setFilter(e.target.value as CustomerFilter)}
-            className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
+            className={`${toolbarBtn} appearance-none pr-8`}
           >
             <option value="ALL">All Customers</option>
             <option value="BLACKLISTED">Blacklisted</option>
           </select>
-          <select
-            value={perPage}
-            onChange={(e) => setPerPage(Number(e.target.value))}
-            className="px-3 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none"
-          >
-            {[10, 25, 50, 100].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+          <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
         </div>
+        <button type="button" onClick={handleExportCsv} disabled={exporting} className={toolbarBtn}>
+          <Download size={15} />
+          {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/vendor/customers/bulk-upload')}
+          className="flex h-9 items-center gap-1.5 rounded-lg bg-brand-blue px-3 text-sm text-white transition hover:opacity-90"
+        >
+          <Upload size={15} />
+          Bulk Upload
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/vendor/customers/add')}
+          className="flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-sm text-white transition-colors hover:bg-brand-dark"
+        >
+          <Plus size={15} />
+          Add Customer
+        </button>
+      </div>
 
-        <div className="px-4 py-3 border-b border-black/5">
+      {/* Selection bar */}
+      {selected.size > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-brand-lime bg-brand-lime/30 px-3 py-2">
+          <span className="text-sm font-medium text-regantify-text">{selected.size} selected</span>
           <button
-            type="button"
-            onClick={handleExportCsv}
-            disabled={exporting}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-50"
+            onClick={() => setSelected(new Set())}
+            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-sm text-neutral-600 hover:bg-white"
           >
-            <Download size={14} />
-            {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
+            <X size={13} />
+            Clear
           </button>
         </div>
+      )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
-                <th className="p-4 w-10">
-                  <input
-                    type="checkbox"
-                    checked={customers.length > 0 && selected.size === customers.length}
-                    onChange={toggleSelectAll}
-                  />
-                </th>
-                <th className="p-4">Customer</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Address</th>
-                <th className="p-4">Company</th>
-                <th className="p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-sm text-regantify-text-muted">
-                    Loading…
+      {/* Table */}
+      <div className="overflow-x-auto rounded-lg border border-line">
+        <table className="w-full min-w-[960px] border-collapse text-[14px]">
+          <thead>
+            <tr className="bg-neutral-50 text-neutral-600">
+              <th className="w-10 border-r border-line p-3">
+                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="h-4 w-4 cursor-pointer accent-brand" />
+              </th>
+              <th className={th}>Customer</th>
+              <th className={th}>Email</th>
+              <th className={th}>Address</th>
+              <th className={th}>Orders</th>
+              <th className={th}>Total Spent</th>
+              <th className={th}>Last Order</th>
+              <th className={`${th} w-16`}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              Array.from({ length: Math.min(perPage, 5) }).map((_, i) => (
+                <tr key={`sk-${i}`} className="border-t border-line">
+                  <td colSpan={COLUMN_COUNT} className="p-3">
+                    <div className="h-8 w-full animate-pulse rounded-md bg-neutral-100" />
                   </td>
                 </tr>
-              ) : customers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-8 text-center text-sm text-regantify-text-muted">
+              ))
+            ) : customers.length === 0 ? (
+              <tr className="border-t border-line">
+                <td colSpan={COLUMN_COUNT} className="px-3 py-16 text-center">
+                  <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
+                    <Users size={20} />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-regantify-text">
                     {filter === 'BLACKLISTED' ? 'No blacklisted customers.' : 'No customers yet.'}
-                  </td>
-                </tr>
-              ) : (
-                customers.map((customer) => (
-                  <CustomerRow
-                    key={customer.phone}
-                    customer={customer}
-                    selected={selected.has(customer.phone)}
-                    onToggleSelect={() => toggleSelectOne(customer.phone)}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
+                  </p>
+                  {search && <p className="mt-1 text-xs text-neutral-500">Try changing your search.</p>}
+                </td>
+              </tr>
+            ) : (
+              customers.map((customer) => (
+                <CustomerRow
+                  key={customer.phone}
+                  customer={customer}
+                  selected={selected.has(customer.phone)}
+                  onToggleSelect={() => toggleSelectOne(customer.phone)}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-4 flex flex-col gap-3 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm text-neutral-700">
+          Show
+          <div className="relative">
+            <select
+              value={perPage}
+              onChange={(e) => setPerPage(Number(e.target.value))}
+              className="h-9 appearance-none rounded-lg border border-line bg-white pl-3 pr-8 text-xs text-regantify-text outline-none focus:border-brand"
+            >
+              {[10, 25, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
+          </div>
+          <span className="text-xs">per page</span>
         </div>
 
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-          <span className="text-xs text-regantify-text-muted">Total: {total}</span>
+        <div className="flex items-center gap-3 text-sm">
+          <span className="mr-2 text-xs text-neutral-600">
+            {total === 0 ? 0 : (page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of {total}
+          </span>
           {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-              >
-                «
-              </button>
+            <>
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                aria-label="Previous page"
+                className="disabled:opacity-30"
               >
-                ‹
+                <ArrowLeft size={16} />
               </button>
               {pageNumbers.map((n) => (
                 <button
                   key={n}
                   onClick={() => setPage(n)}
-                  className={`px-3 py-1 rounded-lg text-sm ${
-                    n === page ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'
+                  className={`h-8 min-w-8 rounded-md px-1 ${
+                    n === page ? 'bg-neutral-100 font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-50'
                   }`}
                 >
                   {n}
@@ -330,21 +377,15 @@ export default function Customers() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
+                aria-label="Next page"
+                className="disabled:opacity-30"
               >
-                ›
+                <ArrowRight size={16} />
               </button>
-              <button
-                onClick={() => setPage(totalPages)}
-                disabled={page === totalPages}
-                className="px-2.5 py-1 rounded-lg text-sm text-regantify-text-muted hover:bg-regantify-content disabled:opacity-40"
-              >
-                »
-              </button>
-            </div>
+            </>
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

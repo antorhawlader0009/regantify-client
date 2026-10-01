@@ -15,23 +15,22 @@ interface RangeStatCardProps {
 /** A card with a "30 Days / All Time" toggle, like Contacts and Accounts Created. */
 function RangeStatCard({ label, range, onRangeChange, value }: RangeStatCardProps) {
   return (
-    <div className="bg-white rounded-2xl border border-black/5 p-5">
-      <div className="flex items-center gap-3 text-xs font-medium">
-        <button
-          onClick={() => onRangeChange('30_DAYS')}
-          className={range === '30_DAYS' ? 'text-regantify-text' : 'text-regantify-text-muted'}
-        >
-          30 Days
-        </button>
-        <button
-          onClick={() => onRangeChange('ALL_TIME')}
-          className={range === 'ALL_TIME' ? 'text-regantify-text' : 'text-regantify-text-muted'}
-        >
-          All Time
-        </button>
+    <div className="rounded-xl border border-line bg-white p-5">
+      <div className="inline-flex items-center gap-0.5 rounded-md border border-line p-0.5 text-xs">
+        {(['30_DAYS', 'ALL_TIME'] as const).map((r) => (
+          <button
+            key={r}
+            onClick={() => onRangeChange(r)}
+            className={`rounded px-2 py-0.5 transition-colors ${
+              range === r ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-500 hover:bg-neutral-100'
+            }`}
+          >
+            {r === '30_DAYS' ? '30 Days' : 'All Time'}
+          </button>
+        ))}
       </div>
-      <p className="text-sm text-regantify-text mt-4">{label}</p>
-      <p className="text-2xl font-bold text-regantify-text mt-1">{value.toLocaleString()}</p>
+      <p className="mt-4 text-sm text-neutral-600">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-regantify-text">{value.toLocaleString()}</p>
     </div>
   );
 }
@@ -39,10 +38,10 @@ function RangeStatCard({ label, range, onRangeChange, value }: RangeStatCardProp
 /** A plain card with no toggle, like Average LTV and the order-status counts. */
 function PlainStatCard({ eyebrow, label, value }: { eyebrow: string; label: string; value: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-black/5 p-5">
-      <p className="text-xs font-medium text-regantify-text-muted">{eyebrow}</p>
-      <p className="text-sm text-regantify-text mt-4">{label}</p>
-      <p className="text-2xl font-bold text-regantify-text mt-1">{value}</p>
+    <div className="rounded-xl border border-line bg-white p-5">
+      <span className="inline-block rounded-md border border-line px-2 py-0.5 text-xs text-neutral-500">{eyebrow}</span>
+      <p className="mt-4 text-sm text-neutral-600">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-regantify-text">{value}</p>
     </div>
   );
 }
@@ -61,18 +60,17 @@ export default function CustomerDetails() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Customers</h1>
+      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-3.5">
+        <h1 className="text-[15px] font-semibold text-regantify-text">Customers</h1>
+        <CustomerTabs />
       </div>
 
-      <CustomerTabs />
-
       {isLoading ? (
-        <div className="bg-white rounded-2xl border border-black/5 p-8 text-center text-sm text-regantify-text-muted">
+        <div className="rounded-xl border border-line bg-white p-8 text-center text-sm text-neutral-500">
           Loading…
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <RangeStatCard
               label="Contacts"
@@ -90,7 +88,7 @@ export default function CustomerDetails() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-regantify-text mb-3">Orders</h2>
+            <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">Orders</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <PlainStatCard eyebrow="All Time" label="Placed Orders" value={String(data?.placedOrders ?? 0)} />
               <PlainStatCard eyebrow="All Time" label="Completed Orders" value={String(data?.completedOrders ?? 0)} />

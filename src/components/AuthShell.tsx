@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store } from 'lucide-react';
 
 interface AuthShellProps {
   children: ReactNode;
@@ -17,19 +16,19 @@ interface AuthShellProps {
 
 /**
  * Wraps every auth screen (send-otp, verify-otp, signup, admin login) in the
- * same black-framed, dark-topbar look used across the rest of Regantify, so
+ * same white-topbar look used across the rest of Regantify, so
  * the very first thing a vendor sees already feels like "home".
  */
 export function AuthShell({ children, title, subtitle, activeAuthTab }: AuthShellProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-regantify-content flex flex-col">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col">
       {/* Topbar — mirrors the dashboard topbar exactly */}
-      <header className="bg-regantify-topbar h-[82px] flex items-center justify-between px-8 shrink-0">
-        <div className="flex items-center gap-3">
-          <Store className="text-white" size={32} strokeWidth={2} />
-          <span className="font-brand text-white text-3xl leading-none pt-1">Regantify</span>
+      <header className="bg-white border-b border-line h-[60px] flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-900 font-bold text-brand-lime">R</div>
+          <span className="text-xl font-semibold leading-none text-regantify-text">Regantify</span>
         </div>
 
         {/* Login / Sign up — top right corner, only on the vendor entry pages */}
@@ -40,8 +39,8 @@ export function AuthShell({ children, title, subtitle, activeAuthTab }: AuthShel
               onClick={() => navigate('/vendor/login')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeAuthTab === 'login'
-                  ? 'bg-white text-regantify-text'
-                  : 'text-white/80 hover:text-white'
+                  ? 'bg-brand text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100 hover:text-regantify-text'
               }`}
             >
               Login
@@ -51,8 +50,8 @@ export function AuthShell({ children, title, subtitle, activeAuthTab }: AuthShel
               onClick={() => navigate('/vendor/signup')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeAuthTab === 'signup'
-                  ? 'bg-white text-regantify-text'
-                  : 'text-white/80 hover:text-white'
+                  ? 'bg-brand text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100 hover:text-regantify-text'
               }`}
             >
               Sign up
@@ -64,7 +63,7 @@ export function AuthShell({ children, title, subtitle, activeAuthTab }: AuthShel
       {/* Centered auth card */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-sm border border-black/5 p-8 sm:p-10">
+          <div className="bg-white rounded-xl border border-line p-8 sm:p-10">
             <h1 className="text-2xl font-semibold text-regantify-text mb-1">{title}</h1>
             {subtitle && <p className="text-regantify-text-muted text-sm mb-6">{subtitle}</p>}
             {!subtitle && <div className="mb-6" />}

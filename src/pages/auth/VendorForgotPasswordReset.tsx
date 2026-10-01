@@ -66,7 +66,7 @@ export default function VendorForgotPasswordReset() {
         <button
           onClick={() => navigate('/vendor/login', { replace: true })}
           className="w-full bg-regantify-black text-white font-medium py-3 rounded-xl
-            hover:bg-black transition-colors"
+            hover:bg-regantify-cta-dark transition-colors"
         >
           Back to login
         </button>
@@ -127,7 +127,7 @@ export default function VendorForgotPasswordReset() {
           type="submit"
           disabled={submitting}
           className="w-full bg-regantify-black text-white font-medium py-3 rounded-xl
-            hover:bg-black transition-colors disabled:opacity-60"
+            hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
         >
           {submitting ? 'Saving…' : 'Reset password'}
         </button>
