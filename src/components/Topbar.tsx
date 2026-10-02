@@ -1,7 +1,8 @@
 import { Fragment } from 'react';
-import { ExternalLink, LogOut, Menu, Search, Settings, User } from 'lucide-react';
+import { ExternalLink, LogOut, Menu, Search, Settings, Sparkles, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useAssistantUi } from '../store/assistantStore';
 import { isNavGroup, type NavSection } from '../lib/navConfig';
 import { storefrontStoreUrl } from '../lib/storefrontUrl';
 import { useLogout } from '../lib/useLogout';
@@ -40,6 +41,8 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
   const logout = useLogout();
   const isVendor = user?.role === 'VENDOR';
   const crumbs = breadcrumb(sections, location.pathname);
+  const assistantOpen = useAssistantUi((s) => s.open);
+  const toggleAssistant = useAssistantUi((s) => s.toggle);
 
   const isAdmin = user?.role === 'SUPER_ADMIN';
 
@@ -73,6 +76,22 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-500"
         />
       </div>
+
+      {/* Opens the "Ask AI" side panel (AssistantPanel, docked on the right of the dashboard). */}
+      {isVendor && (
+        <button
+          type="button"
+          onClick={toggleAssistant}
+          aria-label="Ask AI"
+          aria-pressed={assistantOpen}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border text-sm transition active:scale-95 sm:w-auto sm:px-4 ${
+            assistantOpen ? 'border-neutral-300 bg-neutral-100 text-neutral-900' : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:shadow-sm'
+          }`}
+        >
+          <Sparkles size={15} className="text-neutral-600" />
+          <span className="hidden sm:inline">Ask AI</span>
+        </button>
+      )}
 
       {/* Opens the vendor's public storefront (the separate storefront/ app) in a new tab. */}
       {isVendor && user?.vendor?.subdomain && (

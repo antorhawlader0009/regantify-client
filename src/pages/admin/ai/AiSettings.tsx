@@ -47,6 +47,12 @@ const FEATURES: FeatureField[] = [
     description: 'In the LMS: fills a lead or order from a pasted chat, summarises a lead, and drafts WhatsApp/SMS messages.',
     icon: PhoneCall,
   },
+  {
+    key: 'DASHBOARD_ASSISTANT',
+    label: 'Dashboard Ask AI',
+    description: "The Ask AI side panel in the vendor dashboard: answers how-to questions about the dashboard.",
+    icon: Sparkles,
+  },
 ];
 
 export default function AiSettings() {

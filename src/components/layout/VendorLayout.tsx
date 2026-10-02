@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
 import { vendorNav } from '../../lib/navConfig';
+import { AssistantPanel } from '../assistant/AssistantPanel';
 
 // Full-screen shell: sidebar fixed on the left, only the content column scrolls.
 // Below lg the sidebar is a drawer, opened from the topbar's menu button.
@@ -18,6 +19,8 @@ export function VendorLayout() {
           <Outlet />
         </main>
       </div>
+      {/* "Ask AI": docked on the right, pushes the page instead of floating over it. */}
+      <AssistantPanel />
     </div>
   );
 }
