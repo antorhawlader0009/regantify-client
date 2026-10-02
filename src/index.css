@@ -45,3 +45,18 @@ body {
   filter: blur(7px);
   user-select: none;
 }
+
+/*
+ * Vendor dashboard surfaces use #FBFBFB instead of pure white (cards, sidebar,
+ * top bar, inputs, dropdowns and dialogs). Set by VendorLayout on <body>, so
+ * the admin dashboard, the LMS and the marketing site keep their own colours.
+ * Printed pages (invoices, labels) stay white.
+ */
+body.vendor-panel .bg-white {
+  background-color: #fbfbfb;
+}
+@media print {
+  body.vendor-panel .bg-white {
+    background-color: #fff;
+  }
+}
