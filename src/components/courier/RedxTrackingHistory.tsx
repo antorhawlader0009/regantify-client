@@ -14,8 +14,8 @@ export function RedxTrackingHistory({ orderId }: { orderId: string }) {
     queryKey: ['redx-tracking', orderId],
     queryFn: () => courierApi.getRedxTracking(orderId),
   });
-  if (isLoading) return <p className="text-sm text-regantify-text-muted">Asking RedX…</p>;
-  if (isError || !data) return <p className="text-sm text-red-500">{apiErrorMessage(error, 'Could not load the history from RedX.')}</p>;
+  if (isLoading) return <p className="text-sm text-neutral-500">Asking RedX…</p>;
+  if (isError || !data) return <p className="text-sm text-red-600">{apiErrorMessage(error, 'Could not load the history from RedX.')}</p>;
   return (
     <div className="space-y-3">
       {data.trackingUrl && (
@@ -24,14 +24,14 @@ export function RedxTrackingHistory({ orderId }: { orderId: string }) {
         </a>
       )}
       {data.steps.length === 0 ? (
-        <p className="text-sm text-regantify-text-muted">RedX has no steps for this parcel yet.</p>
+        <p className="text-sm text-neutral-500">RedX has no steps for this parcel yet.</p>
       ) : (
         <ol className="space-y-2.5 border-l border-line pl-4">
           {[...data.steps].reverse().map((step, i) => (
             <li key={i} className="text-sm">
               <p className="text-regantify-text">{step.message || step.messageBn}</p>
-              {step.messageBn && step.message && <p className="text-xs text-regantify-text-muted">{step.messageBn}</p>}
-              {step.at && <p className="text-xs text-regantify-text-muted">{formatDateTime(step.at)}</p>}
+              {step.messageBn && step.message && <p className="text-xs text-neutral-500">{step.messageBn}</p>}
+              {step.at && <p className="text-xs text-neutral-500">{formatDateTime(step.at)}</p>}
             </li>
           ))}
         </ol>

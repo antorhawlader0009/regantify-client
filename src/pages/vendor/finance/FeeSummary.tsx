@@ -1,114 +1,144 @@
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, Check } from 'lucide-react';
-import { getPlans, getVendorPlanUsage, formatFeeParts } from '../../../lib/plansApi';
-import type { PaymentFeePayer } from '../../../lib/plansApi';
+import { Receipt } from 'lucide-react';
+import { getPlans, getVendorPlanUsage, formatFeeParts, type Plan, type PaymentFeePayer } from '../../../lib/plansApi';
+import { EmptyState, PageHeader, StackedList, TableFrame, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
+import { formatTaka } from './financeUi';
 
-function formatFee(flat: string, percent: string) {
-  return `+${formatFeeParts(flat, percent)}`;
+const EXAMPLE_ORDER = 1000;
+
+/**
+ * The charge on an example order, the way the server works it out: a
+ * flat part plus a % of (order total + the flat part). See server's
+ * Plan.codGatewayFeeBdt comment.
+ */
+function exampleFee(plan: Pick<Plan, 'codGatewayFeeBdt' | 'codGatewayFeePercent'>) {
+  const flat = Number(plan.codGatewayFeeBdt);
+  const percent = Number(plan.codGatewayFeePercent);
+  return Math.round((flat + (percent / 100) * (EXAMPLE_ORDER + flat)) * 100) / 100;
 }
 
-// "Fee From: Vendor" — this plan's fee comes out of the vendor's OWN
-// payout at order completion instead of being added to what the
-// shopper pays (see server's PaymentFeePayer). Worth calling out here
-// specifically since it's the vendor's own money either way.
-function payerNote(payer: PaymentFeePayer) {
-  return payer === 'VENDOR' ? 'paid by you, not the customer' : 'paid by the customer';
+function payerText(payer: PaymentFeePayer) {
+  return payer === 'VENDOR' ? 'Taken from your earnings' : 'Added to what the customer pays';
+}
+
+function CurrentBadge() {
+  return <span className="ml-2 rounded border border-brand/30 bg-brand-lime/40 px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Your plan</span>;
 }
 
 /**
- * Finance > Fee Summary — PLAN.md Step 12. Surfaces the per-tier payment
- * COD fee (Plan.codGatewayFeeBdt; the Online Payment fee is hidden from
- * vendors, so it's never shown here) so a vendor can see what they're currently paying
- * and what upgrading would change. Display-only here too: the fee
- * itself is charged at checkout by OrdersService/CreateOrderDto (see
- * src/payment-gateways/), not by this page — this is just a read-only
- * summary of the rate per plan.
+ * Finance > Fee Summary — PLAN.md Step 12. The per-order platform charge
+ * on cash-on-delivery orders for each plan (Plan.codGatewayFee*; the
+ * Online Payment fee is hidden from vendors, so it's never shown here),
+ * with an example order so the number means something, and who pays it.
+ * Read-only: the charge is worked out at checkout by OrdersService.
  */
 export default function FeeSummary() {
-  const { data: usage, isLoading: usageLoading } = useQuery({
-    queryKey: ['vendor-plan-usage'],
-    queryFn: getVendorPlanUsage,
-  });
-  const { data: plans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ['plans'],
-    queryFn: getPlans,
-  });
-
+  const { data: usage, isLoading: usageLoading } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
+  const { data: plans = [], isLoading: plansLoading } = useQuery({ queryKey: ['plans'], queryFn: getPlans });
   const loading = usageLoading || plansLoading;
+  const current = usage?.plan;
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Fee Summary</h1>
-        <p className="text-sm text-regantify-text-muted mt-1">
-          Every plan includes Cash On Delivery with its own per-transaction fee — higher tiers pay less.
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        className=""
+        title="Fee summary"
+        description="The platform charge on each cash-on-delivery order. Higher plans pay less."
+      />
 
       {loading ? (
-        <div className="bg-white rounded-2xl border border-black/5 p-8 text-center text-sm text-regantify-text-muted">
-          Loading…
+        <div className="space-y-4" aria-busy>
+          <div className="h-36 animate-pulse rounded-xl bg-neutral-100 sm:w-96" />
+          <div className="h-56 animate-pulse rounded-xl bg-neutral-100" />
         </div>
       ) : (
         <>
-          {usage && (
-            <div className="grid grid-cols-1 gap-4 max-w-xs mb-6">
-              <div className="bg-regantify-black rounded-2xl p-6 text-white">
-                <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
-                  <CreditCard size={16} />
-                  Cash On Delivery
-                </div>
-                <p className="text-3xl font-semibold mt-3">{formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent)}</p>
-                <p className="text-white/60 text-xs mt-1">
-                  per order, on your {usage.plan.name} plan — {payerNote(usage.plan.codGatewayFeePayer)}
-                </p>
-              </div>
-            </div>
+          {current && (
+            <section className="rounded-xl bg-brand p-4 text-white sm:max-w-md">
+              <p className="text-sm text-white/75">Your charge per cash-on-delivery order</p>
+              <p className="mt-0.5 text-3xl font-semibold tabular-nums">{formatFeeParts(current.codGatewayFeeBdt, current.codGatewayFeePercent)}</p>
+              <p className="mt-2 text-xs leading-relaxed text-white/75">
+                On a {formatTaka(EXAMPLE_ORDER)} order that’s {formatTaka(exampleFee(current))}. {payerText(current.codGatewayFeePayer)}, on your{' '}
+                {current.name} plan.
+              </p>
+            </section>
           )}
 
-          <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide bg-regantify-content border-b border-black/5">
-                  <th className="p-4">Plan</th>
-                  <th className="p-4">Cash On Delivery fee</th>
-                  <th className="p-4">Custom payment gateway</th>
-                </tr>
-              </thead>
-              <tbody>
-                {plans.map((plan) => {
-                  const isCurrent = usage?.plan.code === plan.code;
-                  return (
-                    <tr key={plan.id} className="border-b border-black/5 last:border-b-0">
-                      <td className="p-4">
-                        <span className="text-sm font-medium text-regantify-text">{plan.name}</span>
-                        {isCurrent && (
-                          <span className="ml-2 inline-flex items-center gap-1 text-[11px] font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
-                            <Check size={10} />
-                            Your plan
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-regantify-text">
-                        {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent)}
-                        {plan.codGatewayFeePayer === 'VENDOR' && (
-                          <span className="block text-[11px] text-regantify-text-muted">paid by you</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-regantify-text-muted">
-                        {plan.customPaymentGatewayAllowed ? 'Option available' : '—'}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <section className="rounded-xl border border-line bg-white p-3.5">
+            <h2 className="mb-3 px-0.5 text-[15px] font-semibold text-regantify-text">Every plan</h2>
+            {plans.length === 0 ? (
+              <div className="rounded-lg border border-line">
+                <EmptyState icon={Receipt} title="Couldn’t load the plans" hint="Refresh the page to try again." />
+              </div>
+            ) : (
+              <>
+                <div className="hidden md:block">
+                  <TableFrame minWidth="min-w-[640px]">
+                    <thead>
+                      <tr className={theadRow}>
+                        <th className={th}>Plan</th>
+                        <th className={th}>Charge per COD order</th>
+                        <th className={th}>On a {formatTaka(EXAMPLE_ORDER)} order</th>
+                        <th className={th}>Your own payment gateway</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {plans.map((plan) => {
+                        const isCurrent = current?.code === plan.code;
+                        return (
+                          <tr key={plan.id} className={trClass(isCurrent)}>
+                            <td className={td}>
+                              <span className="font-medium">{plan.name}</span>
+                              {isCurrent && <CurrentBadge />}
+                            </td>
+                            <td className={td}>
+                              <span className="tabular-nums">{formatFeeParts(plan.codGatewayFeeBdt, plan.codGatewayFeePercent)}</span>
+                              <span className="block text-xs text-neutral-500">{payerText(plan.codGatewayFeePayer)}</span>
+                            </td>
+                            <td className={`${td} tabular-nums`}>{formatTaka(exampleFee(plan))}</td>
+                            <td className={`${td} text-neutral-600`}>{plan.customPaymentGatewayAllowed ? 'Included' : 'Not included'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </TableFrame>
+                </div>
 
-          <p className="text-xs text-regantify-text-muted mt-4">
-            Each gateway's fee applies per order paid through it — manage your store's gateways under Store &gt;
-            Payment Gateway.
-          </p>
+                <StackedList className="md:hidden">
+                  {plans.map((plan) => {
+                    const isCurrent = current?.code === plan.code;
+                    return (
+                      <li key={plan.id} className={`px-3 py-3 ${isCurrent ? 'bg-brand-lime/20' : ''}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-regantify-text">
+                            {plan.name}
+                            {isCurrent && <CurrentBadge />}
+                          </p>
+                          <p className="text-sm font-semibold tabular-nums text-regantify-text">{formatFeeParts(plan.codGatewayFeeBdt, plan.codGatewayFeePercent)}</p>
+                        </div>
+                        <p className="mt-0.5 text-xs text-neutral-500">
+                          {formatTaka(exampleFee(plan))} on a {formatTaka(EXAMPLE_ORDER)} order · {payerText(plan.codGatewayFeePayer).toLowerCase()}
+                        </p>
+                        <p className="text-xs text-neutral-500">Your own payment gateway: {plan.customPaymentGatewayAllowed ? 'included' : 'not included'}</p>
+                      </li>
+                    );
+                  })}
+                </StackedList>
+              </>
+            )}
+            <p className="mt-3 px-0.5 text-xs text-neutral-500">
+              Turn payment methods on or off under{' '}
+              <Link to="/vendor/store/payment-gateway" className="text-brand hover:underline">
+                Store › Payment gateway
+              </Link>
+              . To pay less per order,{' '}
+              <Link to="/vendor/billing" className="text-brand hover:underline">
+                compare plans
+              </Link>
+              .
+            </p>
+          </section>
         </>
       )}
     </div>

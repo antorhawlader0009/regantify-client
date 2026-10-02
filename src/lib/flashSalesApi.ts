@@ -21,6 +21,12 @@ export interface FlashSale {
   endsAt: string;
   active: boolean;
   products: FlashSaleProduct[];
+  /**
+   * List only: orders placed while the sale ran that contain one of its
+   * products (cancelled/failed left out). Orders don't record the sale
+   * itself, so this is how many orders came in during it.
+   */
+  orderCount?: number;
   createdAt: string;
   updatedAt: string;
 }

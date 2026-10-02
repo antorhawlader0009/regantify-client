@@ -28,17 +28,17 @@ export function RedxStorePicker({ currentStoreId }: RedxStorePickerProps) {
       queryClient.invalidateQueries({ queryKey: ['redx-overview'] });
       toast.success('Pickup store saved.');
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save your pickup store. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t save your pickup store. Try again in a minute.')),
   });
 
   if (isLoading) {
-    return <p className="text-sm text-regantify-text-muted">Loading your RedX stores…</p>;
+    return <p className="text-sm text-neutral-500">Loading your RedX stores…</p>;
   }
   if (isError || !stores) {
-    return <p className="text-sm text-red-500">Could not load your RedX stores. Please try again.</p>;
+    return <p className="text-sm text-red-600">Could not load your RedX stores. Please try again.</p>;
   }
   if (stores.length === 0) {
-    return <p className="text-sm text-regantify-text-muted">No pickup stores on your RedX account yet — add one below.</p>;
+    return <p className="text-sm text-neutral-500">No pickup stores on your RedX account yet — add one below.</p>;
   }
 
   return (
@@ -51,7 +51,7 @@ export function RedxStorePicker({ currentStoreId }: RedxStorePickerProps) {
           if (store) mutation.mutate({ id: store.id, name: store.name });
         }}
         disabled={mutation.isPending}
-        className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text focus:outline-none disabled:opacity-60"
+        className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
       >
         <option value="" disabled>
           Select a pickup store…
@@ -66,7 +66,7 @@ export function RedxStorePicker({ currentStoreId }: RedxStorePickerProps) {
       {(() => {
         const current = stores.find((s) => s.id === currentStoreId);
         return current?.address ? (
-          <p className="text-xs text-regantify-text-muted mt-1">
+          <p className="text-xs text-neutral-500 mt-1">
             {current.address}
             {current.phone ? ` · ${current.phone}` : ''}
           </p>

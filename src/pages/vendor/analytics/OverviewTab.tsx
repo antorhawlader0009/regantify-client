@@ -46,7 +46,11 @@ export function OverviewTab({ range }: TabProps) {
 
             <Card
               title={metric === 'sales' ? 'Sales over time' : 'Orders over time'}
-              subtitle={data.bucket === 'month' ? 'Per month' : 'Per day'}
+              subtitle={
+                metric === 'sales'
+                  ? `Order totals by the ${data.bucket === 'month' ? 'month' : 'day'} they were placed. Cancelled and unpaid orders left out.`
+                  : `Orders placed each ${data.bucket === 'month' ? 'month' : 'day'}. Cancelled and unpaid orders left out.`
+              }
               action={
                 <Segmented
                   value={metric}
@@ -72,14 +76,14 @@ export function OverviewTab({ range }: TabProps) {
                 {data.topProducts.length === 0 ? (
                   <EmptyState text="No products sold in this period." />
                 ) : (
-                  <ol className="divide-y divide-black/5">
+                  <ol className="divide-y divide-line">
                     {data.topProducts.map((p, i) => (
                       <li key={p.productId ?? p.name} className="flex items-center gap-3 py-2.5">
-                        <span className="w-4 text-xs text-regantify-text-muted tabular-nums">{i + 1}</span>
+                        <span className="w-4 text-xs text-neutral-500 tabular-nums">{i + 1}</span>
                         <ProductThumb src={p.image} alt={p.name} />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-regantify-text truncate">{p.name}</p>
-                          <p className="text-xs text-regantify-text-muted">
+                          <p className="text-xs text-neutral-500">
                             {p.units} sold in {p.orders} order{p.orders === 1 ? '' : 's'}
                           </p>
                         </div>

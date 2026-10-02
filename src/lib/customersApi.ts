@@ -24,6 +24,8 @@ export interface VendorCustomerOrder {
 }
 
 export interface VendorCustomerDetail extends VendorCustomer {
+  /** Why the vendor blacklisted this phone; null when not blacklisted or no reason was given. */
+  blacklistReason: string | null;
   orders: VendorCustomerOrder[];
 }
 
@@ -109,11 +111,12 @@ export const customersApi = {
       })
       .then((r) => r.data),
 
-  setBlacklisted: (phone: string, blacklisted: boolean) =>
+  /** `reason` is kept only while blacklisted (Customer Detail's switch); the list's menu sends none. */
+  setBlacklisted: (phone: string, blacklisted: boolean, reason?: string) =>
     api
-      .patch<{ phone: string; blacklisted: boolean }>(
+      .patch<{ phone: string; blacklisted: boolean; blacklistReason: string | null }>(
         `/v1/customers/${encodeURIComponent(phone)}/blacklist`,
-        { blacklisted },
+        { blacklisted, reason: blacklisted && reason?.trim() ? reason.trim() : undefined },
       )
       .then((r) => r.data),
 

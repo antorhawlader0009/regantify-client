@@ -38,7 +38,7 @@ export function RedxAreaSelect({ value, onChange, disabled }: RedxAreaSelectProp
     return selected && !list.some((a) => a.id === selected.id) ? [selected, ...list] : list;
   }, [areas, term, selected]);
 
-  if (isError) return <p className="text-xs text-red-500">Could not load RedX delivery areas. Please refresh the page.</p>;
+  if (isError) return <p className="text-xs text-red-600">Could not load RedX delivery areas. Please refresh the page.</p>;
 
   return (
     <div className="space-y-1.5">
@@ -47,13 +47,13 @@ export function RedxAreaSelect({ value, onChange, disabled }: RedxAreaSelectProp
         onChange={(e) => setTerm(e.target.value)}
         disabled={disabled || isLoading}
         placeholder={isLoading ? 'Loading RedX areas…' : 'Search area, post code or division'}
-        className="w-full px-3 py-2 rounded-lg border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none disabled:opacity-60"
+        className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
       />
       <select
         value={value ?? ''}
         disabled={disabled || isLoading}
         onChange={(e) => onChange(areas?.find((a) => a.id === Number(e.target.value)) ?? null)}
-        className="w-full px-3 py-2 rounded-lg border border-black/10 text-sm text-regantify-text focus:outline-none disabled:opacity-60"
+        className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
       >
         <option value="" disabled>
           {shown.length === 0 && term ? 'No area matches your search' : 'Select a delivery area'}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronDown, ChevronLeft, FileText, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
+import { whatsappNumber } from '../../../lib/bdPhone';
 import { ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
@@ -41,14 +42,6 @@ function formatPrice(value: string) {
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dhaka' });
-}
-
-/** "01712345678" -> "8801712345678", for a wa.me link. */
-function whatsappNumber(phone: string) {
-  const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('880')) return digits;
-  if (digits.startsWith('0')) return `88${digits}`;
-  return digits;
 }
 
 const COURIER_NAMES: Record<Exclude<CourierProvider, 'NONE'>, string> = { STEADFAST: 'SteadFast', PATHAO: 'Pathao', REDX: 'RedX' };

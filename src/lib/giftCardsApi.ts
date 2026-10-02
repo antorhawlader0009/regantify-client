@@ -74,11 +74,10 @@ export const giftCardsApi = {
   remove: (id: string) => api.delete<{ success: boolean }>(`/v1/gift-cards/${id}`).then((r) => r.data),
 };
 
-/** Same derived status the server documents on the GiftCard model. */
-export function giftCardStatus(card: GiftCard): { label: string; className: string } {
-  if (!card.active) return { label: 'Disabled', className: 'bg-black/5 text-regantify-text-muted' };
-  if (card.expiresAt && new Date(card.expiresAt).getTime() <= Date.now())
-    return { label: 'Expired', className: 'bg-red-50 text-red-600' };
-  if (Number(card.balance) <= 0) return { label: 'Used up', className: 'bg-amber-50 text-amber-700' };
-  return { label: 'Active', className: 'bg-green-50 text-green-700' };
+/** Same derived status the server documents on the GiftCard model, with its badge colours. */
+export function giftCardStatus(card: GiftCard): { label: 'Active' | 'Off' | 'Expired' | 'Used up'; className: string } {
+  if (!card.active) return { label: 'Off', className: 'border-line bg-neutral-50 text-neutral-600' };
+  if (card.expiresAt && new Date(card.expiresAt).getTime() <= Date.now()) return { label: 'Expired', className: 'border-line bg-neutral-50 text-neutral-600' };
+  if (Number(card.balance) <= 0) return { label: 'Used up', className: 'border-amber-200 bg-amber-50 text-amber-700' };
+  return { label: 'Active', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' };
 }

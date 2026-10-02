@@ -62,14 +62,14 @@ export function RedxLocationPicker({
       queryClient.invalidateQueries({ queryKey: ['redx-quote', orderId] });
       toast.success('RedX delivery area saved.');
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the delivery area. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t save the delivery area. Try again in a minute.')),
   });
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-regantify-text-muted">RedX delivery area</p>
+      <p className="text-xs font-medium text-neutral-500">RedX delivery area</p>
       {currentAreaId == null && suggestion && (
-        <p className="flex items-start gap-1.5 text-xs text-regantify-text-muted">
+        <p className="flex items-start gap-1.5 text-xs text-neutral-500">
           <Sparkles size={13} className="mt-0.5 shrink-0 text-brand" />
           <span>
             From the address: <span className="text-regantify-text">{suggestion.areaName}</span>

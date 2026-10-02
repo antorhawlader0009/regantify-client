@@ -25,6 +25,17 @@ export interface WalletSummary {
   balance: string;
   pendingWithdrawals: string;
   totalWithdrawn: string;
+  /** COD the couriers collected for delivered parcels and haven't paid yet. They pay it to you directly, not into this wallet. */
+  codWithCouriers: { amount: number; count: number };
+}
+
+/** Finance > Transactions filters. Days are Dhaka days, YYYY-MM-DD, inclusive. */
+export interface TransactionsQuery {
+  page?: number;
+  perPage?: number;
+  type?: TransactionType;
+  from?: string;
+  to?: string;
 }
 
 export type WithdrawMethod = 'BKASH' | 'NAGAD' | 'BANK';
@@ -56,9 +67,11 @@ export interface CreateWithdrawRequestPayload {
 export const financeApi = {
   getWallet: () => api.get<WalletSummary>('/v1/finance/wallet').then((r) => r.data),
 
-  getTransactions: (page = 1, perPage = 20) =>
+  getTransactions: (query: TransactionsQuery = {}) =>
     api
-      .get<TransactionsPage>('/v1/finance/transactions', { params: { page, perPage } })
+      .get<TransactionsPage>('/v1/finance/transactions', {
+        params: { page: query.page ?? 1, perPage: query.perPage ?? 20, type: query.type, from: query.from || undefined, to: query.to || undefined },
+      })
       .then((r) => r.data),
 
   // Finance > Withdraw's "Request Withdrawal" flow — see FinanceController.

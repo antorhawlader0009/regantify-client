@@ -34,6 +34,10 @@ export interface ListReviewsParams {
   search?: string;
   page?: number;
   perPage?: number;
+  /** Only this many stars (1-5). */
+  rating?: number;
+  /** 'pending' = waiting for approval, 'approved' = shown on the store. */
+  status?: 'pending' | 'approved';
 }
 
 export interface ReviewListResponse {
@@ -41,6 +45,8 @@ export interface ReviewListResponse {
   total: number;
   page: number;
   perPage: number;
+  /** Counts for the tabs, after the search but before the star/status filters. */
+  counts: { all: number; pending: number; approved: number; ratings: Record<'1' | '2' | '3' | '4' | '5', number> };
 }
 
 /** Add/Edit Review form payload — matches the reference form field-for-field. */

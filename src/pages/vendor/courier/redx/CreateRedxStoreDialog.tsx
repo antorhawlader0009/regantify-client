@@ -7,7 +7,7 @@ import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none';
+  'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 /**
  * "Add pickup store" — creates a pickup store on the vendor's RedX account
@@ -41,7 +41,7 @@ export function CreateRedxStoreDialog({ open, onClose }: { open: boolean; onClos
       toast.success(selected ? `Pickup store "${store.name}" added and selected.` : `Pickup store "${store.name}" added.`);
       onClose();
     },
-    onError: (err) => setError(apiErrorMessage(err, 'Could not add the pickup store. Please try again.')),
+    onError: (err) => setError(apiErrorMessage(err, 'Couldn’t add the pickup store. Try again in a minute.')),
   });
 
   return (
@@ -74,20 +74,20 @@ export function CreateRedxStoreDialog({ open, onClose }: { open: boolean; onClos
           <label className="block text-sm font-medium text-regantify-text mb-1.5">Area</label>
           <RedxAreaSelect value={areaId} onChange={(area) => setAreaId(area?.id ?? null)} />
         </div>
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
             disabled={mutation.isPending}
-            className="px-4 py-2 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-4 text-sm text-regantify-text transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
           >
             {mutation.isPending ? 'Adding…' : 'Add store'}
           </button>

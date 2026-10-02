@@ -162,7 +162,8 @@ export function TopProductsCard({ products }: { products: DashboardSummary['topP
   );
 }
 
-function UsageBar({ label, used, limit }: { label: string; used: number; limit: number | null }) {
+/** "Products 12 / 50" with a bar that turns amber at 80% and red at the limit. Also used on Billing. */
+export function UsageBar({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
   const tone = limit && pct >= 100 ? 'bg-red-500' : limit && pct >= 80 ? 'bg-amber-500' : 'bg-brand';
   return (

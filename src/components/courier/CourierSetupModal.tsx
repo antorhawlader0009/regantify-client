@@ -73,7 +73,7 @@ export function CourierSetupModal({ provider, onOpenChange, onConnected }: Couri
     >
       <div className="p-6 pt-4">
         {provider && (
-          <p className="text-sm text-regantify-text-muted mb-4">{PROVIDER_INTRO[provider]}</p>
+          <p className="text-sm text-neutral-500 mb-4">{PROVIDER_INTRO[provider]}</p>
         )}
         {provider === 'STEADFAST' && <SteadfastConnectForm onConnected={onConnected} footer={footer} />}
         {provider === 'PATHAO' && <PathaoConnectForm onConnected={onConnected} footer={footer} />}

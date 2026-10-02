@@ -7,7 +7,7 @@ import { toast } from '../../../../lib/toast';
 import { PathaoLocationSelects, type PathaoLocationValue } from '../../../../components/courier/PathaoLocationSelects';
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none disabled:opacity-60';
+  'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 const BD_PHONE = /^01\d{9}$/;
 
@@ -61,7 +61,7 @@ export function CreatePathaoStoreDialog({ open, onOpenChange }: CreatePathaoStor
       reset();
       onOpenChange(false);
     },
-    onError: (err) => setError(apiErrorMessage(err, 'Could not create the store. Please try again.')),
+    onError: (err) => setError(apiErrorMessage(err, 'Couldn’t create the store. Try again in a minute.')),
   });
 
   function validate(): string | null {
@@ -99,7 +99,7 @@ export function CreatePathaoStoreDialog({ open, onOpenChange }: CreatePathaoStor
         }}
         className="p-6 pt-4 space-y-4"
       >
-        <p className="text-sm text-regantify-text-muted">
+        <p className="text-sm text-neutral-500">
           Pathao picks up parcels from this address. New stores need Pathao’s approval (usually about an hour).
         </p>
 
@@ -148,25 +148,25 @@ export function CreatePathaoStoreDialog({ open, onOpenChange }: CreatePathaoStor
             placeholder="House, road, area — at least 15 characters"
             className={inputClass}
           />
-          <p className="text-xs text-regantify-text-muted mt-1">{address.trim().length}/120</p>
+          <p className="text-xs text-neutral-500 mt-1">{address.trim().length}/120</p>
         </div>
 
         <PathaoLocationSelects value={location} onChange={setLocation} selectClassName={inputClass} />
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-4 text-sm text-regantify-text transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
           >
             {mutation.isPending ? 'Creating…' : 'Create store'}
           </button>

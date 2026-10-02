@@ -95,16 +95,16 @@ export function BookingsTrendChart({ data }: { data: TrendPoint[] }) {
             </span>
           ))}
         </div>
-        <button type="button" onClick={() => setAsTable((v) => !v)} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
+        <button type="button" onClick={() => setAsTable((v) => !v)} className="text-xs underline text-neutral-500 hover:text-regantify-text">
           {asTable ? 'View as chart' : 'View as table'}
         </button>
       </div>
 
       {asTable ? (
-        <div className="max-h-64 overflow-y-auto border border-black/5 rounded-xl">
+        <div className="max-h-64 overflow-y-auto border border-line rounded-lg">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-white">
-              <tr className="text-left text-xs text-regantify-text-muted">
+              <tr className="text-left text-xs text-neutral-500">
                 <th className="px-3 py-2 font-medium">Day</th>
                 <th className="px-3 py-2 font-medium text-right">Booked</th>
                 <th className="px-3 py-2 font-medium text-right">Delivered</th>
@@ -112,7 +112,7 @@ export function BookingsTrendChart({ data }: { data: TrendPoint[] }) {
             </thead>
             <tbody>
               {[...data].reverse().map((d) => (
-                <tr key={d.day} className="border-t border-black/5">
+                <tr key={d.day} className="border-t border-line">
                   <td className="px-3 py-1.5 text-regantify-text">{shortDate(d.day)}</td>
                   <td className="px-3 py-1.5 text-right tabular-nums text-regantify-text">{d.booked}</td>
                   <td className="px-3 py-1.5 text-right tabular-nums text-regantify-text">{d.delivered}</td>
@@ -134,7 +134,7 @@ export function BookingsTrendChart({ data }: { data: TrendPoint[] }) {
               onBlur={() => setActive(null)}
               onPointerMove={(e: PointerEvent<SVGSVGElement>) => setActive(indexAt(e.clientX, e.currentTarget))}
               onPointerLeave={() => setActive(null)}
-              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-cta/40 rounded-lg"
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-lg"
             >
               {ticks.map((t) => (
                 <g key={t}>
@@ -175,15 +175,15 @@ export function BookingsTrendChart({ data }: { data: TrendPoint[] }) {
           )}
           {point && active != null && (
             <div
-              className="pointer-events-none absolute top-0 z-10 bg-white border border-black/10 rounded-lg shadow-sm px-3 py-2 text-xs"
+              className="pointer-events-none absolute top-0 z-10 bg-white border border-line rounded-lg shadow-sm px-3 py-2 text-xs"
               style={{ left: Math.min(Math.max(0, x(active) + 12), Math.max(0, width - 140)) }}
             >
-              <p className="text-regantify-text-muted mb-1">{shortDate(point.day)}</p>
+              <p className="text-neutral-500 mb-1">{shortDate(point.day)}</p>
               {SERIES.map((s) => (
                 <p key={s.key} className="flex items-center gap-2">
                   <span className="inline-block w-3 h-0.5 rounded-full" style={{ background: s.color }} />
                   <span className="font-semibold text-regantify-text tabular-nums">{point[s.key]}</span>
-                  <span className="text-regantify-text-muted">{s.label}</span>
+                  <span className="text-neutral-500">{s.label}</span>
                 </p>
               ))}
             </div>

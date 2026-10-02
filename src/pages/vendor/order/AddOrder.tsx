@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Minus, Package, Plus, Search, ShoppingCart, Trash2, UserCheck } from 'lucide-react';
+import { normalizeBdPhone } from '../../../lib/bdPhone';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { ordersApi, type Order, type OrderItemInput } from '../../../lib/ordersApi';
 import { getVendorDeliveryCharges } from '../../../lib/vendorApi';
@@ -40,13 +41,6 @@ type ChargeMode = 'DHAKA' | 'OUTSIDE_DHAKA' | 'CUSTOM';
 
 function formatPrice(value: number) {
   return `৳${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-}
-
-/** "+880 1712-345678" -> "01712345678"; null until it's a full BD mobile number. */
-function fullBdPhone(raw: string): string | null {
-  let digits = raw.replace(/\D/g, '');
-  if (digits.startsWith('880')) digits = digits.slice(2);
-  return /^01\d{9}$/.test(digits) ? digits : null;
 }
 
 function useDebounced<T>(value: T, ms: number) {
@@ -126,14 +120,14 @@ export default function AddOrder() {
 
   // -- Returning customer: a full phone number looks up this store's own
   // latest order for it and fills in the fields that are still empty.
-  const phone = fullBdPhone(customerPhone);
+  const phone = normalizeBdPhone(customerPhone);
   const debouncedPhone = useDebounced(phone, 400);
   const { data: pastOrder } = useQuery({
     queryKey: ['add-order-phone-lookup', debouncedPhone],
     queryFn: () =>
       ordersApi
         .list({ search: debouncedPhone!, perPage: 5 })
-        .then((r) => r.orders.find((o) => fullBdPhone(o.customerPhone) === debouncedPhone) ?? null),
+        .then((r) => r.orders.find((o) => normalizeBdPhone(o.customerPhone) === debouncedPhone) ?? null),
     enabled: Boolean(debouncedPhone),
     staleTime: 60_000,
   });

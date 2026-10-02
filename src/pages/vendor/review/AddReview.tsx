@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Search, X, ImagePlus } from 'lucide-react';
+import { ImagePlus, Star, X } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
-import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
+import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { SaveBar, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
+import { outlineBtn } from '../../../components/ui/PageKit';
 import { reviewsApi } from '../../../lib/reviewsApi';
 import { ordersApi, type Order } from '../../../lib/ordersApi';
-import { productsApi, type Product } from '../../../lib/productsApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { toLatinDigits } from '../../../lib/bdPhone';
 import { toast } from '../../../lib/toast';
+import { FormHeader, ProductPicker, toLocalInput, type PickedItem } from '../marketing/MarketingKit';
 
 interface PhotoState {
   previewUrl: string;
@@ -17,14 +20,42 @@ interface PhotoState {
   error?: string;
 }
 
+const MAX_PHOTOS = 6;
+const RATING_WORDS = ['', 'Very bad', 'Bad', 'Okay', 'Good', 'Excellent'];
+
+/** Five tappable stars (40px targets), with the word for the rating. */
+export function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const shown = hover ?? value;
+  return (
+    <div className="flex items-center gap-2">
+      <div role="radiogroup" aria-label="Rating" className="flex" onMouseLeave={() => setHover(null)}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={value === n}
+            aria-label={`${n} ${n === 1 ? 'star' : 'stars'}`}
+            onClick={() => onChange(n)}
+            onMouseEnter={() => setHover(n)}
+            className="flex h-10 w-9 items-center justify-center"
+          >
+            <Star size={24} className={n <= shown ? 'fill-amber-400 text-amber-400' : 'text-neutral-300'} aria-hidden />
+          </button>
+        ))}
+      </div>
+      <span className="text-sm text-neutral-600">{RATING_WORDS[shown]}</span>
+    </div>
+  );
+}
+
 /**
- * Reviews > "+ Add New" (and Edit, via the :id param — same page, same
- * shape as AddCollection.tsx) — matches the reference Add Review form
- * field-for-field: Review Content (Title, rich-text Content, Rating,
- * Date), Review Photos, Order & Product Information (search-to-link,
- * same autocomplete pattern as AddCollection's product search), and
- * free-text Customer Information (see Review model's schema comment
- * for why this isn't a Customer relation).
+ * Reviews > "+ Add New" (and Edit, via the :id param). The review itself
+ * (title, text, stars, date), photos, what it's about (an order and/or
+ * products), and who wrote it. Linking an order fills in the customer's
+ * details. See Review model's schema comment for why the customer is
+ * free text, not a Customer relation.
  */
 export default function AddReview() {
   const { id } = useParams<{ id: string }>();
@@ -32,7 +63,7 @@ export default function AddReview() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: existing } = useQuery({
+  const { data: existing, isLoading } = useQuery({
     queryKey: ['reviews', id],
     queryFn: () => reviewsApi.findOne(id!),
     enabled: isEdit,
@@ -48,220 +79,179 @@ export default function AddReview() {
   const [orderQuery, setOrderQuery] = useState('');
   const [orderFocused, setOrderFocused] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-  const [productQuery, setProductQuery] = useState('');
-  const [productFocused, setProductFocused] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<PickedItem[]>([]);
 
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
 
+  const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
-  // Fills the form once the existing review arrives — a plain one-time
-  // fill, not a controlled sync (same pattern as EditCustomer.tsx).
+  // One-time fill once the existing review arrives.
   useEffect(() => {
     if (!existing) return;
     setTitle(existing.title);
     setContent(existing.content ?? '');
     setRating(existing.rating);
+    setDate(toLocalInput(existing.createdAt));
     setPhotos(existing.photos.map((url) => ({ previewUrl: url, uploadedUrl: url, uploading: false })));
-    setSelectedProducts(
-      existing.products.map((p) => ({ id: p.id, name: p.name, photoUrls: p.photoUrls }) as Product),
-    );
+    setProducts(existing.products.map((p) => ({ id: p.id, label: p.name, photoUrl: p.photoUrls[0] ?? null })));
     setCustomerName(existing.customerName ?? '');
     setCustomerEmail(existing.customerEmail ?? '');
     setCustomerPhone(existing.customerPhone ?? '');
-    if (existing.order) {
-      setOrderQuery(`ORDER-${existing.order.invoiceNumber}`);
-    }
+    if (existing.order) setOrderQuery(`ORDER-${existing.order.invoiceNumber}`);
   }, [existing]);
+
+  const dirty = !saved && Boolean(isEdit ? existing && (title !== existing.title || content !== (existing.content ?? '') || rating !== existing.rating) : title || content);
+  useUnsavedChangesWarning(Boolean(dirty));
 
   const { data: orderSearchResults } = useQuery({
     queryKey: ['orders-search', orderQuery],
-    queryFn: () => ordersApi.list({ search: orderQuery.trim(), perPage: 8 }),
+    queryFn: () => ordersApi.list({ search: orderQuery.trim().replace(/^order-/i, ''), perPage: 8 }),
     enabled: orderQuery.trim().length > 0 && !selectedOrder,
   });
   const orderMatches = orderSearchResults?.orders ?? [];
-
-  const { data: productSearchResults } = useQuery({
-    queryKey: ['products-search', productQuery],
-    queryFn: () => productsApi.list({ search: productQuery.trim(), perPage: 8 }),
-    enabled: productQuery.trim().length > 0,
-  });
-  const productMatches = useMemo(
-    () => (productSearchResults?.products ?? []).filter((p) => !selectedProducts.some((sp) => sp.id === p.id)),
-    [productSearchResults, selectedProducts],
-  );
 
   const selectOrder = (order: Order) => {
     setSelectedOrder(order);
     setOrderQuery(`ORDER-${order.invoiceNumber}`);
     setOrderFocused(false);
-    // Prefills Customer Information from the order — still fully
-    // editable, and only fills in blank fields so it never clobbers
-    // something already typed.
+    // Fills only empty customer fields, so nothing typed is overwritten.
     setCustomerName((prev) => prev || order.customerName);
     setCustomerEmail((prev) => prev || order.customerEmail || '');
     setCustomerPhone((prev) => prev || order.customerPhone);
   };
 
-  const clearOrder = () => {
-    setSelectedOrder(null);
-    setOrderQuery('');
-  };
-
-  const addProduct = (product: Product) => {
-    setSelectedProducts((prev) => [...prev, product]);
-    setProductQuery('');
-  };
-
-  const removeProduct = (productId: string) => {
-    setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
-
   const handlePhotoSelect = (file: File | undefined) => {
     if (!file) return;
-    if (!/^image\/(jpe?g|png|webp|gif)$/.test(file.type)) return;
-    if (photos.length >= 6) return;
-
+    if (!/^image\/(jpe?g|png|webp|gif)$/.test(file.type)) {
+      toast.error('Choose a JPG, PNG, WebP or GIF photo.');
+      return;
+    }
+    if (photos.length >= MAX_PHOTOS) return;
     const previewUrl = URL.createObjectURL(file);
     const index = photos.length;
     setPhotos((prev) => [...prev, { previewUrl, uploading: true }]);
-
     reviewsApi
       .uploadPhoto(file)
-      .then((res) =>
-        setPhotos((prev) => prev.map((p, i) => (i === index ? { previewUrl, uploadedUrl: res.url, uploading: false } : p))),
-      )
+      .then((res) => setPhotos((prev) => prev.map((p, i) => (i === index ? { previewUrl, uploadedUrl: res.url, uploading: false } : p))))
       .catch((err) =>
-        setPhotos((prev) => prev.map((p, i) => (i === index ? { ...p, uploading: false, error: apiErrorMessage(err, 'Upload failed') } : p))),
+        setPhotos((prev) => prev.map((p, i) => (i === index ? { ...p, uploading: false, error: apiErrorMessage(err, 'Didn’t upload') } : p))),
       );
   };
 
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  const errors = {
+    title: !title.trim() ? 'Give the review a short title, e.g. “Great quality”.' : null,
+    photos: photos.some((p) => p.uploading) ? 'Wait for the photos to finish uploading.' : null,
   };
-
-  function buildPayload() {
-    return {
-      title: title.trim(),
-      content: content || undefined,
-      rating,
-      date: date ? new Date(date).toISOString() : undefined,
-      photoUrls: photos.filter((p) => p.uploadedUrl).map((p) => p.uploadedUrl!),
-      orderId: selectedOrder?.id,
-      productIds: selectedProducts.map((p) => p.id),
-      customerName: customerName.trim() || undefined,
-      customerEmail: customerEmail.trim() || undefined,
-      customerPhone: customerPhone.trim() || undefined,
-    };
-  }
+  const valid = !errors.title && !errors.photos;
 
   const saveMutation = useMutation({
-    mutationFn: () => (isEdit ? reviewsApi.update(id!, buildPayload()) : reviewsApi.create(buildPayload())),
+    mutationFn: () => {
+      const payload = {
+        title: title.trim(),
+        content: content || undefined,
+        rating,
+        date: date ? new Date(date).toISOString() : undefined,
+        photoUrls: photos.filter((p) => p.uploadedUrl).map((p) => p.uploadedUrl!),
+        orderId: selectedOrder?.id,
+        productIds: products.map((p) => p.id),
+        customerName: customerName.trim() || undefined,
+        customerEmail: customerEmail.trim() || undefined,
+        customerPhone: customerPhone.trim() || undefined,
+      };
+      return isEdit ? reviewsApi.update(id!, payload) : reviewsApi.create(payload);
+    },
     onSuccess: () => {
+      setSaved(true);
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
-      toast.success(isEdit ? 'Review updated.' : 'Review created.');
+      toast.success(isEdit ? 'Review saved' : 'Review added');
       navigate('/vendor/reviews');
     },
     onError: (err: any) => {
-      setFormError(err?.response?.data?.message ?? 'Could not save this review. Please try again.');
+      const message = err?.response?.data?.message;
+      setFormError((Array.isArray(message) ? message[0] : message) ?? 'Couldn’t save this review. Check your connection and try again.');
     },
   });
 
-  const handleSubmit = () => {
-    setFormError(null);
-    if (!title.trim()) {
-      setFormError('Review title is required.');
-      return;
-    }
-    if (photos.some((p) => p.uploading)) {
-      setFormError('Please wait for all photos to finish uploading.');
-      return;
-    }
-    saveMutation.mutate();
-  };
+  if (isEdit && isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-4" aria-busy>
+        <div className="h-12 w-48 animate-pulse rounded-lg bg-neutral-100" />
+        <div className="h-64 animate-pulse rounded-xl bg-neutral-100" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-3xl">
-      <button
-        onClick={() => navigate('/vendor/reviews')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
-        <ChevronLeft size={16} />
-        Reviews
-      </button>
+    <form
+      className="mx-auto max-w-3xl"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        setFormError(null);
+        setSubmitted(true);
+        if (valid) saveMutation.mutate();
+      }}
+    >
+      <FormHeader
+        backTo="/vendor/reviews"
+        backLabel="Reviews"
+        title={isEdit ? 'Edit review' : 'Add review'}
+        description={isEdit ? 'Changes show on your store right away if the review is shown.' : 'A review you add is shown on your store straight away.'}
+      />
 
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">{isEdit ? 'Edit Review' : 'Add Review'}</h1>
-
-      <div className="space-y-6">
-        <SectionCard title="Review Content">
-          <div className="space-y-5">
-            <Field label="Title" required>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Review Title"
-                className={inputClass}
-              />
-              {formError === 'Review title is required.' && <p className="text-red-500 text-xs mt-1">Review title is required.</p>}
+      <div className="space-y-4">
+        <SectionCard title="Review">
+          <div className="space-y-4">
+            <Field label="Stars" required>
+              <StarPicker value={rating} onChange={setRating} />
             </Field>
-
-            <Field label="Review Content">
-              <RichTextEditor value={content} onChange={setContent} placeholder="Enter text here..." />
+            <Field label="Title" required error={submitted ? errors.title : null}>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Great quality, fast delivery" className={productInputClass} />
             </Field>
-
-            <Field label="Rating" required>
-              <select value={rating} onChange={(e) => setRating(Number(e.target.value))} className={inputClass}>
-                {[5, 4, 3, 2, 1].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
+            <Field label="What they said">
+              <RichTextEditor value={content} onChange={setContent} placeholder="The customer’s words" />
             </Field>
-
-            <Field label="Date" hint="Defaults to right now if left blank">
-              <input
-                type="datetime-local"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
+            <div className="sm:w-1/2 sm:pr-2">
+              <Field label="Date" hint={isEdit ? undefined : 'Leave empty for right now.'}>
+                <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} className={productInputClass} />
+              </Field>
+            </div>
           </div>
         </SectionCard>
 
-        <SectionCard title="Review Photos">
+        <SectionCard title="Photos" description={`Up to ${MAX_PHOTOS}. Shown with the review.`}>
           <div className="flex flex-wrap gap-3">
             {photos.map((photo, i) => (
-              <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-black/10 shrink-0">
-                <img src={photo.uploadedUrl ?? photo.previewUrl} alt="" className="w-full h-full object-cover" />
+              <div key={i} className={`relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border ${photo.error ? 'border-red-300' : 'border-line'}`}>
+                <img src={photo.uploadedUrl ?? photo.previewUrl} alt="" className="h-full w-full object-cover" />
                 {photo.uploading && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   </div>
                 )}
+                {photo.error && <p className="absolute inset-x-0 bottom-0 bg-red-600/90 px-1 py-0.5 text-center text-[10px] text-white">{photo.error}</p>}
                 <button
                   type="button"
-                  onClick={() => removePhoto(i)}
-                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                  onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
+                  aria-label="Remove photo"
+                  className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
                 >
-                  <X size={11} />
+                  <X size={13} />
                 </button>
               </div>
             ))}
-            {photos.length < 6 && (
+            {photos.length < MAX_PHOTOS && (
               <button
                 type="button"
                 onClick={() => photoInputRef.current?.click()}
-                className="w-24 h-24 rounded-xl border-2 border-dashed border-black/15 bg-regantify-content
-                  flex items-center justify-center hover:border-black/25 shrink-0"
+                className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-xs text-neutral-500 hover:border-brand"
               >
-                <ImagePlus size={20} className="text-regantify-text-muted" />
+                <ImagePlus size={20} aria-hidden />
+                Add photo
               </button>
             )}
           </div>
@@ -275,11 +265,12 @@ export default function AddReview() {
             }}
             className="hidden"
           />
+          {submitted && errors.photos && <p className="mt-2 text-xs text-red-600">{errors.photos}</p>}
         </SectionCard>
 
-        <SectionCard title="Order & Product Information">
-          <div className="space-y-5">
-            <Field label="Order">
+        <SectionCard title="What it’s about" description="Link the order and products so the review shows on those product pages.">
+          <div className="space-y-4">
+            <Field label="Order" hint="Optional. Fills in the customer below.">
               <div className="relative">
                 <input
                   type="text"
@@ -290,125 +281,76 @@ export default function AddReview() {
                   }}
                   onFocus={() => setOrderFocused(true)}
                   onBlur={() => setTimeout(() => setOrderFocused(false), 150)}
-                  placeholder="Search Order"
-                  className={inputClass}
+                  placeholder="Search invoice, name or phone"
+                  className={productInputClass}
                 />
                 {selectedOrder && (
                   <button
                     type="button"
-                    onClick={clearOrder}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-regantify-text-muted hover:text-red-600"
+                    onClick={() => {
+                      setSelectedOrder(null);
+                      setOrderQuery('');
+                    }}
+                    aria-label="Unlink order"
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-neutral-500 hover:text-red-600"
                   >
-                    <X size={14} />
+                    <X size={15} />
                   </button>
                 )}
                 {orderFocused && !selectedOrder && orderMatches.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-xl shadow-lg border border-black/10 max-h-48 overflow-y-auto py-1">
+                  <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-20 max-h-56 overflow-y-auto rounded-lg border border-line bg-white py-1 shadow-lg">
                     {orderMatches.map((o) => (
                       <button
                         key={o.id}
                         type="button"
                         onMouseDown={() => selectOrder(o)}
-                        className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-regantify-content flex items-center justify-between gap-2"
+                        className="flex min-h-10 w-full items-center justify-between gap-2 px-3.5 py-2 text-left text-sm text-regantify-text hover:bg-neutral-50"
                       >
                         <span className="font-medium">ORDER-{o.invoiceNumber}</span>
-                        <span className="text-xs text-regantify-text-muted truncate">{o.customerName}</span>
+                        <span className="truncate text-xs text-neutral-500">
+                          {o.customerName} · {o.customerPhone}
+                        </span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
             </Field>
+            <ProductPicker selected={products} onChange={setProducts} />
+          </div>
+        </SectionCard>
 
-            <div>
-              <p className="text-sm font-medium text-regantify-text mb-2">Products</p>
-              <div className="space-y-2 mb-3">
-                {selectedProducts.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between gap-3 p-2 rounded-xl bg-regantify-content">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <img src={p.photoUrls[0] ?? ''} alt="" className="w-8 h-8 rounded-lg object-cover bg-white shrink-0" />
-                      <span className="text-sm text-regantify-text truncate">{p.name}</span>
-                    </div>
-                    <button type="button" onClick={() => removeProduct(p.id)} className="text-regantify-text-muted hover:text-red-600 shrink-0">
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-                <input
-                  type="text"
-                  value={productQuery}
-                  onChange={(e) => setProductQuery(e.target.value)}
-                  onFocus={() => setProductFocused(true)}
-                  onBlur={() => setTimeout(() => setProductFocused(false), 150)}
-                  placeholder="Search products to add"
-                  className={`${inputClass} pl-10`}
-                />
-                {productFocused && productMatches.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-xl shadow-lg border border-black/10 max-h-56 overflow-y-auto py-1">
-                    {productMatches.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onMouseDown={() => addProduct(p)}
-                        className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-regantify-content flex items-center gap-2.5"
-                      >
-                        <img src={p.photoUrls[0] ?? ''} alt="" className="w-6 h-6 rounded object-cover bg-regantify-content" />
-                        <span className="truncate">{p.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+        <SectionCard title="Who wrote it">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Name" hint="Shown on the review.">
+              <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g. Nusrat J." className={productInputClass} />
+            </Field>
+            <Field label="Phone" hint="Only you see this.">
+              <input type="text" inputMode="tel" value={customerPhone} onChange={(e) => setCustomerPhone(toLatinDigits(e.target.value))} placeholder="Optional" className={productInputClass} />
+            </Field>
+            <div className="sm:col-span-2">
+              <Field label="Email" hint="Only you see this.">
+                <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Optional" className={productInputClass} />
+              </Field>
             </div>
           </div>
         </SectionCard>
-
-        <SectionCard title="Customer Information">
-          <div className="space-y-5">
-            <Field label="Name">
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Customer Name"
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Email">
-              <input
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="Customer Email"
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Phone">
-              <input
-                type="text"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Customer Phone"
-                className={inputClass}
-              />
-            </Field>
-          </div>
-        </SectionCard>
-
-        {formError && formError !== 'Review title is required.' && <p className="text-red-500 text-sm">{formError}</p>}
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={saveMutation.isPending}
-          className="px-8 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium transition-colors disabled:opacity-60"
-        >
-          {saveMutation.isPending ? 'Saving…' : isEdit ? 'Update' : 'Create'}
-        </button>
       </div>
-    </div>
+
+      <SaveBar
+        message={formError ? <span className="text-red-600">{formError}</span> : submitted && !valid ? <span className="text-red-600">Fix the fields marked in red.</span> : undefined}
+      >
+        <Link to="/vendor/reviews" className={`${outlineBtn} h-10`}>
+          Cancel
+        </Link>
+        <button
+          type="submit"
+          disabled={saveMutation.isPending}
+          className="inline-flex h-10 items-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+        >
+          {saveMutation.isPending ? 'Saving…' : isEdit ? 'Save review' : 'Add review'}
+        </button>
+      </SaveBar>
+    </form>
   );
 }

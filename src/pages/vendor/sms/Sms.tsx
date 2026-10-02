@@ -1,166 +1,199 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { MessageSquareText, Plus, Send } from 'lucide-react';
 import { smsApi } from '../../../lib/smsApi';
-import { toast } from '../../../lib/toast';
-import { BuySmsDialog } from './BuySmsDialog';
+import { apiErrorMessage } from '../../../lib/api';
+import { BD_PHONE_HINT, normalizeBdPhone, toLatinDigits } from '../../../lib/bdPhone';
+import { formatDhakaDateTime } from '../../../lib/dhakaDate';
+import { Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { EmptyState, PageHeader, PillTabs, StackedList, TableFrame, TableSkeleton, primaryBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
+import { BuySmsDialog, perSms } from './BuySmsDialog';
 
-type Tab = 'logs' | 'settings';
+type Tab = 'logs' | 'test';
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'numeric',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-function ShowLogs() {
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ['sms-logs'],
-    queryFn: () => smsApi.getLogs(),
-  });
+/**
+ * Sent messages, newest first (the last 30). The gateway (bulksmsbd.net)
+ * only confirms it accepted a message; it sends no delivery reports, so
+ * there's no "delivered" column (theme-update-plan.md Step 9).
+ */
+function SentLogs() {
+  const { data: logs, isLoading } = useQuery({ queryKey: ['sms-logs'], queryFn: () => smsApi.getLogs() });
+  const COLS = 4;
+  const empty = (
+    <EmptyState
+      icon={MessageSquareText}
+      title="No SMS sent yet"
+      hint="Order updates, verification codes and tracking messages show up here once your store sends them."
+    />
+  );
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-regantify-text mb-4">Sent SMS Logs</h2>
-
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide border-b border-black/5">
-                <th className="p-4 w-10">#</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Message</th>
-                <th className="p-4">SMS Count</th>
-                <th className="p-4">Date and Time</th>
+    <>
+      <div className="hidden md:block">
+        <TableFrame minWidth="min-w-[720px]">
+          <thead>
+            <tr className={theadRow}>
+              <th className={`${th} w-44`}>Sent</th>
+              <th className={`${th} w-36`}>To</th>
+              <th className={th}>Message</th>
+              <th className={`${th} w-24 text-right`}>SMS used</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <TableSkeleton rows={6} colSpan={COLS} />
+            ) : !logs || logs.length === 0 ? (
+              <tr className="border-t border-line">
+                <td colSpan={COLS}>{empty}</td>
               </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-sm text-regantify-text-muted">
-                    Loading…
-                  </td>
+            ) : (
+              logs.map((log) => (
+                <tr key={log.id} className={trClass()}>
+                  <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDhakaDateTime(log.createdAt)}</td>
+                  <td className={`${td} whitespace-nowrap tabular-nums`}>{log.phone}</td>
+                  <td className={td}>{log.message}</td>
+                  <td className={`${td} text-right tabular-nums`}>{log.smsCount}</td>
                 </tr>
-              ) : !logs || logs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-sm text-regantify-text-muted">
-                    No SMS sent yet.
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log, i) => (
-                  <tr key={log.id} className="border-b border-black/5 align-top last:border-0">
-                    <td className="p-4 text-sm text-regantify-text">{i + 1}</td>
-                    <td className="p-4 text-sm text-regantify-text whitespace-nowrap">{log.phone}</td>
-                    <td className="p-4 text-sm text-regantify-text max-w-md">{log.message}</td>
-                    <td className="p-4 text-sm text-regantify-text">{log.smsCount}</td>
-                    <td className="p-4 text-sm text-regantify-text-muted whitespace-nowrap">
-                      {formatDateTime(log.createdAt)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </TableFrame>
       </div>
-    </div>
+
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="space-y-2" aria-busy>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-lg bg-neutral-100" />
+            ))}
+          </div>
+        ) : !logs || logs.length === 0 ? (
+          <div className="rounded-lg border border-line">{empty}</div>
+        ) : (
+          <StackedList>
+            {logs.map((log) => (
+              <li key={log.id} className="px-3 py-2.5">
+                <div className="flex items-baseline justify-between gap-2 text-xs text-neutral-500">
+                  <span className="tabular-nums">{log.phone}</span>
+                  <span>
+                    {formatDhakaDateTime(log.createdAt)} · {log.smsCount} SMS
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-regantify-text">{log.message}</p>
+              </li>
+            ))}
+          </StackedList>
+        )}
+      </div>
+      {logs && logs.length > 0 && (
+        <p className="mt-3 px-0.5 text-xs text-neutral-500">The last 30 messages. “Sent” means the SMS company accepted it for delivery.</p>
+      )}
+    </>
   );
 }
 
-function Settings() {
+function TestSms() {
   const queryClient = useQueryClient();
   const [phone, setPhone] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const normalized = normalizeBdPhone(phone);
+  const phoneError = !phone.trim() ? 'Enter a phone number.' : !normalized ? BD_PHONE_HINT : null;
 
   const sendTestMutation = useMutation({
-    mutationFn: () => smsApi.sendTest(phone.trim()),
+    mutationFn: () => smsApi.sendTest(normalized!),
     onSuccess: (data) => {
       queryClient.setQueryData(['sms-credits'], data);
       queryClient.invalidateQueries({ queryKey: ['sms-logs'] });
-      toast.success('Test SMS sent.');
+      setSentTo(normalized);
       setPhone('');
+      setSubmitted(false);
     },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.message ?? 'Could not send the test SMS. Please try again.');
-    },
+    onError: (err) => setError(apiErrorMessage(err, 'Couldn’t send the test SMS. Try again in a minute.')),
   });
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-regantify-text mb-4">Settings</h2>
-
-      <div>
-        <p className="text-base font-semibold text-regantify-text mb-3">SMS Testing</p>
-        <div className="bg-white rounded-2xl border border-black/5 p-5 mb-4">
-          <label className="block text-sm font-medium text-regantify-text mb-1.5">Phone Number</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="01XXXXXXXXX"
-            className="w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text
-              placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black text-sm"
-          />
-        </div>
-
-        <button
-          onClick={() => sendTestMutation.mutate()}
-          disabled={!phone.trim() || sendTestMutation.isPending}
-          className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
-            transition-colors disabled:opacity-60"
-        >
-          {sendTestMutation.isPending ? 'Sending…' : 'Send Test SMS'}
-        </button>
-      </div>
-    </div>
+    <form
+      noValidate
+      className="max-w-md"
+      onSubmit={(e) => {
+        e.preventDefault();
+        setError(null);
+        setSentTo(null);
+        setSubmitted(true);
+        if (!phoneError) sendTestMutation.mutate();
+      }}
+    >
+      <p className="mb-4 text-sm text-neutral-600">Send yourself a test message to check SMS works. It uses 1 SMS.</p>
+      <Field label="Send to" error={submitted ? phoneError : null}>
+        <input
+          type="tel"
+          inputMode="tel"
+          value={phone}
+          onChange={(e) => setPhone(toLatinDigits(e.target.value))}
+          placeholder="01XXXXXXXXX"
+          className={productInputClass}
+        />
+      </Field>
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {sentTo && <p className="animate-pop-in mt-3 text-sm text-emerald-700">Test SMS sent to {sentTo}.</p>}
+      <button type="submit" disabled={sendTestMutation.isPending} className={`${primaryBtn} mt-4 h-10 px-4`}>
+        <Send size={14} aria-hidden />
+        {sendTestMutation.isPending ? 'Sending…' : 'Send test SMS'}
+      </button>
+    </form>
   );
 }
 
+/**
+ * Store > SMS: how many SMS are left (big, with Buy SMS and the price
+ * of one), the messages your store sent, and a test send.
+ */
 export default function Sms() {
   const [tab, setTab] = useState<Tab>('logs');
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
 
-  const { data: creditsData } = useQuery({
-    queryKey: ['sms-credits'],
-    queryFn: () => smsApi.getCredits(),
-  });
+  const { data: creditsData, isLoading } = useQuery({ queryKey: ['sms-credits'], queryFn: () => smsApi.getCredits() });
+  const { data: packages } = useQuery({ queryKey: ['sms-packages'], queryFn: () => smsApi.getPackages() });
+  const credits = creditsData?.smsCredits ?? 0;
+  const cheapest = packages?.reduce<(typeof packages)[number] | null>((b, p) => (!b || p.price / p.smsCount < b.price / b.smsCount ? p : b), null);
+  const low = !isLoading && credits < 50;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-regantify-black mb-6">SMS</h1>
+    <div className="space-y-4">
+      <PageHeader className="" title="SMS" description="Messages your store sends: order updates, verification codes and tracking." />
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-5">
-          <button
-            onClick={() => setTab('logs')}
-            className={`text-sm font-medium ${tab === 'logs' ? 'text-regantify-text' : 'text-regantify-text-muted hover:text-regantify-text'}`}
-          >
-            Show Logs
-          </button>
-          <button
-            onClick={() => setTab('settings')}
-            className={`text-sm font-medium ${tab === 'settings' ? 'text-regantify-text' : 'text-regantify-text-muted hover:text-regantify-text'}`}
-          >
-            Settings
-          </button>
+      <section className={`flex flex-wrap items-center gap-4 rounded-xl border p-4 ${low ? 'border-amber-200 bg-amber-50' : 'border-line bg-white'}`}>
+        <div className="mr-auto">
+          <p className="text-sm text-neutral-600">SMS left</p>
+          {isLoading ? (
+            <div className="mt-1 h-9 w-24 animate-pulse rounded bg-neutral-100" />
+          ) : (
+            <p className="text-3xl font-semibold tabular-nums text-regantify-text">{credits.toLocaleString()}</p>
+          )}
+          <p className="mt-0.5 text-xs text-neutral-500">
+            {low ? 'Running low: messages stop when this reaches 0. ' : ''}
+            {cheapest ? `From ${perSms(cheapest)} per SMS. A long message can use 2 or more.` : 'A long message can use 2 or more.'}
+          </p>
         </div>
+        <button type="button" onClick={() => setBuyDialogOpen(true)} className={`${primaryBtn} h-10 w-full px-4 sm:w-auto`}>
+          <Plus size={15} aria-hidden />
+          Buy SMS
+        </button>
+      </section>
 
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setBuyDialogOpen(true)}
-            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
-          >
-            Buy SMS
-          </button>
-          <span className="text-sm text-regantify-text">SMS Left: {creditsData?.smsCredits ?? 0}</span>
-        </div>
-      </div>
-
-      {tab === 'logs' ? <ShowLogs /> : <Settings />}
+      <section className="rounded-xl border border-line bg-white p-3.5">
+        <PillTabs<Tab>
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: 'logs', label: 'Sent messages' },
+            { id: 'test', label: 'Send a test' },
+          ]}
+        />
+        <div className="px-0.5">{tab === 'logs' ? <SentLogs /> : <TestSms />}</div>
+      </section>
 
       <BuySmsDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen} />
     </div>

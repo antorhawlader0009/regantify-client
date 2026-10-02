@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, Clock, CreditCard } from 'lucide-react';
+import { Check, Clock, Minus } from 'lucide-react';
 import {
   getPlans,
   getVendorPlanUsage,
@@ -14,69 +14,62 @@ import {
 import { paymentsApi } from '../../lib/paymentsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
-
-function UsageBar({ label, used, limit }: { label: string; used: number; limit: number | null }) {
-  const pct = limit === null ? 0 : Math.min(100, Math.round((used / Math.max(limit, 1)) * 100));
-  const atLimit = limit !== null && used >= limit;
-  return (
-    <div>
-      <div className="flex items-center justify-between text-sm mb-1">
-        <span className="text-regantify-text-muted">{label}</span>
-        <span className={atLimit ? 'text-amber-600 font-medium' : 'text-regantify-text'}>
-          {used} / {limit ?? '∞'}
-        </span>
-      </div>
-      {limit !== null && (
-        <div className="h-1.5 rounded-full bg-regantify-content overflow-hidden">
-          <div
-            className={`h-full rounded-full ${atLimit ? 'bg-amber-500' : 'bg-regantify-cta'}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
+import { UsageBar } from '../../components/dashboard/SideCards';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { PageHeader } from '../../components/ui/PageKit';
 
 const TIER_ORDER: PlanCode[] = ['FREE', 'BASIC', 'STARTER', 'ADVANCE'];
 
+function limitText(value: number | null, suffix = '') {
+  return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
+}
+
+function priceText(plan: Plan) {
+  const price = Number(plan.priceMonthly);
+  return price <= 0 ? 'Free' : `৳${price.toLocaleString('en-US')}`;
+}
+
+/** The plan's per-order charge on cash-on-delivery orders and who pays it. */
+function feeText(flat: string, percent: string, payer: PaymentFeePayer) {
+  return `${formatFeeParts(flat, percent)} per COD order${payer === 'VENDOR' ? ', paid by you' : ''}`;
+}
+
+/** One feature line on a plan card: a tick (or a dash for "no") and the words. */
+function Feature({ on = true, children }: { on?: boolean; children: ReactNode }) {
+  return (
+    <li className={`flex items-start gap-2 ${on ? 'text-regantify-text' : 'text-neutral-400'}`}>
+      {on ? <Check size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden /> : <Minus size={14} className="mt-0.5 shrink-0" aria-hidden />}
+      <span>{children}</span>
+    </li>
+  );
+}
+
 /**
- * Vendor dashboard's Billing page — a 4-tier comparison with two ways
- * to move plans: "Pay with PayStation" (self-serve, upgrades
- * immediately on payment — see PaymentsService's PLAN_UPGRADE purpose)
- * as the primary action, and "Request Upgrade" underneath it as a
- * fallback for a vendor who'd rather arrange payment manually with
- * support (creates a PlanUpgradeRequest a Super Admin reviews — Plan
- * Requests page). Free has no payment button since it never costs
- * anything.
+ * Billing: your plan on top (price, the per-order charge, and the same
+ * usage bars as the Dashboard), then every plan side by side with yours
+ * highlighted. Two ways to move: pay with PayStation (upgrades at once on
+ * payment — see PaymentsService's PLAN_UPGRADE purpose), or ask us to
+ * set it up by hand (a PlanUpgradeRequest a Super Admin reviews). Free
+ * has no payment, so moving to it is always a request.
  */
 export default function Billing() {
   const queryClient = useQueryClient();
   const [payingPlan, setPayingPlan] = useState<PlanCode | null>(null);
+  const [confirmRequest, setConfirmRequest] = useState<Plan | null>(null);
 
-  const { data: usage, isLoading: usageLoading } = useQuery({
-    queryKey: ['vendor-plan-usage'],
-    queryFn: getVendorPlanUsage,
-  });
-  const { data: plans = [], isLoading: plansLoading } = useQuery({
-    queryKey: ['plans'],
-    queryFn: getPlans,
-  });
-  const { data: requests = [] } = useQuery({
-    queryKey: ['own-plan-requests'],
-    queryFn: getOwnPlanRequests,
-  });
-
+  const { data: usage, isLoading: usageLoading } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
+  const { data: plans = [], isLoading: plansLoading } = useQuery({ queryKey: ['plans'], queryFn: getPlans });
+  const { data: requests = [] } = useQuery({ queryKey: ['own-plan-requests'], queryFn: getOwnPlanRequests });
   const pendingRequest = requests.find((r) => r.status === 'PENDING');
 
   const requestMutation = useMutation({
     mutationFn: (planCode: PlanCode) => requestPlanUpgrade(planCode),
     onSuccess: (_, planCode) => {
       queryClient.invalidateQueries({ queryKey: ['own-plan-requests'] });
-      const plan = plans.find((p) => p.code === planCode);
-      toast.success(`Request sent — we'll review your request to move to ${plan?.name ?? planCode}.`);
+      setConfirmRequest(null);
+      toast.success(`Request sent to move to ${plans.find((p) => p.code === planCode)?.name ?? planCode}`);
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not send the request. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t send the request. Try again in a minute.')),
   });
 
   const payMutation = useMutation({
@@ -88,195 +81,149 @@ export default function Billing() {
       window.location.href = data.paymentUrl;
     },
     onError: (err) => {
-      toast.error(apiErrorMessage(err, 'Could not start the payment. Please try again.'));
+      toast.error(apiErrorMessage(err, 'Couldn’t open PayStation. Check your connection and try again.'));
       setPayingPlan(null);
     },
   });
 
   const loading = usageLoading || plansLoading;
   const sortedPlans = [...plans].sort((a, b) => TIER_ORDER.indexOf(a.code) - TIER_ORDER.indexOf(b.code));
+  const currentIndex = usage ? TIER_ORDER.indexOf(usage.plan.code) : -1;
+
+  if (loading) {
+    return (
+      <div className="space-y-4" aria-busy>
+        <div className="h-12 w-48 animate-pulse rounded-lg bg-neutral-100" />
+        <div className="h-64 animate-pulse rounded-xl bg-neutral-100" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-80 animate-pulse rounded-xl bg-neutral-100" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Billing &amp; Plan</h1>
-        <p className="text-sm text-regantify-text-muted mt-1">Your current plan, usage, and upgrade options.</p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader className="" title="Billing" description="Your plan, what you’ve used of it, and the other plans." />
 
-      {loading ? (
-        <div className="bg-white rounded-2xl border border-black/5 p-8 text-center text-sm text-regantify-text-muted">
-          Loading…
-        </div>
-      ) : (
-        <>
-          {usage && (
-            <div className="bg-white rounded-2xl border border-black/5 p-6 mb-6 max-w-xl">
-              <div className="flex items-center gap-2 text-regantify-text-muted text-sm font-medium mb-1">
-                <CreditCard size={16} />
-                Current plan: <span className="text-regantify-text font-semibold">{usage.plan.name}</span>
-              </div>
-              <p className="text-xs text-regantify-text-muted mb-4">
-                COD fee:{' '}
-                {formatFee(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer, usage.plan.codFeeHidden)}
-              </p>
-              <div className="space-y-4">
-                <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
-                <UsageBar label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
-                <UsageBar label="Orders today" used={usage.usage.ordersToday.used} limit={usage.usage.ordersToday.limit} />
-                <UsageBar
-                  label="Monthly visits"
-                  used={usage.usage.monthlyVisits.used}
-                  limit={usage.usage.monthlyVisits.limit}
-                />
-                <UsageBar
-                  label="AI chat messages today"
-                  used={usage.usage.aiChatMessagesToday.used}
-                  limit={usage.usage.aiChatMessagesToday.limit}
-                />
-              </div>
-            </div>
-          )}
-
-          {pendingRequest && (
-            <div className="max-w-xl mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
-              <Clock size={16} className="text-amber-700 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-900">
-                You have a pending request to move to <strong>{pendingRequest.requestedPlan.name}</strong>. We'll
-                review it and get back to you.
-              </p>
-            </div>
-          )}
-
-          <h2 className="text-lg font-medium text-regantify-text mb-4">Compare plans</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {sortedPlans.map((plan) => {
-              const isCurrent = usage?.plan.code === plan.code;
-              return (
-                <PlanCard
-                  key={plan.id}
-                  plan={plan}
-                  isCurrent={isCurrent}
-                  pending={pendingRequest}
-                  onRequest={requestMutation.mutate}
-                  requesting={requestMutation.isPending}
-                  onPay={payMutation.mutate}
-                  paying={payMutation.isPending && payingPlan === plan.code}
-                  payDisabled={payMutation.isPending}
-                />
-              );
-            })}
+      {usage && (
+        <section className="grid gap-4 rounded-xl border border-line bg-white p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          <div className="rounded-lg bg-brand p-4 text-white">
+            <p className="text-sm text-white/75">Your plan</p>
+            <p className="mt-0.5 text-2xl font-semibold">{usage.plan.name}</p>
+            <p className="mt-1 text-sm">
+              {priceText(usage.plan)}
+              {Number(usage.plan.priceMonthly) > 0 && <span className="text-white/75"> a month</span>}
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-white/75">
+              {feeText(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer)}.
+            </p>
           </div>
-        </>
+          <div className="space-y-3">
+            <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
+            <UsageBar label="Orders today" used={usage.usage.ordersToday.used} limit={usage.usage.ordersToday.limit} />
+            <UsageBar label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
+            <UsageBar label="AI chat messages today" used={usage.usage.aiChatMessagesToday.used} limit={usage.usage.aiChatMessagesToday.limit} />
+            <UsageBar label="Store visits this month" used={usage.usage.monthlyVisits.used} limit={usage.usage.monthlyVisits.limit} />
+            <p className="text-xs text-neutral-500">Visits are for your information: your store keeps working for shoppers past the number.</p>
+          </div>
+        </section>
       )}
-    </div>
-  );
-}
 
-function formatLimit(value: number | null, suffix = '') {
-  return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
-}
-
-// Store > Payment Gateway's per-plan COD fee (the Online Payment fee is
-// hidden from vendors, so it's never listed here) — same
-// formatting convention as Finance > Fee Summary/Manage Plans (Super
-// Admin), surfaced here too so a vendor comparing plans can see exactly
-// what each tier charges and who pays it before upgrading, not just
-// after (Fee Summary only ever shows the vendor's OWN current plan's
-// fee in that kind of full-page format).
-function formatFee(flat: string, percent: string, payer: PaymentFeePayer, hidden: boolean) {
-  const value = formatFeeParts(flat, percent);
-  if (payer === 'VENDOR') return `${value} (you pay, hidden from customer)`;
-  return hidden ? `${value} (hidden from customer)` : value;
-}
-
-function PlanCard({
-  plan,
-  isCurrent,
-  pending,
-  onRequest,
-  requesting,
-  onPay,
-  paying,
-  payDisabled,
-}: {
-  plan: Plan;
-  isCurrent: boolean;
-  pending: { requestedPlan: Plan } | undefined;
-  onRequest: (code: PlanCode) => void;
-  requesting: boolean;
-  onPay: (code: PlanCode) => void;
-  paying: boolean;
-  payDisabled: boolean;
-}) {
-  const isPendingTarget = pending?.requestedPlan.code === plan.code;
-  const price = Number(plan.priceMonthly);
-  const isFree = price <= 0;
-
-  return (
-    <div
-      className={`bg-white rounded-2xl border p-5 flex flex-col ${
-        isCurrent ? 'border-regantify-cta ring-1 ring-regantify-cta' : 'border-black/5'
-      }`}
-    >
-      <div className="flex items-center gap-2 mb-1">
-        <h3 className="text-base font-semibold text-regantify-text">{plan.name}</h3>
-        {isCurrent && (
-          <span className="flex items-center gap-1 text-xs font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
-            <Check size={12} />
-            Current
-          </span>
-        )}
-      </div>
-
-      <p className="text-lg font-semibold text-regantify-text mt-1">
-        {isFree ? 'Free' : `৳${price.toLocaleString('en-US')}`}
-        {!isFree && <span className="text-xs font-normal text-regantify-text-muted">/month</span>}
-      </p>
-
-      <ul className="text-xs text-regantify-text-muted space-y-1.5 my-4 flex-1">
-        <li>Products: {formatLimit(plan.productLimit)}</li>
-        <li>Orders: {formatLimit(plan.orderLimitPerDay, '/day')}</li>
-        <li>Monthly visits: {formatLimit(plan.monthlyVisitLimit)}</li>
-        <li>Themes: {formatLimit(plan.themeAllowance)}</li>
-        <li>Image uploads: {formatLimit(plan.imageUploadLimit)}</li>
-        <li>AI chat: {formatLimit(plan.aiChatMessageLimitPerDay, '/day')}</li>
-        <li>Staff: {formatLimit(plan.staffLimit)}</li>
-        <li>Custom domain: {plan.customDomainAllowed ? 'Yes' : 'No'}</li>
-        <li className="pt-1.5 mt-1.5 border-t border-black/5 text-regantify-text">
-          COD fee: {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer, plan.codFeeHidden)}
-        </li>
-      </ul>
-
-      {isCurrent ? (
-        <button
-          type="button"
-          disabled
-          className="px-4 py-2 rounded-xl text-sm font-medium bg-regantify-content text-regantify-text-muted cursor-default"
-        >
-          Current Plan
-        </button>
-      ) : (
-        <div className="space-y-2">
-          {!isFree && (
-            <button
-              type="button"
-              disabled={payDisabled}
-              onClick={() => onPay(plan.code)}
-              className="w-full px-4 py-2 rounded-xl text-sm font-medium bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-            >
-              {paying ? 'Redirecting…' : 'Pay with PayStation'}
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={requesting || Boolean(pending) || payDisabled}
-            onClick={() => onRequest(plan.code)}
-            className="w-full px-4 py-2 rounded-xl text-sm font-medium border border-regantify-cta text-regantify-cta hover:bg-regantify-cta hover:text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
-            {isPendingTarget ? 'Requested' : pending ? 'Request Pending' : isFree ? 'Request Downgrade' : 'Request Manually'}
-          </button>
+      {pendingRequest && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-900">
+          <Clock size={16} className="mt-0.5 shrink-0 text-amber-700" aria-hidden />
+          <p>
+            Your request to move to <strong>{pendingRequest.requestedPlan.name}</strong> is waiting for our team. We’ll set it up and let you
+            know.
+          </p>
         </div>
       )}
+
+      <section>
+        <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">Compare plans</h2>
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {sortedPlans.map((plan) => {
+            const isCurrent = usage?.plan.code === plan.code;
+            const isFree = Number(plan.priceMonthly) <= 0;
+            const higher = TIER_ORDER.indexOf(plan.code) > currentIndex;
+            const isPendingTarget = pendingRequest?.requestedPlan.code === plan.code;
+            return (
+              <li key={plan.id} className={`flex flex-col rounded-xl border bg-white p-4 ${isCurrent ? 'border-brand ring-1 ring-brand' : 'border-line'}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-[15px] font-semibold text-regantify-text">{plan.name}</h3>
+                  {isCurrent && <span className="rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Your plan</span>}
+                </div>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-regantify-text">
+                  {priceText(plan)}
+                  {!isFree && <span className="text-xs font-normal text-neutral-500"> /month</span>}
+                </p>
+
+                <ul className="my-4 flex-1 space-y-1.5 text-sm">
+                  <Feature>{limitText(plan.productLimit)} products</Feature>
+                  <Feature>{limitText(plan.orderLimitPerDay)} orders a day</Feature>
+                  <Feature>{limitText(plan.staffLimit)} staff</Feature>
+                  <Feature>
+                    {plan.themeAllowance === null ? 'All themes' : `${plan.themeAllowance} ${plan.themeAllowance === 1 ? 'theme' : 'themes'}`}
+                  </Feature>
+                  <Feature>{limitText(plan.imageUploadLimit)} image uploads</Feature>
+                  <Feature>{limitText(plan.aiChatMessageLimitPerDay)} AI chat messages a day</Feature>
+                  <Feature on={plan.customDomainAllowed}>Your own domain</Feature>
+                  <Feature on={plan.customPaymentGatewayAllowed}>Your own payment gateway</Feature>
+                  <Feature on={plan.lmsEnabled}>LMS (calls and follow-ups)</Feature>
+                  <li className="mt-2 border-t border-line pt-2 text-xs text-neutral-600">
+                    {feeText(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer)}
+                  </li>
+                </ul>
+
+                {isCurrent ? (
+                  <p className="flex h-10 items-center justify-center rounded-lg bg-neutral-50 text-sm text-neutral-500">You’re on this plan</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {!isFree && (
+                      <button
+                        type="button"
+                        disabled={payMutation.isPending}
+                        onClick={() => payMutation.mutate(plan.code)}
+                        className={`inline-flex h-10 w-full items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors disabled:opacity-60 ${
+                          higher ? 'bg-brand text-white hover:bg-brand-dark' : 'border border-line bg-white text-regantify-text hover:bg-neutral-50'
+                        }`}
+                      >
+                        {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `${higher ? 'Upgrade' : 'Switch'} and pay ${priceText(plan)}`}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={requestMutation.isPending || Boolean(pendingRequest)}
+                      onClick={() => setConfirmRequest(plan)}
+                      className="h-9 w-full rounded-lg text-xs text-neutral-600 underline-offset-2 hover:text-regantify-text hover:underline disabled:no-underline disabled:opacity-60"
+                    >
+                      {isPendingTarget ? 'Request sent' : pendingRequest ? 'A request is already waiting' : isFree ? 'Ask to move to Free' : 'Or ask us to set it up by hand'}
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-3 text-xs text-neutral-500">Paying with PayStation changes your plan as soon as the payment goes through.</p>
+      </section>
+
+      <ConfirmDialog
+        open={confirmRequest != null}
+        onOpenChange={(open) => !open && setConfirmRequest(null)}
+        title={confirmRequest ? `Ask to move to ${confirmRequest.name}?` : ''}
+        message={
+          confirmRequest && Number(confirmRequest.priceMonthly) <= 0
+            ? 'Our team moves you to Free. You keep what you have, but you can’t add more than Free allows, and your store shows the StorePal theme.'
+            : 'Our team contacts you to arrange payment (e.g. bank transfer), then changes your plan. To change it right away, pay with PayStation instead.'
+        }
+        confirmLabel="Send request"
+        onConfirm={() => confirmRequest && requestMutation.mutate(confirmRequest.code)}
+        busy={requestMutation.isPending}
+      />
     </div>
   );
 }

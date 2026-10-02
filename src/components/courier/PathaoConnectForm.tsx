@@ -12,7 +12,7 @@ interface PathaoConnectFormProps {
 }
 
 const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none';
+  'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 /**
  * Pathao's connect form — the VENDOR's own merchant Client ID/Secret
@@ -94,7 +94,7 @@ export function PathaoConnectForm({ onConnected, footer }: PathaoConnectFormProp
           className={inputClass}
         />
       </div>
-      <p className="text-xs text-regantify-text-muted">
+      <p className="text-xs text-neutral-500">
         Find both at merchant.pathao.com → Developer API → Merchant API Credentials.
       </p>
 
@@ -123,17 +123,17 @@ export function PathaoConnectForm({ onConnected, footer }: PathaoConnectFormProp
           </div>
         </>
       ) : (
-        <button type="button" onClick={() => setShowLogin(true)} className="text-xs text-regantify-cta hover:underline">
+        <button type="button" onClick={() => setShowLogin(true)} className="text-xs text-brand hover:underline">
           + Also add Pathao email &amp; password (backup login)
         </button>
       )}
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
       {footer ? footer(mutation.isPending) : (
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
           {mutation.isPending ? 'Connecting…' : 'Connect Pathao'}
         </button>

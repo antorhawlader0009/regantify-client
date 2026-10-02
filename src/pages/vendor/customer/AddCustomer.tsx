@@ -1,182 +1,163 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
-import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UserCheck } from 'lucide-react';
+import { Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { SaveBar, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
+import { outlineBtn } from '../../../components/ui/PageKit';
 import { customersApi } from '../../../lib/customersApi';
+import { normalizeBdPhone } from '../../../lib/bdPhone';
 import { toast } from '../../../lib/toast';
+import {
+  CustomerFields,
+  CustomerFormHeader,
+  MoreOptions,
+  customerPayload,
+  emptyCustomer,
+  useShownErrors,
+  validateCustomer,
+  type CustomerFormValues,
+} from './CustomerForm';
+
+function useDebounced<T>(value: T, ms: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebounced(value), ms);
+    return () => window.clearTimeout(t);
+  }, [value, ms]);
+  return debounced;
+}
 
 /**
  * Customers > "+ Add New" — a vendor registering a customer directly,
- * with no order involved. Only Name and Phone are required (matches the
- * reference form, where every other field is a plain optional input).
+ * with no order involved. Only Name and Phone are required.
  * See CustomersService.create on the backend for what actually happens
  * on submit: this creates the customer's platform-wide login account
  * (if the phone doesn't have one yet) plus this vendor's own note of
  * their profile, which is what makes them show up on this vendor's
- * Customers list even before any order exists.
+ * Customers list even before any order exists. Saving an existing
+ * customer's phone replaces their saved details, so the page says so
+ * as soon as a full number is typed.
  */
 export default function AddCustomer() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [values, setValues] = useState<CustomerFormValues>(emptyCustomer);
   const [password, setPassword] = useState('');
-  const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [district, setDistrict] = useState('');
-  const [zip, setZip] = useState('');
-
   const [formError, setFormError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const errors = validateCustomer(values, password, true);
+  const { touch, shown, submit } = useShownErrors(errors);
+  const onChange = (field: keyof CustomerFormValues, value: string) => setValues((prev) => ({ ...prev, [field]: value }));
+
+  const dirty = !saved && Object.values(values).some((v) => v.trim() !== '');
+  useUnsavedChangesWarning(dirty);
+
+  // A full number that's already one of this store's customers.
+  const phone = normalizeBdPhone(values.phone);
+  const debouncedPhone = useDebounced(phone, 400);
+  const { data: existing } = useQuery({
+    queryKey: ['customers', debouncedPhone],
+    queryFn: () => customersApi.findOne(debouncedPhone!),
+    enabled: Boolean(debouncedPhone),
+    retry: false,
+  });
+  const alreadyCustomer = existing && phone === debouncedPhone ? existing : null;
 
   const createMutation = useMutation({
-    mutationFn: () =>
-      customersApi.create({
-        name: name.trim(),
-        phone: phone.trim(),
-        email: email.trim() || undefined,
-        password: password.trim() || undefined,
-        address: address.trim() || undefined,
-        city: city.trim() || undefined,
-        district: district.trim() || undefined,
-        zip: zip.trim() || undefined,
-      }),
-    onSuccess: () => {
+    mutationFn: () => customersApi.create({ ...customerPayload(values), phone: phone!, password: password.trim() || undefined }),
+    onSuccess: (customer) => {
+      setSaved(true);
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      toast.success('Customer added.');
-      navigate('/vendor/customers');
+      toast.success('Customer added');
+      navigate(`/vendor/customers/${encodeURIComponent(customer.phone)}`);
     },
     onError: (err: any) => {
-      setFormError(err?.response?.data?.message ?? 'Could not add this customer. Please try again.');
+      const message = err?.response?.data?.message;
+      setFormError(
+        (Array.isArray(message) ? message[0] : message) ?? 'Couldn’t add this customer. Check your connection and try again.',
+      );
     },
   });
 
-  const isValid = name.trim().length > 0 && phone.trim().length > 0;
-
   const handleSubmit = () => {
     setFormError(null);
-    if (!name.trim()) {
-      setFormError('Customer name is required.');
-      return;
-    }
-    if (!phone.trim()) {
-      setFormError('Phone number is required.');
-      return;
-    }
+    submit();
+    if (Object.keys(errors).length > 0) return;
     createMutation.mutate();
   };
 
   return (
-    <div className="max-w-3xl">
-      <button
-        onClick={() => navigate('/vendor/customers')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
-        <ChevronLeft size={16} />
-        Customers
-      </button>
+    <form
+      className="mx-auto max-w-3xl"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+      noValidate
+    >
+      <CustomerFormHeader
+        backTo="/vendor/customers"
+        backLabel="Customers"
+        title="Add customer"
+        description="For someone who orders by phone, Facebook or in the shop. Name and phone are enough."
+      />
 
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">Add Customer</h1>
+      <div className="space-y-4">
+        <CustomerFields
+          values={values}
+          onChange={onChange}
+          shown={shown}
+          touch={touch}
+          phoneNote={
+            alreadyCustomer && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-brand-lime bg-brand-lime/25 px-3 py-2.5 text-sm">
+                <UserCheck size={16} className="shrink-0 text-brand" aria-hidden />
+                <span className="text-regantify-text">
+                  Already one of your customers:{' '}
+                  <Link to={`/vendor/customers/${encodeURIComponent(alreadyCustomer.phone)}`} className="font-medium underline-offset-2 hover:underline">
+                    {alreadyCustomer.name}
+                  </Link>
+                  . Saving here replaces their saved details.
+                </span>
+              </div>
+            )
+          }
+        />
 
-      <div className="space-y-6">
-        <SectionCard title="Personal Information">
-          <div className="space-y-5">
-            <Field label="Name" required>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Customer Name"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Phone" required>
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Mobile phone number"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Email">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Valid email address"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Password" hint="Optional — leave blank if this customer will set their own later">
-              <input
-                type="text"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Address">
-              <textarea
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Special instructions for this order"
-                rows={3}
-                className={inputClass + ' resize-y'}
-              />
-            </Field>
-
-            <Field label="City/Thana">
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="ie. Dhaka, Uttara, Gazipur"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="District">
-              <input
-                type="text"
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                placeholder="ie. Dhaka, Sylhet, Chattogram"
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Zip Code">
-              <input
-                type="text"
-                value={zip}
-                onChange={(e) => setZip(e.target.value)}
-                placeholder="####"
-                className={inputClass}
-              />
-            </Field>
-          </div>
-        </SectionCard>
-
-        {formError && <p className="text-red-500 text-sm">{formError}</p>}
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!isValid || createMutation.isPending}
-          className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium
-            transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {createMutation.isPending ? 'Adding…' : 'Add Customer'}
-        </button>
+        <MoreOptions>
+          <Field
+            label="Storefront password"
+            error={shown('password')}
+            hint="Only if they want to log in to your store now. They can also set one later with their phone number."
+          >
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onBlur={() => touch('password')}
+              placeholder="At least 6 characters"
+              autoComplete="new-password"
+              className={productInputClass}
+            />
+          </Field>
+        </MoreOptions>
       </div>
-    </div>
+
+      <SaveBar message={formError ? <span className="text-red-600">{formError}</span> : 'Name and phone are required.'}>
+        <Link to="/vendor/customers" className={`${outlineBtn} h-10`}>
+          Cancel
+        </Link>
+        <button
+          type="submit"
+          disabled={createMutation.isPending}
+          className="h-10 rounded-lg bg-brand px-4 text-sm font-medium text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {createMutation.isPending ? 'Adding…' : 'Add customer'}
+        </button>
+      </SaveBar>
+    </form>
   );
 }

@@ -40,32 +40,32 @@ export function CourierTimeline({ orderId, showEmpty }: { orderId: string; /** S
     queryFn: () => courierApi.getOrderCourierEvents(orderId),
   });
 
-  if (isLoading) return <p className="text-xs text-regantify-text-muted">Loading courier timeline…</p>;
+  if (isLoading) return <p className="text-xs text-neutral-500">Loading courier timeline…</p>;
   if (!events || events.length === 0) {
-    return showEmpty ? <p className="text-sm text-regantify-text-muted">No courier updates yet.</p> : null;
+    return showEmpty ? <p className="text-sm text-neutral-500">No courier updates yet.</p> : null;
   }
 
   return (
     <div>
-      <p className="text-xs font-medium text-regantify-text-muted mb-2">Courier timeline</p>
+      <p className="text-xs font-medium text-neutral-500 mb-2">Courier timeline</p>
       <ol className="relative border-l border-line ml-1.5 space-y-3">
         {events.map((event, i) => (
           <li key={event.id} className="pl-4 relative">
             <span
               className={`absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full ${
-                event.event === 'booking_failed' ? 'bg-red-500' : i === 0 ? 'bg-brand' : 'bg-black/20'
+                event.event === 'booking_failed' ? 'bg-red-500' : i === 0 ? 'bg-brand' : 'bg-neutral-300'
               }`}
             />
             <p className="text-sm text-regantify-text">
               {eventTitle(event)}
               {event.appliedStatus && (
-                <span className="text-xs text-regantify-text-muted"> · order moved to {orderStatusLabel(event.appliedStatus)}</span>
+                <span className="text-xs text-neutral-500"> · order moved to {orderStatusLabel(event.appliedStatus)}</span>
               )}
             </p>
             {event.note && (
-              <p className={`text-xs mt-0.5 ${event.event === 'booking_failed' ? 'text-red-500' : 'text-regantify-text-muted'}`}>{event.note}</p>
+              <p className={`text-xs mt-0.5 ${event.event === 'booking_failed' ? 'text-red-600' : 'text-neutral-500'}`}>{event.note}</p>
             )}
-            <p className="text-[11px] text-regantify-text-muted mt-0.5">
+            <p className="text-[11px] text-neutral-500 mt-0.5">
               {formatDateTime(event.createdAt)} · {SOURCE_LABELS[event.source]}
             </p>
           </li>

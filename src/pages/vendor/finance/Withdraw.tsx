@@ -1,273 +1,331 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Clock } from 'lucide-react';
-import { inputClass } from '../../../components/product/ProductFormPieces';
-import { financeApi, type WithdrawMethod, type WithdrawRequestStatus } from '../../../lib/financeApi';
+import { Check, Clock, Landmark, X } from 'lucide-react';
+import { Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { MoneyInput, Segmented } from '../../../components/product/ProductFormKit';
+import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { EmptyState, StackedList } from '../../../components/ui/PageKit';
+import { financeApi, type WithdrawMethod, type WithdrawRequest } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { BD_PHONE_HINT, normalizeBdPhone, toLatinDigits } from '../../../lib/bdPhone';
+import { formatDhakaDate, formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
-
-function formatAmount(value: string) {
-  return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-}
-
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
+import { formatTaka } from './financeUi';
 
 const METHOD_LABEL: Record<WithdrawMethod, string> = {
   BKASH: 'bKash',
   NAGAD: 'Nagad',
-  BANK: 'Bank Transfer',
+  BANK: 'Bank transfer',
 };
 
-const STATUS_BADGE: Record<WithdrawRequestStatus, string> = {
-  PENDING: 'bg-amber-100 text-amber-800',
-  APPROVED: 'bg-blue-100 text-blue-800',
-  REJECTED: 'bg-red-100 text-red-700',
-  PAID: 'bg-green-100 text-green-800',
-};
-
+// Mirrors server WithdrawRequestsService's MINIMUM_WITHDRAW_AMOUNT. There's no withdrawal fee.
 const MINIMUM_WITHDRAW_AMOUNT = 100;
 
+/** Requested → Approved → Paid (or Requested → Rejected), with the dates we know. */
+function StatusSteps({ r }: { r: WithdrawRequest }) {
+  const steps: { label: string; state: 'done' | 'now' | 'todo' | 'failed'; at?: string | null }[] =
+    r.status === 'REJECTED'
+      ? [
+          { label: 'Requested', state: 'done', at: r.createdAt },
+          { label: 'Rejected', state: 'failed', at: r.resolvedAt },
+        ]
+      : [
+          { label: 'Requested', state: 'done', at: r.createdAt },
+          { label: 'Approved', state: r.status === 'PENDING' ? 'now' : 'done', at: r.status === 'APPROVED' ? r.resolvedAt : null },
+          { label: 'Paid', state: r.status === 'PAID' ? 'done' : r.status === 'APPROVED' ? 'now' : 'todo', at: r.status === 'PAID' ? r.resolvedAt : null },
+        ];
+
+  return (
+    <ol className="mt-2.5 flex items-start" aria-label="Request progress">
+      {steps.map((s, i) => (
+        <li key={s.label} className="flex min-w-0 flex-1 flex-col items-start">
+          <div className="flex w-full items-center">
+            <span
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                s.state === 'done'
+                  ? 'border-brand bg-brand text-white'
+                  : s.state === 'failed'
+                    ? 'border-red-600 bg-red-600 text-white'
+                    : s.state === 'now'
+                      ? 'border-amber-500 bg-amber-50 text-amber-600'
+                      : 'border-line bg-white text-neutral-300'
+              }`}
+              aria-hidden
+            >
+              {s.state === 'done' ? <Check size={11} /> : s.state === 'failed' ? <X size={11} /> : s.state === 'now' ? <Clock size={11} /> : null}
+            </span>
+            {i < steps.length - 1 && <span className={`mx-1 h-px flex-1 ${s.state === 'done' ? 'bg-brand' : 'bg-line'}`} aria-hidden />}
+          </div>
+          <span className={`mt-1 text-xs ${s.state === 'todo' ? 'text-neutral-400' : s.state === 'failed' ? 'text-red-700' : 'text-regantify-text'}`}>
+            {s.label}
+            <span className="sr-only">: {s.state === 'done' ? 'done' : s.state === 'now' ? 'waiting' : s.state === 'failed' ? '' : 'not yet'}</span>
+          </span>
+          {s.at && <span className="text-[11px] text-neutral-500">{formatDhakaDate(s.at)}</span>}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function RequestItem({ r }: { r: WithdrawRequest }) {
+  const to = r.method === 'BANK' ? r.bankDetails?.split('\n')[0] : r.receiverNumber;
+  return (
+    <li className="px-3 py-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+        <p className="text-sm font-semibold tabular-nums text-regantify-text">{formatTaka(r.amount)}</p>
+        <p className="text-xs text-neutral-500">{formatDhakaDateTime(r.createdAt)}</p>
+      </div>
+      <p className="mt-0.5 truncate text-xs text-neutral-600">
+        {METHOD_LABEL[r.method]}
+        {to && <> · {to}</>}
+      </p>
+      <StatusSteps r={r} />
+      {r.status === 'REJECTED' && <p className="mt-2 text-xs text-neutral-600">The amount went back to your wallet balance.</p>}
+      {r.note && <p className="mt-2 rounded-md bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-600">Note: {r.note}</p>}
+    </li>
+  );
+}
+
 /**
- * Finance > Withdraw — request a payout from Vendor.balance. No real
- * payout gateway exists yet (see FeeSummary.tsx's own note on checkout
- * being COD-only), so this is the same manual "vendor requests, Super
- * Admin reviews and pays outside the platform" flow as Billing's plan
- * upgrade requests — see server's WithdrawRequestsService for the
- * balance-reservation behavior a submitted request has.
+ * Finance > Withdraw — request a payout from the wallet balance. No
+ * payout gateway exists yet, so a Super Admin reviews each request and
+ * pays outside the platform (see server's WithdrawRequestsService: the
+ * amount is set aside from the balance right away, and given back if the
+ * request is rejected). The form shows the available balance and the
+ * minimum, fills the method and number from the last request, and
+ * confirms the amount before sending. There's no fee.
  */
 export default function Withdraw() {
   const queryClient = useQueryClient();
 
-  const { data: wallet } = useQuery({
-    queryKey: ['finance', 'wallet'],
-    queryFn: () => financeApi.getWallet(),
-  });
-  const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['finance', 'withdraw-requests'],
-    queryFn: () => financeApi.getWithdrawRequests(),
-  });
+  const { data: wallet, isLoading: walletLoading } = useQuery({ queryKey: ['finance', 'wallet'], queryFn: () => financeApi.getWallet() });
+  const { data: requests = [], isLoading } = useQuery({ queryKey: ['finance', 'withdraw-requests'], queryFn: () => financeApi.getWithdrawRequests() });
 
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<WithdrawMethod>('BKASH');
   const [receiverNumber, setReceiverNumber] = useState('');
   const [bankDetails, setBankDetails] = useState('');
   const [note, setNote] = useState('');
+  const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+
+  // Fill the method and number from the most recent request, once.
+  const [prefilled, setPrefilled] = useState(false);
+  useEffect(() => {
+    if (prefilled || isLoading) return;
+    const last = requests[0];
+    if (last) {
+      setMethod(last.method);
+      if (last.receiverNumber) setReceiverNumber(last.receiverNumber);
+      if (last.bankDetails) setBankDetails(last.bankDetails);
+    }
+    setPrefilled(true);
+  }, [prefilled, isLoading, requests]);
 
   const pendingRequest = requests.find((r) => r.status === 'PENDING');
   const balance = Number(wallet?.balance ?? 0);
+  const numericAmount = Number(amount);
+  const phone = normalizeBdPhone(receiverNumber);
+
+  const errors = {
+    amount: !amount
+      ? 'Enter how much to withdraw.'
+      : !Number.isFinite(numericAmount) || numericAmount <= 0
+        ? 'Enter an amount like 500.'
+        : numericAmount < MINIMUM_WITHDRAW_AMOUNT
+          ? `The minimum is ${formatTaka(MINIMUM_WITHDRAW_AMOUNT)}.`
+          : numericAmount > balance
+            ? `That’s more than your balance of ${formatTaka(balance)}.`
+            : null,
+    receiver: method === 'BANK' ? null : !receiverNumber.trim() ? `Enter your ${METHOD_LABEL[method]} number.` : !phone ? BD_PHONE_HINT : null,
+    bank: method === 'BANK' && !bankDetails.trim() ? 'Enter the account name, account number, bank and branch.' : null,
+  };
+  const valid = !errors.amount && !errors.receiver && !errors.bank;
+  const shown = (key: keyof typeof errors) => (submitted || (key === 'amount' && amount) ? errors[key] : null);
 
   const submitMutation = useMutation({
     mutationFn: () =>
       financeApi.createWithdrawRequest({
-        amount: Number(amount),
+        amount: numericAmount,
         method,
-        receiverNumber: method !== 'BANK' ? receiverNumber.trim() : undefined,
+        receiverNumber: method !== 'BANK' ? phone ?? receiverNumber.trim() : undefined,
         bankDetails: method === 'BANK' ? bankDetails.trim() : undefined,
         note: note.trim() || undefined,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance', 'withdraw-requests'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'wallet'] });
+      queryClient.invalidateQueries({ queryKey: ['finance'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setAmount('');
-      setReceiverNumber('');
-      setBankDetails('');
       setNote('');
-      setFormError(null);
-      toast.success('Withdrawal request submitted — we’ll review it shortly.');
+      setSubmitted(false);
+      setConfirming(false);
+      toast.success('Withdrawal requested');
     },
-    onError: (err) => setFormError(apiErrorMessage(err, 'Could not submit this request. Please try again.')),
+    onError: (err) => {
+      setConfirming(false);
+      setFormError(apiErrorMessage(err, 'Couldn’t send this request. Check your connection and try again.'));
+    },
   });
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setFormError(null);
-
-    const numericAmount = Number(amount);
-    if (!amount || Number.isNaN(numericAmount) || numericAmount <= 0) {
-      setFormError('Enter a valid amount.');
-      return;
-    }
-    if (numericAmount < MINIMUM_WITHDRAW_AMOUNT) {
-      setFormError(`Minimum withdrawal amount is ${formatAmount(String(MINIMUM_WITHDRAW_AMOUNT))}.`);
-      return;
-    }
-    if (numericAmount > balance) {
-      setFormError('This amount is more than your available balance.');
-      return;
-    }
-    if (method !== 'BANK' && !receiverNumber.trim()) {
-      setFormError(`Enter your ${METHOD_LABEL[method]} number.`);
-      return;
-    }
-    if (method === 'BANK' && !bankDetails.trim()) {
-      setFormError('Enter your bank account details.');
-      return;
-    }
-
-    submitMutation.mutate();
-  }
+  const destination = method === 'BANK' ? 'your bank account' : `${METHOD_LABEL[method]} ${phone ?? receiverNumber.trim()}`;
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Withdraw</h1>
-        <p className="text-sm text-regantify-text-muted mt-1">
-          Request a payout from your wallet balance — available balance: {formatAmount(String(balance))}
-        </p>
+      <div className="mb-4">
+        <h1 className="text-[15px] font-semibold text-regantify-text">Withdraw</h1>
+        <p className="mt-0.5 text-sm text-neutral-500">Move money from your wallet to bKash, Nagad or your bank. There’s no fee.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6">
-        <div className="bg-white rounded-2xl border border-black/5 p-6 h-fit">
-          <h2 className="text-base font-semibold text-regantify-text mb-4">Request Withdrawal</h2>
+      <div className="grid items-start gap-4 lg:grid-cols-[400px_minmax(0,1fr)]">
+        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
+          <h2 className="text-[15px] font-semibold text-regantify-text">New withdrawal</h2>
+          <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg bg-neutral-50 p-3 text-sm">
+            <div>
+              <p className="text-xs text-neutral-500">Available</p>
+              {walletLoading ? (
+                <div className="mt-1 h-5 w-20 animate-pulse rounded bg-neutral-200" />
+              ) : (
+                <p className="font-semibold tabular-nums text-regantify-text">{formatTaka(balance)}</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500">Minimum</p>
+              <p className="font-semibold tabular-nums text-regantify-text">{formatTaka(MINIMUM_WITHDRAW_AMOUNT)}</p>
+            </div>
+          </div>
 
           {pendingRequest ? (
-            <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
-              <Clock size={16} className="text-amber-700 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-900">
-                You have a pending request for {formatAmount(pendingRequest.amount)}. Please wait for it to be
-                resolved before submitting another.
+            <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <Clock size={16} className="mt-0.5 shrink-0 text-amber-700" aria-hidden />
+              <p>
+                Your request for {formatTaka(pendingRequest.amount)} is waiting for review. You can ask for another once it’s approved or
+                rejected.
               </p>
             </div>
+          ) : !walletLoading && balance < MINIMUM_WITHDRAW_AMOUNT ? (
+            <p className="mt-4 text-sm text-neutral-600">
+              You can withdraw once your balance reaches {formatTaka(MINIMUM_WITHDRAW_AMOUNT)}. Online orders add to it when they’re paid.
+            </p>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-regantify-text mb-1.5">Amount</label>
-                <input
-                  type="number"
-                  min={MINIMUM_WITHDRAW_AMOUNT}
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={`Min. ${MINIMUM_WITHDRAW_AMOUNT}`}
-                  className={inputClass}
-                />
-              </div>
+            <form
+              noValidate
+              onSubmit={(e) => {
+                e.preventDefault();
+                setFormError(null);
+                setSubmitted(true);
+                if (valid) setConfirming(true);
+              }}
+              className="mt-4 space-y-4"
+            >
+              <Field label="Amount" required error={shown('amount')}>
+                <MoneyInput value={amount} onChange={(v) => setAmount(toLatinDigits(v))} placeholder={`At least ${MINIMUM_WITHDRAW_AMOUNT}`} ariaLabel="Amount" />
+                <button type="button" onClick={() => setAmount(String(Math.floor(balance * 100) / 100))} className="mt-1.5 text-xs font-medium text-brand hover:underline">
+                  Withdraw all ({formatTaka(balance)})
+                </button>
+              </Field>
 
               <div>
-                <label className="block text-sm font-medium text-regantify-text mb-1.5">Payout Method</label>
-                <div className="flex gap-2">
-                  {(['BKASH', 'NAGAD', 'BANK'] as WithdrawMethod[]).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMethod(m)}
-                      className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                        method === m
-                          ? 'bg-regantify-black text-white'
-                          : 'bg-regantify-search text-regantify-text-muted hover:bg-regantify-content'
-                      }`}
-                    >
-                      {METHOD_LABEL[m]}
-                    </button>
-                  ))}
-                </div>
+                <p className="mb-1.5 text-sm font-medium text-regantify-text">Send it to</p>
+                <Segmented<WithdrawMethod>
+                  ariaLabel="Payout method"
+                  value={method}
+                  onChange={setMethod}
+                  options={(['BKASH', 'NAGAD', 'BANK'] as WithdrawMethod[]).map((m) => ({ id: m, label: METHOD_LABEL[m] }))}
+                />
               </div>
 
               {method !== 'BANK' ? (
-                <div>
-                  <label className="block text-sm font-medium text-regantify-text mb-1.5">
-                    {METHOD_LABEL[method]} Number
-                  </label>
+                <Field label={`${METHOD_LABEL[method]} number`} required error={shown('receiver')}>
                   <input
                     type="text"
+                    inputMode="tel"
                     value={receiverNumber}
-                    onChange={(e) => setReceiverNumber(e.target.value)}
+                    onChange={(e) => setReceiverNumber(toLatinDigits(e.target.value))}
                     placeholder="01XXXXXXXXX"
-                    className={inputClass}
+                    className={productInputClass}
                   />
-                </div>
+                </Field>
               ) : (
-                <div>
-                  <label className="block text-sm font-medium text-regantify-text mb-1.5">Bank Account Details</label>
+                <Field label="Bank account" required error={shown('bank')}>
                   <textarea
                     value={bankDetails}
                     onChange={(e) => setBankDetails(e.target.value)}
-                    placeholder="Account name, account number, bank name, branch"
+                    placeholder={'Account name\nAccount number\nBank and branch'}
                     rows={3}
-                    className={inputClass}
+                    className={`${productInputClass} resize-y`}
                   />
-                </div>
+                </Field>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-regantify-text mb-1.5">Note (optional)</label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={2}
-                  className={inputClass}
-                />
-              </div>
+              <Field label="Note (optional)">
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={500} className={`${productInputClass} resize-y`} />
+              </Field>
 
               {formError && <p className="text-sm text-red-600">{formError}</p>}
 
               <button
                 type="submit"
-                disabled={submitMutation.isPending}
-                className="w-full px-4 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white
-                  text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
               >
-                {submitMutation.isPending ? 'Submitting…' : 'Submit Request'}
+                Withdraw {valid ? formatTaka(numericAmount) : ''}
               </button>
             </form>
           )}
-        </div>
+        </section>
 
-        <div className="bg-white rounded-2xl border border-black/5 overflow-hidden h-fit">
-          <div className="px-5 py-3.5 border-b border-black/5">
-            <h2 className="text-base font-semibold text-regantify-text">Withdrawal History</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-regantify-content text-left text-regantify-text-muted">
-                  <th className="px-5 py-3 font-medium">DATE</th>
-                  <th className="px-5 py-3 font-medium">METHOD</th>
-                  <th className="px-5 py-3 font-medium">AMOUNT</th>
-                  <th className="px-5 py-3 font-medium">STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading && (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-8 text-center text-regantify-text-muted">
-                      Loading…
-                    </td>
-                  </tr>
-                )}
-                {!isLoading && requests.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-8 text-center text-regantify-text-muted">
-                      No withdrawal requests yet.
-                    </td>
-                  </tr>
-                )}
-                {requests.map((r) => (
-                  <tr key={r.id} className="border-t border-black/5">
-                    <td className="px-5 py-3.5 text-regantify-text whitespace-nowrap">{formatDateTime(r.createdAt)}</td>
-                    <td className="px-5 py-3.5 text-regantify-text">{METHOD_LABEL[r.method]}</td>
-                    <td className="px-5 py-3.5 font-medium text-regantify-text">{formatAmount(r.amount)}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-md ${STATUS_BADGE[r.status]}`}>
-                        {r.status.charAt(0) + r.status.slice(1).toLowerCase()}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <section className="min-w-0 rounded-xl border border-line bg-white p-3.5">
+          <h2 className="mb-3 px-0.5 text-[15px] font-semibold text-regantify-text">Your withdrawals</h2>
+          {isLoading ? (
+            <div className="space-y-2" aria-busy>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-24 animate-pulse rounded-lg bg-neutral-100" />
+              ))}
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="rounded-lg border border-line">
+              <EmptyState icon={Landmark} title="No withdrawals yet" hint="Your requests and where each one is (requested, approved, paid) show up here." />
+            </div>
+          ) : (
+            <StackedList>
+              {requests.map((r) => (
+                <RequestItem key={r.id} r={r} />
+              ))}
+            </StackedList>
+          )}
+        </section>
       </div>
+
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`Withdraw ${formatTaka(numericAmount || 0)}?`}
+        message={
+          <>
+            <p>
+              We’ll send <strong className="text-regantify-text">{formatTaka(numericAmount || 0)}</strong> to {destination}.
+            </p>
+            <dl className="mt-3 space-y-1 rounded-lg bg-neutral-50 p-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <dt>Fee</dt>
+                <dd className="tabular-nums">{formatTaka(0)}</dd>
+              </div>
+              <div className="flex justify-between gap-3 font-medium text-regantify-text">
+                <dt>You receive</dt>
+                <dd className="tabular-nums">{formatTaka(numericAmount || 0)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt>Balance after</dt>
+                <dd className="tabular-nums">{formatTaka(balance - (numericAmount || 0))}</dd>
+              </div>
+            </dl>
+            <p className="mt-3 text-xs">The amount is set aside now. If the request is rejected, it comes back to your wallet.</p>
+          </>
+        }
+        confirmLabel="Send request"
+        onConfirm={() => submitMutation.mutate()}
+        busy={submitMutation.isPending}
+      />
     </div>
   );
 }

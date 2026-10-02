@@ -40,7 +40,7 @@ export function SalesTab({ range }: TabProps) {
             </KpiStrip>
 
             <div className="grid lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-2" title="Sales and profit" subtitle={data.bucket === 'month' ? 'Per month' : 'Per day'}>
+              <Card className="lg:col-span-2" title="Sales and profit" subtitle={`Each ${data.bucket === 'month' ? 'month' : 'day'}: order totals, and what’s left after product cost, delivery, platform charge and VAT.`}>
                 {data.trend.every((d) => d.sales === 0) ? (
                   <EmptyState text="No sales in this period yet." />
                 ) : (
@@ -73,7 +73,7 @@ export function SalesTab({ range }: TabProps) {
                     label: (
                       <>
                         {paymentLabel(r.key)}
-                        <span className="ml-1.5 text-xs text-regantify-text-muted">
+                        <span className="ml-1.5 text-xs text-neutral-500">
                           {r.orders} order{r.orders === 1 ? '' : 's'}
                         </span>
                       </>
@@ -129,7 +129,7 @@ function MoneyLedger({ breakdown: b, missingCost }: { breakdown: SalesAnalytics[
       </div>
 
       {(b.costCoverage < 99.5 || b.netSales > 0) && (
-        <div className="mt-4 space-y-1.5 text-[12px] leading-relaxed text-regantify-text-muted">
+        <div className="mt-4 space-y-1.5 text-[12px] leading-relaxed text-neutral-500">
           {b.costCoverage < 99.5 && (
             <p className="text-amber-800">
               {missingCost.length} product{missingCost.length === 1 ? ' has' : 's have'} no cost set, so real profit is lower than this.{' '}
@@ -151,7 +151,7 @@ function LedgerRow({ label, amount, title, strong }: { label: string; amount: st
   return (
     <div className="flex items-baseline gap-2 py-1.5" title={title}>
       <dt className={strong ? 'font-semibold text-regantify-text' : 'text-regantify-text'}>{label}</dt>
-      <span className="flex-1 translate-y-[-3px] border-b border-dotted border-black/25" aria-hidden />
+      <span className="flex-1 translate-y-[-3px] border-b border-dotted border-neutral-300" aria-hidden />
       <dd className={`tabular-nums ${strong ? 'font-semibold text-regantify-text' : 'text-regantify-text'}`}>{amount}</dd>
     </div>
   );
@@ -163,7 +163,7 @@ function ProductProfitTable({ products }: { products: SalesAnalytics['products']
     <div className="overflow-x-auto -mx-5">
       <table className="w-full min-w-[620px] text-sm">
         <thead>
-          <tr className="text-left text-[12px] text-regantify-text-muted">
+          <tr className="text-left text-[12px] text-neutral-500">
             <th className="px-5 pb-2 font-normal">Product</th>
             <th className="px-3 pb-2 font-normal text-right">Units</th>
             <th className="px-3 pb-2 font-normal text-right">Sales</th>
@@ -174,7 +174,7 @@ function ProductProfitTable({ products }: { products: SalesAnalytics['products']
         </thead>
         <tbody>
           {products.map((p) => (
-            <tr key={p.productId ?? p.name} className="border-t border-black/5">
+            <tr key={p.productId ?? p.name} className="border-t border-line">
               <td className="px-5 py-2.5 max-w-[280px]">
                 <span className="flex items-center gap-3 min-w-0">
                   <ProductThumb src={p.image} alt={p.name} />
@@ -189,13 +189,13 @@ function ProductProfitTable({ products }: { products: SalesAnalytics['products']
                 ) : p.productId ? (
                   <CardLink to={`/vendor/product/edit/${p.productId}`}>Add cost</CardLink>
                 ) : (
-                  <span className="text-regantify-text-muted">Not set</span>
+                  <span className="text-neutral-500">Not set</span>
                 )}
               </td>
               <td className={`px-3 py-2.5 text-right tabular-nums font-semibold ${p.profit != null && p.profit < 0 ? 'text-red-700' : ''}`}>
-                {p.profit == null ? <span className="font-normal text-regantify-text-muted">—</span> : formatTaka(p.profit)}
+                {p.profit == null ? <span className="font-normal text-neutral-500">—</span> : formatTaka(p.profit)}
               </td>
-              <td className="px-5 py-2.5 text-right tabular-nums text-regantify-text-muted">{p.margin == null ? '—' : `${p.margin.toFixed(0)}%`}</td>
+              <td className="px-5 py-2.5 text-right tabular-nums text-neutral-500">{p.margin == null ? '—' : `${p.margin.toFixed(0)}%`}</td>
             </tr>
           ))}
         </tbody>

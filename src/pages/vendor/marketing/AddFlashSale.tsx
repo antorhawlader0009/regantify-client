@@ -1,37 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Search, X } from 'lucide-react';
-import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
+import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { SaveBar, ToggleRow, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
+import { outlineBtn } from '../../../components/ui/PageKit';
 import { flashSalesApi, type FlashSaleDiscountType } from '../../../lib/flashSalesApi';
-import { productsApi } from '../../../lib/productsApi';
+import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
-
-/** Same visual pattern as AddDiscount's switches. */
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`w-9 h-5 rounded-full relative transition-colors shrink-0 ${checked ? 'bg-regantify-cta' : 'bg-black/15'}`}
-    >
-      <span
-        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-          checked ? 'translate-x-4' : 'translate-x-0.5'
-        }`}
-      />
-    </button>
-  );
-}
-
-/** ISO string -> the local "yyyy-MM-ddTHH:mm" a datetime-local input wants. */
-function toLocalInput(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+import { DateField, DiscountTypePicker, FormHeader, OfferSummary, ProductPicker, UnitInput, taka, toLocalInput, type PickedItem } from './MarketingKit';
 
 /** Same rule as the server's flash-sale-pricing.ts, used only for the preview next to each product. */
 function salePrice(listPrice: number, type: FlashSaleDiscountType, amount: number): number {
@@ -39,17 +15,11 @@ function salePrice(listPrice: number, type: FlashSaleDiscountType, amount: numbe
   return Math.max(0, Math.round(raw * 100) / 100);
 }
 
-interface PickedProduct {
-  id: string;
-  name: string;
-  price: number;
-  photoUrl: string | null;
-}
-
 /**
- * Marketing > Flash Sale "+ Add New" (and Edit, via the :id param — same
- * page, same shape as AddDiscount.tsx). Sections: General, Discount,
- * Schedule, Products.
+ * Marketing > Flash Sale "+ Add New" (and Edit, via the :id param). A
+ * name, the discount, when it runs and the products, each showing its
+ * regular and sale price as you type. The sentence at the bottom says
+ * what shoppers get.
  */
 export default function AddFlashSale() {
   const { id } = useParams<{ id: string }>();
@@ -57,7 +27,7 @@ export default function AddFlashSale() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: existing } = useQuery({
+  const { data: existing, isLoading } = useQuery({
     queryKey: ['flash-sales', id],
     queryFn: () => flashSalesApi.findOne(id!),
     enabled: isEdit,
@@ -69,14 +39,12 @@ export default function AddFlashSale() {
   const [amount, setAmount] = useState('');
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
+  const [products, setProducts] = useState<PickedItem[]>([]);
 
-  const [productQuery, setProductQuery] = useState('');
-  const [productFocused, setProductFocused] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<PickedProduct[]>([]);
-
+  const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
-  // One-time fill once the saved flash sale arrives (same as AddDiscount.tsx).
   useEffect(() => {
     if (!existing) return;
     setName(existing.name);
@@ -85,24 +53,27 @@ export default function AddFlashSale() {
     setAmount(String(Number(existing.amount)));
     setStartsAt(toLocalInput(existing.startsAt));
     setEndsAt(toLocalInput(existing.endsAt));
-    setSelectedProducts(
-      existing.products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        price: Number(p.price),
-        photoUrl: p.photoUrls[0] ?? null,
-      })),
-    );
+    setProducts(existing.products.map((p) => ({ id: p.id, label: p.name, sub: taka(p.price), price: Number(p.price), photoUrl: p.photoUrls[0] ?? null })));
   }, [existing]);
 
-  const { data: productSearchResults } = useQuery({
-    queryKey: ['products-search', productQuery],
-    queryFn: () => productsApi.list({ search: productQuery.trim(), perPage: 8 }),
-    enabled: productQuery.trim().length > 0,
-  });
-  const productMatches = (productSearchResults?.products ?? []).filter(
-    (p) => !selectedProducts.some((sp) => sp.id === p.id),
-  );
+  const snapshot = JSON.stringify({ name, active, discountType, amount, startsAt, endsAt, ids: products.map((p) => p.id) });
+  const initial = useRef<string | null>(null);
+  useEffect(() => {
+    if (initial.current == null && (!isEdit || existing)) initial.current = snapshot;
+  }, [snapshot, isEdit, existing]);
+  const dirty = !saved && initial.current != null && initial.current !== snapshot;
+  useUnsavedChangesWarning(dirty);
+
+  const amountNumber = Number(amount) || 0;
+  const errors = {
+    name: !name.trim() ? 'Give it a name, e.g. Eid midnight sale.' : null,
+    amount: !amount || amountNumber <= 0 ? 'Enter how much off.' : discountType === 'PERCENT' && amountNumber > 100 ? 'A percentage can be at most 100.' : null,
+    startsAt: !startsAt ? 'Pick when it starts, or tap Start now.' : null,
+    endsAt: !endsAt ? 'Pick when it ends.' : startsAt && new Date(endsAt) <= new Date(startsAt) ? 'The end must be after the start.' : null,
+    products: products.length === 0 ? 'Add at least one product.' : null,
+  };
+  const shown = (k: keyof typeof errors) => (submitted || (k === 'endsAt' && endsAt) ? errors[k] : null);
+  const valid = Object.values(errors).every((e) => !e);
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -110,229 +81,133 @@ export default function AddFlashSale() {
         name: name.trim(),
         active,
         discountType,
-        amount: Number(amount),
+        amount: amountNumber,
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
-        productIds: selectedProducts.map((p) => p.id),
+        productIds: products.map((p) => p.id),
       };
       return isEdit ? flashSalesApi.update(id!, payload) : flashSalesApi.create(payload);
     },
     onSuccess: () => {
+      setSaved(true);
       queryClient.invalidateQueries({ queryKey: ['flash-sales'] });
-      toast.success(isEdit ? 'Flash sale updated.' : 'Flash sale created.');
+      toast.success(isEdit ? 'Flash sale saved' : 'Flash sale added');
       navigate('/vendor/marketing/flash-sale');
     },
     onError: (err: any) => {
       const message = err?.response?.data?.message;
-      setFormError(
-        (Array.isArray(message) ? message[0] : message) ?? 'Could not save this flash sale. Please try again.',
-      );
+      setFormError((Array.isArray(message) ? message[0] : message) ?? 'Couldn’t save this flash sale. Check your connection and try again.');
     },
   });
 
-  const handleSubmit = () => {
-    setFormError(null);
-    if (!name.trim()) {
-      setFormError('Flash sale name is required.');
-      return;
-    }
-    if (!amount.trim() || Number(amount) <= 0) {
-      setFormError('Enter a discount amount.');
-      return;
-    }
-    if (discountType === 'PERCENT' && Number(amount) > 100) {
-      setFormError('A percentage discount can be at most 100%.');
-      return;
-    }
-    if (!startsAt || !endsAt) {
-      setFormError('Set when the flash sale starts and ends.');
-      return;
-    }
-    if (new Date(endsAt) <= new Date(startsAt)) {
-      setFormError('The end time must be after the start time.');
-      return;
-    }
-    if (selectedProducts.length === 0) {
-      setFormError('Add at least one product to the flash sale.');
-      return;
-    }
-    saveMutation.mutate();
-  };
+  const sentence =
+    amountNumber > 0
+      ? `${discountType === 'PERCENT' ? `${amountNumber}%` : taka(amountNumber)} off ${products.length || 'the'} ${products.length === 1 ? 'product' : 'products'}${
+          startsAt ? `, ${new Date(startsAt).getTime() > Date.now() ? `from ${formatDhakaDateTime(new Date(startsAt).toISOString())}` : 'from now'}` : ''
+        }${endsAt ? ` until ${formatDhakaDateTime(new Date(endsAt).toISOString())}` : ''}. If a product already costs less, shoppers keep the lower price.`
+      : 'Fill in the discount to see what shoppers get.';
 
-  const amountNumber = Number(amount) || 0;
+  if (isEdit && isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-4" aria-busy>
+        <div className="h-12 w-48 animate-pulse rounded-lg bg-neutral-100" />
+        <div className="h-48 animate-pulse rounded-xl bg-neutral-100" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-3xl">
-      <button
-        onClick={() => navigate('/vendor/marketing/flash-sale')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
-        <ChevronLeft size={16} />
-        Flash Sale
-      </button>
+    <form
+      className="mx-auto max-w-3xl"
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        setFormError(null);
+        setSubmitted(true);
+        if (valid) saveMutation.mutate();
+      }}
+    >
+      <FormHeader
+        backTo="/vendor/marketing/flash-sale"
+        backLabel="Flash sales"
+        title={isEdit ? `Edit ${existing?.name ?? 'flash sale'}` : 'New flash sale'}
+        description="A lower price on chosen products for a set time. It starts and stops by itself."
+      />
 
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">
-        {isEdit ? 'Edit Flash Sale' : 'New Flash Sale'}
-      </h1>
-
-      <div className="space-y-6">
-        <SectionCard title="General Information">
-          <div className="space-y-5">
-            <Field label="Name" required hint="Only you see this, e.g. “Eid Midnight Sale”.">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Flash sale name"
-                className={inputClass}
-              />
+      <div className="space-y-4">
+        <SectionCard title="Name">
+          <div className="space-y-4">
+            <Field label="Name" required error={shown('name')} hint="Only you see this.">
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Eid midnight sale" className={productInputClass} />
             </Field>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-regantify-text">Active</p>
-                <p className="text-xs text-regantify-text-muted mt-0.5">Turn off to pause without deleting it.</p>
-              </div>
-              <Toggle checked={active} onChange={setActive} />
+            <ToggleRow checked={active} onChange={setActive} label="On" hint="Turn off to pause it without deleting." />
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Discount">
+          <div className="space-y-4">
+            <DiscountTypePicker<FlashSaleDiscountType>
+              value={discountType}
+              onChange={setDiscountType}
+              options={[
+                { id: 'PERCENT', label: '% off' },
+                { id: 'FIXED', label: '৳ off' },
+              ]}
+            />
+            <div className="sm:w-1/2 sm:pr-2">
+              <Field label={discountType === 'PERCENT' ? 'Percent off' : 'Amount off each product'} required error={shown('amount')} hint="Taken off each product’s regular price.">
+                <UnitInput unit={discountType === 'PERCENT' ? '%' : '৳'} value={amount} onChange={setAmount} placeholder={discountType === 'PERCENT' ? 'e.g. 20' : 'e.g. 200'} />
+              </Field>
             </div>
           </div>
         </SectionCard>
 
-        <SectionCard title="Discount Information">
-          <div className="space-y-5">
-            <div>
-              <p className="text-sm font-medium text-regantify-text mb-2.5">Discount Type</p>
-              <div className="flex flex-wrap gap-5">
-                {(
-                  [
-                    ['PERCENT', 'Percentage Discount'],
-                    ['FIXED', 'Fixed Discount'],
-                  ] as [FlashSaleDiscountType, string][]
-                ).map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2 text-sm text-regantify-text cursor-pointer">
-                    <input
-                      type="radio"
-                      name="discountType"
-                      checked={discountType === value}
-                      onChange={() => setDiscountType(value)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <Field
-              label={discountType === 'PERCENT' ? 'Discount (%)' : 'Discount (৳)'}
-              required
-              hint="Taken off each product’s regular price."
-            >
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={discountType === 'PERCENT' ? 'e.g. 20' : 'e.g. 200'}
-                className={inputClass}
-              />
-            </Field>
+        <SectionCard title="When it runs">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DateField label="Starts" required value={startsAt} onChange={setStartsAt} role="start" error={shown('startsAt')} />
+            <DateField label="Ends" required value={endsAt} onChange={setEndsAt} role="end" error={shown('endsAt')} hint="It stops by itself at this time." />
           </div>
         </SectionCard>
 
-        <SectionCard title="Schedule">
-          <div className="space-y-5">
-            <Field label="Starts" required>
-              <input
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Ends" required hint="The sale stops by itself at this time.">
-              <input
-                type="datetime-local"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-          </div>
+        <SectionCard title="Products" description="Each one shows its regular price and its sale price.">
+          <ProductPicker
+            label="Products in the sale"
+            selected={products}
+            onChange={setProducts}
+            error={shown('products')}
+            renderExtra={(p) =>
+              amountNumber > 0 && p.price != null ? (
+                <span className="shrink-0 whitespace-nowrap text-xs text-neutral-500">
+                  <s>{taka(p.price)}</s> <span className="font-medium text-emerald-700">{taka(salePrice(p.price, discountType, amountNumber))}</span>
+                </span>
+              ) : null
+            }
+          />
         </SectionCard>
-
-        <SectionCard title="Products">
-          <div className="space-y-3">
-            {selectedProducts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-3 p-2 rounded-xl bg-regantify-content">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {p.photoUrl && <img src={p.photoUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />}
-                  <span className="text-sm text-regantify-text truncate">{p.name}</span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {amountNumber > 0 && (
-                    <span className="text-xs text-regantify-text-muted whitespace-nowrap">
-                      <s>৳{p.price.toLocaleString()}</s>{' '}
-                      <span className="font-medium text-regantify-text">
-                        ৳{salePrice(p.price, discountType, amountNumber).toLocaleString()}
-                      </span>
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProducts((prev) => prev.filter((sp) => sp.id !== p.id))}
-                    className="text-regantify-text-muted hover:text-red-600"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-              <input
-                type="text"
-                value={productQuery}
-                onChange={(e) => setProductQuery(e.target.value)}
-                onFocus={() => setProductFocused(true)}
-                onBlur={() => setTimeout(() => setProductFocused(false), 150)}
-                placeholder="Search products to add"
-                className={`${inputClass} pl-10`}
-              />
-              {productFocused && productMatches.length > 0 && (
-                <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-xl shadow-lg border border-black/10 max-h-56 overflow-y-auto py-1">
-                  {productMatches.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onMouseDown={() => {
-                        setSelectedProducts((prev) => [
-                          ...prev,
-                          { id: p.id, name: p.name, price: Number(p.price), photoUrl: p.photoUrls[0] ?? null },
-                        ]);
-                        setProductQuery('');
-                      }}
-                      className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-regantify-content flex items-center gap-2.5"
-                    >
-                      <img src={p.photoUrls[0] ?? ''} alt="" className="w-6 h-6 rounded object-cover bg-regantify-content" />
-                      <span className="truncate">{p.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </SectionCard>
-
-        {formError && <p className="text-red-500 text-sm">{formError}</p>}
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={saveMutation.isPending}
-          className="px-8 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium transition-colors disabled:opacity-60"
-        >
-          {saveMutation.isPending ? 'Saving…' : isEdit ? 'Update Flash Sale' : 'Add Flash Sale'}
-        </button>
       </div>
-    </div>
+
+      <SaveBar
+        message={
+          formError ? (
+            <span className="text-red-600">{formError}</span>
+          ) : submitted && !valid ? (
+            <span className="text-red-600">Fix the fields marked in red.</span>
+          ) : (
+            <OfferSummary>{sentence}</OfferSummary>
+          )
+        }
+      >
+        <Link to="/vendor/marketing/flash-sale" className={`${outlineBtn} h-10`}>
+          Cancel
+        </Link>
+        <button
+          type="submit"
+          disabled={saveMutation.isPending}
+          className="inline-flex h-10 items-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+        >
+          {saveMutation.isPending ? 'Saving…' : isEdit ? 'Save flash sale' : 'Add flash sale'}
+        </button>
+      </SaveBar>
+    </form>
   );
 }

@@ -9,7 +9,7 @@ import { toast } from '../../lib/toast';
 import { PathaoLocationSelects } from './PathaoLocationSelects';
 
 const inputClass =
-  'w-full px-3 py-2 rounded-lg border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none disabled:opacity-60';
+  'w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 function formatTaka(value: number) {
   return `৳${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
@@ -55,7 +55,7 @@ function Field({ label, hint, children }: { label: string; hint?: ReactNode; chi
     <div>
       <label className="block text-xs font-medium text-regantify-text mb-1">{label}</label>
       {children}
-      {hint && <p className="text-xs text-regantify-text-muted mt-1">{hint}</p>}
+      {hint && <p className="text-xs text-neutral-500 mt-1">{hint}</p>}
     </div>
   );
 }
@@ -98,13 +98,13 @@ function PriceEstimate({ form }: { form: PathaoBookingDraft }) {
 
   if (!ready) {
     return (
-      <p className="text-xs text-regantify-text-muted">
+      <p className="text-xs text-neutral-500">
         Pick a city and zone to see Pathao’s charge. Without a location, Pathao works it out from the address.
       </p>
     );
   }
   if (isFetching && !price) {
-    return <p className="text-xs text-regantify-text-muted">Checking Pathao’s price…</p>;
+    return <p className="text-xs text-neutral-500">Checking Pathao’s price…</p>;
   }
   if (isError || !price) {
     return <p className="text-xs text-amber-700">{apiErrorMessage(error, 'Could not get a price from Pathao right now.')}</p>;
@@ -116,18 +116,18 @@ function PriceEstimate({ form }: { form: PathaoBookingDraft }) {
   return (
     <div className="text-sm space-y-1">
       <div className="flex justify-between">
-        <span className="text-regantify-text-muted">Delivery charge</span>
+        <span className="text-neutral-500">Delivery charge</span>
         <span className="text-regantify-text">{formatTaka(price.finalPrice)}</span>
       </div>
       {discount > 0 && (
         <div className="flex justify-between text-xs">
-          <span className="text-regantify-text-muted">Includes discount</span>
-          <span className="text-green-700">−{formatTaka(discount)}</span>
+          <span className="text-neutral-500">Includes discount</span>
+          <span className="text-emerald-700">−{formatTaka(discount)}</span>
         </div>
       )}
       {codFee > 0 && (
         <div className="flex justify-between">
-          <span className="text-regantify-text-muted">COD charge ({(price.codPercentage * 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}%)</span>
+          <span className="text-neutral-500">COD charge ({(price.codPercentage * 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}%)</span>
           <span className="text-regantify-text">≈ {formatTaka(codFee)}</span>
         </div>
       )}
@@ -135,7 +135,7 @@ function PriceEstimate({ form }: { form: PathaoBookingDraft }) {
         <span className="text-regantify-text">Pathao charge</span>
         <span className="text-regantify-text">≈ {formatTaka(price.finalPrice + codFee)}</span>
       </div>
-      {isFetching && <p className="text-xs text-regantify-text-muted">Updating…</p>}
+      {isFetching && <p className="text-xs text-neutral-500">Updating…</p>}
     </div>
   );
 }
@@ -191,7 +191,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
     },
     onError: (err) => {
       invalidateOrder(); // picks up courierBookingStatus: FAILED + the error on the row
-      setError(apiErrorMessage(err, 'Could not book this order with Pathao. Please try again.'));
+      setError(apiErrorMessage(err, 'Couldn’t book this order with Pathao. Try again in a minute.'));
     },
   });
 
@@ -281,7 +281,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
             <button
               type="button"
               onClick={() => setForm((prev) => ({ ...prev, cityId: null, zoneId: null, areaId: null }))}
-              className="text-xs text-regantify-text-muted hover:text-regantify-text underline"
+              className="text-xs text-neutral-500 hover:text-regantify-text underline"
             >
               Clear — let Pathao detect it
             </button>
@@ -373,7 +373,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
         <PriceEstimate form={form} />
       </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
 
       <div className="flex justify-end gap-3 pt-1">
         <button
@@ -430,9 +430,9 @@ export function PathaoBookingModal({ orderId, onOpenChange }: PathaoBookingModal
       maxWidth="max-w-2xl"
     >
       {isLoading ? (
-        <p className="p-6 pt-4 text-sm text-regantify-text-muted">Loading…</p>
+        <p className="p-6 pt-4 text-sm text-neutral-500">Loading…</p>
       ) : notConnected ? (
-        <p className="p-6 pt-4 text-sm text-regantify-text-muted">
+        <p className="p-6 pt-4 text-sm text-neutral-500">
           Connect your Pathao account first on the{' '}
           <Link to="/vendor/courier/pathao" className="text-brand underline" onClick={() => onOpenChange(false)}>
             Pathao page
@@ -440,7 +440,7 @@ export function PathaoBookingModal({ orderId, onOpenChange }: PathaoBookingModal
           .
         </p>
       ) : isError || !data ? (
-        <p className="p-6 pt-4 text-sm text-red-500">{apiErrorMessage(error, 'Could not load this order for Pathao booking.')}</p>
+        <p className="p-6 pt-4 text-sm text-red-600">{apiErrorMessage(error, 'Could not load this order for Pathao booking.')}</p>
       ) : (
         <BookingForm key={orderId} data={data} onCancel={() => onOpenChange(false)} onBooked={() => onOpenChange(false)} />
       )}

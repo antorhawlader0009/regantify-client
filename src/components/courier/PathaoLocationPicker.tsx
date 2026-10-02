@@ -56,12 +56,12 @@ export function PathaoLocationPicker({
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
       toast.success('Pathao delivery location saved.');
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the delivery location. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t save the delivery location. Try again in a minute.')),
   });
 
   if (!pathaoConnected) {
     return (
-      <p className="text-xs text-regantify-text-muted">
+      <p className="text-xs text-neutral-500">
         Connect your Pathao account in Courier Integration &gt; Pathao to set a delivery location for Pathao.
       </p>
     );
@@ -71,7 +71,7 @@ export function PathaoLocationPicker({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-regantify-text-muted">Pathao delivery location</p>
+      <p className="text-xs font-medium text-neutral-500">Pathao delivery location</p>
       <PathaoLocationSelects
         value={location}
         onChange={setLocation}

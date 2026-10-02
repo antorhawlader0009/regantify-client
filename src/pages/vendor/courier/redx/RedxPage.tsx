@@ -1,92 +1,78 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
 import { courierApi } from '../../../../lib/courierApi';
-import { LockedFeatureCard } from '../../../../components/ui/UpgradePrompt';
+import { ConnectionCard, CourierPageShell, PlanLockedCard, formatAgo, useCourierTab } from '../../../../components/courier/CourierKit';
 import { RedxSettingsTab } from './RedxSettingsTab';
 import { RedxParcelsTab } from './RedxParcelsTab';
 import { RedxDashboardTab } from './RedxDashboardTab';
 
-type Tab = 'dashboard' | 'parcels' | 'settings';
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'parcels', label: 'Parcels' },
-  { id: 'settings', label: 'Settings' },
-];
-
 /**
- * Courier Integration > RedX — Dashboard / Parcels / Settings, the same
- * layout as the Pathao and SteadFast pages. The active tab lives in
- * `?tab=`; connected vendors land on the Dashboard, not-connected ones
- * always on Settings (the other tabs have nothing to show yet). RedX is
- * a paid-plan courier.
+ * Courier Integration > RedX — connection card, then Dashboard / Parcels
+ * / Settings, the same shape as the Pathao and SteadFast pages. The
+ * active tab lives in `?tab=`; connected vendors land on the Dashboard,
+ * not-connected ones always on Settings. RedX is a paid-plan courier.
  */
 export default function RedxPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-
   const { data: overview, isLoading, isError, refetch } = useQuery({
     queryKey: ['redx-overview'],
     queryFn: courierApi.getRedxOverview,
   });
-
-  const requested = searchParams.get('tab') as Tab | null;
-  const tab: Tab = !overview?.connected
-    ? 'settings'
-    : requested && TABS.some((t) => t.id === requested)
-      ? requested
-      : 'dashboard';
+  const [tab, setTab] = useCourierTab(overview?.connected, overview?.planAllowed === false ? 'settings' : 'dashboard');
+  const connected = overview?.connected ? overview : null;
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-regantify-black flex items-center gap-2">
-          RedX Courier
-          {overview?.connected && overview.sandbox && (
-            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-medium">Sandbox</span>
-          )}
-        </h1>
-        <p className="text-sm text-regantify-text-muted mt-1">Book RedX deliveries from your orders and track every parcel.</p>
-      </div>
-
-      <div className="flex items-center gap-5 mb-6 border-b border-black/5">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setSearchParams({ tab: t.id })}
-            disabled={!overview?.connected && t.id !== 'settings'}
-            className={`-mb-px pb-2.5 text-sm font-medium border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-              tab === t.id
-                ? 'border-regantify-cta text-regantify-text'
-                : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
-            }`}
-          >
-            {t.label}
-          </button>
+    <CourierPageShell
+      name="RedX"
+      description="Send orders to RedX and follow every parcel."
+      badge={
+        connected?.sandbox && (
+          <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">Test mode</span>
+        )
+      }
+      tab={tab}
+      onTabChange={setTab}
+      connected={Boolean(connected)}
+      loading={isLoading}
+      error={isError || (!isLoading && !overview)}
+      onRetry={() => refetch()}
+      connection={
+        overview && (
+          <ConnectionCard
+            connected={overview.connected}
+            notConnectedText="Paste your RedX access token in Settings below. RedX needs a paid plan."
+            warning={
+              connected && !connected.pickupStore
+                ? 'Choose a pickup store in Settings. RedX needs it before you can book.'
+                : connected?.sandbox
+                  ? 'Test mode: parcels go to RedX’s sandbox, and no rider will come.'
+                  : undefined
+            }
+            details={
+              connected
+                ? [
+                    { label: 'Access token', value: connected.tokenMasked ?? '—' },
+                    { label: 'Pickup store', value: connected.pickupStore?.name ?? 'Not chosen' },
+                    { label: 'Last update from RedX', value: formatAgo(connected.lastWebhookAt) },
+                  ]
+                : undefined
+            }
+            onTest={async () => {
+              const stores = await courierApi.getRedxStores();
+              return `RedX answered. ${stores.length} pickup store${stores.length === 1 ? '' : 's'} on your account.`;
+            }}
+          />
+        )
+      }
+    >
+      {overview &&
+        (!overview.planAllowed && tab !== 'settings' ? (
+          <PlanLockedCard title="RedX needs a paid plan" message="Upgrade to book parcels and see the RedX dashboard. SteadFast is free on every plan." />
+        ) : tab === 'dashboard' ? (
+          <RedxDashboardTab onOpenParcels={() => setTab('parcels')} />
+        ) : tab === 'parcels' ? (
+          <RedxParcelsTab />
+        ) : (
+          <RedxSettingsTab overview={overview} />
         ))}
-      </div>
-
-      {isLoading ? (
-        <p className="text-sm text-regantify-text-muted">Loading…</p>
-      ) : isError || !overview ? (
-        <p className="text-sm text-red-500">
-          Could not load your RedX settings.{' '}
-          <button type="button" onClick={() => refetch()} className="underline">
-            Try again
-          </button>
-        </p>
-      ) : !overview.planAllowed && tab !== 'settings' ? (
-        <LockedFeatureCard
-          title="RedX is a paid-plan courier"
-          message="Upgrade your plan to book parcels and use the RedX dashboard. SteadFast is free on every plan."
-        />
-      ) : tab === 'dashboard' ? (
-        <RedxDashboardTab onOpenParcels={() => setSearchParams({ tab: 'parcels' })} />
-      ) : tab === 'parcels' ? (
-        <RedxParcelsTab />
-      ) : (
-        <RedxSettingsTab overview={overview} />
-      )}
-    </div>
+    </CourierPageShell>
   );
 }

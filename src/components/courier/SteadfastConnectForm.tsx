@@ -56,7 +56,7 @@ export function SteadfastConnectForm({ onConnected, footer }: SteadfastConnectFo
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="Your SteadFast API Key"
-          className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+          className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
         />
       </div>
       <div>
@@ -66,19 +66,19 @@ export function SteadfastConnectForm({ onConnected, footer }: SteadfastConnectFo
           value={secretKey}
           onChange={(e) => setSecretKey(e.target.value)}
           placeholder="Your SteadFast Secret Key"
-          className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+          className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
         />
       </div>
-      <p className="text-xs text-regantify-text-muted">
+      <p className="text-xs text-neutral-500">
         In your SteadFast merchant panel open <strong>More › API guide › Your API keys</strong> and create a key for this store. We
         check the keys with SteadFast before saving them.
       </p>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
       {footer ? footer(mutation.isPending) : (
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
           {mutation.isPending ? 'Checking with SteadFast…' : 'Connect SteadFast'}
         </button>

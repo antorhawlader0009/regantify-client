@@ -113,16 +113,16 @@ export function TrendChart<K extends string>({
               </span>
             ))}
         </div>
-        <button type="button" onClick={() => setAsTable((v) => !v)} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
+        <button type="button" onClick={() => setAsTable((v) => !v)} className="text-xs underline text-neutral-500 hover:text-regantify-text">
           {asTable ? 'View as chart' : 'View as table'}
         </button>
       </div>
 
       {asTable ? (
-        <div className="overflow-y-auto border border-black/5 rounded-xl" style={{ maxHeight: height + 24 }}>
+        <div className="overflow-y-auto border border-line rounded-xl" style={{ maxHeight: height + 24 }}>
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-white">
-              <tr className="text-left text-xs text-regantify-text-muted">
+              <tr className="text-left text-xs text-neutral-500">
                 <th className="px-3 py-2 font-medium">{bucket === 'month' ? 'Month' : 'Day'}</th>
                 {series.map((s) => (
                   <th key={s.key} className="px-3 py-2 font-medium text-right">
@@ -133,7 +133,7 @@ export function TrendChart<K extends string>({
             </thead>
             <tbody>
               {[...data].reverse().map((d) => (
-                <tr key={d.bucket} className="border-t border-black/5">
+                <tr key={d.bucket} className="border-t border-line">
                   <td className="px-3 py-1.5 text-regantify-text">{bucketLabel(d.bucket, bucket)}</td>
                   {series.map((s) => (
                     <td key={s.key} className="px-3 py-1.5 text-right tabular-nums text-regantify-text">
@@ -158,7 +158,7 @@ export function TrendChart<K extends string>({
               onBlur={() => setActive(null)}
               onPointerMove={(e: PointerEvent<SVGSVGElement>) => setActive(indexAt(e.clientX, e.currentTarget))}
               onPointerLeave={() => setActive(null)}
-              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-cta/40 rounded-lg"
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 rounded-lg"
             >
               <defs>
                 <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -213,15 +213,15 @@ export function TrendChart<K extends string>({
           )}
           {point && active != null && (
             <div
-              className="pointer-events-none absolute top-0 z-10 min-w-[140px] bg-white border border-black/10 rounded-xl shadow-lg px-3 py-2 text-xs"
+              className="pointer-events-none absolute top-0 z-10 min-w-[140px] bg-white border border-line rounded-xl shadow-lg px-3 py-2 text-xs"
               style={{ left: x(active) + 160 > width ? Math.max(0, x(active) - 172) : x(active) + 12 }}
             >
-              <p className="text-regantify-text-muted mb-1">{bucketLabel(point.bucket, bucket, true)}</p>
+              <p className="text-neutral-500 mb-1">{bucketLabel(point.bucket, bucket, true)}</p>
               {series.map((s) => (
                 <p key={s.key} className="flex items-center gap-2">
                   <span className="inline-block w-3 h-0.5 rounded-full" style={{ background: s.color }} />
                   <span className="font-semibold text-regantify-text tabular-nums">{formatValue(point[s.key], kind)}</span>
-                  <span className="text-regantify-text-muted">{s.label}</span>
+                  <span className="text-neutral-500">{s.label}</span>
                 </p>
               ))}
             </div>
@@ -301,10 +301,10 @@ export function ColumnChart({
       )}
       {active != null && (
         <div
-          className="pointer-events-none absolute top-0 z-10 bg-white border border-black/10 rounded-xl shadow-lg px-3 py-2 text-xs whitespace-nowrap"
+          className="pointer-events-none absolute top-0 z-10 bg-white border border-line rounded-xl shadow-lg px-3 py-2 text-xs whitespace-nowrap"
           style={{ left: Math.min(Math.max(0, padL + active * slot + slot + 6), Math.max(0, width - 150)) }}
         >
-          <p className="text-regantify-text-muted">{data[active].tooltip}</p>
+          <p className="text-neutral-500">{data[active].tooltip}</p>
           <p className="font-semibold text-regantify-text tabular-nums">
             {data[active].value.toLocaleString('en-US')} {label}
           </p>

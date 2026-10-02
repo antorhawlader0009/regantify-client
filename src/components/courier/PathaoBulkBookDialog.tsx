@@ -76,18 +76,18 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
         {outcome ? (
           <>
             <p className="flex items-center gap-2 text-sm font-medium text-regantify-text">
-              <CheckCircle2 size={16} className="text-green-600" />
+              <CheckCircle2 size={16} className="text-emerald-600" />
               {outcome.summary.booked} booked
               {outcome.summary.failed > 0 && <span className="text-red-600">, {outcome.summary.failed} failed</span>}
-              {outcome.summary.skipped > 0 && <span className="text-regantify-text-muted">, {outcome.summary.skipped} skipped</span>}
+              {outcome.summary.skipped > 0 && <span className="text-neutral-500">, {outcome.summary.skipped} skipped</span>}
             </p>
             {outcome.results.some((r) => !r.ok) && (
-              <ul className="max-h-60 overflow-y-auto divide-y divide-black/5 rounded-xl border border-black/5">
+              <ul className="max-h-60 overflow-y-auto divide-y divide-line rounded-lg border border-line">
                 {outcome.results
                   .filter((r) => !r.ok)
                   .map((r) => (
                     <li key={r.orderId} className="px-3 py-2 text-xs">
-                      <Link to={`/vendor/orders/${r.orderId}`} className="font-medium text-regantify-cta hover:underline">
+                      <Link to={`/vendor/orders/${r.orderId}`} className="font-medium text-brand hover:underline">
                         ORDER-{r.invoiceNumber}
                       </Link>
                       <p className="text-red-600 mt-0.5">{r.ok ? '' : r.error}</p>
@@ -96,38 +96,38 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
               </ul>
             )}
             <div className="flex justify-end">
-              <button type="button" onClick={close} className="px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium">
+              <button type="button" onClick={close} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60">
                 Done
               </button>
             </div>
           </>
         ) : planMutation.isPending || (!draft && !planMutation.isError) ? (
-          <p className="text-sm text-regantify-text-muted">Checking the selected orders…</p>
+          <p className="text-sm text-neutral-500">Checking the selected orders…</p>
         ) : planMutation.isError ? (
-          <p className="text-sm text-red-600">{apiErrorMessage(planMutation.error, 'Could not check these orders. Please try again.')}</p>
+          <p className="text-sm text-red-600">{apiErrorMessage(planMutation.error, 'Couldn’t check these orders. Try again in a minute.')}</p>
         ) : draft ? (
           <>
             <div className={`grid ${draft.pickupStore ? 'grid-cols-3' : 'grid-cols-2'} gap-2 text-center`}>
-              <div className="rounded-xl bg-regantify-content p-3">
+              <div className="rounded-lg border border-line bg-neutral-50 p-3">
                 <p className="text-xl font-semibold text-regantify-text tabular-nums">{draft.eligible.length}</p>
-                <p className="text-xs text-regantify-text-muted">to book</p>
+                <p className="text-xs text-neutral-500">to book</p>
               </div>
-              <div className="rounded-xl bg-regantify-content p-3">
+              <div className="rounded-lg border border-line bg-neutral-50 p-3">
                 <p className="text-xl font-semibold text-regantify-text tabular-nums">{formatTaka(draft.totalCod)}</p>
-                <p className="text-xs text-regantify-text-muted">COD to collect</p>
+                <p className="text-xs text-neutral-500">COD to collect</p>
               </div>
               {draft.pickupStore && (
-                <div className="rounded-xl bg-regantify-content p-3">
+                <div className="rounded-lg border border-line bg-neutral-50 p-3">
                   <p className="text-sm font-semibold text-regantify-text truncate" title={draft.pickupStore.name ?? undefined}>
                     {draft.pickupStore.name ?? `Store #${draft.pickupStore.id}`}
                   </p>
-                  <p className="text-xs text-regantify-text-muted">pickup store</p>
+                  <p className="text-xs text-neutral-500">pickup store</p>
                 </div>
               )}
             </div>
 
-            <p className="text-xs text-regantify-text-muted">
-              Each order is booked with your Default Values (Courier Integration › {name}). Orders without a courier are assigned to {name}.
+            <p className="text-xs text-neutral-500">
+              Each order uses your booking defaults (Courier integration › {name} › Settings). Orders with no courier yet are set to {name}.
             </p>
 
             {draft.skipped.length > 0 && (
@@ -135,11 +135,11 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
                 <p className="flex items-center gap-1.5 text-xs font-medium text-amber-700 mb-1.5">
                   <AlertTriangle size={13} /> {draft.skipped.length} will be skipped
                 </p>
-                <ul className="max-h-40 overflow-y-auto divide-y divide-black/5 rounded-xl border border-black/5">
+                <ul className="max-h-40 overflow-y-auto divide-y divide-line rounded-lg border border-line">
                   {draft.skipped.map((s) => (
                     <li key={s.orderId} className="px-3 py-1.5 text-xs">
                       <span className="font-medium text-regantify-text">{s.invoiceNumber ? `ORDER-${s.invoiceNumber}` : 'Unknown order'}</span>
-                      <span className="text-regantify-text-muted"> — {s.reason}</span>
+                      <span className="text-neutral-500"> — {s.reason}</span>
                     </li>
                   ))}
                 </ul>
@@ -147,7 +147,7 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
             )}
 
             {bookMutation.isError && (
-              <p className="text-sm text-red-600">{apiErrorMessage(bookMutation.error, 'Could not send these orders. Please try again.')}</p>
+              <p className="text-sm text-red-600">{apiErrorMessage(bookMutation.error, 'Couldn’t send these orders. Try again in a minute.')}</p>
             )}
 
             <div className="flex justify-end gap-2">
@@ -155,7 +155,7 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
                 type="button"
                 onClick={close}
                 disabled={bookMutation.isPending}
-                className="px-4 py-2 rounded-lg border border-black/10 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-line bg-white px-4 text-sm text-regantify-text transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -163,9 +163,9 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
                 type="button"
                 onClick={() => orderIds && bookMutation.mutate(orderIds)}
                 disabled={draft.eligible.length === 0 || bookMutation.isPending}
-                className="px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {bookMutation.isPending ? `Booking ${draft.eligible.length}…` : `Book ${draft.eligible.length} with ${name}`}
+                {bookMutation.isPending ? `Sending ${draft.eligible.length}…` : `Send ${draft.eligible.length} to ${name}`}
               </button>
             </div>
           </>

@@ -1,83 +1,79 @@
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
 import { courierApi } from '../../../../lib/courierApi';
-import { LockedFeatureCard } from '../../../../components/ui/UpgradePrompt';
+import { ConnectionCard, CourierPageShell, PlanLockedCard, formatAgo, useCourierTab } from '../../../../components/courier/CourierKit';
 import { PathaoSettingsTab } from './PathaoSettingsTab';
 import { PathaoParcelsTab } from './PathaoParcelsTab';
 import { PathaoDashboardTab } from './PathaoDashboardTab';
 
-type Tab = 'dashboard' | 'parcels' | 'settings';
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'parcels', label: 'Parcels' },
-  { id: 'settings', label: 'Settings' },
-];
-
 /**
- * Courier Integration > Pathao — the dedicated Pathao addon page
- * (pathao-plan.md §3): Dashboard / Parcels / Settings tabs. The active
- * tab lives in `?tab=` so a link can open a specific one (e.g. the
- * Settings page's "Manage" link). Not-connected vendors always land on
- * Settings, since the other two tabs have nothing to show yet.
+ * Courier Integration > Pathao (pathao-plan.md §3) — connection card,
+ * then Dashboard / Parcels / Settings, the same shape as the SteadFast
+ * and RedX pages. The active tab lives in `?tab=` so a link can open a
+ * specific one. Not-connected vendors always land on Settings; on a plan
+ * without Pathao booking, Settings is the landing tab too (connecting
+ * and the customer delivery check are free on every plan).
  */
 export default function PathaoPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-
   const { data: overview, isLoading, isError, refetch } = useQuery({
     queryKey: ['pathao-overview'],
     queryFn: courierApi.getPathaoOverview,
   });
+  const [tab, setTab] = useCourierTab(overview?.connected, overview?.planAllowed ? 'dashboard' : 'settings');
 
-  const requested = searchParams.get('tab') as Tab | null;
-  const tab: Tab = overview && !overview.connected ? 'settings' : requested && TABS.some((t) => t.id === requested) ? requested : 'settings';
+  const connected = overview?.connected ? overview : null;
+  const warning = connected?.needsReconnect
+    ? 'Pathao changed how stores connect. Reconnect with your own Client ID and Client Secret in Settings to keep booking.'
+    : connected && !connected.pickupStore
+      ? 'Choose a pickup store in Settings. Pathao needs it before you can book.'
+      : undefined;
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-regantify-black">Pathao Courier</h1>
-        <p className="text-sm text-regantify-text-muted mt-1">Book Pathao deliveries from your orders and track every parcel.</p>
-      </div>
-
-      <div className="flex items-center gap-5 mb-6 border-b border-black/5">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setSearchParams(t.id === 'settings' ? {} : { tab: t.id })}
-            disabled={overview && !overview.connected && t.id !== 'settings'}
-            className={`-mb-px pb-2.5 text-sm font-medium border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-              tab === t.id
-                ? 'border-regantify-cta text-regantify-text'
-                : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
-            }`}
-          >
-            {t.label}
-          </button>
+    <CourierPageShell
+      name="Pathao"
+      description="Send orders to Pathao, print labels and follow every parcel."
+      tab={tab}
+      onTabChange={setTab}
+      connected={Boolean(connected)}
+      loading={isLoading}
+      error={isError || (!isLoading && !overview)}
+      onRetry={() => refetch()}
+      connection={
+        overview && (
+          <ConnectionCard
+            connected={overview.connected}
+            notConnectedText="Paste your Pathao Client ID and Client Secret in Settings below. Connecting is free on every plan."
+            warning={warning}
+            details={
+              connected
+                ? [
+                    ...(connected.merchantName ? [{ label: 'Account', value: connected.merchantName }] : []),
+                    { label: 'Client ID', value: connected.clientIdMasked ?? '—' },
+                    { label: 'Pickup store', value: connected.pickupStore?.name ?? 'Not chosen' },
+                    { label: 'Last update from Pathao', value: formatAgo(connected.lastWebhookAt) },
+                  ]
+                : undefined
+            }
+            onTest={async () => {
+              const stores = await courierApi.getPathaoStoreList();
+              return `Pathao answered. ${stores.length} pickup store${stores.length === 1 ? '' : 's'} on your account.`;
+            }}
+          />
+        )
+      }
+    >
+      {overview &&
+        (!overview.planAllowed && tab !== 'settings' ? (
+          <PlanLockedCard
+            title="Booking with Pathao needs a paid plan"
+            message="Upgrade to book parcels and see the Pathao dashboard. Connecting Pathao and the customer delivery check (Settings) are free on every plan."
+          />
+        ) : tab === 'dashboard' ? (
+          <PathaoDashboardTab onOpenParcels={() => setTab('parcels')} />
+        ) : tab === 'parcels' ? (
+          <PathaoParcelsTab />
+        ) : (
+          <PathaoSettingsTab overview={overview} />
         ))}
-      </div>
-
-      {isLoading ? (
-        <p className="text-sm text-regantify-text-muted">Loading…</p>
-      ) : isError || !overview ? (
-        <p className="text-sm text-red-500">
-          Could not load your Pathao settings.{' '}
-          <button type="button" onClick={() => refetch()} className="underline">
-            Try again
-          </button>
-        </p>
-      ) : !overview.planAllowed && tab !== 'settings' ? (
-        <LockedFeatureCard
-          title="Booking with Pathao is a paid-plan feature"
-          message="Upgrade your plan to book parcels and use the Pathao dashboard. Connecting Pathao and the customer delivery check (Settings tab) are free on every plan."
-        />
-      ) : tab === 'dashboard' ? (
-        <PathaoDashboardTab onOpenParcels={() => setSearchParams({ tab: 'parcels' })} />
-      ) : tab === 'parcels' ? (
-        <PathaoParcelsTab />
-      ) : (
-        <PathaoSettingsTab overview={overview} />
-      )}
-    </div>
+    </CourierPageShell>
   );
 }

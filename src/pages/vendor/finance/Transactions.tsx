@@ -1,113 +1,167 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Receipt } from 'lucide-react';
 import { financeApi, type TransactionType } from '../../../lib/financeApi';
+import { formatDhakaDateTime } from '../../../lib/dhakaDate';
+import {
+  EmptyState,
+  PageHeader,
+  PageSection,
+  PillTabs,
+  StackedList,
+  TableFooter,
+  TableFrame,
+  TableSkeleton,
+  outlineBtn,
+  td,
+  th,
+  theadRow,
+  trClass,
+} from '../../../components/ui/PageKit';
+import { DateRangeFilter } from '../order/DateRangeFilter';
+import { SignedAmount, TransactionDescription, TransactionItem, formatTaka } from './financeUi';
 
-function formatAmount(value: string) {
-  return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-}
+type TypeFilter = 'ALL' | TransactionType;
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'numeric',
-    day: 'numeric',
-    year: '2-digit',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-const TYPE_BADGE: Record<TransactionType, string> = {
-  CREDIT: 'bg-green-100 text-green-700',
-  DEBIT: 'bg-red-100 text-red-700',
-};
-
+/**
+ * Finance > Transactions — the wallet's ledger, newest first: money in
+ * (green, "+") and money out ("−"), with the balance after each. Filter
+ * by money in / out and by dates (server-side, see FinanceService
+ * .listTransactions); "ORDER-…" in a description links to the order.
+ */
 export default function Transactions() {
+  const [type, setType] = useState<TypeFilter>('ALL');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
-  const perPage = 20;
+  const [perPage, setPerPage] = useState(20);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['finance', 'transactions', page],
-    queryFn: () => financeApi.getTransactions(page, perPage),
+  const query = { page, perPage, type: type === 'ALL' ? undefined : type, from: dateFrom, to: dateTo };
+  const { data, isLoading, isError, isFetching } = useQuery({
+    queryKey: ['finance', 'transactions', query],
+    queryFn: () => financeApi.getTransactions(query),
+    placeholderData: keepPreviousData,
   });
 
   const transactions = data?.transactions ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const filtered = type !== 'ALL' || Boolean(dateFrom || dateTo);
+  const COLS = 4;
+  const empty = filtered
+    ? { title: 'Nothing matches', hint: 'Try All, or clear the dates.', action: undefined }
+    : {
+        title: 'No transactions yet',
+        hint: 'Money shows up here when online orders are paid, orders complete, or you add or withdraw money.',
+        action: (
+          <Link to="/vendor/finance/wallet" className={outlineBtn}>
+            Go to wallet
+          </Link>
+        ),
+      };
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-regantify-text mb-6">Transactions</h1>
+    <PageSection>
+      <PageHeader title="Transactions" description="Every change to your wallet balance, newest first." />
 
-      <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-regantify-content text-left text-regantify-text-muted">
-              <th className="px-5 py-3 font-medium">DATE</th>
-              <th className="px-5 py-3 font-medium">DESCRIPTION</th>
-              <th className="px-5 py-3 font-medium">TYPE</th>
-              <th className="px-5 py-3 font-medium">AMOUNT</th>
-              <th className="px-5 py-3 font-medium">RUNNING BALANCE</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && (
-              <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-regantify-text-muted">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!isLoading && transactions.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-regantify-text-muted">
-                  No transactions yet.
-                </td>
-              </tr>
-            )}
-            {transactions.map((t) => (
-              <tr key={t.id} className="border-t border-black/5">
-                <td className="px-5 py-3.5 text-regantify-text whitespace-nowrap">{formatDateTime(t.createdAt)}</td>
-                <td className="px-5 py-3.5 text-regantify-text">{t.description}</td>
-                <td className="px-5 py-3.5">
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-md ${TYPE_BADGE[t.type]}`}>{t.type}</span>
-                </td>
-                <td className={`px-5 py-3.5 font-medium ${t.type === 'DEBIT' ? 'text-red-600' : 'text-green-700'}`}>
-                  {t.type === 'DEBIT' ? '-' : '+'}
-                  {formatAmount(t.amount)}
-                </td>
-                <td className="px-5 py-3.5 text-regantify-text">{formatAmount(t.balanceAfter)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <PillTabs<TypeFilter>
+          className="w-full sm:w-fit"
+          value={type}
+          onChange={(v) => {
+            setType(v);
+            setPage(1);
+          }}
+          tabs={[
+            { id: 'ALL', label: 'All' },
+            { id: 'CREDIT', label: 'Money in' },
+            { id: 'DEBIT', label: 'Money out' },
+          ]}
+        />
+        <DateRangeFilter
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onChange={(from, to) => {
+            setDateFrom(from);
+            setDateTo(to);
+            setPage(1);
+          }}
+        />
+      </div>
 
-        <div className="flex items-center justify-between px-5 py-3.5 border-t border-black/5">
-          <span className="text-xs text-regantify-text-muted">Total: {total}</span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text
-                  hover:bg-regantify-content disabled:opacity-40 disabled:hover:bg-transparent"
-              >
-                Previous
-              </button>
-              <span className="px-2 text-sm text-regantify-text-muted">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="px-3 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text
-                  hover:bg-regantify-content disabled:opacity-40 disabled:hover:bg-transparent"
-              >
-                Next
-              </button>
-            </div>
+      {isError && !data ? (
+        <div className="rounded-lg border border-line">
+          <EmptyState icon={Receipt} title="Couldn’t load your transactions" hint="Refresh the page to try again." />
+        </div>
+      ) : (
+        <div className={`transition-opacity ${isFetching && !isLoading ? 'opacity-60' : ''}`}>
+          <div className="hidden md:block">
+            <TableFrame minWidth="min-w-[720px]">
+              <thead>
+                <tr className={theadRow}>
+                  <th className={`${th} w-48`}>Date</th>
+                  <th className={th}>What it was</th>
+                  <th className={`${th} w-40 text-right`}>Amount</th>
+                  <th className={`${th} w-40 text-right`}>Balance after</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <TableSkeleton rows={8} colSpan={COLS} />
+                ) : transactions.length === 0 ? (
+                  <EmptyState as="row" colSpan={COLS} icon={Receipt} title={empty.title} hint={empty.hint} action={empty.action} />
+                ) : (
+                  transactions.map((t) => (
+                    <tr key={t.id} className={trClass()}>
+                      <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDhakaDateTime(t.createdAt)}</td>
+                      <td className={td}>
+                        <TransactionDescription t={t} />
+                      </td>
+                      <td className={`${td} whitespace-nowrap text-right`}>
+                        <SignedAmount t={t} />
+                      </td>
+                      <td className={`${td} whitespace-nowrap text-right tabular-nums text-neutral-600`}>{formatTaka(t.balanceAfter)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </TableFrame>
+          </div>
+
+          <div className="md:hidden">
+            {isLoading ? (
+              <div className="space-y-2" aria-busy>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-14 animate-pulse rounded-lg bg-neutral-100" />
+                ))}
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="rounded-lg border border-line">
+                <EmptyState icon={Receipt} title={empty.title} hint={empty.hint} action={empty.action} />
+              </div>
+            ) : (
+              <StackedList>
+                {transactions.map((t) => (
+                  <TransactionItem key={t.id} t={t} />
+                ))}
+              </StackedList>
+            )}
+          </div>
+
+          {data && data.total > 0 && (
+            <TableFooter
+              page={page}
+              perPage={perPage}
+              total={data.total}
+              onPageChange={setPage}
+              onPerPageChange={(n) => {
+                setPerPage(n);
+                setPage(1);
+              }}
+              perPageOptions={[20, 50, 100]}
+            />
           )}
         </div>
-      </div>
-    </div>
+      )}
+    </PageSection>
   );
 }

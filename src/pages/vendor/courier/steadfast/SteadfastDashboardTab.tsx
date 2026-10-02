@@ -1,31 +1,23 @@
-import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { RefreshCw, Wallet } from 'lucide-react';
 import { courierApi, type PathaoStatsRange } from '../../../../lib/courierApi';
 import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
-import { BookingsTrendChart } from '../../../../components/courier/BookingsTrendChart';
-
-const RANGES: { id: PathaoStatsRange; label: string }[] = [
-  { id: '7d', label: 'Last 7 days' },
-  { id: '30d', label: 'Last 30 days' },
-  { id: '90d', label: 'Last 90 days' },
-];
-
-function formatTaka(value: number) {
-  return `৳${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-}
-
-function StatTile({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'danger' }) {
-  return (
-    <div className="bg-white rounded-2xl border border-black/5 p-4">
-      <p className="text-xs text-regantify-text-muted">{label}</p>
-      <p className={`text-2xl font-semibold mt-1 tabular-nums ${tone === 'danger' ? 'text-red-600' : 'text-regantify-text'}`}>{value}</p>
-      {hint && <p className="text-xs text-regantify-text-muted mt-0.5">{hint}</p>}
-    </div>
-  );
-}
+import { formatDhakaDate } from '../../../../lib/dhakaDate';
+import { outlineBtn } from '../../../../components/ui/PageKit';
+import {
+  AttentionCard,
+  CourierCard,
+  DashboardError,
+  DashboardSkeleton,
+  RangeTabs,
+  StatGrid,
+  StatTile,
+  TrendCard,
+  formatTaka,
+  rangeLabel,
+} from '../../../../components/courier/CourierKit';
 
 /** Recent payouts, live from SteadFast, with "Check payouts" to mark the parcels they settled as paid. */
 function PayoutsCard() {
@@ -42,58 +34,60 @@ function PayoutsCard() {
       queryClient.invalidateQueries({ queryKey: ['steadfast-stats'] });
       queryClient.invalidateQueries({ queryKey: ['steadfast-parcels'] });
       queryClient.invalidateQueries({ queryKey: ['steadfast-payouts'] });
-      toast.success(markedPaid > 0 ? `${markedPaid} parcel${markedPaid === 1 ? '' : 's'} marked as paid out.` : 'Everything is up to date.');
+      toast.success(markedPaid > 0 ? `${markedPaid} parcel${markedPaid === 1 ? '' : 's'} marked as paid to you` : 'Payouts are up to date');
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not check your payouts. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t check your payouts. Try again in a minute.')),
   });
 
   return (
-    <section className="bg-white rounded-2xl border border-black/5 p-5">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <h2 className="text-base font-semibold text-regantify-text">Payouts from SteadFast</h2>
-        <button
-          type="button"
-          onClick={() => syncMutation.mutate()}
-          disabled={syncMutation.isPending}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-xs font-medium text-regantify-text hover:bg-regantify-content disabled:opacity-60"
-        >
-          <RefreshCw size={13} className={syncMutation.isPending ? 'animate-spin' : ''} /> Check payouts
+    <CourierCard
+      title="Payouts from SteadFast"
+      description="We also check by ourselves every few hours."
+      action={
+        <button type="button" onClick={() => syncMutation.mutate()} disabled={syncMutation.isPending} className={outlineBtn}>
+          <RefreshCw size={14} className={syncMutation.isPending ? 'animate-spin' : ''} aria-hidden />
+          Check payouts
         </button>
-      </div>
+      }
+    >
       {isLoading ? (
-        <p className="text-sm text-regantify-text-muted">Loading…</p>
+        <div className="space-y-2" aria-busy>
+          <div className="h-12 animate-pulse rounded-lg bg-neutral-100" />
+          <div className="h-12 animate-pulse rounded-lg bg-neutral-100" />
+        </div>
       ) : isError || !payouts ? (
-        <p className="text-sm text-red-500">Could not load your payouts from SteadFast right now.</p>
+        <p className="text-sm text-red-600">SteadFast didn’t send your payouts just now. Try again in a minute.</p>
       ) : payouts.length === 0 ? (
-        <p className="text-sm text-regantify-text-muted">No payouts yet.</p>
+        <p className="flex items-center gap-2 text-sm text-neutral-500">
+          <Wallet size={15} aria-hidden /> No payouts yet. They show up here once SteadFast pays you.
+        </p>
       ) : (
-        <ul className="divide-y divide-black/5">
+        <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line">
           {payouts.map((p) => (
-            <li key={p.id} className="py-2.5 flex items-center justify-between gap-3 text-sm">
-              <div>
+            <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
+              <div className="min-w-0">
                 <p className="text-regantify-text">Payout #{p.id}</p>
-                <p className="text-xs text-regantify-text-muted">
-                  {p.createdAt ? new Date(p.createdAt.replace(' ', 'T')).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                <p className="truncate text-xs text-neutral-500">
+                  {p.createdAt ? formatDhakaDate(p.createdAt.replace(' ', 'T')) : '—'}
                   {p.method && <> · {p.method}</>}
                   {p.status && <> · {p.status}</>}
                 </p>
               </div>
-              <span className="font-medium tabular-nums text-regantify-text">{p.amount == null ? '—' : formatTaka(p.amount)}</span>
+              <span className="font-medium tabular-nums text-regantify-text">{formatTaka(p.amount)}</span>
             </li>
           ))}
         </ul>
       )}
-      <p className="text-xs text-regantify-text-muted mt-3">Parcels are also marked as paid out automatically every few hours.</p>
-    </section>
+    </CourierCard>
   );
 }
 
 /**
  * Courier Integration > SteadFast > Dashboard: headline numbers (the
- * "Bookings Today" / "Active Bookings" pair with their COD, like the
- * reference add-on, plus delivered/returned/fees/COD for the period),
- * what SteadFast owes you right now (live), a bookings-vs-deliveries
- * trend, orders that need attention and recent payouts.
+ * "Bookings Today" / "Active Bookings" pair with their COD, plus
+ * delivered/returned/COD for the period), what SteadFast owes you right
+ * now (live), a bookings-vs-deliveries trend, orders that need
+ * attention and recent payouts.
  */
 export function SteadfastDashboardTab({ onOpenParcels }: { onOpenParcels: () => void }) {
   const [range, setRange] = useState<PathaoStatsRange>('30d');
@@ -107,110 +101,40 @@ export function SteadfastDashboardTab({ onOpenParcels }: { onOpenParcels: () => 
     queryFn: courierApi.getSteadfastBalance,
     staleTime: 60_000,
   });
-
-  const period = RANGES.find((r) => r.id === range)!.label.toLowerCase();
+  const period = rangeLabel(range);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {RANGES.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => setRange(r.id)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border ${
-              range === r.id ? 'bg-regantify-black text-white border-regantify-black' : 'border-black/10 text-regantify-text hover:bg-regantify-content'
-            }`}
-          >
-            {r.label}
-          </button>
-        ))}
-      </div>
-
+      <RangeTabs value={range} onChange={setRange} />
       {isLoading ? (
-        <p className="text-sm text-regantify-text-muted">Loading…</p>
+        <DashboardSkeleton />
       ) : isError || !data ? (
-        <p className="text-sm text-red-500">Could not load your SteadFast numbers. Please refresh the page.</p>
+        <DashboardError courier="SteadFast" />
       ) : (
-        <div className={`space-y-4 ${isFetching ? 'opacity-60' : ''}`}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatTile label="Bookings today" value={data.bookingsToday.count} hint={`${formatTaka(data.bookingsToday.cod)} COD`} />
-            <StatTile label="Active bookings" value={data.active.count} hint={`${formatTaka(data.active.cod)} COD on the way`} />
-            <StatTile label="Delivered" value={data.delivered} hint={`Of ${data.booked} booked, ${period}`} />
-            <StatTile
-              label="Returned"
-              value={data.returned}
-              hint={data.returnRate == null ? 'No finished parcels yet' : `${data.returnRate}% return rate`}
-            />
+        <>
+          <StatGrid dim={isFetching}>
+            <StatTile label="Booked today" value={data.bookingsToday.count} hint={`${formatTaka(data.bookingsToday.cod)} COD`} />
+            <StatTile label="On the way now" value={data.active.count} hint={`${formatTaka(data.active.cod)} COD to collect`} />
+            <StatTile label="Delivered" value={data.delivered} hint={`Of ${data.booked} booked, ${period}`} tone="good" />
+            <StatTile label="Returned" value={data.returned} hint={data.returnRate == null ? 'No finished parcels yet' : `${data.returnRate}% came back`} />
             <StatTile
               label="SteadFast balance"
               value={balance?.balance == null ? '—' : formatTaka(balance.balance)}
               hint={balance?.balance == null ? 'SteadFast didn’t answer just now' : 'What SteadFast owes you right now'}
             />
-            <StatTile
-              label="COD still with SteadFast"
-              value={formatTaka(data.codPending.amount)}
-              hint={`${data.codPending.count} delivered, not paid out yet`}
-            />
-            <StatTile label="COD paid out" value={formatTaka(data.codPaid.amount)} hint={`${data.codPaid.count} parcels, ${period}`} />
+            <StatTile label="COD still with SteadFast" value={formatTaka(data.codPending.amount)} hint={`${data.codPending.count} delivered, not paid to you yet`} />
+            <StatTile label="COD paid to you" value={formatTaka(data.codPaid.amount)} hint={`${data.codPaid.count} parcels, ${period}`} />
             <StatTile
               label="Failed bookings"
               value={data.failedBookings}
               hint="Not sent to SteadFast yet"
               tone={data.failedBookings > 0 ? 'danger' : undefined}
             />
-          </div>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-5">
-            <h2 className="text-base font-semibold text-regantify-text mb-3">Bookings and deliveries per day</h2>
-            {data.trend.every((d) => d.booked === 0 && d.delivered === 0) ? (
-              <p className="text-sm text-regantify-text-muted py-8 text-center">No SteadFast bookings or deliveries {period}.</p>
-            ) : (
-              <BookingsTrendChart data={data.trend} />
-            )}
-          </section>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-5">
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <h2 className="text-base font-semibold text-regantify-text">
-                Needs attention{data.attention.total > 0 && <span className="text-regantify-text-muted font-normal"> · {data.attention.total}</span>}
-              </h2>
-              {data.attention.total > 0 && (
-                <button type="button" onClick={onOpenParcels} className="text-xs underline text-regantify-text-muted hover:text-regantify-text">
-                  Open parcels
-                </button>
-              )}
-            </div>
-            {data.attention.items.length === 0 ? (
-              <p className="flex items-center gap-2 text-sm text-green-700">
-                <CheckCircle2 size={15} /> Nothing needs your attention.
-              </p>
-            ) : (
-              <ul className="divide-y divide-black/5">
-                {data.attention.items.map((item) => (
-                  <li key={item.id} className="py-2.5 flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-regantify-text">
-                        <AlertTriangle size={14} className="text-amber-600 shrink-0" />
-                        {item.reason}
-                      </p>
-                      {item.detail && <p className="text-xs text-red-500 mt-0.5">{item.detail}</p>}
-                      <p className="text-xs text-regantify-text-muted mt-0.5">
-                        {item.customerName} · {item.customerPhone}
-                        {item.courierConsignmentId && <> · {item.courierConsignmentId}</>}
-                      </p>
-                    </div>
-                    <Link to={`/vendor/orders/${item.id}`} className="text-xs text-regantify-cta hover:underline whitespace-nowrap">
-                      ORDER-{item.invoiceNumber} →
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
+          </StatGrid>
+          <TrendCard data={data.trend} courier="SteadFast" period={period} />
+          <AttentionCard attention={data.attention} onOpenParcels={onOpenParcels} />
           <PayoutsCard />
-        </div>
+        </>
       )}
     </div>
   );

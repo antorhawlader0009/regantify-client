@@ -34,13 +34,13 @@ export function RedxCancelDialog({ order, onClose }: RedxCancelDialogProps) {
       toast.success('RedX parcel cancelled. You can book this order again.');
       onClose();
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not cancel the parcel. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t cancel the parcel. Try again in a minute.')),
   });
 
   return (
     <Dialog open={order != null} onOpenChange={(open) => !open && !mutation.isPending && onClose()} title="Cancel RedX parcel" maxWidth="max-w-md">
       <div className="p-6 pt-4 space-y-4">
-        <p className="text-sm text-regantify-text-muted">
+        <p className="text-sm text-neutral-500">
           Tells RedX not to pick up ORDER-{order?.invoiceNumber}. This only works before RedX collects the parcel. Your order status stays as
           it is, and you can book the order again afterwards.
         </p>
@@ -50,7 +50,7 @@ export function RedxCancelDialog({ order, onClose }: RedxCancelDialogProps) {
           maxLength={300}
           rows={3}
           placeholder="Reason (optional), e.g. Customer cancelled"
-          className="w-full px-3.5 py-2.5 rounded-lg border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+          className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
         />
         <div className="flex justify-end gap-2">
           <button

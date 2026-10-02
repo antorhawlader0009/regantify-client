@@ -1,21 +1,20 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Dialog } from '../../../components/ui/Dialog';
-import { inputClass } from '../../../components/product/ProductFormPieces';
+import { Field } from '../../../components/product/ProductFormPieces';
+import { MoneyInput } from '../../../components/product/ProductFormKit';
 import { paymentsApi } from '../../../lib/paymentsApi';
 import { apiErrorMessage } from '../../../lib/api';
-import { toast } from '../../../lib/toast';
+import { toLatinDigits } from '../../../lib/bdPhone';
+import { formatTaka } from './financeUi';
 
 const MIN_AMOUNT = 20;
-
-function formatAmount(value: number) {
-  return `৳${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-}
+const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 
 interface AddMoneyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Current Main Balance (see Wallet.tsx) — used only to show the
+  // Current wallet balance (see Wallet.tsx) — used only to show the
   // "this also clears your negative balance" note below before
   // submitting; the server always resolves the real deficit itself at
   // charge time (PaymentsService.initiate), this is display-only.
@@ -23,79 +22,85 @@ interface AddMoneyDialogProps {
 }
 
 /**
- * Finance > Wallet's "Add Money" — a real top-up through PayStation,
- * replacing the old capped ৳1–৳5 "Test Payment" button (see git history
- * for TestPaymentDialog, same component this grew out of). Redirects the
- * whole tab to PayStation's hosted checkout; PayStation then redirects
- * back to /vendor/finance/payment-callback once the vendor finishes.
+ * Finance > Wallet's "Add money" — a real top-up through PayStation.
+ * Redirects the whole tab to PayStation's hosted checkout; PayStation
+ * then redirects back to /vendor/finance/payment-callback once the
+ * vendor finishes.
  *
- * If Vendor.balance is currently negative (e.g. ORDER_COMPLETION_FEE
- * charged with no balance floor — see OrdersService.applyStatusUpdate),
- * the server adds that deficit on top of whatever amount is entered here
+ * If Vendor.balance is currently negative (e.g. a platform charge taken
+ * with no balance floor — see OrdersService.applyStatusUpdate), the
+ * server adds that deficit on top of whatever amount is entered here
  * (PaymentsService.initiate) so completing this top-up also clears it —
  * there's no separate "pay down your negative balance" flow, this is it.
  */
 export function AddMoneyDialog({ open, onOpenChange, currentBalance }: AddMoneyDialogProps) {
-  const [amount, setAmount] = useState('100');
+  const [amount, setAmount] = useState('500');
+  const [error, setError] = useState<string | null>(null);
 
   const initiateMutation = useMutation({
     mutationFn: () => paymentsApi.initiate({ purpose: 'WALLET_TOPUP', amount: Number(amount) }),
     onSuccess: (data) => {
       window.location.href = data.paymentUrl;
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not start the payment. Please try again.')),
+    onError: (err) => setError(apiErrorMessage(err, 'Couldn’t open PayStation. Check your connection and try again.')),
   });
 
   const parsedAmount = Number(amount);
   const isValid = Number.isFinite(parsedAmount) && parsedAmount >= MIN_AMOUNT;
-  const hasDeficit = currentBalance < 0;
-  const deficit = hasDeficit ? Math.abs(currentBalance) : 0;
+  const deficit = currentBalance < 0 ? Math.abs(currentBalance) : 0;
   const payableTotal = isValid ? parsedAmount + deficit : 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Add Money (PayStation)" maxWidth="max-w-md">
-      <div className="p-6 pt-4">
-        <p className="text-sm text-regantify-text-muted mb-4">
-          Top up your wallet balance through PayStation. It's added to your Main Balance once confirmed.
-        </p>
+    <Dialog open={open} onOpenChange={onOpenChange} title="Add money" maxWidth="max-w-md">
+      <form
+        className="p-6 pt-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setError(null);
+          if (isValid) initiateMutation.mutate();
+        }}
+      >
+        <p className="mb-4 text-sm text-neutral-600">Pay with bKash, Nagad or a card through PayStation. It’s in your wallet as soon as the payment is confirmed.</p>
 
-        {hasDeficit && (
-          <div className="mb-4 px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
-            Your wallet balance is currently {formatAmount(currentBalance)}. This negative amount (
-            {formatAmount(deficit)}) will automatically be added to your payment below so this top-up also clears
-            it.
+        <Field label="Amount" error={amount && !isValid ? `Add at least ${formatTaka(MIN_AMOUNT)}.` : null}>
+          <MoneyInput value={amount} onChange={(v) => setAmount(toLatinDigits(v))} ariaLabel="Amount to add" />
+        </Field>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {QUICK_AMOUNTS.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setAmount(String(n))}
+              className={`h-8 rounded-full border px-3 text-xs tabular-nums transition-colors ${
+                Number(amount) === n ? 'border-brand bg-brand-lime font-medium text-regantify-text' : 'border-line text-neutral-600 hover:bg-neutral-50'
+              }`}
+            >
+              ৳{n.toLocaleString('en-US')}
+            </button>
+          ))}
+        </div>
+
+        {deficit > 0 && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            Your balance is {formatTaka(currentBalance)}, so {formatTaka(deficit)} is added to this payment to clear it.
+            {isValid && (
+              <span className="mt-1 block font-medium">
+                You pay {formatTaka(payableTotal)}: {formatTaka(parsedAmount)} into your wallet + {formatTaka(deficit)} to clear the balance.
+              </span>
+            )}
           </div>
         )}
 
-        <label className="block text-sm font-medium text-regantify-text mb-1.5">Amount to Add (৳)</label>
-        <input
-          type="number"
-          min={MIN_AMOUNT}
-          step="1"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className={inputClass}
-        />
-        {!isValid && <p className="text-xs text-red-600 mt-1.5">Enter an amount of at least ৳{MIN_AMOUNT}.</p>}
-
-        {isValid && hasDeficit && (
-          <p className="text-xs text-regantify-text-muted mt-1.5">
-            You'll be charged {formatAmount(payableTotal)} total — {formatAmount(parsedAmount)} added to your
-            wallet + {formatAmount(deficit)} clearing your negative balance.
-          </p>
-        )}
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
         <button
-          onClick={() => initiateMutation.mutate()}
+          type="submit"
           disabled={!isValid || initiateMutation.isPending}
-          className="w-full mt-5 px-6 py-3 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
-            transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {initiateMutation.isPending
-            ? 'Redirecting…'
-            : `Pay ${isValid ? formatAmount(payableTotal) : ''} with PayStation`}
+          {initiateMutation.isPending ? 'Opening PayStation…' : isValid ? `Pay ${formatTaka(payableTotal)}` : 'Pay'}
         </button>
-      </div>
+      </form>
     </Dialog>
   );
 }

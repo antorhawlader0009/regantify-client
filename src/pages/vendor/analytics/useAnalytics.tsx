@@ -32,7 +32,7 @@ export function TabState<D>({
   if (query.isLoading) return <TabSkeleton />;
   if (query.isError || !query.data) {
     return (
-      <div className="rounded-2xl border border-red-100 bg-red-50/60 p-6 text-sm text-red-700">
+      <div className="rounded-xl border border-red-100 bg-red-50/60 p-6 text-sm text-red-700">
         {apiErrorMessage(query.error, 'Could not load your analytics.')}{' '}
         <button type="button" onClick={() => query.refetch()} className="underline font-medium">
           Try again

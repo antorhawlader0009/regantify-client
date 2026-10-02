@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Clock, Link as LinkIcon, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { paymentsApi, type PaymentStatus } from '../../../lib/paymentsApi';
+import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 
 const PURPOSE_LABEL: Record<string, string> = {
-  WALLET_TOPUP: 'Wallet top-up',
-  SMS_PACKAGE: 'SMS package',
-  CHATBOT_PACKAGE: 'AI Chat Bot package',
-  PLAN_UPGRADE: 'Plan upgrade',
+  WALLET_TOPUP: 'Your wallet top-up',
+  SMS_PACKAGE: 'Your SMS package',
+  CHATBOT_PACKAGE: 'Your AI chat bot package',
+  PLAN_UPGRADE: 'Your plan upgrade',
+};
+
+// Where to go next after each kind of payment.
+const PURPOSE_NEXT: Record<string, { to: string; label: string }> = {
+  WALLET_TOPUP: { to: '/vendor/finance/wallet', label: 'Go to wallet' },
+  SMS_PACKAGE: { to: '/vendor/sms', label: 'Go to SMS' },
+  CHATBOT_PACKAGE: { to: '/vendor/ai-automation/ai-chat-bot', label: 'Go to AI chat bot' },
+  PLAN_UPGRADE: { to: '/vendor/billing', label: 'Go to billing' },
 };
 
 // Invalidate the query keys each purpose's own page reads, so returning
@@ -21,8 +30,8 @@ const INVALIDATE_KEYS: Record<string, string[][]> = {
 };
 
 /**
- * Finance > Wallet test-payment / SMS Buy / AI Chat Bot Buy's shared
- * landing page — PayStation's `callback_url` (see
+ * Finance > Wallet top-up / SMS Buy / AI Chat Bot Buy / plan upgrade's
+ * shared landing page — PayStation's `callback_url` (see
  * PaymentsController.initiate) always points back here with
  * `?invoice=...`. Never trusts a query-param "it worked" signal from
  * the redirect itself (PayStation's own hosted checkout doesn't send
@@ -87,65 +96,68 @@ export default function PaymentCallback() {
     };
   }, [invoiceNumber, queryClient]);
 
+  const next = (purpose && PURPOSE_NEXT[purpose]) || PURPOSE_NEXT.WALLET_TOPUP;
+
   return (
-    <div className="max-w-md mx-auto mt-12 bg-white rounded-2xl border border-black/5 p-8 text-center">
+    <section className="mx-auto mt-8 max-w-md rounded-xl border border-line bg-white p-6 text-center sm:p-8" role="status" aria-live="polite">
       {state === 'checking' && (
         <>
-          <Clock className="mx-auto mb-4 text-regantify-text-muted animate-pulse" size={40} />
-          <h1 className="text-lg font-semibold text-regantify-text mb-1">Confirming your payment…</h1>
-          <p className="text-sm text-regantify-text-muted">Please wait while we verify this with PayStation.</p>
+          <Clock className="mx-auto mb-3 animate-pulse text-neutral-400" size={36} aria-hidden />
+          <h1 className="text-[15px] font-semibold text-regantify-text">Checking your payment…</h1>
+          <p className="mt-1 text-sm text-neutral-500">We’re confirming it with PayStation. This takes a few seconds.</p>
         </>
       )}
 
       {state === 'SUCCESS' && (
         <>
-          <CheckCircle2 className="mx-auto mb-4 text-emerald-600" size={40} />
-          <h1 className="text-lg font-semibold text-regantify-text mb-1">Payment successful</h1>
-          <p className="text-sm text-regantify-text-muted mb-6">
-            {purpose ? PURPOSE_LABEL[purpose] ?? 'Your purchase' : 'Your purchase'} has been credited to your account.
-          </p>
+          <CheckCircle2 className="mx-auto mb-3 text-emerald-600" size={36} aria-hidden />
+          <h1 className="text-[15px] font-semibold text-regantify-text">Payment received</h1>
+          <p className="mt-1 text-sm text-neutral-500">{(purpose && PURPOSE_LABEL[purpose]) ?? 'Your purchase'} is added to your account.</p>
         </>
       )}
 
       {state === 'PENDING' && (
         <>
-          <Clock className="mx-auto mb-4 text-amber-600" size={40} />
-          <h1 className="text-lg font-semibold text-regantify-text mb-1">Still processing</h1>
-          <p className="text-sm text-regantify-text-muted mb-6">
-            PayStation hasn't confirmed this payment yet. If you completed checkout, it will be credited automatically —
-            check back in a minute.
+          <Clock className="mx-auto mb-3 text-amber-600" size={36} aria-hidden />
+          <h1 className="text-[15px] font-semibold text-regantify-text">Still waiting for PayStation</h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            If you finished paying, it’s added by itself in a minute or two. No need to pay again.
           </p>
         </>
       )}
 
       {(state === 'FAILED' || state === 'CANCELLED') && (
         <>
-          <XCircle className="mx-auto mb-4 text-red-600" size={40} />
-          <h1 className="text-lg font-semibold text-regantify-text mb-1">
-            {state === 'CANCELLED' ? 'Payment cancelled' : 'Payment failed'}
-          </h1>
-          <p className="text-sm text-regantify-text-muted mb-6">Nothing was charged. You can try again anytime.</p>
+          <XCircle className="mx-auto mb-3 text-red-600" size={36} aria-hidden />
+          <h1 className="text-[15px] font-semibold text-regantify-text">{state === 'CANCELLED' ? 'Payment cancelled' : 'Payment didn’t go through'}</h1>
+          <p className="mt-1 text-sm text-neutral-500">Nothing was taken from your account. You can try again whenever you like.</p>
         </>
       )}
 
       {state === 'error' && (
         <>
-          <XCircle className="mx-auto mb-4 text-red-600" size={40} />
-          <h1 className="text-lg font-semibold text-regantify-text mb-1">Couldn't confirm this payment</h1>
-          <p className="text-sm text-regantify-text-muted mb-6">
-            {invoiceNumber ? 'Something went wrong verifying this transaction.' : 'No invoice reference was provided.'}
+          <XCircle className="mx-auto mb-3 text-red-600" size={36} aria-hidden />
+          <h1 className="text-[15px] font-semibold text-regantify-text">Couldn’t check this payment</h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            {invoiceNumber
+              ? 'Refresh this page in a minute. If money left your account, it’s added by itself once PayStation confirms.'
+              : 'This link has no payment reference. Open the payment again from your wallet.'}
           </p>
         </>
       )}
 
-      <Link
-        to="/vendor/finance/wallet"
-        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark
-          text-white text-sm font-medium transition-colors"
-      >
-        <LinkIcon size={14} />
-        Back to Wallet
-      </Link>
-    </div>
+      {state !== 'checking' && (
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Link to={next.to} className={`${primaryBtn} h-10 px-4`}>
+            {next.label}
+          </Link>
+          {next.to !== '/vendor/finance/wallet' && (
+            <Link to="/vendor/finance/wallet" className={`${outlineBtn} h-10`}>
+              Go to wallet
+            </Link>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

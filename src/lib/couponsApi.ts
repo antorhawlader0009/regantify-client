@@ -49,23 +49,26 @@ export interface CouponListResponse {
   perPage: number;
 }
 
-/** New/Edit Coupon form payload — matches the reference form field-for-field. */
+/**
+ * New/Edit Coupon form payload. On Edit, `null` clears an optional field
+ * (validTill, maxDiscount, minCartAmount, usageLimit); `undefined` leaves it.
+ */
 export interface CouponPayload {
   code: string;
-  validTill?: string;
+  validTill?: string | null;
   hasCustomLink?: boolean;
   customLink?: string;
   discountType: DiscountType;
   amount?: number;
-  maxDiscount?: number;
+  maxDiscount?: number | null;
   applyOnListPrice?: boolean;
   resetOtherDiscounts?: boolean;
-  minCartAmount?: number;
+  minCartAmount?: number | null;
   newCustomerOnly?: boolean;
   customerPhones?: string[];
   productIds?: string[];
   categoryIds?: string[];
-  usageLimit?: number;
+  usageLimit?: number | null;
 }
 
 export const couponsApi = {

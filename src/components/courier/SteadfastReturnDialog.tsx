@@ -41,13 +41,13 @@ export function SteadfastReturnDialog({ order, onClose }: SteadfastReturnDialogP
       toast.success('Return requested. SteadFast will bring the parcel back.');
       onClose();
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not request the return. Please try again.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t request the return. Try again in a minute.')),
   });
 
   return (
     <Dialog open={order != null} onOpenChange={(open) => !open && !mutation.isPending && onClose()} title="Request return from SteadFast" maxWidth="max-w-md">
       <div className="p-6 pt-4 space-y-4">
-        <p className="text-sm text-regantify-text-muted">
+        <p className="text-sm text-neutral-500">
           Asks SteadFast to stop delivering ORDER-{order?.invoiceNumber} and bring it back to you. Your order status changes when SteadFast
           reports the return.
         </p>
@@ -57,7 +57,7 @@ export function SteadfastReturnDialog({ order, onClose }: SteadfastReturnDialogP
           maxLength={300}
           rows={3}
           placeholder="Reason (optional), e.g. Customer cancelled"
-          className="w-full px-3.5 py-2.5 rounded-lg border border-line text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none"
+          className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
         />
         <div className="flex justify-end gap-2">
           <button

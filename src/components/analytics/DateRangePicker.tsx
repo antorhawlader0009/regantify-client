@@ -140,12 +140,12 @@ export function DateRangePicker({
       <RadixPopover.Trigger asChild>
         <button
           type="button"
-          className="inline-flex max-w-full items-center gap-2 rounded-xl border border-black/[0.1] bg-white px-3 py-2 text-sm text-regantify-text hover:bg-regantify-content/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-regantify-cta/40"
+          className="inline-flex h-9 max-w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
         >
-          <CalendarDays size={15} className="shrink-0 text-regantify-text-muted" aria-hidden />
-          {preset && <span className="hidden sm:inline shrink-0 rounded-md bg-black/[0.05] px-1.5 py-0.5 text-[12px] text-regantify-text-muted">{presetLabel(preset)}</span>}
+          <CalendarDays size={15} className="shrink-0 text-neutral-500" aria-hidden />
+          {preset && <span className="hidden sm:inline shrink-0 rounded-md bg-neutral-100 px-1.5 py-0.5 text-[12px] text-neutral-500">{presetLabel(preset)}</span>}
           <span className="truncate font-medium tabular-nums">{formatRange(value)}</span>
-          <ChevronDown size={15} className="shrink-0 text-regantify-text-muted" aria-hidden />
+          <ChevronDown size={15} className="shrink-0 text-neutral-500" aria-hidden />
         </button>
       </RadixPopover.Trigger>
 
@@ -154,11 +154,11 @@ export function DateRangePicker({
           align="end"
           sideOffset={8}
           collisionPadding={16}
-          className="z-40 w-[min(calc(100vw-32px),600px)] overflow-hidden rounded-2xl border border-black/[0.1] bg-white shadow-[0_12px_40px_rgba(16,24,40,0.16)] focus:outline-none"
+          className="z-40 w-[min(calc(100vw-32px),600px)] overflow-hidden rounded-xl border border-line bg-white shadow-[0_12px_40px_rgba(16,24,40,0.16)] focus:outline-none"
         >
           <div className="flex flex-col sm:flex-row">
             {/* Presets */}
-            <ul className="flex sm:block gap-1 overflow-x-auto sm:overflow-y-auto sm:max-h-[440px] border-b sm:border-b-0 sm:border-r border-black/[0.08] p-2 sm:w-[220px] shrink-0" role="listbox" aria-label="Date presets">
+            <ul className="flex sm:block gap-1 overflow-x-auto sm:overflow-y-auto sm:max-h-[440px] border-b sm:border-b-0 sm:border-r border-line p-2 sm:w-[220px] shrink-0" role="listbox" aria-label="Date presets">
               {[{ id: null as PresetId | null, label: 'Custom' }, ...PRESETS].map((p) => {
                 const selected = draftPreset === p.id;
                 return (
@@ -169,7 +169,7 @@ export function DateRangePicker({
                       aria-selected={selected}
                       onClick={() => (p.id ? choosePreset(p.id) : setDraftPreset(null))}
                       className={`w-full whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                        selected ? 'bg-regantify-content font-medium text-regantify-text' : 'text-regantify-text-muted hover:bg-black/[0.03] hover:text-regantify-text'
+                        selected ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-500 hover:bg-neutral-50 hover:text-regantify-text'
                       }`}
                     >
                       {p.label}
@@ -183,13 +183,13 @@ export function DateRangePicker({
             <div className="flex-1 min-w-0">
               <div className="flex items-end gap-2 px-4 pt-4">
                 <DateField label="Start date" value={draftFrom} min={min} max={today} onChange={(d) => typeDay('from', d)} />
-                <span className="pb-2 text-regantify-text-muted" aria-hidden>
+                <span className="pb-2 text-neutral-500" aria-hidden>
                   –
                 </span>
                 <DateField label="End date" value={draftTo} min={min} max={today} onChange={(d) => typeDay('to', d)} />
               </div>
 
-              <div className="grid grid-cols-7 px-4 pt-3 pb-1 text-center text-[12px] text-regantify-text-muted" aria-hidden>
+              <div className="grid grid-cols-7 px-4 pt-3 pb-1 text-center text-[12px] text-neutral-500" aria-hidden>
                 {WEEKDAYS.map((d, i) => (
                   <span key={i}>{d}</span>
                 ))}
@@ -220,7 +220,7 @@ export function DateRangePicker({
                         return (
                           <div
                             key={day}
-                            className={`flex justify-center ${band ? 'bg-black/[0.06]' : ''} ${isStart && band ? 'rounded-l-full' : ''} ${isEnd && band ? 'rounded-r-full' : ''}`}
+                            className={`flex justify-center ${band ? 'bg-brand-lime/40' : ''} ${isStart && band ? 'rounded-l-full' : ''} ${isEnd && band ? 'rounded-r-full' : ''}`}
                           >
                             <button
                               type="button"
@@ -229,12 +229,12 @@ export function DateRangePicker({
                               onMouseEnter={() => setHover(day)}
                               aria-pressed={edge}
                               aria-label={parseDay(day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
-                              className={`h-9 w-9 rounded-full text-[13px] tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-regantify-cta/40 ${
+                              className={`h-9 w-9 rounded-full text-[13px] tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 ${
                                 edge
-                                  ? 'bg-regantify-black font-semibold text-white'
+                                  ? 'bg-brand font-semibold text-white'
                                   : disabled
-                                    ? 'cursor-default text-black/20'
-                                    : `text-regantify-text hover:bg-black/[0.08] ${day === today ? 'ring-1 ring-inset ring-regantify-black/60' : ''}`
+                                    ? 'cursor-default text-neutral-300'
+                                    : `text-regantify-text hover:bg-line ${day === today ? 'ring-1 ring-inset ring-brand/60' : ''}`
                               }`}
                             >
                               {Number(day.slice(8))}
@@ -249,13 +249,13 @@ export function DateRangePicker({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.08] px-4 py-3">
-            <p className="text-[12px] text-regantify-text-muted">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+            <p className="text-[12px] text-neutral-500">
               Visitor data is kept for {RETENTION_YEARS} years. Orders are always kept.
             </p>
             <div className="flex items-center gap-2">
               <RadixPopover.Close asChild>
-                <button type="button" className="rounded-lg px-3.5 py-2 text-sm font-medium text-regantify-text hover:bg-black/[0.04]">
+                <button type="button" className="rounded-lg px-3.5 py-2 text-sm font-medium text-regantify-text hover:bg-neutral-50">
                   Cancel
                 </button>
               </RadixPopover.Close>
@@ -267,7 +267,7 @@ export function DateRangePicker({
                   onApply({ from: draftFrom, to: draftTo }, draftPreset);
                   setOpen(false);
                 }}
-                className="rounded-lg bg-regantify-black px-4 py-2 text-sm font-medium text-white hover:bg-regantify-cta-dark disabled:opacity-40"
+                className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-40"
               >
                 Apply
               </button>
@@ -282,14 +282,14 @@ export function DateRangePicker({
 function DateField({ label, value, min, max, onChange }: { label: string; value: string | null; min: string; max: string; onChange: (day: string) => void }) {
   return (
     <label className="flex-1 min-w-0">
-      <span className="mb-1 block text-[12px] text-regantify-text-muted">{label}</span>
+      <span className="mb-1 block text-[12px] text-neutral-500">{label}</span>
       <input
         type="date"
         value={value ?? ''}
         min={min}
         max={max}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-black/[0.12] px-2.5 py-1.5 text-sm tabular-nums text-regantify-text focus:border-regantify-black focus:outline-none"
+        className="w-full rounded-lg border border-line px-2.5 py-1.5 text-sm tabular-nums text-regantify-text focus:border-brand focus:outline-none"
       />
     </label>
   );

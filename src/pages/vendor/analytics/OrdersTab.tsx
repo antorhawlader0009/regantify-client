@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Truck } from 'lucide-react';
 import type { DeliveryAnalytics, DeliveryCourier, DeliveryOutcome } from '../../../lib/analyticsApi';
-import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, Share, StatCard } from '../../../components/analytics/AnalyticsUi';
+import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, Share, StatCard, MobileRows } from '../../../components/analytics/AnalyticsUi';
 import { ColumnChart, PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { orderStatusLabel } from '../order/orderStatus';
@@ -27,7 +27,7 @@ function days(value: number | null) {
  * the only signal. Bangladesh benchmark: 80-85% is normal, 90%+ is good.
  */
 function SuccessRate({ value }: { value: number | null }) {
-  if (value == null) return <span className="text-regantify-text-muted">—</span>;
+  if (value == null) return <span className="text-neutral-500">—</span>;
   const [label, cls] = value >= 90 ? ['Good', 'bg-emerald-50 text-emerald-700'] : value >= 80 ? ['Normal', 'bg-amber-50 text-amber-700'] : ['Low', 'bg-red-50 text-red-700'];
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -40,12 +40,12 @@ function SuccessRate({ value }: { value: number | null }) {
 function OutcomeList({ rows, labelOf, emptyText }: { rows: DeliveryOutcome[]; labelOf: (key: string) => string; emptyText: string }) {
   if (rows.length === 0) return <EmptyState text={emptyText} />;
   return (
-    <ul className="divide-y divide-black/5">
+    <ul className="divide-y divide-line">
       {rows.map((r) => (
         <li key={r.key} className="flex items-center justify-between gap-3 py-2.5">
           <div className="min-w-0">
             <p className="text-sm font-medium text-regantify-text truncate">{labelOf(r.key)}</p>
-            <p className="text-xs text-regantify-text-muted tabular-nums">
+            <p className="text-xs text-neutral-500 tabular-nums">
               {r.delivered} delivered, {r.returned} returned
             </p>
           </div>
@@ -60,7 +60,7 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
   return (
     <div className="pt-2">
       <h2 className="text-lg font-semibold text-regantify-text">{title}</h2>
-      {subtitle && <p className="text-xs text-regantify-text-muted mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="text-xs text-neutral-500 mt-0.5">{subtitle}</p>}
     </div>
   );
 }
@@ -114,7 +114,7 @@ export function OrdersTab({ range }: TabProps) {
               </KpiStrip>
 
               <div className="grid lg:grid-cols-3 gap-4">
-                <Card className="lg:col-span-2" title="Orders over time" subtitle={data.bucket === 'month' ? 'Per month' : 'Per day'}>
+                <Card className="lg:col-span-2" title="Orders over time" subtitle={`Orders placed each ${data.bucket === 'month' ? 'month' : 'day'}. Cancelled and unpaid orders left out.`}>
                   {!hasOrders ? (
                     <EmptyState text="No orders in this period yet." />
                   ) : (
@@ -189,9 +189,9 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
         {title}
         <Card>
           <div className="flex flex-col items-center text-center py-6">
-            <Truck size={22} strokeWidth={1.6} className="text-regantify-text-muted" aria-hidden />
+            <Truck size={22} strokeWidth={1.6} className="text-neutral-500" aria-hidden />
             <p className="mt-3 text-sm font-medium text-regantify-text">No courier parcels booked in this period</p>
-            <p className="mt-1 mb-3 text-[13px] text-regantify-text-muted max-w-sm">
+            <p className="mt-1 mb-3 text-[13px] text-neutral-500 max-w-sm">
               Book orders with Pathao, Steadfast or RedX to see your delivery success rate, returns and COD money here.
             </p>
             <CardLink to="/vendor/courier">Set up a courier</CardLink>
@@ -229,10 +229,19 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
       </KpiStrip>
 
       <Card title="By courier" subtitle="Which courier delivers best for you">
-        <div className="overflow-x-auto -mx-5">
+        <MobileRows
+          rows={data.couriers.map((c) => ({
+            key: c.courier,
+            title: COURIERS[c.courier].label,
+            value: c.successRate == null ? '—' : `${c.successRate.toFixed(0)}%`,
+            detail: `${c.booked} booked · ${c.delivered} delivered · ${c.returned} returned · ${c.inProgress} on the way · fees ${formatTaka(c.deliveryFees)}`,
+            to: COURIERS[c.courier].path,
+          }))}
+        />
+        <div className="-mx-5 hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="text-left text-[12px] text-regantify-text-muted">
+              <tr className="text-left text-[12px] text-neutral-500">
                 <th className="px-5 pb-2 font-normal">Courier</th>
                 <th className="px-3 pb-2 font-normal text-right">Booked</th>
                 <th className="px-3 pb-2 font-normal text-right">Delivered</th>
@@ -245,7 +254,7 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
             </thead>
             <tbody>
               {data.couriers.map((c) => (
-                <tr key={c.courier} className="border-t border-black/5 hover:bg-black/[0.015]">
+                <tr key={c.courier} className="border-t border-line hover:bg-neutral-50/70">
                   <td className="px-5 py-3">
                     <Link to={COURIERS[c.courier].path} className="font-medium text-regantify-text hover:underline">
                       {COURIERS[c.courier].label}

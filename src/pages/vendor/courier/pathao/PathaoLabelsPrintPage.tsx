@@ -45,19 +45,21 @@ export default function PathaoLabelsPrintPage() {
   const sheets: PathaoLabel[][] = size === 'a4' ? chunk(labels, 4) : labels.map((l) => [l]);
 
   return (
-    <div className="min-h-screen bg-regantify-content print:bg-white">
+    <div className="min-h-screen bg-neutral-100 print:bg-white">
       <style>{`${PAGE_CSS[size]}
         @media print { body { background: #fff; } .label-sheet, .label-cell { margin: 0 !important; box-shadow: none !important; } }`}</style>
 
-      <div className="print:hidden sticky top-0 z-10 bg-white border-b border-black/5 px-4 py-3 flex flex-wrap items-center gap-3">
-        <h1 className="text-base font-semibold text-regantify-text">Pathao labels{labels.length > 0 && ` (${labels.length})`}</h1>
-        <div className="flex rounded-lg border border-black/10 overflow-hidden text-xs">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 print:hidden">
+        <h1 className="text-[15px] font-semibold text-regantify-text">Pathao labels{labels.length > 0 && ` (${labels.length})`}</h1>
+        <div role="radiogroup" aria-label="Paper size" className="flex gap-1 rounded-lg border border-line bg-white p-1 text-sm">
           {(['4x6', 'a4'] as const).map((s) => (
             <button
               key={s}
               type="button"
+              role="radio"
+              aria-checked={size === s}
               onClick={() => setSearchParams({ ids: ids.join(','), size: s })}
-              className={`px-3 py-1.5 ${size === s ? 'bg-regantify-black text-white' : 'text-regantify-text hover:bg-regantify-content'}`}
+              className={`h-8 rounded-md px-3 ${size === s ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-100'}`}
             >
               {s === '4x6' ? '4×6 in label' : 'A4 (4 per page)'}
             </button>
@@ -67,20 +69,20 @@ export default function PathaoLabelsPrintPage() {
           type="button"
           onClick={() => window.print()}
           disabled={labels.length === 0}
-          className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+          className="ml-auto inline-flex h-10 items-center gap-1.5 rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
         >
-          <Printer size={15} /> Print
+          <Printer size={15} aria-hidden /> Print labels
         </button>
       </div>
 
-      <div className="print:hidden px-4 pt-3 space-y-1">
-        {ids.length === 0 && <p className="text-sm text-regantify-text-muted">No orders selected.</p>}
-        {isLoading && <p className="text-sm text-regantify-text-muted">Preparing labels…</p>}
-        {isError && <p className="text-sm text-red-600">{apiErrorMessage(error, 'Could not load these labels. Please try again.')}</p>}
+      <div className="space-y-1 px-4 pt-3 print:hidden">
+        {ids.length === 0 && <p className="text-sm text-neutral-500">No orders chosen. Pick orders on the Orders page, then choose Print label.</p>}
+        {isLoading && <p className="text-sm text-neutral-500">Preparing labels…</p>}
+        {isError && <p className="text-sm text-red-600">{apiErrorMessage(error, 'Couldn’t load these labels. Refresh the page to try again.')}</p>}
         {data && data.skipped.length > 0 && (
           <p className="text-sm text-amber-700">
             No label for{' '}
-            {data.skipped.map((s) => (s.invoiceNumber ? `ORDER-${s.invoiceNumber}` : 'an unknown order')).join(', ')} — only orders booked with Pathao
+            {data.skipped.map((s) => (s.invoiceNumber ? `ORDER-${s.invoiceNumber}` : 'an unknown order')).join(', ')} . Only orders sent to Pathao
             get one.
           </p>
         )}

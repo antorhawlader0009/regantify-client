@@ -9,8 +9,8 @@ function rate(line: CourierStatLine): number | null {
 // Risk colours for the combined line (pathao-plan.md Step 15): ≥80% fine,
 // 60-80% careful, <60% risky. Always shown with the number, never colour alone.
 function riskClass(percent: number | null): string {
-  if (percent == null) return 'text-regantify-text-muted';
-  if (percent >= 80) return 'text-green-700';
+  if (percent == null) return 'text-neutral-500';
+  if (percent >= 80) return 'text-emerald-700';
   if (percent >= 60) return 'text-amber-700';
   return 'text-red-600';
 }
@@ -58,7 +58,7 @@ function Line({ mark, name, line }: { mark: ReactNode; name: string; line: Couri
   return (
     <p className="flex items-center gap-1.5 text-[11px] text-regantify-text" title={tooltip(name, line)}>
       {mark}
-      <span className="text-regantify-text-muted">{name}</span>
+      <span className="text-neutral-500">{name}</span>
       <span className="tabular-nums">{percent == null ? 'No history' : `${percent}% (${line.total})`}</span>
     </p>
   );
@@ -68,7 +68,7 @@ function Line({ mark, name, line }: { mark: ReactNode; name: string; line: Couri
 function CourierLine({ mark, name, line }: { mark: ReactNode; name: string; line: CourierCheckLine }) {
   if (!line.fetchedAt) {
     return (
-      <p className="flex items-center gap-1.5 text-[11px] text-regantify-text-muted" title={line.error ?? undefined}>
+      <p className="flex items-center gap-1.5 text-[11px] text-neutral-500" title={line.error ?? undefined}>
         {mark}
         {name} {line.pending ? 'checking…' : line.error ? 'not available' : 'no record yet'}
       </p>
@@ -84,7 +84,7 @@ function CourierLine({ mark, name, line }: { mark: ReactNode; name: string; line
           title={`${name}: Delivered=${score.deliveryRatio ?? '?'}%, Cancelled=${score.cancellationRatio ?? '?'}% of finished parcels`}
         >
           {mark}
-          <span className="text-regantify-text-muted">{name}</span>
+          <span className="text-neutral-500">{name}</span>
           <span className={`tabular-nums ${riskClass(score.deliveryRatio)}`}>{steadfastScoreText(score)}</span>
         </p>
       ) : (
