@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { AiTokenCredits } from './aiChatBotApi';
 
 export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
@@ -31,7 +32,8 @@ export interface Plan {
   monthlyVisitLimit: number | null;
   themeAllowance: number | null;
   imageUploadLimit: number | null;
-  aiChatMessageLimitPerDay: number | null;
+  /** AI tokens the plan gives once, when it's bought. Free: once at sign-up. */
+  aiTokenGrant: number | null;
   staffLimit: number | null;
   customDomainAllowed: boolean;
   customPaymentGatewayAllowed: boolean;
@@ -65,8 +67,9 @@ export interface VendorPlanUsage {
     staff: UsageStat;
     ordersToday: UsageStat;
     monthlyVisits: UsageStat;
-    aiChatMessagesToday: UsageStat;
   };
+  /** The store's AI chat token wallet. */
+  aiTokens: AiTokenCredits;
 }
 
 export type PlanUpgradeRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';

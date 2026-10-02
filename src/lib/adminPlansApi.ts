@@ -19,7 +19,8 @@ export interface UpdatePlanPayload {
   monthlyVisitLimit?: number | null;
   themeAllowance?: number | null;
   imageUploadLimit?: number | null;
-  aiChatMessageLimitPerDay?: number | null;
+  /** AI tokens given once when the plan is bought (0 = none). */
+  aiTokenGrant?: number | null;
   staffLimit?: number | null;
   customDomainAllowed?: boolean;
   customPaymentGatewayAllowed?: boolean;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Package, Truck, Wallet } from 'lucide-react';
 import type { DashboardSummary } from '../../lib/dashboardApi';
 import type { VendorPlanUsage } from '../../lib/plansApi';
+import type { AiTokenCredits } from '../../lib/aiChatBotApi';
 import { formatValue } from '../analytics/format';
 
 // Dashboard > right-hand column (dashboard-plan.md Step 8): money, delivery,
@@ -181,6 +182,36 @@ export function UsageBar({ label, used, limit }: { label: string; used: number; 
   );
 }
 
+/**
+ * The store's AI chat tokens with "about N replies left" (ai-token-plan.md
+ * Step 8), amber when running low. Used on the Dashboard plan card and
+ * Billing. `showBuy` links to the AI Chat Bot page (owner only: staff
+ * can't open it).
+ */
+export function AiTokensLine({ tokens, showBuy }: { tokens: AiTokenCredits; showBuy: boolean }) {
+  const empty = !tokens.canReply;
+  const low = tokens.lowBalance;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2 text-sm">
+        <span className="text-neutral-600">AI chat tokens</span>
+        <span className={`tabular-nums ${low ? 'text-amber-700' : 'text-regantify-text'}`}>{tokens.available.toLocaleString()}</span>
+      </div>
+      <p className={`mt-0.5 text-xs ${low ? 'text-amber-700' : 'text-neutral-500'}`}>
+        {empty ? 'Used up: the chat is hidden on your store.' : `About ${tokens.repliesLeft.toLocaleString()} replies left.`}
+        {showBuy && (
+          <>
+            {' '}
+            <Link to="/vendor/ai-automation/ai-chat-bot" className="font-medium text-brand hover:underline">
+              {low ? 'Buy tokens' : 'Details'}
+            </Link>
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 /** The plan and how much of it is used; an upgrade nudge once a limit is 80% used. */
 export function PlanCard({ usage, isOwner }: { usage: VendorPlanUsage; isOwner: boolean }) {
   const rows = [
@@ -201,6 +232,7 @@ export function PlanCard({ usage, isOwner }: { usage: VendorPlanUsage; isOwner: 
         {rows.map((r) => (
           <UsageBar key={r.label} label={r.label} used={r.used} limit={r.limit} />
         ))}
+        {usage.aiTokens && <AiTokensLine tokens={usage.aiTokens} showBuy={isOwner} />}
       </div>
       {isOwner && (
         <Link

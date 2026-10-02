@@ -158,9 +158,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [monthlyVisitLimit, setMonthlyVisitLimit] = useState<number | null>(plan?.monthlyVisitLimit ?? null);
   const [themeAllowance, setThemeAllowance] = useState<number | null>(plan?.themeAllowance ?? null);
   const [imageUploadLimit, setImageUploadLimit] = useState<number | null>(plan?.imageUploadLimit ?? null);
-  const [aiChatMessageLimitPerDay, setAiChatMessageLimitPerDay] = useState<number | null>(
-    plan?.aiChatMessageLimitPerDay ?? null,
-  );
+  const [aiTokenGrant, setAiTokenGrant] = useState<number>(plan?.aiTokenGrant ?? 0);
   const [staffLimit, setStaffLimit] = useState<number | null>(plan?.staffLimit ?? null);
   const [customDomainAllowed, setCustomDomainAllowed] = useState(plan?.customDomainAllowed ?? false);
   const [customPaymentGatewayAllowed, setCustomPaymentGatewayAllowed] = useState(
@@ -192,7 +190,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       monthlyVisitLimit,
       themeAllowance,
       imageUploadLimit,
-      aiChatMessageLimitPerDay,
+      aiTokenGrant,
       staffLimit,
       customDomainAllowed,
       customPaymentGatewayAllowed,
@@ -272,8 +270,23 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             <LimitField label="Monthly visits" value={monthlyVisitLimit} onChange={setMonthlyVisitLimit} />
             <LimitField label="Theme allowance" value={themeAllowance} onChange={setThemeAllowance} />
             <LimitField label="Image uploads" value={imageUploadLimit} onChange={setImageUploadLimit} />
-            <LimitField label="AI chat msgs / day" value={aiChatMessageLimitPerDay} onChange={setAiChatMessageLimitPerDay} />
             <LimitField label="Staff limit" value={staffLimit} onChange={setStaffLimit} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">AI tokens included (one time)</label>
+            <input
+              type="number"
+              min={0}
+              step={1000}
+              value={aiTokenGrant}
+              onChange={(e) => setAiTokenGrant(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+              className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+            />
+            <p className="mt-1 text-xs text-regantify-text-muted">
+              Added to the store's AI chat wallet each time this plan is bought (on top of what's left). Free: given once, when the
+              account is made. 0 = none.
+            </p>
           </div>
 
           <div className="border-t border-black/5 pt-3">

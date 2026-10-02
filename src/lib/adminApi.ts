@@ -16,6 +16,8 @@ export interface AdminVendor {
   // Decimal serialized as a string by Prisma's JSON encoding (e.g. "1250.00") — parse with Number(...) before formatting.
   balance: string;
   smsCredits: number;
+  /** The store's AI chat token wallet. */
+  aiTokenBalance: number;
   createdAt: string;
   lastLoginAt: string | null;
   productCount: number;
@@ -62,4 +64,12 @@ export const adminApi = {
   // (see adminPlansApi.resolvePlanRequest).
   assignVendorPlan: (vendorId: string, planCode: PlanCode) =>
     api.patch(`/v1/admin/vendors/${vendorId}/plan`, { planCode }).then((r) => r.data),
+
+  // All Vendors > store details > Add or remove AI tokens (ai-token-plan.md
+  // Step 8). Positive adds, negative removes (never below 0); the reason
+  // shows on the store's token history.
+  adjustAiTokens: (vendorId: string, amount: number, reason: string) =>
+    api
+      .post<{ balanceAfter: number; amount: number }>(`/v1/admin/vendors/${vendorId}/ai-tokens`, { amount, reason })
+      .then((r) => r.data),
 };
