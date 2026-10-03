@@ -22,12 +22,21 @@ import {
 export interface NavLinkItem {
   label: string;
   path: string;
+  /** Other pages that should keep this link highlighted (e.g. the pages a hub page opens). */
+  alsoActive?: string[];
 }
 
 /** A collapsible sub-group inside a section (e.g. Store > Design). One level deep only. */
 export interface NavGroup {
   label: string;
   children: NavLinkItem[];
+  /**
+   * Not shown in the sidebar: its pages are reached from a hub page (see Store > Design). They still count for
+   * the breadcrumb, the search, the assistant's page list and the section highlight.
+   */
+  hidden?: boolean;
+  /** For a hidden group: the hub page its pages show a "back" link to. */
+  hubPath?: string;
 }
 
 export type NavChild = NavLinkItem | NavGroup;
@@ -55,6 +64,20 @@ export interface NavSection {
  * Mirrors Section 6 of the project brief exactly. Each child renders as a
  * placeholder page (just a heading) for now — see PlaceholderPage.tsx.
  */
+// The pages the Store > Design hub opens (see designPages.ts); kept highlighted under the "Design" link.
+const DESIGN_PAGE_PATHS = [
+  '/vendor/store/branding',
+  '/vendor/store/customize',
+  '/vendor/store/navigation',
+  '/vendor/store/header-editor',
+  '/vendor/store/footer',
+  '/vendor/store/layout-settings',
+  '/vendor/store/site-banner',
+  '/vendor/store/product-display',
+  '/vendor/store/product-card',
+  '/vendor/store/themes',
+];
+
 export const vendorNav: NavSection[] = [
   { label: 'Dashboard', icon: LayoutDashboard, group: 'Main Menu', path: '/vendor/dashboard' },
   // One page with its own tabs (Overview/Sales/Orders/...), see AnalyticsPage.tsx.
@@ -109,8 +132,11 @@ export const vendorNav: NavSection[] = [
     group: 'Store',
     children: [
       { label: 'Templates', path: '/vendor/store/themes' },
+      { label: 'Design', path: '/vendor/store/design', alsoActive: DESIGN_PAGE_PATHS },
       {
         label: 'Design',
+        hidden: true,
+        hubPath: '/vendor/store/design',
         children: [
           { label: 'Branding', path: '/vendor/store/branding' },
           { label: 'Customize', path: '/vendor/store/customize' },

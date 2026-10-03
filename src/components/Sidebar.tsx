@@ -241,9 +241,15 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
           <div className="ml-[21px] mt-1 space-y-0.5 border-l border-neutral-200 pl-3">
             {section.children!.map((child) =>
               isNavGroup(child) ? (
-                renderGroup(section, child)
+                child.hidden ? null : renderGroup(section, child)
               ) : (
-                <NavLink key={child.path} to={child.path} className={subLinkClass}>
+                <NavLink
+                  key={child.path}
+                  to={child.path}
+                  className={({ isActive }) =>
+                    subLinkClass({ isActive: isActive || Boolean(child.alsoActive?.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))) })
+                  }
+                >
                   {child.label}
                 </NavLink>
               ),

@@ -1,12 +1,13 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 import { isNavGroup, type NavSection } from '../../lib/navConfig';
 
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
 /**
- * Tab bar for the sidebar sub-group (e.g. Store > Design) the current page
- * belongs to, so its sibling pages are one click away without the sidebar.
- * Renders nothing on pages that aren't inside a sub-group.
+ * Above a page that belongs to a sidebar sub-group (e.g. Store > Checkout): a tab bar of its sibling
+ * pages, so they are one click away without the sidebar. For a page in a hidden group (Store > Design,
+ * reached from a hub of cards): a "Design" link back to the hub. Nothing on pages outside any group.
  */
 export function SectionTabs({ sections }: { sections: NavSection[] }) {
   const { pathname } = useLocation();
@@ -15,6 +16,16 @@ export function SectionTabs({ sections }: { sections: NavSection[] }) {
     .filter(isNavGroup)
     .find((g) => g.children.some((c) => matches(pathname, c.path)));
   if (!group) return null;
+
+  if (group.hidden) {
+    if (!group.hubPath) return null;
+    return (
+      <Link to={group.hubPath} className="mb-4 -mt-1 inline-flex items-center gap-1 text-[13px] text-neutral-500 hover:text-regantify-text">
+        <ChevronLeft size={14} />
+        {group.label}
+      </Link>
+    );
+  }
 
   return (
     <nav aria-label={group.label} className="mb-5 -mt-1 overflow-x-auto border-b border-line">

@@ -48,6 +48,7 @@ import Domain from './pages/vendor/store/Domain';
 import PaymentGateway from './pages/vendor/store/PaymentGateway';
 import StockSettings from './pages/vendor/store/StockSettings';
 import OrderTracking from './pages/vendor/store/OrderTracking';
+import DesignHub from './pages/vendor/store/DesignHub';
 import DeliveryCharge from './pages/vendor/store/DeliveryCharge';
 import GdprPrompt from './pages/vendor/store/GdprPrompt';
 import { CustomCss, CustomHeadScripts } from './pages/vendor/store/design/CustomCodePage';
@@ -162,6 +163,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/delivery-charge' &&
     r.path !== '/vendor/store/stock-settings' &&
     r.path !== '/vendor/store/order-tracking' &&
+    r.path !== '/vendor/store/design' &&
     r.path !== '/vendor/store/gdpr' &&
     r.path !== '/vendor/store/cod-guard' &&
     r.path !== '/vendor/store/integrations' &&
@@ -293,6 +295,7 @@ export default function App() {
                 <Route path="/vendor/store/delivery-charge" element={<DeliveryCharge />} />
                 <Route path="/vendor/store/stock-settings" element={<StockSettings />} />
                 <Route path="/vendor/store/order-tracking" element={<OrderTracking />} />
+                <Route path="/vendor/store/design" element={<DesignHub />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
                 <Route path="/vendor/store/integrations" element={<Integrations />} />
