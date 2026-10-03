@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getVendorDeliveryCharges, updateVendorDeliveryCharges } from '../../../lib/vendorApi';
+import { getVendorDeliveryCharges, updateVendorDeliveryCharges, type DeliveryCharges } from '../../../lib/vendorApi';
+import { apiErrorMessage } from '../../../lib/api';
 
 const deliveryChargeSchema = z.object({
   insideDhakaCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
@@ -113,6 +114,121 @@ export default function DeliveryCharge() {
           </div>
         </form>
       </section>
+
+      <DeliveryTimeSection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
     </div>
+  );
+}
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/**
+ * "Delivery time" (tracking-plan.md Step 7): how many working days a parcel takes, so shoppers see an
+ * "Expected by" date at checkout, on the thank-you page, on the tracking page and in texts. Blank for a
+ * zone means no date is shown for it (the default). The date is worked out when the order is placed and
+ * never changes afterwards, so editing this later does not move a promise already made.
+ */
+function DeliveryTimeSection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [inside, setInside] = useState('');
+  const [outside, setOutside] = useState('');
+  const [processing, setProcessing] = useState('0');
+  const [offDays, setOffDays] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!charges) return;
+    setInside(charges.insideDhakaDays === null ? '' : String(charges.insideDhakaDays));
+    setOutside(charges.outsideDhakaDays === null ? '' : String(charges.outsideDhakaDays));
+    setProcessing(String(charges.deliveryProcessingDays));
+    setOffDays(charges.deliveryOffDays);
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () =>
+      updateVendorDeliveryCharges({
+        insideDhakaDays: inside.trim() === '' ? null : Number(inside),
+        outsideDhakaDays: outside.trim() === '' ? null : Number(outside),
+        deliveryProcessingDays: Number(processing) || 0,
+        deliveryOffDays: offDays,
+      }),
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Delivery time saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the delivery time. Check the numbers and try again.')),
+  });
+
+  const numberField = (label: string, value: string, set: (v: string) => void, hint: string, max: number) => (
+    <div>
+      <label className="block text-sm font-medium text-regantify-text mb-1.5">{label}</label>
+      <input
+        type="number"
+        min={0}
+        max={max}
+        step={1}
+        inputMode="numeric"
+        value={value}
+        disabled={disabled}
+        onChange={(e) => set(e.target.value)}
+        className={inputClass}
+      />
+      <p className="text-xs text-regantify-text-muted mt-1.5">{hint}</p>
+    </div>
+  );
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <h2 className="text-base font-medium text-regantify-text">Delivery time</h2>
+      <p className="text-sm text-regantify-text-muted mt-1">
+        Show shoppers an &ldquo;Expected by&rdquo; date. Leave a zone blank to show no date for it.
+      </p>
+
+      <div className="grid sm:grid-cols-3 gap-4 mt-4">
+        {numberField('Inside Dhaka (working days)', inside, setInside, 'Blank = no date shown.', 60)}
+        {numberField('Outside Dhaka (working days)', outside, setOutside, 'Blank = no date shown.', 60)}
+        {numberField('Days to get an order ready', processing, setProcessing, 'Added before the delivery days.', 30)}
+      </div>
+
+      <div className="mt-4">
+        <p className="text-sm font-medium text-regantify-text mb-1.5">Days off (not counted)</p>
+        <div className="flex flex-wrap gap-2">
+          {WEEKDAYS.map((name, day) => {
+            const on = offDays.includes(day);
+            return (
+              <button
+                key={name}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setOffDays((prev) => (on ? prev.filter((d) => d !== day) : [...prev, day].sort()))}
+                className={`px-3 py-1.5 rounded-lg border text-sm ${on ? 'bg-regantify-black text-white border-regantify-black' : 'border-black/10 text-regantify-text hover:bg-regantify-content'}`}
+              >
+                {name}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-regantify-text-muted mt-1.5">For example Friday, if you do not ship or deliver on Fridays.</p>
+      </div>
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-5 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save delivery time'}
+      </button>
+    </section>
   );
 }

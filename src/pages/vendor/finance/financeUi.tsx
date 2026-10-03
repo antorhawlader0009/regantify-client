@@ -26,7 +26,7 @@ export function SignedAmount({ t, className = '' }: { t: Pick<Transaction, 'type
 
 /** "ORDER-123" inside a ledger description becomes a link to that order. */
 export function TransactionDescription({ t }: { t: Transaction }) {
-  const match = t.orderId ? t.description.match(/ORDER-\d+/) : null;
+  const match = t.orderId ? t.description.match(/ORDER-\d+|[A-Z]{3}-\d{6}-[0-9A-Z]{7}/) : null;
   if (!match || match.index == null) return <>{t.description}</>;
   return (
     <>

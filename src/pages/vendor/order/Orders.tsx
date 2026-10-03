@@ -27,7 +27,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { ordersApi, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
+import { orderRef, ordersApi, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
 import { lmsApi } from '../../../lib/lmsApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import {
@@ -317,16 +317,18 @@ function OrderRow({
             type="checkbox"
             checked={Boolean(selected)}
             onChange={() => onToggleSelect(order.id)}
-            aria-label={`Select ORDER-${order.invoiceNumber}`}
+            aria-label={`Select ${orderRef(order)}`}
             className="h-4 w-4 cursor-pointer accent-brand"
           />
         </td>
       )}
       <td className={`${td} whitespace-nowrap`}>
         <Link to={`/vendor/orders/${order.id}`} className="font-medium text-brand hover:underline">
-          ORDER-{order.invoiceNumber}
+          {orderRef(order)}
         </Link>
-        <p className="mt-0.5 text-xs text-neutral-500">{formatDateTime(order.createdAt)}</p>
+        <p className="mt-0.5 text-xs text-neutral-500">
+          #{order.invoiceNumber} · {formatDateTime(order.createdAt)}
+        </p>
         {order.label && (
           <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-[11px] font-medium text-brand">
             <Tag size={10} />
@@ -805,7 +807,7 @@ export default function Orders() {
 
           {activeTab !== 'ABANDONED' && (
             <>
-              <SearchBox value={search} onChange={setSearch} placeholder="Search order, customer" />
+              <SearchBox value={search} onChange={setSearch} placeholder="Search order no., customer" />
               <DateRangeFilter
                 dateFrom={dateFrom}
                 dateTo={dateTo}
@@ -1052,7 +1054,7 @@ export default function Orders() {
       <Dialog
         open={timelineOrder != null}
         onOpenChange={(open) => !open && setTimelineOrder(null)}
-        title={timelineOrder ? `ORDER-${timelineOrder.invoiceNumber} · Courier timeline` : undefined}
+        title={timelineOrder ? `${orderRef(timelineOrder)} · Courier timeline` : undefined}
         maxWidth="max-w-md"
       >
         <div className="p-6 pt-4">{timelineOrder && <CourierTimeline orderId={timelineOrder.id} showEmpty />}</div>

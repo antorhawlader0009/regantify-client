@@ -241,7 +241,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
     body = (
       <div className="px-6 py-12 text-center text-sm text-neutral-500">
         <p className="font-medium text-neutral-800">No results for &ldquo;{query.trim()}&rdquo;</p>
-        <p className="mt-1">Try a product name, an order number like ORDER-12, a phone number, or a page name.</p>
+        <p className="mt-1">Try a product name, an order number (or its last few characters), a phone number, or a page name.</p>
       </div>
     );
   } else {
@@ -337,7 +337,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
           <span>&uarr;&darr; to move</span>
           <span>&crarr; to open</span>
           <span>Esc to close</span>
-          <span className="ml-auto">Tip: type ORDER-12 or a phone number</span>
+          <span className="ml-auto">Tip: type an order number or a phone number</span>
         </div>
       </div>
     </div>

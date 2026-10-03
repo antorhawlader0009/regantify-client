@@ -34,7 +34,39 @@ export interface CodGuardSettings {
   verificationTrigger: CodVerificationTrigger | null;
 }
 
+// Store > Order Tracking (tracking-plan.md Step 5) — mirrors StoreSettingsService's
+// getTrackingNotifySettings. Owner-only, on VendorController.
+export type TrackingNotifyEventName = 'confirmed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'delivery_failed' | 'returned' | 'cancelled';
+
+export interface TrackingNotifyEvent {
+  event: TrackingNotifyEventName;
+  label: string;
+  enabled: boolean;
+  /** The text in use: the vendor's own, or the built-in one for the chosen language. */
+  text: string;
+  custom: boolean;
+  defaultText: { en: string; bn: string };
+}
+
+export interface TrackingNotifySettings {
+  language: 'en' | 'bn';
+  quietHours: boolean;
+  variables: string[];
+  maxTextLength: number;
+  events: TrackingNotifyEvent[];
+}
+
+export interface UpdateTrackingNotifySettings {
+  language?: 'en' | 'bn';
+  quietHours?: boolean;
+  events?: Partial<Record<TrackingNotifyEventName, { enabled?: boolean; text?: string | null }>>;
+}
+
 export const storeSettingsApi = {
+  getTrackingNotify: async () => (await api.get<TrackingNotifySettings>('/v1/vendor/tracking-notify-settings')).data,
+  updateTrackingNotify: async (body: UpdateTrackingNotifySettings) =>
+    (await api.patch<TrackingNotifySettings>('/v1/vendor/tracking-notify-settings', body)).data,
+
   getStock: async () => (await api.get<StockSettings>('/v1/vendor/stock-settings')).data,
   updateStock: async (body: Partial<Omit<StockSettings, 'backorderPopupMessage' | 'backorderShortMessage'>> & {
     backorderPopupMessage?: string;

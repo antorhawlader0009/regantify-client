@@ -37,6 +37,7 @@ export interface DashboardTodo {
 export interface DashboardRecentOrder {
   id: string;
   invoiceNumber: number;
+  publicCode?: string | null;
   customerName: string;
   customerPhone: string;
   status: OrderStatus;

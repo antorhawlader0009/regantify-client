@@ -47,12 +47,24 @@ export interface Order {
   id: string;
   vendorId: string;
   invoiceNumber: number;
+  /** Public order number ("FAS-261003-7K3M9QD"): what shoppers and couriers see. invoiceNumber is the store's own serial. Null on an order the backfill has not reached. */
+  publicCode?: string | null;
   source: 'STOREFRONT' | 'MANUAL';
   status: OrderStatus;
   label?: string | null;
   courierProvider: CourierProvider;
   courierConsignmentId?: string | null;
   courierTrackingCode?: string | null;
+  /** Private tracking link token: the shopper opens /t/{token} on the store without typing a phone. Null on orders older than the link until the backfill has run. */
+  trackingToken?: string | null;
+  /** Own delivery or a courier with no integration (tracking-plan.md Step 6); used only while courierProvider is NONE. */
+  manualCourierName?: string | null;
+  manualTrackingId?: string | null;
+  manualTrackingUrl?: string | null;
+  manualRiderName?: string | null;
+  manualRiderPhone?: string | null;
+  /** shipped | out_for_delivery | failed | delivered: where the vendor last said the parcel is. */
+  manualStage?: string | null;
   /** SteadFast only: the tracking page link SteadFast gave at booking. Null for parcels booked before it was saved. */
   courierTrackingUrl?: string | null;
   courierBookingStatus: CourierBookingStatus;
@@ -302,3 +314,8 @@ export const ordersApi = {
   getCustomerCourierStats: (phones: string[]) =>
     api.post<CustomerCourierStats>('/v1/orders/customer-courier-stats', { phones }).then((r) => r.data),
 };
+
+/** The order number to show: the public code, or ORDER-n for an order that has none. */
+export function orderRef(order: { publicCode?: string | null; invoiceNumber: number }): string {
+  return order.publicCode ?? `ORDER-${order.invoiceNumber}`;
+}

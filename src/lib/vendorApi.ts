@@ -78,6 +78,22 @@ export interface DeliveryCharges {
   insideDhakaCharge: string;
   outsideDhakaCharge: string;
   vatChargeBdt: string;
+  // Delivery time (tracking-plan.md Step 7): working days per zone (null = no "Expected by" date for
+  // that zone), days to get an order ready, and the weekdays that don't count (0 = Sunday ... 6 = Saturday).
+  insideDhakaDays: number | null;
+  outsideDhakaDays: number | null;
+  deliveryProcessingDays: number;
+  deliveryOffDays: number[];
+}
+
+export interface DeliveryChargesUpdate {
+  insideDhakaCharge?: number;
+  outsideDhakaCharge?: number;
+  vatChargeBdt?: number;
+  insideDhakaDays?: number | null;
+  outsideDhakaDays?: number | null;
+  deliveryProcessingDays?: number;
+  deliveryOffDays?: number[];
 }
 
 export async function getVendorDeliveryCharges(): Promise<DeliveryCharges> {
@@ -85,9 +101,7 @@ export async function getVendorDeliveryCharges(): Promise<DeliveryCharges> {
   return data;
 }
 
-export async function updateVendorDeliveryCharges(
-  charges: Partial<Record<keyof DeliveryCharges, number>>,
-): Promise<DeliveryCharges> {
+export async function updateVendorDeliveryCharges(charges: DeliveryChargesUpdate): Promise<DeliveryCharges> {
   const { data } = await api.patch<DeliveryCharges>('/v1/vendor/delivery-charges', charges);
   return data;
 }

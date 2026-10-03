@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, ChevronDown, ChevronLeft, FileText, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
-import { ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
+import { orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
+import { useAuthStore } from '../../../store/authStore';
+import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { apiErrorMessage } from '../../../lib/api';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import {
@@ -25,6 +27,7 @@ import { RedxLocationPicker } from '../../../components/courier/RedxLocationPick
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
+import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCard';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
@@ -236,6 +239,15 @@ export default function OrderDetail() {
   const booked = order.courierBookingStatus === 'BOOKED';
   const canSendToCourier = order.status === 'PROCESSING' && !booked && order.courierBookingStatus !== 'BOOKING';
   const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
+  // The private link the shopper gets in the shipping SMS; the vendor can paste it into Messenger or WhatsApp.
+  const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
+  const trackingLink = order.trackingToken && subdomain ? `${storefrontStoreUrl(subdomain)}/t/${order.trackingToken}` : null;
+  const copyTrackingLink = () =>
+    trackingLink &&
+    navigator.clipboard
+      .writeText(trackingLink)
+      .then(() => toast.success('Tracking link copied. Send it to the customer.'))
+      .catch(() => toast.error('Could not copy the link.'));
   const copyTracking = (code: string) =>
     navigator.clipboard
       .writeText(code)
@@ -305,16 +317,22 @@ export default function OrderDetail() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="mr-auto min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold text-regantify-text">ORDER-{order.invoiceNumber}</h1>
+            <h1 className="text-xl font-semibold text-regantify-text">{orderRef(order)}</h1>
             <OrderStatusBadge status={order.status} />
             {order.label && (
               <span className="rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-xs font-medium text-brand">{order.label}</span>
             )}
           </div>
           <p className="mt-0.5 text-sm text-neutral-500">
-            Placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : 'added by hand'}
+            Serial #{order.invoiceNumber} · placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : 'added by hand'}
           </p>
         </div>
+        {trackingLink && (
+          <button type="button" onClick={copyTrackingLink} className={outlineBtn}>
+            <Link2 size={15} />
+            Copy tracking link
+          </button>
+        )}
         <button type="button" onClick={() => setShowInvoice(true)} className={outlineBtn}>
           <FileText size={15} />
           Invoice
@@ -462,6 +480,7 @@ export default function OrderDetail() {
                 {order.status !== 'PROCESSING' && order.status !== 'PENDING' ? null : (
                   <div className="mt-2">{order.status === 'PENDING' ? <p className="text-xs text-neutral-500">Confirm the order first, then send it.</p> : courierMenu('Send to courier')}</div>
                 )}
+                <ManualDeliveryCard order={order} onChanged={invalidateOrder} />
               </div>
             )}
 
@@ -736,7 +755,7 @@ export default function OrderDetail() {
       <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
-      <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ORDER-${order.invoiceNumber}`} maxWidth="max-w-md">
+      <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ${orderRef(order)}`} maxWidth="max-w-md">
         <div className="p-6 pt-4">{showRedxHistory && <RedxTrackingHistory orderId={order.id} />}</div>
       </Dialog>
       <CourierSetupModal

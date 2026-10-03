@@ -88,7 +88,7 @@ export function RecentOrders({ orders }: { orders: DashboardRecentOrder[] }) {
                   <tr key={o.id} className="border-t border-line transition-colors hover:bg-neutral-50/70">
                     <td className={`${td} whitespace-nowrap`}>
                       <Link to={`/vendor/orders/${o.id}`} className="font-medium text-brand hover:underline">
-                        ORDER-{o.invoiceNumber}
+                        {o.publicCode ?? `ORDER-${o.invoiceNumber}`}
                       </Link>
                       <p className="mt-0.5 text-xs text-neutral-500" title={exactTime(o.createdAt)}>
                         {timeAgo(o.createdAt)}
@@ -120,7 +120,7 @@ export function RecentOrders({ orders }: { orders: DashboardRecentOrder[] }) {
               <li key={o.id}>
                 <Link to={`/vendor/orders/${o.id}`} className="flex items-start gap-3 px-3 py-3 active:bg-neutral-50">
                   <div className="min-w-0 flex-1">
-                    <p className="whitespace-nowrap font-medium text-brand">ORDER-{o.invoiceNumber}</p>
+                    <p className="whitespace-nowrap font-medium text-brand">{o.publicCode ?? `ORDER-${o.invoiceNumber}`}</p>
                     <p className="mt-0.5 truncate text-sm text-regantify-text">
                       {o.customerName}
                       <span className="text-xs text-neutral-500"> · {timeAgo(o.createdAt)}</span>

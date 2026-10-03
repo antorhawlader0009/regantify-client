@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Printer } from 'lucide-react';
-import { vendorOrderTotal, type Order } from '../../../lib/ordersApi';
+import { orderRef, vendorOrderTotal, type Order } from '../../../lib/ordersApi';
 import { getVendorSettings } from '../../../lib/vendorApi';
 import { Dialog } from '../../../components/ui/Dialog';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
@@ -53,7 +53,7 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
     if (!printAreaRef.current || !order) return;
     setPrinting(true);
     try {
-      await printElement(printAreaRef.current, `Invoice ORDER-${order.invoiceNumber}`);
+      await printElement(printAreaRef.current, `Invoice ${orderRef(order)}`);
     } catch {
       toast.error('Could not open the print window. Please try again.');
     } finally {
@@ -77,7 +77,8 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-2xl font-semibold tracking-tight text-regantify-text">Invoice</p>
-                    <p className="mt-1 text-sm text-neutral-600">ORDER-{order.invoiceNumber}</p>
+                    <p className="mt-1 text-sm text-neutral-600">{orderRef(order)}</p>
+                    <p className="text-sm text-neutral-600">Serial #{order.invoiceNumber}</p>
                     <p className="text-sm text-neutral-600">{formatDate(order.createdAt)}</p>
                   </div>
                 </div>
