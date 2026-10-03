@@ -28,6 +28,7 @@ import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
 import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCard';
+import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
@@ -721,6 +722,10 @@ export default function OrderDetail() {
                 )}
               </div>
             )}
+          </Card>
+
+          <Card title="Customer tracking" id="tracking">
+            <OrderTrackingCard orderId={order.id} onLinkChanged={invalidateOrder} />
           </Card>
 
           <Card title="Change status">

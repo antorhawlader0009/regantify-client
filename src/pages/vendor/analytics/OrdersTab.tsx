@@ -5,6 +5,7 @@ import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, Share, StatCard
 import { ColumnChart, PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { orderStatusLabel } from '../order/orderStatus';
+import { TrackingStats } from '../../../components/analytics/TrackingStats';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 
 const COURIERS: Record<DeliveryCourier, { label: string; path: string }> = {
@@ -170,6 +171,8 @@ export function OrdersTab({ range }: TabProps) {
       </TabState>
 
       <TabState query={delivery}>{(data) => <DeliverySection data={data} compareLabel={compareLabel} />}</TabState>
+
+      <TrackingStats />
     </div>
   );
 }

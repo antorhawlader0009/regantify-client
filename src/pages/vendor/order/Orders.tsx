@@ -61,6 +61,7 @@ import { InvoiceModal } from './InvoiceModal';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { SearchBox, TableFooter, outlineBtn, td, th } from '../../../components/ui/PageKit';
+import { NeedsAttention } from '../../../components/order/NeedsAttention';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 // Table + toolbar pieces come from PageKit; the bulk bar's smaller buttons are Orders' own.
@@ -793,6 +794,7 @@ export default function Orders() {
 
   return (
     <div>
+      {!trashView && activeTab !== 'ABANDONED' && <NeedsAttention />}
       <section className="rounded-xl border border-line bg-white p-3.5">
         {/* Toolbar */}
         <div className="mb-3 flex flex-wrap items-center gap-2">

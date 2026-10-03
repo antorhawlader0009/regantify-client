@@ -51,6 +51,8 @@ export interface TrackingNotifyEvent {
 export interface TrackingNotifySettings {
   language: 'en' | 'bn';
   quietHours: boolean;
+  /** Hours without courier movement before a parcel on its way is flagged as stalled. */
+  stalledAfterHours: number;
   variables: string[];
   maxTextLength: number;
   events: TrackingNotifyEvent[];
@@ -59,6 +61,7 @@ export interface TrackingNotifySettings {
 export interface UpdateTrackingNotifySettings {
   language?: 'en' | 'bn';
   quietHours?: boolean;
+  stalledAfterHours?: number;
   events?: Partial<Record<TrackingNotifyEventName, { enabled?: boolean; text?: string | null }>>;
 }
 

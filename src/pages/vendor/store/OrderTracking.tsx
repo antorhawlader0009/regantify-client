@@ -135,11 +135,13 @@ export default function OrderTracking() {
 
   const [language, setLanguage] = useState<'en' | 'bn'>('en');
   const [quietHours, setQuietHours] = useState(true);
+  const [stalledHours, setStalledHours] = useState('48');
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
 
   const load = (settings: TrackingNotifySettings) => {
     setLanguage(settings.language);
     setQuietHours(settings.quietHours);
+    setStalledHours(String(settings.stalledAfterHours));
     setDrafts(Object.fromEntries(settings.events.map((e) => [e.event, { enabled: e.enabled, text: e.custom ? e.text : null }])));
   };
   useEffect(() => {
@@ -151,6 +153,7 @@ export default function OrderTracking() {
       storeSettingsApi.updateTrackingNotify({
         language,
         quietHours,
+        stalledAfterHours: Math.min(336, Math.max(6, Math.round(Number(stalledHours)) || 48)),
         events: Object.fromEntries(Object.entries(drafts).map(([event, d]) => [event, { enabled: d.enabled, text: d.text }])) as Partial<
           Record<TrackingNotifyEventName, { enabled: boolean; text: string | null }>
         >,
@@ -217,6 +220,26 @@ export default function OrderTracking() {
               label="Quiet hours: no texts between 9 pm and 8 am"
               hint="A text that comes up at night waits and goes out at 8 am (Bangladesh time)."
             />
+
+            <div>
+              <label htmlFor="stalled-hours" className="mb-1.5 block text-sm font-medium text-regantify-text">
+                Flag a parcel as stalled after (hours)
+              </label>
+              <input
+                id="stalled-hours"
+                type="number"
+                min={6}
+                max={336}
+                step={1}
+                value={stalledHours}
+                onChange={(e) => setStalledHours(e.target.value)}
+                className={`${inputClass} max-w-[140px]`}
+              />
+              <p className="mt-1.5 text-xs text-regantify-text-muted">
+                A parcel on its way with no courier movement for this long shows under &ldquo;Needs attention&rdquo; on the Orders page, with a
+                notification. Failed deliveries, late orders and returns are flagged too.
+              </p>
+            </div>
           </section>
 
           <section className="space-y-4">
