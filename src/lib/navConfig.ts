@@ -52,8 +52,6 @@ export interface NavSection {
   icon: LucideIcon;
   path?: string; // present when the top-level item itself is a page (e.g. Dashboard, Customers)
   children?: NavChild[];
-  /** Opens `path` in its own browser tab instead of inside the dashboard (the LMS). */
-  newWindow?: boolean;
   /** Sidebar heading; consecutive sections with the same group share one heading. */
   group?: string;
   /** Pinned to the sidebar's bottom bar, which never scrolls. */
@@ -87,9 +85,9 @@ export const vendorNav: NavSection[] = [
   // Abandoned carts are a tab on the Orders page, not a separate nav entry.
   { label: 'Orders', icon: ClipboardList, group: 'Main Menu', path: '/vendor/orders' },
   { label: 'Customers', icon: Users, group: 'Main Menu', path: '/vendor/customers' },
-  // LMS: its own app in its own tab (LMS-plan.md Step 4). Its sections
-  // (Leads, Call Desk, Tasks, Reports, Settings) are in the LMS's top bar.
-  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms/leads', newWindow: true },
+  // LMS: a dashboard page with its own section tabs (LMS-plan.md Step 4). Its sections
+  // (Leads, Call Desk, Tasks, Reports, Settings) are tabs at the top of the page.
+  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms' },
   {
     label: 'Product',
     icon: PackageSearch,

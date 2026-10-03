@@ -256,17 +256,15 @@ function LeadsList({
         </div>
       </div>
 
-      {selected.size > 0 && (
-        <BulkBar
-          me={me}
-          ids={[...selected]}
-          onDone={() => {
-            setSelected(new Set());
-            refresh();
-          }}
-          onClear={() => setSelected(new Set())}
-        />
-      )}
+      <BulkBar
+        me={me}
+        ids={[...selected]}
+        onDone={() => {
+          setSelected(new Set());
+          refresh();
+        }}
+        onClear={() => setSelected(new Set())}
+      />
 
       <Panel className="!p-0 overflow-hidden">
         {listQuery.isPending ? (
@@ -309,7 +307,7 @@ function LeadsList({
                   <Th>Product</Th>
                   <Th className="text-right">Value</Th>
                   <Th>Logistics</Th>
-                  {me.isManager && <Th>Agent</Th>}
+                  {me.isManager && <Th>Assigned Agent</Th>}
                   <Th className="text-right">Tries</Th>
                   <Th>Next task</Th>
                   <Th>Waiting or last update</Th>
@@ -677,42 +675,68 @@ function SavedViews({ filters, onApply }: { filters: LmsLeadFilters; onApply: (f
   );
 }
 
-type BulkDialog = 'none' | 'lost' | 'addTag' | 'removeTag' | 'delete' | 'assign';
+type BulkDialog = 'none' | 'lost' | 'addTag' | 'removeTag' | 'delete';
 
 function BulkBar({ me, ids, onDone, onClear }: { me: LmsMe; ids: string[]; onDone: () => void; onClear: () => void }) {
   const [dialog, setDialog] = useState<BulkDialog>('none');
   const [tag, setTag] = useState('');
-  const [assignTo, setAssignTo] = useState('POOL');
+  const [assignTo, setAssignTo] = useState('');
+  const empty = ids.length === 0;
 
   const run = useMutation({
     mutationFn: ({ action, reason, tag, assignTo }: { action: LmsBulkAction; reason?: string; tag?: string; assignTo?: string | null }) =>
       lmsApi.bulk(ids, action, { reason, tag, assignTo }),
-    onSuccess: ({ done, skipped }) => {
+    onSuccess: ({ done, skipped }, vars) => {
       setDialog('none');
       setTag('');
+      setAssignTo('');
       const leadWord = (n: number) => `${n} lead${n === 1 ? '' : 's'}`;
-      toast.success(skipped ? `Done for ${leadWord(done)}. ${leadWord(skipped)} skipped (already closed or part of an order).` : `Done for ${leadWord(done)}.`);
+      if (vars.action === 'ASSIGN') {
+        toast.success(done ? `Transferred ${leadWord(done)}.${skipped ? ` ${leadWord(skipped)} already with them.` : ''}` : 'Nothing changed: the selected leads are already with them.');
+      } else {
+        toast.success(skipped ? `Done for ${leadWord(done)}. ${leadWord(skipped)} skipped (already closed or part of an order).` : `Done for ${leadWord(done)}.`);
+      }
       onDone();
     },
     onError: (err) => toast.error(apiErrorMessage(err, "That didn't work. Try again.")),
   });
 
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border border-lms-ink bg-lms-surface px-3 py-2">
+    <div className={`mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border bg-lms-surface px-3 py-2 ${empty ? 'border-lms-line' : 'border-lms-ink'}`}>
       <span className="mr-2 text-sm font-medium tabular-nums">{ids.length} selected</span>
-      <LmsButton onClick={() => run.mutate({ action: 'WON' })} disabled={run.isPending}>
+      <LmsButton onClick={() => run.mutate({ action: 'WON' })} disabled={empty || run.isPending}>
         Mark as won
       </LmsButton>
-      <LmsButton onClick={() => setDialog('lost')}>Mark as lost</LmsButton>
-      <LmsButton onClick={() => setDialog('addTag')}>Add tag</LmsButton>
-      <LmsButton onClick={() => setDialog('removeTag')}>Remove tag</LmsButton>
-      {me.isManager && <LmsButton onClick={() => setDialog('assign')}>Assign to…</LmsButton>}
+      <LmsButton disabled={empty} onClick={() => setDialog('lost')}>Mark as lost</LmsButton>
+      <LmsButton disabled={empty} onClick={() => setDialog('addTag')}>Add tag</LmsButton>
+      <LmsButton disabled={empty} onClick={() => setDialog('removeTag')}>Remove tag</LmsButton>
       {me.isManager && (
-        <LmsButton variant="danger" onClick={() => setDialog('delete')}>
+        <>
+          <AgentSelect
+            me={me}
+            extra={['POOL']}
+            placeholder="Transfer selected to…"
+            aria-label="Transfer selected to"
+            className="!w-auto min-w-[12rem]"
+            disabled={empty}
+            value={assignTo}
+            onChange={(e) => setAssignTo(e.target.value)}
+          />
+          <LmsButton
+            variant="primary"
+            disabled={empty || !assignTo || run.isPending}
+            onClick={() => run.mutate({ action: 'ASSIGN', assignTo: assignTo === 'POOL' ? null : assignTo })}
+          >
+            Transfer selected
+          </LmsButton>
+        </>
+      )}
+      {me.isManager && (
+        <LmsButton variant="danger" disabled={empty} onClick={() => setDialog('delete')}>
           Delete
         </LmsButton>
       )}
-      <LmsButton variant="quiet" className="ml-auto" onClick={onClear}>
+      <LmsButton variant="quiet" className="ml-auto" disabled={empty} onClick={onClear}>
         Clear selection
       </LmsButton>
 
@@ -750,24 +774,6 @@ function BulkBar({ me, ids, onDone, onClear }: { me: LmsMe; ids: string[]; onDon
         </form>
       </LmsDialog>
 
-      <LmsDialog open={dialog === 'assign'} onOpenChange={(o) => !o && setDialog('none')} title={`Assign ${ids.length} lead${ids.length === 1 ? '' : 's'} to`} width="max-w-sm">
-        <form
-          onSubmit={(e: FormEvent) => {
-            e.preventDefault();
-            run.mutate({ action: 'ASSIGN', assignTo: assignTo === 'POOL' ? null : assignTo });
-          }}
-        >
-          <Field label="Who calls them" hint="Their open follow-ups move with them.">
-            <AgentSelect me={me} extra={['POOL']} value={assignTo} onChange={(e) => setAssignTo(e.target.value)} autoFocus />
-          </Field>
-          <div className="mt-4 flex justify-end gap-2">
-            <LmsButton onClick={() => setDialog('none')}>Cancel</LmsButton>
-            <LmsButton type="submit" variant="primary" disabled={run.isPending}>
-              {run.isPending ? 'Assigning…' : 'Assign'}
-            </LmsButton>
-          </div>
-        </form>
-      </LmsDialog>
 
       <LmsDialog open={dialog === 'delete'} onOpenChange={(o) => !o && setDialog('none')} title={`Delete ${ids.length} lead${ids.length === 1 ? '' : 's'}?`} width="max-w-sm">
         <p className="text-sm text-lms-muted">Their notes and history are deleted too. Orders they came from aren't touched. This can't be undone.</p>

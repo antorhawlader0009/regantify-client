@@ -232,7 +232,7 @@ function PrintSheet({ me, filters, data }: { me: LmsMe; filters: LmsLeadFilters;
             <th>Product</th>
             <th className="num">Value</th>
             <th>Address</th>
-            {me.isManager && <th>Agent</th>}
+            {me.isManager && <th>Assigned Agent</th>}
             <th className="num">Tries</th>
             <th>Last note</th>
             <th>Added</th>

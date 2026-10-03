@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   CalendarClock,
@@ -19,7 +19,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { DashboardTodo } from '../../lib/dashboardApi';
-import { openLms } from '../../lib/lmsWindow';
 
 type Tone = 'neutral' | 'warning' | 'danger';
 
@@ -31,8 +30,6 @@ interface Row {
   text: string;
   tone: Tone;
   to: string;
-  /** Opens in the LMS's own tab instead of navigating here. */
-  lms?: boolean;
 }
 
 const TONE: Record<Tone, string> = {
@@ -54,7 +51,6 @@ function daysUntil(iso: string) {
  * Every row opens the page or filtered list that holds those items.
  */
 export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo; isOwner: boolean; planName: string }) {
-  const navigate = useNavigate();
   const days = todo.recentDays;
   const lmsDue = todo.lmsTasks ? todo.lmsTasks.overdue + todo.lmsTasks.today : 0;
 
@@ -160,7 +156,6 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
                 : `LMS ${plural(lmsDue, 'follow-up', 'follow-ups')} due today`,
             tone: todo.lmsTasks.overdue > 0 ? ('warning' as const) : ('neutral' as const),
             to: `/vendor/lms/tasks?view=${todo.lmsTasks.overdue > 0 ? 'OVERDUE' : 'TODAY'}${isOwner ? '&who=ALL' : ''}`,
-            lms: true,
           },
         ]
       : []),
@@ -232,22 +227,9 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
               'group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-neutral-50 focus-visible:bg-neutral-50 focus-visible:outline-none';
             return (
               <li key={row.key} className="border-b border-line last:border-b-0">
-                {row.lms ? (
-                  <button
-                    type="button"
-                    className={cls}
-                    onClick={() => {
-                      // Same tab when the session can't move to a new one (impersonation).
-                      if (!openLms(row.to)) navigate(row.to);
-                    }}
-                  >
-                    {content}
-                  </button>
-                ) : (
-                  <Link to={row.to} className={cls}>
-                    {content}
-                  </Link>
-                )}
+                <Link to={row.to} className={cls}>
+                  {content}
+                </Link>
               </li>
             );
           })}

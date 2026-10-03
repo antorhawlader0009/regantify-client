@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronsLeft, ChevronsRight, ExternalLink, LogOut, X } from 'lucide-react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { isNavGroup, navLinks, type NavGroup, type NavLinkItem, type NavSection } from '../lib/navConfig';
-import { LMS_WINDOW, openLms } from '../lib/lmsWindow';
 import { adminSupportApi, supportApi } from '../lib/supportApi';
 import { getVendorPlanUsage } from '../lib/plansApi';
 import { useAuthStore } from '../store/authStore';
@@ -94,7 +93,6 @@ interface SidebarProps {
 
 export function Sidebar({ sections, mobileOpen = false, onMobileClose }: SidebarProps) {
   const location = useLocation();
-  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
   const isAdmin = user?.role === 'SUPER_ADMIN';
@@ -180,30 +178,6 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
     const icon = <Icon size={17} strokeWidth={1.6} className="shrink-0" />;
     const title = collapsed ? section.label : undefined;
     const label = !collapsed && <span className="truncate">{section.label}</span>;
-
-    if (section.newWindow && section.path) {
-      // A real link, so middle-click and "open in new tab" still work.
-      return (
-        <a
-          key={section.label}
-          href={section.path}
-          target={LMS_WINDOW}
-          title={collapsed ? `${section.label} (opens in a new tab)` : 'Opens in a new tab'}
-          onClick={(e) => {
-            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
-            e.preventDefault();
-            // In-app navigation in the same tab when the session can't move
-            // to a new one (impersonation): a full page load would lose it.
-            if (!openLms()) navigate(section.path!);
-          }}
-          className={rowClass(false, collapsed)}
-        >
-          {icon}
-          {label}
-          {!collapsed && <ExternalLink size={13} className="ml-auto shrink-0 text-neutral-400" aria-hidden />}
-        </a>
-      );
-    }
 
     const links = navLinks(section.children);
     const active = containsCurrent(links);

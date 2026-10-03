@@ -362,24 +362,22 @@ export default function App() {
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
                 <Route path="/vendor/analytics" element={<AnalyticsPage />} />
                 <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
+                {/* LMS: a dashboard page with its own shell (LmsLayout: section tabs, lead
+                    search, bell), so it renders inside VendorLayout like every other
+                    vendor page (LMS-plan.md Step 4). */}
+                <Route element={<LmsLayout />}>
+                  <Route path="/vendor/lms" element={<Navigate to="/vendor/lms/leads" replace />} />
+                  <Route path="/vendor/lms/leads" element={<LeadsPage />} />
+                  <Route path="/vendor/lms/leads/import" element={<ImportLeadsPage />} />
+                  <Route path="/vendor/lms/desk" element={<CallDeskPage />} />
+                  <Route path="/vendor/lms/tasks" element={<TasksPage />} />
+                  <Route path="/vendor/lms/reports" element={<ReportsPage />} />
+                  <Route path="/vendor/lms/settings" element={<LmsSettingsPage />} />
+                  <Route path="/vendor/lms/*" element={<Navigate to="/vendor/lms/leads" replace />} />
+                </Route>
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}
-              </Route>
-
-              {/* LMS — its own app, opened in its own tab from the sidebar
-                  (LMS-plan.md Step 4). OUTSIDE <VendorLayout> on purpose:
-                  LmsLayout is the LMS's own shell (top bar, no dashboard
-                  sidebar), still inside the VENDOR/STAFF ProtectedRoute. */}
-              <Route element={<LmsLayout />}>
-                <Route path="/vendor/lms" element={<Navigate to="/vendor/lms/leads" replace />} />
-                <Route path="/vendor/lms/leads" element={<LeadsPage />} />
-                <Route path="/vendor/lms/leads/import" element={<ImportLeadsPage />} />
-                <Route path="/vendor/lms/desk" element={<CallDeskPage />} />
-                <Route path="/vendor/lms/tasks" element={<TasksPage />} />
-                <Route path="/vendor/lms/reports" element={<ReportsPage />} />
-                <Route path="/vendor/lms/settings" element={<LmsSettingsPage />} />
-                <Route path="/vendor/lms/*" element={<Navigate to="/vendor/lms/leads" replace />} />
               </Route>
 
               {/* Landing page builder — deliberately OUTSIDE <VendorLayout>

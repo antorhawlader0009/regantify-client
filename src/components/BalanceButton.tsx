@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Wallet } from 'lucide-react';
 import { financeApi } from '../lib/financeApi';
 
+const WALLET_PATH = '/vendor/finance/wallet';
 const SHOW_MS = 5000; // how long the balance stays visible before it hides itself
 
 const format = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -10,11 +12,13 @@ const format = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionD
 /**
  * "Check balance" pill. A tap fetches the live balance (never the possibly
  * stale one on the auth user, which only refreshes on login/token refresh),
- * counts up to it and hides it again after SHOW_MS; tap again to hide now.
+ * counts up to it and hides it again after SHOW_MS. While the amount is showing,
+ * a tap on it opens the wallet page without hiding it early.
  */
 export function BalanceButton() {
   const [visible, setVisible] = useState(false);
   const [value, setValue] = useState(0);
+  const navigate = useNavigate();
   const wallet = useMutation({ mutationFn: () => financeApi.getWallet() });
   const balance = Number(wallet.data?.balance ?? 0);
 
@@ -40,7 +44,12 @@ export function BalanceButton() {
   }, [visible, balance]);
 
   const onClick = () => {
-    if (visible) return setVisible(false);
+    if (visible) {
+      // Opens the wallet and leaves the amount showing: the Topbar stays mounted across pages, so the
+      // 5-second countdown carries on and the amount hides itself when it runs out.
+      navigate(WALLET_PATH);
+      return;
+    }
     wallet.mutate(undefined, { onSuccess: () => setVisible(true) });
   };
 
@@ -48,7 +57,8 @@ export function BalanceButton() {
     <button
       onClick={onClick}
       disabled={wallet.isPending}
-      aria-label={visible ? 'Hide balance' : 'Show balance'}
+      aria-label={visible ? 'Open wallet' : 'Show balance'}
+      title={visible ? 'Open wallet' : undefined}
       className={`relative flex h-10 w-[148px] shrink-0 sm:w-[160px] items-center gap-2.5 overflow-hidden rounded-full border pl-1.5 pr-4 text-sm transition-all duration-500 active:scale-95 disabled:cursor-wait ${
         visible
           ? 'border-brand/25 bg-white text-brand'

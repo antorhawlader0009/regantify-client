@@ -8,15 +8,12 @@ import {
   type ReactNode,
 } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import * as RadixDropdown from '@radix-ui/react-dropdown-menu';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, ExternalLink, ListChecks, LogOut, PhoneCall, Rows3, Search, Settings2, X, type LucideIcon } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
-import { authApi } from '../../lib/authApi';
 import { toast } from '../../lib/toast';
 import { isPlanLocked, lmsApi, LMS_STAGES, type LmsMe } from '../../lib/lmsApi';
-import { LMS_HOME } from '../../lib/lmsWindow';
-import { useAuthStore } from '../../store/authStore';
+import { LMS_HOME } from '../../lib/lmsPaths';
 import { formatPhone } from './format';
 import { STAGE_RULE } from './stageStyles';
 import { Panel } from './LmsPage';
@@ -27,26 +24,25 @@ import '../../pages/vendor/lms/lms-theme.css';
 export const LMS_ME_KEY = ['lms', 'me'] as const;
 
 /*
- * The LMS app shell (LMS-plan.md Step 4, "The app shell"). The LMS opens in
- * its own tab and is deliberately NOT the dashboard: no dark sidebar, a
- * white top bar with the five sections, and a bottom tab bar on phones.
- * It runs the one gate every LMS page shares (plan / turned on), then hands
- * `me` to the page through the outlet context (LmsPage reads it).
+ * The LMS shell (LMS-plan.md Step 4, "The app shell"). The LMS is a page of
+ * the vendor dashboard: it renders inside VendorLayout, so the dashboard's
+ * sidebar and top bar stay. This adds the LMS's own bar on top of the page:
+ * the five sections as tabs, lead search and the bell. It runs the one gate
+ * every LMS page shares (plan / turned on), then hands `me` to the page
+ * through the outlet context (LmsPage reads it).
  */
 
-const SECTIONS: { label: string; path: string; icon: LucideIcon }[] = [
-  { label: 'Leads', path: '/vendor/lms/leads', icon: Rows3 },
-  { label: 'Call Desk', path: '/vendor/lms/desk', icon: PhoneCall },
-  { label: 'Tasks', path: '/vendor/lms/tasks', icon: ListChecks },
-  { label: 'Reports', path: '/vendor/lms/reports', icon: BarChart3 },
-  { label: 'Settings', path: '/vendor/lms/settings', icon: Settings2 },
+const SECTIONS: { label: string; path: string }[] = [
+  { label: 'Leads', path: '/vendor/lms/leads' },
+  { label: 'Call Desk', path: '/vendor/lms/desk' },
+  { label: 'Tasks', path: '/vendor/lms/tasks' },
+  { label: 'Reports', path: '/vendor/lms/reports' },
+  { label: 'Settings', path: '/vendor/lms/settings' },
 ];
 
 export function LmsLayout() {
-  const user = useAuthStore((s) => s.user);
   const meQuery = useQuery({ queryKey: LMS_ME_KEY, queryFn: lmsApi.me, retry: false });
   const me = meQuery.isSuccess && meQuery.data.enabled ? meQuery.data : null;
-  const storeName = meQuery.data?.storeName || user?.vendor?.storeName || '';
 
   // Pages set the tab title; put the dashboard's back when leaving the LMS.
   useEffect(() => {
@@ -74,76 +70,57 @@ export function LmsLayout() {
   }
 
   return (
-    <div className="lms-root min-h-screen bg-lms-page">
-      <TopBar me={me} storeName={storeName} role={meQuery.data ? roleLabel(meQuery.data) : null} />
-      <main className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 md:pb-12">{body}</main>
-      {me && <BottomTabs />}
+    <div className="lms-root">
+      {me && <LmsBar me={me} />}
+      <div className="mx-auto w-full max-w-[1440px] p-3 sm:p-6">{body}</div>
       {me && <BrowserAlerts />}
     </div>
   );
 }
 
-function roleLabel(me: LmsMe): string {
-  if (me.isOwner) return 'Store owner';
-  return me.isManager ? 'Lead manager' : 'Agent';
-}
-
-/**
- * A link to a dashboard page from inside the LMS. It opens a new tab so the
- * LMS stays open, except in an impersonated session, where only in-app
- * navigation keeps the login (see authStore.impersonated).
- */
+/** A link to a dashboard page from inside the LMS: the LMS is part of the dashboard, so it's a plain in-app link. */
 export const DashboardLink = forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }>(
   function DashboardLink({ to, ...props }, ref) {
-    const impersonated = useAuthStore((s) => s.impersonated);
-    return impersonated ? (
-      <Link ref={ref} to={to} {...props} />
-    ) : (
-      <a ref={ref} href={to} target="_blank" rel="noopener" {...props} />
-    );
+    return <Link ref={ref} to={to} {...props} />;
   },
 );
 
-/* ---------------------------------------------------------------- top bar */
+/* ---------------------------------------------------------------- LMS bar */
 
-function TopBar({ me, storeName, role }: { me: LmsMe | null; storeName: string; role: string | null }) {
+/** Section tabs on the left (they scroll sideways on a phone), lead search and the bell on the right. */
+function LmsBar({ me }: { me: LmsMe }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-lms-line bg-lms-surface">
-      <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 px-4 sm:px-6 lg:gap-8">
-        <Link to={LMS_HOME} className="flex min-w-0 shrink items-center gap-2.5 rounded-md">
-          {/* The dot is the caller's shift: green on shift, grey away. */}
-          <span
-            aria-hidden
-            title={me ? (me.available ? 'You are on shift' : 'You are away') : undefined}
-            className={`h-2.5 w-2.5 shrink-0 rounded-full ${me && !me.available ? 'bg-lms-line' : 'bg-lms-call'}`}
-          />
-          <span className="text-[15px] font-semibold">LMS</span>
-          {storeName && <span className="truncate text-sm text-lms-muted max-w-[9rem] sm:max-w-[14rem]">{storeName}</span>}
-        </Link>
+    <header className="sticky top-0 z-20 border-b border-lms-line bg-lms-surface">
+      <div className="flex h-12 items-center gap-3 px-3 sm:px-6 lg:gap-6">
+        {/* The dot is the caller's shift: green on shift, grey away. */}
+        <span
+          title={me.available ? 'You are on shift' : 'You are away'}
+          className="hidden shrink-0 items-center gap-2 text-[13px] text-lms-muted sm:flex"
+        >
+          <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${me.available ? 'bg-lms-call' : 'bg-lms-line'}`} />
+          {me.available ? 'On shift' : 'Away'}
+        </span>
 
-        {me && (
-          <nav aria-label="LMS sections" className="hidden h-full items-stretch gap-6 md:flex">
-            {SECTIONS.map((s) => (
-              <NavLink
-                key={s.path}
-                to={s.path}
-                className={({ isActive }) =>
-                  `-mb-px flex items-center border-b-2 text-sm whitespace-nowrap ${
-                    isActive ? 'border-lms-ink font-medium text-lms-ink' : 'border-transparent text-lms-muted hover:text-lms-ink'
-                  }`
-                }
-              >
-                {s.label}
-                <SectionBadge path={s.path} />
-              </NavLink>
-            ))}
-          </nav>
-        )}
+        <nav aria-label="LMS sections" className="-mb-px flex h-full min-w-0 items-stretch gap-5 overflow-x-auto sm:gap-6">
+          {SECTIONS.map((s) => (
+            <NavLink
+              key={s.path}
+              to={s.path}
+              className={({ isActive }) =>
+                `flex items-center border-b-2 text-sm whitespace-nowrap ${
+                  isActive ? 'border-lms-ink font-medium text-lms-ink' : 'border-transparent text-lms-muted hover:text-lms-ink'
+                }`
+              }
+            >
+              {s.label}
+              <SectionBadge path={s.path} />
+            </NavLink>
+          ))}
+        </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
-          {me && <LeadSearch me={me} />}
-          {me && <NotificationBell />}
-          <AccountMenu name={me?.name ?? ''} role={role} />
+          <LeadSearch me={me} />
+          <NotificationBell />
         </div>
       </div>
     </header>
@@ -241,7 +218,7 @@ function LeadSearch({ me }: { me: LmsMe }) {
       {/* One search box: inline from md up; on a phone it covers the top bar while open. */}
       <div
         className={`${
-          phoneOpen ? 'fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 border-b border-lms-line bg-lms-surface px-4' : 'hidden'
+          phoneOpen ? 'absolute inset-0 z-10 flex items-center gap-2 bg-lms-surface px-3' : 'hidden'
         } md:static md:z-auto md:flex md:h-auto md:w-60 md:border-0 md:bg-transparent md:p-0 lg:w-72`}
       >
         <div className="relative flex-1">
@@ -328,127 +305,18 @@ function LeadSearch({ me }: { me: LmsMe }) {
   );
 }
 
-/* ----------------------------------------------------------- account menu */
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '·';
-  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-}
-
-function AccountMenu({ name, role }: { name: string; role: string | null }) {
-  const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
-  const displayName = name || user?.fullName || user?.phone || '';
-
-  const logOut = async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // Clear the session here anyway.
-    } finally {
-      clearAuth();
-      navigate('/vendor/login', { replace: true });
-    }
-  };
-
-  const item =
-    'flex w-full cursor-pointer select-none items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-lms-ink outline-none data-[highlighted]:bg-lms-page';
-
-  return (
-    <RadixDropdown.Root>
-      <RadixDropdown.Trigger asChild>
-        <button
-          type="button"
-          aria-label="Account"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full"
-        >
-          {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
-          ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-lms-ink text-xs font-semibold text-white">
-              {initials(displayName)}
-            </span>
-          )}
-        </button>
-      </RadixDropdown.Trigger>
-      <RadixDropdown.Portal>
-        <RadixDropdown.Content
-          align="end"
-          sideOffset={6}
-          collisionPadding={12}
-          className="lms-root z-50 w-60 rounded-[10px] border border-lms-line bg-lms-surface p-1.5 shadow-lg"
-        >
-          {displayName && (
-            <div className="px-2.5 pb-2 pt-1.5">
-              <p className="truncate text-sm font-medium">{displayName}</p>
-              {role && <p className="text-[13px] text-lms-muted">{role}</p>}
-            </div>
-          )}
-          <RadixDropdown.Separator className="my-1 h-px bg-lms-line" />
-          <RadixDropdown.Item asChild className={item}>
-            <DashboardLink to="/vendor/dashboard">
-              <ExternalLink size={16} className="text-lms-muted" />
-              Open dashboard
-            </DashboardLink>
-          </RadixDropdown.Item>
-          <RadixDropdown.Item className={item} onSelect={logOut}>
-            <LogOut size={16} className="text-lms-muted" />
-            Log out
-          </RadixDropdown.Item>
-        </RadixDropdown.Content>
-      </RadixDropdown.Portal>
-    </RadixDropdown.Root>
-  );
-}
-
 /**
  * The section counts, from the one notifications poll (Step 8): Leads =
  * new leads waiting for your first call (ink: yours to do), Tasks = your
  * overdue tasks (red: late).
  */
-function SectionBadge({ path, dot = false }: { path: string; dot?: boolean }) {
+function SectionBadge({ path }: { path: string }) {
   const summary = useLmsSummary();
   const badges = summary.data?.badges;
   if (!badges) return null;
-  if (path === '/vendor/lms/leads') return <NavBadge count={badges.leads} tone="ink" dot={dot} label={`${badges.leads} new for you`} />;
-  if (path === '/vendor/lms/tasks') return <NavBadge count={badges.tasks} tone="alert" dot={dot} label={`${badges.tasks} overdue`} />;
+  if (path === '/vendor/lms/leads') return <NavBadge count={badges.leads} tone="ink" label={`${badges.leads} new for you`} />;
+  if (path === '/vendor/lms/tasks') return <NavBadge count={badges.tasks} tone="alert" label={`${badges.tasks} overdue`} />;
   return null;
-}
-
-/* ---------------------------------------------------- phone bottom tabs */
-
-function BottomTabs() {
-  return (
-    <nav
-      aria-label="LMS sections"
-      className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-lms-line bg-lms-surface pb-[env(safe-area-inset-bottom)] md:hidden"
-    >
-      {SECTIONS.map(({ label, path, icon: Icon }) => (
-        <NavLink
-          key={path}
-          to={path}
-          className={({ isActive }) =>
-            `relative flex h-14 flex-col items-center justify-center gap-1 text-[11px] ${
-              isActive ? 'font-medium text-lms-ink' : 'text-lms-muted'
-            }`
-          }
-        >
-          {({ isActive }) => (
-            <>
-              {isActive && <span aria-hidden className="absolute inset-x-4 top-0 h-0.5 rounded-b bg-lms-ink" />}
-              <span className="relative">
-                <Icon size={20} strokeWidth={isActive ? 2 : 1.75} />
-                <SectionBadge path={path} dot />
-              </span>
-              {label}
-            </>
-          )}
-        </NavLink>
-      ))}
-    </nav>
-  );
 }
 
 /* ------------------------------------------------------- gate screens */

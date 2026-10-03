@@ -33,9 +33,8 @@ interface AuthState {
   // so a hard page reload doesn't bounce a still-logged-in vendor out.
   hasHydrated: boolean;
   // True in a Super Admin "Login as vendor" tab. That session has no
-  // refresh cookie of its own, so it can't be carried into a new tab
-  // (a new tab would refresh with the admin's cookie instead). The LMS
-  // opens in the same tab when this is set (lib/lmsWindow.ts).
+  // refresh cookie of its own, so it only works in the tab it was opened in
+  // (VendorImpersonateEntry).
   impersonated: boolean;
   setAuth: (accessToken: string, user: AuthUser) => void;
   markImpersonated: () => void;

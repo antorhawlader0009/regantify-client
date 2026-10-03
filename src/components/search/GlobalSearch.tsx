@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { searchApi } from '../../lib/searchApi';
 import { clearRecents, loadRecents, queryTokens, quickActions, saveRecent, searchStatic, type RecentEntry } from '../../lib/searchIndex';
-import { openLms } from '../../lib/lmsWindow';
 import { useAuthStore } from '../../store/authStore';
 import { useSearchUi } from '../../store/searchStore';
 
@@ -209,11 +208,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
   const choose = (row: Row) => {
     if (userId) setRecents(saveRecent(userId, { title: row.title, subtitle: row.subtitle, path: row.path }));
     onClose();
-    if (row.path.startsWith('/vendor/lms')) {
-      if (!openLms(row.path)) navigate(row.path);
-    } else {
-      navigate(row.path);
-    }
+    navigate(row.path);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {

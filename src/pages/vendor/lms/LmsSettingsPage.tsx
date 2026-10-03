@@ -110,7 +110,7 @@ function SectionNav() {
 
   return (
     <nav aria-label="Settings sections" className="hidden lg:block">
-      <ul className="sticky top-[5.5rem] space-y-0.5 border-l border-lms-line">
+      <ul className="sticky top-[4.5rem] space-y-0.5 border-l border-lms-line">
         {SECTIONS.map((s) => (
           <li key={s.id}>
             <a

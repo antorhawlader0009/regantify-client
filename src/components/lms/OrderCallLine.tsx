@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { PhoneCall } from 'lucide-react';
 import { lmsApi, type LmsOrderCall } from '../../lib/lmsApi';
-import { openLms } from '../../lib/lmsWindow';
 
 /** "confirmed by Rahim, 2 tries" / "waiting for a call, Karim's" / "cancelled by Rahim (Not reachable), 3 tries". */
 function callWords(call: LmsOrderCall): string {
@@ -33,10 +32,6 @@ export function OrderCallLine({ orderId }: { orderId: string }) {
         <span className="font-medium text-regantify-text">Call:</span> {callWords(call.data)}.{' '}
         <Link
           to={path}
-          target="regantify-lms"
-          onClick={(e) => {
-            if (openLms(path)) e.preventDefault();
-          }}
           className="underline hover:text-regantify-text"
         >
           Open in LMS

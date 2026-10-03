@@ -15,11 +15,10 @@ const SKIP_TYPES = new Set(['password', 'file', 'hidden', 'checkbox', 'radio', '
 const KIND_BY_TYPE: Record<string, AssistantFieldKind> = { number: 'number', email: 'email', tel: 'tel', url: 'url', date: 'date' };
 const SECRET = /pass|secret|token|api.?key|otp|\bpin\b|cvv|card|private|credential/i;
 
-/** Dashboard pages the assistant may link to: the sidebar's own entries (not the LMS, which opens in its own tab). */
+/** Dashboard pages the assistant may link to: the sidebar's own entries. */
 export function assistantRoutes(): AssistantRoute[] {
   const out: AssistantRoute[] = [];
   for (const s of vendorNav) {
-    if (s.newWindow) continue;
     if (s.path) out.push({ path: s.path, label: s.label });
     for (const child of s.children ?? []) {
       const links = isNavGroup(child) ? child.children : navLinks([child]);

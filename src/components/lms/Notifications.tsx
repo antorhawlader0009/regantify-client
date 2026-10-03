@@ -6,7 +6,7 @@ import { Bell } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { lmsApi, type LmsNotification, type LmsNotificationSummary, type LmsNotificationType } from '../../lib/lmsApi';
-import { LMS_HOME } from '../../lib/lmsWindow';
+import { LMS_HOME } from '../../lib/lmsPaths';
 import { agoPhrase } from './format';
 import { LmsButton } from './ui';
 
