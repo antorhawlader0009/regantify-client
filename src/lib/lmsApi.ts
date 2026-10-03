@@ -654,6 +654,7 @@ export const lmsApi = {
 
   listLeads: (filters: LmsLeadFilters, page: number) =>
     api.get<LmsLeadList>('/v1/lms/leads', { params: { ...filters, page } }).then((r) => r.data),
+  leadsPulse: () => api.get<{ marker: string }>('/v1/lms/leads/pulse').then((r) => r.data),
   counts: (filters: LmsLeadFilters) =>
     api.get<LmsStageCounts>('/v1/lms/leads/counts', { params: { ...filters, stage: undefined } }).then((r) => r.data),
   exportLeads: (filters: LmsLeadFilters, limit?: number) =>

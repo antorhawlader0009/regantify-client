@@ -93,7 +93,20 @@ export function parseCsvToObjects(text: string): Record<string, string>[] {
   });
 }
 
-function escapeCsvCell(value: string): string {
+/**
+ * A cell that starts with = + - @ (or a tab/return) is run as a formula when
+ * the file is opened in Excel or Sheets, and the text can come from shoppers.
+ * Such cells get a leading apostrophe. Plain numbers and phone numbers
+ * (+8801…, -5) are left alone so exports still read back as they were.
+ */
+function neutralizeFormula(value: string): string {
+  if (!/^[=+\-@\t\r]/.test(value)) return value;
+  if (/^[+-]?[\d\s().-]+$/.test(value)) return value;
+  return `'${value}`;
+}
+
+function escapeCsvCell(raw: string): string {
+  const value = neutralizeFormula(raw);
   if (/[",\n\r]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;
   }

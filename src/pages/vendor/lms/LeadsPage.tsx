@@ -15,6 +15,7 @@ import { RestockNotice } from '../../../components/lms/RestockNotice';
 import { formatExtraValue, useLmsFields } from '../../../components/lms/ExtraFields';
 import { AgentSelect } from '../../../components/lms/Team';
 import { ExportButton, PrintButton } from '../../../components/lms/LeadsExport';
+import { useLeadsAutoRefresh } from '../../../components/lms/useLeadsAutoRefresh';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import {
@@ -36,6 +37,7 @@ export default function LeadsPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [params, setParams] = useSearchParams();
   const me = useOutletContext<LmsMe>();
+  useLeadsAutoRefresh();
   const filters = useMemo(() => readFilters(params), [params]);
   const openLead = (id: string | null) =>
     setParams(
