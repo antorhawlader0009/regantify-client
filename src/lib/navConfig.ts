@@ -58,6 +58,8 @@ export interface NavSection {
   group?: string;
   /** Pinned to the sidebar's bottom bar, which never scrolls. */
   bottom?: boolean;
+  /** Its pages (all plain links) also show as a tab bar above each page, so they can be switched without the sidebar. */
+  tabs?: boolean;
 }
 
 /**
@@ -106,6 +108,7 @@ export const vendorNav: NavSection[] = [
     label: 'Marketing',
     icon: Megaphone,
     group: 'Sales Marketing',
+    tabs: true,
     children: [
       { label: 'Coupons', path: '/vendor/marketing/coupons' },
       { label: 'Campaigns', path: '/vendor/marketing/campaigns' },
@@ -119,9 +122,10 @@ export const vendorNav: NavSection[] = [
     label: 'AI & Automation',
     icon: Bot,
     group: 'Sales Marketing',
+    tabs: true,
     children: [
-      { label: 'AI Tools', path: '/vendor/ai-automation/ai-tools' },
       { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot' },
+      { label: 'AI Tools', path: '/vendor/ai-automation/ai-tools' },
       { label: 'Automation', path: '/vendor/ai-automation/automation' },
       { label: 'n8n', path: '/vendor/ai-automation/n8n' },
     ],

@@ -1,13 +1,14 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
-import { isNavGroup, type NavSection } from '../../lib/navConfig';
+import { isNavGroup, navLinks, type NavLinkItem, type NavSection } from '../../lib/navConfig';
 
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
 /**
  * Above a page that belongs to a sidebar sub-group (e.g. Store > Checkout): a tab bar of its sibling
  * pages, so they are one click away without the sidebar. For a page in a hidden group (Store > Design,
- * reached from a hub of cards): a "Design" link back to the hub. Nothing on pages outside any group.
+ * reached from a hub of cards): a "Design" link back to the hub. A whole section marked `tabs` (AI &
+ * Automation) gets the same tab bar for its pages. Nothing on other pages.
  */
 export function SectionTabs({ sections }: { sections: NavSection[] }) {
   const { pathname } = useLocation();
@@ -15,9 +16,12 @@ export function SectionTabs({ sections }: { sections: NavSection[] }) {
     .flatMap((s) => s.children ?? [])
     .filter(isNavGroup)
     .find((g) => g.children.some((c) => matches(pathname, c.path)));
-  if (!group) return null;
+  const tabSection = sections.find((s) => s.tabs && navLinks(s.children).some((c) => matches(pathname, c.path)));
+  if (!group && !tabSection) return null;
+  const label = (group ?? tabSection)!.label;
+  const links: NavLinkItem[] = group ? group.children : navLinks(tabSection!.children);
 
-  if (group.hidden) {
+  if (group?.hidden) {
     if (!group.hubPath) return null;
     return (
       <Link to={group.hubPath} className="mb-4 -mt-1 inline-flex items-center gap-1 text-[13px] text-neutral-500 hover:text-regantify-text">
@@ -28,9 +32,9 @@ export function SectionTabs({ sections }: { sections: NavSection[] }) {
   }
 
   return (
-    <nav aria-label={group.label} className="mb-5 -mt-1 overflow-x-auto border-b border-line">
+    <nav aria-label={label} className="mb-5 -mt-1 overflow-x-auto border-b border-line">
       <ul className="flex min-w-max gap-1">
-        {group.children.map((c) => {
+        {links.map((c) => {
           const active = matches(pathname, c.path);
           return (
             <li key={c.path}>
