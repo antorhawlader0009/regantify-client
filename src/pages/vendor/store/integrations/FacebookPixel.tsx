@@ -118,7 +118,7 @@ export default function FacebookPixel() {
                 <Notice tone="warning">
                   The Facebook Pixel only works with the StorePal theme. Switch to it in{' '}
                   <Link to="/vendor/store/themes" className="underline">
-                    Themes
+                    Templates
                   </Link>{' '}
                   to start tracking.
                 </Notice>

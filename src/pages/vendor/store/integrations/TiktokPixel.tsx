@@ -146,7 +146,7 @@ export default function TiktokPixel() {
                 <Notice tone="warning">
                   The TikTok Pixel only works with the StorePal theme. Switch to it in{' '}
                   <Link to="/vendor/store/themes" className="underline">
-                    Themes
+                    Templates
                   </Link>{' '}
                   to start tracking.
                 </Notice>

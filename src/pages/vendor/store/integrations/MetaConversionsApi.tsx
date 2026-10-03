@@ -146,7 +146,7 @@ export default function MetaConversionsApi() {
                 <Notice tone="warning">
                   The Conversions API only works with the StorePal theme. Switch to it in{' '}
                   <Link to="/vendor/store/themes" className="underline">
-                    Themes
+                    Templates
                   </Link>
                   .
                 </Notice>

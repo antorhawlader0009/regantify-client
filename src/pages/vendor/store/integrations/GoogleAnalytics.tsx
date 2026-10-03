@@ -167,7 +167,7 @@ export default function GoogleAnalytics() {
                 <Notice tone="warning">
                   Google Analytics only works with the StorePal theme. Switch to it in{' '}
                   <Link to="/vendor/store/themes" className="underline">
-                    Themes
+                    Templates
                   </Link>{' '}
                   to start tracking.
                 </Notice>

@@ -53,24 +53,24 @@ export function SourceMark({ letter, className }: { letter: string; className: s
   );
 }
 
-function Line({ mark, name, line }: { mark: ReactNode; name: string; line: CourierStatLine }) {
+function Line({ mark, name, line, compact }: { mark: ReactNode; name: string; line: CourierStatLine; compact?: boolean }) {
   const percent = rate(line);
   return (
-    <p className="flex items-center gap-1.5 text-[11px] text-regantify-text" title={tooltip(name, line)}>
+    <p className={`flex items-center gap-1.5 text-regantify-text ${compact ? 'text-xs' : 'text-[11px]'}`} title={tooltip(name, line)}>
       {mark}
-      <span className="text-neutral-500">{name}</span>
+      {!compact && <span className="text-neutral-500">{name}</span>}
       <span className="tabular-nums">{percent == null ? 'No history' : `${percent}% (${line.total})`}</span>
     </p>
   );
 }
 
 /** One courier's line — its numbers once fetched, else why there are none yet. */
-function CourierLine({ mark, name, line }: { mark: ReactNode; name: string; line: CourierCheckLine }) {
+function CourierLine({ mark, name, line, compact }: { mark: ReactNode; name: string; line: CourierCheckLine; compact?: boolean }) {
   if (!line.fetchedAt) {
     return (
       <p className="flex items-center gap-1.5 text-[11px] text-neutral-500" title={line.error ?? undefined}>
         {mark}
-        {name} {line.pending ? 'checking…' : line.error ? 'not available' : 'no record yet'}
+        {compact ? '' : `${name} `}{line.pending ? 'checking…' : line.error ? 'not available' : 'no record yet'}
       </p>
     );
   }
@@ -80,15 +80,17 @@ function CourierLine({ mark, name, line }: { mark: ReactNode; name: string; line
     <>
       {score ? (
         <p
-          className="flex items-center gap-1.5 text-[11px] text-regantify-text"
+          className={`flex items-center gap-1.5 text-regantify-text ${compact ? 'text-xs' : 'text-[11px]'}`}
           title={`${name}: Delivered=${score.deliveryRatio ?? '?'}%, Cancelled=${score.cancellationRatio ?? '?'}% of finished parcels`}
         >
           {mark}
-          <span className="text-neutral-500">{name}</span>
-          <span className={`tabular-nums ${riskClass(score.deliveryRatio)}`}>{steadfastScoreText(score)}</span>
+          {!compact && <span className="text-neutral-500">{name}</span>}
+          <span className={`tabular-nums ${riskClass(score.deliveryRatio)}`}>
+            {compact ? (score.deliveryRatio == null ? 'No history' : `${score.deliveryRatio}%`) : steadfastScoreText(score)}
+          </span>
         </p>
       ) : (
-        <Line mark={mark} name={name} line={line} />
+        <Line mark={mark} name={name} line={line} compact={compact} />
       )}
       {line.fraudReports > 0 && (
         <p className="text-[11px] font-medium text-red-600 pl-5" title={categories || undefined}>
@@ -107,7 +109,7 @@ function CourierLine({ mark, name, line }: { mark: ReactNode; name: string; line
  * SteadFast reports percents rather than counts, so it isn't part of the
  * combined total (its counts are 0).
  */
-export function CustomerDeliveryStats({ stats }: { stats: PhoneCourierStats | undefined }) {
+export function CustomerDeliveryStats({ stats, compact }: { stats: PhoneCourierStats | undefined; compact?: boolean }) {
   if (!stats) return null;
   const { pathao, steadfast, storepal } = stats;
   const known = [pathao, steadfast].filter((line): line is CourierCheckLine => Boolean(line?.fetchedAt));
@@ -118,11 +120,11 @@ export function CustomerDeliveryStats({ stats }: { stats: PhoneCourierStats | un
   const combinedRate = rate(combined);
 
   return (
-    <div className="mt-1.5 space-y-0.5">
-      {pathao && <CourierLine mark={<SourceMark letter="P" className="bg-red-600" />} name="Pathao" line={pathao} />}
-      {steadfast && <CourierLine mark={<SourceMark letter="SF" className="bg-teal-600" />} name="SteadFast" line={steadfast} />}
-      <Line mark={<SourceMark letter="S" className="bg-regantify-black" />} name="StorePal" line={storepal} />
-      <p className={`text-[11px] font-semibold tabular-nums ${riskClass(combinedRate)}`} title={tooltip('Total', combined)}>
+    <div className={compact ? 'mt-2 space-y-1' : 'mt-1.5 space-y-0.5'}>
+      {pathao && <CourierLine mark={<SourceMark letter="P" className="bg-red-600" />} name="Pathao" line={pathao} compact={compact} />}
+      {steadfast && <CourierLine mark={<SourceMark letter="SF" className="bg-teal-600" />} name="SteadFast" line={steadfast} compact={compact} />}
+      <Line mark={<SourceMark letter="S" className="bg-regantify-black" />} name="StorePal" line={storepal} compact={compact} />
+      <p className={`${compact ? 'text-xs' : 'text-[11px]'} font-semibold tabular-nums ${riskClass(combinedRate)}`} title={tooltip('Total', combined)}>
         {combinedRate == null ? 'No delivery history' : `Total: ${combinedRate}% (${combined.total})`}
       </p>
     </div>

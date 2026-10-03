@@ -157,13 +157,13 @@ export default function Themes() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Themes</h1>
+        <h1 className="text-2xl font-semibold text-regantify-text">Templates</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
           Choose how your storefront looks to customers. Switching takes effect on your live store immediately.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {THEMES.map((theme) => {
           const isSelected = theme.id === selected;
           const isSwitching = switching === theme.id;
@@ -179,7 +179,7 @@ export default function Themes() {
                 isSelected ? 'border-regantify-cta ring-1 ring-regantify-cta' : 'border-black/5'
               }`}
             >
-              <div className="aspect-[16/10] relative">
+              <div className="aspect-[16/9] relative">
                 <ThemePreview id={theme.id} />
                 {isLocked && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -191,9 +191,9 @@ export default function Themes() {
                 )}
               </div>
 
-              <div className="p-4 flex flex-col flex-1">
+              <div className="p-3 flex flex-col flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-base font-semibold text-regantify-text">{theme.name}</h2>
+                  <h2 className="text-sm font-semibold text-regantify-text">{theme.name}</h2>
                   {isSelected && (
                     <span className="flex items-center gap-1 text-xs font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
                       <Check size={12} />
@@ -201,13 +201,13 @@ export default function Themes() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-regantify-text-muted flex-1">{theme.description}</p>
+                <p className="text-xs leading-relaxed text-regantify-text-muted flex-1 line-clamp-3" title={theme.description}>{theme.description}</p>
 
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-3 flex items-center gap-2">
                   <button
                     disabled={loading || isSelected || switching !== null}
                     onClick={() => handleSelect(theme.id)}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                       isSelected
                         ? 'bg-regantify-content text-regantify-text-muted cursor-default'
                         : isLocked
@@ -230,7 +230,7 @@ export default function Themes() {
                       href={storeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-black/10 hover:bg-regantify-content
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 hover:bg-regantify-content
                         text-regantify-text text-sm font-medium transition-colors"
                     >
                       <ExternalLink size={16} />

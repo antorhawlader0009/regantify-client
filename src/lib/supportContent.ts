@@ -54,7 +54,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     question: 'Why can I only use the StorePal theme?',
     answer: 'The Free plan includes StorePal. Paid plans unlock more themes, and your earlier choice comes back when you upgrade.',
-    link: { label: 'Open Themes', to: '/vendor/store/themes' },
+    link: { label: 'Open Templates', to: '/vendor/store/themes' },
   },
   {
     question: 'Can I use my own domain?',

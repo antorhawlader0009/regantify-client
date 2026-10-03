@@ -116,7 +116,7 @@ export default function GoogleTagManager() {
                 <Notice tone="warning">
                   Google Tag Manager only works with the StorePal theme. Switch to it in{' '}
                   <Link to="/vendor/store/themes" className="underline">
-                    Themes
+                    Templates
                   </Link>{' '}
                   to start tracking.
                 </Notice>

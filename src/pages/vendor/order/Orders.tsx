@@ -12,6 +12,7 @@ import {
   History,
   MoreVertical,
   ListChecks,
+  Phone,
   Plus,
   Printer,
   RefreshCw,
@@ -22,6 +23,7 @@ import {
   Trash2,
   Truck,
   Undo2,
+  User,
   X,
   XCircle,
 } from 'lucide-react';
@@ -110,6 +112,15 @@ async function copyTrackingId(id: string) {
     toast.success('Tracking ID copied — share it with the customer.');
   } catch {
     toast.error('Could not copy. Open the order and copy the ID yourself.');
+  }
+}
+
+async function copyPhone(phone: string) {
+  try {
+    await navigator.clipboard.writeText(phone);
+    toast.success('Phone number copied.');
+  } catch {
+    toast.error('Could not copy the phone number.');
   }
 }
 
@@ -359,9 +370,24 @@ function OrderRow({
         )}
       </td>
       <td className={`${td} min-w-[180px]`}>
-        <p>{order.customerName}</p>
-        <p className="mt-0.5 text-xs text-neutral-500">{order.customerPhone}</p>
-        <CustomerDeliveryStats stats={deliveryStats} />
+        <p className="flex items-center gap-1.5 font-medium">
+          <User size={14} className="shrink-0 text-neutral-500" />
+          {order.customerName}
+        </p>
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-600">
+          <Phone size={12} className="shrink-0 text-neutral-500" />
+          {order.customerPhone}
+          <button
+            type="button"
+            onClick={() => copyPhone(order.customerPhone)}
+            aria-label="Copy phone number"
+            title="Copy phone number"
+            className="text-neutral-400 transition hover:text-neutral-700"
+          >
+            <Copy size={11} />
+          </button>
+        </p>
+        <CustomerDeliveryStats stats={deliveryStats} compact />
         <button
           onClick={() => onCheckHistory(order.customerPhone)}
           className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50"

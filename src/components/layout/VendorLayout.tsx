@@ -4,6 +4,7 @@ import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
 import { vendorNav } from '../../lib/navConfig';
 import { AssistantPanel } from '../assistant/AssistantPanel';
+import { SectionTabs } from './SectionTabs';
 
 // Full-screen shell: sidebar fixed on the left, only the content column scrolls.
 // Below lg the sidebar is a drawer, opened from the topbar's menu button.
@@ -24,6 +25,7 @@ export function VendorLayout() {
       <div className="flex min-w-0 flex-1 flex-col bg-[#f4f4f4] lg:border-l lg:border-line">
         <Topbar sections={vendorNav} onMenuClick={() => setMenuOpen(true)} />
         <main className="isolate flex-1 overflow-y-auto p-3 sm:p-6">
+          <SectionTabs sections={vendorNav} />
           <Outlet />
         </main>
       </div>

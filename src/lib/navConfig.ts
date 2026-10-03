@@ -108,10 +108,10 @@ export const vendorNav: NavSection[] = [
     icon: StoreIcon,
     group: 'Store',
     children: [
+      { label: 'Templates', path: '/vendor/store/themes' },
       {
         label: 'Design',
         children: [
-          { label: 'Themes', path: '/vendor/store/themes' },
           { label: 'Branding', path: '/vendor/store/branding' },
           { label: 'Customize', path: '/vendor/store/customize' },
           { label: 'Navigation', path: '/vendor/store/navigation' },
@@ -121,23 +121,48 @@ export const vendorNav: NavSection[] = [
           { label: 'Site Banner', path: '/vendor/store/site-banner' },
           { label: 'Product Display', path: '/vendor/store/product-display' },
           { label: 'Product Card', path: '/vendor/store/product-card' },
+        ],
+      },
+      {
+        label: 'Content',
+        children: [
+          { label: 'Pages', path: '/vendor/store/pages' },
+          { label: 'Landing Page', path: '/vendor/store/landing-pages' },
+          { label: 'Media', path: '/vendor/store/media' },
+        ],
+      },
+      {
+        label: 'Checkout',
+        children: [
+          { label: 'Payment Gateway', path: '/vendor/store/payment-gateway' },
+          { label: 'Delivery Charge', path: '/vendor/store/delivery-charge' },
+          { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
+          { label: 'COD Guard', path: '/vendor/store/cod-guard' },
+        ],
+      },
+      {
+        label: 'SEO & Tracking',
+        children: [
+          { label: 'SEO', path: '/vendor/store/seo' },
+          { label: 'Integrations', path: '/vendor/store/integrations' },
+        ],
+      },
+      {
+        label: 'Store Settings',
+        children: [
+          { label: 'Domain', path: '/vendor/store/domain' },
+          { label: 'Social', path: '/vendor/store/social' },
+          { label: 'GDPR Prompt', path: '/vendor/store/gdpr' },
+        ],
+      },
+      {
+        label: 'Custom Code',
+        children: [
           { label: 'Custom CSS', path: '/vendor/store/custom-css' },
           { label: 'Custom Head Scripts', path: '/vendor/store/head-scripts' },
           { label: 'JavaScript Code', path: '/vendor/store/javascript' },
         ],
       },
-      { label: 'Pages', path: '/vendor/store/pages' },
-      { label: 'Landing Page', path: '/vendor/store/landing-pages' },
-      { label: 'Media', path: '/vendor/store/media' },
-      { label: 'Social', path: '/vendor/store/social' },
-      { label: 'Domain', path: '/vendor/store/domain' },
-      { label: 'Payment Gateway', path: '/vendor/store/payment-gateway' },
-      { label: 'Delivery Charge', path: '/vendor/store/delivery-charge' },
-      { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
-      { label: 'GDPR Prompt', path: '/vendor/store/gdpr' },
-      { label: 'COD Guard', path: '/vendor/store/cod-guard' },
-      { label: 'Integrations', path: '/vendor/store/integrations' },
-      { label: 'SEO', path: '/vendor/store/seo' },
     ],
   },
   {
