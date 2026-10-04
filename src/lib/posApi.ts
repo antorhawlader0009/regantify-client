@@ -187,7 +187,7 @@ export interface CreatePosSale {
 }
 
 /** The ways a counter sale can be paid (server pos-tenders.ts). */
-export const POS_TENDERS = ['CASH', 'CARD', 'BKASH', 'NAGAD', 'BANGLA_QR', 'BANK', 'GIFT_CARD', 'OTHER'] as const;
+export const POS_TENDERS = ['CASH', 'CARD', 'BKASH', 'NAGAD', 'BANGLA_QR', 'BANK', 'GIFT_CARD', 'DUE', 'OTHER'] as const;
 export type PosTender = (typeof POS_TENDERS)[number];
 
 export const TENDER_LABEL: Record<PosTender, string> = {
@@ -198,8 +198,62 @@ export const TENDER_LABEL: Record<PosTender, string> = {
   BANGLA_QR: 'Bangla QR',
   BANK: 'Bank transfer',
   GIFT_CARD: 'Gift card',
+  DUE: 'Due (baki)',
   OTHER: 'Other',
 };
+
+/** How a due can be paid back (server pos-tenders.ts DUE_PAYMENT_METHODS). */
+export type DuePaymentMethod = Exclude<PosTender, 'GIFT_CARD' | 'DUE'>;
+
+/** What a customer owes (GET /v1/pos/due/lookup at the counter). */
+export interface PosDueLookup {
+  phone: string;
+  name: string | null;
+  balance: number;
+  /** null = no limit. */
+  limit: number | null;
+}
+
+/** A due paid back at the counter: what the payment slip prints. */
+export interface PosDuePayment {
+  id: string;
+  createdAt: string;
+  phone: string;
+  name: string | null;
+  amount: number;
+  method: DuePaymentMethod;
+  reference: string | null;
+  balanceAfter: number;
+  registerName: string;
+  cashierName: string;
+}
+
+export type DueEntryType = 'SALE_ON_DUE' | 'PAYMENT' | 'RETURN' | 'ADJUSTMENT';
+
+/** Customer Detail's due: the balance and the history, newest first (GET /v1/pos/due/customers/:phone). */
+export interface PosDueAccount {
+  phone: string;
+  balance: number;
+  limit: number | null;
+  remindedAt: string | null;
+  entries: Array<{
+    id: string;
+    type: DueEntryType;
+    /** Signed: + they owe more, - they owe less. */
+    amount: number;
+    balanceAfter: number;
+    method: PosTender | null;
+    reference: string | null;
+    note: string | null;
+    createdByName: string;
+    createdAt: string;
+    order: { id: string; publicCode: string | null; invoiceNumber: number } | null;
+    registerName: string | null;
+  }>;
+  total: number;
+  page: number;
+  perPage: number;
+}
 
 export interface PosTenderInput {
   method: PosTender;
@@ -253,6 +307,8 @@ export interface PosReceipt {
   trackingToken: string | null;
   /** The private order page, for the receipt's QR code and the SMS receipt. */
   receiptUrl: string | null;
+  /** What the customer owes in all right after this sale, when part of it went on their due (Step 9). */
+  dueBalanceAfter?: number | null;
   /** Returns and voids against this sale (Step 8), oldest first. */
   returns?: Array<{ kind: 'RETURN' | 'VOID'; amount: number; reason: string | null; cashierName: string; createdAt: string }>;
   /** true when this was a retry of a sale that had already gone through. */
@@ -381,6 +437,22 @@ export const posApi = {
   smsReceipt: (id: string, phone: string | undefined, token: string) =>
     api.post<{ sent: true; phone: string }>(`/v1/pos/sales/${id}/sms-receipt`, { phone: phone || undefined }, cashier(token)).then((r) => r.data),
   receiptProfile: () => api.get<PosReceiptProfile>('/v1/pos/receipt-profile').then((r) => r.data),
+
+  // The customer due (baki) ledger (Step 9). Counter: lookup and collect (cashier token).
+  dueLookup: (phone: string, token: string) => api.get<PosDueLookup>('/v1/pos/due/lookup', { params: { phone }, ...cashier(token) }).then((r) => r.data),
+  collectDue: (dto: { sessionId: string; phone: string; amount: number; method: DuePaymentMethod; reference?: string }, token: string) =>
+    api.post<PosDuePayment>('/v1/pos/due/collect', dto, cashier(token)).then((r) => r.data),
+  // Customer Detail (dashboard; money and limits are for managers).
+  dueAccount: (phone: string, page = 1) =>
+    api.get<PosDueAccount>(`/v1/pos/due/customers/${encodeURIComponent(phone)}`, { params: { page } }).then((r) => r.data),
+  receiveDuePayment: (phone: string, dto: { amount: number; method: DuePaymentMethod; reference?: string; note?: string }) =>
+    api.post<PosDueAccount>(`/v1/pos/due/customers/${encodeURIComponent(phone)}/payments`, dto).then((r) => r.data),
+  adjustDue: (phone: string, amount: number, note: string) =>
+    api.post<PosDueAccount>(`/v1/pos/due/customers/${encodeURIComponent(phone)}/adjust`, { amount, note }).then((r) => r.data),
+  setDueLimit: (phone: string, limit: number | null) =>
+    api.put<PosDueAccount>(`/v1/pos/due/customers/${encodeURIComponent(phone)}/limit`, { limit }).then((r) => r.data),
+  remindDue: (phone: string) =>
+    api.post<{ sent: true; phone: string; amount: number }>(`/v1/pos/due/customers/${encodeURIComponent(phone)}/remind`).then((r) => r.data),
 
   sessions: (params: { registerId?: string; page?: number; perPage?: number } = {}) =>
     api

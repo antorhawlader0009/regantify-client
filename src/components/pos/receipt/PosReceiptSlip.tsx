@@ -31,6 +31,7 @@ const LABELS = {
     bin: 'BIN',
     scan: 'Scan to see this receipt online',
     thanks: 'Thank you for shopping with us',
+    dueNow: 'Your due in all',
   },
   bn: {
     receipt: 'রসিদ',
@@ -51,6 +52,7 @@ const LABELS = {
     bin: 'বিআইএন',
     scan: 'অনলাইনে রসিদ দেখতে স্ক্যান করুন',
     thanks: 'আমাদের সাথে কেনাকাটার জন্য ধন্যবাদ',
+    dueNow: 'মোট বাকি',
   },
 } as const;
 
@@ -149,6 +151,12 @@ export const PosReceiptSlip = forwardRef<HTMLDivElement, { receipt: PosReceipt; 
           {p.change != null && p.change > 0 && <Row left={t.change} right={money(p.change)} />}
         </div>
       ))}
+      {/* Part of the sale on the customer's due (Step 9): what they owe the shop in all after it. */}
+      {receipt.dueBalanceAfter != null && (
+        <div className="mt-[0.5mm] font-bold">
+          <Row left={t.dueNow} right={money(receipt.dueBalanceAfter)} />
+        </div>
+      )}
       {(profile.footer || qr) && rule}
       {qr && (
         <div className="mt-[1mm] text-center">

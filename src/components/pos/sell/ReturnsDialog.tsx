@@ -64,6 +64,8 @@ export function ReturnsDialog({
       setQty({});
       setRestock(Object.fromEntries(s.lines.map((l) => [l.orderItemId, true])));
       setKind('RETURN');
+      // A due sale: lowering the due is the usual way back, so it's picked first.
+      setMethod(s.paidWith.includes('DUE') ? 'DUE' : 'CASH');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'That sale couldn’t be opened.')),
   });
@@ -75,7 +77,14 @@ export function ReturnsDialog({
   const amount = !sale ? 0 : emptiesSale ? round2(sale.total - sale.refunded) : round2(chosen.reduce((s, l) => s + round2(l.unitRefund * l.take), 0));
   const canVoid = !!sale && sale.posSessionId === sessionId && sale.status === 'COMPLETED' && sale.returns.length === 0;
   const pastWindow = !!sale?.returnableUntil && new Date(sale.returnableUntil).getTime() < Date.now();
-  const refundMethods: RefundMethod[] = ['CASH', 'GIFT_CARD', ...((sale?.paidWith ?? []).filter((m) => m !== 'CASH' && m !== 'GIFT_CARD' && m !== 'DUE') as RefundMethod[])];
+  // A sale (partly) on due can give the money back by lowering that due (Step 9).
+  const refundMethods: RefundMethod[] = [
+    ...((sale?.paidWith ?? []).includes('DUE') ? (['DUE'] as RefundMethod[]) : []),
+    'CASH',
+    'GIFT_CARD',
+    ...((sale?.paidWith ?? []).filter((m) => m !== 'CASH' && m !== 'GIFT_CARD' && m !== 'DUE') as RefundMethod[]),
+  ];
+  const methodLabel = (m: RefundMethod) => (m === 'GIFT_CARD' ? 'Store credit' : m === 'DUE' ? 'Lower their due' : TENDER_LABEL[m]);
 
   const submit = useMutation({
     mutationFn: (approvalId?: string) =>
@@ -107,7 +116,7 @@ export function ReturnsDialog({
       <PosDialog open onOpenChange={(o) => !o && onClose()} title={kind === 'VOID' ? 'Sale voided' : 'Return done'}>
         <div className="space-y-4 text-center">
           <CheckCircle2 size={36} className="mx-auto text-pos-go" aria-hidden />
-          <p className="text-sm text-pos-muted">{credit ? 'Store credit made' : `Give back by ${TENDER_LABEL[method]}`}</p>
+          <p className="text-sm text-pos-muted">{credit ? 'Store credit made' : method === 'DUE' ? 'Taken off their due' : `Give back by ${TENDER_LABEL[method]}`}</p>
           <p className="text-3xl font-semibold tabular-nums">{taka(done.amount)}</p>
           {credit && (
             <div className="rounded-lg border border-pos-line bg-pos-page p-4">
@@ -251,12 +260,12 @@ export function ReturnsDialog({
                           onClick={() => setMethod(m)}
                           className={`h-9 rounded-md border px-3 text-sm ${method === m ? 'border-pos-ink bg-pos-ink text-white' : 'border-pos-line'}`}
                         >
-                          {m === 'GIFT_CARD' ? 'Store credit' : TENDER_LABEL[m]}
+                          {methodLabel(m)}
                         </button>
                       ))}
                     </div>
                   </Field>
-                  {method !== 'CASH' && method !== 'GIFT_CARD' && (
+                  {method !== 'CASH' && method !== 'GIFT_CARD' && method !== 'DUE' && (
                     <Field label="Transaction ID (optional)">
                       <PosInput maxLength={60} value={reference} onChange={(e) => setReference(e.target.value)} />
                     </Field>
@@ -267,7 +276,7 @@ export function ReturnsDialog({
                 </div>
 
                 <div className="flex items-center justify-between gap-3 rounded-lg bg-pos-page px-4 py-3">
-                  <span className="text-sm">{method === 'GIFT_CARD' ? 'Store credit' : 'Money back'}</span>
+                  <span className="text-sm">{method === 'GIFT_CARD' ? 'Store credit' : method === 'DUE' ? 'Off their due' : 'Money back'}</span>
                   <span className="text-2xl font-semibold tabular-nums">{taka(amount)}</span>
                 </div>
                 <div className="flex justify-end gap-2">

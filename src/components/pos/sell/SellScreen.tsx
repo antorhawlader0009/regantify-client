@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, ClipboardList, Lock, MessageSquare, Minus, Pause, Percent, Plus, Printer, ScanBarcode, Search, Trash2, Undo2, User } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { ArrowLeft, CheckCircle2, ClipboardList, HandCoins, Lock, MessageSquare, Minus, Pause, Percent, Plus, Printer, ScanBarcode, Search, Trash2, Undo2, User } from 'lucide-react';
 import { useReceiptPrinter } from '../receipt/useReceiptPrinter';
 import { cartTotals, lineAmounts, round2, toSaleLines, type CartLine } from './cartMath';
 import { ReturnsDialog } from './ReturnsDialog';
+import { CollectDueDialog } from './DueDialogs';
 import { approvalCovers, CartDiscountDialog, HeldCartsDialog, HoldDialog, LineEditDialog, ManagerApprovalDialog } from './CounterDialogs';
 import {
   posApi,
@@ -82,6 +83,8 @@ export function SellScreen({
   // Step 8: returns, and the store credit an exchange brings to the next sale.
   const [returnsOpen, setReturnsOpen] = useState(false);
   const [exchangeCredit, setExchangeCredit] = useState<{ code: string; amount: number } | null>(null);
+  // Step 9: a customer paying back their due.
+  const [dueOpen, setDueOpen] = useState(false);
 
   const totals = cartTotals(cart, settings, cartDiscount, couponCode ? couponDiscount : 0);
   const isManager = unlock.cashier.role === 'MANAGER';
@@ -212,7 +215,7 @@ export function SellScreen({
     setPaying(true);
   }
 
-  const busy = paying || picking !== null || customerOpen || done !== null || editing !== null || discountOpen || approvalAsk !== null || holdOpen || heldOpen || returnsOpen;
+  const busy = paying || picking !== null || customerOpen || done !== null || editing !== null || discountOpen || approvalAsk !== null || holdOpen || heldOpen || returnsOpen || dueOpen;
   useBarcodeScanner((code) => void addByCode(code), { enabled: !busy });
 
   useEffect(() => {
@@ -346,6 +349,12 @@ export function SellScreen({
             <Undo2 size={15} aria-hidden />
             <span className="hidden sm:inline">Returns</span>
           </PosButton>
+          {printer.profile?.paymentMethods.includes('DUE') && (
+            <PosButton variant="quiet" className="h-9" onClick={() => setDueOpen(true)}>
+              <HandCoins size={15} aria-hidden />
+              <span className="hidden sm:inline">Collect due</span>
+            </PosButton>
+          )}
           <PosButton variant="quiet" className="h-9" onClick={() => setHeldOpen(true)}>
             <ClipboardList size={15} aria-hidden />
             <span className="hidden sm:inline">On hold</span>
@@ -638,6 +647,18 @@ export function SellScreen({
           }}
         />
       )}
+      {dueOpen && (
+        <CollectDueDialog
+          unlock={unlock}
+          sessionId={sessionId}
+          methods={printer.profile?.paymentMethods ?? ['CASH']}
+          profile={printer.profile}
+          onClose={() => {
+            setDueOpen(false);
+            setTimeout(focusSearch, 0);
+          }}
+        />
+      )}
       {heldOpen && <HeldCartsDialog unlock={unlock} cartEmpty={cart.length === 0} onResume={resumeCart} onClose={() => setHeldOpen(false)} />}
       {paying && (
         <PayDialog
@@ -645,6 +666,8 @@ export function SellScreen({
           methods={printer.profile?.paymentMethods ?? ['CASH']}
           qrImageUrl={printer.profile?.banglaQrImageUrl ?? null}
           giftCredit={exchangeCredit}
+          customer={customer}
+          token={unlock.token}
           pending={sale.isPending}
           onConfirm={(payments) => sale.mutate(payments)}
           onClose={() => !sale.isPending && setPaying(false)}
@@ -753,6 +776,8 @@ function PayDialog({
   methods,
   qrImageUrl,
   giftCredit,
+  customer,
+  token,
   pending,
   onConfirm,
   onClose,
@@ -762,6 +787,9 @@ function PayDialog({
   qrImageUrl: string | null;
   /** An exchange's store credit (Step 8), put in as a gift card line to start with. */
   giftCredit?: { code: string; amount: number } | null;
+  /** Due (Step 9) needs the customer's name and phone. */
+  customer: { name: string; phone: string };
+  token: string;
   pending: boolean;
   onConfirm: (payments: PosTenderInput[]) => void;
   onClose: () => void;
@@ -815,9 +843,21 @@ function PayDialog({
     BANGLA_QR: 'Transaction ID (optional)',
     BANK: 'Reference (optional)',
     GIFT_CARD: 'Gift card code',
+    DUE: 'Note (optional)',
     OTHER: 'Which method? (e.g. Upay)',
   };
   const otherMethods = methods.filter((m): m is Exclude<PosTender, 'CASH'> => m !== 'CASH');
+
+  // Due (Step 9): who owes it, and what they owe already.
+  const hasCustomer = !!customer.name.trim() && !!customer.phone.trim();
+  const dueLine = lines.find((l) => l.method === 'DUE');
+  const owes = useQuery({
+    queryKey: ['pos', 'due', customer.phone.trim()],
+    queryFn: () => posApi.dueLookup(customer.phone.trim(), token),
+    enabled: !!dueLine && hasCustomer,
+    retry: false,
+  });
+  const dueAfter = dueLine && owes.data ? round2(owes.data.balance + (Number(dueLine.amount) || 0)) : null;
 
   return (
     <PosDialog open onOpenChange={(o) => !o && onClose()} title="Payment" width="max-w-lg">
@@ -838,12 +878,21 @@ function PayDialog({
             <p className="mb-1.5 text-xs text-pos-muted">Paid another way? Tap it (tap more than one to split):</p>
             <div className="flex flex-wrap gap-2">
               {otherMethods.map((m) => (
-                <PosButton key={m} className="h-9" onClick={() => addLine(m)} disabled={cashDue <= 0}>
+                <PosButton
+                  key={m}
+                  className="h-9"
+                  onClick={() => addLine(m)}
+                  disabled={cashDue <= 0 || (m === 'DUE' && (!hasCustomer || !!dueLine))}
+                  title={m === 'DUE' && !hasCustomer ? 'Add the customer’s name and phone first (F4)' : undefined}
+                >
                   <Plus size={14} aria-hidden />
                   {TENDER_LABEL[m]}
                 </PosButton>
               ))}
             </div>
+            {otherMethods.includes('DUE') && !hasCustomer && (
+              <p className="mt-1.5 text-xs text-pos-muted">To put it on the customer’s due, close this and add their name and phone (F4).</p>
+            )}
           </div>
         )}
 
@@ -859,6 +908,21 @@ function PayDialog({
               <PosInput inputMode="decimal" value={l.amount} onChange={(e) => update(l.key, { amount: e.target.value })} aria-label={`${TENDER_LABEL[l.method]} amount`} className="tabular-nums" />
               <PosInput value={l.reference} maxLength={l.method === 'GIFT_CARD' ? 40 : 60} onChange={(e) => update(l.key, { reference: e.target.value })} placeholder={placeholder[l.method]} aria-label={placeholder[l.method]} />
             </div>
+            {l.method === 'DUE' && (
+              <p className="mt-2 text-xs text-pos-muted">
+                {customer.name.trim()} ({customer.phone.trim()})
+                {owes.data && (
+                  <>
+                    {' '}
+                    owes {taka(owes.data.balance)} now, <span className="font-medium text-pos-ink">{taka(dueAfter ?? 0)} after this sale</span>
+                    {owes.data.limit !== null && <> · limit {taka(owes.data.limit)}</>}
+                  </>
+                )}
+                {owes.data && owes.data.limit !== null && dueAfter !== null && dueAfter > owes.data.limit && (
+                  <span className="mt-1 block text-pos-alert">That’s over their limit, so the sale will be refused. Take more now, or a manager can raise the limit on the customer’s page.</span>
+                )}
+              </p>
+            )}
             {l.method === 'BANGLA_QR' && qrImageUrl && (
               <img src={qrImageUrl} alt="Scan to pay with any bank or MFS app" className="mx-auto mt-3 max-h-56 rounded-md border border-pos-line bg-white p-2" />
             )}
@@ -910,7 +974,7 @@ function CustomerDialog({ value, onSave, onClose }: { value: { name: string; pho
         }}
         className="space-y-4"
       >
-        <p className="text-sm text-pos-muted">Add a phone number to see this sale on the customer's record.</p>
+        <p className="text-sm text-pos-muted">Add a phone number to see this sale on the customer's record. Name and phone are both needed to put a sale on their due.</p>
         <Field label="Name">
           <PosInput autoFocus value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
         </Field>
@@ -986,6 +1050,12 @@ function SaleDone({
             <dt className="font-medium">Change</dt>
             <dd className="text-3xl font-semibold tabular-nums">{taka(cash?.change ?? 0)}</dd>
           </div>
+          {receipt.dueBalanceAfter != null && (
+            <div className="flex justify-between rounded-md bg-pos-page px-2 py-1.5">
+              <dt>{receipt.customerName} now owes in all</dt>
+              <dd className="font-semibold tabular-nums">{taka(receipt.dueBalanceAfter)}</dd>
+            </div>
+          )}
         </dl>
         {receipt.stockWarnings.length > 0 && (
           <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-left text-xs text-amber-800">

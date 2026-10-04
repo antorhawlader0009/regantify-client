@@ -7,11 +7,13 @@ import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
 import { normalizeBdPhone, whatsappNumber } from '../../../lib/bdPhone';
 import { formatDhakaDate, formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
 import { OrderStatusBadge } from '../order/orderStatus';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { ToggleRow } from '../../../components/product/ProductFormKit';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { CustomerDueSection } from './CustomerDueSection';
 import {
   EmptyState,
   StackedList,
@@ -171,7 +173,8 @@ export default function CustomerDetail() {
       toast.success('Customer deleted');
       navigate('/vendor/customers');
     },
-    onError: () => toast.error('Couldn’t delete this customer. Check your connection and try again.'),
+    // The server refuses while they owe money (POS due), with a message that says so.
+    onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t delete this customer. Check your connection and try again.')),
   });
 
   const back = (
@@ -245,6 +248,9 @@ export default function CustomerDetail() {
               {customer.blacklisted && (
                 <span className="rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">Blacklisted</span>
               )}
+              {customer.dueBalance > 0 && (
+                <span className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">Owes {formatMoney(customer.dueBalance)}</span>
+              )}
             </div>
             <p className="mt-0.5 text-sm tabular-nums text-neutral-600">{customer.phone}</p>
             {customer.email && <p className="truncate text-sm text-neutral-500">{customer.email}</p>}
@@ -286,6 +292,7 @@ export default function CustomerDetail() {
       </section>
 
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-4">
         {/* Order history */}
         <section className="min-w-0 rounded-xl border border-line bg-white p-3.5">
           <div className="mb-3 flex items-center justify-between gap-2 px-0.5">
@@ -354,6 +361,10 @@ export default function CustomerDetail() {
             </>
           )}
         </section>
+
+        {/* Due (baki) from counter sales, POS-system-plan.md Step 9 */}
+        <CustomerDueSection phone={customer.phone} />
+        </div>
 
         {/* Side column */}
         <div className="min-w-0 space-y-4">

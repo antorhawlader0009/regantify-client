@@ -12,6 +12,8 @@ export interface VendorCustomer {
   totalSpent: number;
   lastOrderAt: string;
   blacklisted: boolean;
+  /** What they owe from counter sales on due (POS); 0 for most customers. */
+  dueBalance: number;
 }
 
 export interface VendorCustomerOrder {
@@ -32,6 +34,8 @@ export interface VendorCustomerDetail extends VendorCustomer {
 export interface ListCustomersParams {
   search?: string;
   blacklistedOnly?: boolean;
+  /** Only customers who owe money (POS due). */
+  dueOnly?: boolean;
   page?: number;
   perPage?: number;
 }
@@ -81,6 +85,7 @@ export interface CustomerStats {
 export interface ExportCsvParams {
   search?: string;
   blacklistedOnly?: boolean;
+  dueOnly?: boolean;
   /** When given, only these phones are exported — the "select rows, then Export CSV" flow. */
   phones?: string[];
 }
@@ -106,6 +111,7 @@ export const customersApi = {
         params: {
           search: params.search,
           blacklistedOnly: params.blacklistedOnly,
+          dueOnly: params.dueOnly,
           phones: params.phones && params.phones.length > 0 ? params.phones.join(',') : undefined,
         },
       })

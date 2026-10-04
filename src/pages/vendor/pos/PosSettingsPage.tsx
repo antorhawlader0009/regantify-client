@@ -227,6 +227,11 @@ function SettingsForm({ settings, readOnly }: { settings: PosSettings; readOnly:
               </label>
             ))}
           </div>
+          {form.paymentMethods.includes('DUE') && (
+            <p className="mt-2 text-xs text-pos-muted">
+              Due (baki): the customer takes the goods and pays later. It needs their name and phone; what they owe shows under Customers, and the counter gets a “Collect due” button.
+            </p>
+          )}
           <BanglaQrField value={form.banglaQrImageUrl} onChange={(url) => set('banglaQrImageUrl', url)} disabled={readOnly} />
         </Section>
 

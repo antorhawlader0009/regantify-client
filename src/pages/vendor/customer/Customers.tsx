@@ -26,6 +26,7 @@ import {
   trClass,
 } from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
 
@@ -68,7 +69,8 @@ function useCustomerActions(customer: VendorCustomer) {
       setConfirmDelete(false);
       toast.success('Customer deleted.');
     },
-    onError: () => toast.error('Could not delete this customer. Please try again.'),
+    // Refused while they owe money (POS due); the server's message says so.
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not delete this customer. Please try again.')),
   });
 
   const menu = (
@@ -141,6 +143,9 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
       </td>
       <td className={`${td} whitespace-nowrap`}>{customer.orderCount}</td>
       <td className={`${td} whitespace-nowrap font-medium`}>{formatMoney(customer.totalSpent)}</td>
+      <td className={`${td} whitespace-nowrap`}>
+        {customer.dueBalance > 0 ? <span className="font-medium text-amber-700">{formatMoney(customer.dueBalance)}</span> : <span className="text-neutral-400">—</span>}
+      </td>
       <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDate(customer.lastOrderAt)}</td>
       <td className={td}>
         {menu}
@@ -160,6 +165,7 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
         <p className="truncate text-sm font-medium text-brand">{customer.name}</p>
         <p className="truncate text-xs text-neutral-500">
           {customer.phone} · {customer.orderCount} {customer.orderCount === 1 ? 'order' : 'orders'} · {formatMoney(customer.totalSpent)}
+          {customer.dueBalance > 0 && <span className="font-medium text-amber-700"> · owes {formatMoney(customer.dueBalance)}</span>}
         </p>
         {customer.blacklisted && (
           <div className="mt-1">
@@ -174,10 +180,10 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
   );
 }
 
-type CustomerFilter = 'ALL' | 'BLACKLISTED';
+type CustomerFilter = 'ALL' | 'BLACKLISTED' | 'DUE';
 
 /** One row of the exported CSV. */
-const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Blacklisted'];
+const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Due', 'Blacklisted'];
 
 function toExportRow(c: VendorCustomer): string[] {
   return [
@@ -190,6 +196,7 @@ function toExportRow(c: VendorCustomer): string[] {
     c.zip ?? '',
     String(c.orderCount),
     c.totalSpent.toFixed(2),
+    c.dueBalance.toFixed(2),
     c.blacklisted ? 'Yes' : 'No',
   ];
 }
@@ -214,6 +221,7 @@ export default function Customers() {
       customersApi.list({
         search: search.trim() || undefined,
         blacklistedOnly: filter === 'BLACKLISTED',
+        dueOnly: filter === 'DUE',
         page,
         perPage,
       }),
@@ -245,6 +253,7 @@ export default function Customers() {
       const rows = await customersApi.exportCsv({
         search: search.trim() || undefined,
         blacklistedOnly: filter === 'BLACKLISTED',
+        dueOnly: filter === 'DUE',
         phones: selected.size > 0 ? Array.from(selected) : undefined,
       });
       if (rows.length === 0) {
@@ -259,10 +268,12 @@ export default function Customers() {
     }
   };
 
-  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : search ? 'No customers match your search' : 'No customers yet';
+  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : filter === 'DUE' ? 'Nobody owes you money' : search ? 'No customers match your search' : 'No customers yet';
   const emptyHint =
     filter === 'BLACKLISTED'
       ? 'Customers you blacklist show up here, and can’t order with Cash on Delivery.'
+      : filter === 'DUE'
+        ? 'Counter sales paid by “Due (baki)” show up here until the customer pays.'
       : search
         ? 'Try a different name or phone number.'
         : 'Customers appear here after their first order. You can also add them yourself.';
@@ -290,6 +301,7 @@ export default function Customers() {
             <SelectBox ariaLabel="Filter customers" value={filter} onChange={(v) => setFilter(v as CustomerFilter)}>
               <option value="ALL">All customers</option>
               <option value="BLACKLISTED">Blacklisted</option>
+              <option value="DUE">Owes money (due)</option>
             </SelectBox>
             <button type="button" onClick={handleExportCsv} disabled={exporting} className={outlineBtn}>
               <Download size={15} />
@@ -333,6 +345,7 @@ export default function Customers() {
             <th className={th}>Address</th>
             <th className={th}>Orders</th>
             <th className={th}>Total spent</th>
+            <th className={th}>Due</th>
             <th className={th}>Last order</th>
             <th className={`${th} w-16`}>Actions</th>
           </tr>
