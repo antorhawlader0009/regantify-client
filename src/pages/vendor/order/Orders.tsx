@@ -27,7 +27,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { orderRef, ordersApi, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
+import { orderRef, ordersApi, paymentMethodLabel, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
 import { lmsApi } from '../../../lib/lmsApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import {
@@ -327,6 +327,11 @@ function OrderRow({
         <Link to={`/vendor/orders/${order.id}`} className="font-medium text-brand hover:underline">
           {orderRef(order)}
         </Link>
+        {order.source === 'POS' && (
+          <span className="ml-1.5 rounded border border-line bg-neutral-50 px-1 py-0.5 align-middle text-[10px] font-semibold text-neutral-600" title="Sold at the counter">
+            POS
+          </span>
+        )}
         <p className="mt-0.5 text-xs text-neutral-500">
           #{order.invoiceNumber} · {formatDateTime(order.createdAt)}
         </p>
@@ -428,7 +433,7 @@ function OrderRow({
       </td>
       <td className={`${td} whitespace-nowrap`}>
         <p className="font-medium">{formatPrice(vendorOrderTotal(order))}</p>
-        <p className="mt-0.5 text-xs text-neutral-500">{order.paymentMethod}</p>
+        <p className="mt-0.5 text-xs text-neutral-500">{order.source === 'POS' ? paymentMethodLabel(order.paymentMethod) : order.paymentMethod}</p>
       </td>
       <td className={td}>
         <DropdownMenu

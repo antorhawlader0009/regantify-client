@@ -17,6 +17,7 @@ import {
   PackageX,
   X,
   Infinity as InfinityIcon,
+  Printer,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
@@ -26,6 +27,7 @@ import { toast } from '../../../lib/toast';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
+import { PrintLabelsDialog } from '../../../components/product/PrintLabelsDialog';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -91,12 +93,14 @@ function ActionsMenu({
   onDelete,
   onChangeStatus,
   onCreateStockProduct,
+  onPrintLabels,
   atProductLimit,
 }: {
   onEdit: () => void;
   onDelete: () => void;
   onChangeStatus: () => void;
   onCreateStockProduct: () => void;
+  onPrintLabels: () => void;
   atProductLimit: boolean;
 }) {
   return (
@@ -113,6 +117,7 @@ function ActionsMenu({
     >
       <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
       <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>
+      <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>
       <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onCreateStockProduct())}>
         <span className="flex items-center gap-1.5">
           Create Stock Product
@@ -234,6 +239,8 @@ export default function AllProducts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [statusModalProduct, setStatusModalProduct] = useState<Product | null>(null);
   const [stockProductModalId, setStockProductModalId] = useState<string | null>(null);
+  // Print labels: the products whose barcode/price labels are being printed (one from the row menu, or the selection).
+  const [labelProductIds, setLabelProductIds] = useState<string[] | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Table look & feel (from the design reference): filter panel toggle,
@@ -573,6 +580,13 @@ export default function AllProducts() {
                 Clear
               </button>
               <button
+                onClick={() => setLabelProductIds(Array.from(selected))}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50"
+              >
+                <Printer size={13} aria-hidden />
+                Print labels
+              </button>
+              <button
                 onClick={handleBulkDelete}
                 className="h-8 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 hover:bg-red-50"
               >
@@ -730,6 +744,7 @@ export default function AllProducts() {
                       onDelete={() => handleDelete(p.id, p.name)}
                       onChangeStatus={() => setStatusModalProduct(p)}
                       onCreateStockProduct={() => setStockProductModalId(p.id)}
+                      onPrintLabels={() => setLabelProductIds([p.id])}
                       atProductLimit={atProductLimit}
                     />
                   </td>
@@ -762,6 +777,8 @@ export default function AllProducts() {
       )}
 
       {showImportModal && <ImportCsvModal onClose={() => setShowImportModal(false)} />}
+
+      {labelProductIds && <PrintLabelsDialog productIds={labelProductIds} onClose={() => setLabelProductIds(null)} />}
 
       <ConfirmDialog
         open={pendingDelete != null}

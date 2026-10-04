@@ -758,8 +758,5 @@ export const lmsApi = {
   deleteView: (id: string) => api.delete(`/v1/lms/views/${id}`).then((r) => r.data),
 };
 
-/** True for the server's "your plan doesn't include this" answer (HTTP 402 PLAN_LIMIT_EXCEEDED). */
-export function isPlanLocked(err: unknown): boolean {
-  const res = (err as { response?: { status?: number; data?: { code?: string } } })?.response;
-  return res?.status === 402 && res.data?.code === 'PLAN_LIMIT_EXCEEDED';
-}
+// Moved to api.ts so the POS shares it; re-exported here so LMS imports keep working.
+export { isPlanLocked } from './api';

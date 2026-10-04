@@ -18,6 +18,7 @@ import {
   useUnsavedChangesWarning,
 } from '../../../components/product/ProductFormKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { BarcodeInput } from '../../../components/product/BarcodeField';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
@@ -140,6 +141,7 @@ export default function EditProduct() {
 
   // Stock
   const [sku, setSku] = useState('');
+  const [barcode, setBarcode] = useState('');
   const [editingSku, setEditingSku] = useState(false);
   const [isPreOrder, setIsPreOrder] = useState(false);
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
@@ -191,6 +193,7 @@ export default function EditProduct() {
       discountPrice: (p.discountPrice ?? '').toString(),
       cost: (p.cost ?? '').toString(),
       sku: p.sku,
+      barcode: p.barcode ?? '',
       isPreOrder: p.isPreOrder,
       quoteOnly: p.quoteOnly ?? false,
       stockQuantity: p.stockQuantity != null ? String(p.stockQuantity) : '',
@@ -199,6 +202,7 @@ export default function EditProduct() {
       variationOptions: (p.variationOptions ?? []).map((o) => ({ name: o.name, values: o.values })),
       variants: (p.variants ?? []).map((v) => ({
         sku: v.sku,
+        barcode: v.barcode ?? undefined,
         optionValues: v.optionValues,
         stock: v.stock,
         // Numbers, as applyProduct() puts them into state.
@@ -236,6 +240,7 @@ export default function EditProduct() {
       discountPrice: discountPrice.toString(),
       cost: cost.toString(),
       sku,
+      barcode,
       isPreOrder,
       quoteOnly,
       stockQuantity,
@@ -285,6 +290,7 @@ export default function EditProduct() {
     setDiscountPrice(p.discountPrice ?? '');
     setCost(p.cost ?? '');
     setSku(p.sku);
+    setBarcode(p.barcode ?? '');
     setIsPreOrder(p.isPreOrder);
     setQuoteOnly(p.quoteOnly ?? false);
     setStockQuantity(p.stockQuantity != null ? String(p.stockQuantity) : '');
@@ -294,6 +300,7 @@ export default function EditProduct() {
     setVariants(
       (p.variants ?? []).map((v) => ({
         sku: v.sku,
+        barcode: v.barcode ?? undefined,
         optionValues: v.optionValues,
         stock: v.stock,
         // The server serializes these Decimal fields as strings (see
@@ -378,6 +385,8 @@ export default function EditProduct() {
         discountPrice: discountPrice.toString().trim() ? Number(discountPrice) : undefined,
         cost: cost.toString().trim() ? Number(cost) : undefined,
         sku: sku.trim(),
+        // Always sent: an empty field removes the barcode.
+        barcode: barcode.trim(),
         isPreOrder,
         quoteOnly,
         stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
@@ -601,6 +610,9 @@ export default function EditProduct() {
                     </button>
                   </div>
                 )}
+              </Field>
+              <Field label="Barcode" tooltip="What a barcode scanner reads at your POS counter. Use the code printed on the pack, or Generate one for your own goods." hint="Optional.">
+                <BarcodeInput value={barcode} onChange={setBarcode} />
               </Field>
               {variationOptions.length === 0 ? (
                 <Field label="Stock quantity" hint="Leave empty for unlimited stock.">

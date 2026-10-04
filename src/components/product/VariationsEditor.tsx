@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Plus, Camera } from 'lucide-react';
+import { X, Plus, Camera, Wand2 } from 'lucide-react';
 import { productInputClass } from './ProductFormPieces';
 import type { VariationOptionInput, ProductVariantInput, VariationValuePhotoInput } from '../../lib/productsApi';
 import { productsApi } from '../../lib/productsApi';
+import { apiErrorMessage } from '../../lib/api';
+import { toast } from '../../lib/toast';
 
 interface VariationsEditorProps {
   productSku: string;
@@ -157,6 +159,8 @@ export function VariationsEditor({
       variants.map((v) => {
         if (v.sku !== sku) return v;
         if (field === 'sku') return { ...v, sku: value };
+        // A barcode never has spaces (scanners don't type any).
+        if (field === 'barcode') return { ...v, barcode: value.replace(/s+/g, '').slice(0, 48) };
         const num = value.trim() === '' ? undefined : Number(value);
         return { ...v, [field]: num };
       }),
@@ -164,6 +168,22 @@ export function VariationsEditor({
   };
 
   const totalStock = variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
+
+  // "Generate missing barcodes": one in-store code for every variant that has none (POS scanning).
+  const [generatingBarcodes, setGeneratingBarcodes] = useState(false);
+  const missingBarcodes = variants.filter((v) => !v.barcode?.trim()).length;
+  const generateMissingBarcodes = async () => {
+    setGeneratingBarcodes(true);
+    try {
+      const codes = await productsApi.generateBarcodes(missingBarcodes);
+      let next = 0;
+      onVariantsChange(variants.map((v) => (v.barcode?.trim() ? v : { ...v, barcode: codes[next++] ?? v.barcode })));
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Couldn't make barcodes. Try again."));
+    } finally {
+      setGeneratingBarcodes(false);
+    }
+  };
 
   // The currently selected photo option, re-derived from `options` so it
   // stays valid even if the option list changes underneath it (e.g. the
@@ -414,12 +434,26 @@ export function VariationsEditor({
 
       {variants.length > 0 && (
         <div>
-          <p className="text-sm font-medium text-regantify-text mb-2">Variation Stocks</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-regantify-text">Variation Stocks</p>
+            {missingBarcodes > 0 && (
+              <button
+                type="button"
+                onClick={generateMissingBarcodes}
+                disabled={generatingBarcodes}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-medium text-regantify-text hover:bg-neutral-50 disabled:opacity-50"
+              >
+                <Wand2 size={13} aria-hidden />
+                {generatingBarcodes ? 'Making…' : `Generate ${missingBarcodes === variants.length ? 'barcodes' : 'missing barcodes'}`}
+              </button>
+            )}
+          </div>
           <div className="overflow-x-auto rounded-lg border border-line">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-neutral-50 text-left text-regantify-text-muted">
                   <th className="px-3 py-2.5 font-medium">SKU</th>
+                  <th className="px-3 py-2.5 font-medium">Barcode</th>
                   <th className="px-3 py-2.5 font-medium">Stock</th>
                   <th className="px-3 py-2.5 font-medium">List Price</th>
                   <th className="px-3 py-2.5 font-medium">Discount Price</th>
@@ -437,6 +471,23 @@ export function VariationsEditor({
                         onChange={(e) => updateVariantField(v.sku, 'sku', e.target.value.slice(0, 60))}
                         maxLength={60}
                         className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text focus:outline-none"
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="text"
+                        value={v.barcode ?? ''}
+                        onChange={(e) => updateVariantField(v.sku, 'barcode', e.target.value)}
+                        // A scanner presses Enter after the code; don't let it submit the form.
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.preventDefault();
+                        }}
+                        placeholder="Scan or type"
+                        aria-label={`Barcode for ${v.sku}`}
+                        maxLength={48}
+                        autoComplete="off"
+                        spellCheck={false}
+                        className="w-36 px-2.5 py-1.5 rounded-lg bg-white border border-line font-mono text-xs text-regantify-text placeholder:font-sans placeholder:text-regantify-text-muted/70 focus:outline-none"
                       />
                     </td>
                     <td className="px-3 py-2">

@@ -34,6 +34,7 @@ import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
+import { PosReceiptButton, PosSaleReturns } from '../../../components/pos/receipt/PosReceiptButton';
 import { Dialog } from '../../../components/ui/Dialog';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
@@ -325,7 +326,7 @@ export default function OrderDetail() {
             )}
           </div>
           <p className="mt-0.5 text-sm text-neutral-500">
-            Serial #{order.invoiceNumber} · placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : 'added by hand'}
+            Serial #{order.invoiceNumber} · placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : order.source === 'POS' ? 'sold at the counter' : 'added by hand'}
           </p>
         </div>
         {trackingLink && (
@@ -404,7 +405,8 @@ export default function OrderDetail() {
               </div>
               {Number(order.vatAmount) > 0 && (
                 <div className="flex justify-between text-neutral-600">
-                  <dt>COD charge</dt>
+                  {/* A POS sale with VAT-inclusive prices: the VAT is inside the subtotal, not added. */}
+                  <dt>{order.vatIncluded ? 'Includes VAT' : 'COD charge'}</dt>
                   <dd className="tabular-nums">{formatPrice(order.vatAmount)}</dd>
                 </div>
               )}
@@ -467,6 +469,17 @@ export default function OrderDetail() {
             )}
           </Card>
 
+          {/* A counter sale was handed over in the shop: no delivery, no courier, no tracking. */}
+          {order.source === 'POS' ? (
+            <Card title="Sold at the counter">
+              <p className="text-sm text-regantify-text">
+                {order.posCashierName ? `Rung up by ${order.posCashierName}.` : 'Rung up at the POS.'} Paid and handed over in the shop.
+              </p>
+              <PosReceiptButton orderId={order.id} className={`${outlineBtn} mt-3 inline-flex items-center gap-1.5`} />
+              <PosSaleReturns orderId={order.id} />
+            </Card>
+          ) : (
+          <>
           <Card title="Delivery" id="delivery">
             <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
             <p className="mt-1 text-xs text-neutral-500">
@@ -727,6 +740,8 @@ export default function OrderDetail() {
           <Card title="Customer tracking" id="tracking">
             <OrderTrackingCard orderId={order.id} onLinkChanged={invalidateOrder} />
           </Card>
+          </>
+          )}
 
           <Card title="Change status">
             <select

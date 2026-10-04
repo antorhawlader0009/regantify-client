@@ -13,6 +13,7 @@ import {
   MessageSquare,
   UsersRound,
   PhoneCall,
+  ScanBarcode,
   Headphones,
   Settings,
   CreditCard,
@@ -88,6 +89,8 @@ export const vendorNav: NavSection[] = [
   // LMS: a dashboard page with its own section tabs (LMS-plan.md Step 4). Its sections
   // (Leads, Call Desk, Tasks, Reports, Settings) are tabs at the top of the page.
   { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms' },
+  // POS: selling over the counter, a dashboard page with its own section tabs (POS-system-plan.md).
+  { label: 'POS', icon: ScanBarcode, group: 'Main Menu', path: '/vendor/pos' },
   {
     label: 'Product',
     icon: PackageSearch,

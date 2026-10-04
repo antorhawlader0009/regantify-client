@@ -42,6 +42,16 @@ export default {
           'stage-won': 'var(--lms-stage-won)',
           'stage-lost': 'var(--lms-stage-lost)',
         },
+        // POS has its own light theme too; values in pages/vendor/pos/pos-theme.css.
+        pos: {
+          page: 'var(--pos-page)',
+          surface: 'var(--pos-surface)',
+          ink: 'var(--pos-ink)',
+          muted: 'var(--pos-muted)',
+          line: 'var(--pos-line)',
+          go: 'var(--pos-go)',
+          alert: 'var(--pos-alert)',
+        },
       },
       fontFamily: {
         brand: ['"Irish Grover"', 'cursive'],

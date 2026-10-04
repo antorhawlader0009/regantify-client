@@ -124,6 +124,12 @@ import ReportsPage from './pages/vendor/lms/ReportsPage';
 import LmsSettingsPage from './pages/vendor/lms/LmsSettingsPage';
 import ImportLeadsPage from './pages/vendor/lms/ImportLeadsPage';
 import { LmsLayout } from './components/lms/LmsLayout';
+import { PosLayout } from './components/pos/PosLayout';
+import PosSettingsPage from './pages/vendor/pos/PosSettingsPage';
+import PosRegistersPage from './pages/vendor/pos/PosRegistersPage';
+import PosStaffPage from './pages/vendor/pos/PosStaffPage';
+import PosSellPage from './pages/vendor/pos/PosSellPage';
+import { POS_HOME } from './lib/posApi';
 
 const queryClient = new QueryClient();
 
@@ -197,7 +203,8 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/steadfast' &&
     r.path !== '/vendor/courier/redx' &&
     r.path !== '/vendor/analytics' &&
-    !r.path.startsWith('/vendor/lms'),
+    !r.path.startsWith('/vendor/lms') &&
+    !r.path.startsWith('/vendor/pos'),
 );
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
@@ -375,6 +382,15 @@ export default function App() {
                   <Route path="/vendor/lms/settings" element={<LmsSettingsPage />} />
                   <Route path="/vendor/lms/*" element={<Navigate to="/vendor/lms/leads" replace />} />
                 </Route>
+                {/* POS: same idea as the LMS, a dashboard page with its own section tabs
+                    (POS-system-plan.md). The full-screen sell screen (Step 4) mounts outside VendorLayout. */}
+                <Route element={<PosLayout />}>
+                  <Route path="/vendor/pos" element={<Navigate to={POS_HOME} replace />} />
+                  <Route path="/vendor/pos/registers" element={<PosRegistersPage />} />
+                  <Route path="/vendor/pos/staff" element={<PosStaffPage />} />
+                  <Route path="/vendor/pos/settings" element={<PosSettingsPage />} />
+                  <Route path="/vendor/pos/*" element={<Navigate to={POS_HOME} replace />} />
+                </Route>
                 {vendorPlaceholderRoutes.map((r) => (
                   <Route key={r.path} path={r.path} element={<PlaceholderPage title={r.label} />} />
                 ))}
@@ -388,6 +404,8 @@ export default function App() {
               {/* Pathao shipping labels (pathao-plan.md Step 12) — also
                   outside <VendorLayout>, so only the labels print. */}
               <Route path="/vendor/courier/pathao/labels" element={<PathaoLabelsPrintPage />} />
+              {/* POS counter (POS-system-plan.md Step 4): full screen, outside <VendorLayout>. */}
+              <Route path="/vendor/pos/sell" element={<PosSellPage />} />
             </Route>
 
             {/* Super Admin dashboard — protected, SUPER_ADMIN role only */}

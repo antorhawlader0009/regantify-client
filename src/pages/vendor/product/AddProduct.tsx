@@ -27,6 +27,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { BarcodeInput } from '../../../components/product/BarcodeField';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -89,6 +90,7 @@ export default function AddProduct() {
 
   // Stock
   const [sku, setSku] = useState('');
+  const [barcode, setBarcode] = useState('');
   const [isPreOrder, setIsPreOrder] = useState(false);
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
@@ -244,6 +246,7 @@ export default function AddProduct() {
       discountPrice: discountPrice.trim() ? Number(discountPrice) : undefined,
       cost: cost.trim() ? Number(cost) : undefined,
       sku: sku.trim(),
+      barcode: barcode.trim() || undefined,
       isPreOrder,
       quoteOnly,
       stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
@@ -369,6 +372,9 @@ export default function AddProduct() {
                   maxLength={50}
                   className={productInputClass}
                 />
+              </Field>
+              <Field label="Barcode" tooltip="What a barcode scanner reads at your POS counter. Use the code printed on the pack, or Generate one for your own goods." hint="Optional.">
+                <BarcodeInput value={barcode} onChange={setBarcode} />
               </Field>
               {variationOptions.length === 0 ? (
                 <Field label="Stock quantity" hint="Leave empty for unlimited stock.">

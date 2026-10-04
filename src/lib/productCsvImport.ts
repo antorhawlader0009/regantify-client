@@ -18,6 +18,12 @@ export interface ImportField {
 export const IMPORT_FIELDS: ImportField[] = [
   { key: 'name', label: 'Product Name', required: true, aliases: ['product name', 'name', 'title'] },
   { key: 'sku', label: 'SKU', required: true, aliases: ['sku', 'sku code', 'product sku'] },
+  {
+    key: 'barcode',
+    label: 'Barcode',
+    hint: 'For the POS scanner. In Excel, format this column as Text',
+    aliases: ['barcode', 'bar code', 'ean', 'upc', 'gtin'],
+  },
   { key: 'price', label: 'Price', required: true, aliases: ['price', 'list price', 'selling price'] },
   { key: 'description', label: 'Description', aliases: ['description', 'product description', 'details'] },
   { key: 'category', label: 'Category', aliases: ['category', 'product category'] },
@@ -68,6 +74,7 @@ const SAMPLE_HEADERS = [
   'Discount Price',
   'Cost',
   'SKU',
+  'Barcode',
   'Is Pre-Order (yes/no)',
   'Stock Quantity',
   'Weight',
@@ -86,6 +93,7 @@ const SAMPLE_ROWS: string[][] = [
     '600',
     '400',
     'ORG-HNY-007',
+    '2000000000015',
     'no',
     '60',
     '500',
@@ -102,6 +110,7 @@ const SAMPLE_ROWS: string[][] = [
     '',
     '120',
     'PHN-CASE-006',
+    '',
     'no',
     '100',
     '25',
@@ -167,6 +176,12 @@ export function mapCsvRow(raw: Record<string, string>, mapping: ColumnMapping, r
   const sku = getMapped(raw, mapping, 'sku');
   if (!sku) errors.push('SKU is required.');
 
+  // Excel turns a long number into "8.94E+12" unless the column is Text; that can't be a real barcode.
+  const barcode = getMapped(raw, mapping, 'barcode').replace(/s+/g, '');
+  if (/^d+(.d+)?e+d+$/i.test(barcode)) {
+    errors.push('Barcode "' + barcode + '" was changed by Excel. Format the Barcode column as Text and export again.');
+  }
+
   const priceRaw = getMapped(raw, mapping, 'price');
   let price: number | undefined;
   if (!priceRaw) {
@@ -214,6 +229,7 @@ export function mapCsvRow(raw: Record<string, string>, mapping: ColumnMapping, r
     discountPrice,
     cost,
     sku,
+    barcode: barcode || undefined,
     isPreOrder: toYesNo(getMapped(raw, mapping, 'isPreOrder')),
     stockQuantity,
     weight,

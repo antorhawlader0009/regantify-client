@@ -12,6 +12,8 @@ export interface ProductVariant {
   id: string;
   productId: string;
   sku: string;
+  /** What a scanner reads (POS); unique per store across products and variants. */
+  barcode?: string | null;
   optionValues: Record<string, string>;
   stock: number;
   listPrice?: string | null;
@@ -72,6 +74,8 @@ export interface Product {
   // Shown as a read-only column on Marketing > Campaigns' product table.
   freeShipping: boolean;
   sku: string;
+  /** What a scanner reads (POS); unique per store across products and variants. */
+  barcode?: string | null;
   isPreOrder: boolean;
   quoteOnly?: boolean;
   stockQuantity?: number | null;
@@ -105,6 +109,7 @@ export interface CreateProductPayload {
   discountPrice?: number;
   cost?: number;
   sku: string;
+  barcode?: string;
   isPreOrder?: boolean;
   quoteOnly?: boolean;
   stockQuantity?: number;
@@ -122,6 +127,7 @@ export interface VariationOptionInput {
 
 export interface ProductVariantInput {
   sku: string;
+  barcode?: string;
   optionValues: Record<string, string>;
   stock?: number;
   listPrice?: number;
@@ -163,6 +169,8 @@ export interface UpdateProductPayload {
   discountPrice?: number;
   cost?: number;
   sku?: string;
+  /** An empty string removes it. */
+  barcode?: string;
   isPreOrder?: boolean;
   quoteOnly?: boolean;
   stockQuantity?: number;
@@ -221,6 +229,10 @@ export const productsApi = {
   // ever callable (see the button's disabled condition).
   aiGenerate: (name: string, photoUrl: string) =>
     api.post<GeneratedProductInfo>('/v1/products/ai-generate', { name, photoUrl }).then((r) => r.data),
+
+  // "Generate" next to a barcode field: in-store EAN-13 codes nothing in this store uses yet.
+  generateBarcodes: (count = 1) =>
+    api.post<{ barcodes: string[] }>('/v1/products/barcodes/generate', { count }).then((r) => r.data.barcodes),
 
   findOne: (id: string) => api.get<Product>(`/v1/products/${id}`).then((r) => r.data),
 

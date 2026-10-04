@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Printer } from 'lucide-react';
-import { orderRef, vendorOrderTotal, type Order } from '../../../lib/ordersApi';
+import { orderRef, paymentMethodLabel, vendorOrderTotal, type Order } from '../../../lib/ordersApi';
 import { getVendorSettings } from '../../../lib/vendorApi';
 import { Dialog } from '../../../components/ui/Dialog';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
@@ -21,11 +21,7 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Dhaka' });
 }
 
-function paymentLabel(method: string) {
-  if (method === 'COD') return 'Cash on delivery';
-  if (method === 'ONLINE_PAYMENT') return 'Paid online';
-  return method.replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase());
-}
+const paymentLabel = paymentMethodLabel;
 
 /**
  * "Download Invoice" / "Print Invoice" from the Actions menu. Rather
@@ -145,7 +141,8 @@ export function InvoiceModal({ order, onOpenChange }: InvoiceModalProps) {
                     </div>
                     {Number(order.vatAmount) > 0 && (
                       <div className="flex justify-between text-neutral-600">
-                        <span>COD charge</span>
+                        {/* A POS sale with VAT-inclusive prices: the VAT is inside the subtotal, not added. */}
+                        <span>{order.vatIncluded ? 'Includes VAT' : 'COD charge'}</span>
                         <span className="tabular-nums">{formatPrice(order.vatAmount)}</span>
                       </div>
                     )}

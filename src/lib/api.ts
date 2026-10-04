@@ -83,6 +83,12 @@ api.interceptors.response.use(
  * "you're at your plan's limit, upgrade to continue" message instead of
  * a hardcoded generic one that discards it.
  */
+/** True for the server's "your plan doesn't include this" answer (HTTP 402 PLAN_LIMIT_EXCEEDED). */
+export function isPlanLocked(err: unknown): boolean {
+  const res = (err as { response?: { status?: number; data?: { code?: string } } })?.response;
+  return res?.status === 402 && res.data?.code === 'PLAN_LIMIT_EXCEEDED';
+}
+
 export function apiErrorMessage(err: unknown, fallback: string): string {
   const data = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data;
   const message = data?.message;

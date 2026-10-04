@@ -1,0 +1,31 @@
+/*
+ * POS light theme (POS-system-plan.md D12). Like the LMS, the POS doesn't
+ * follow the current dashboard look on purpose: the dashboard gets
+ * redesigned near the end of the project, and this file is the one place
+ * that re-skins the POS when that happens. Components use the `pos-*`
+ * Tailwind colours (tailwind.config.js), which point at these variables;
+ * never hard-code a hex value in a POS component.
+ */
+.pos-root {
+  --pos-page: #f4f4f1;
+  --pos-surface: #ffffff;
+  --pos-ink: #1b1f1d;
+  --pos-muted: #5d6460;
+  --pos-line: #dcded9;
+  /* The one action colour: Pay, Open register, a switch that's on. */
+  --pos-go: #1f6b4f;
+  --pos-alert: #b42318;
+
+  font-family: 'IBM Plex Sans', 'Hind Siliguri', system-ui, sans-serif;
+  color: var(--pos-ink);
+}
+
+.pos-root :focus-visible {
+  outline: 2px solid var(--pos-ink);
+  outline-offset: 2px;
+}
+
+/* Dim layer behind POS dialogs (they render in a portal, so they carry pos-root too). */
+.pos-overlay {
+  background: rgb(27 31 29 / 0.4);
+}

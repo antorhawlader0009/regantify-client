@@ -49,7 +49,10 @@ export interface Order {
   invoiceNumber: number;
   /** Public order number ("FAS-261003-7K3M9QD"): what shoppers and couriers see. invoiceNumber is the store's own serial. Null on an order the backfill has not reached. */
   publicCode?: string | null;
-  source: 'STOREFRONT' | 'MANUAL';
+  /** POS = sold over the counter (POS-system-plan.md). */
+  source: 'STOREFRONT' | 'MANUAL' | 'POS';
+  /** POS sales only: who rang it up (snapshot). */
+  posCashierName?: string | null;
   status: OrderStatus;
   label?: string | null;
   courierProvider: CourierProvider;
@@ -106,6 +109,8 @@ export interface Order {
   // every order regardless of paymentMethod. See Vendor.vatChargeBdt /
   // Order.vatAmount in schema.prisma.
   vatAmount: string;
+  /** True on a POS sale whose prices already include VAT: vatAmount is part of the subtotal, shown as "includes VAT", never added. */
+  vatIncluded?: boolean;
   // Store > Payment Gateway's per-gateway Platform Charge — independent
   // of vatAmount above. See VendorPaymentGateway.platformChargeBdt /
   // Order.platformChargeAmount in schema.prisma. Always the real amount
@@ -318,4 +323,25 @@ export const ordersApi = {
 /** The order number to show: the public code, or ORDER-n for an order that has none. */
 export function orderRef(order: { publicCode?: string | null; invoiceNumber: number }): string {
   return order.publicCode ?? `ORDER-${order.invoiceNumber}`;
+}
+
+const POS_METHOD_LABELS: Record<string, string> = {
+  CASH: 'Cash',
+  CARD: 'Card',
+  BKASH: 'bKash',
+  NAGAD: 'Nagad',
+  BANGLA_QR: 'Bangla QR',
+  BANK: 'Bank',
+  GIFT_CARD: 'Gift card',
+  DUE: 'Due',
+  OTHER: 'Other',
+  MIXED: 'Split payment',
+};
+
+/** Order.paymentMethod in words: "Cash on delivery", "Paid online", "bKash (counter)"... */
+export function paymentMethodLabel(method: string): string {
+  if (method === 'COD') return 'Cash on delivery';
+  if (method === 'ONLINE_PAYMENT') return 'Paid online';
+  if (method.startsWith('POS_')) return `${POS_METHOD_LABELS[method.slice(4)] ?? method.slice(4)} (counter)`;
+  return method.replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase());
 }
