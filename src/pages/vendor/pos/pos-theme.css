@@ -15,6 +15,11 @@
   /* The one action colour: Pay, Open register, a switch that's on. */
   --pos-go: #1f6b4f;
   --pos-alert: #b42318;
+  /* The counter screen (sell screen redesign): its yellow buttons and badges, and the dark top bar. */
+  --pos-accent: #f6cf3c;
+  --pos-accent-ink: #1b1f1d;
+  --pos-bar: #262a28;
+  --pos-bar-ink: #ffffff;
 
   font-family: 'IBM Plex Sans', 'Hind Siliguri', system-ui, sans-serif;
   color: var(--pos-ink);

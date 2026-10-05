@@ -317,7 +317,10 @@ export async function printSlip(el: HTMLElement, title: string, widthMm: number,
       // Fall through to the dialog so the customer still gets a receipt.
     }
   }
-  await printElement(el, title, { size: `${widthMm}mm auto`, padding: '0' });
+  // The page is exactly the slip: its width × its measured height ("80mm auto" isn't a valid page
+  // size, so the browser threw it away and printed on its default paper with its own header/footer).
+  const heightMm = Math.ceil((el.getBoundingClientRect().height * 25.4) / 96) + 4;
+  await printElement(el, title, { size: `${widthMm}mm ${Math.max(heightMm, 40)}mm`, padding: '0' });
   return 'dialog' as const;
 }
 

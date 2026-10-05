@@ -67,13 +67,22 @@
 .lms-print-sheet {
   display: none;
 }
+/*
+ * Only while the LMS sheet is on the page: a named page for its paper, and :has()
+ * for the hiding. This stylesheet is in every page's CSS (one bundle), and these
+ * rules used to be global, so every other print (receipts, invoices, labels) came
+ * out blank on A4 landscape.
+ */
+@page lms-sheet {
+  size: A4 landscape;
+  margin: 10mm;
+}
 @media print {
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
-  body > *:not(.lms-print-sheet) {
+  body:has(> .lms-print-sheet) > *:not(.lms-print-sheet) {
     display: none !important;
+  }
+  .lms-print-sheet {
+    page: lms-sheet;
   }
   body {
     background: #fff !important;

@@ -1,7 +1,36 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Banknote, CheckCircle2, CloudOff, MonitorSmartphone, RefreshCw, ClipboardList, HandCoins, Lock, MessageSquare, Minus, Pause, Percent, Plus, Printer, ScanBarcode, Search, Trash2, Undo2, User } from 'lucide-react';
+import {
+  Banknote,
+  CheckCircle2,
+  ChevronDown,
+  ClipboardList,
+  CloudOff,
+  HandCoins,
+  Layers,
+  LayoutGrid,
+  Lock,
+  MapPin,
+  Maximize2,
+  MessageSquare,
+  Minimize2,
+  Minus,
+  MonitorSmartphone,
+  PackageOpen,
+  Pause,
+  Plus,
+  Printer,
+  RefreshCw,
+  ScanBarcode,
+  Search,
+  Tag,
+  Trash2,
+  Undo2,
+  UserPlus,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { useReceiptPrinter } from '../receipt/useReceiptPrinter';
 import { cartTotals, lineAmounts, round2, toSaleLines, type CartLine } from './cartMath';
 import { ReturnsDialog } from './ReturnsDialog';
@@ -42,6 +71,12 @@ import { usePosCatalog } from './usePosCatalog';
 
 
 const optionText = (values: Record<string, string>) => Object.values(values).join(' / ');
+/** Up to this many categories show as one-tap chips; more get the dropdown. */
+const CHIP_LIMIT = 8;
+/** "N left" on a product photo at or below this count (and above 0). */
+const LOW_STOCK = 99;
+/** At or below this, "Only N left" in red: the next customer may get the last one. */
+const URGENT_STOCK = 5;
 
 function errorCode(err: unknown): string | undefined {
   return (err as { response?: { data?: { code?: string } } })?.response?.data?.code;
@@ -71,6 +106,18 @@ export function SellScreen({
   const sync = useOfflineSync(unlock.token, () => catalog.refresh());
   const offline = !sync.online;
   const [syncListOpen, setSyncListOpen] = useState(false);
+  // The cart's summary can be folded away for more room; full screen hides the browser's own bars.
+  const [summaryOpen, setSummaryOpen] = useState(true);
+  const [fullscreen, setFullscreen] = useState(() => !!document.fullscreenElement);
+  useEffect(() => {
+    const onChange = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    else void document.documentElement.requestFullscreen?.().catch(() => toast.error('This browser can’t go full screen here.'));
+  };
   const [cart, setCart] = useState<CartLine[]>([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -415,24 +462,48 @@ export function SellScreen({
     toast.success(`Back on screen: "${name}"`);
   }
 
+  /** Lock (the next person unlocks with a PIN). Offline it's refused: unlocking needs the server. */
+  function lockOrSay() {
+    if (offline) toast.error('You’re offline. Unlocking again needs the internet, so the counter stays with you for now.');
+    else onLock();
+  }
+
+  // A dark-bar button: icon always, the label from wide screens up.
+  const barBtn = 'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-white/20 px-2.5 text-sm text-pos-bar-ink hover:bg-white/10 disabled:opacity-40';
+  const needsNet = offline ? 'Needs the internet' : undefined;
+
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-pos-line bg-pos-surface px-3 sm:px-5">
-        <Link to="/vendor/pos/registers" className="rounded-md p-2 text-pos-muted hover:bg-pos-page hover:text-pos-ink" aria-label="Back to the dashboard">
-          <ArrowLeft size={18} />
+      {/* The dark top bar: who and where, the counter's tools, full screen and session out. */}
+      <header className="flex h-14 shrink-0 items-center gap-2 bg-pos-bar px-3 text-pos-bar-ink sm:px-4">
+        {printer.profile?.logoUrl ? (
+          <img src={printer.profile.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full bg-white object-contain p-0.5" />
+        ) : (
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pos-accent text-sm font-bold text-pos-accent-ink">{storeName.trim().charAt(0).toUpperCase() || 'P'}</span>
+        )}
+        <Link to="/vendor/pos/registers" className={barBtn} aria-label="Back to the dashboard" title="Back to the dashboard">
+          <LayoutGrid size={16} aria-hidden />
         </Link>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{storeName}</p>
-          <p className="truncate text-xs text-pos-muted">
-            {registerName} · {unlock.cashier.displayName}
-          </p>
-        </div>
-        <div className="ml-auto flex items-center gap-1">
+        <button type="button" onClick={lockOrSay} className={`${barBtn} max-w-[11rem]`} title="Switch cashier (asks for a PIN)">
+          <UserRound size={15} aria-hidden />
+          <span className="truncate">{unlock.cashier.displayName}</span>
+          <ChevronDown size={14} className="shrink-0 opacity-70" aria-hidden />
+        </button>
+        <span className={`${barBtn} hidden max-w-[12rem] cursor-default hover:bg-transparent md:inline-flex`} title={storeName}>
+          <MapPin size={15} aria-hidden />
+          <span className="truncate">{registerName}</span>
+        </span>
+        <button type="button" className={barBtn} onClick={() => setReturnsOpen(true)} disabled={offline} title={needsNet ?? 'Returns, exchanges and voids'}>
+          <Undo2 size={15} aria-hidden />
+          <span className="hidden lg:inline">Returns</span>
+        </button>
+
+        <div className="ml-auto flex min-w-0 items-center gap-1.5 overflow-x-auto">
           {(offline || sync.waiting.length > 0 || sync.failed.length > 0) && (
             <button
               type="button"
               onClick={() => setSyncListOpen(true)}
-              className={`inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium ${sync.failed.length > 0 ? 'bg-red-50 text-pos-alert' : offline ? 'bg-amber-50 text-amber-800' : 'bg-pos-page text-pos-ink'}`}
+              className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium ${sync.failed.length > 0 ? 'bg-pos-alert text-white' : offline ? 'bg-pos-accent text-pos-accent-ink' : 'bg-white/15 text-pos-bar-ink'}`}
             >
               {offline ? <CloudOff size={14} aria-hidden /> : <RefreshCw size={14} className={sync.syncing ? 'animate-spin' : ''} aria-hidden />}
               {offline ? 'Offline' : 'Sending'}
@@ -440,92 +511,107 @@ export function SellScreen({
               {sync.failed.length > 0 && ` · ${sync.failed.length} refused`}
             </button>
           )}
-          <PosButton variant="quiet" className="h-9" onClick={() => setReturnsOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
-            <Undo2 size={15} aria-hidden />
-            <span className="hidden sm:inline">Returns</span>
-          </PosButton>
-          {printer.profile?.paymentMethods.includes('DUE') && (
-            <PosButton variant="quiet" className="h-9" onClick={() => setDueOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
-              <HandCoins size={15} aria-hidden />
-              <span className="hidden sm:inline">Collect due</span>
-            </PosButton>
-          )}
-          <PosButton variant="quiet" className="h-9" onClick={() => openCustomerDisplay() || toast.error('The browser blocked the new window. Allow pop-ups for this site.')} title="Open the customer screen in a new window (drag it to the second monitor)">
-            <MonitorSmartphone size={15} aria-hidden />
-            <span className="hidden xl:inline">Customer screen</span>
-          </PosButton>
-          <PosButton variant="quiet" className="h-9" onClick={() => setCashOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
+          <button type="button" className={barBtn} onClick={() => setCashOpen(true)} disabled={offline} title={needsNet ?? 'Cash drawer: pay in, pay out, no sale, X report'}>
             <Banknote size={15} aria-hidden />
-            <span className="hidden sm:inline">Cash</span>
-          </PosButton>
-          <PosButton variant="quiet" className="h-9" onClick={() => setHeldOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
-            <ClipboardList size={15} aria-hidden />
-            <span className="hidden sm:inline">On hold</span>
-          </PosButton>
-          {lastReceipt && (
-            <PosButton variant="quiet" className="h-9" onClick={() => printer.print(lastReceipt)} disabled={printer.printing}>
-              <Printer size={15} aria-hidden />
-              <span className="hidden sm:inline">Reprint last</span>
-            </PosButton>
+            <span className="hidden xl:inline">Cash</span>
+          </button>
+          {printer.profile?.paymentMethods.includes('DUE') && (
+            <button type="button" className={barBtn} onClick={() => setDueOpen(true)} disabled={offline} title={needsNet ?? 'Collect a customer’s due'}>
+              <HandCoins size={15} aria-hidden />
+              <span className="hidden xl:inline">Due</span>
+            </button>
           )}
+          <button type="button" className={barBtn} onClick={() => setHeldOpen(true)} disabled={offline} title={needsNet ?? 'Carts on hold'}>
+            <ClipboardList size={15} aria-hidden />
+            <span className="hidden xl:inline">On hold</span>
+          </button>
+          {lastReceipt && (
+            <button type="button" className={barBtn} onClick={() => printer.print(lastReceipt)} disabled={printer.printing} title="Reprint the last receipt">
+              <Printer size={15} aria-hidden />
+              <span className="hidden xl:inline">Reprint</span>
+            </button>
+          )}
+          <button
+            type="button"
+            className={barBtn}
+            onClick={() => openCustomerDisplay() || toast.error('The browser blocked the new window. Allow pop-ups for this site.')}
+            title="Open the customer screen in a new window (drag it to the second monitor)"
+          >
+            <MonitorSmartphone size={15} aria-hidden />
+          </button>
+          <button type="button" className={barBtn} onClick={toggleFullscreen} aria-label={fullscreen ? 'Leave full screen' : 'Full screen'} title={fullscreen ? 'Leave full screen' : 'Full screen'}>
+            {fullscreen ? <Minimize2 size={15} aria-hidden /> : <Maximize2 size={15} aria-hidden />}
+          </button>
+          {/* "Lock", not "session out": a session here is the register's shift, which this doesn't close. */}
+          <button type="button" className={barBtn} onClick={lockOrSay} title="Lock the counter (the next person unlocks with their PIN)">
+            <Lock size={15} aria-hidden />
+            <span className="hidden sm:inline">Lock</span>
+          </button>
         </div>
-        <PosButton
-          variant="secondary"
-          className="h-9"
-          onClick={() => {
-            // Unlocking checks the PIN on the server, so locking offline would shut the counter until it's back.
-            if (offline) toast.error('You’re offline. Unlocking again needs the internet, so the counter stays with you for now.');
-            else onLock();
-          }}
-        >
-          <Lock size={15} aria-hidden />
-          Lock
-        </PosButton>
       </header>
 
-      {/* Two columns from a 10" tablet held upright (768px) up; the cart narrower until a laptop. */}
-      <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_400px]">
+      {/* Two white panels on the page: products, and the cart. Two columns from a 10" tablet held upright (768px). */}
+      <div className="grid min-h-0 flex-1 gap-3 p-3 md:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_400px]">
         {/* Products */}
-        <section className="flex min-h-0 flex-col">
-          <form onSubmit={onSearchSubmit} className="shrink-0 border-b border-pos-line bg-pos-surface p-3">
-            <label className="relative block">
+        <section className="flex min-h-0 flex-col rounded-[10px] border border-pos-line bg-pos-surface">
+          <form onSubmit={onSearchSubmit} className="flex shrink-0 gap-2 border-b border-pos-line p-3">
+            <button
+              type="button"
+              onClick={() => setCameraOpen(true)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-pos-line text-pos-ink hover:bg-pos-page"
+              aria-label="Scan with the camera"
+              title="Scan with the camera"
+            >
+              <ScanBarcode size={18} aria-hidden />
+            </button>
+            {/* Many categories: the yellow dropdown. A few: one-tap chips under the search (below). */}
+            {categories.length > CHIP_LIMIT && (
+              <label className="relative shrink-0">
+                <span className="sr-only">Category</span>
+                <select
+                  value={category ?? ''}
+                  onChange={(e) => setCategory(e.target.value || null)}
+                  className="h-11 w-36 appearance-none truncate rounded-md bg-pos-accent pl-3 pr-8 text-sm font-medium text-pos-accent-ink outline-none sm:w-44"
+                >
+                  <option value="">All categories</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={15} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-pos-accent-ink" aria-hidden />
+              </label>
+            )}
+            <label className="relative min-w-0 flex-1">
               <span className="sr-only">Search or scan</span>
-              <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-pos-muted" aria-hidden />
               <input
                 ref={searchRef}
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Scan a barcode, or search by name or SKU (F2)"
+                placeholder="Search product, or scan a barcode (F2)"
                 autoComplete="off"
                 spellCheck={false}
-                className="h-12 w-full rounded-lg border border-pos-line bg-pos-page pl-10 pr-10 text-base outline-none focus:border-pos-ink"
+                className="h-11 w-full rounded-md border border-pos-line bg-pos-surface pl-3 pr-10 text-base outline-none focus:border-pos-ink"
               />
-              <button
-                type="button"
-                onClick={() => setCameraOpen(true)}
-                className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-pos-muted hover:bg-pos-surface hover:text-pos-ink"
-                aria-label="Scan with the camera"
-                title="Scan with the camera"
-              >
-                <ScanBarcode size={18} aria-hidden />
-              </button>
+              <Search size={18} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-pos-ink" aria-hidden />
             </label>
-            {categories.length > 0 && (
-              <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
-                {[null, ...categories].map((c) => (
-                  <button
-                    key={c ?? 'all'}
-                    type="button"
-                    onClick={() => setCategory(c)}
-                    className={`h-8 shrink-0 rounded-full border px-3 text-xs ${category === c ? 'border-pos-ink bg-pos-ink text-white' : 'border-pos-line bg-pos-surface text-pos-ink'}`}
-                  >
-                    {c ?? 'All'}
-                  </button>
-                ))}
-              </div>
-            )}
           </form>
+          {categories.length > 0 && categories.length <= CHIP_LIMIT && (
+            <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-pos-line px-3 py-2">
+              {[null, ...categories].map((c) => (
+                <button
+                  key={c ?? 'all'}
+                  type="button"
+                  onClick={() => setCategory(c)}
+                  className={`h-8 shrink-0 rounded-full px-3 text-xs font-medium ${category === c ? 'bg-pos-accent text-pos-accent-ink' : 'border border-pos-line bg-pos-surface text-pos-ink hover:bg-pos-page'}`}
+                >
+                  {c ?? 'All'}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             {catalog.status === 'loading' && <p className="text-sm text-pos-muted">Loading products…</p>}
@@ -538,7 +624,7 @@ export function SellScreen({
               </p>
             )}
             {catalog.status === 'ready' && visible.length === 0 && <p className="text-sm text-pos-muted">No products match.</p>}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
               {visible.slice(0, 120).map((p) => (
                 <ProductTile key={p.id} product={p} onPick={() => addLine(p, null)} />
               ))}
@@ -548,19 +634,38 @@ export function SellScreen({
         </section>
 
         {/* Cart */}
-        <aside className="flex min-h-0 flex-col border-t border-pos-line bg-pos-surface md:border-l md:border-t-0">
-          <div className="flex shrink-0 items-center justify-between border-b border-pos-line px-4 py-3">
-            <h2 className="text-sm font-semibold">
-              Cart {totals.items > 0 && <span className="font-normal text-pos-muted">· {totals.items} item{totals.items === 1 ? '' : 's'}</span>}
-            </h2>
-            <button type="button" onClick={() => setCustomerOpen(true)} className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm hover:bg-pos-page">
-              <User size={15} aria-hidden />
-              {customer.name.trim() || customer.phone.trim() || 'Walk-in customer'}
+        <aside className="flex min-h-0 flex-col rounded-[10px] border border-pos-line bg-pos-surface">
+          <div className="flex shrink-0 gap-2 p-3">
+            <button
+              type="button"
+              onClick={() => setCustomerOpen(true)}
+              className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-md border border-pos-line px-3 text-left text-sm hover:bg-pos-page"
+            >
+              <UserRound size={16} className="shrink-0 text-pos-muted" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{customer.name.trim() || customer.phone.trim() || 'Walk-in customer'}</span>
+              <ChevronDown size={15} className="shrink-0 text-pos-muted" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCustomerOpen(true)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-pos-accent text-pos-accent-ink"
+              aria-label="Add the customer (F4)"
+              title="Add the customer (F4)"
+            >
+              <UserPlus size={18} aria-hidden />
             </button>
           </div>
 
           <ul className="min-h-[8rem] flex-1 divide-y divide-pos-line overflow-y-auto">
-            {cart.length === 0 && <li className="px-4 py-8 text-center text-sm text-pos-muted">Scan or tap a product to start a sale.</li>}
+            {cart.length === 0 && (
+              <li className="mx-3 flex items-center gap-4 rounded-lg bg-pos-page px-5 py-6">
+                <PackageOpen size={44} strokeWidth={1.25} className="shrink-0 text-pos-muted" aria-hidden />
+                <div>
+                  <p className="font-semibold text-pos-muted">Your cart awaits.</p>
+                  <p className="mt-0.5 text-sm text-pos-muted">Scan a barcode or tap a product to add it.</p>
+                </div>
+              </li>
+            )}
             {cart.map((l) => {
               const over = l.stock !== null && l.quantity > l.stock;
               const amounts = lineAmounts(l);
@@ -607,73 +712,77 @@ export function SellScreen({
             })}
           </ul>
 
-          <div className="shrink-0 border-t border-pos-line p-4">
-            <dl className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-pos-muted">Subtotal</dt>
-                <dd className="tabular-nums">{taka(totals.subtotal)}</dd>
-              </div>
-              {totals.cartOff > 0 && (
-                <div className="flex justify-between text-pos-go">
-                  <dt>Discount{cartDiscount?.type === 'PERCENT' ? ` ${cartDiscount.value}%` : ''}</dt>
-                  <dd className="tabular-nums">-{taka(totals.cartOff)}</dd>
-                </div>
-              )}
-              {couponCode && (
-                <div className="flex justify-between text-pos-go">
-                  <dt>
-                    Coupon {couponCode}{' '}
-                    <button
-                      type="button"
-                      className="text-xs text-pos-muted underline"
-                      onClick={() => {
-                        setCouponCode(null);
-                        setCouponInput('');
+          <div className="relative shrink-0 border-t border-pos-line">
+            {/* Fold the summary away to give the cart more room. */}
+            <button
+              type="button"
+              onClick={() => setSummaryOpen((o) => !o)}
+              className="absolute left-1/2 top-0 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-pos-accent text-pos-accent-ink"
+              aria-label={summaryOpen ? 'Hide the details' : 'Show the details'}
+              aria-expanded={summaryOpen}
+            >
+              <ChevronDown size={14} className={summaryOpen ? '' : 'rotate-180'} aria-hidden />
+            </button>
+            {summaryOpen && (
+              <div className="px-4 pb-2 pt-4">
+                <dl className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <dt>Sub total</dt>
+                    <dd className="tabular-nums">{taka(totals.subtotal)}</dd>
+                  </div>
+                  {totals.cartOff > 0 && (
+                    <div className="flex justify-between text-pos-go">
+                      <dt>Discount{cartDiscount?.type === 'PERCENT' ? ` ${cartDiscount.value}%` : ''}</dt>
+                      <dd className="tabular-nums">-{taka(totals.cartOff)}</dd>
+                    </div>
+                  )}
+                  {couponCode && (
+                    <div className="flex justify-between text-pos-go">
+                      <dt>
+                        Coupon {couponCode}{' '}
+                        <button
+                          type="button"
+                          className="text-xs text-pos-muted underline"
+                          onClick={() => {
+                            setCouponCode(null);
+                            setCouponInput('');
+                          }}
+                        >
+                          remove
+                        </button>
+                      </dt>
+                      <dd className="tabular-nums">-{taka(totals.coupon)}</dd>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <dt>{totals.vatIncluded && totals.vat > 0 ? 'Includes VAT' : `VAT${settings?.vatPercent ? ` ${settings.vatPercent}%` : ''}`}</dt>
+                    <dd className="tabular-nums">{taka(totals.vat)}</dd>
+                  </div>
+                </dl>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  <PosButton className="h-9" onClick={() => setHoldOpen(true)} disabled={cart.length === 0 || offline} title={needsNet}>
+                    <Pause size={14} aria-hidden />
+                    Hold
+                  </PosButton>
+                  {!couponCode && !offline && (
+                    <form
+                      className="flex min-w-[10rem] flex-1 gap-1"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (couponInput.trim()) setCouponCode(couponInput.trim().toUpperCase());
                       }}
                     >
-                      remove
-                    </button>
-                  </dt>
-                  <dd className="tabular-nums">-{taka(totals.coupon)}</dd>
+                      <PosInput value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="Coupon" aria-label="Coupon code" maxLength={40} className="h-9" disabled={cart.length === 0} />
+                      <PosButton type="submit" className="h-9" disabled={!couponInput.trim() || cart.length === 0}>
+                        Apply
+                      </PosButton>
+                    </form>
+                  )}
                 </div>
-              )}
-              {totals.vat > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-pos-muted">{totals.vatIncluded ? 'Includes VAT' : `VAT ${settings?.vatPercent}%`}</dt>
-                  <dd className="tabular-nums">{taka(totals.vat)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between pt-1 text-lg font-semibold">
-                <dt>Total</dt>
-                <dd className="tabular-nums">{taka(totals.total)}</dd>
               </div>
-            </dl>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <PosButton className="h-9" onClick={() => setDiscountOpen(true)} disabled={cart.length === 0 || offline} title={offline ? 'Needs the internet' : undefined}>
-                <Percent size={14} aria-hidden />
-                Discount
-              </PosButton>
-              <PosButton className="h-9" onClick={() => setHoldOpen(true)} disabled={cart.length === 0 || offline} title={offline ? 'Needs the internet' : undefined}>
-                <Pause size={14} aria-hidden />
-                Hold
-              </PosButton>
-              {!couponCode && !offline && (
-                <form
-                  className="flex min-w-[10rem] flex-1 gap-1"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (couponInput.trim()) setCouponCode(couponInput.trim().toUpperCase());
-                  }}
-                >
-                  <PosInput value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder="Coupon" aria-label="Coupon code" maxLength={40} className="h-9" disabled={cart.length === 0} />
-                  <PosButton type="submit" className="h-9" disabled={!couponInput.trim() || cart.length === 0}>
-                    Apply
-                  </PosButton>
-                </form>
-              )}
-            </div>
+            )}
             {exchangeCredit && (
-              <p className="mt-2 flex items-center justify-between gap-2 rounded-md bg-pos-page px-3 py-2 text-xs">
+              <p className="mx-4 mb-2 flex items-center justify-between gap-2 rounded-md bg-pos-page px-3 py-2 text-xs">
                 <span>
                   Exchange: store credit {exchangeCredit.code} ({taka(exchangeCredit.amount)}) goes on this sale at Pay.
                 </span>
@@ -683,15 +792,49 @@ export function SellScreen({
               </p>
             )}
             {approval && approvalCovers(approval, approvalNeed() ?? { discountPercent: 0, priceOverride: false }) && (
-              <p className="mt-2 text-xs text-pos-go">Approved by {approval.managerName}</p>
+              <p className="mx-4 mb-2 text-xs text-pos-go">Approved by {approval.managerName}</p>
             )}
-            <div className="mt-3 flex gap-2">
-              <PosButton className="h-12" onClick={clearCart} disabled={cart.length === 0}>
-                Clear
-              </PosButton>
-              <PosButton variant="primary" className="h-12 flex-1 text-base" onClick={startPay} disabled={cart.length === 0}>
-                Pay {cart.length > 0 && taka(totals.total)} <span className="text-xs font-normal opacity-80">(F8)</span>
-              </PosButton>
+
+            <div className="flex items-baseline justify-between bg-pos-bar px-4 py-3.5 text-pos-bar-ink">
+              <span className="text-lg font-semibold">
+                Total <span className="text-sm font-normal opacity-80">({totals.items} {totals.items === 1 ? 'item' : 'items'})</span>
+              </span>
+              <span className="text-2xl font-semibold tabular-nums">{taka(totals.total)}</span>
+            </div>
+            <div className="flex gap-2 p-3">
+              {/* The one loud thing on the screen: what the cashier does next. */}
+              <button
+                type="button"
+                onClick={startPay}
+                disabled={cart.length === 0}
+                className="flex h-14 min-w-0 flex-1 items-center justify-between gap-3 rounded-lg bg-pos-go px-4 text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <span className="text-lg font-bold">Pay</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  {cart.length > 0 && <span className="truncate text-xl font-bold tabular-nums">{taka(totals.total)}</span>}
+                  <kbd className="rounded-md bg-white/20 px-1.5 py-0.5 font-sans text-[11px] font-semibold">F8</kbd>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiscountOpen(true)}
+                disabled={cart.length === 0 || offline}
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-pos-bar text-pos-bar-ink disabled:opacity-40"
+                aria-label="Discount on the whole sale"
+                title={needsNet ?? 'Discount on the whole sale'}
+              >
+                <Tag size={18} aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={clearCart}
+                disabled={cart.length === 0}
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-pos-alert text-white disabled:opacity-40"
+                aria-label="Clear the cart"
+                title="Clear the cart (Esc clears the search)"
+              >
+                <X size={20} aria-hidden />
+              </button>
             </div>
           </div>
         </aside>
@@ -867,30 +1010,50 @@ function QtyButton({ children, onClick, label }: { children: React.ReactNode; on
   );
 }
 
-function stockLabel(stock: number | null, isPreOrder: boolean) {
-  if (isPreOrder || stock === null) return null;
-  if (stock <= 0) return <span className="text-pos-alert">Out of stock</span>;
-  return <span>{stock} in stock</span>;
-}
-
 function ProductTile({ product, onPick }: { product: PosCatalogProduct; onPick: () => void }) {
   const hasVariants = product.variants.length > 0;
   const prices = hasVariants ? product.variants.map((v) => v.price) : [product.price];
+  const lists = hasVariants ? product.variants.map((v) => Math.max(v.listPrice, v.price)) : [Math.max(product.listPrice, product.price)];
   const min = Math.min(...prices);
-  const totalStock = hasVariants ? product.variants.reduce((s, v) => s + Math.max(v.stock, 0), 0) : product.stock;
+  const max = Math.max(...prices);
+  const listMin = Math.min(...lists);
+  const listMax = Math.max(...lists);
+  const cut = listMax > max || listMin > min;
+  const range = (a: number, b: number) => (a === b ? taka(a) : `${taka(a)} – ${taka(b)}`);
+  const totalStock = product.isPreOrder ? null : hasVariants ? product.variants.reduce((s, v) => s + Math.max(v.stock, 0), 0) : product.stock;
+  const out = totalStock !== null && totalStock <= 0;
+  const urgent = totalStock !== null && totalStock > 0 && totalStock <= URGENT_STOCK;
+  // A pill that reads on any photo: solid colour, a thin edge and a soft lift off the picture.
+  const pill = 'absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-5 shadow-sm';
   return (
-    <button type="button" onClick={onPick} className="flex flex-col overflow-hidden rounded-lg border border-pos-line bg-pos-surface text-left hover:border-pos-ink">
-      <div className="aspect-square w-full bg-pos-page">
-        {product.photo && <img src={product.photo} alt="" loading="lazy" className="h-full w-full object-cover" />}
+    <button type="button" onClick={onPick} className="group flex flex-col rounded-lg p-1 text-left transition-transform active:scale-[0.97]">
+      <div className="relative aspect-square w-full overflow-hidden rounded-md border border-pos-line bg-pos-page group-hover:border-pos-ink">
+        {product.photo && <img src={product.photo} alt="" loading="lazy" className={`h-full w-full object-contain ${out ? 'opacity-60 grayscale' : ''}`} />}
+        {/* Stock on the photo: gone (red), almost gone (red), getting low (yellow). */}
+        {out ? (
+          <span className={`${pill} bg-pos-alert text-white`}>Out of stock</span>
+        ) : urgent ? (
+          <span className={`${pill} bg-pos-alert text-white`}>Only {totalStock} left</span>
+        ) : (
+          // Solid dark with a light edge: readable on light and dark photos alike.
+          totalStock !== null && totalStock <= LOW_STOCK && <span className={`${pill} bg-pos-ink text-white`}>{totalStock} left</span>
+        )}
+        {product.isPreOrder && <span className={`${pill} bg-pos-bar text-pos-bar-ink`}>Pre-order</span>}
+        {/* Sizes / colours to choose from. */}
+        {hasVariants && (
+          <span
+            className="absolute bottom-2 left-2 flex h-7 w-7 items-center justify-center rounded-full bg-pos-accent text-pos-accent-ink shadow-sm ring-1 ring-black/10"
+            title={`${product.variants.length} options to choose from`}
+          >
+            <Layers size={14} aria-hidden />
+          </span>
+        )}
       </div>
-      <div className="flex flex-1 flex-col gap-0.5 p-2.5">
-        <p className="line-clamp-2 text-sm font-medium leading-snug">{product.name}</p>
-        <p className="mt-auto text-sm font-semibold tabular-nums">
-          {hasVariants && prices.some((p) => p !== min) ? 'from ' : ''}
-          {taka(min)}
-        </p>
-        <p className="text-xs text-pos-muted">{stockLabel(totalStock, product.isPreOrder)}</p>
-      </div>
+      <p className="mt-2 line-clamp-2 text-sm leading-snug">{product.name}</p>
+      <p className="mt-0.5 text-[15px] font-semibold tabular-nums">
+        {range(min, max)}
+        {cut && <span className="ml-1.5 text-xs font-normal text-pos-muted line-through">{range(listMin, listMax)}</span>}
+      </p>
     </button>
   );
 }

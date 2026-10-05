@@ -51,6 +51,10 @@ export default {
           line: 'var(--pos-line)',
           go: 'var(--pos-go)',
           alert: 'var(--pos-alert)',
+          accent: 'var(--pos-accent)',
+          'accent-ink': 'var(--pos-accent-ink)',
+          bar: 'var(--pos-bar)',
+          'bar-ink': 'var(--pos-bar-ink)',
         },
       },
       fontFamily: {
