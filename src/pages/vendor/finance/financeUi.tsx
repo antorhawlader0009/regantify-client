@@ -27,15 +27,52 @@ export function SignedAmount({ t, className = '' }: { t: Pick<Transaction, 'type
 /** "ORDER-123" inside a ledger description becomes a link to that order. */
 export function TransactionDescription({ t }: { t: Transaction }) {
   const match = t.orderId ? t.description.match(/ORDER-\d+|[A-Z]{3}-\d{6}-[0-9A-Z]{7}/) : null;
-  if (!match || match.index == null) return <>{t.description}</>;
+  const text =
+    !match || match.index == null ? (
+      <>{t.description}</>
+    ) : (
+      <>
+        {t.description.slice(0, match.index)}
+        <Link to={`/vendor/orders/${t.orderId}`} className="font-medium text-brand hover:underline">
+          {match[0]}
+        </Link>
+        {t.description.slice(match.index + match[0].length)}
+      </>
+    );
   return (
     <>
-      {t.description.slice(0, match.index)}
-      <Link to={`/vendor/orders/${t.orderId}`} className="font-medium text-brand hover:underline">
-        {match[0]}
-      </Link>
-      {t.description.slice(match.index + match[0].length)}
+      {text}
+      <DueBadge t={t} />
+      {t.clearedDue && Number(t.clearedDue.amount) > 0 && (
+        <span className="mt-0.5 block text-xs text-neutral-500">
+          {formatTaka(t.clearedDue.amount)} of this cleared your due
+          {t.clearedDue.orders.length > 0 ? ` (${t.clearedDue.orders.join(', ')})` : ''}.
+        </span>
+      )}
     </>
+  );
+}
+
+/**
+ * A charge taken while the wallet had too little: "Due" until later money covers it, then
+ * "Paid from <order>". The charge is only ever counted once; this just says whether it's still owed.
+ */
+function DueBadge({ t }: { t: Transaction }) {
+  if (!t.due) return null;
+  if (t.due.status === 'OPEN') {
+    return (
+      <span className="ml-2 inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-amber-200">
+        Due
+      </span>
+    );
+  }
+  return (
+    <span
+      title={`Paid ${formatDhakaDateTime(t.due.paidAt)}`}
+      className="ml-2 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200"
+    >
+      {t.due.paidBy ? `Paid from ${t.due.paidBy}` : 'Paid'}
+    </span>
   );
 }
 

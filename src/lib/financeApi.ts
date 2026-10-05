@@ -12,6 +12,14 @@ export interface Transaction {
   orderId?: string | null;
   withdrawRequestId?: string | null;
   createdAt: string;
+  /**
+   * Display-only (the amounts and running balance are the ledger's own): a charge that took the
+   * balance below 0 is a due, OPEN until later money brings it back to 0 or more, then PAID by that
+   * money's order (null when it wasn't an order, e.g. a top-up).
+   */
+  due?: { status: 'OPEN' } | { status: 'PAID'; paidBy: string | null; paidAt: string };
+  /** On money that arrived while the balance was below 0: how much of it cleared that due, and for which orders. */
+  clearedDue?: { amount: string; orders: string[] };
 }
 
 export interface TransactionsPage {
