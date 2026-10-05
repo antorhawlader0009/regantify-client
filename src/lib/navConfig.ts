@@ -145,7 +145,6 @@ export const vendorNav: NavSection[] = [
         children: [
           { label: 'Branding', path: '/vendor/store/branding' },
           { label: 'Customize', path: '/vendor/store/customize' },
-          { label: 'Navigation', path: '/vendor/store/navigation' },
           { label: 'Header Editor', path: '/vendor/store/header-editor' },
           { label: 'Footer', path: '/vendor/store/footer' },
           { label: 'Layout Settings', path: '/vendor/store/layout-settings' },

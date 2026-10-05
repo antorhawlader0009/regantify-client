@@ -55,6 +55,7 @@ import { CustomCss, CustomHeadScripts } from './pages/vendor/store/design/Custom
 import JavaScriptCode from './pages/vendor/store/design/JavaScriptCode';
 import HeaderEditor from './pages/vendor/store/design/HeaderEditor';
 import LayoutSettings from './pages/vendor/store/design/LayoutSettings';
+import Customize from './pages/vendor/store/design/Customize';
 import SiteBanner from './pages/vendor/store/design/SiteBanner';
 import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
@@ -181,6 +182,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/integrations' &&
     r.path !== '/vendor/store/header-editor' &&
     r.path !== '/vendor/store/layout-settings' &&
+    r.path !== '/vendor/store/customize' &&
     r.path !== '/vendor/store/site-banner' &&
     r.path !== '/vendor/store/product-display' &&
     r.path !== '/vendor/store/product-card' &&
@@ -321,6 +323,9 @@ export default function App() {
                 <Route path="/vendor/store/integrations/external-api" element={<ExternalApi />} />
                 <Route path="/vendor/store/header-editor" element={<HeaderEditor />} />
                 <Route path="/vendor/store/layout-settings" element={<LayoutSettings />} />
+                <Route path="/vendor/store/customize" element={<Customize />} />
+                {/* Menus are edited in the Header Editor (and Layout Settings, Footer); there is no separate Navigation page. */}
+                <Route path="/vendor/store/navigation" element={<Navigate to="/vendor/store/header-editor" replace />} />
                 <Route path="/vendor/store/site-banner" element={<SiteBanner />} />
                 <Route path="/vendor/store/product-display" element={<ProductDisplay />} />
                 <Route path="/vendor/store/product-card" element={<ProductCardDisplay />} />

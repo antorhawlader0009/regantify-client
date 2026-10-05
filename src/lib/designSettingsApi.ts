@@ -25,6 +25,49 @@ export interface StoreMenuItem {
   value: string;
 }
 
+/** The StorePal home page's sections, for Store > Design > Customize. Mirrored by the server's HOME_SECTION_IDS and the storefront's homeSections.ts. */
+export type HomeSectionId =
+  | 'HERO'
+  | 'FLASH_SALE'
+  | 'CAMPAIGNS'
+  | 'TOP_SELLING'
+  | 'CATEGORY_SHORTCUTS'
+  | 'CATEGORY_SECTIONS'
+  | 'HIGHLIGHTS'
+  | 'REVIEWS';
+
+export interface HomeSection {
+  id: HomeSectionId;
+  enabled: boolean;
+}
+
+/** The icons a highlight can use; mirrored by the server's HOME_HIGHLIGHT_ICONS and the storefront's highlightIcons.ts. */
+export type HomeHighlightIcon =
+  | 'TRUCK'
+  | 'SHIELD_CHECK'
+  | 'HAND_COINS'
+  | 'ROTATE_CCW'
+  | 'HEADSET'
+  | 'BADGE_CHECK'
+  | 'CLOCK'
+  | 'GIFT'
+  | 'LEAF'
+  | 'LOCK'
+  | 'STAR'
+  | 'TAG'
+  | 'PACKAGE'
+  | 'MAP_PIN'
+  | 'HEART'
+  | 'SPARKLES';
+
+/** One entry of the home page's highlights band (free delivery, easy returns...). `id` only keys the list in the editor. */
+export interface HomeHighlight {
+  id: string;
+  icon: HomeHighlightIcon;
+  title: string;
+  text: string;
+}
+
 export interface DesignSettings {
   productImageShape: ProductImageShape;
   galleryStyle: ProductGalleryStyle;
@@ -53,6 +96,11 @@ export interface DesignSettings {
   headerLeftMenu: StoreMenuItem[];
   headerRightMenu: StoreMenuItem[];
   mobileMenu: StoreMenuItem[];
+
+  // Empty = StorePal's own order with everything on / its three built-in highlights.
+  homeSections: HomeSection[];
+  homeHighlights: HomeHighlight[];
+  homeHighlightsHeading: string | null;
 }
 
 // Text fields go out as "" to clear them (the server stores null).
