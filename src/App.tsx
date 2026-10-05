@@ -87,6 +87,7 @@ import Coupons from './pages/vendor/marketing/Coupons';
 import AddCoupon from './pages/vendor/marketing/AddCoupon';
 import Campaigns from './pages/vendor/marketing/Campaigns';
 import AddCampaign from './pages/vendor/marketing/AddCampaign';
+import PopupCampaignBuilder from './pages/vendor/marketing/PopupCampaignBuilder';
 import Discounts from './pages/vendor/marketing/Discounts';
 import AddDiscount from './pages/vendor/marketing/AddDiscount';
 import FlashSales from './pages/vendor/marketing/FlashSales';
@@ -410,6 +411,9 @@ export default function App() {
                   (landing-plan.md §4.2), while still sitting inside the same
                   VENDOR/STAFF ProtectedRoute as every other vendor route. */}
               <Route path="/vendor/store/landing-pages/:id/builder" element={<LandingPageBuilder />} />
+              {/* Marketing > Campaigns > Popup builder: full screen like the landing page builder. */}
+              <Route path="/vendor/marketing/campaigns/popup/new" element={<PopupCampaignBuilder />} />
+              <Route path="/vendor/marketing/campaigns/popup/:id/edit" element={<PopupCampaignBuilder />} />
               {/* Pathao shipping labels (pathao-plan.md Step 12) — also
                   outside <VendorLayout>, so only the labels print. */}
               <Route path="/vendor/courier/pathao/labels" element={<PathaoLabelsPrintPage />} />

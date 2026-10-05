@@ -54,7 +54,7 @@ function PlanBadge() {
 
 function Badge({ children }: { children: string }) {
   return (
-    <span className="animate-pop-in inline-flex translate-y-[3px] items-center rounded-full border border-[#d9ed94] bg-[#d9ed94] px-1.5 py-px text-[8.5px] font-semibold uppercase leading-tight tracking-wider text-brand">
+    <span className="animate-pop-in inline-flex translate-y-[3px] items-center rounded-full border border-brand-lime bg-brand-lime px-1.5 py-px text-[8.5px] font-semibold uppercase leading-tight tracking-wider text-brand-dark">
       {children}
     </span>
   );
@@ -63,11 +63,11 @@ function Badge({ children }: { children: string }) {
 const rowClass = (active: boolean, collapsed: boolean) =>
   `relative flex w-full items-center rounded-md py-2.5 text-[14px] ${
     collapsed ? 'justify-center px-0' : 'gap-3 px-3'
-  } ${active ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-800 hover:bg-neutral-100'}`;
+  } ${active ? 'nav-active' : 'text-neutral-800 hover:bg-neutral-100'}`;
 
 const subLinkClass = ({ isActive }: { isActive: boolean }) =>
   `block flex-1 rounded-md px-3 py-2 text-[13px] ${
-    isActive ? 'bg-neutral-100 font-medium text-neutral-900' : 'text-neutral-600 hover:bg-neutral-50'
+    isActive ? 'sub-active bg-neutral-100 font-medium text-neutral-900' : 'text-neutral-600 hover:bg-neutral-50'
   }`;
 
 const DESKTOP_QUERY = '(min-width: 1024px)'; // Tailwind `lg`
@@ -160,7 +160,7 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
                 to={c.path}
                 className={({ isActive }) =>
                   `block rounded-md px-3 py-1.5 text-[12px] ${
-                    isActive ? 'bg-neutral-100 font-medium text-neutral-900' : 'text-neutral-500 hover:bg-neutral-50'
+                    isActive ? 'sub-active bg-neutral-100 font-medium text-neutral-900' : 'text-neutral-500 hover:bg-neutral-50'
                   }`
                 }
               >

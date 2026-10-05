@@ -11,7 +11,7 @@ type Range = '7' | '30';
 type Metric = 'sales' | 'orders';
 
 /** The theme's brand green (tailwind `brand`); TrendChart takes a plain color. */
-const BRAND = '#1F4A44';
+const BRAND = '#4F46E5';
 
 const RANGES: { id: Range; label: string }[] = [
   { id: '7', label: '7 days' },

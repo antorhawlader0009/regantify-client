@@ -127,7 +127,7 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      <div className="sticky top-0 z-20 -mx-3 bg-[#f4f4f4]/95 px-3 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-20 -mx-3 bg-[#efeff6]/95 px-3 py-2 backdrop-blur sm:-mx-6 sm:px-6">
         <PillTabs<AnalyticsTab>
           className=""
           value={tab}

@@ -15,7 +15,7 @@ export function VendorLayout() {
   const isLms = useLocation().pathname.startsWith('/vendor/lms');
 
   // Marks <body> while the vendor dashboard is open so index.css can swap its
-  // white surfaces for #FBFBFB. On <body> (not this div) so dropdowns and
+  // white surfaces for #FAFAFD. On <body> (not this div) so dropdowns and
   // dialogs rendered into a portal get it too.
   useEffect(() => {
     document.body.classList.add('vendor-panel');
@@ -24,7 +24,7 @@ export function VendorLayout() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar sections={vendorNav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
-      <div className="flex min-w-0 flex-1 flex-col bg-[#f4f4f4] lg:border-l lg:border-line">
+      <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
         <Topbar sections={vendorNav} onMenuClick={() => setMenuOpen(true)} />
         <main className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={vendorNav} />

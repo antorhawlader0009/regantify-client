@@ -4,27 +4,29 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Dashboard palette, from the final theme (regantify-new-theme/):
-        // dark green primary, lime for the active nav item and highlights,
-        // blue for a secondary action, #ececec hairlines on white.
+        // Dashboard palette. The values live in index.css as RGB channels
+        // (--c-*): indigo by default (the vendor panel, from the
+        // regantify-admin theme zip) and red under body.admin-panel (from
+        // regantify-admin2), so the two dashboards read as different
+        // places. Tailwind needs the channel form to keep /opacity working.
         brand: {
-          DEFAULT: '#1F4A44',
-          dark: '#173A35',
-          lime: '#D9EE94',
+          DEFAULT: 'rgb(var(--c-brand) / <alpha-value>)',
+          dark: 'rgb(var(--c-brand-dark) / <alpha-value>)',
+          lime: 'rgb(var(--c-accent) / <alpha-value>)', // the "lime" name stays; it is the soft highlight colour now
           blue: '#1D6BF3',
         },
-        line: '#ECECEC',
+        line: 'rgb(var(--c-line) / <alpha-value>)',
         // The older token names stay (every page uses them) but now carry
-        // the palette above: black and cta are both the green primary.
-        'regantify-black': '#1F4A44',
-        'regantify-topbar': '#1F4A44',
-        'regantify-sidebar': '#FFFFFF',
-        'regantify-content': '#F5F5F5',
-        'regantify-search': '#F5F5F5',
-        'regantify-text': '#1A1A1A',
-        'regantify-text-muted': '#737373',
-        'regantify-cta': '#1F4A44',
-        'regantify-cta-dark': '#173A35',
+        // the palette above: black and cta are both the primary.
+        'regantify-black': 'rgb(var(--c-brand) / <alpha-value>)',
+        'regantify-topbar': 'rgb(var(--c-brand-dark) / <alpha-value>)',
+        'regantify-sidebar': 'rgb(var(--c-sidebar) / <alpha-value>)',
+        'regantify-content': 'rgb(var(--c-content) / <alpha-value>)',
+        'regantify-search': 'rgb(var(--c-search) / <alpha-value>)',
+        'regantify-text': 'rgb(var(--c-text) / <alpha-value>)',
+        'regantify-text-muted': 'rgb(var(--c-muted) / <alpha-value>)',
+        'regantify-cta': 'rgb(var(--c-brand) / <alpha-value>)',
+        'regantify-cta-dark': 'rgb(var(--c-brand-dark) / <alpha-value>)',
         // LMS has its own light theme; the values live in
         // pages/vendor/lms/lms-theme.css so a redesign swaps them there.
         lms: {

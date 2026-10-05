@@ -166,8 +166,11 @@ function LeadsList({
   ];
   const total = countsQuery.data?.ALL ?? 0;
 
-  const allOnPageSelected = leads.length > 0 && leads.every((l) => selected.has(l.id));
-  const toggleAll = () => setSelected(allOnPageSelected ? new Set() : new Set(leads.map((l) => l.id)));
+  // "Select all" only picks leads nobody has yet ("Nobody yet" in Assigned Agent), so a bulk transfer or
+  // hand-over never moves leads an agent already owns. Those can still be ticked one by one.
+  const unassigned = leads.filter((l) => !l.assignedTo);
+  const allOnPageSelected = unassigned.length > 0 && unassigned.every((l) => selected.has(l.id));
+  const toggleAll = () => setSelected(allOnPageSelected ? new Set() : new Set(unassigned.map((l) => l.id)));
   const toggleOne = (id: string) =>
     setSelected((s) => {
       const next = new Set(s);
@@ -295,7 +298,9 @@ function LeadsList({
                   <Th className="w-10 pl-4">
                     <input
                       type="checkbox"
-                      aria-label="Select all on this page"
+                      aria-label="Select all unassigned leads on this page"
+                      title="Selects only leads with no agent yet"
+                      disabled={unassigned.length === 0}
                       checked={allOnPageSelected}
                       onChange={toggleAll}
                       className="h-4 w-4 accent-[var(--lms-ink)]"
