@@ -32,6 +32,10 @@ export interface CodGuardSettings {
   verificationType: CodVerificationType;
   verificationCondition: CodVerificationCondition | null;
   verificationTrigger: CodVerificationTrigger | null;
+  // "Delivery charge in advance": a COD shopper pays the delivery charge online before the order is placed.
+  advanceEnabled: boolean;
+  // Only carts of at least this much (BDT). A string when it comes from the server (a decimal), a number when sent.
+  advanceMinOrder: string | number | null;
 }
 
 // Store > Order Tracking (tracking-plan.md Step 5) — mirrors StoreSettingsService's

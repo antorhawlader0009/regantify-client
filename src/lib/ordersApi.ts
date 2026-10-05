@@ -129,6 +129,16 @@ export interface Order {
   discountLabel?: string | null;
   total: string;
   paymentMethod: string;
+  /**
+   * Delivery charge (or any part of the total) paid before delivery on a COD order: the courier
+   * collects only total - advanceAmount (see codDue). ONLINE = paid through the store's PayStation,
+   * MANUAL = taken by the vendor outside the platform. advancePaidAt null with an ONLINE advance means
+   * the shopper hasn't paid it yet (the order waits as "Incomplete Payment").
+   */
+  advanceAmount?: string;
+  advanceMethod?: 'ONLINE' | 'MANUAL' | null;
+  advancePaidAt?: string | null;
+  advanceNote?: string | null;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
@@ -145,6 +155,17 @@ export function vendorOrderTotal(
 ): string {
   if (order.paymentMethod !== 'ONLINE_PAYMENT' || order.platformChargePayer !== 'CUSTOMER') return order.total;
   return String(Math.round((Number(order.total) - Number(order.platformChargeAmount)) * 100) / 100);
+}
+
+/** What has really been paid in advance (a still-pending online advance counts as nothing). */
+export function advancePaid(order: Pick<Order, 'advanceAmount' | 'advancePaidAt'>): number {
+  return order.advancePaidAt ? Number(order.advanceAmount ?? 0) : 0;
+}
+
+/** The cash still to collect on delivery for a COD order, as the courier is told it; 0 for any other payment method. */
+export function codDue(order: Pick<Order, 'total' | 'paymentMethod' | 'advanceAmount' | 'advancePaidAt'>): number {
+  if (order.paymentMethod !== 'COD') return 0;
+  return Math.max(0, Math.round(Number(order.total)) - Math.round(advancePaid(order)));
 }
 
 export interface OrderStatusHistoryEntry {
@@ -275,6 +296,9 @@ export interface CreateOrderPayload {
   deliveryCharge?: number;
   discountAmount?: number;
   discountLabel?: string;
+  /** Part of the total already received outside the platform (e.g. the delivery charge on your own bKash). */
+  advanceAmount?: number;
+  advanceNote?: string;
 }
 
 export const ordersApi = {
@@ -288,6 +312,10 @@ export const ordersApi = {
 
   updateStatus: (id: string, status: OrderStatus, note?: string) =>
     api.patch<Order>(`/v1/orders/${id}/status`, { status, note }).then((r) => r.data),
+
+  /** "Advance received": amount 0 clears it. */
+  updateAdvance: (id: string, amount: number, note?: string) =>
+    api.patch<Order>(`/v1/orders/${id}/advance`, { amount, note }).then((r) => r.data),
 
   updateLabel: (id: string, label: string | null) =>
     api.patch<Order>(`/v1/orders/${id}/label`, { label }).then((r) => r.data),

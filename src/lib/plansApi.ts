@@ -50,6 +50,10 @@ export interface Plan {
   onlinePaymentGatewayFeeBdt: string;
   onlinePaymentGatewayFeePercent: string;
   onlinePaymentGatewayFeePayer: PaymentFeePayer;
+  // Fee on a COD order's delivery-charge advance (flat ৳ + %): added on top of what the shopper pays on the
+  // payment page, never shown at checkout. Admin-only like the online fee above.
+  codAdvanceFeeBdt?: string;
+  codAdvanceFeePercent?: string;
   /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
   codFeeHidden: boolean;
   onlinePaymentFeeHidden: boolean;

@@ -178,6 +178,9 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [onlinePaymentGatewayFeePayer, setOnlinePaymentGatewayFeePayer] = useState<PaymentFeePayer>(
     plan?.onlinePaymentGatewayFeePayer ?? 'CUSTOMER',
   );
+  // Delivery-charge advance fee (COD orders, Store > COD Guard): defaults to 2% like a fresh plan row.
+  const [codAdvanceFeeBdt, setCodAdvanceFeeBdt] = useState(plan ? Number(plan.codAdvanceFeeBdt ?? 0) : 0);
+  const [codAdvanceFeePercent, setCodAdvanceFeePercent] = useState(plan ? Number(plan.codAdvanceFeePercent ?? 2) : 2);
   const [codFeeHidden, setCodFeeHidden] = useState(plan?.codFeeHidden ?? false);
   const [onlinePaymentFeeHidden, setOnlinePaymentFeeHidden] = useState(plan?.onlinePaymentFeeHidden ?? false);
 
@@ -202,6 +205,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       onlinePaymentGatewayFeeBdt,
       onlinePaymentGatewayFeePercent,
       onlinePaymentGatewayFeePayer,
+      codAdvanceFeeBdt,
+      codAdvanceFeePercent,
       codFeeHidden,
       onlinePaymentFeeHidden,
     });
@@ -262,6 +267,20 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             just folded into the total silently); Fee From Vendor never charges the shopper at all and comes out of
             the vendor's own payout instead.
           </p>
+
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">Delivery advance fee</label>
+            <div className="flex items-center gap-1.5 max-w-xs">
+              <FeePartInput value={codAdvanceFeeBdt} onChange={setCodAdvanceFeeBdt} suffix="৳" />
+              <span className="text-xs text-regantify-text-muted">+</span>
+              <FeePartInput value={codAdvanceFeePercent} onChange={setCodAdvanceFeePercent} suffix="%" max={100} />
+            </div>
+            <p className="mt-1.5 text-xs text-regantify-text-muted">
+              For Cash on Delivery orders where the shopper pays the delivery charge in advance (Store &gt; COD Guard). Fee = flat ৳ +
+              % of the delivery charge, added automatically on the payment page and never shown at checkout. E.g. ৳60 delivery at 2% =
+              ৳1.2, so the shopper pays ৳61.2 and the vendor gets the full ৳60. Set both to 0 for no fee.
+            </p>
+          </div>
 
           <p className="text-xs text-regantify-text-muted -mb-2">Leave a limit field blank for unlimited.</p>
           <div className="grid grid-cols-2 gap-3">

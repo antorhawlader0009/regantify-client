@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
-import { orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
+import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
@@ -29,6 +29,7 @@ import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
 import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCard';
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
+import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
@@ -348,7 +349,16 @@ export default function OrderDetail() {
       <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
         {[
           { label: 'Total', value: formatPrice(vendorOrderTotal(order)), icon: ReceiptText },
-          { label: 'Payment', value: order.paymentMethod === 'COD' ? 'Cash on delivery' : order.paymentMethod.replace(/_/g, ' ').toLowerCase(), icon: ReceiptText },
+          {
+            label: 'Payment',
+            value:
+              order.paymentMethod === 'COD'
+                ? advancePaid(order) > 0
+                  ? `COD, ${formatPrice(String(codDue(order)))} due`
+                  : 'Cash on delivery'
+                : order.paymentMethod.replace(/_/g, ' ').toLowerCase(),
+            icon: ReceiptText,
+          },
           { label: 'Items', value: `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`, icon: Package },
           {
             label: 'Delivery',
@@ -422,8 +432,27 @@ export default function OrderDetail() {
                 <dt>Total</dt>
                 <dd className="tabular-nums">{formatPrice(vendorOrderTotal(order))}</dd>
               </div>
+              {advancePaid(order) > 0 && (
+                <>
+                  <div className="flex justify-between text-neutral-600">
+                    <dt>Paid in advance ({order.advanceMethod === 'ONLINE' ? 'online' : 'by hand'})</dt>
+                    <dd className="tabular-nums">−{formatPrice(String(advancePaid(order)))}</dd>
+                  </div>
+                  <div className="flex justify-between text-base font-semibold text-regantify-text">
+                    <dt>Collect on delivery</dt>
+                    <dd className="tabular-nums">{formatPrice(String(codDue(order)))}</dd>
+                  </div>
+                </>
+              )}
             </dl>
           </Card>
+
+          {/* Cash on Delivery: the delivery charge (or any part) paid before delivery. */}
+          {order.source !== 'POS' && order.paymentMethod === 'COD' && (
+            <Card title="Advance" id="advance">
+              <OrderAdvanceCard order={order} onChanged={invalidateOrder} />
+            </Card>
+          )}
 
           <Card title="Timeline">
             <OrderTimeline orderId={order.id} history={history} hasCourier={provider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED'} />

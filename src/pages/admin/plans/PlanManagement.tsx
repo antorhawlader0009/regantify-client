@@ -74,6 +74,7 @@ export default function PlanManagement() {
                   <th className="px-4 py-3 font-medium">STAFF</th>
                   <th className="px-4 py-3 font-medium">COD FEE</th>
                   <th className="px-4 py-3 font-medium">ONLINE FEE</th>
+                  <th className="px-4 py-3 font-medium">ADVANCE FEE</th>
                   <th className="px-4 py-3 font-medium"></th>
                 </tr>
               </thead>
@@ -92,6 +93,9 @@ export default function PlanManagement() {
                     </td>
                     <td className="px-4 py-3 text-regantify-text">
                       {formatFee(plan.onlinePaymentGatewayFeeBdt, plan.onlinePaymentGatewayFeePercent, plan.onlinePaymentGatewayFeePayer)}
+                    </td>
+                    <td className="px-4 py-3 text-regantify-text">
+                      +{formatFeeParts(plan.codAdvanceFeeBdt ?? '0', plan.codAdvanceFeePercent ?? '2')}
                     </td>
                     <td className="px-4 py-3">
                       <button

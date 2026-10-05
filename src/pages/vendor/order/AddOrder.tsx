@@ -178,6 +178,11 @@ export default function AddOrder() {
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountAmount, setDiscountAmount] = useState('');
   const [discountLabel, setDiscountLabel] = useState('');
+  // Part of the total the customer already paid outside the platform (e.g. the delivery charge on the
+  // vendor's own bKash), so the courier collects only the rest.
+  const [showAdvance, setShowAdvance] = useState(false);
+  const [advanceAmount, setAdvanceAmount] = useState('');
+  const [advanceNote, setAdvanceNote] = useState('');
 
   const { data: searchResults = [], isFetching: searching } = useQuery({
     queryKey: ['orders-product-search', searchTerm],
@@ -245,6 +250,8 @@ export default function AddOrder() {
   const discountValue = showDiscount && discountAmount !== '' ? Number(discountAmount) : null;
   const discount = discountValue ?? 0;
   const grandTotal = Math.max(0, cartTotal + deliveryCharge + vatAmount - discount);
+  const advanceValue = showAdvance && advanceAmount !== '' ? Number(advanceAmount) : 0;
+  const advance = Number.isFinite(advanceValue) && advanceValue > 0 ? advanceValue : 0;
 
   const dirty = cart.length > 0 || Boolean(customerName.trim() || customerPhone.trim() || shippingAddress.trim());
   const [submitted, setSubmitted] = useState(false);
@@ -311,6 +318,8 @@ export default function AddOrder() {
       deliveryCharge: chargeMode === 'CUSTOM' && customChargeValue !== null ? customChargeValue : undefined,
       discountAmount: discountValue ?? undefined,
       discountLabel: showDiscount ? discountLabel.trim() || undefined : undefined,
+      advanceAmount: advance > 0 ? advance : undefined,
+      advanceNote: advance > 0 ? advanceNote.trim() || undefined : undefined,
     });
   };
 
@@ -364,6 +373,18 @@ export default function AddOrder() {
         <dt className="font-semibold text-regantify-text">Customer pays</dt>
         <dd className="text-lg font-semibold tabular-nums text-regantify-text">{formatPrice(grandTotal)}</dd>
       </div>
+      {advance > 0 && (
+        <>
+          <div className="flex justify-between text-emerald-700">
+            <dt>Received in advance</dt>
+            <dd className="tabular-nums">−{formatPrice(advance)}</dd>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <dt className="font-semibold text-regantify-text">Collect on delivery</dt>
+            <dd className="font-semibold tabular-nums text-regantify-text">{formatPrice(Math.max(0, grandTotal - advance))}</dd>
+          </div>
+        </>
+      )}
     </dl>
   );
 
@@ -676,6 +697,40 @@ export default function AddOrder() {
                 <button type="button" onClick={() => setShowDiscount(true)} className={outlineBtn}>
                   <Plus size={14} />
                   Add discount
+                </button>
+              )}
+
+              {showAdvance ? (
+                <Field label="Advance received">
+                  <div className="flex gap-2">
+                    <div className="w-28 shrink-0">
+                      <MoneyInput value={advanceAmount} onChange={setAdvanceAmount} placeholder="0" ariaLabel="Advance received" />
+                    </div>
+                    <input
+                      value={advanceNote}
+                      maxLength={200}
+                      onChange={(e) => setAdvanceNote(e.target.value)}
+                      placeholder="Note, e.g. bKash TrxID (optional)"
+                      className={productInputClass}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-neutral-500">Money you already took, like the delivery charge. The courier collects only the rest.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAdvance(false);
+                      setAdvanceAmount('');
+                      setAdvanceNote('');
+                    }}
+                    className="mt-1.5 text-xs text-neutral-500 hover:text-regantify-text"
+                  >
+                    Remove advance
+                  </button>
+                </Field>
+              ) : (
+                <button type="button" onClick={() => setShowAdvance(true)} className={outlineBtn}>
+                  <Plus size={14} />
+                  Add advance received
                 </button>
               )}
             </div>

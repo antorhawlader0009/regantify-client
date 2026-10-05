@@ -38,14 +38,22 @@ export default function CodGuard() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['cod-guard-settings'], queryFn: storeSettingsApi.getCodGuard });
   const [form, setForm] = useState<CodGuardSettings | null>(null);
+  // The minimum cart for the advance, as typed ("" = every order).
+  const [minOrderText, setMinOrderText] = useState('');
+
+  const minOrderToText = (value: CodGuardSettings['advanceMinOrder']) => (value ? String(Number(value)) : '');
 
   useEffect(() => {
-    if (data) setForm(data);
+    if (data) {
+      setForm(data);
+      setMinOrderText(minOrderToText(data.advanceMinOrder));
+    }
   }, [data]);
 
   const onSaved = (updated: CodGuardSettings, message: string) => {
     queryClient.setQueryData(['cod-guard-settings'], updated);
     setForm(updated);
+    setMinOrderText(minOrderToText(updated.advanceMinOrder));
     toast.success(message);
   };
 
@@ -70,7 +78,12 @@ export default function CodGuard() {
       toast.error('Choose a trigger condition and when verification should happen.');
       return;
     }
-    save.mutate(form);
+    const minOrder = minOrderText.trim() === '' ? null : Number(minOrderText);
+    if (form.advanceEnabled && minOrder !== null && (!Number.isFinite(minOrder) || minOrder < 0)) {
+      toast.error('Enter the minimum order amount as a number, or leave it empty for every order.');
+      return;
+    }
+    save.mutate({ ...form, advanceMinOrder: form.advanceEnabled && minOrder ? minOrder : null });
   };
 
   const isSms = form?.verificationType === 'SMS';
@@ -103,6 +116,56 @@ export default function CodGuard() {
               </Link>{' '}
               are blocked at checkout.
             </p>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <Checkbox
+              checked={form.advanceEnabled}
+              onChange={(v) => set('advanceEnabled', v)}
+              label="Take the delivery charge in advance"
+            />
+            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+              A shopper who chooses Cash on Delivery first pays <b>only the delivery charge</b> online (bKash, Nagad, card via
+              PayStation) to confirm the order, and pays the rest in cash on delivery. Couriers are then asked to collect only the
+              remaining amount. Many sellers use this to stop fake orders.
+            </p>
+
+            {form.advanceEnabled && (
+              <div className="mt-4 ml-7 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-regantify-text mb-1.5">
+                    Only for orders of at least (৳)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    inputMode="decimal"
+                    value={minOrderText}
+                    onChange={(e) => setMinOrderText(e.target.value)}
+                    placeholder="Empty = every Cash on Delivery order"
+                    className="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
+                      focus:outline-none focus:border-regantify-cta transition-colors"
+                  />
+                </div>
+                <ul className="text-xs text-regantify-text-muted space-y-1 list-disc pl-4">
+                  <li>
+                    Needs <b>Online Payment</b> to be on in{' '}
+                    <Link to="/vendor/store/payment-gateway" className="text-regantify-cta hover:underline">
+                      Payment Gateway
+                    </Link>
+                    ; otherwise Cash on Delivery works as usual.
+                  </li>
+                  <li>Works on the StorePal theme only. Free-delivery orders pay no advance.</li>
+                  <li>
+                    The whole delivery charge goes to your wallet. The payment page adds a small processing fee on top for the
+                    shopper, so you lose nothing. It is not refunded automatically if the order is cancelled.
+                  </li>
+                  <li>
+                    Took the money yourself (own bKash)? Open the order and use <b>Advance received</b> to record it.
+                  </li>
+                </ul>
+              </div>
+            )}
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">

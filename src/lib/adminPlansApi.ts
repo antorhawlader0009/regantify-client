@@ -33,6 +33,8 @@ export interface UpdatePlanPayload {
   onlinePaymentGatewayFeeBdt?: number;
   onlinePaymentGatewayFeePercent?: number;
   onlinePaymentGatewayFeePayer?: PaymentFeePayer;
+  codAdvanceFeeBdt?: number;
+  codAdvanceFeePercent?: number;
   codFeeHidden?: boolean;
   onlinePaymentFeeHidden?: boolean;
 }
