@@ -18,10 +18,14 @@ export const POS_ME_KEY = ['pos', 'me'] as const;
  * mounted outside VendorLayout and has its own gate.
  */
 
-// More sections (Sales, Reports) arrive with their steps.
-const SECTIONS: { label: string; path: string }[] = [
+// managerOnly: the server refuses these to cashiers (POS-system-plan.md Step 15), so they aren't shown.
+const SECTIONS: { label: string; path: string; managerOnly?: boolean }[] = [
   { label: 'Registers', path: '/vendor/pos/registers' },
+  { label: 'Sales', path: '/vendor/pos/sales', managerOnly: true },
+  { label: 'Reports', path: '/vendor/pos/reports', managerOnly: true },
+  { label: 'Sessions', path: '/vendor/pos/sessions', managerOnly: true },
   { label: 'Staff', path: '/vendor/pos/staff' },
+  { label: 'Hardware', path: '/vendor/pos/hardware' },
   { label: 'Settings', path: '/vendor/pos/settings' },
 ];
 
@@ -56,7 +60,7 @@ export function PosLayout() {
 
   return (
     <div className="pos-root min-h-full bg-pos-page">
-      {me && <PosBar />}
+      {me && <PosBar isManager={me.isManager} />}
       <div className="mx-auto w-full max-w-[1200px] p-3 sm:p-6">{body}</div>
     </div>
   );
@@ -78,13 +82,13 @@ export function PosPage({ title, children }: { title: string; children: (me: Pos
   );
 }
 
-function PosBar() {
+function PosBar({ isManager }: { isManager: boolean }) {
   return (
     <header className="sticky top-0 z-20 border-b border-pos-line bg-pos-surface">
       <div className="flex h-12 items-center gap-6 px-3 sm:px-6">
         <span className="shrink-0 text-sm font-semibold">POS</span>
         <nav aria-label="POS sections" className="-mb-px flex h-full min-w-0 items-stretch gap-6 overflow-x-auto">
-          {SECTIONS.map((s) => (
+          {SECTIONS.filter((s) => isManager || !s.managerOnly).map((s) => (
             <NavLink
               key={s.path}
               to={s.path}

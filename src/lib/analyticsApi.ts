@@ -54,9 +54,13 @@ export interface OverviewAnalytics {
   trend: { bucket: string; sales: number; orders: number }[];
   topProducts: TopProduct[];
   statuses: { status: OrderStatus; count: number }[];
+  /** STOREFRONT / MANUAL / POS; adds up to kpis.sales (POS-system-plan.md Step 11). */
+  channels: SplitRow[];
 }
 
 export interface SalesAnalytics {
+  /** STOREFRONT / MANUAL / POS; adds up to kpis.sales. */
+  channels: SplitRow[];
   period: AnalyticsPeriodInfo;
   bucket: AnalyticsBucket;
   kpis: Record<'sales' | 'netSales' | 'profit', Compared> & { margin: NullableCompared };

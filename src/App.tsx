@@ -128,7 +128,12 @@ import { PosLayout } from './components/pos/PosLayout';
 import PosSettingsPage from './pages/vendor/pos/PosSettingsPage';
 import PosRegistersPage from './pages/vendor/pos/PosRegistersPage';
 import PosStaffPage from './pages/vendor/pos/PosStaffPage';
+import PosSessionsPage from './pages/vendor/pos/PosSessionsPage';
+import PosSalesPage from './pages/vendor/pos/PosSalesPage';
+import PosReportsPage from './pages/vendor/pos/PosReportsPage';
+import PosHardwarePage from './pages/vendor/pos/PosHardwarePage';
 import PosSellPage from './pages/vendor/pos/PosSellPage';
+import PosDisplayPage from './pages/vendor/pos/PosDisplayPage';
 import { POS_HOME } from './lib/posApi';
 
 const queryClient = new QueryClient();
@@ -387,6 +392,10 @@ export default function App() {
                 <Route element={<PosLayout />}>
                   <Route path="/vendor/pos" element={<Navigate to={POS_HOME} replace />} />
                   <Route path="/vendor/pos/registers" element={<PosRegistersPage />} />
+                  <Route path="/vendor/pos/sessions" element={<PosSessionsPage />} />
+                  <Route path="/vendor/pos/sales" element={<PosSalesPage />} />
+                  <Route path="/vendor/pos/reports" element={<PosReportsPage />} />
+                  <Route path="/vendor/pos/hardware" element={<PosHardwarePage />} />
                   <Route path="/vendor/pos/staff" element={<PosStaffPage />} />
                   <Route path="/vendor/pos/settings" element={<PosSettingsPage />} />
                   <Route path="/vendor/pos/*" element={<Navigate to={POS_HOME} replace />} />
@@ -406,6 +415,8 @@ export default function App() {
               <Route path="/vendor/courier/pathao/labels" element={<PathaoLabelsPrintPage />} />
               {/* POS counter (POS-system-plan.md Step 4): full screen, outside <VendorLayout>. */}
               <Route path="/vendor/pos/sell" element={<PosSellPage />} />
+              {/* The customer-facing screen (Step 12): a second window fed by the counter tab. */}
+              <Route path="/vendor/pos/display" element={<PosDisplayPage />} />
             </Route>
 
             {/* Super Admin dashboard — protected, SUPER_ADMIN role only */}

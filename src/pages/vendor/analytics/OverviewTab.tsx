@@ -5,6 +5,7 @@ import { PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { orderStatusLabel } from '../order/orderStatus';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
+import { ChannelSplitCard } from '../../../components/analytics/ChannelSplit';
 
 /** Another Analytics tab, keeping the picked dates (the page's own URL parameters). */
 export function tabLink(tab: AnalyticsTab) {
@@ -110,6 +111,10 @@ export function OverviewTab({ range }: TabProps) {
                   }))}
                 />
               </Card>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-4">
+              <ChannelSplitCard channels={data.channels} />
             </div>
           </>
         );

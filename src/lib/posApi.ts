@@ -100,7 +100,44 @@ export interface PosClosedSession {
   expectedCash: string;
   countedCash: string;
   variance: string;
-  zReport: { salesCount: number; salesTotal: number; cashSales: number } | null;
+  zReport: PosShiftReport | null;
+}
+
+/** The note and coin values counted at close (server pos-shift-report.ts BDT_DENOMINATIONS). */
+export const BDT_NOTES = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1] as const;
+
+export type PosCashMovementType = 'PAY_IN' | 'PAY_OUT' | 'NO_SALE';
+
+/**
+ * The shift report (Step 10, server pos-shift-report.ts): the X report of an open shift (built
+ * on request, changes nothing) or the frozen Z report of a closed one (with the count).
+ */
+export interface PosShiftReport {
+  version: 2;
+  kind: 'X' | 'Z';
+  sessionId: string;
+  register: string;
+  openedAt: string;
+  openedByName: string;
+  generatedAt: string;
+  sales: { count: number; items: number; subtotal: number; discounts: number; vat: number; vatAdded: number; total: number };
+  returns: { count: number; amount: number; voids: number; voidAmount: number };
+  net: number;
+  onDue: number;
+  byMethod: Array<{ method: string; sales: number; dueCollected: number; refunds: number; net: number }>;
+  byCashier: Array<{ name: string; count: number; total: number }>;
+  cash: { float: number; sales: number; dueCollected: number; payIns: number; refunds: number; payOuts: number; expected: number };
+  movements: Array<{ type: PosCashMovementType; amount: number; reason: string; byName: string; approvedByName: string | null; createdAt: string }>;
+  noSales: number;
+  // Z only:
+  closedAt?: string;
+  closedByName?: string;
+  countedCash?: number;
+  countedNotes?: Record<string, number> | null;
+  variance?: number;
+  closingNote?: string | null;
+  /** A shift closed before Step 10, its report rebuilt from its rows. */
+  rebuilt?: boolean;
 }
 
 const cashier = (token: string) => ({ headers: { [CASHIER_HEADER]: token } });
@@ -184,6 +221,8 @@ export interface CreatePosSale {
   approvalId?: string;
   /** One tender, or several for a split payment. Cash takes what the others leave and gives change. */
   payments: PosTenderInput[];
+  /** A sale made with no internet, sent in later (Step 13). */
+  offline?: { soldAt: string; localNumber: string; total: number; cashierId: string };
 }
 
 /** The ways a counter sale can be paid (server pos-tenders.ts). */
@@ -309,6 +348,10 @@ export interface PosReceipt {
   receiptUrl: string | null;
   /** What the customer owes in all right after this sale, when part of it went on their due (Step 9). */
   dueBalanceAfter?: number | null;
+  /** Sold with no internet (Step 13): the counter's own number, e.g. "OFF-3F2A-0007". */
+  localNumber?: string | null;
+  /** A receipt made at the counter for a sale not sent in yet (it has no serial or online link). */
+  offline?: boolean;
   /** Returns and voids against this sale (Step 8), oldest first. */
   returns?: Array<{ kind: 'RETURN' | 'VOID'; amount: number; reason: string | null; cashierName: string; createdAt: string }>;
   /** true when this was a retry of a sale that had already gone through. */
@@ -336,6 +379,8 @@ export interface PosSettings {
   banglaQrImageUrl: string | null;
   /** Days a sale's items can be returned; null = any time. */
   returnDays: number | null;
+  /** The owner's bell rings when a closed shift's cash is off by at least this much; null = never. */
+  varianceAlertBdt: number | null;
 }
 
 /** Only what's sent changes; an empty string clears a text field. */
@@ -376,7 +421,86 @@ export interface PosCatalog {
   products: PosCatalogProduct[];
 }
 
+/** One row of POS > Sales (GET /v1/pos/sales, Step 11). */
+export interface PosSaleRow {
+  id: string;
+  publicCode: string | null;
+  invoiceNumber: number;
+  createdAt: string;
+  status: 'COMPLETED' | 'REFUNDED' | 'CANCELLED' | string;
+  partlyReturned: boolean;
+  total: number;
+  /** Given back by returns so far. */
+  returned: number;
+  customerName: string;
+  customerPhone: string | null;
+  cashierName: string | null;
+  registerName: string | null;
+  items: number;
+  payments: Array<{ method: string; amount: number }>;
+  /** Sold with no internet and sent in later (Step 13). */
+  offline: boolean;
+  localNumber: string | null;
+  /** "Check after sync" items not checked yet. */
+  openIssues: number;
+}
+
+/** "Check after sync" (Step 13): something an offline sale ran into when it was sent in. */
+export interface PosSyncIssue {
+  id: string;
+  kind: 'STOCK_SHORT' | 'PRICE_CHANGED' | 'TOTAL_DIFFERS' | 'SHIFT_CLOSED';
+  detail: string;
+  createdAt: string;
+  resolvedAt: string | null;
+  resolvedByName: string | null;
+  order: { id: string; publicCode: string | null; invoiceNumber: number; posLocalNumber: string | null; createdAt: string; total: number; posCashierName: string | null };
+}
+
+export interface PosSalesFilter {
+  /** Dhaka days, "2026-10-05", both included. */
+  from?: string;
+  to?: string;
+  registerId?: string;
+  cashierId?: string;
+  method?: PosTender;
+  status?: 'COMPLETED' | 'PARTLY_RETURNED' | 'REFUNDED' | 'CANCELLED';
+  search?: string;
+  page?: number;
+  perPage?: number;
+}
+
+/** POS > Reports (GET /v1/pos/reports). Sales by the day rung up; returns and voids by the day given (like a Z report). */
+export interface PosReport {
+  from: string;
+  to: string;
+  totals: {
+    sales: number;
+    subtotal: number;
+    discounts: number;
+    vat: number;
+    total: number;
+    returns: { count: number; amount: number };
+    voids: { count: number; amount: number };
+    net: number;
+    averageSale: number;
+  };
+  byDay: Array<{ day: string; sales: number; total: number; returns: number; net: number }>;
+  byHour: Array<{ hour: number; sales: number; total: number }>;
+  byMethod: Array<{ method: string; sales: number; dueCollected: number; refunds: number; net: number }>;
+  byCashier: Array<{ name: string; sales: number; total: number }>;
+  topProducts: Array<{ name: string; quantity: number; revenue: number }>;
+  variances: Array<{ sessionId: string; register: string; closedAt: string; closedByName: string | null; expected: number; counted: number; variance: number }>;
+  varianceTotals: { shifts: number; short: number; over: number };
+}
+
 export const posApi = {
+  // POS > Sales and POS > Reports (Step 11).
+  salesList: (filter: PosSalesFilter) => api.get<{ sales: PosSaleRow[]; total: number; totalAmount: number; page: number; perPage: number }>('/v1/pos/sales', { params: filter }).then((r) => r.data),
+  report: (from: string, to: string) => api.get<PosReport>('/v1/pos/reports', { params: { from, to } }).then((r) => r.data),
+  // "Check after sync" (Step 13).
+  syncIssues: () => api.get<{ issues: PosSyncIssue[]; openCount: number }>('/v1/pos/sync-issues').then((r) => r.data),
+  resolveSyncIssue: (id: string) => api.post(`/v1/pos/sync-issues/${id}/resolve`).then((r) => r.data),
+
   me: () => api.get<PosMe>('/v1/pos/me').then((r) => r.data),
   catalog: (updatedSince?: string) =>
     api.get<PosCatalog>('/v1/pos/catalog', { params: updatedSince ? { updatedSince } : {} }).then((r) => r.data),
@@ -404,15 +528,31 @@ export const posApi = {
   updateRegister: (id: string, dto: { name?: string; active?: boolean }) => api.patch(`/v1/pos/registers/${id}`, dto).then((r) => r.data),
   openSession: (registerId: string, openingFloat: number, token: string) =>
     api.post('/v1/pos/sessions/open', { registerId, openingFloat }, cashier(token)).then((r) => r.data),
-  closeSession: (id: string, countedCash: number, note: string, token: string) =>
-    api.post<PosClosedSession>(`/v1/pos/sessions/${id}/close`, { countedCash, note: note || undefined }, cashier(token)).then((r) => r.data),
+  /** `notes`: the count by note and coin ({"500": 3, ...}), which must add up to countedCash. */
+  closeSession: (id: string, countedCash: number, note: string, token: string, notes?: Record<string, number>) =>
+    api.post<PosClosedSession>(`/v1/pos/sessions/${id}/close`, { countedCash, note: note || undefined, notes }, cashier(token)).then((r) => r.data),
+  /** The X report of an open shift, or the Z report of a closed one (Step 10). */
+  /** A manager reads any; at the counter the cashier's unlock `token` lets them read their shift's X (Step 15). */
+  shiftReport: (id: string, token?: string) => api.get<PosShiftReport>(`/v1/pos/sessions/${id}/report`, token ? cashier(token) : {}).then((r) => r.data),
+  /** Pay in / pay out / no sale on an open shift (Step 10). */
+  addMovement: (sessionId: string, dto: { type: PosCashMovementType; amount?: number; reason: string; approvalId?: string }, token: string) =>
+    api
+      .post<{ id: string; type: PosCashMovementType; amount: number; reason: string; byName: string; approvedByName: string | null; createdAt: string; expectedCash: number }>(
+        `/v1/pos/sessions/${sessionId}/movements`,
+        dto,
+        cashier(token),
+      )
+      .then((r) => r.data),
   // A sale at the counter, and one sale's receipt.
   createSale: (dto: CreatePosSale, token: string) => api.post<PosReceipt>('/v1/pos/sales', dto, cashier(token)).then((r) => r.data),
   sale: (id: string) => api.get<PosReceipt>(`/v1/pos/sales/${id}`).then((r) => r.data),
   quote: (dto: Pick<CreatePosSale, 'lines' | 'customer' | 'cartDiscount' | 'couponCode'>, token: string) =>
     api.post<PosQuote>('/v1/pos/sales/quote', dto, cashier(token)).then((r) => r.data),
   /** A manager's PIN for a discount over the cashier's limit or a changed price. */
-  approve: (dto: { managerId: string; pin: string; discountPercent: number; priceOverride: boolean; refund?: boolean; voidSale?: boolean }, token: string) =>
+  approve: (
+    dto: { managerId: string; pin: string; discountPercent: number; priceOverride: boolean; refund?: boolean; voidSale?: boolean; cashMovement?: boolean },
+    token: string,
+  ) =>
     api.post<{ approvalId: string; managerName: string }>('/v1/pos/approvals', dto, cashier(token)).then((r) => r.data),
   // Returns, exchanges and voids (Step 8).
   findSales: (q: string, token: string) =>

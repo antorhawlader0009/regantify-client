@@ -82,6 +82,8 @@ interface FormState {
   banglaQrImageUrl: string;
   /** Empty = returns any time. */
   returnDays: string;
+  /** Empty = no bell. */
+  varianceAlertBdt: string;
 }
 
 function toForm(s: PosSettings): FormState {
@@ -101,6 +103,7 @@ function toForm(s: PosSettings): FormState {
     paymentMethods: s.paymentMethods,
     banglaQrImageUrl: s.banglaQrImageUrl ?? '',
     returnDays: s.returnDays === null ? '' : String(s.returnDays),
+    varianceAlertBdt: s.varianceAlertBdt === null ? '' : String(s.varianceAlertBdt),
   };
 }
 
@@ -136,6 +139,7 @@ function SettingsForm({ settings, readOnly }: { settings: PosSettings; readOnly:
       paymentMethods: form.paymentMethods,
       banglaQrImageUrl: form.banglaQrImageUrl,
       returnDays: form.returnDays.trim() === '' ? null : Math.max(0, Math.trunc(Number(form.returnDays)) || 0),
+      varianceAlertBdt: Number(form.varianceAlertBdt) >= 1 ? Math.round(Number(form.varianceAlertBdt) * 100) / 100 : null,
     });
   }
 
@@ -239,6 +243,14 @@ function SettingsForm({ settings, readOnly }: { settings: PosSettings; readOnly:
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Returns accepted for (days)" hint="Leave empty to accept returns any time.">
               <PosInput inputMode="numeric" maxLength={4} value={form.returnDays} onChange={(e) => set('returnDays', e.target.value.replace(/\D/g, ''))} placeholder="Any time" />
+            </Field>
+          </div>
+        </Section>
+
+        <Section title="Cash" text="When a register is closed, the cash counted is compared with what the drawer should hold.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Alert me when a shift is short or over by (৳)" hint="You get a notification in the bell. Leave empty for no alert.">
+              <PosInput inputMode="decimal" maxLength={10} value={form.varianceAlertBdt} onChange={(e) => set('varianceAlertBdt', e.target.value.replace(/[^\d.]/g, ''))} placeholder="No alert" />
             </Field>
           </div>
         </Section>

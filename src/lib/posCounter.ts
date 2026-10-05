@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import type { PosUnlock } from './posApi';
+import { rememberUnlock } from './posOffline';
 
 /*
  * The counter's own state (POS-system-plan.md Step 4): which register this
- * screen sells on, and who unlocked it with their PIN. The unlock lives in
- * memory only, so a reload or a closed tab asks for the PIN again; the
+ * screen sells on, and who unlocked it with their PIN. Online, a reload or a
+ * closed tab asks for the PIN again (offline, Step 13, the same tab carries on); the
  * register choice is remembered per browser (a convenience, safe to lose).
  */
 
@@ -38,8 +39,16 @@ export const useCounter = create<CounterState>((set) => ({
     }
     set({ registerId: id });
   },
-  setUnlock: (unlock) => set({ unlock }),
-  lock: () => set({ unlock: null }),
+  // Step 13: the unlock is also kept in this tab's sessionStorage while unlocked, so a reload with
+  // no internet can carry on as the same cashier (PosSellPage only uses it when offline).
+  setUnlock: (unlock) => {
+    rememberUnlock(unlock);
+    set({ unlock });
+  },
+  lock: () => {
+    rememberUnlock(null);
+    set({ unlock: null });
+  },
 }));
 
 /** True while an unlock is still within its 12 hours. */

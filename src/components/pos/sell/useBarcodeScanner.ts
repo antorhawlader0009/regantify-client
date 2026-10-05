@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { readScannerSettings } from '../../../lib/posHardware';
 
 /**
  * USB / Bluetooth barcode scanners act as a keyboard: they "type" the code
@@ -8,7 +9,11 @@ import { useEffect, useRef } from 'react';
  * Enter. Inputs handle their own Enter (the search box does), so keys typed
  * into an input are left alone.
  */
-export function useBarcodeScanner(onScan: (code: string) => void, { enabled = true, minLength = 4, maxGapMs = 50 } = {}) {
+export function useBarcodeScanner(
+  onScan: (code: string) => void,
+  // The speed and length can be tuned per counter in POS > Hardware (Step 12).
+  { enabled = true, minLength = readScannerSettings().minLength, maxGapMs = readScannerSettings().maxGapMs } = {},
+) {
   const buffer = useRef('');
   const last = useRef(0);
   const handler = useRef(onScan);

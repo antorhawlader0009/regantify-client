@@ -85,6 +85,13 @@ export interface DashboardSummary {
     storeVisited: boolean;
     hasOrder: boolean;
   };
+  /** "Today in store" (POS); null without the POS (plan or turned off). */
+  pos: {
+    sales: number;
+    orders: number;
+    cashInDrawer: number;
+    openRegisters: Array<{ name: string; openedByName: string; cashInDrawer: number }>;
+  } | null;
 }
 
 export const dashboardApi = {

@@ -1,8 +1,31 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // POS offline shell (POS-system-plan.md Step 13). The service worker is registered by the POS
+    // counter page only, with scope /vendor/pos/, so the rest of the dashboard is never served
+    // from it. It keeps the built app (index.html + assets) so the counter can reload with no
+    // internet; API calls are never cached (offline sales live in IndexedDB, lib/posOffline.ts).
+    VitePWA({
+      injectRegister: false,
+      registerType: 'autoUpdate',
+      manifest: false,
+      workbox: {
+        // The app only (not the marketing images in public/).
+        globPatterns: ['index.html', 'assets/**/*.{js,css,svg,png,woff2}'],
+        // The whole app bundle is a few MB; the counter needs all of it to start offline.
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+        navigateFallback: '/index.html',
+        navigateFallbackAllowlist: [/^\/vendor\/pos\//],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
+    }),
+  ],
   server: {
     port: 5173,
     // Bind to all network interfaces (not just localhost) so the dev

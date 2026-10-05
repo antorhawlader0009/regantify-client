@@ -2,7 +2,7 @@ import { forwardRef, useRef, useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2, Printer, Search } from 'lucide-react';
 import { posApi, TENDER_LABEL, type DuePaymentMethod, type PosDueLookup, type PosDuePayment, type PosReceiptProfile, type PosTender, type PosUnlock } from '../../../lib/posApi';
-import { printElement } from '../../../lib/printElement';
+import { printSlip, readPrinterPrefs } from '../../../lib/posHardware';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { Field, PosButton, PosDialog, PosInput, taka } from '../ui';
@@ -59,7 +59,7 @@ export function CollectDueDialog({
   const print = () => {
     if (!slipRef.current || !profile || !done) return;
     setPrinting(true);
-    printElement(slipRef.current, `Due payment ${done.phone}`, { size: `${profile.widthMm}mm auto`, padding: '0' })
+    printSlip(slipRef.current, `Due payment ${done.phone}`, profile.widthMm, { kick: done.method === 'CASH' && readPrinterPrefs().kickOnCash })
       .catch(() => toast.error('Could not open the print window. Please try again.'))
       .finally(() => setPrinting(false));
   };

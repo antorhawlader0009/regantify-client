@@ -1,15 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, LockOpen, Plus } from 'lucide-react';
+import { Lock, LockOpen, Plus, Printer } from 'lucide-react';
 import { PosPage } from '../../../components/pos/PosLayout';
 import { useCashierUnlock } from '../../../components/pos/CashierUnlock';
 import { Field, Panel, PosButton, PosDialog, PosInput, PosTextarea, taka } from '../../../components/pos/ui';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
-import { posApi, type PosClosedSession, type PosMe, type PosRegister } from '../../../lib/posApi';
+import { BDT_NOTES, posApi, type PosClosedSession, type PosMe, type PosRegister } from '../../../lib/posApi';
+import { ShiftReportDialog } from '../../../components/pos/ShiftReportView';
+import { SessionsTable } from './PosSessionsPage';
 
 const REGISTERS_KEY = ['pos', 'registers'] as const;
-const SESSIONS_KEY = ['pos', 'sessions'] as const;
 
 const dhakaTime = (iso: string) =>
   new Date(iso).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
@@ -89,9 +90,11 @@ function RegisterCard({
     onError: (err) => toast.error(apiErrorMessage(err, "Couldn't turn this register off.")),
   });
   const s = register.openSession;
+  const [showX, setShowX] = useState(false);
 
   return (
     <Panel className="flex flex-col gap-4">
+      {showX && s && <ShiftReportDialog sessionId={s.id} onClose={() => setShowX(false)} />}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold">{register.name}</h2>
@@ -131,9 +134,12 @@ function RegisterCard({
 
       <div className="mt-auto">
         {s ? (
-          <PosButton className="w-full" onClick={onClose}>
-            Close register
-          </PosButton>
+          <div className="flex gap-2">
+            {me.isManager && <PosButton onClick={() => setShowX(true)}>X report</PosButton>}
+            <PosButton className="flex-1" onClick={onClose}>
+              Close register
+            </PosButton>
+          </div>
         ) : (
           <PosButton variant="primary" className="w-full" onClick={onOpen}>
             Open register
@@ -224,16 +230,25 @@ function OpenDialog({ register, onDone }: { register: PosRegister; onDone: () =>
 function CloseDialog({ register, onDone }: { register: PosRegister; onDone: () => void }) {
   const queryClient = useQueryClient();
   const unlock = useCashierUnlock();
+  // Step 10: count by note and coin (the total adds itself up), or type one total.
+  const [byNote, setByNote] = useState(true);
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [counted, setCounted] = useState('');
   const [note, setNote] = useState('');
   const [result, setResult] = useState<PosClosedSession | null>(null);
-  const amount = parseMoney(counted);
+  const [showZ, setShowZ] = useState(false);
+  // The closer's unlock, so a cashier (not only a manager) can read the Z they just made.
+  const [closerToken, setCloserToken] = useState<string | undefined>();
   const session = register.openSession!;
+  const noteCounts = Object.fromEntries(BDT_NOTES.map((n) => [String(n), Math.max(0, Math.trunc(Number(notes[String(n)] || 0)))]));
+  const noteTotal = BDT_NOTES.reduce((s, n) => s + n * noteCounts[String(n)], 0);
+  const amount = byNote ? (Object.values(notes).some((v) => v.trim() !== '') ? noteTotal : null) : parseMoney(counted);
 
   const close = useMutation({
     mutationFn: async () => {
       const { token } = await unlock.unlock();
-      return posApi.closeSession(session.id, amount ?? 0, note, token);
+      setCloserToken(token);
+      return posApi.closeSession(session.id, amount ?? 0, note, token, byNote ? noteCounts : undefined);
     },
     onSuccess: (closed) => {
       setResult(closed);
@@ -252,12 +267,13 @@ function CloseDialog({ register, onDone }: { register: PosRegister; onDone: () =
 
   if (result) {
     const variance = Number(result.variance);
+    if (showZ) return <ShiftReportDialog sessionId={result.id} token={closerToken} onClose={onDone} />;
     return (
       <PosDialog open onOpenChange={(o) => !o && onDone()} title={`${register.name} is closed`}>
         <dl className="grid grid-cols-2 gap-y-2 text-sm">
           <dt className="text-pos-muted">Sales</dt>
           <dd className="text-right tabular-nums">
-            {result.zReport?.salesCount ?? 0} · {taka(result.zReport?.salesTotal ?? 0)}
+            {result.zReport?.sales.count ?? 0} · {taka(result.zReport?.sales.total ?? 0)}
           </dd>
           <dt className="text-pos-muted">Cash expected</dt>
           <dd className="text-right tabular-nums">{taka(result.expectedCash)}</dd>
@@ -266,7 +282,11 @@ function CloseDialog({ register, onDone }: { register: PosRegister; onDone: () =
           <dt className="font-medium">{variance === 0 ? 'Difference' : variance < 0 ? 'Short' : 'Over'}</dt>
           <dd className={`text-right font-semibold tabular-nums ${variance < 0 ? 'text-pos-alert' : ''}`}>{taka(Math.abs(variance))}</dd>
         </dl>
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex justify-end gap-2">
+          <PosButton onClick={() => setShowZ(true)}>
+            <Printer size={15} aria-hidden />
+            Z report
+          </PosButton>
           <PosButton variant="primary" onClick={onDone}>
             Done
           </PosButton>
@@ -276,15 +296,47 @@ function CloseDialog({ register, onDone }: { register: PosRegister; onDone: () =
   }
 
   return (
-    <PosDialog open onOpenChange={(o) => !o && onDone()} title={`Close ${register.name}`}>
+    <PosDialog open onOpenChange={(o) => !o && onDone()} title={`Close ${register.name}`} width="max-w-lg">
       <form onSubmit={submit} className="space-y-4">
         <p className="text-sm text-pos-muted">
-          Count all the cash in the drawer, then enter it. The difference from what's expected is saved with the shift.
+          Count all the cash in the drawer. The difference from what's expected is saved with the shift and printed on the Z report.
         </p>
         {unlock.fields}
-        <Field label="Cash counted">
-          <PosInput inputMode="decimal" value={counted} onChange={(e) => setCounted(e.target.value)} placeholder="e.g. 7450" />
-        </Field>
+        <div role="group" aria-label="How to count" className="inline-flex overflow-hidden rounded-md border border-pos-line">
+          {([true, false] as const).map((v) => (
+            <button key={String(v)} type="button" aria-pressed={byNote === v} onClick={() => setByNote(v)} className={`h-9 px-3 text-sm ${byNote === v ? 'bg-pos-ink text-white' : ''}`}>
+              {v ? 'Count by note' : 'Type the total'}
+            </button>
+          ))}
+        </div>
+        {byNote ? (
+          <div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+              {BDT_NOTES.map((n) => (
+                <label key={n} className="flex items-center gap-2 text-sm">
+                  <span className="w-12 shrink-0 text-right tabular-nums">৳{n}</span>
+                  <span className="text-pos-muted">×</span>
+                  <PosInput
+                    inputMode="numeric"
+                    maxLength={5}
+                    value={notes[String(n)] ?? ''}
+                    onChange={(e) => setNotes((x) => ({ ...x, [String(n)]: e.target.value.replace(/\D/g, '') }))}
+                    aria-label={`How many ৳${n}`}
+                    className="h-9 tabular-nums"
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 flex items-baseline justify-between rounded-lg bg-pos-page px-4 py-2.5">
+              <span className="text-sm">Cash counted</span>
+              <span className="text-xl font-semibold tabular-nums">{taka(noteTotal)}</span>
+            </div>
+          </div>
+        ) : (
+          <Field label="Cash counted">
+            <PosInput inputMode="decimal" value={counted} onChange={(e) => setCounted(e.target.value)} placeholder="e.g. 7450" />
+          </Field>
+        )}
         <Field label="Note (optional)" hint="For example why the cash is short or over.">
           <PosTextarea rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
         </Field>
@@ -334,54 +386,5 @@ function NameDialog({ title, initial = '', save, onDone }: { title: string; init
 }
 
 function SessionHistory() {
-  const query = useQuery({ queryKey: [...SESSIONS_KEY, 1], queryFn: () => posApi.sessions({ page: 1, perPage: 20 }) });
-  if (!query.isSuccess || query.data.sessions.length === 0) return null;
-  return (
-    <section>
-      <h2 className="mb-3 text-base font-semibold">Recent shifts</h2>
-      <div className="overflow-x-auto rounded-[10px] border border-pos-line bg-pos-surface">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="text-left text-pos-muted">
-            <tr>
-              <th className="px-4 py-2.5 font-medium">Register</th>
-              <th className="px-4 py-2.5 font-medium">Opened</th>
-              <th className="px-4 py-2.5 font-medium">Closed</th>
-              <th className="px-4 py-2.5 text-right font-medium">Float</th>
-              <th className="px-4 py-2.5 text-right font-medium">Expected</th>
-              <th className="px-4 py-2.5 text-right font-medium">Counted</th>
-              <th className="px-4 py-2.5 text-right font-medium">Difference</th>
-            </tr>
-          </thead>
-          <tbody>
-            {query.data.sessions.map((s) => {
-              const variance = s.variance === null ? null : Number(s.variance);
-              return (
-                <tr key={s.id} className="border-t border-pos-line">
-                  <td className="px-4 py-2.5">{s.register.name}</td>
-                  <td className="px-4 py-2.5">
-                    {dhakaTime(s.openedAt)} <span className="text-pos-muted">· {s.openedByName}</span>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    {s.closedAt ? (
-                      <>
-                        {dhakaTime(s.closedAt)} <span className="text-pos-muted">· {s.closedByName}</span>
-                      </>
-                    ) : (
-                      <span className="text-pos-go">Open</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums">{taka(s.openingFloat)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums">{s.expectedCash === null ? '' : taka(s.expectedCash)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums">{s.countedCash === null ? '' : taka(s.countedCash)}</td>
-                  <td className={`px-4 py-2.5 text-right tabular-nums ${variance !== null && variance < 0 ? 'text-pos-alert' : ''}`}>
-                    {variance === null ? '' : variance === 0 ? taka(0) : `${variance < 0 ? 'Short ' : 'Over '}${taka(Math.abs(variance))}`}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
+  return <SessionsTable recent />;
 }

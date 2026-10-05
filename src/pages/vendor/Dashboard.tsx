@@ -14,7 +14,7 @@ import { TodayKpis } from '../../components/dashboard/TodayKpis';
 import { AttentionList } from '../../components/dashboard/AttentionList';
 import { SalesOverview } from '../../components/dashboard/SalesOverview';
 import { RecentOrders } from '../../components/dashboard/RecentOrders';
-import { DeliveryCard, MoneyCard, PlanCard, TopProductsCard } from '../../components/dashboard/SideCards';
+import { DeliveryCard, InStoreCard, MoneyCard, PlanCard, TopProductsCard } from '../../components/dashboard/SideCards';
 import { DailyBrief } from '../../components/dashboard/DailyBrief';
 
 // Vendor dashboard home (dashboard-plan.md). Step 2: the page shell —
@@ -103,7 +103,7 @@ export default function VendorDashboard() {
 
   const isOwner = user?.role === 'VENDOR';
   // Money is owner only and delivery needs a courier: without either, the to-dos take the full width.
-  const hasMoneyColumn = !!dashboard.data && (!!dashboard.data.money || dashboard.data.delivery.courierConnected);
+  const hasMoneyColumn = !!dashboard.data && (!!dashboard.data.money || dashboard.data.delivery.courierConnected || !!dashboard.data.pos);
 
   const now = new Date();
   const greet = greeting(now);
@@ -230,7 +230,8 @@ export default function VendorDashboard() {
             {hasMoneyColumn && (
               <div className="space-y-4">
                 {dashboard.data.money && <MoneyCard money={dashboard.data.money} />}
-                <DeliveryCard delivery={dashboard.data.delivery} />
+                {dashboard.data.pos && <InStoreCard pos={dashboard.data.pos} />}
+                {(dashboard.data.money || dashboard.data.delivery.courierConnected) && <DeliveryCard delivery={dashboard.data.delivery} />}
               </div>
             )}
           </div>

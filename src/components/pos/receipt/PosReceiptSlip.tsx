@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import type { PosReceipt, PosReceiptProfile } from '../../../lib/posApi';
-import { printElement } from '../../../lib/printElement';
+import { printSlip, readPrinterPrefs } from '../../../lib/posHardware';
 
 /*
  * The printed counter receipt (POS-system-plan.md Step 5). Drawn by the
@@ -117,7 +117,9 @@ export const PosReceiptSlip = forwardRef<HTMLDivElement, { receipt: PosReceipt; 
       </div>
       {rule}
       <div>
-        <Row left={`${t.receipt}: ${receipt.publicCode ?? `#${receipt.invoiceNumber}`}`} right={`#${receipt.invoiceNumber}`} />
+        {/* Offline (Step 13): the counter's own number only; the serial comes when it's sent in. */}
+        <Row left={`${t.receipt}: ${receipt.publicCode ?? `#${receipt.invoiceNumber}`}`} right={receipt.offline ? undefined : `#${receipt.invoiceNumber}`} />
+        {receipt.localNumber && !receipt.offline && <Row left={`${t.receipt} (offline): ${receipt.localNumber}`} />}
         <Row left={`${t.date}: ${dhakaDate(receipt.createdAt)}`} />
         {receipt.registerName && <Row left={`${t.counter}: ${receipt.registerName}`} />}
         {receipt.cashierName && <Row left={`${t.cashier}: ${receipt.cashierName}`} />}
@@ -181,7 +183,11 @@ function Row({ left, right }: { left: React.ReactNode; right?: React.ReactNode }
   );
 }
 
-/** Opens the print dialog with just the slip, on paper as wide as the store's printer. */
+/**
+ * Prints the slip on paper as wide as the store's printer: straight to a printer connected on
+ * this counter (Step 12, opening the cash drawer when cash was taken), else the print dialog.
+ */
 export function printReceipt(el: HTMLElement, receipt: PosReceipt, profile: PosReceiptProfile) {
-  return printElement(el, `Receipt ${receipt.publicCode ?? receipt.invoiceNumber}`, { size: `${profile.widthMm}mm auto`, padding: '0' });
+  const tookCash = receipt.payments.some((p) => p.method === 'CASH' && p.amount > 0);
+  return printSlip(el, `Receipt ${receipt.publicCode ?? receipt.invoiceNumber}`, profile.widthMm, { kick: tookCash && readPrinterPrefs().kickOnCash });
 }

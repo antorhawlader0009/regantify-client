@@ -15,7 +15,7 @@ const buttonClass =
 const ENDPOINTS: { method: string; path: string; description: string; write?: boolean }[] = [
   { method: 'GET', path: '/store', description: 'Your store and this key' },
   { method: 'GET', path: '/orders', description: 'List orders: ?status=, ?phone=, ?created_from=, ?created_to=, ?page=, ?limit= (max 100)' },
-  { method: 'GET', path: '/orders/{id or invoice number}', description: 'One order with its items' },
+  { method: 'GET', path: '/orders/{id or invoice number}', description: 'One order with its items. "source" says where it came from: STOREFRONT (online store), MANUAL (added by hand) or POS (sold at your counter)' },
   { method: 'POST', path: '/orders', description: 'Create an order (e.g. from a chatbot or CRM)', write: true },
   { method: 'PATCH', path: '/orders/{id or invoice number}/status', description: 'Change an order status: { status, note }', write: true },
   { method: 'GET', path: '/products', description: 'List products: ?search=, ?page=, ?limit=' },

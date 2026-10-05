@@ -16,6 +16,8 @@ export interface ApprovalAsk {
   priceOverride: boolean;
   refund?: boolean;
   voidSale?: boolean;
+  /** Step 10: cash in or out of the drawer, or opening it, by a cashier without "Open the drawer". */
+  cashMovement?: boolean;
 }
 
 /** % or ৳, the one control every discount here uses. */
@@ -46,12 +48,15 @@ function DiscountInput({ value, onChange }: { value: PosDiscount | undefined; on
 export function LineEditDialog({
   line,
   canChangePrice,
+  quantityOnly = false,
   onSave,
   onRemove,
   onClose,
 }: {
   line: CartLine;
   canChangePrice: boolean;
+  /** Offline (Step 13): prices and discounts need the server, so only the quantity can change. */
+  quantityOnly?: boolean;
   onSave: (next: CartLine) => void;
   onRemove: () => void;
   onClose: () => void;
@@ -82,6 +87,8 @@ export function LineEditDialog({
             </PosButton>
           </div>
         </Field>
+        {!quantityOnly && (
+          <>
         <Field label={`Price each (regular ${taka(line.price)})`} hint={canChangePrice ? undefined : 'Changing the price needs a manager’s PIN when you pay.'}>
           <PosInput
             inputMode="decimal"
@@ -103,6 +110,9 @@ export function LineEditDialog({
             <PosInput maxLength={80} value={draft.discount.reason ?? ''} onChange={(e) => setDraft((d) => ({ ...d, discount: d.discount && { ...d.discount, reason: e.target.value || undefined } }))} />
           </Field>
         )}
+          </>
+        )}
+        {quantityOnly && <p className="text-xs text-pos-muted">Offline: prices and discounts need the internet.</p>}
         <div className="flex items-baseline justify-between rounded-lg bg-pos-page px-4 py-3">
           <span className="text-sm">Line total</span>
           <span className="text-xl font-semibold tabular-nums">
@@ -169,7 +179,7 @@ export function ManagerApprovalDialog({
   }, [managers, managerId]);
   const approve = useMutation({
     mutationFn: () =>
-      posApi.approve({ managerId, pin, discountPercent: ask.discountPercent, priceOverride: ask.priceOverride, refund: ask.refund, voidSale: ask.voidSale }, token),
+      posApi.approve({ managerId, pin, discountPercent: ask.discountPercent, priceOverride: ask.priceOverride, refund: ask.refund, voidSale: ask.voidSale, cashMovement: ask.cashMovement }, token),
     onSuccess: (r) => onApproved({ id: r.approvalId, managerName: r.managerName }),
     onError: (err) => {
       setPin('');
@@ -181,6 +191,7 @@ export function ManagerApprovalDialog({
     ask.priceOverride && 'a changed price',
     ask.refund && 'a refund',
     ask.voidSale && 'voiding a sale',
+    ask.cashMovement && 'opening the cash drawer',
   ]
     .filter(Boolean)
     .join(' and ');

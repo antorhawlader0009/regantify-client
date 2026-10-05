@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { authApi } from '../lib/authApi';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, type AuthUser } from '../store/authStore';
+import { isNetworkError, offlineUser } from '../lib/posOffline';
 
 // /vendor-impersonate is opened in a brand-new tab from Super Admin's
 // "Login as Vendor" (see VendorImpersonateEntry.tsx) — it must NEVER run
@@ -40,10 +41,19 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
       .then((data) => {
         if (!cancelled) setAuth(data.accessToken, data.user);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         // No valid refresh cookie (never logged in, logged out, or
         // expired) — this is the normal "not logged in" case, not a
         // failure to surface to the user.
+        //
+        // POS offline (POS-system-plan.md Step 13): no answer at all on the
+        // counter, reloaded in the tab it was already open in, carries on as
+        // the user that tab saved. The placeholder token gets a 401 once the
+        // internet is back, and the normal refresh then gets a real one.
+        const savedUser = offlineUser<AuthUser>();
+        if (isNetworkError(err) && savedUser && window.location.pathname.startsWith('/vendor/pos/')) {
+          if (!cancelled) setAuth('offline', savedUser);
+        }
       })
       .finally(() => {
         if (!cancelled) setHasHydrated();

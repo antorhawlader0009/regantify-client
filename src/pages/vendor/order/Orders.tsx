@@ -632,6 +632,8 @@ export default function Orders() {
   const [trashView, setTrashView] = useState(false);
   // LMS "Call status" filter (LMS-plan.md Step 14), only offered when the store uses the LMS.
   const [callStatus, setCallStatus] = useState<ListOrdersParams['callStatus'] | ''>('');
+  // POS-system-plan.md D9: online / added by hand / sold at the counter.
+  const [source, setSource] = useState<ListOrdersParams['source'] | ''>('');
   const lmsMe = useQuery({ queryKey: ['lms', 'me'], queryFn: lmsApi.me, retry: false, staleTime: 5 * 60_000 });
   const lmsOn = !!lmsMe.data?.enabled;
   const [customizeOpen, setCustomizeOpen] = useState(false);
@@ -648,7 +650,7 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -727,7 +729,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -737,6 +739,7 @@ export default function Orders() {
         trashOnly: trashView,
         callStatus: (lmsOn && callStatus) || undefined,
         courierBooking,
+        source: source || undefined,
         page,
         perPage,
       }),
@@ -823,6 +826,20 @@ export default function Orders() {
                   setDateTo(to);
                 }}
               />
+              <div className="relative">
+                <select
+                  aria-label="Source"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value as ListOrdersParams['source'] | '')}
+                  className={`${toolbarBtn} appearance-none pr-8`}
+                >
+                  <option value="">All sources</option>
+                  <option value="STOREFRONT">Online store</option>
+                  <option value="MANUAL">Added by hand</option>
+                  <option value="POS">POS (counter)</option>
+                </select>
+                <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
+              </div>
               {lmsOn && (
                 <div className="relative">
                   <select
@@ -1006,7 +1023,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>

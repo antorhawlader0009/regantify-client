@@ -4,6 +4,8 @@ import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, S
 import { PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
+import { ChannelSplitCard } from '../../../components/analytics/ChannelSplit';
+import { paymentMethodLabel } from '../../../lib/ordersApi';
 
 const PAYMENT_LABELS: Record<string, string> = {
   COD: 'Cash on delivery',
@@ -12,6 +14,8 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 function paymentLabel(key: string) {
+  // Counter sales: "bKash (counter)", "Split payment (counter)".
+  if (key.startsWith('POS_')) return paymentMethodLabel(key);
   return PAYMENT_LABELS[key] ?? key.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 }
 
@@ -88,6 +92,10 @@ export function SalesTab({ range }: TabProps) {
                   }))}
                 />
               </Card>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-4">
+              <ChannelSplitCard channels={data.channels} />
             </div>
           </>
         );

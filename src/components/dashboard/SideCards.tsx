@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Eye, EyeOff, Package, Truck, Wallet } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Package, Store, Truck, Wallet } from 'lucide-react';
 import type { DashboardSummary } from '../../lib/dashboardApi';
 import type { VendorPlanUsage } from '../../lib/plansApi';
 import type { AiTokenCredits } from '../../lib/aiChatBotApi';
@@ -83,6 +83,42 @@ export function MoneyCard({ money: m }: { money: NonNullable<DashboardSummary['m
       >
         <Wallet size={15} aria-hidden />
         Withdraw
+      </Link>
+    </SideCard>
+  );
+}
+
+
+/** The shop counter today (POS-system-plan.md Step 11): its sales, and the cash each open drawer should hold. */
+export function InStoreCard({ pos: p }: { pos: NonNullable<DashboardSummary['pos']> }) {
+  return (
+    <SideCard title="Today in store" action={<MoreLink to="/vendor/pos/reports">POS reports</MoreLink>}>
+      <dl className="space-y-2.5 text-sm">
+        <div className="flex items-start justify-between gap-3">
+          <dt className="text-neutral-600">
+            Counter sales
+            <span className="block text-xs text-neutral-400">
+              {p.orders} {p.orders === 1 ? 'sale' : 'sales'} today
+            </span>
+          </dt>
+          <dd className="dash-money shrink-0 font-semibold tabular-nums text-regantify-text">{money(p.sales)}</dd>
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <dt className="text-neutral-600">
+            Cash in drawers
+            <span className="block text-xs text-neutral-400">
+              {p.openRegisters.length === 0 ? 'No register open' : p.openRegisters.map((r) => `${r.name} (${r.openedByName})`).join(', ')}
+            </span>
+          </dt>
+          <dd className="dash-money shrink-0 font-semibold tabular-nums text-regantify-text">{money(p.cashInDrawer)}</dd>
+        </div>
+      </dl>
+      <Link
+        to="/vendor/pos/sell"
+        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-line text-sm text-regantify-text transition-colors hover:bg-neutral-50"
+      >
+        <Store size={15} aria-hidden />
+        Open the counter
       </Link>
     </SideCard>
   );

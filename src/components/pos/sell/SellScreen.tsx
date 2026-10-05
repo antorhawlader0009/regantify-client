@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, ClipboardList, HandCoins, Lock, MessageSquare, Minus, Pause, Percent, Plus, Printer, ScanBarcode, Search, Trash2, Undo2, User } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle2, CloudOff, MonitorSmartphone, RefreshCw, ClipboardList, HandCoins, Lock, MessageSquare, Minus, Pause, Percent, Plus, Printer, ScanBarcode, Search, Trash2, Undo2, User } from 'lucide-react';
 import { useReceiptPrinter } from '../receipt/useReceiptPrinter';
 import { cartTotals, lineAmounts, round2, toSaleLines, type CartLine } from './cartMath';
 import { ReturnsDialog } from './ReturnsDialog';
 import { CollectDueDialog } from './DueDialogs';
+import { CashDialog } from './CashDialog';
+import { CameraScanner } from './CameraScanner';
+import { SyncListDialog } from './SyncListDialog';
+import { useOfflineSync } from './useOfflineSync';
+import { buildOfflineSale, offlineBlocker } from './offlineSale';
+import { isNetworkError } from '../../../lib/posOffline';
+import { restorePrinter } from '../../../lib/posHardware';
+import { openCustomerDisplay, openDisplayChannel, type DisplayMessage } from '../../../lib/posDisplay';
 import { approvalCovers, CartDiscountDialog, HeldCartsDialog, HoldDialog, LineEditDialog, ManagerApprovalDialog } from './CounterDialogs';
 import {
   posApi,
@@ -41,6 +49,7 @@ function errorCode(err: unknown): string | undefined {
 
 export function SellScreen({
   storeName,
+  registerId,
   registerName,
   sessionId,
   unlock,
@@ -49,6 +58,7 @@ export function SellScreen({
   onRegisterClosed,
 }: {
   storeName: string;
+  registerId: string;
   registerName: string;
   sessionId: string;
   unlock: PosUnlock;
@@ -57,6 +67,10 @@ export function SellScreen({
   onRegisterClosed: () => void;
 }) {
   const catalog = usePosCatalog();
+  // Step 13: selling on with no internet; offline sales wait here and go in order when it's back.
+  const sync = useOfflineSync(unlock.token, () => catalog.refresh());
+  const offline = !sync.online;
+  const [syncListOpen, setSyncListOpen] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -85,6 +99,27 @@ export function SellScreen({
   const [exchangeCredit, setExchangeCredit] = useState<{ code: string; amount: number } | null>(null);
   // Step 9: a customer paying back their due.
   const [dueOpen, setDueOpen] = useState(false);
+  // Step 10: pay in / pay out / no sale, and the X report.
+  const [cashOpen, setCashOpen] = useState(false);
+  // Step 12: camera scanning, and what the customer screen shows.
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [payQr, setPayQr] = useState(false);
+  const display = useRef<ReturnType<typeof openDisplayChannel> | null>(null);
+  const displayState = useRef<DisplayMessage>({ type: 'idle', storeName });
+
+  // A printer picked on this counter before reconnects by itself (Serial/USB remember the permission).
+  useEffect(() => {
+    void restorePrinter();
+  }, []);
+
+  // The customer screen: it says "hello" when it opens, and gets what's on screen now.
+  useEffect(() => {
+    const channel = openDisplayChannel((m) => {
+      if (m.type === 'hello') channel.send(displayState.current);
+    });
+    display.current = channel;
+    return () => channel.close();
+  }, []);
 
   const totals = cartTotals(cart, settings, cartDiscount, couponCode ? couponDiscount : 0);
   const isManager = unlock.cashier.role === 'MANAGER';
@@ -215,7 +250,30 @@ export function SellScreen({
     setPaying(true);
   }
 
-  const busy = paying || picking !== null || customerOpen || done !== null || editing !== null || discountOpen || approvalAsk !== null || holdOpen || heldOpen || returnsOpen || dueOpen;
+  const busy = paying || picking !== null || customerOpen || done !== null || editing !== null || discountOpen || approvalAsk !== null || holdOpen || heldOpen || returnsOpen || dueOpen || cashOpen || cameraOpen;
+
+  // Keep the customer screen in step with the cart, the payment and the finished sale.
+  const displayKey = JSON.stringify([done?.id, paying, payQr, totals.total, cart.map((l) => [l.key, l.quantity, lineAmounts(l).total])]);
+  useEffect(() => {
+    const msg: DisplayMessage = done
+      ? { type: 'done', storeName, total: done.total, paid: done.payments.reduce((s, p) => s + (p.tendered ?? p.amount), 0), change: done.payments.find((p) => p.method === 'CASH')?.change ?? 0 }
+      : paying
+        ? { type: 'pay', storeName, total: totals.total, qrImageUrl: payQr ? (printer.profile?.banglaQrImageUrl ?? null) : null }
+        : cart.length > 0
+          ? {
+              type: 'cart',
+              storeName,
+              lines: cart.map((l) => ({ name: l.name, options: l.options, quantity: l.quantity, total: lineAmounts(l).total })),
+              discount: round2(totals.cartOff + totals.coupon),
+              vat: totals.vat,
+              vatIncluded: totals.vatIncluded,
+              total: totals.total,
+            }
+          : { type: 'idle', storeName };
+    displayState.current = msg;
+    display.current?.send(msg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayKey]);
   useBarcodeScanner((code) => void addByCode(code), { enabled: !busy });
 
   useEffect(() => {
@@ -242,9 +300,21 @@ export function SellScreen({
   const [lastReceipt, setLastReceipt] = useState<PosReceipt | null>(null);
   const [autoPrint, setAutoPrint] = useState(readAutoPrint);
 
+  /** Keep a sale on this device and print its receipt now; it goes to the server when the internet is back (Step 13). */
+  async function sellOffline(payments: PosTenderInput[]) {
+    const blocked = offlineBlocker(cart, cartDiscount, couponCode, payments);
+    if (blocked) throw Object.assign(new Error(blocked), { offlineBlock: true });
+    const built = buildOfflineSale({ clientSaleId, sessionId, registerId, registerName, cashier: unlock.cashier, cart, totals, customer, payments });
+    await sync.enqueue({ clientSaleId, sale: built.sale, receipt: built.receipt, queuedAt: built.receipt.createdAt });
+    catalog.takeStock(cart.map((l) => ({ productId: l.productId, variantId: l.variantId, quantity: l.quantity })));
+    return built.receipt;
+  }
+
   const sale = useMutation({
-    mutationFn: (payments: PosTenderInput[]) =>
-      posApi.createSale(
+    mutationFn: async (payments: PosTenderInput[]) => {
+      if (offline) return sellOffline(payments);
+      try {
+        return await posApi.createSale(
         {
           clientSaleId,
           sessionId,
@@ -255,8 +325,17 @@ export function SellScreen({
           approvalId: approval && Date.now() - approval.at < 120_000 ? approval.id : undefined,
           payments,
         },
-        unlock.token,
-      ),
+          unlock.token,
+        );
+      } catch (err) {
+        // No answer at all (the internet dropped): keep it here. The same id makes it once even if it did arrive.
+        if (isNetworkError(err)) {
+          sync.markOffline();
+          return sellOffline(payments);
+        }
+        throw err;
+      }
+    },
     onSuccess: (receipt) => {
       setPaying(false);
       setDone(receipt);
@@ -265,6 +344,10 @@ export function SellScreen({
       if (autoPrint) printer.print(receipt);
     },
     onError: (err) => {
+      if ((err as { offlineBlock?: boolean }).offlineBlock) {
+        toast.error((err as Error).message);
+        return;
+      }
       const code = errorCode(err);
       if (code === 'POS_PIN_REQUIRED') {
         toast.error('Unlock the counter again to finish this sale.');
@@ -345,17 +428,37 @@ export function SellScreen({
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1">
-          <PosButton variant="quiet" className="h-9" onClick={() => setReturnsOpen(true)}>
+          {(offline || sync.waiting.length > 0 || sync.failed.length > 0) && (
+            <button
+              type="button"
+              onClick={() => setSyncListOpen(true)}
+              className={`inline-flex h-9 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium ${sync.failed.length > 0 ? 'bg-red-50 text-pos-alert' : offline ? 'bg-amber-50 text-amber-800' : 'bg-pos-page text-pos-ink'}`}
+            >
+              {offline ? <CloudOff size={14} aria-hidden /> : <RefreshCw size={14} className={sync.syncing ? 'animate-spin' : ''} aria-hidden />}
+              {offline ? 'Offline' : 'Sending'}
+              {sync.waiting.length > 0 && ` · ${sync.waiting.length} waiting`}
+              {sync.failed.length > 0 && ` · ${sync.failed.length} refused`}
+            </button>
+          )}
+          <PosButton variant="quiet" className="h-9" onClick={() => setReturnsOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
             <Undo2 size={15} aria-hidden />
             <span className="hidden sm:inline">Returns</span>
           </PosButton>
           {printer.profile?.paymentMethods.includes('DUE') && (
-            <PosButton variant="quiet" className="h-9" onClick={() => setDueOpen(true)}>
+            <PosButton variant="quiet" className="h-9" onClick={() => setDueOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
               <HandCoins size={15} aria-hidden />
               <span className="hidden sm:inline">Collect due</span>
             </PosButton>
           )}
-          <PosButton variant="quiet" className="h-9" onClick={() => setHeldOpen(true)}>
+          <PosButton variant="quiet" className="h-9" onClick={() => openCustomerDisplay() || toast.error('The browser blocked the new window. Allow pop-ups for this site.')} title="Open the customer screen in a new window (drag it to the second monitor)">
+            <MonitorSmartphone size={15} aria-hidden />
+            <span className="hidden xl:inline">Customer screen</span>
+          </PosButton>
+          <PosButton variant="quiet" className="h-9" onClick={() => setCashOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
+            <Banknote size={15} aria-hidden />
+            <span className="hidden sm:inline">Cash</span>
+          </PosButton>
+          <PosButton variant="quiet" className="h-9" onClick={() => setHeldOpen(true)} disabled={offline} title={offline ? 'Needs the internet' : undefined}>
             <ClipboardList size={15} aria-hidden />
             <span className="hidden sm:inline">On hold</span>
           </PosButton>
@@ -366,13 +469,22 @@ export function SellScreen({
             </PosButton>
           )}
         </div>
-        <PosButton variant="secondary" className="h-9" onClick={onLock}>
+        <PosButton
+          variant="secondary"
+          className="h-9"
+          onClick={() => {
+            // Unlocking checks the PIN on the server, so locking offline would shut the counter until it's back.
+            if (offline) toast.error('You’re offline. Unlocking again needs the internet, so the counter stays with you for now.');
+            else onLock();
+          }}
+        >
           <Lock size={15} aria-hidden />
           Lock
         </PosButton>
       </header>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_400px]">
+      {/* Two columns from a 10" tablet held upright (768px) up; the cart narrower until a laptop. */}
+      <div className="grid min-h-0 flex-1 md:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_400px]">
         {/* Products */}
         <section className="flex min-h-0 flex-col">
           <form onSubmit={onSearchSubmit} className="shrink-0 border-b border-pos-line bg-pos-surface p-3">
@@ -389,7 +501,15 @@ export function SellScreen({
                 spellCheck={false}
                 className="h-12 w-full rounded-lg border border-pos-line bg-pos-page pl-10 pr-10 text-base outline-none focus:border-pos-ink"
               />
-              <ScanBarcode size={18} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-pos-muted" aria-hidden />
+              <button
+                type="button"
+                onClick={() => setCameraOpen(true)}
+                className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-pos-muted hover:bg-pos-surface hover:text-pos-ink"
+                aria-label="Scan with the camera"
+                title="Scan with the camera"
+              >
+                <ScanBarcode size={18} aria-hidden />
+              </button>
             </label>
             {categories.length > 0 && (
               <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
@@ -428,7 +548,7 @@ export function SellScreen({
         </section>
 
         {/* Cart */}
-        <aside className="flex min-h-0 flex-col border-t border-pos-line bg-pos-surface lg:border-l lg:border-t-0">
+        <aside className="flex min-h-0 flex-col border-t border-pos-line bg-pos-surface md:border-l md:border-t-0">
           <div className="flex shrink-0 items-center justify-between border-b border-pos-line px-4 py-3">
             <h2 className="text-sm font-semibold">
               Cart {totals.items > 0 && <span className="font-normal text-pos-muted">· {totals.items} item{totals.items === 1 ? '' : 's'}</span>}
@@ -529,15 +649,15 @@ export function SellScreen({
               </div>
             </dl>
             <div className="mt-3 flex flex-wrap gap-2">
-              <PosButton className="h-9" onClick={() => setDiscountOpen(true)} disabled={cart.length === 0}>
+              <PosButton className="h-9" onClick={() => setDiscountOpen(true)} disabled={cart.length === 0 || offline} title={offline ? 'Needs the internet' : undefined}>
                 <Percent size={14} aria-hidden />
                 Discount
               </PosButton>
-              <PosButton className="h-9" onClick={() => setHoldOpen(true)} disabled={cart.length === 0}>
+              <PosButton className="h-9" onClick={() => setHoldOpen(true)} disabled={cart.length === 0 || offline} title={offline ? 'Needs the internet' : undefined}>
                 <Pause size={14} aria-hidden />
                 Hold
               </PosButton>
-              {!couponCode && (
+              {!couponCode && !offline && (
                 <form
                   className="flex min-w-[10rem] flex-1 gap-1"
                   onSubmit={(e) => {
@@ -597,6 +717,7 @@ export function SellScreen({
         <LineEditDialog
           line={editing}
           canChangePrice={canChangePrice}
+          quantityOnly={offline}
           onSave={(next) => {
             setCart((prev) => prev.map((x) => (x.key === next.key ? next : x)));
             setEditing(null);
@@ -647,6 +768,38 @@ export function SellScreen({
           }}
         />
       )}
+      {syncListOpen && (
+        <SyncListDialog
+          online={sync.online}
+          syncing={sync.syncing}
+          waiting={sync.waiting}
+          failed={sync.failed}
+          onSync={() => void sync.sync()}
+          onRetry={(id) => void sync.retry(id)}
+          onReprint={(r) => printer.print(r)}
+          onClose={() => setSyncListOpen(false)}
+        />
+      )}
+      {cameraOpen && (
+        <CameraScanner
+          onCode={(code) => void addByCode(code)}
+          onClose={() => {
+            setCameraOpen(false);
+            setTimeout(focusSearch, 0);
+          }}
+        />
+      )}
+      {cashOpen && (
+        <CashDialog
+          unlock={unlock}
+          sessionId={sessionId}
+          profile={printer.profile}
+          onClose={() => {
+            setCashOpen(false);
+            setTimeout(focusSearch, 0);
+          }}
+        />
+      )}
       {dueOpen && (
         <CollectDueDialog
           unlock={unlock}
@@ -663,11 +816,13 @@ export function SellScreen({
       {paying && (
         <PayDialog
           total={totals.total}
-          methods={printer.profile?.paymentMethods ?? ['CASH']}
+          // Offline (Step 13): gift cards and due need the server.
+          methods={(printer.profile?.paymentMethods ?? ['CASH']).filter((m) => !offline || (m !== 'GIFT_CARD' && m !== 'DUE'))}
           qrImageUrl={printer.profile?.banglaQrImageUrl ?? null}
           giftCredit={exchangeCredit}
           customer={customer}
           token={unlock.token}
+          onQrShown={setPayQr}
           pending={sale.isPending}
           onConfirm={(payments) => sale.mutate(payments)}
           onClose={() => !sale.isPending && setPaying(false)}
@@ -778,6 +933,7 @@ function PayDialog({
   giftCredit,
   customer,
   token,
+  onQrShown,
   pending,
   onConfirm,
   onClose,
@@ -790,6 +946,8 @@ function PayDialog({
   /** Due (Step 9) needs the customer's name and phone. */
   customer: { name: string; phone: string };
   token: string;
+  /** Step 12: a Bangla QR line is on, so the customer screen shows the shop's QR. */
+  onQrShown: (shown: boolean) => void;
   pending: boolean;
   onConfirm: (payments: PosTenderInput[]) => void;
   onClose: () => void;
@@ -858,6 +1016,12 @@ function PayDialog({
     retry: false,
   });
   const dueAfter = dueLine && owes.data ? round2(owes.data.balance + (Number(dueLine.amount) || 0)) : null;
+
+  const qrShown = lines.some((l) => l.method === 'BANGLA_QR') && !!qrImageUrl;
+  useEffect(() => {
+    onQrShown(qrShown);
+    return () => onQrShown(false);
+  }, [qrShown, onQrShown]);
 
   return (
     <PosDialog open onOpenChange={(o) => !o && onClose()} title="Payment" width="max-w-lg">

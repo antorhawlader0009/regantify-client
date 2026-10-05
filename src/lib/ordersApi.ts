@@ -230,6 +230,8 @@ export interface ListOrdersParams {
   callStatus?: 'WAITING' | 'CONFIRMED' | 'CANCELLED' | 'NONE';
   /** Not sent to a courier yet, or a failed booking still to fix (finished orders left out). */
   courierBooking?: 'NOT_BOOKED' | 'FAILED';
+  /** Where it came from: the online store, added by hand, or sold at the counter (POS). */
+  source?: 'STOREFRONT' | 'MANUAL' | 'POS';
   page?: number;
   perPage?: number;
 }

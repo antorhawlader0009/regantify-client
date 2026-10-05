@@ -5,6 +5,8 @@ import { ArrowLeft } from 'lucide-react';
 import { apiErrorMessage, isPlanLocked } from '../../../lib/api';
 import { posApi } from '../../../lib/posApi';
 import { unlockValid, useCounter } from '../../../lib/posCounter';
+import { isNetworkError, loadCounter, rememberedUnlock, rememberOfflineUser, saveCounter } from '../../../lib/posOffline';
+import { useAuthStore } from '../../../store/authStore';
 import { LockScreen } from '../../../components/pos/sell/LockScreen';
 import { SellScreen } from '../../../components/pos/sell/SellScreen';
 import { taka } from '../../../components/pos/ui';
@@ -23,10 +25,17 @@ export default function PosSellPage() {
   const settings = useQuery({ queryKey: ['pos', 'settings'], queryFn: posApi.getSettings, enabled });
   const registers = useQuery({ queryKey: ['pos', 'registers'], queryFn: posApi.registers, enabled });
   const { registerId, unlock, setRegister, setUnlock, lock } = useCounter();
+  const user = useAuthStore((s) => s.user);
+  // Step 13: what this device saved the last time it sold online, for selling with no internet.
+  const saved = useQuery({ queryKey: ['pos', 'saved-counter'], queryFn: async () => (await loadCounter()) ?? null, staleTime: Infinity });
 
   useEffect(() => {
     const previous = document.title;
     document.title = 'POS';
+    // The offline shell (Step 13): this page and the customer screen keep working with no internet.
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/vendor/pos/' }).catch(() => undefined);
+    }
     return () => {
       document.title = previous;
     };
@@ -35,8 +44,49 @@ export default function PosSellPage() {
   const openRegisters = registers.data?.filter((r) => r.active && r.openSession) ?? [];
   const register = openRegisters.find((r) => r.id === registerId) ?? null;
 
+  // Online and ready: remember the counter (and, for this tab, the user) for an offline reload.
+  useEffect(() => {
+    if (!me.isSuccess || !register?.openSession) return;
+    rememberOfflineUser(user);
+    void saveCounter({
+      storeName: me.data.storeName,
+      registerId: register.id,
+      registerName: register.name,
+      sessionId: register.openSession.id,
+      settings: settings.data,
+      savedAt: new Date().toISOString(),
+    });
+  }, [me.isSuccess, me.data?.storeName, register?.id, register?.name, register?.openSession, settings.data, user]);
+
+  // No internet at all: carry on from what this device saved, as the cashier unlocked in this tab.
+  const networkDown = (me.isError && isNetworkError(me.error)) || (registers.isError && isNetworkError(registers.error));
+  const offlineUnlock = unlockValid(unlock) ? unlock : rememberedUnlock();
+  useEffect(() => {
+    if (networkDown && !unlockValid(unlock) && unlockValid(offlineUnlock)) setUnlock(offlineUnlock);
+  }, [networkDown, unlock, offlineUnlock, setUnlock]);
+
   let body: React.ReactNode;
-  if (me.isPending || (enabled && registers.isPending)) {
+  if (networkDown) {
+    const s = saved.data;
+    body =
+      s && (!registerId || s.registerId === registerId) && unlockValid(offlineUnlock) ? (
+        <SellScreen
+          storeName={s.storeName}
+          registerId={s.registerId}
+          registerName={s.registerName}
+          sessionId={s.sessionId}
+          unlock={offlineUnlock}
+          settings={s.settings}
+          onLock={lock}
+          onRegisterClosed={() => undefined}
+        />
+      ) : (
+        <Centered>
+          No internet. The counter can sell offline only when it was open here with a cashier unlocked before the internet went. Connect and refresh.
+          <BackLink />
+        </Centered>
+      );
+  } else if (me.isPending || (enabled && registers.isPending)) {
     body = <Centered>Loading…</Centered>;
   } else if (me.isError) {
     body = (
@@ -97,6 +147,7 @@ export default function PosSellPage() {
     body = (
       <SellScreen
         storeName={me.data.storeName}
+        registerId={register.id}
         registerName={register.name}
         sessionId={register.openSession!.id}
         unlock={unlock}
