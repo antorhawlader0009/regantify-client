@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquareQuote, MoreVertical, Plus, Star } from 'lucide-react';
 import { reviewsApi, type Review } from '../../../lib/reviewsApi';
+import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import {
@@ -150,7 +151,19 @@ function ReviewRow({ review }: { review: Review }) {
           {review.featured && <FeaturedBadge />}
         </p>
         {review.content && <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{stripHtml(review.content)}</p>}
-        {review.products.length > 0 && <p className="mt-1 truncate text-xs text-neutral-500">On {review.products.map((p) => p.name).join(', ')}</p>}
+        {review.products.length > 0 && (
+          <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-neutral-500">
+            On
+            {review.products.map((p, i) => (
+              <span key={p.id} className="inline-flex items-center gap-1">
+                {p.name}
+                {/* Opens the product's real page on the store in a new tab. */}
+                <ViewProductOnStorefront slug={p.slug} />
+                {i < review.products.length - 1 && ','}
+              </span>
+            ))}
+          </p>
+        )}
       </td>
       <td className={`${td} min-w-[150px]`}>
         <p>{review.customerName || '—'}</p>

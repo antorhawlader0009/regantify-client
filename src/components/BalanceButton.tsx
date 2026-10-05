@@ -21,6 +21,8 @@ export function BalanceButton() {
   const navigate = useNavigate();
   const wallet = useMutation({ mutationFn: () => financeApi.getWallet() });
   const balance = Number(wallet.data?.balance ?? 0);
+  // Red only while a negative balance is on show; once the timer hides it, the button goes back to grey.
+  const negative = visible && balance < 0;
 
   useEffect(() => {
     if (!visible) return;
@@ -61,15 +63,17 @@ export function BalanceButton() {
       title={visible ? 'Open wallet' : undefined}
       className={`relative flex h-10 w-[148px] shrink-0 sm:w-[160px] items-center gap-2.5 overflow-hidden rounded-full border pl-1.5 pr-4 text-sm transition-all duration-500 active:scale-95 disabled:cursor-wait ${
         visible
-          ? 'border-brand/25 bg-white text-brand'
+          ? negative
+            ? 'border-rose-300 bg-rose-50 text-rose-700'
+            : 'border-neutral-300 bg-white text-neutral-800'
           : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:shadow-sm'
       }`}
     >
       {/* Wallet icon, with a soft pulse ring while idle */}
       <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
-        {!visible && <span className="absolute inset-0 animate-ping rounded-full bg-brand-lime/70" />}
+        {!visible && <span className="absolute inset-0 animate-ping rounded-full bg-neutral-300/70" />}
         <span
-          className={`relative flex h-7 w-7 items-center justify-center rounded-full bg-brand-lime text-brand transition-transform duration-500 ${
+          className={`relative flex h-7 w-7 items-center justify-center rounded-full ${negative ? 'bg-rose-100 text-rose-600' : 'bg-neutral-200 text-neutral-700'} transition-transform duration-500 ${
             visible ? 'rotate-[360deg] scale-110' : ''
           }`}
         >
@@ -90,7 +94,7 @@ export function BalanceButton() {
       {visible && (
         // auto-hide countdown line
         <span
-          className="animate-shrink absolute bottom-0 left-0 h-[2px] bg-brand/40"
+          className={`animate-shrink absolute bottom-0 left-0 h-[2px] ${negative ? 'bg-rose-400/70' : 'bg-neutral-400/60'}`}
           style={{ animationDuration: `${SHOW_MS}ms` }}
         />
       )}

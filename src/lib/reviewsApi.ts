@@ -8,6 +8,8 @@ export interface ReviewOrderRef {
 export interface ReviewProductRef {
   id: string;
   name: string;
+  /** The product's storefront address, for the "view on store" link. */
+  slug?: string;
   photoUrls: string[];
 }
 

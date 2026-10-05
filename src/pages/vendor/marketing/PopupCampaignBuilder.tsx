@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlignCenter,
   AlignLeft,
@@ -177,6 +177,97 @@ function linkKindOf(link: string | null): { kind: LinkKind; slug: string } {
   return { kind: 'CUSTOM', slug: '' };
 }
 
+/**
+ * Finds one product by typing, for a store with hundreds: the search runs on
+ * the server (name or SKU) a moment after typing stops and shows the first
+ * matches, instead of loading a giant list into a dropdown.
+ */
+function ProductSearch({ slug, onPick }: { slug: string; onPick: (slug: string) => void }) {
+  type Hit = { name: string; slug?: string; sku?: string; photoUrls?: string[] };
+  const [text, setText] = useState('');
+  const [debounced, setDebounced] = useState('');
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState<string | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(text.trim()), 250);
+    return () => clearTimeout(t);
+  }, [text]);
+
+  // Close when clicking anywhere else.
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', away);
+    return () => document.removeEventListener('mousedown', away);
+  }, [open]);
+
+  const results = useQuery({
+    queryKey: ['popup-product-search', debounced],
+    enabled: open,
+    placeholderData: keepPreviousData,
+    queryFn: async () => (await productsApi.list({ search: debounced || undefined, perPage: 12 })).products as unknown as Hit[],
+  });
+
+  // A saved link only holds the slug: look the name up so the field can show it.
+  useQuery({
+    queryKey: ['popup-product-label', slug],
+    enabled: !!slug && !label,
+    queryFn: async () => {
+      const found = ((await productsApi.list({ search: slug.replace(/-/g, ' '), perPage: 10 })).products as unknown as Hit[]).find((p) => p.slug === slug);
+      if (found) setLabel(found.name);
+      return found?.name ?? null;
+    },
+  });
+
+  const hits = results.data ?? [];
+  return (
+    <div ref={boxRef} className="relative">
+      <input
+        value={open ? text : (label ?? slug.replace(/-/g, ' '))}
+        onFocus={() => {
+          setOpen(true);
+          setText('');
+        }}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Search your products by name or SKU…"
+        aria-label="Search products"
+        className={productInputClass}
+      />
+      {open && (
+        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-line bg-white py-1 shadow-lg">
+          {results.isLoading && <li className="px-3 py-2 text-sm text-neutral-500">Searching…</li>}
+          {!results.isLoading && hits.length === 0 && <li className="px-3 py-2 text-sm text-neutral-500">No product matches “{debounced}”.</li>}
+          {hits
+            .filter((p) => p.slug)
+            .map((p) => (
+              <li key={p.slug}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPick(p.slug!);
+                    setLabel(p.name);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                >
+                  {p.photoUrls?.[0] ? <img src={p.photoUrls[0]} alt="" className="h-8 w-8 shrink-0 rounded object-cover" /> : <span className="h-8 w-8 shrink-0 rounded bg-neutral-100" />}
+                  <span className="min-w-0">
+                    <span className="block truncate">{p.name}</span>
+                    {p.sku && <span className="block truncate text-xs text-neutral-500">{p.sku}</span>}
+                  </span>
+                </button>
+              </li>
+            ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function LinkPicker({ value, onChange }: { value: string | null; onChange: (v: string) => void }) {
   const initial = useMemo(() => linkKindOf(value), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [kind, setKind] = useState<LinkKind>(initial.kind);
@@ -184,9 +275,9 @@ function LinkPicker({ value, onChange }: { value: string | null; onChange: (v: s
   const needsList = kind === 'PRODUCT' || kind === 'CAMPAIGN' || kind === 'PAGE' || kind === 'LANDING';
   const { data: options = [], isLoading } = useQuery({
     queryKey: ['popup-link-options', kind],
-    enabled: needsList,
+    // Products have their own search box below (a store can have hundreds).
+    enabled: needsList && kind !== 'PRODUCT',
     queryFn: async (): Promise<{ slug: string; label: string }[]> => {
-      if (kind === 'PRODUCT') return (await productsApi.list({ perPage: 100 })).products.map((p) => ({ slug: (p as { slug?: string }).slug ?? '', label: p.name }));
       if (kind === 'CAMPAIGN') return (await campaignsApi.list()).map((c) => ({ slug: c.slug, label: c.name }));
       if (kind === 'PAGE') return (await pagesApi.list()).map((p) => ({ slug: p.slug, label: p.title }));
       return (await landingPagesApi.list()).map((p) => ({ slug: p.slug, label: p.title }));
@@ -216,7 +307,8 @@ function LinkPicker({ value, onChange }: { value: string | null; onChange: (v: s
         </select>
         <ChevronDown size={14} className="pointer-events-none absolute right-3 top-3.5 text-neutral-400" aria-hidden />
       </div>
-      {needsList && (
+      {kind === 'PRODUCT' && <ProductSearch slug={current} onPick={(s) => onChange(`/product/${s}`)} />}
+      {needsList && kind !== 'PRODUCT' && (
         <select
           value={current}
           onChange={(e) => onChange(e.target.value ? `${prefix[kind as keyof typeof prefix]}${e.target.value}` : '')}

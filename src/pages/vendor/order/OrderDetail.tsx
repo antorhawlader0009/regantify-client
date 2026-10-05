@@ -224,6 +224,9 @@ export default function OrderDetail() {
     onError: () => toast.error('Could not update the order status. Please try again.'),
   });
 
+  // A hook, so it stays above the loading early return below (hooks must run in the same order every render).
+  const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
+
   if (isLoading || !order) {
     return (
       <div className="mx-auto max-w-6xl space-y-4" aria-busy="true" aria-label="Loading order">
@@ -242,7 +245,6 @@ export default function OrderDetail() {
   const canSendToCourier = order.status === 'PROCESSING' && !booked && order.courierBookingStatus !== 'BOOKING';
   const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
   // The private link the shopper gets in the shipping SMS; the vendor can paste it into Messenger or WhatsApp.
-  const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
   const trackingLink = order.trackingToken && subdomain ? `${storefrontStoreUrl(subdomain)}/t/${order.trackingToken}` : null;
   const copyTrackingLink = () =>
     trackingLink &&
