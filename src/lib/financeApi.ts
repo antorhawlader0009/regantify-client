@@ -64,12 +64,23 @@ export interface WithdrawRequest {
   updatedAt: string;
 }
 
-export interface CreateWithdrawRequestPayload {
+export interface WithdrawDetailsPayload {
   amount: number;
   method: WithdrawMethod;
   receiverNumber?: string;
   bankDetails?: string;
   note?: string;
+}
+
+// The same details plus the 6-digit SMS code (2FA) from sendWithdrawOtp.
+export interface CreateWithdrawRequestPayload extends WithdrawDetailsPayload {
+  otpCode: string;
+}
+
+export interface WithdrawOtpSent {
+  sentTo: string; // masked, e.g. 017•••••678
+  expiresInSeconds: number;
+  resendInSeconds: number;
 }
 
 export const financeApi = {
@@ -83,6 +94,10 @@ export const financeApi = {
       .then((r) => r.data),
 
   // Finance > Withdraw's "Request Withdrawal" flow — see FinanceController.
+  // Step 1 texts a code to the owner's phone; step 2 sends it with the request.
+  sendWithdrawOtp: (payload: WithdrawDetailsPayload) =>
+    api.post<WithdrawOtpSent>('/v1/finance/withdraw-requests/send-otp', payload).then((r) => r.data),
+
   createWithdrawRequest: (payload: CreateWithdrawRequestPayload) =>
     api.post<WithdrawRequest>('/v1/finance/withdraw-requests', payload).then((r) => r.data),
 

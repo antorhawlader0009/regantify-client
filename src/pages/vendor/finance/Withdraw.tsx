@@ -5,7 +5,7 @@ import { Field, productInputClass } from '../../../components/product/ProductFor
 import { MoneyInput, Segmented } from '../../../components/product/ProductFormKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { EmptyState, StackedList } from '../../../components/ui/PageKit';
-import { financeApi, type WithdrawMethod, type WithdrawRequest } from '../../../lib/financeApi';
+import { financeApi, type WithdrawMethod, type WithdrawOtpSent, type WithdrawRequest } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { BD_PHONE_HINT, normalizeBdPhone, toLatinDigits } from '../../../lib/bdPhone';
 import { formatDhakaDate, formatDhakaDateTime } from '../../../lib/dhakaDate';
@@ -109,6 +109,25 @@ export default function Withdraw() {
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  // 2FA: the confirm dialog first texts a code to the owner's phone, then takes it.
+  const [otpSent, setOtpSent] = useState<WithdrawOtpSent | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [resendIn, setResendIn] = useState(0);
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  const closeConfirm = (open: boolean) => {
+    setConfirming(open);
+    if (!open) {
+      setOtpSent(null);
+      setOtpCode('');
+      setOtpError(null);
+    }
+  };
 
   // Fill the method and number from the most recent request, once.
   const [prefilled, setPrefilled] = useState(false);
@@ -144,29 +163,47 @@ export default function Withdraw() {
   const valid = !errors.amount && !errors.receiver && !errors.bank;
   const shown = (key: keyof typeof errors) => (submitted || (key === 'amount' && amount) ? errors[key] : null);
 
+  const details = {
+    amount: numericAmount,
+    method,
+    receiverNumber: method !== 'BANK' ? phone ?? receiverNumber.trim() : undefined,
+    bankDetails: method === 'BANK' ? bankDetails.trim() : undefined,
+    note: note.trim() || undefined,
+  };
+
+  const sendOtpMutation = useMutation({
+    mutationFn: () => financeApi.sendWithdrawOtp(details),
+    onSuccess: (sent) => {
+      setOtpSent(sent);
+      setOtpCode('');
+      setOtpError(null);
+      setResendIn(sent.resendInSeconds);
+    },
+    onError: (err) => setOtpError(apiErrorMessage(err, 'Couldn’t send the code. Check your connection and try again.')),
+  });
+
   const submitMutation = useMutation({
-    mutationFn: () =>
-      financeApi.createWithdrawRequest({
-        amount: numericAmount,
-        method,
-        receiverNumber: method !== 'BANK' ? phone ?? receiverNumber.trim() : undefined,
-        bankDetails: method === 'BANK' ? bankDetails.trim() : undefined,
-        note: note.trim() || undefined,
-      }),
+    mutationFn: () => financeApi.createWithdrawRequest({ ...details, otpCode }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['finance'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setAmount('');
       setNote('');
       setSubmitted(false);
-      setConfirming(false);
+      closeConfirm(false);
       toast.success('Withdrawal requested');
     },
-    onError: (err) => {
-      setConfirming(false);
-      setFormError(apiErrorMessage(err, 'Couldn’t send this request. Check your connection and try again.'));
-    },
+    onError: (err) => setOtpError(apiErrorMessage(err, 'Couldn’t send this request. Check your connection and try again.')),
   });
+
+  const confirmWithdraw = () => {
+    if (!/^\d{6}$/.test(otpCode)) {
+      setOtpError('Enter the 6-digit code we sent to your phone.');
+      return;
+    }
+    setOtpError(null);
+    submitMutation.mutate();
+  };
 
   const destination = method === 'BANK' ? 'your bank account' : `${METHOD_LABEL[method]} ${phone ?? receiverNumber.trim()}`;
 
@@ -298,33 +335,80 @@ export default function Withdraw() {
 
       <ConfirmDialog
         open={confirming}
-        onOpenChange={setConfirming}
-        title={`Withdraw ${formatTaka(numericAmount || 0)}?`}
+        onOpenChange={closeConfirm}
+        title={otpSent ? 'Enter the code' : `Withdraw ${formatTaka(numericAmount || 0)}?`}
         message={
-          <>
-            <p>
-              We’ll send <strong className="text-regantify-text">{formatTaka(numericAmount || 0)}</strong> to {destination}.
-            </p>
-            <dl className="mt-3 space-y-1 rounded-lg bg-neutral-50 p-3 text-sm">
-              <div className="flex justify-between gap-3">
-                <dt>Fee</dt>
-                <dd className="tabular-nums">{formatTaka(0)}</dd>
-              </div>
-              <div className="flex justify-between gap-3 font-medium text-regantify-text">
-                <dt>You receive</dt>
-                <dd className="tabular-nums">{formatTaka(numericAmount || 0)}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt>Balance after</dt>
-                <dd className="tabular-nums">{formatTaka(balance - (numericAmount || 0))}</dd>
-              </div>
-            </dl>
-            <p className="mt-3 text-xs">The amount is set aside now. If the request is rejected, it comes back to your wallet.</p>
-          </>
+          otpSent ? (
+            <>
+              <p>
+                We texted a 6-digit code to <strong className="text-regantify-text">{otpSent.sentTo}</strong>. Enter it to withdraw{' '}
+                <strong className="text-regantify-text">{formatTaka(numericAmount || 0)}</strong> to {destination}.
+              </p>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+                maxLength={6}
+                value={otpCode}
+                onChange={(e) => setOtpCode(toLatinDigits(e.target.value).replace(/\D/g, '').slice(0, 6))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!submitMutation.isPending) confirmWithdraw();
+                  }
+                }}
+                placeholder="------"
+                aria-label="Verification code"
+                className={`${productInputClass} mt-3 text-center text-lg tracking-[0.5em] tabular-nums`}
+              />
+              {otpError && <p className="mt-2 text-sm text-red-600">{otpError}</p>}
+              <p className="mt-2 text-xs">
+                Didn’t get it?{' '}
+                {resendIn > 0 ? (
+                  <span className="tabular-nums">Resend in {resendIn}s</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => sendOtpMutation.mutate()}
+                    disabled={sendOtpMutation.isPending}
+                    className="font-medium text-brand hover:underline disabled:opacity-60"
+                  >
+                    Resend code
+                  </button>
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                We’ll send <strong className="text-regantify-text">{formatTaka(numericAmount || 0)}</strong> to {destination}.
+              </p>
+              <dl className="mt-3 space-y-1 rounded-lg bg-neutral-50 p-3 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt>Fee</dt>
+                  <dd className="tabular-nums">{formatTaka(0)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 font-medium text-regantify-text">
+                  <dt>You receive</dt>
+                  <dd className="tabular-nums">{formatTaka(numericAmount || 0)}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt>Balance after</dt>
+                  <dd className="tabular-nums">{formatTaka(balance - (numericAmount || 0))}</dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs">
+                To keep your money safe, we’ll text a code to your phone to confirm. The amount is set aside once you confirm, and comes back to
+                your wallet if the request is rejected.
+              </p>
+              {otpError && <p className="mt-2 text-sm text-red-600">{otpError}</p>}
+            </>
+          )
         }
-        confirmLabel="Send request"
-        onConfirm={() => submitMutation.mutate()}
-        busy={submitMutation.isPending}
+        confirmLabel={otpSent ? 'Confirm withdrawal' : 'Send code'}
+        onConfirm={() => (otpSent ? confirmWithdraw() : sendOtpMutation.mutate())}
+        busy={otpSent ? submitMutation.isPending : sendOtpMutation.isPending}
       />
     </div>
   );
