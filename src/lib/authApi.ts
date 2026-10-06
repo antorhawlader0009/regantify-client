@@ -58,7 +58,21 @@ export type VendorLoginResponse =
       setupToken: string;
       expiresInSeconds: number;
       user: AuthUser;
+    }
+  | {
+      // One phone can be on several staff accounts (and one owner account). When the
+      // password matches more than one, nothing is signed in yet: the person picks one and
+      // the login is sent again with its accountId.
+      chooseAccount: true;
+      accounts: LoginAccountChoice[];
     };
+
+export interface LoginAccountChoice {
+  accountId: string;
+  storeName: string;
+  roleName: string;
+  turnedOff: boolean;
+}
 
 export interface SendOtpLikeResponse {
   message: string;
@@ -83,9 +97,9 @@ export const authApi = {
   // identifier (backend detects which). If the vendor is still on the
   // temporary password, this comes back as { mustSetPassword: true,
   // setupToken } instead of real tokens — see VendorLoginResponse.
-  vendorLogin: (identifier: string, password: string) =>
+  vendorLogin: (identifier: string, password: string, accountId?: string) =>
     api
-      .post<VendorLoginResponse>('/v1/auth/vendor/login', { identifier, password })
+      .post<VendorLoginResponse>('/v1/auth/vendor/login', { identifier, password, ...(accountId ? { accountId } : {}) })
       .then((r) => r.data),
 
   // Sets the vendor's own password in place of the SMS'd temporary one,

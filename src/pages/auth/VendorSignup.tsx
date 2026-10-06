@@ -75,6 +75,7 @@ const dict = {
     err_password_required: 'Enter your password',
     err_generic: 'Something went wrong. Please try again.',
     err_bad_password: 'Invalid password.',
+    err_pick_account: 'This number has more than one account. Sign in from the Login page to pick one.',
   },
   bn: {
     nav_login: 'লগইন',
@@ -122,6 +123,7 @@ const dict = {
     err_password_required: 'আপনার পাসওয়ার্ড দিন',
     err_generic: 'কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।',
     err_bad_password: 'পাসওয়ার্ড ভুল।',
+    err_pick_account: 'এই নম্বরে একাধিক অ্যাকাউন্ট আছে। বেছে নিতে লগইন পেজ থেকে সাইন ইন করুন।',
   },
 } as const;
 
@@ -337,6 +339,11 @@ function VendorSignupInner() {
     setLoginSubmitting(true);
     try {
       const res = await authApi.vendorLogin(existingPhone, values.password.trim());
+      if ('chooseAccount' in res) {
+        // Several accounts on this number share the password: the login page has the picker.
+        setLoginError(t('err_pick_account'));
+        return;
+      }
       if (res.mustSetPassword) {
         navigate('/vendor/complete-setup', { replace: true, state: { setupToken: res.setupToken } });
         return;

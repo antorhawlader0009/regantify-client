@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../../lib/authApi';
+import { authApi, type LoginAccountChoice } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
 import {
   Lock,
@@ -67,6 +67,9 @@ const dict = {
     err_identifier_invalid: 'Enter a valid phone number or email address',
     err_password_required: 'Password is required',
     err_login_failed: 'Invalid phone/email or password.',
+    choose_account: 'This number has more than one account. Which one do you want to open?',
+    account_turned_off: 'turned off',
+    choose_back: 'Use a different number',
   },
   bn: {
     nav_login: 'লগইন',
@@ -107,6 +110,9 @@ const dict = {
     err_identifier_invalid: 'সঠিক ফোন নম্বর বা ইমেইল ঠিকানা দিন',
     err_password_required: 'পাসওয়ার্ড দিতে হবে',
     err_login_failed: 'ফোন/ইমেইল বা পাসওয়ার্ড ভুল।',
+    choose_account: 'এই নম্বরে একাধিক অ্যাকাউন্ট আছে। কোনটি খুলতে চান?',
+    account_turned_off: 'বন্ধ করা',
+    choose_back: 'অন্য নম্বর দিয়ে লগইন',
   },
 } as const;
 
@@ -288,13 +294,22 @@ function VendorPhoneEntryInner() {
 
   const passwordForm = useForm<PasswordFormValues>({ resolver: zodResolver(passwordSchema) });
 
-  const handlePasswordLogin = async (values: PasswordFormValues) => {
+  // One phone can be on several staff accounts (and one owner account). When the password
+  // matches more than one, the server lists them and the person picks which store to open.
+  const [accountChoices, setAccountChoices] = useState<LoginAccountChoice[] | null>(null);
+
+  const handlePasswordLogin = async (values: PasswordFormValues, accountId?: string) => {
     setServerError(null);
     setSubmitting(true);
     try {
       // Guard against accidental whitespace/newlines picked up when a
       // vendor pastes the temporary password straight from the SMS app.
-      const res = await authApi.vendorLogin(values.identifier.trim(), values.password.trim());
+      const res = await authApi.vendorLogin(values.identifier.trim(), values.password.trim(), accountId);
+
+      if ('chooseAccount' in res) {
+        setAccountChoices(res.accounts);
+        return;
+      }
 
       if (res.mustSetPassword) {
         // Still on the temporary password — no real session was issued.
@@ -423,7 +438,44 @@ function VendorPhoneEntryInner() {
             <h2 className={`mt-5 text-2xl font-bold ${th.formTitle}`}>{t('form_title')}</h2>
             <p className={`mt-2 text-sm leading-relaxed ${th.formSub}`}>{t('form_sub')}</p>
 
-            <form onSubmit={passwordForm.handleSubmit(handlePasswordLogin)} className="mt-7 space-y-5">
+            {accountChoices ? (
+              <div className="mt-7 space-y-3">
+                <p className={`text-sm font-medium ${th.label}`}>{t('choose_account')}</p>
+                {accountChoices.map((a) => (
+                  <button
+                    key={a.accountId}
+                    type="button"
+                    disabled={submitting || a.turnedOff}
+                    onClick={() => handlePasswordLogin(passwordForm.getValues(), a.accountId)}
+                    className={`w-full text-left px-4 py-3 rounded-xl transition-colors disabled:opacity-50
+                      flex items-center justify-between gap-3 ${th.input}`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-semibold truncate">{a.storeName || '—'}</span>
+                      <span className={`block text-sm ${th.muted}`}>
+                        {a.roleName}
+                        {a.turnedOff && ` · ${t('account_turned_off')}`}
+                      </span>
+                    </span>
+                    <ArrowRight size={18} className="shrink-0" />
+                  </button>
+                ))}
+                {serverError && (
+                  <p className={`text-sm rounded-lg px-3 py-2 ${th.errorBox}`}>{serverError}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountChoices(null);
+                    setServerError(null);
+                  }}
+                  className={`w-full text-sm underline underline-offset-4 transition-colors ${th.link}`}
+                >
+                  {t('choose_back')}
+                </button>
+              </div>
+            ) : (
+            <form onSubmit={passwordForm.handleSubmit((v) => handlePasswordLogin(v))} className="mt-7 space-y-5">
               <div>
                 <label className={`block text-sm font-medium mb-1.5 ${th.label}`}>
                   {t('label_identifier')}
@@ -510,6 +562,7 @@ function VendorPhoneEntryInner() {
                 </button>
               </p>
             </form>
+            )}
           </div>
         </section>
       </main>
