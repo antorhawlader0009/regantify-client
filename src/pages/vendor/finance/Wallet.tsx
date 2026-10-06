@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowRight, Eye, EyeOff, Plus, Receipt } from 'lucide-re
 import { financeApi } from '../../../lib/financeApi';
 import { EmptyState, PageHeader, StackedList, outlineBtn, primaryBtn, secondaryBtn } from '../../../components/ui/PageKit';
 import { AddMoneyDialog } from './AddMoneyDialog';
+import { useCan } from '../../../lib/useStaffAccess';
 import { TransactionItem, formatTaka } from './financeUi';
 
 function Figure({ label, value, hint, loading }: { label: string; value: ReactNode; hint: ReactNode; loading: boolean }) {
@@ -28,6 +29,7 @@ function Figure({ label, value, hint, loading }: { label: string; value: ReactNo
  * few transactions. Add money / Withdraw are the two actions.
  */
 export default function Wallet() {
+  const isOwner = useCan('owner');
   const [addMoneyOpen, setAddMoneyOpen] = useState(false);
   const [shown, setShown] = useState(true);
 
@@ -51,15 +53,18 @@ export default function Wallet() {
         title="Wallet"
         description="Money from your online orders, minus platform charges. Withdraw it to bKash, Nagad or your bank."
         actions={
-          <div className="flex w-full gap-2 sm:w-auto">
-            <button type="button" onClick={() => setAddMoneyOpen(true)} className={`${secondaryBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
-              <Plus size={15} aria-hidden />
-              Add money
-            </button>
-            <Link to="/vendor/finance/withdraw" className={`${primaryBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
-              Withdraw
-            </Link>
-          </div>
+          // Moving money in or out is the owner's (rule-plan.md 5.2); staff with finance.view only look.
+          isOwner ? (
+            <div className="flex w-full gap-2 sm:w-auto">
+              <button type="button" onClick={() => setAddMoneyOpen(true)} className={`${secondaryBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
+                <Plus size={15} aria-hidden />
+                Add money
+              </button>
+              <Link to="/vendor/finance/withdraw" className={`${primaryBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
+                Withdraw
+              </Link>
+            </div>
+          ) : undefined
         }
       />
 

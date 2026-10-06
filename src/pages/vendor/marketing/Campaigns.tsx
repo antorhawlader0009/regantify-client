@@ -11,6 +11,7 @@ import { PromoListPage, StandardPromoMenu, copyText } from './MarketingKit';
 import { EmptyState, PageHeader, PageSection, PillTabs, SearchBox, SelectBox, primaryBtn } from '../../../components/ui/PageKit';
 import { popupCampaignsApi, popupPhase, type PopupCampaign, type PopupPhase } from '../../../lib/popupCampaignsApi';
 import { toast } from '../../../lib/toast';
+import { useCan } from '../../../lib/useStaffAccess';
 
 /** The campaign's own page on the storefront. */
 export function campaignPageUrl(subdomain: string, slug: string) {
@@ -110,6 +111,8 @@ function PopupMenu({ item }: { item: PopupCampaign }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const phase = popupPhase(item);
+  // Duplicate makes a new campaign, so it isn't one of the read-only extras (rule-plan.md Step 10).
+  const canEdit = useCan('marketing.edit');
   return (
     <StandardPromoMenu
       name={item.name}
@@ -121,6 +124,7 @@ function PopupMenu({ item }: { item: PopupCampaign }) {
       remove={() => popupCampaignsApi.remove(item.id)}
       deleteMessage="It stops showing on your store. Its numbers are lost."
       extra={
+        canEdit && (
         <DropdownMenuItem
           onSelect={async () => {
             try {
@@ -135,6 +139,7 @@ function PopupMenu({ item }: { item: PopupCampaign }) {
         >
           Duplicate
         </DropdownMenuItem>
+        )
       }
     />
   );
@@ -159,6 +164,7 @@ function StatCard({ Icon, label, value, note, tint }: { Icon: typeof Eye; label:
 
 /** Popup / message campaigns: what shoppers see over the StorePal storefront. */
 function PopupCampaigns() {
+  const canEdit = useCan('marketing.edit');
   const [phase, setPhase] = useState<PopupPhase | 'all'>('all');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('new');
@@ -180,12 +186,13 @@ function PopupCampaigns() {
           : b.c.createdAt.localeCompare(a.c.createdAt),
     );
 
-  const addButton = (
+  // Read-only roles see the popups but can't add one (rule-plan.md Step 10).
+  const addButton = canEdit ? (
     <Link to="/vendor/marketing/campaigns/popup/new" className={primaryBtn}>
       <Plus size={15} aria-hidden />
       New campaign
     </Link>
-  );
+  ) : undefined;
 
   return (
     <div className="space-y-3">
@@ -230,7 +237,7 @@ function PopupCampaigns() {
                 : 'Try another tab or search.'
             }
             action={
-              data.length === 0 ? (
+              data.length === 0 && canEdit ? (
                 <Link to="/vendor/marketing/campaigns/popup/new" className={primaryBtn}>
                   <Plus size={15} aria-hidden />
                   Create your first

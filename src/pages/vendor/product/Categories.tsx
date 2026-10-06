@@ -22,6 +22,7 @@ import {
   theadRow,
 } from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
+import { useCan } from '../../../lib/useStaffAccess';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
 
@@ -46,6 +47,8 @@ function VisibilityBadge({ visibility }: { visibility: Category['visibility'] })
 }
 
 function ActionsMenu({ onEdit, onAddSub, onDelete }: { onEdit: () => void; onAddSub: () => void; onDelete: () => void }) {
+  // No menu for a role that can't change the catalog (rule-plan.md Step 10).
+  if (!useCan('products.edit')) return null;
   return (
     <DropdownMenu
       trigger={
@@ -65,6 +68,8 @@ function ActionsMenu({ onEdit, onAddSub, onDelete }: { onEdit: () => void; onAdd
 
 export default function Categories() {
   const queryClient = useQueryClient();
+  // Read-only roles see the tree but can't add, drag or change it (rule-plan.md Step 10).
+  const canEdit = useCan('products.edit');
   const [search, setSearch] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('ALL');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -168,12 +173,12 @@ export default function Categories() {
     reparentMutation.mutate({ id: subId, parentId: targetMainId });
   };
 
-  const addButton = (
+  const addButton = canEdit ? (
     <button type="button" onClick={() => setShowAddModal(true)} className={primaryBtn}>
       <Plus size={15} />
       Add category
     </button>
-  );
+  ) : undefined;
   const emptyTitle = search || visibilityFilter !== 'ALL' ? 'No categories match' : 'No categories yet';
   const emptyHint =
     search || visibilityFilter !== 'ALL'
@@ -269,7 +274,7 @@ export default function Categories() {
                   <td className={`${td} whitespace-nowrap`}>
                     <div className="flex items-center gap-2">
                       <span
-                        draggable
+                        draggable={canEdit}
                         onDragStart={(e) => {
                           e.dataTransfer.setData(MAIN_DRAG_TYPE, main.id);
                           e.dataTransfer.effectAllowed = 'move';
@@ -289,7 +294,7 @@ export default function Categories() {
                   </td>
                   <td className={td}>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      {subcategories.map((sub) => subChip(sub, true))}
+                      {subcategories.map((sub) => subChip(sub, canEdit))}
                       <button
                         type="button"
                         onClick={() => setAddingSubcategoryFor(main)}

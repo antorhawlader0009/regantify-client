@@ -25,6 +25,7 @@ import { OrdersTab } from './OrdersTab';
 import { ProductsTab } from './ProductsTab';
 import { CustomersTab } from './CustomersTab';
 import { MarketingTab } from './MarketingTab';
+import { useCan } from '../../../lib/useStaffAccess';
 
 const TABS: { id: AnalyticsTab; label: string; icon: LucideIcon }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutGrid },
@@ -67,6 +68,7 @@ export default function AnalyticsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const fetching = useIsFetching({ queryKey: ['analytics'] }) > 0;
   const today = todayDhaka();
+  const canProfit = useCan('analytics.profit'); // the Sales tab is sales only without it (rule-plan.md Step 10)
 
   // "traffic" was this tab's name before it became Marketing; old links still land there.
   const rawTab = searchParams.get('tab');
@@ -139,7 +141,7 @@ export default function AnalyticsPage() {
               label: (
                 <span className="inline-flex items-center gap-1.5">
                   <Icon size={15} aria-hidden />
-                  {t.label}
+                  {t.id === 'sales' && !canProfit ? 'Sales' : t.label}
                 </span>
               ),
             };

@@ -60,6 +60,17 @@ function Feature({ on = true, children }: { on?: boolean; children: ReactNode })
  * set it up by hand (a PlanUpgradeRequest a Super Admin reviews). Free
  * has no payment, so moving to it is always a request.
  */
+/** The end date as shown to the vendor, whole days left (a part day counts as one), and whether it's close (7 days or less). */
+function describePlanEnd(iso: string) {
+  const end = new Date(iso);
+  const daysLeft = Math.max(1, Math.ceil((end.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+  return {
+    date: end.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Dhaka' }),
+    daysLeft,
+    soon: daysLeft <= 7,
+  };
+}
+
 export default function Billing() {
   const queryClient = useQueryClient();
   const isOwner = useAuthStore((s) => s.user?.role === 'VENDOR');
@@ -98,6 +109,7 @@ export default function Billing() {
   const loading = usageLoading || plansLoading;
   const sortedPlans = [...plans].sort((a, b) => TIER_ORDER.indexOf(a.code) - TIER_ORDER.indexOf(b.code));
   const currentIndex = usage ? TIER_ORDER.indexOf(usage.plan.code) : -1;
+  const planEnd = usage?.planExpiresAt ? describePlanEnd(usage.planExpiresAt) : null;
 
   if (loading) {
     return (
@@ -126,6 +138,11 @@ export default function Billing() {
               {priceText(usage.plan)}
               {Number(usage.plan.priceMonthly) > 0 && <span className="text-white/75"> a month</span>}
             </p>
+            {planEnd && (
+              <p className={`mt-3 rounded-md px-2.5 py-1.5 text-xs font-medium ${planEnd.soon ? 'bg-amber-300 text-amber-950' : 'bg-white/15 text-white'}`}>
+                Ends on {planEnd.date} ({planEnd.daysLeft} {planEnd.daysLeft === 1 ? 'day' : 'days'} left). After that your store goes back to the Free plan.
+              </p>
+            )}
             <p className="mt-3 text-xs leading-relaxed text-white/75">
               {feeText(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer)}.
             </p>
@@ -187,7 +204,16 @@ export default function Billing() {
                   </li>
                 </ul>
 
-                {isCurrent ? (
+                {isCurrent && !isFree && planEnd ? (
+                  <button
+                    type="button"
+                    disabled={payMutation.isPending}
+                    onClick={() => payMutation.mutate(plan.code)}
+                    className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+                  >
+                    {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${priceText(plan)}`}
+                  </button>
+                ) : isCurrent ? (
                   <p className="flex h-10 items-center justify-center rounded-lg bg-neutral-50 text-sm text-neutral-500">You’re on this plan</p>
                 ) : (
                   <div className="space-y-1.5">

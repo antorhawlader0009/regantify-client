@@ -3,9 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
-import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type OrderStatus } from '../../../lib/ordersApi';
+import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
+import { useCan } from '../../../lib/useStaffAccess';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { apiErrorMessage } from '../../../lib/api';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
@@ -70,6 +71,40 @@ function linkBtn(extra = '') {
   return `text-xs font-medium text-brand underline-offset-2 hover:underline disabled:opacity-60 ${extra}`;
 }
 
+/**
+ * Delivery for a staff role without orders.courier (rule-plan.md Step 10):
+ * where it goes and what the courier says, with nothing to book or change.
+ */
+function ReadOnlyDelivery({ order }: { order: Order }) {
+  const provider = order.courierProvider;
+  return (
+    <Card title="Delivery" id="delivery">
+      <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
+      <p className="mt-1 text-xs text-neutral-500">
+        {[order.shippingCity && `City: ${order.shippingCity}`, order.shippingDistrict && `District: ${order.shippingDistrict}`, order.shippingZip && `ZIP: ${order.shippingZip}`]
+          .filter(Boolean)
+          .join(', ')}
+      </p>
+      <div className="mt-4 border-t border-line pt-4 text-sm">
+        {provider === 'NONE' ? (
+          <p className="text-neutral-600">Not sent to a courier yet.</p>
+        ) : (
+          <>
+            <p className="flex flex-wrap items-center gap-2 text-regantify-text">
+              {COURIER_NAMES[provider]}
+              {order.courierStatus && <CourierStatusBadge provider={provider} status={order.courierStatus} />}
+            </p>
+            {(order.courierTrackingCode || order.courierConsignmentId) && (
+              <p className="mt-1 text-xs text-neutral-500">Tracking: {order.courierTrackingCode ?? order.courierConsignmentId}</p>
+            )}
+          </>
+        )}
+        <p className="mt-3 text-xs text-neutral-500">Your role can’t book or change couriers.</p>
+      </div>
+    </Card>
+  );
+}
+
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
@@ -96,11 +131,17 @@ export default function OrderDetail() {
     enabled: Boolean(id),
   });
 
-  // The customer's delivery record (same lookup as the Orders list).
+  // What this person's role can do here (rule-plan.md Step 10); the server checks each again.
+  const canEdit = useCan('orders.edit');
+  const canCancelRefund = useCan('orders.cancel_refund');
+  const canCourier = useCan('orders.courier');
+  const canContact = useCan('customers.contact');
+
+  // The customer's delivery record (same lookup as the Orders list); by full phone number, so it needs contact.
   const { data: deliveryStats } = useQuery({
     queryKey: ['customer-courier-stats', order ? [order.customerPhone] : []],
     queryFn: () => ordersApi.getCustomerCourierStats([order!.customerPhone]),
-    enabled: Boolean(order),
+    enabled: Boolean(order) && canContact,
     staleTime: 60_000,
     refetchInterval: (query) =>
       query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending || s.steadfast?.pending) ? 4000 : false,
@@ -448,7 +489,7 @@ export default function OrderDetail() {
           </Card>
 
           {/* Cash on Delivery: the delivery charge (or any part) paid before delivery. */}
-          {order.source !== 'POS' && order.paymentMethod === 'COD' && (
+          {canEdit && order.source !== 'POS' && order.paymentMethod === 'COD' && (
             <Card title="Advance" id="advance">
               <OrderAdvanceCard order={order} onChanged={invalidateOrder} />
             </Card>
@@ -467,23 +508,28 @@ export default function OrderDetail() {
             {order.customerPhoneAlt && <p className="text-sm text-neutral-600">{order.customerPhoneAlt} (other number)</p>}
             {order.customerEmail && <p className="truncate text-sm text-neutral-600">{order.customerEmail}</p>}
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a href={`tel:${order.customerPhone}`} className={outlineBtn}>
-                <Phone size={14} />
-                Call
-              </a>
-              <a href={`https://wa.me/${whatsappNumber(order.customerPhone)}`} target="_blank" rel="noopener noreferrer" className={outlineBtn}>
-                <MessageCircle size={14} />
-                WhatsApp
-              </a>
-              <button type="button" onClick={() => setHistoryPhone(order.customerPhone)} className={outlineBtn}>
-                Order history
-              </button>
-            </div>
+            {/* Without customers.contact the number comes masked (rule-plan.md Step 5): nothing to call or look up. */}
+            {canContact && (
+              <>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a href={`tel:${order.customerPhone}`} className={outlineBtn}>
+                    <Phone size={14} />
+                    Call
+                  </a>
+                  <a href={`https://wa.me/${whatsappNumber(order.customerPhone)}`} target="_blank" rel="noopener noreferrer" className={outlineBtn}>
+                    <MessageCircle size={14} />
+                    WhatsApp
+                  </a>
+                  <button type="button" onClick={() => setHistoryPhone(order.customerPhone)} className={outlineBtn}>
+                    Order history
+                  </button>
+                </div>
 
-            <div className="mt-3">
-              <CustomerDeliveryStats stats={deliveryStats?.byPhone[order.customerPhone]} />
-            </div>
+                <div className="mt-3">
+                  <CustomerDeliveryStats stats={deliveryStats?.byPhone[order.customerPhone]} />
+                </div>
+              </>
+            )}
             <OrderCallLine orderId={order.id} />
 
             {order.customerNote && (
@@ -511,6 +557,9 @@ export default function OrderDetail() {
             </Card>
           ) : (
           <>
+          {!canCourier ? (
+            <ReadOnlyDelivery order={order} />
+          ) : (
           <Card title="Delivery" id="delivery">
             <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
             <p className="mt-1 text-xs text-neutral-500">
@@ -767,13 +816,17 @@ export default function OrderDetail() {
               </div>
             )}
           </Card>
+          )}
 
-          <Card title="Customer tracking" id="tracking">
-            <OrderTrackingCard orderId={order.id} onLinkChanged={invalidateOrder} />
-          </Card>
+          {canEdit && (
+            <Card title="Customer tracking" id="tracking">
+              <OrderTrackingCard orderId={order.id} onLinkChanged={invalidateOrder} />
+            </Card>
+          )}
           </>
           )}
 
+          {canEdit && (
           <Card title="Change status">
             <select
               value=""
@@ -785,7 +838,8 @@ export default function OrderDetail() {
               <option value="" disabled>
                 Move this order to…
               </option>
-              {ALL_ORDER_STATUSES.filter((s) => s !== order.status).map((status) => (
+              {/* Cancelled / Refunded need their own permission (rule-plan.md 5.3). */}
+              {ALL_ORDER_STATUSES.filter((s) => s !== order.status && (canCancelRefund || (s !== 'CANCELLED' && s !== 'REFUNDED'))).map((status) => (
                 <option key={status} value={status}>
                   {orderStatusLabel(status)}
                 </option>
@@ -800,6 +854,7 @@ export default function OrderDetail() {
             />
             <p className="mt-1.5 text-xs text-neutral-500">Write the note first; it’s saved with the next status change.</p>
           </Card>
+          )}
         </div>
       </div>
 

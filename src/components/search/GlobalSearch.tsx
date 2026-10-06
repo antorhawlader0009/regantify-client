@@ -24,6 +24,8 @@ import {
 import { searchApi } from '../../lib/searchApi';
 import { clearRecents, loadRecents, queryTokens, quickActions, saveRecent, searchStatic, type RecentEntry } from '../../lib/searchIndex';
 import { useAuthStore } from '../../store/authStore';
+import { useViewer } from '../../lib/useStaffAccess';
+import { canOpenPath } from '../../lib/staffPermissions';
 import { useSearchUi } from '../../store/searchStore';
 
 /*
@@ -141,6 +143,7 @@ export function SearchPalette() {
 function PaletteBody({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const userId = useAuthStore((s) => s.user?.id) ?? '';
+  const viewer = useViewer();
   const [query, setQuery] = useState('');
   const [term, setTerm] = useState('');
   const [active, setActive] = useState(0);
@@ -174,14 +177,21 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
   const rows = useMemo<Row[]>(() => {
     const out: Row[] = [];
     const q = query.trim();
+    // Only pages this person's role can open (rule-plan.md Step 7).
+    const canGo = (path: string) => canOpenPath(viewer, path);
     if (!q) {
-      recents.forEach((r, i) => out.push({ key: `recent-${i}`, group: 'Recent', icon: 'recent', title: r.title, subtitle: r.subtitle, path: r.path }));
+      recents
+        .filter((r) => canGo(r.path))
+        .forEach((r, i) => out.push({ key: `recent-${i}`, group: 'Recent', icon: 'recent', title: r.title, subtitle: r.subtitle, path: r.path }));
       quickActions()
+        .filter((a) => canGo(a.path))
         .slice(0, 6)
         .forEach((a) => out.push({ key: `qa-${a.path}`, group: 'Quick actions', icon: 'action', title: a.title, path: a.path }));
       return out;
     }
-    const matches = searchStatic(q, 12);
+    const matches = searchStatic(q, 40)
+      .filter((m) => canGo(m.path))
+      .slice(0, 12);
     matches
       .filter((m) => m.kind === 'page')
       .slice(0, 4)
@@ -197,7 +207,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
       }
     }
     return out;
-  }, [query, recents, remote.data]);
+  }, [query, recents, remote.data, viewer]);
 
   useEffect(() => setActive(0), [query, remote.data]);
 

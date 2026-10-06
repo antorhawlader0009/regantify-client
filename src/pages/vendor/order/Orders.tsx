@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { orderRef, ordersApi, paymentMethodLabel, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
 import { lmsApi } from '../../../lib/lmsApi';
+import { useCan } from '../../../lib/useStaffAccess';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import {
   courierApi,
@@ -187,6 +188,12 @@ function OrderRow({
   deliveryStats,
 }: OrderRowProps) {
   const queryClient = useQueryClient();
+  // What this person's role can do to an order (rule-plan.md Step 10); the server checks each again.
+  const canEdit = useCan('orders.edit');
+  const canCancelRefund = useCan('orders.cancel_refund');
+  const canCourier = useCan('orders.courier');
+  const canTrash = useCan('orders.delete');
+  const canContact = useCan('customers.contact');
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -385,23 +392,28 @@ function OrderRow({
         <p className="mt-1 flex items-center gap-1.5 text-xs text-neutral-600">
           <Phone size={12} className="shrink-0 text-neutral-500" />
           {order.customerPhone}
-          <button
-            type="button"
-            onClick={() => copyPhone(order.customerPhone)}
-            aria-label="Copy phone number"
-            title="Copy phone number"
-            className="text-neutral-400 transition hover:text-neutral-700"
-          >
-            <Copy size={11} />
-          </button>
+          {/* Without customers.contact the number comes masked (rule-plan.md Step 5): nothing to copy or look up. */}
+          {canContact && (
+            <button
+              type="button"
+              onClick={() => copyPhone(order.customerPhone)}
+              aria-label="Copy phone number"
+              title="Copy phone number"
+              className="text-neutral-400 transition hover:text-neutral-700"
+            >
+              <Copy size={11} />
+            </button>
+          )}
         </p>
         <CustomerDeliveryStats stats={deliveryStats} compact />
-        <button
-          onClick={() => onCheckHistory(order.customerPhone)}
-          className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50"
-        >
-          Check History
-        </button>
+        {canContact && (
+          <button
+            onClick={() => onCheckHistory(order.customerPhone)}
+            className="mt-1.5 inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50"
+          >
+            Check History
+          </button>
+        )}
       </td>
       <td className={`${td} min-w-[200px]`}>
         <p>{order.shippingAddress}</p>
@@ -449,29 +461,43 @@ function OrderRow({
           }
         >
           {trashView ? (
-            <DropdownMenuItem icon={<RotateCcw />} onSelect={() => trashMutation.mutate()}>
-              Restore
-            </DropdownMenuItem>
+            canTrash ? (
+              <DropdownMenuItem icon={<RotateCcw />} onSelect={() => trashMutation.mutate()}>
+                Restore
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem icon={<RotateCcw />} disabled hint="Your role can’t restore orders" onSelect={() => undefined}>
+                Restore
+              </DropdownMenuItem>
+            )
           ) : (
             <>
               <DropdownMenuItem icon={<FileText />} hint="View, print or download" onSelect={() => onShowInvoice(order)}>
                 Invoice
               </DropdownMenuItem>
-              <DropdownMenuSub icon={<ListChecks />} label="Change status" value={orderStatusLabel(order.status)}>
-                {ALL_ORDER_STATUSES.map((status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    disabled={status === order.status || statusMutation.isPending}
-                    icon={status === order.status ? <Check /> : <span className="block w-4" />}
-                    onSelect={() => statusMutation.mutate(status)}
-                  >
-                    {orderStatusLabel(status)}
+              {canEdit && (
+                <>
+                  <DropdownMenuSub icon={<ListChecks />} label="Change status" value={orderStatusLabel(order.status)}>
+                    {ALL_ORDER_STATUSES.map((status) => {
+                      const moneyBack = status === 'CANCELLED' || status === 'REFUNDED';
+                      return (
+                        <DropdownMenuItem
+                          key={status}
+                          disabled={status === order.status || statusMutation.isPending || (moneyBack && !canCancelRefund)}
+                          hint={moneyBack && !canCancelRefund && status !== order.status ? 'Your role can’t cancel or refund' : undefined}
+                          icon={status === order.status ? <Check /> : <span className="block w-4" />}
+                          onSelect={() => statusMutation.mutate(status)}
+                        >
+                          {orderStatusLabel(status)}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuSub>
+                  <DropdownMenuItem icon={<Tag />} onSelect={() => onChangeLabel(order)}>
+                    Change label
                   </DropdownMenuItem>
-                ))}
-              </DropdownMenuSub>
-              <DropdownMenuItem icon={<Tag />} onSelect={() => onChangeLabel(order)}>
-                Change label
-              </DropdownMenuItem>
+                </>
+              )}
 
               <DropdownMenuSeparator />
               <DropdownMenuLabel>
@@ -480,9 +506,11 @@ function OrderRow({
 
               {booked ? (
                 <>
-                  <DropdownMenuItem icon={<RefreshCw />} disabled={refreshStatusMutation.isPending} onSelect={() => refreshStatusMutation.mutate()}>
-                    {refreshStatusMutation.isPending ? 'Refreshing…' : 'Refresh delivery status'}
-                  </DropdownMenuItem>
+                  {canCourier && (
+                    <DropdownMenuItem icon={<RefreshCw />} disabled={refreshStatusMutation.isPending} onSelect={() => refreshStatusMutation.mutate()}>
+                      {refreshStatusMutation.isPending ? 'Refreshing…' : 'Refresh delivery status'}
+                    </DropdownMenuItem>
+                  )}
                   {trackingId && (
                     <DropdownMenuItem icon={<Copy />} hint={trackingId} onSelect={() => copyTrackingId(trackingId)}>
                       Copy tracking ID
@@ -507,17 +535,17 @@ function OrderRow({
                   <DropdownMenuItem icon={<History />} onSelect={() => onShowTimeline(order)}>
                     Courier timeline
                   </DropdownMenuItem>
-                  {order.courierProvider === 'PATHAO' && (
+                  {canCourier && order.courierProvider === 'PATHAO' && (
                     <DropdownMenuItem icon={<Printer />} onSelect={() => openPathaoLabels([order.id])}>
                       Print shipping label
                     </DropdownMenuItem>
                   )}
-                  {order.courierProvider === 'STEADFAST' && steadfastReturnable(order.courierStatus) && (
+                  {canCourier && order.courierProvider === 'STEADFAST' && steadfastReturnable(order.courierStatus) && (
                     <DropdownMenuItem icon={<Undo2 />} onSelect={() => onRequestReturn(order)}>
                       Request return
                     </DropdownMenuItem>
                   )}
-                  {order.courierProvider === 'REDX' && redxCancellable(order.courierStatus) && (
+                  {canCourier && order.courierProvider === 'REDX' && redxCancellable(order.courierStatus) && (
                     <DropdownMenuItem icon={<XCircle />} hint="Only before RedX picks it up" onSelect={() => onCancelRedx(order)}>
                       Cancel parcel
                     </DropdownMenuItem>
@@ -526,6 +554,10 @@ function OrderRow({
               ) : bookingNow ? (
                 <DropdownMenuItem icon={<Truck />} disabled onSelect={() => undefined}>
                   Booking…
+                </DropdownMenuItem>
+              ) : !canCourier ? (
+                <DropdownMenuItem icon={<Truck />} disabled hint="Your role can’t book couriers" onSelect={() => undefined}>
+                  {assigned ? `Not booked with ${COURIER_SHORT[order.courierProvider as BookableCourier]} yet` : 'Not sent to a courier yet'}
                 </DropdownMenuItem>
               ) : (
                 <>
@@ -587,10 +619,14 @@ function OrderRow({
                 </>
               )}
 
-              <DropdownMenuSeparator />
-              <DropdownMenuItem danger icon={<Trash2 className="text-red-500" />} onSelect={() => trashMutation.mutate()}>
-                Send to Trash
-              </DropdownMenuItem>
+              {canTrash && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem danger icon={<Trash2 className="text-red-500" />} onSelect={() => trashMutation.mutate()}>
+                    Send to Trash
+                  </DropdownMenuItem>
+                </>
+              )}
             </>
           )}
         </DropdownMenu>
@@ -635,6 +671,12 @@ export default function Orders() {
   // POS-system-plan.md D9: online / added by hand / sold at the counter.
   const [source, setSource] = useState<ListOrdersParams['source'] | ''>('');
   const lmsMe = useQuery({ queryKey: ['lms', 'me'], queryFn: lmsApi.me, retry: false, staleTime: 5 * 60_000 });
+  // What this person's role can do on this page (rule-plan.md Step 10); the server checks each again.
+  const canCreate = useCan('orders.create');
+  const canEdit = useCan('orders.edit');
+  const canCourier = useCan('orders.courier');
+  const canTrash = useCan('orders.delete');
+  const canContact = useCan('customers.contact');
   const lmsOn = !!lmsMe.data?.enabled;
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
@@ -757,7 +799,8 @@ export default function Orders() {
   const { data: deliveryStats } = useQuery({
     queryKey: ['customer-courier-stats', pagePhones],
     queryFn: () => ordersApi.getCustomerCourierStats(pagePhones),
-    enabled: pagePhones.length > 0 && !trashView,
+    // Looked up by full phone number, so only with customers.contact (rule-plan.md Step 5).
+    enabled: pagePhones.length > 0 && !trashView && canContact,
     staleTime: 60_000,
     refetchInterval: (query) =>
       query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending || s.steadfast?.pending) ? 4000 : false,
@@ -857,16 +900,19 @@ export default function Orders() {
                   <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
                 </div>
               )}
-              <button
-                onClick={() => setTrashView((v) => !v)}
-                className={`${toolbarBtn} ${trashView ? 'border-neutral-300 bg-neutral-50' : ''}`}
-              >
-                {trashView ? <ArrowLeft size={15} /> : <Trash2 size={15} />}
-                {trashView ? 'Back to Orders' : 'Trash'}
-              </button>
+              {canTrash && (
+                <button
+                  onClick={() => setTrashView((v) => !v)}
+                  className={`${toolbarBtn} ${trashView ? 'border-neutral-300 bg-neutral-50' : ''}`}
+                >
+                  {trashView ? <ArrowLeft size={15} /> : <Trash2 size={15} />}
+                  {trashView ? 'Back to Orders' : 'Trash'}
+                </button>
+              )}
             </>
           )}
 
+          {canCreate && (
           <button
             onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
             disabled={atOrderLimit}
@@ -878,6 +924,7 @@ export default function Orders() {
             {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
             Add Order
           </button>
+          )}
         </div>
 
         {/* Status tabs */}
@@ -895,14 +942,16 @@ export default function Orders() {
                 {t === 'ALL' ? 'All' : t === 'ABANDONED' ? 'Abandoned Cart' : orderStatusLabel(t)}
               </button>
             ))}
-            <button
-              onClick={() => setCustomizeOpen(true)}
-              title="Customize tabs"
-              aria-label="Customize tabs"
-              className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
-            >
-              <Settings2 size={15} />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setCustomizeOpen(true)}
+                title="Customize tabs"
+                aria-label="Customize tabs"
+                className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
+              >
+                <Settings2 size={15} />
+              </button>
+            )}
           </div>
         )}
 
@@ -1046,7 +1095,7 @@ export default function Orders() {
                         onCancelRedx={setCancelRedxOrder}
                         selected={selectedIds.has(order.id)}
                         deliveryStats={deliveryStats?.byPhone[order.customerPhone]}
-                        onToggleSelect={trashView ? undefined : toggleSelected}
+                        onToggleSelect={trashView || !canCourier ? undefined : toggleSelected}
                       />
                     ))
                   )}

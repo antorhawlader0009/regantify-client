@@ -21,6 +21,7 @@ import {
   trClass,
 } from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
+import { useCan } from '../../../lib/useStaffAccess';
 
 function BrandLogo({ brand }: { brand: Brand }) {
   return <img src={brand.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-line bg-neutral-100 object-cover" loading="lazy" />;
@@ -28,6 +29,7 @@ function BrandLogo({ brand }: { brand: Brand }) {
 
 export default function Brands() {
   const queryClient = useQueryClient();
+  const canEdit = useCan('products.edit');
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleting, setDeleting] = useState<Brand | null>(null);
@@ -53,7 +55,8 @@ export default function Brands() {
     return brands.filter((b) => b.name.toLowerCase().includes(q));
   }, [brands, search]);
 
-  const menu = (b: Brand) => (
+  // Read-only roles get no menu and no Add (rule-plan.md Step 10).
+  const menu = (b: Brand) => canEdit && (
     <DropdownMenu
       trigger={
         <button aria-label="Actions" title="Actions" className={iconBtn}>
@@ -67,7 +70,7 @@ export default function Brands() {
     </DropdownMenu>
   );
 
-  const addButton = (
+  const addButton = canEdit && (
     <button type="button" onClick={() => setShowAddModal(true)} className={primaryBtn}>
       <Plus size={15} />
       Add brand

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
-import { vendorNav } from '../../lib/navConfig';
+import { useVendorNav } from '../../lib/useStaffAccess';
+import { VendorPageGate } from '../staff/VendorPageGate';
+import { WelcomeNote } from '../staff/WelcomeNote';
 import { AssistantPanel } from '../assistant/AssistantPanel';
 import { SectionTabs } from './SectionTabs';
 import { useScrollMemory } from '../../lib/useScrollMemory';
@@ -17,6 +19,8 @@ export function VendorLayout() {
   // Back / "All orders" reopens a list where it was scrolled (see useScrollMemory).
   const mainRef = useRef<HTMLElement>(null);
   useScrollMemory(mainRef);
+  // Only the pages this person's role can open (rule-plan.md Step 7); the owner gets the whole nav.
+  const nav = useVendorNav();
 
   // Marks <body> while the vendor dashboard is open so index.css can swap its
   // white surfaces for #FAFAFD. On <body> (not this div) so dropdowns and
@@ -27,16 +31,19 @@ export function VendorLayout() {
   }, []);
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
-      <Sidebar sections={vendorNav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
+      <Sidebar sections={nav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
       <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
-        <Topbar sections={vendorNav} onMenuClick={() => setMenuOpen(true)} />
+        <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
-          <SectionTabs sections={vendorNav} />
-          <Outlet />
+          <SectionTabs sections={nav} />
+          <VendorPageGate>
+            <Outlet />
+          </VendorPageGate>
         </main>
       </div>
       {/* "Ask AI": docked on the right, pushes the page instead of floating over it. */}
       <AssistantPanel />
+      <WelcomeNote />
     </div>
   );
 }

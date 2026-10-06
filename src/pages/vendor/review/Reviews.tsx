@@ -25,6 +25,7 @@ import {
 } from '../../../components/ui/PageKit';
 import { formatDhakaDate } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
+import { useCan } from '../../../lib/useStaffAccess';
 
 type StatusTab = 'all' | 'pending' | 'approved';
 
@@ -55,13 +56,15 @@ function ShowSwitch({ review }: { review: Review }) {
     onError: () => toast.error('Couldn’t change this review. Try again in a minute.'),
   });
   const on = mutation.isPending ? !review.approved : review.approved;
+  // A read-only role sees the switch's state but can't flip it (rule-plan.md Step 10).
+  const canEdit = useCan('reviews.edit');
   return (
-    <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 text-sm">
+    <label className={`inline-flex min-h-10 items-center gap-2 text-sm ${canEdit ? 'cursor-pointer' : 'cursor-default opacity-70'}`}>
       <span className="relative inline-flex shrink-0">
         <input
           type="checkbox"
           checked={on}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || !canEdit}
           onChange={(e) => mutation.mutate(e.target.checked)}
           className="peer sr-only"
           aria-label={on ? 'Shown on store. Turn off to hide.' : 'Hidden. Turn on to show on store.'}
@@ -98,7 +101,9 @@ function useReviewMenu(review: Review) {
     onError: () => toast.error('Couldn’t delete this review. Try again in a minute.'),
   });
 
-  const menu = (
+  // No menu for a read-only role (rule-plan.md Step 10).
+  const canEdit = useCan('reviews.edit');
+  const menu = canEdit && (
     <DropdownMenu
       trigger={
         <button aria-label={`Actions for review ${review.title}`} className={`${iconBtn} h-9 w-9 md:h-auto md:w-auto`}>
@@ -219,6 +224,7 @@ function ReviewItem({ review }: { review: Review }) {
  * (ReviewsService.findAllForVendor), with counts on each.
  */
 export default function Reviews() {
+  const canEdit = useCan('reviews.edit');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusTab>('all');
   const [rating, setRating] = useState<number | null>(null);
@@ -245,12 +251,12 @@ export default function Reviews() {
   const filtered = Boolean(search.trim() || status !== 'all' || rating);
   const COLS = 5;
 
-  const addButton = (
+  const addButton = canEdit ? (
     <Link to="/vendor/reviews/add" className={primaryBtn}>
       <Plus size={15} aria-hidden />
       Add review
     </Link>
-  );
+  ) : undefined;
   const empty = filtered
     ? { title: 'No reviews match', hint: 'Try another tab, star filter or search.', action: undefined }
     : {

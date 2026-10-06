@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
 import { getVendorSettings, updateVendorSettings } from '../../lib/vendorApi';
+import { useViewer } from '../../lib/useStaffAccess';
+import { canAccess, canOpenPath } from '../../lib/staffPermissions';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
 import { Field, IconInput, IconTextarea, SaveButton, Section, flashFor } from '../../components/ui/FormKit';
@@ -82,7 +84,13 @@ const isTab = (v: string | null): v is TabKey => v === 'general' || v === 'secur
 
 export default function VendorSettings() {
   const [params, setParams] = useSearchParams();
-  const tab: TabKey = isTab(params.get('tab')) ? (params.get('tab') as TabKey) : 'general';
+  // A staff role only gets the tabs it can use (rule-plan.md Step 7): store details need
+  // store.settings, "More settings" only lists pages the role can open; Security is everyone's.
+  const viewer = useViewer();
+  const moreLinks = MORE_SETTINGS.filter((s) => canOpenPath(viewer, s.path));
+  const tabs = TABS.filter((t) => (t.key === 'general' ? canAccess(viewer, 'store.settings') : t.key === 'more' ? moreLinks.length > 0 : true));
+  const asked = params.get('tab');
+  const tab: TabKey = isTab(asked) && tabs.some((t) => t.key === asked) ? (asked as TabKey) : tabs[0].key;
   const selectTab = (key: TabKey) => setParams(key === 'general' ? {} : { tab: key }, { replace: true });
 
   return (
@@ -93,7 +101,7 @@ export default function VendorSettings() {
       </div>
 
       <div role="tablist" aria-label="Settings sections" className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-white p-1">
-        {TABS.map((t) => {
+        {tabs.map((t) => {
           const Icon = t.icon;
           const active = tab === t.key;
           return (
@@ -115,7 +123,7 @@ export default function VendorSettings() {
 
       {tab === 'general' && <GeneralTab />}
       {tab === 'security' && <SecurityTab />}
-      {tab === 'more' && <MoreTab />}
+      {tab === 'more' && <MoreTab links={moreLinks} />}
     </div>
   );
 }
@@ -292,11 +300,11 @@ function SecurityTab() {
   );
 }
 
-function MoreTab() {
+function MoreTab({ links }: { links: typeof MORE_SETTINGS }) {
   return (
     <Section title="Store settings" description="Everything else about how your store works has its own page.">
       <div className="grid gap-3 sm:grid-cols-2">
-        {MORE_SETTINGS.map((s) => {
+        {links.map((s) => {
           const Icon = s.icon;
           return (
             <Link

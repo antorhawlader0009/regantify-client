@@ -14,6 +14,14 @@ interface EditPlanModalProps {
 // = that number. Mirrors the server's own null-means-unlimited
 // convention (see UpdatePlanDto) directly in the form's own UI, rather
 // than a separate "unlimited" checkbox next to every field.
+/** Plan.staffRoleTier, in words (rule-plan.md 5.5; per role: STAFF_ROLE_MIN_TIER). */
+const STAFF_ROLE_TIER_OPTIONS = [
+  { tier: 0, label: 'Admin only' },
+  { tier: 1, label: '+ Manager, Staff, Viewer' },
+  { tier: 2, label: '+ CS Team, Delivery Team, Marketing, Accounts' },
+  { tier: 3, label: '+ Custom roles (all roles)' },
+];
+
 function LimitField({
   label,
   value,
@@ -160,6 +168,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [imageUploadLimit, setImageUploadLimit] = useState<number | null>(plan?.imageUploadLimit ?? null);
   const [aiTokenGrant, setAiTokenGrant] = useState<number>(plan?.aiTokenGrant ?? 0);
   const [staffLimit, setStaffLimit] = useState<number | null>(plan?.staffLimit ?? null);
+  const [staffRoleTier, setStaffRoleTier] = useState<number>(plan?.staffRoleTier ?? 0);
   const [customDomainAllowed, setCustomDomainAllowed] = useState(plan?.customDomainAllowed ?? false);
   const [customPaymentGatewayAllowed, setCustomPaymentGatewayAllowed] = useState(
     plan?.customPaymentGatewayAllowed ?? false,
@@ -195,6 +204,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       imageUploadLimit,
       aiTokenGrant,
       staffLimit,
+      staffRoleTier,
       customDomainAllowed,
       customPaymentGatewayAllowed,
       lmsEnabled,
@@ -290,6 +300,27 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             <LimitField label="Theme allowance" value={themeAllowance} onChange={setThemeAllowance} />
             <LimitField label="Image uploads" value={imageUploadLimit} onChange={setImageUploadLimit} />
             <LimitField label="Staff limit" value={staffLimit} onChange={setStaffLimit} />
+          </div>
+
+          <div>
+            <label htmlFor="plan-staff-roles" className="block text-xs font-medium text-regantify-text-muted mb-1">
+              Staff roles
+            </label>
+            <select
+              id="plan-staff-roles"
+              value={staffRoleTier}
+              onChange={(e) => setStaffRoleTier(Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
+            >
+              {STAFF_ROLE_TIER_OPTIONS.map((o) => (
+                <option key={o.tier} value={o.tier}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-regantify-text-muted">
+              Which roles the store can give its staff. Checked when a role is picked; staff already on a role keep it after a downgrade.
+            </p>
           </div>
 
           <div>

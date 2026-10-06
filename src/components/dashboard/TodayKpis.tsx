@@ -108,6 +108,15 @@ export function TodayKpis({
     </div>
   );
 
+  // A staff role without dashboard.view gets no sales numbers (rule-plan.md Step 7): just the header.
+  if (!today) {
+    return (
+      <section className="space-y-3" aria-label="Today so far">
+        {header}
+      </section>
+    );
+  }
+
   if (!data.setup.hasOrder) {
     return (
       <section className="space-y-3" aria-label="Today so far">

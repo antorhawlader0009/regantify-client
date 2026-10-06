@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { VendorPageGate } from './components/staff/VendorPageGate';
 import { AuthBootstrap } from './components/AuthBootstrap';
 import { VendorLayout } from './components/layout/VendorLayout';
 import { AdminLayout } from './components/layout/AdminLayout';
@@ -84,6 +85,7 @@ import AddReview from './pages/vendor/review/AddReview';
 import Staff from './pages/vendor/staff/Staff';
 import AddStaffMember from './pages/vendor/staff/AddStaffMember';
 import Billing from './pages/vendor/Billing';
+import Notifications from './pages/vendor/Notifications';
 import Coupons from './pages/vendor/marketing/Coupons';
 import AddCoupon from './pages/vendor/marketing/AddCoupon';
 import Campaigns from './pages/vendor/marketing/Campaigns';
@@ -158,6 +160,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
   (r) =>
     r.path !== '/vendor/settings' &&
     r.path !== '/vendor/support' &&
+    r.path !== '/vendor/notifications' &&
     r.path !== '/vendor/product/all' &&
     r.path !== '/vendor/product/add' &&
     r.path !== '/vendor/product/categories' &&
@@ -285,6 +288,7 @@ export default function App() {
                 <Route path="/vendor/dashboard" element={<VendorDashboard />} />
                 <Route path="/vendor/settings" element={<VendorSettings />} />
                 <Route path="/vendor/profile" element={<VendorProfile />} />
+                <Route path="/vendor/notifications" element={<Notifications />} />
                 <Route path="/vendor/support" element={<Support />} />
                 <Route path="/vendor/support/:id" element={<SupportTicket />} />
                 <Route path="/vendor/product/add" element={<AddProduct />} />
@@ -350,6 +354,7 @@ export default function App() {
                 <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
                 <Route path="/vendor/staff" element={<Staff />} />
                 <Route path="/vendor/staff/add" element={<AddStaffMember />} />
+                <Route path="/vendor/staff/:id/edit" element={<AddStaffMember />} />
                 <Route path="/vendor/billing" element={<Billing />} />
                 <Route path="/vendor/marketing/coupons" element={<Coupons />} />
                 <Route path="/vendor/marketing/coupons/add" element={<AddCoupon />} />
@@ -411,6 +416,9 @@ export default function App() {
                 ))}
               </Route>
 
+              {/* The full-screen vendor pages below sit outside <VendorLayout>, so they get the
+                  role check (rule-plan.md Step 7) from this gate instead of the layout's. */}
+              <Route element={<VendorPageGate />}>
               {/* Landing page builder — deliberately OUTSIDE <VendorLayout>
                   so it renders full-screen with no dashboard sidebar/topbar
                   (landing-plan.md §4.2), while still sitting inside the same
@@ -426,6 +434,7 @@ export default function App() {
               <Route path="/vendor/pos/sell" element={<PosSellPage />} />
               {/* The customer-facing screen (Step 12): a second window fed by the counter tab. */}
               <Route path="/vendor/pos/display" element={<PosDisplayPage />} />
+              </Route>
             </Route>
 
             {/* Super Admin dashboard — protected, SUPER_ADMIN role only */}

@@ -9,6 +9,7 @@ import { toast } from '../../../lib/toast';
 import { ChangeLabelModal } from './ChangeLabelModal';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+import { useCan } from '../../../lib/useStaffAccess';
 
 const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
 
@@ -28,6 +29,7 @@ interface NotesModalProps {
 }
 
 function NotesPanel({ order, onOpenChange }: NotesModalProps) {
+  const canEditNotes = useCan('orders.edit'); // read-only roles read the notes, can't add (rule-plan.md Step 10)
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
 
@@ -69,6 +71,7 @@ function NotesPanel({ order, onOpenChange }: NotesModalProps) {
           )}
         </div>
 
+        {canEditNotes && (
         <div className="p-4 border-t border-black/5 flex gap-2">
           <input
             value={text}
@@ -87,6 +90,7 @@ function NotesPanel({ order, onOpenChange }: NotesModalProps) {
             Add
           </button>
         </div>
+        )}
       </div>
     </div>
   );
@@ -103,6 +107,9 @@ interface RowProps {
 function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, onOpenNotes }: RowProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const canCreate = useCan('orders.create');
+  const canEdit = useCan('orders.edit');
+  const canDelete = useCan('orders.delete');
 
   const removeMutation = useMutation({
     mutationFn: () => incompleteOrdersApi.remove(order.id),
@@ -207,24 +214,31 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
         )}
       </td>
       <td className="border-r border-line p-3 last:border-r-0">
-        <DropdownMenu
-          trigger={
-            <button
-              aria-label="Actions"
-              title="Actions"
-              className="rounded-md border border-line bg-white p-1.5 text-regantify-text transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50"
-            >
-              <MoreVertical size={14} />
-            </button>
-          }
-        >
-          <DropdownMenuItem onSelect={handleCreateOrder}>Create Order</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onChangeLabel}>Change Label</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem danger onSelect={() => removeMutation.mutate()}>
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenu>
+        {/* Only what this person's role can do (rule-plan.md Step 10). */}
+        {(canCreate || canEdit || canDelete) && (
+          <DropdownMenu
+            trigger={
+              <button
+                aria-label="Actions"
+                title="Actions"
+                className="rounded-md border border-line bg-white p-1.5 text-regantify-text transition-colors hover:bg-neutral-50 data-[state=open]:bg-neutral-50"
+              >
+                <MoreVertical size={14} />
+              </button>
+            }
+          >
+            {canCreate && <DropdownMenuItem onSelect={handleCreateOrder}>Create Order</DropdownMenuItem>}
+            {canEdit && <DropdownMenuItem onSelect={onChangeLabel}>Change Label</DropdownMenuItem>}
+            {canDelete && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem danger onSelect={() => removeMutation.mutate()}>
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenu>
+        )}
       </td>
     </tr>
   );
@@ -237,6 +251,8 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
  */
 export default function AbandonedCart() {
   const queryClient = useQueryClient();
+  const canEdit = useCan('orders.edit');
+  const canDelete = useCan('orders.delete');
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -318,6 +334,7 @@ export default function AbandonedCart() {
           />
         </div>
 
+        {(canEdit || canDelete) && (
         <DropdownMenu
           align="start"
           trigger={
@@ -330,11 +347,14 @@ export default function AbandonedCart() {
             </button>
           }
         >
-          <DropdownMenuItem danger onSelect={() => bulkRemoveMutation.mutate()}>
-            Bulk remove
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setBulkLabelOpen(true)}>Bulk Change Label</DropdownMenuItem>
+          {canDelete && (
+            <DropdownMenuItem danger onSelect={() => bulkRemoveMutation.mutate()}>
+              Bulk remove
+            </DropdownMenuItem>
+          )}
+          {canEdit && <DropdownMenuItem onSelect={() => setBulkLabelOpen(true)}>Bulk Change Label</DropdownMenuItem>}
         </DropdownMenu>
+        )}
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-line">

@@ -35,6 +35,8 @@ export interface Plan {
   /** AI tokens the plan gives once, when it's bought. Free: once at sign-up. */
   aiTokenGrant: number | null;
   staffLimit: number | null;
+  /** Which staff roles the plan may assign: 0 Admin only … 3 + Custom roles (rule-plan.md 5.5). */
+  staffRoleTier: number;
   customDomainAllowed: boolean;
   customPaymentGatewayAllowed: boolean;
   lmsEnabled: boolean;
@@ -66,6 +68,8 @@ interface UsageStat {
 
 export interface VendorPlanUsage {
   plan: Plan;
+  /** ISO date the paid plan ends and the store goes back to Free; null on Free. */
+  planExpiresAt: string | null;
   usage: {
     products: UsageStat;
     staff: UsageStat;

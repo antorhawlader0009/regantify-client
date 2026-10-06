@@ -19,6 +19,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { DashboardTodo } from '../../lib/dashboardApi';
+import { useViewer } from '../../lib/useStaffAccess';
+import { canOpenPath } from '../../lib/staffPermissions';
 
 type Tone = 'neutral' | 'warning' | 'danger';
 
@@ -51,6 +53,7 @@ function daysUntil(iso: string) {
  * Every row opens the page or filtered list that holds those items.
  */
 export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo; isOwner: boolean; planName: string }) {
+  const viewer = useViewer();
   const days = todo.recentDays;
   const lmsDue = todo.lmsTasks ? todo.lmsTasks.overdue + todo.lmsTasks.today : 0;
 
@@ -185,7 +188,8 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
     },
   ];
   // SMS at 0 credits and a plan ending today are the most urgent of all, so those two show even at 0.
-  const rows = candidates.filter((r) => r.count > 0 || r.key === 'sms' || r.key === 'plan');
+  // A row only shows when its page opens for this person's role (rule-plan.md Step 7).
+  const rows = candidates.filter((r) => (r.count > 0 || r.key === 'sms' || r.key === 'plan') && canOpenPath(viewer, r.to));
 
   return (
     <section className="h-full rounded-xl border border-line bg-white" aria-labelledby="attention-title">

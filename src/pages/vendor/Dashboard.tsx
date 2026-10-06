@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, Check, Copy, Eye, EyeOff, Moon, Plus, RefreshCw, Sun, Sunrise, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { useCan } from '../../lib/useStaffAccess';
 import { dashboardApi } from '../../lib/dashboardApi';
 import { getVendorPlanUsage } from '../../lib/plansApi';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
@@ -79,6 +80,7 @@ function DashboardSkeleton() {
 export default function VendorDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const canSeeOrders = useCan('orders.view');
   const [copied, setCopied] = useState(false);
   const [hideNumbers, setHideNumbers] = useState(readHideNumbers);
   const toggleHideNumbers = () => {
@@ -236,14 +238,17 @@ export default function VendorDashboard() {
             )}
           </div>
 
-          <SalesOverview data={dashboard.data} />
+          {/* Sales numbers need dashboard.view, the latest orders orders.view (rule-plan.md Step 7). */}
+          {dashboard.data.today && <SalesOverview data={dashboard.data} />}
 
           <div className="grid items-start gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <RecentOrders orders={dashboard.data.recentOrders} />
-            </div>
-            <div className="space-y-4">
-              <TopProductsCard products={dashboard.data.topProducts} />
+            {canSeeOrders && (
+              <div className="lg:col-span-2">
+                <RecentOrders orders={dashboard.data.recentOrders} />
+              </div>
+            )}
+            <div className={canSeeOrders ? 'space-y-4' : 'space-y-4 lg:col-span-3'}>
+              {dashboard.data.today && <TopProductsCard products={dashboard.data.topProducts} />}
               {planUsage && <PlanCard usage={planUsage} isOwner={isOwner} />}
             </div>
           </div>

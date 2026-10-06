@@ -6,6 +6,8 @@ import { assistantApi, type AssistantFill, type AssistantMessage, type Assistant
 import { applyFills, assistantRoutes, collectPageFields } from '../../lib/assistantPage';
 import { useAssistantUi } from '../../store/assistantStore';
 import { useAuthStore } from '../../store/authStore';
+import { viewerOf } from '../../lib/useStaffAccess';
+import { canOpenPath } from '../../lib/staffPermissions';
 
 /*
  * Dashboard "Ask AI" side panel: docked on the right of the vendor
@@ -184,7 +186,9 @@ function PanelBody({
     try {
       const history = withQuestion.messages.slice(-SEND_MESSAGES).map(({ role, content }) => ({ role, content }));
       const page = { path: location.pathname, fields: collectPageFields() };
-      const answer = await assistantApi.chat(history, assistantRoutes(), page);
+      // It may only point to pages this person's role can open (rule-plan.md Step 7).
+      const routes = assistantRoutes().filter((r) => canOpenPath(viewerOf(useAuthStore.getState().user), r.path));
+      const answer = await assistantApi.chat(history, routes, page);
       const reply: ChatMessage = {
         role: 'assistant',
         content: answer.reply,

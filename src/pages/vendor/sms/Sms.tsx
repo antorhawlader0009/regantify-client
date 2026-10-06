@@ -8,6 +8,7 @@ import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { EmptyState, PageHeader, PillTabs, StackedList, TableFrame, TableSkeleton, primaryBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
 import { BuySmsDialog, perSms } from './BuySmsDialog';
+import { useCan } from '../../../lib/useStaffAccess';
 
 type Tab = 'logs' | 'test';
 
@@ -151,6 +152,8 @@ function TestSms() {
  * of one), the messages your store sent, and a test send.
  */
 export default function Sms() {
+  const isOwner = useCan('owner');
+  const canTest = useCan('sms.manage');
   const [tab, setTab] = useState<Tab>('logs');
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
 
@@ -177,22 +180,22 @@ export default function Sms() {
             {cheapest ? `From ${perSms(cheapest)} per SMS. A long message can use 2 or more.` : 'A long message can use 2 or more.'}
           </p>
         </div>
-        <button type="button" onClick={() => setBuyDialogOpen(true)} className={`${primaryBtn} h-10 w-full px-4 sm:w-auto`}>
-          <Plus size={15} aria-hidden />
-          Buy SMS
-        </button>
+        {/* Buying spends the store's money: owner only (rule-plan.md 5.2). */}
+        {isOwner && (
+          <button type="button" onClick={() => setBuyDialogOpen(true)} className={`${primaryBtn} h-10 w-full px-4 sm:w-auto`}>
+            <Plus size={15} aria-hidden />
+            Buy SMS
+          </button>
+        )}
       </section>
 
       <section className="rounded-xl border border-line bg-white p-3.5">
         <PillTabs<Tab>
-          value={tab}
+          value={canTest ? tab : 'logs'}
           onChange={setTab}
-          tabs={[
-            { id: 'logs', label: 'Sent messages' },
-            { id: 'test', label: 'Send a test' },
-          ]}
+          tabs={[{ id: 'logs', label: 'Sent messages' }, ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : [])]}
         />
-        <div className="px-0.5">{tab === 'logs' ? <SentLogs /> : <TestSms />}</div>
+        <div className="px-0.5">{tab === 'test' && canTest ? <TestSms /> : <SentLogs />}</div>
       </section>
 
       <BuySmsDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen} />

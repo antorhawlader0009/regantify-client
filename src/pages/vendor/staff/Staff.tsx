@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MoreVertical, Plus, Users } from 'lucide-react';
+import { KeyRound, MessageSquare, MoreVertical, Pencil, Plus, Power, PowerOff, Trash2, Users } from 'lucide-react';
+import { LoginDetailsDialog } from '../../../components/staff/LoginDetailsDialog';
+import { STAFF_ROLES } from '../../../lib/staffPermissions';
+import { StaffRolesTab } from './StaffRolesTab';
+import { StaffActivityTab } from './StaffActivityTab';
 import { staffApi, type StaffMember } from '../../../lib/staffApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
@@ -11,6 +15,7 @@ import {
   EmptyState,
   PageHeader,
   PageSection,
+  PillTabs,
   SearchBox,
   StackedList,
   TableFooter,
@@ -47,7 +52,21 @@ function lastLoginText(m: StaffMember) {
   return `${formatDhakaDateTime(m.lastLoginAt)}${m.lastLoginIp ? ` · IP ${m.lastLoginIp}` : ''}`;
 }
 
-function RowMenu({ member, onRemove }: { member: StaffMember; onRemove: () => void }) {
+function RowMenu({
+  member,
+  onDetails,
+  onToggleStatus,
+  onSendSms,
+  onRemove,
+}: {
+  member: StaffMember;
+  onDetails: () => void;
+  onToggleStatus: () => void;
+  onSendSms: () => void;
+  onRemove: () => void;
+}) {
+  const navigate = useNavigate();
+  const suspended = member.status === 'SUSPENDED';
   return (
     <DropdownMenu
       trigger={
@@ -56,11 +75,44 @@ function RowMenu({ member, onRemove }: { member: StaffMember; onRemove: () => vo
         </button>
       }
     >
-      <DropdownMenuItem onSelect={onRemove} danger>
+      <DropdownMenuItem icon={<Pencil />} onSelect={() => navigate(`/vendor/staff/${member.id}/edit`)}>
+        Edit
+      </DropdownMenuItem>
+      <DropdownMenuItem icon={<KeyRound />} onSelect={onDetails}>
+        Login details
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        icon={<MessageSquare />}
+        onSelect={onSendSms}
+        disabled={!member.hasSavedPassword || suspended}
+        hint={suspended ? 'Turn their account back on first' : member.hasSavedPassword ? undefined : 'Reset the password first, from Login details'}
+      >
+        Send login SMS
+      </DropdownMenuItem>
+      <DropdownMenuItem icon={suspended ? <Power /> : <PowerOff />} onSelect={onToggleStatus} hint={suspended ? undefined : 'Signs them out; you can turn it back on'}>
+        {suspended ? 'Turn back on' : 'Turn off account'}
+      </DropdownMenuItem>
+      <DropdownMenuItem icon={<Trash2 />} onSelect={onRemove} danger>
         Remove from team
       </DropdownMenuItem>
     </DropdownMenu>
   );
+}
+
+/** The role with its icon (ready-made roles' icon, the slider icon for custom roles). */
+function RoleChip({ member }: { member: StaffMember }) {
+  if (member.isOwner) return <OwnerBadge />;
+  const Icon = member.roleKey ? STAFF_ROLES[member.roleKey].icon : null;
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2 py-0.5 text-xs text-regantify-text">
+      {Icon && <Icon size={12} strokeWidth={2} className="text-neutral-500" aria-hidden />}
+      {member.role}
+    </span>
+  );
+}
+
+function SuspendedBadge() {
+  return <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] font-medium text-neutral-700">Turned off</span>;
 }
 
 /**
@@ -73,6 +125,36 @@ function RowMenu({ member, onRemove }: { member: StaffMember; onRemove: () => vo
  * staff can do, since the role is a label and not a permission.
  */
 export default function Staff() {
+  const [params, setParams] = useSearchParams();
+  const tab: StaffTab = params.get('tab') === 'roles' ? 'roles' : params.get('tab') === 'activity' ? 'activity' : 'team';
+  const selectTab = (next: StaffTab) => setParams(next === 'team' ? {} : { tab: next }, { replace: true });
+
+  // The team list is shared by the Team tab and the Activity tab's person filter.
+  const { data: everyone = [] } = useQuery({ queryKey: ['staff', ''], queryFn: () => staffApi.list() });
+
+  return (
+    <div className="space-y-4">
+      <PillTabs<StaffTab>
+        className=""
+        value={tab}
+        onChange={selectTab}
+        tabs={[
+          { id: 'team', label: 'Team', count: everyone.length || undefined },
+          { id: 'roles', label: 'Roles' },
+          { id: 'activity', label: 'Activity' },
+        ]}
+      />
+      {tab === 'team' && <TeamTab />}
+      {tab === 'roles' && <StaffRolesTab />}
+      {tab === 'activity' && <StaffActivityTab members={everyone} />}
+    </div>
+  );
+}
+
+type StaffTab = 'team' | 'roles' | 'activity';
+
+/** Staff > Team: everyone on the team, with their role and what the owner can do about them. */
+function TeamTab() {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((s) => s.user);
   const isOwner = currentUser?.role === 'VENDOR';
@@ -80,6 +162,8 @@ export default function Staff() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [removing, setRemoving] = useState<StaffMember | null>(null);
+  const [turningOff, setTurningOff] = useState<StaffMember | null>(null);
+  const [detailsFor, setDetailsFor] = useState<StaffMember | null>(null);
   useEffect(() => setPage(1), [search]);
 
   const { data: allMembers = [], isLoading } = useQuery({
@@ -94,21 +178,57 @@ export default function Staff() {
   const staffUsage = planUsage?.usage.staff;
   const atStaffLimit = staffUsage != null && staffUsage.limit !== null && staffUsage.used >= staffUsage.limit;
 
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['staff'] });
+    queryClient.invalidateQueries({ queryKey: ['staff-activity'] });
+  };
   const deleteMutation = useMutation({
     mutationFn: (id: string) => staffApi.remove(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staff'] });
+      refresh();
       queryClient.invalidateQueries({ queryKey: ['vendor-plan-usage'] });
+      queryClient.invalidateQueries({ queryKey: ['staff-roles'] });
       toast.success(`${removing?.name ?? 'Staff member'} removed from your team`);
       setRemoving(null);
     },
     onError: () => toast.error('Couldn’t remove this staff member. Try again in a minute.'),
+  });
+  const statusMutation = useMutation({
+    mutationFn: (m: StaffMember) => (m.status === 'SUSPENDED' ? staffApi.activate(m.id) : staffApi.suspend(m.id)),
+    onSuccess: (m) => {
+      refresh();
+      toast.success(m.status === 'SUSPENDED' ? `${m.name}’s account is turned off` : `${m.name} can sign in again`);
+      setTurningOff(null);
+    },
+    onError: () => toast.error('Couldn’t change this account. Try again in a minute.'),
+  });
+  const smsMutation = useMutation({
+    mutationFn: (m: StaffMember) => staffApi.sendLoginSms(m.id).then(() => m),
+    onSuccess: (m) => {
+      refresh();
+      toast.success(`Login details sent to ${m.phone}`);
+    },
+    onError: (err: any) => {
+      const message = err?.response?.data?.message;
+      toast.error((Array.isArray(message) ? message[0] : message) ?? 'Couldn’t send the SMS. Try again in a minute.');
+    },
   });
 
   const total = allMembers.length;
   const members = allMembers.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const isMe = (m: StaffMember) => Boolean(currentUser && m.phone && m.phone === currentUser.phone);
   const COLS = 5;
+  const menuFor = (m: StaffMember) =>
+    isOwner &&
+    !m.isOwner && (
+      <RowMenu
+        member={m}
+        onDetails={() => setDetailsFor(m)}
+        onToggleStatus={() => (m.status === 'SUSPENDED' ? statusMutation.mutate(m) : setTurningOff(m))}
+        onSendSms={() => smsMutation.mutate(m)}
+        onRemove={() => setRemoving(m)}
+      />
+    );
 
   const addButton = isOwner ? (
     atStaffLimit ? (
@@ -141,7 +261,7 @@ export default function Staff() {
           actions={addButton}
         />
         <div className="mb-3">
-          <SearchBox value={search} onChange={setSearch} placeholder="Search name, phone or email" />
+          <SearchBox value={search} onChange={setSearch} placeholder="Search name, role, phone or email" />
         </div>
 
         <div className="hidden md:block">
@@ -161,10 +281,10 @@ export default function Staff() {
               {isLoading ? (
                 <TableSkeleton rows={3} colSpan={COLS} />
               ) : members.length === 0 ? (
-                <EmptyState as="row" colSpan={COLS} icon={Users} title="No one matches" hint="Try another name or phone." />
+                <EmptyState as="row" colSpan={COLS} icon={Users} title="No one matches" hint="Try another name, role or phone." />
               ) : (
                 members.map((m) => (
-                  <tr key={m.id} className={trClass()}>
+                  <tr key={m.id} className={`${trClass()} ${m.status === 'SUSPENDED' ? 'text-neutral-500' : ''}`}>
                     <td className={td}>
                       <div className="flex items-center gap-3">
                         <Initial name={m.name} />
@@ -172,13 +292,11 @@ export default function Staff() {
                           {m.name}
                           {isMe(m) && <span className="font-normal text-neutral-500"> (you)</span>}
                         </span>
+                        {m.status === 'SUSPENDED' && <SuspendedBadge />}
                       </div>
                     </td>
                     <td className={td}>
-                      <div className="flex items-center gap-2">
-                        {m.role}
-                        {m.isOwner && <OwnerBadge />}
-                      </div>
+                      <RoleChip member={m} />
                     </td>
                     <td className={td}>
                       <p className="tabular-nums">{m.phone ?? '—'}</p>
@@ -188,7 +306,7 @@ export default function Staff() {
                       {lastLoginText(m)}
                       {m.allowedIp && <p className="text-xs text-neutral-500">Only from IP {m.allowedIp}</p>}
                     </td>
-                    <td className={td}>{isOwner && !m.isOwner && <RowMenu member={m} onRemove={() => setRemoving(m)} />}</td>
+                    <td className={td}>{menuFor(m)}</td>
                   </tr>
                 ))
               )}
@@ -205,7 +323,7 @@ export default function Staff() {
             </div>
           ) : members.length === 0 ? (
             <div className="rounded-lg border border-line">
-              <EmptyState icon={Users} title="No one matches" hint="Try another name or phone." />
+              <EmptyState icon={Users} title="No one matches" hint="Try another name, role or phone." />
             </div>
           ) : (
             <StackedList>
@@ -218,14 +336,13 @@ export default function Staff() {
                         {m.name}
                         {isMe(m) && <span className="font-normal text-neutral-500"> (you)</span>}
                       </span>
-                      {m.isOwner && <OwnerBadge />}
+                      <RoleChip member={m} />
+                      {m.status === 'SUSPENDED' && <SuspendedBadge />}
                     </div>
-                    <p className="text-xs text-neutral-600">
-                      {m.role} · {m.phone ?? '—'}
-                    </p>
+                    <p className="text-xs tabular-nums text-neutral-600">{m.phone ?? '—'}</p>
                     <p className="text-xs text-neutral-500">{lastLoginText(m)}</p>
                   </div>
-                  {isOwner && !m.isOwner && <RowMenu member={m} onRemove={() => setRemoving(m)} />}
+                  {menuFor(m)}
                 </li>
               ))}
             </StackedList>
@@ -245,6 +362,19 @@ export default function Staff() {
         <h2 className="mb-3 px-0.5 text-[15px] font-semibold text-regantify-text">What staff can do</h2>
         <StaffAccessNote />
       </section>
+
+      <LoginDetailsDialog member={detailsFor} onOpenChange={(open) => !open && setDetailsFor(null)} />
+
+      <ConfirmDialog
+        open={turningOff != null}
+        onOpenChange={(open) => !open && setTurningOff(null)}
+        title={turningOff ? `Turn off ${turningOff.name}’s account?` : ''}
+        message="They’re signed out at once and can’t sign in until you turn it back on. Their role, orders and notes stay as they are."
+        confirmLabel="Turn off account"
+        onConfirm={() => turningOff && statusMutation.mutate(turningOff)}
+        busy={statusMutation.isPending}
+        danger
+      />
 
       <ConfirmDialog
         open={removing != null}

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Newspaper } from 'lucide-react';
 import type { DashboardSummary } from '../../lib/dashboardApi';
 import { formatValue } from '../analytics/format';
+import { useViewer } from '../../lib/useStaffAccess';
 
 /** A money amount inside a sentence; masked by "Hide numbers" like every other one. */
 function Money({ value }: { value: number }) {
@@ -16,6 +17,7 @@ const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
 /** Today's sales vs yesterday at the same time, in words. */
 function salesSentence(data: DashboardSummary): ReactNode {
+  if (!data.today) return null; // a staff role without dashboard.view
   const { current, previous } = data.today.sales;
   const orders = data.today.orders.current;
   if (current > 0) {
@@ -42,7 +44,7 @@ function salesSentence(data: DashboardSummary): ReactNode {
 }
 
 /** The most urgent to-do, plus how many more are waiting below. */
-function todoSentence(data: DashboardSummary): ReactNode {
+function todoSentence(data: DashboardSummary, isOwner: boolean): ReactNode {
   const t = data.todo;
   // Same order as the "Needs your attention" list.
   const items: { count: number; text: (n: number) => string }[] = [
@@ -55,7 +57,7 @@ function todoSentence(data: DashboardSummary): ReactNode {
   ];
   const open = items.filter((i) => i.count > 0);
   // The rest of the list's rows, so "N more" always matches what the list shows (SMS / plan rows are owner only, like there).
-  const isOwner = data.money != null;
+  // isOwner from the signed-in user, not `data.money != null`: staff with finance.view get the money card too (rule-plan.md Step 7).
   const otherRows =
     [t.lowStock, t.sellingOutSoon, t.badReviews, t.abandonedCarts, t.supportUnread, t.lmsTasks ? t.lmsTasks.overdue + t.lmsTasks.today : 0].filter((n) => n > 0)
       .length +
@@ -118,8 +120,9 @@ function moneySentence(data: DashboardSummary): ReactNode | null {
  * (the setup checklist is the story then).
  */
 export function DailyBrief({ data }: { data: DashboardSummary }) {
+  const isOwner = useViewer().isOwner;
   if (!data.setup.hasOrder) return null;
-  const sentences = [salesSentence(data), todoSentence(data), stockSentence(data), moneySentence(data)].filter(Boolean).slice(0, 4);
+  const sentences = [salesSentence(data), todoSentence(data, isOwner), stockSentence(data), moneySentence(data)].filter(Boolean).slice(0, 4);
 
   return (
     <section className="flex gap-3 rounded-xl border border-line bg-white p-4" aria-labelledby="brief-title">

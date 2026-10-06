@@ -14,6 +14,7 @@ import { ToggleRow } from '../../../components/product/ProductFormKit';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { CustomerDueSection } from './CustomerDueSection';
+import { useCan } from '../../../lib/useStaffAccess';
 import {
   EmptyState,
   StackedList,
@@ -146,6 +147,10 @@ export default function CustomerDetail() {
   const { phone } = useParams<{ phone: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  // What this person's role can do here (rule-plan.md Step 10); the server checks each again.
+  const canEdit = useCan('customers.edit');
+  const canDelete = useCan('customers.delete');
+  const canCreateOrder = useCan('orders.create');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { data: customer, isLoading } = useQuery({
@@ -222,12 +227,12 @@ export default function CustomerDetail() {
         shippingAddress: customer.address || undefined,
       },
     });
-  const newOrderButton = (
+  const newOrderButton = canCreateOrder ? (
     <button type="button" onClick={newOrder} className={primaryBtn}>
       <Plus size={15} aria-hidden />
       New order
     </button>
-  );
+  ) : undefined;
   const editPath = `/vendor/customers/${encodeURIComponent(customer.phone)}/edit`;
   const addressLine = [customer.city, customer.district, customer.zip].filter(Boolean).join(', ');
   const hasOrders = customer.orders.length > 0;
@@ -269,14 +274,18 @@ export default function CustomerDetail() {
               <MessageCircle size={14} aria-hidden />
               WhatsApp
             </a>
-            <Link to={editPath} className={`${outlineBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
-              <Pencil size={14} aria-hidden />
-              Edit
-            </Link>
-            <button type="button" onClick={newOrder} className={`${primaryBtn} h-10 w-full sm:h-9 sm:w-auto`}>
-              <Plus size={15} aria-hidden />
-              New order
-            </button>
+            {canEdit && (
+              <Link to={editPath} className={`${outlineBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
+                <Pencil size={14} aria-hidden />
+                Edit
+              </Link>
+            )}
+            {canCreateOrder && (
+              <button type="button" onClick={newOrder} className={`${primaryBtn} h-10 w-full sm:h-9 sm:w-auto`}>
+                <Plus size={15} aria-hidden />
+                New order
+              </button>
+            )}
           </div>
         </div>
 
@@ -393,16 +402,18 @@ export default function CustomerDetail() {
             </Card>
           )}
 
-          <BlacklistCard customer={customer} />
+          {canEdit && <BlacklistCard customer={customer} />}
 
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 transition-colors hover:bg-red-50"
-          >
-            <Trash2 size={14} aria-hidden />
-            Delete customer
-          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 transition-colors hover:bg-red-50"
+            >
+              <Trash2 size={14} aria-hidden />
+              Delete customer
+            </button>
+          )}
         </div>
       </div>
 

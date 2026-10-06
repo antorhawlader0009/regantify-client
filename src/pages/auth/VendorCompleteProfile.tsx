@@ -86,6 +86,8 @@ export default function VendorCompleteProfile() {
           )}
         </div>
 
+        {/* Staff land here too after setting a password; only the owner names the store (rule-plan.md Step 8). */}
+        {user?.role !== 'STAFF' && (
         <div>
           <label className="block text-sm font-medium text-regantify-text mb-1.5">
             Store name <span className="text-regantify-text-muted font-normal">(optional)</span>
@@ -111,6 +113,7 @@ export default function VendorCompleteProfile() {
             can always change it later from Settings.
           </p>
         </div>
+        )}
 
         {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
 

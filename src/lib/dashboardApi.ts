@@ -60,7 +60,7 @@ export interface DashboardSummary {
     aov: Compared;
     /** Today so far; stored per day, so no same-hour comparison. */
     visitors: number;
-  };
+  } | null; // null for a staff role without dashboard.view (trend and topProducts come empty, pos null; rule-plan.md Step 7)
   /** Last 30 Dhaka days, oldest first. */
   trend: { bucket: string; sales: number; orders: number }[];
   /** Orders per status, placed in the last 7 / 30 days (all statuses, biggest first). */

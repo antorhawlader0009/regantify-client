@@ -29,6 +29,7 @@ import { productsApi, type VariationOptionInput, type ProductVariantInput, type 
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
+import { useCan } from '../../../lib/useStaffAccess';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -64,6 +65,10 @@ export default function EditProduct() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const storeSubdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
+  // What this person's role allows here (rule-plan.md Step 10); the server checks each again.
+  const canEdit = useCan('products.edit');
+  const canDelete = useCan('products.delete');
+  const canPrice = useCan('products.price');
   const storeName = useAuthStore((s) => s.user?.vendor?.storeName);
 
   const { data: product, isLoading } = useQuery({
@@ -594,6 +599,7 @@ export default function EditProduct() {
               cost={cost}
               onCost={setCost}
               priceError={priceError}
+              priceLocked={!canPrice}
             />
           </SectionCard>
 
@@ -681,6 +687,7 @@ export default function EditProduct() {
               onVariantsChange={setVariants}
               variationPhotos={variationPhotos}
               onVariationPhotosChange={setVariationPhotos}
+              priceLocked={!canPrice}
             />
           </SectionCard>
         </div>
@@ -800,20 +807,29 @@ export default function EditProduct() {
             descriptionFallback={htmlToText(description)}
           />
 
-          <ProductSideCard title="Delete product">
-            <p className="text-xs text-neutral-500">Removes it from your store and your product list. Past orders keep their details.</p>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(true)}
-              className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 transition-colors hover:bg-red-50"
-            >
-              <Trash2 size={15} />
-              Delete product
-            </button>
-          </ProductSideCard>
+          {canDelete && (
+            <ProductSideCard title="Delete product">
+              <p className="text-xs text-neutral-500">Removes it from your store and your product list. Past orders keep their details.</p>
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 transition-colors hover:bg-red-50"
+              >
+                <Trash2 size={15} />
+                Delete product
+              </button>
+            </ProductSideCard>
+          )}
         </div>
       </div>
 
+      {!canEdit ? (
+        <SaveBar message={<span className="text-neutral-500">Your role can look at this product, not change it.</span>}>
+          <Link to="/vendor/product/all" className={outlineBtn}>
+            Back to products
+          </Link>
+        </SaveBar>
+      ) : (
       <SaveBar
         message={
           formError ? (
@@ -834,6 +850,7 @@ export default function EditProduct() {
           {updateMutation.isPending ? 'Saving…' : 'Save changes'}
         </button>
       </SaveBar>
+      )}
 
       <ConfirmDialog
         open={confirmDelete}

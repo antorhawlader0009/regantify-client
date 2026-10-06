@@ -25,6 +25,7 @@ import {
 } from '../../../components/ui/PageKit';
 import { PromoRowMenu, PromoStatusBadge, copyText, promoStatus, taka } from './MarketingKit';
 import { formatDhakaDate } from '../../../lib/dhakaDate';
+import { useCan } from '../../../lib/useStaffAccess';
 
 /** "10% off (up to ৳500)" / "৳100 off" / "Free delivery". */
 function discountLabel(c: Coupon): string {
@@ -175,6 +176,7 @@ function CouponItem({ coupon, subdomain }: { coupon: Coupon; subdomain?: string 
  */
 export default function Coupons() {
   const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
+  const canEdit = useCan('marketing.edit');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -190,12 +192,13 @@ export default function Coupons() {
   const total = data?.total ?? 0;
   const COLS = 6;
 
-  const addButton = (
+  // Read-only roles (Viewer, Accounts) see the coupons but get no Add (rule-plan.md Step 10).
+  const addButton = canEdit ? (
     <Link to="/vendor/marketing/coupons/add" className={primaryBtn}>
       <Plus size={15} aria-hidden />
       Add coupon
     </Link>
-  );
+  ) : undefined;
   const empty = search.trim()
     ? { title: 'No coupons match', hint: 'Try another code.', action: undefined }
     : { title: 'No coupons yet', hint: 'Make a code shoppers type at checkout, like EID100 for ৳100 off.', action: addButton };

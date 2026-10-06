@@ -21,10 +21,12 @@ import {
   trClass,
 } from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
+import { useCan } from '../../../lib/useStaffAccess';
 
 export default function Collections() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const canEdit = useCan('products.edit');
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
 
@@ -45,7 +47,8 @@ export default function Collections() {
 
   const editPath = (id: string) => `/vendor/product/collections/edit/${id}`;
 
-  const menu = (c: { id: string; name: string }) => (
+  // Read-only roles get no menu and no Add (rule-plan.md Step 10).
+  const menu = (c: { id: string; name: string }) => canEdit && (
     <DropdownMenu
       trigger={
         <button aria-label="Actions" title="Actions" className={iconBtn}>
@@ -60,7 +63,7 @@ export default function Collections() {
     </DropdownMenu>
   );
 
-  const addButton = (
+  const addButton = canEdit && (
     <button type="button" onClick={() => navigate('/vendor/product/collections/add')} className={primaryBtn}>
       <Plus size={15} />
       Add collection

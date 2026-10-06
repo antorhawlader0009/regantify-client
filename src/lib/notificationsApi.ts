@@ -20,9 +20,24 @@ export interface NotificationList {
   unreadCount: number;
 }
 
+/** One page of the full "All notifications" history. */
+export interface NotificationPage {
+  items: VendorNotification[];
+  total: number;
+  unreadCount: number;
+  /** Unread per type; a type with nothing unread is missing. */
+  unreadByType: Partial<Record<NotificationType, number>>;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export const notificationsApi = {
   list: (limit = 30) =>
     api.get<NotificationList>('/v1/notifications', { params: { limit } }).then((r) => r.data),
+
+  listAll: (params: { page: number; pageSize?: number; unread?: boolean; type?: NotificationType }) =>
+    api.get<NotificationPage>('/v1/notifications/all', { params }).then((r) => r.data),
 
   markRead: (id: string) => api.post(`/v1/notifications/${id}/read`).then((r) => r.data),
 

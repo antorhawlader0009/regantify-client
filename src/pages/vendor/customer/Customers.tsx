@@ -29,6 +29,7 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
+import { useCan } from '../../../lib/useStaffAccess';
 
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -73,7 +74,10 @@ function useCustomerActions(customer: VendorCustomer) {
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not delete this customer. Please try again.')),
   });
 
-  const menu = (
+  // Only what this person's role can do (rule-plan.md Step 10); no menu at all for a read-only role.
+  const canEdit = useCan('customers.edit');
+  const canDelete = useCan('customers.delete');
+  const menu = (canEdit || canDelete) && (
     <DropdownMenu
       trigger={
         <button aria-label="Actions" title="Actions" className={iconBtn}>
@@ -81,12 +85,16 @@ function useCustomerActions(customer: VendorCustomer) {
         </button>
       }
     >
-      <DropdownMenuItem onSelect={() => blacklistMutation.mutate(!customer.blacklisted)}>
-        {customer.blacklisted ? 'Remove from blacklist' : 'Blacklist customer'}
-      </DropdownMenuItem>
-      <DropdownMenuItem onSelect={() => setConfirmDelete(true)} danger>
-        Delete customer
-      </DropdownMenuItem>
+      {canEdit && (
+        <DropdownMenuItem onSelect={() => blacklistMutation.mutate(!customer.blacklisted)}>
+          {customer.blacklisted ? 'Remove from blacklist' : 'Blacklist customer'}
+        </DropdownMenuItem>
+      )}
+      {canDelete && (
+        <DropdownMenuItem onSelect={() => setConfirmDelete(true)} danger>
+          Delete customer
+        </DropdownMenuItem>
+      )}
     </DropdownMenu>
   );
 
@@ -114,6 +122,8 @@ interface CustomerRowProps {
 
 function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
   const { menu, dialog } = useCustomerActions(customer);
+  // A customer is opened by phone number; without customers.contact it comes masked (rule-plan.md Step 5).
+  const canOpen = useCan('customers.contact');
   return (
     <tr className={trClass(selected)}>
       <td className={`${td} w-10`}>
@@ -123,9 +133,13 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
         <div className="flex items-start gap-3">
           <Initial name={customer.name} />
           <div className="min-w-0">
-            <Link to={`/vendor/customers/${encodeURIComponent(customer.phone)}`} className="font-medium text-brand hover:underline">
-              {customer.name}
-            </Link>
+            {canOpen ? (
+              <Link to={`/vendor/customers/${encodeURIComponent(customer.phone)}`} className="font-medium text-brand hover:underline">
+                {customer.name}
+              </Link>
+            ) : (
+              <span className="font-medium text-regantify-text">{customer.name}</span>
+            )}
             <p className="mt-0.5 text-xs text-neutral-500">{customer.phone}</p>
             {customer.blacklisted && (
               <div className="mt-1.5">
@@ -158,10 +172,16 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
 /** Phones: one tappable row per customer. */
 function CustomerListItem({ customer }: { customer: VendorCustomer }) {
   const { menu, dialog } = useCustomerActions(customer);
+  const canOpen = useCan('customers.contact');
   return (
     <li className="flex items-center gap-3 px-3 py-3">
       <Initial name={customer.name} />
-      <Link to={`/vendor/customers/${encodeURIComponent(customer.phone)}`} className="min-w-0 flex-1">
+      <Link
+        to={`/vendor/customers/${encodeURIComponent(customer.phone)}`}
+        className={`min-w-0 flex-1 ${canOpen ? '' : 'pointer-events-none'}`}
+        aria-disabled={!canOpen}
+        tabIndex={canOpen ? undefined : -1}
+      >
         <p className="truncate text-sm font-medium text-brand">{customer.name}</p>
         <p className="truncate text-xs text-neutral-500">
           {customer.phone} · {customer.orderCount} {customer.orderCount === 1 ? 'order' : 'orders'} · {formatMoney(customer.totalSpent)}
@@ -175,7 +195,7 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
       </Link>
       {menu}
       {dialog}
-      <ChevronRight size={16} className="shrink-0 text-neutral-400" aria-hidden />
+      {canOpen && <ChevronRight size={16} className="shrink-0 text-neutral-400" aria-hidden />}
     </li>
   );
 }
@@ -205,6 +225,9 @@ const COLUMN_COUNT = 8;
 
 export default function Customers() {
   const navigate = useNavigate();
+  // What this person's role can do here (rule-plan.md Step 10); the server checks each again.
+  const canEdit = useCan('customers.edit');
+  const canExport = useCan('customers.export');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('ALL');
   const [perPage, setPerPage] = useState(10);
@@ -278,7 +301,7 @@ export default function Customers() {
         ? 'Try a different name or phone number.'
         : 'Customers appear here after their first order. You can also add them yourself.';
   const emptyAction =
-    filter === 'ALL' && !search ? (
+    filter === 'ALL' && !search && canEdit ? (
       <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
         <Plus size={15} />
         Add customer
@@ -303,18 +326,24 @@ export default function Customers() {
               <option value="BLACKLISTED">Blacklisted</option>
               <option value="DUE">Owes money (due)</option>
             </SelectBox>
-            <button type="button" onClick={handleExportCsv} disabled={exporting} className={outlineBtn}>
-              <Download size={15} />
-              {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
-            </button>
-            <button type="button" onClick={() => navigate('/vendor/customers/bulk-upload')} className={secondaryBtn}>
-              <Upload size={15} />
-              Bulk upload
-            </button>
-            <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
-              <Plus size={15} />
-              Add customer
-            </button>
+            {canExport && (
+              <button type="button" onClick={handleExportCsv} disabled={exporting} className={outlineBtn}>
+                <Download size={15} />
+                {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
+              </button>
+            )}
+            {canEdit && (
+              <>
+                <button type="button" onClick={() => navigate('/vendor/customers/bulk-upload')} className={secondaryBtn}>
+                  <Upload size={15} />
+                  Bulk upload
+                </button>
+                <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
+                  <Plus size={15} />
+                  Add customer
+                </button>
+              </>
+            )}
           </>
         }
       />

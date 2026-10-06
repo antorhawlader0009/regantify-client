@@ -126,6 +126,9 @@ export const authApi = {
   },
 
   // Settings page: change password. Requires the current password.
+  /** A staff member saw the owner's welcome note (rule-plan.md Step 7). */
+  welcomeSeen: () => api.post<{ success: boolean }>('/v1/auth/vendor/welcome-seen').then((r) => r.data),
+
   changePassword: (currentPassword: string, newPassword: string) =>
     api
       .post<{ message: string }>('/v1/auth/vendor/settings/change-password', {

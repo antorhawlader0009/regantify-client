@@ -29,6 +29,7 @@ function BalanceCell({ card }: { card: GiftCard }) {
 function GiftCardMenu({ item }: { item: GiftCard }) {
   return (
     <StandardPromoMenu
+      editPermission="marketing.gift_cards"
       name={item.code}
       kind="gift card"
       editTo={`/vendor/marketing/gift-cards/${item.id}`}
@@ -50,6 +51,7 @@ function GiftCardMenu({ item }: { item: GiftCard }) {
 export default function GiftCards() {
   return (
     <PromoListPage<GiftCard>
+      editPermission="marketing.gift_cards"
       title="Gift cards"
       description="A prepaid balance a shopper spends at checkout, like cash. Sell or give them away."
       addTo="/vendor/marketing/gift-cards/add"

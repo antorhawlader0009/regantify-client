@@ -1,28 +1,10 @@
-import { type ReactNode } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import * as RadixDropdown from '@radix-ui/react-dropdown-menu';
-import {
-  Bell,
-  BellOff,
-  CheckCheck,
-  ChevronRight,
-  CreditCard,
-  Landmark,
-  ShoppingBag,
-  Star,
-  Wallet,
-  Info,
-  LifeBuoy,
-} from 'lucide-react';
+import * as Popover from '@radix-ui/react-popover';
+import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import {
-  notificationsApi,
-  type NotificationList,
-  type NotificationTone,
-  type NotificationType,
-  type VendorNotification,
-} from '../lib/notificationsApi';
-import { agoPhrase } from './lms/format';
+import { notificationsApi, type NotificationList, type VendorNotification } from '../lib/notificationsApi';
+import { DayHeading, NotificationRow, groupByDay } from './notifications/notificationUi';
 
 // The feed is written by the server where events really happen (withdraw
 // approved/rejected/paid, wallet top-up, plan changes, new orders, reviews...),
@@ -31,26 +13,11 @@ import { agoPhrase } from './lms/format';
 const POLL_MS = 60_000;
 const QUERY_KEY = ['notifications'];
 
-const TYPE_ICON: Record<NotificationType, ReactNode> = {
-  ORDER: <ShoppingBag size={16} />,
-  WITHDRAW: <Landmark size={16} />,
-  WALLET: <Wallet size={16} />,
-  SUBSCRIPTION: <CreditCard size={16} />,
-  REVIEW: <Star size={16} />,
-  SUPPORT: <LifeBuoy size={16} />,
-  SYSTEM: <Info size={16} />,
-};
-
-const TONE_TILE: Record<NotificationTone, string> = {
-  INFO: 'bg-sky-50 text-sky-600',
-  SUCCESS: 'bg-emerald-50 text-emerald-600',
-  WARNING: 'bg-amber-50 text-amber-600',
-  DANGER: 'bg-red-50 text-red-600',
-};
-
 export function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [unreadOnly, setUnreadOnly] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: QUERY_KEY,
@@ -60,8 +27,10 @@ export function NotificationBell() {
     retry: false,
   });
 
-  const items = data?.items ?? [];
+  const all = data?.items ?? [];
   const unreadCount = data?.unreadCount ?? 0;
+  const items = unreadOnly ? all.filter((i) => !i.readAt) : all;
+  const groups = groupByDay(items);
 
   // Flip read state in the cache right away; the next poll confirms it.
   const patchCache = (fn: (list: NotificationList) => NotificationList) =>
@@ -84,7 +53,7 @@ export function NotificationBell() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
   });
 
-  const open = (item: VendorNotification) => {
+  const openItem = (item: VendorNotification) => {
     if (!item.readAt) {
       patchCache((l) => ({
         unreadCount: Math.max(0, l.unreadCount - 1),
@@ -92,141 +61,115 @@ export function NotificationBell() {
       }));
       markRead.mutate(item.id);
     }
+    setOpen(false);
     if (item.link) navigate(item.link);
   };
 
   return (
-    <RadixDropdown.Root>
-      <RadixDropdown.Trigger asChild>
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
         <button
-          className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line
-            bg-white text-regantify-text transition-all duration-200 hover:border-neutral-300 hover:shadow-sm
+          className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line
+            bg-white text-regantify-text transition-colors hover:border-neutral-300
             focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/20
             data-[state=open]:border-neutral-300 data-[state=open]:bg-neutral-50"
           title="Notifications"
           aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         >
-          <Bell
-            size={18}
-            className="transition-transform duration-300 origin-top group-hover:rotate-[14deg]"
-          />
+          <Bell size={18} strokeWidth={1.75} />
           {unreadCount > 0 && (
             <span
-              className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center
-                rounded-full bg-orange-500 px-1 text-[10px] font-bold leading-none text-white
-                ring-2 ring-white"
+              className="absolute -right-1 -top-1 flex h-[17px] min-w-[17px] items-center justify-center
+                rounded-full bg-orange-500 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-white"
             >
-              <span className="absolute inset-0 animate-ping rounded-full bg-orange-500/60" />
-              <span className="relative">{unreadCount > 9 ? '9+' : unreadCount}</span>
+              {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
-      </RadixDropdown.Trigger>
+      </Popover.Trigger>
 
-      <RadixDropdown.Portal>
-        <RadixDropdown.Content
+      <Popover.Portal>
+        <Popover.Content
           align="end"
-          sideOffset={12}
+          sideOffset={8}
           collisionPadding={12}
-          className="z-30 w-[380px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-black/10
-            bg-white shadow-2xl shadow-black/25 focus:outline-none"
+          className="z-30 flex max-h-[min(560px,calc(100vh-96px))] w-[400px] max-w-[calc(100vw-24px)] flex-col overflow-hidden
+            rounded-md border border-line bg-white shadow-lg focus:outline-none"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-black/5 px-5 py-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-semibold text-regantify-text">Notifications</h3>
-              {unreadCount > 0 && (
-                <span className="rounded-full bg-regantify-cta/10 px-2 py-0.5 text-[11px] font-semibold text-regantify-cta">
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <h3 className="text-sm font-semibold text-regantify-text">Notifications</h3>
             <button
+              type="button"
               onClick={() => markAllRead.mutate()}
               disabled={unreadCount === 0}
-              className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium
-                text-regantify-text-muted transition-colors hover:bg-regantify-content hover:text-regantify-text
-                disabled:pointer-events-none disabled:opacity-40"
+              className="rounded-sm text-[13px] font-medium text-regantify-cta underline-offset-2 hover:underline
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:pointer-events-none disabled:text-regantify-text-muted disabled:opacity-60"
             >
-              <CheckCheck size={14} />
               Mark all as read
             </button>
           </div>
 
-          <div className="max-h-[420px] overflow-y-auto">
+          <div role="tablist" aria-label="Show" className="flex gap-5 border-b border-line px-4">
+            {[
+              { label: 'All', value: false },
+              { label: unreadCount ? `Unread ${unreadCount}` : 'Unread', value: true },
+            ].map((tab) => (
+              <button
+                key={tab.label}
+                role="tab"
+                aria-selected={unreadOnly === tab.value}
+                onClick={() => setUnreadOnly(tab.value)}
+                className={`-mb-px border-b-2 pb-2 text-[13px] font-medium transition-colors focus:outline-none focus-visible:text-regantify-text ${
+                  unreadOnly === tab.value ? 'border-regantify-text text-regantify-text' : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {isLoading ? (
-              <div className="space-y-1 p-3">
+              <div className="divide-y divide-line" aria-busy>
                 {[0, 1, 2].map((n) => (
-                  <div key={n} className="flex animate-pulse gap-3 rounded-xl p-2.5">
-                    <div className="h-10 w-10 shrink-0 rounded-xl bg-regantify-content" />
-                    <div className="flex-1 space-y-2 pt-1">
-                      <div className="h-3 w-2/5 rounded bg-regantify-content" />
-                      <div className="h-3 w-4/5 rounded bg-regantify-content" />
+                  <div key={n} className="flex animate-pulse gap-3 px-4 py-3">
+                    <div className="mt-0.5 h-4 w-4 shrink-0 rounded-sm bg-regantify-content" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-2/5 rounded-sm bg-regantify-content" />
+                      <div className="h-3 w-4/5 rounded-sm bg-regantify-content" />
                     </div>
                   </div>
                 ))}
               </div>
-            ) : items.length === 0 ? (
-              <div className="flex flex-col items-center px-6 py-12 text-center">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-regantify-content text-regantify-text-muted">
-                  <BellOff size={22} />
-                </div>
-                <p className="text-sm font-semibold text-regantify-text">You're all caught up</p>
-                <p className="mt-1 text-xs text-regantify-text-muted">
-                  Orders, payments, withdrawals and plan updates will show up here.
-                </p>
-              </div>
+            ) : groups.length === 0 ? (
+              <p className="px-6 py-12 text-center text-sm text-regantify-text-muted">
+                {unreadOnly ? 'No unread notifications.' : 'No notifications yet. Orders, payments and plan updates will show up here.'}
+              </p>
             ) : (
-              <ul className="p-2">
-                {items.map((item) => {
-                  const unread = !item.readAt;
-                  return (
-                    <li key={item.id}>
-                      <RadixDropdown.Item
-                        onSelect={() => open(item)}
-                        className="group/item relative flex cursor-pointer select-none items-start gap-3 rounded-xl
-                          p-2.5 outline-none transition-colors data-[highlighted]:bg-regantify-content"
-                      >
-                        <span
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${TONE_TILE[item.tone]}`}
-                        >
-                          {TYPE_ICON[item.type]}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={`block text-[13px] leading-snug text-regantify-text ${
-                              unread ? 'font-semibold' : 'font-medium'
-                            }`}
-                          >
-                            {item.title}
-                          </span>
-                          {item.body && (
-                            <span className="mt-0.5 block line-clamp-2 break-words text-xs text-regantify-text-muted">
-                              {item.body}
-                            </span>
-                          )}
-                          <span className="mt-1 block text-[11px] text-regantify-text-muted/70">
-                            {agoPhrase(item.createdAt)}
-                          </span>
-                        </span>
-                        {unread ? (
-                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-regantify-cta" />
-                        ) : (
-                          item.link && (
-                            <ChevronRight
-                              size={14}
-                              className="mt-1.5 shrink-0 text-regantify-text-muted opacity-0 transition-opacity group-data-[highlighted]/item:opacity-100"
-                            />
-                          )
-                        )}
-                      </RadixDropdown.Item>
-                    </li>
-                  );
-                })}
-              </ul>
+              groups.map((group) => (
+                <section key={group.heading}>
+                  <DayHeading>{group.heading}</DayHeading>
+                  {group.items.map((item) => (
+                    <NotificationRow key={item.id} item={item} onOpen={openItem} />
+                  ))}
+                </section>
+              ))
             )}
           </div>
-        </RadixDropdown.Content>
-      </RadixDropdown.Portal>
-    </RadixDropdown.Root>
+
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              navigate('/vendor/notifications');
+            }}
+            className="border-t border-line px-4 py-2.5 text-center text-[13px] font-medium text-regantify-text transition-colors
+              hover:bg-regantify-content/50 focus:outline-none focus-visible:bg-regantify-content/50"
+          >
+            See all notifications
+          </button>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }

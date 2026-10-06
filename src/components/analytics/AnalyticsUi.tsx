@@ -37,7 +37,8 @@ export function Card({
   );
 }
 
-const STRIP_COLS: Record<3 | 4 | 5, string> = {
+const STRIP_COLS: Record<2 | 3 | 4 | 5, string> = {
+  2: '', // the base grid is already two wide (Sales without profit for a staff role, rule-plan.md Step 10)
   3: 'sm:grid-cols-3',
   4: 'lg:grid-cols-4',
   5: 'lg:grid-cols-5',
@@ -48,7 +49,7 @@ const STRIP_COLS: Record<3 | 4 | 5, string> = {
  * so they read as one set rather than a row of separate cards. On two
  * columns an odd last cell spans the row, so no empty gap shows.
  */
-export function KpiStrip({ cols, children }: { cols: 3 | 4 | 5; children: ReactNode }) {
+export function KpiStrip({ cols, children }: { cols: 2 | 3 | 4 | 5; children: ReactNode }) {
   return (
     <div
       className={`grid grid-cols-2 ${STRIP_COLS[cols]} gap-px overflow-hidden rounded-xl border border-line bg-line

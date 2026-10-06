@@ -19,6 +19,15 @@ export interface AuthUser {
     // "1250.00") — parse with Number(...) before formatting/display.
     balance: string;
   } | null;
+  // What they may do in the dashboard (rule-plan.md Step 3): sent with every
+  // user the auth endpoints return. The owner has every permission. Missing
+  // on a session saved before roles existed (see viewerOf in useStaffAccess).
+  isOwner?: boolean;
+  staffRole?: string | null;
+  staffRoleName?: string | null;
+  permissions?: string[];
+  // The owner's note for a staff member, until they've seen it once (Step 7).
+  welcomeMessage?: string | null;
   // Note: Vendor.address is intentionally NOT included here — it's not
   // part of the login/session payload, only fetched/edited directly on
   // the Settings page (see getVendorSettings/updateVendorSettings).

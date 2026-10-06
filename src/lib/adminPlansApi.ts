@@ -22,6 +22,8 @@ export interface UpdatePlanPayload {
   /** AI tokens given once when the plan is bought (0 = none). */
   aiTokenGrant?: number | null;
   staffLimit?: number | null;
+  /** Which staff roles the plan may assign: 0 Admin only … 3 + Custom roles (rule-plan.md 5.5). */
+  staffRoleTier?: number;
   customDomainAllowed?: boolean;
   customPaymentGatewayAllowed?: boolean;
   lmsEnabled?: boolean;

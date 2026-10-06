@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { Camera, ChevronDown, Eye, EyeOff, GripVertical, Plus, Star, UploadCloud, X } from 'lucide-react';
 import { productInputClass } from './ProductFormPieces';
+import { useCan } from '../../lib/useStaffAccess';
 
 // Pieces shared by Add Product and Edit Product (theme-update-plan.md
 // Step 2), so both forms get the same photos, price, status, search
@@ -89,11 +90,13 @@ export function MoneyInput({
   onChange,
   placeholder,
   ariaLabel,
+  disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="relative">
@@ -105,9 +108,10 @@ export function MoneyInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel}
+        disabled={disabled}
         min={0}
         max={10000000}
-        className={`${productInputClass} pl-7`}
+        className={`${productInputClass} pl-7 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500`}
       />
     </div>
   );
@@ -306,6 +310,7 @@ export function PriceFields({
   cost,
   onCost,
   priceError,
+  priceLocked = false,
 }: {
   price: string;
   onPrice: (v: string) => void;
@@ -314,7 +319,11 @@ export function PriceFields({
   cost: string;
   onCost: (v: string) => void;
   priceError?: string | null;
+  /** Edit Product for a staff role without products.price: prices are shown, not changeable (rule-plan.md Step 10). */
+  priceLocked?: boolean;
 }) {
+  // Without products.cost the server never sends the cost and keeps the saved one on save (Step 5): no box at all.
+  const canCost = useCan('products.cost');
   const p = Number(price);
   const d = Number(discountPrice);
   const c = Number(cost);
@@ -344,26 +353,30 @@ export function PriceFields({
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className={`grid gap-4 ${canCost ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
       <div>
         <label className="mb-1.5 flex items-center gap-1 text-sm font-medium text-regantify-text">
           Price <span className="text-red-500" aria-hidden>*</span>
         </label>
         <div className={priceError ? '[&_input]:border-red-400' : undefined}>
-          <MoneyInput value={price} onChange={onPrice} placeholder="0" ariaLabel="Price" />
+          <MoneyInput value={price} onChange={onPrice} placeholder="0" ariaLabel="Price" disabled={priceLocked} />
         </div>
-        <p className={`mt-1.5 text-xs ${priceError ? 'text-red-600' : 'text-neutral-500'}`}>{priceError ?? 'What shoppers pay.'}</p>
+        <p className={`mt-1.5 text-xs ${priceError ? 'text-red-600' : 'text-neutral-500'}`}>
+          {priceError ?? (priceLocked ? 'Your role can’t change prices. Ask the store owner.' : 'What shoppers pay.')}
+        </p>
       </div>
       <div>
         <label className="mb-1.5 block text-sm font-medium text-regantify-text">Sale price</label>
-        <MoneyInput value={discountPrice} onChange={onDiscountPrice} placeholder="Optional" ariaLabel="Sale price" />
+        <MoneyInput value={discountPrice} onChange={onDiscountPrice} placeholder="Optional" ariaLabel="Sale price" disabled={priceLocked} />
         <p className="mt-1.5 text-xs text-neutral-500">{discountNote}</p>
       </div>
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-regantify-text">Cost</label>
-        <MoneyInput value={cost} onChange={onCost} placeholder="Optional" ariaLabel="Cost" />
-        <p className="mt-1.5 text-xs text-neutral-500">{costNote}</p>
-      </div>
+      {canCost && (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-regantify-text">Cost</label>
+          <MoneyInput value={cost} onChange={onCost} placeholder="Optional" ariaLabel="Cost" />
+          <p className="mt-1.5 text-xs text-neutral-500">{costNote}</p>
+        </div>
+      )}
     </div>
   );
 }

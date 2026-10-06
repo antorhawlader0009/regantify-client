@@ -28,6 +28,8 @@ import { customersApi } from '../../../lib/customersApi';
 import { toLatinDigits } from '../../../lib/bdPhone';
 import { formatDhakaDate, formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
+import { useCan } from '../../../lib/useStaffAccess';
+import type { StaffPermission } from '../../../lib/staffPermissions';
 
 // Shared pieces of the five Marketing pages (theme-update-plan.md Step 7):
 // Coupons, Discounts, Flash Sale, Campaigns, Gift Cards. Same list and
@@ -119,6 +121,7 @@ export function PromoRowMenu({
   onToggleActive,
   onDelete,
   extra,
+  editPermission = 'marketing.edit',
 }: {
   name: string;
   onEdit: () => void;
@@ -126,15 +129,19 @@ export function PromoRowMenu({
   onToggleActive?: () => void;
   onDelete: () => void;
   extra?: ReactNode;
+  /** What changing this needs (rule-plan.md Step 10): marketing.edit, or marketing.gift_cards for gift cards. */
+  editPermission?: StaffPermission;
 }) {
+  const canEdit = useCan(editPermission);
+  const trigger = (
+    <button aria-label={`Actions for ${name}`} title="Actions" className={`${iconBtn} h-9 w-9 md:h-auto md:w-auto`}>
+      <MoreVertical size={14} />
+    </button>
+  );
+  // A read-only role keeps only the harmless extras (copy code / link), or no menu at all.
+  if (!canEdit) return extra ? <DropdownMenu trigger={trigger}>{extra}</DropdownMenu> : null;
   return (
-    <DropdownMenu
-      trigger={
-        <button aria-label={`Actions for ${name}`} title="Actions" className={`${iconBtn} h-9 w-9 md:h-auto md:w-auto`}>
-          <MoreVertical size={14} />
-        </button>
-      }
-    >
+    <DropdownMenu trigger={trigger}>
       <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
       {extra}
       {onToggleActive && <DropdownMenuItem onSelect={onToggleActive}>{active ? 'Turn off' : 'Turn on'}</DropdownMenuItem>}
@@ -161,7 +168,9 @@ export function StandardPromoMenu({
   remove,
   deleteMessage,
   extra,
+  editPermission,
 }: {
+  editPermission?: StaffPermission;
   name: string;
   /** "coupon", "discount", "flash sale"… */
   kind: string;
@@ -205,6 +214,7 @@ export function StandardPromoMenu({
         onToggleActive={setActive ? () => activeMutation.mutate() : undefined}
         onDelete={() => setConfirming(true)}
         extra={extra}
+        editPermission={editPermission}
       />
       <ConfirmDialog
         open={confirming}
@@ -240,7 +250,10 @@ export function PromoListPage<T extends { id: string }>({
   mobile,
   editPath,
   Menu,
+  editPermission = 'marketing.edit',
 }: {
+  /** What adding or changing these needs (rule-plan.md Step 10). */
+  editPermission?: StaffPermission;
   title: string;
   description: string;
   addTo: string;
@@ -270,12 +283,13 @@ export function PromoListPage<T extends { id: string }>({
   const total = data?.total ?? 0;
   const colSpan = columns.length + 1;
 
-  const addButton = (
+  const canEdit = useCan(editPermission);
+  const addButton = canEdit ? (
     <Link to={addTo} className={primaryBtn}>
       <Plus size={15} aria-hidden />
       {addLabel}
     </Link>
-  );
+  ) : undefined;
   const empty = search.trim()
     ? { title: `No ${title.toLowerCase()} match`, hint: 'Try another search.', action: undefined }
     : { title: `No ${title.toLowerCase()} yet`, hint: emptyHint, action: addButton };
@@ -342,7 +356,7 @@ export function PromoListPage<T extends { id: string }>({
                 const m = mobile(item);
                 return (
                   <li key={item.id} className="flex items-start gap-2 px-3 py-3">
-                    <button type="button" onClick={() => navigate(editPath(item))} className="min-w-0 flex-1 text-left">
+                    <button type="button" disabled={!canEdit} onClick={() => navigate(editPath(item))} className="min-w-0 flex-1 text-left disabled:cursor-default">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium text-regantify-text">{m.title}</span>
                         {m.badge}

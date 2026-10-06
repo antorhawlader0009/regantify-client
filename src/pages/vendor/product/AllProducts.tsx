@@ -27,6 +27,7 @@ import { toast } from '../../../lib/toast';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
+import { useCan } from '../../../lib/useStaffAccess';
 import { PrintLabelsDialog } from '../../../components/product/PrintLabelsDialog';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/PageKit';
@@ -103,6 +104,9 @@ function ActionsMenu({
   onPrintLabels: () => void;
   atProductLimit: boolean;
 }) {
+  // Only what this person's role can do (rule-plan.md Step 10); the server checks each again.
+  const canEdit = useCan('products.edit');
+  const canDelete = useCan('products.delete');
   return (
     <DropdownMenu
       widthClass="w-52"
@@ -115,19 +119,25 @@ function ActionsMenu({
         </button>
       }
     >
-      <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
-      <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>
+      <DropdownMenuItem onSelect={onEdit}>{canEdit ? 'Edit' : 'View'}</DropdownMenuItem>
+      {canEdit && <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>}
       <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>
-      <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onCreateStockProduct())}>
-        <span className="flex items-center gap-1.5">
-          Create Stock Product
-          {atProductLimit && <LockedBadge size={12} />}
-        </span>
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onSelect={onDelete} danger>
-        Delete
-      </DropdownMenuItem>
+      {canEdit && (
+        <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onCreateStockProduct())}>
+          <span className="flex items-center gap-1.5">
+            Create Stock Product
+            {atProductLimit && <LockedBadge size={12} />}
+          </span>
+        </DropdownMenuItem>
+      )}
+      {canDelete && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onDelete} danger>
+            Delete
+          </DropdownMenuItem>
+        </>
+      )}
     </DropdownMenu>
   );
 }
@@ -229,6 +239,9 @@ function StatusBadge({ visibility }: { visibility: Product['visibility'] }) {
 export default function AllProducts() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  // What this person's role can do here (rule-plan.md Step 10); the server checks each again.
+  const canEditProducts = useCan('products.edit');
+  const canDeleteProducts = useCan('products.delete');
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -489,6 +502,8 @@ export default function AllProducts() {
             )}
           </button>
 
+          {canEditProducts && (
+          <>
           <button
             onClick={() => (atProductLimit ? upgradeToast('add more products') : navigate('/vendor/product/add'))}
             disabled={atProductLimit}
@@ -513,6 +528,8 @@ export default function AllProducts() {
             {atProductLimit ? <LockedBadge size={14} /> : <Upload size={15} />}
             Import Product
           </button>
+          </>
+          )}
         </div>
 
         {/* Filter panel */}
@@ -586,12 +603,14 @@ export default function AllProducts() {
                 <Printer size={13} aria-hidden />
                 Print labels
               </button>
-              <button
-                onClick={handleBulkDelete}
-                className="h-8 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 hover:bg-red-50"
-              >
-                Delete Selected ({selected.size})
-              </button>
+              {canDeleteProducts && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="h-8 rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Delete Selected ({selected.size})
+                </button>
+              )}
             </div>
           </div>
         )}

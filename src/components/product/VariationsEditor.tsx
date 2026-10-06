@@ -5,6 +5,7 @@ import type { VariationOptionInput, ProductVariantInput, VariationValuePhotoInpu
 import { productsApi } from '../../lib/productsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
+import { useCan } from '../../lib/useStaffAccess';
 
 interface VariationsEditorProps {
   productSku: string;
@@ -15,6 +16,8 @@ interface VariationsEditorProps {
   onVariantsChange: (variants: ProductVariantInput[]) => void;
   variationPhotos: VariationValuePhotoInput[];
   onVariationPhotosChange: (photos: VariationValuePhotoInput[]) => void;
+  /** Edit Product for a staff role without products.price: variant prices can't be changed (rule-plan.md Step 10). */
+  priceLocked?: boolean;
 }
 
 function slugify(input: string): string {
@@ -57,7 +60,10 @@ export function VariationsEditor({
   onVariantsChange,
   variationPhotos,
   onVariationPhotosChange,
+  priceLocked = false,
 }: VariationsEditorProps) {
+  // No cost column for a staff role without products.cost: the server keeps the saved costs (rule-plan.md Step 5).
+  const canCost = useCan('products.cost');
   const [addingCustom, setAddingCustom] = useState(false);
   const [customName, setCustomName] = useState('');
   const [valueInputs, setValueInputs] = useState<Record<string, string>>({});
@@ -457,7 +463,7 @@ export function VariationsEditor({
                   <th className="px-3 py-2.5 font-medium">Stock</th>
                   <th className="px-3 py-2.5 font-medium">List Price</th>
                   <th className="px-3 py-2.5 font-medium">Discount Price</th>
-                  <th className="px-3 py-2.5 font-medium">Cost</th>
+                  {canCost && <th className="px-3 py-2.5 font-medium">Cost</th>}
                   <th className="px-3 py-2.5 font-medium">Weight</th>
                 </tr>
               </thead>
@@ -506,9 +512,10 @@ export function VariationsEditor({
                         value={v.listPrice ?? ''}
                         onChange={(e) => updateVariantField(v.sku, 'listPrice', e.target.value)}
                         placeholder="Variation price"
+                        disabled={priceLocked}
                         min={0}
                         max={10000000}
-                        className="w-28 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                        className="w-28 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -517,22 +524,25 @@ export function VariationsEditor({
                         value={v.discountPrice ?? ''}
                         onChange={(e) => updateVariantField(v.sku, 'discountPrice', e.target.value)}
                         placeholder="Variation price"
+                        disabled={priceLocked}
                         min={0}
                         max={10000000}
-                        className="w-28 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                        className="w-28 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500"
                       />
                     </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        value={v.cost ?? ''}
-                        onChange={(e) => updateVariantField(v.sku, 'cost', e.target.value)}
-                        placeholder="Cost"
-                        min={0}
-                        max={10000000}
-                        className="w-24 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
-                      />
-                    </td>
+                    {canCost && (
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          value={v.cost ?? ''}
+                          onChange={(e) => updateVariantField(v.sku, 'cost', e.target.value)}
+                          placeholder="Cost"
+                          min={0}
+                          max={10000000}
+                          className="w-24 px-2.5 py-1.5 rounded-lg bg-white border border-line text-xs text-regantify-text placeholder:text-regantify-text-muted/70 focus:outline-none"
+                        />
+                      </td>
+                    )}
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-1">
                         <input

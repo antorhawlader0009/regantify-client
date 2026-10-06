@@ -8,6 +8,14 @@ import type { UpdatePlanPayload } from '../../../lib/adminPlansApi';
 
 const TIER_ORDER: PlanCode[] = ['FREE', 'BASIC', 'STARTER', 'ADVANCE'];
 
+/** Plan.staffRoleTier in a few words, under the staff limit (rule-plan.md 5.5). */
+const STAFF_ROLE_TIER_SHORT: Record<number, string> = {
+  0: 'Admin role only',
+  1: '4 roles',
+  2: '8 roles',
+  3: 'All roles + custom',
+};
+
 function formatLimit(value: number | null, suffix = '') {
   return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
 }
@@ -87,7 +95,10 @@ export default function PlanManagement() {
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.orderLimitPerDay)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.monthlyVisitLimit)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.themeAllowance)}</td>
-                    <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.staffLimit)}</td>
+                    <td className="px-4 py-3 text-regantify-text">
+                      {formatLimit(plan.staffLimit)}
+                      <span className="block text-[11px] text-regantify-text-muted">{STAFF_ROLE_TIER_SHORT[plan.staffRoleTier] ?? ''}</span>
+                    </td>
                     <td className="px-4 py-3 text-regantify-text">
                       {formatFee(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer)}
                     </td>
