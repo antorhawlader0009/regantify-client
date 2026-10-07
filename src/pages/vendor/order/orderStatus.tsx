@@ -15,6 +15,52 @@ export const ALL_ORDER_STATUSES: OrderStatus[] = [
   'STOCK_OUT',
 ];
 
+// Which statuses an order can move to from `from`: forward only, never back.
+// A copy of server/src/orders/order-status-flow.ts, which is what really
+// decides (it also knows the furthest step the order ever reached, so from a
+// pause like On Hold it may still refuse going back; this menu then shows
+// the server's message).
+const FLOW_STEP: Partial<Record<OrderStatus, number>> = {
+  PAYMENT_INITIATED: 0,
+  PARTIAL_PAYMENT_PENDING: 0,
+  PENDING: 1,
+  PROCESSING: 2,
+  SHIPPING: 3,
+  COMPLETED: 4,
+};
+
+export function canMoveOrderStatus(from: OrderStatus, to: OrderStatus): boolean {
+  if (from === to) return false;
+  switch (from) {
+    case 'REFUNDED':
+      return false;
+    case 'RETURN':
+    case 'CANCELLED':
+      return to === 'REFUNDED';
+    case 'PAYMENT_FAILED':
+      return to === 'CANCELLED';
+    case 'COMPLETED':
+      return to === 'RETURN' || to === 'REFUNDED';
+  }
+  const fromStep = FLOW_STEP[from]; // undefined for a pause (On Hold, Stock Out)
+  switch (to) {
+    case 'CANCELLED':
+    case 'ON_HOLD':
+      return true;
+    case 'REFUNDED':
+      return false;
+    case 'PAYMENT_FAILED':
+      return fromStep === 0;
+    case 'RETURN':
+      return fromStep === undefined || fromStep >= 3;
+    case 'STOCK_OUT':
+      return fromStep === undefined || fromStep < 3;
+  }
+  const toStep = FLOW_STEP[to]!;
+  if (toStep === 0) return fromStep === 0;
+  return fromStep === undefined || toStep >= fromStep;
+}
+
 // PAYMENT_INITIATED included by default (mirrors OrdersService's own
 // DEFAULT_TABS server-side) — a storefront order stuck awaiting a
 // gateway redirect the shopper abandoned/never completed otherwise only

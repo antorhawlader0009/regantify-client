@@ -18,7 +18,7 @@ import {
   redxTrackingUrl,
   type CourierAccountProvider,
 } from '../../../lib/courierApi';
-import { ALL_ORDER_STATUSES, OrderStatusBadge, orderStatusLabel } from './orderStatus';
+import { ALL_ORDER_STATUSES, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel } from './orderStatus';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { InvoiceModal } from './InvoiceModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
@@ -263,7 +263,8 @@ export default function OrderDetail() {
       setStatusNote('');
       toast.success(status === 'PROCESSING' ? 'Order confirmed.' : `Status changed to ${orderStatusLabel(status)}.`);
     },
-    onError: () => toast.error('Could not update the order status. Please try again.'),
+    // The server's own reason when the flow refuses the move ("already reached Processing…").
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not update the order status. Please try again.')),
   });
 
   // A hook, so it stays above the loading early return below (hooks must run in the same order every render).
@@ -838,8 +839,8 @@ export default function OrderDetail() {
               <option value="" disabled>
                 Move this order to…
               </option>
-              {/* Cancelled / Refunded need their own permission (rule-plan.md 5.3). */}
-              {ALL_ORDER_STATUSES.filter((s) => s !== order.status && (canCancelRefund || (s !== 'CANCELLED' && s !== 'REFUNDED'))).map((status) => (
+              {/* Forward only (canMoveOrderStatus). Cancelled / Refunded need their own permission (rule-plan.md 5.3). */}
+              {ALL_ORDER_STATUSES.filter((s) => canMoveOrderStatus(order.status, s) && (canCancelRefund || (s !== 'CANCELLED' && s !== 'REFUNDED'))).map((status) => (
                 <option key={status} value={status}>
                   {orderStatusLabel(status)}
                 </option>

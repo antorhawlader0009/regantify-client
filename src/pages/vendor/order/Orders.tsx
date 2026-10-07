@@ -53,7 +53,7 @@ import { PathaoBulkBookDialog } from '../../../components/courier/PathaoBulkBook
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import type { PhoneCourierStats } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
-import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, orderStatusLabel } from './orderStatus';
+import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel } from './orderStatus';
 import { CustomizeTabsModal } from './CustomizeTabsModal';
 import AbandonedCart from './AbandonedCart';
 import { CheckHistoryModal } from './CheckHistoryModal';
@@ -205,7 +205,8 @@ function OrderRow({
       invalidate();
       toast.success('Order status updated.');
     },
-    onError: () => toast.error('Could not update the order status. Please try again.'),
+    // The server's own reason when the flow refuses the move ("already reached Processing…").
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not update the order status. Please try again.')),
   });
 
   const courierMutation = useMutation({
@@ -478,7 +479,8 @@ function OrderRow({
               {canEdit && (
                 <>
                   <DropdownMenuSub icon={<ListChecks />} label="Change status" value={orderStatusLabel(order.status)}>
-                    {ALL_ORDER_STATUSES.map((status) => {
+                    {/* Forward only: the current status (ticked) plus the moves the flow allows. */}
+                    {ALL_ORDER_STATUSES.filter((s) => s === order.status || canMoveOrderStatus(order.status, s)).map((status) => {
                       const moneyBack = status === 'CANCELLED' || status === 'REFUNDED';
                       return (
                         <DropdownMenuItem
