@@ -158,6 +158,22 @@ function MoneyLedger({ breakdown: b, missingCost }: { breakdown: SalesAnalytics[
           {formatTaka(b.profit)}
         </span>
       </div>
+      {/* Finance > Expenses (ads, rent, salaries...) for the same days. */}
+      <dl className="mt-2 text-sm">
+        <LedgerRow label="Expenses" title="Ads, packaging, rent and other costs from Finance > Expenses" amount={`− ${formatTaka(b.expenses)}`} />
+      </dl>
+      <div className="mt-1 flex items-baseline justify-between gap-3 border-t border-line pt-2">
+        <span className="text-sm font-semibold text-regantify-text">Profit after expenses</span>
+        <span className={`text-lg font-semibold tabular-nums ${b.profitAfterExpenses < 0 ? 'text-red-700' : 'text-emerald-800'}`}>{formatTaka(b.profitAfterExpenses)}</span>
+      </div>
+      {b.expenses === 0 && (
+        <p className="mt-1 text-[12px] text-neutral-500">
+          No expenses recorded for these days.{' '}
+          <Link to="/vendor/finance/expenses" className="font-medium underline underline-offset-2">
+            Add expenses
+          </Link>
+        </p>
+      )}
 
       {(b.costCoverage < 99.5 || b.netSales > 0) && (
         <div className="mt-4 space-y-1.5 text-[12px] leading-relaxed text-neutral-500">

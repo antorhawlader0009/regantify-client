@@ -24,6 +24,7 @@ const SAMPLE = {
   '{tracking_id}': 'PTH1234567',
   '{amount}': '1060',
   '{expected}': 'Expected by Tue 6 Oct.',
+  '{review}': 'https://yourstore.com/product/blue-shirt',
 } as const;
 
 // Same rule as the server's SmsService.estimateSmsCount: plain GSM text is 160 characters per
@@ -39,7 +40,7 @@ function segments(message: string): { count: number; unicode: boolean } {
 
 function preview(text: string): string {
   return text
-    .replace(/\{(store|order|link|courier|tracking_id|amount|expected)\}/g, (m) => SAMPLE[m as keyof typeof SAMPLE] ?? m)
+    .replace(/\{(store|order|link|courier|tracking_id|amount|expected|review)\}/g, (m) => SAMPLE[m as keyof typeof SAMPLE] ?? m)
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([.,!?])/g, '$1')
     .trim();

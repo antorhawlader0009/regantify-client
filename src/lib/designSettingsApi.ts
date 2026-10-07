@@ -101,6 +101,9 @@ export interface DesignSettings {
   homeSections: HomeSection[];
   homeHighlights: HomeHighlight[];
   homeHighlightsHeading: string | null;
+
+  /** StorePal's own buttons and labels: English or Bangla. Product names and descriptions stay as written. */
+  storeLanguage: 'en' | 'bn';
 }
 
 // Text fields go out as "" to clear them (the server stores null).

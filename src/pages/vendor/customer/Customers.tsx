@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronRight, Download, MoreVertical, Plus, Upload, Users, X } from 'lucide-react';
+import { ChevronRight, Download, MoreVertical, Plus, Send, Upload, Users, X } from 'lucide-react';
 import { customersApi, type VendorCustomer } from '../../../lib/customersApi';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -228,6 +228,7 @@ export default function Customers() {
   // What this person's role can do here (rule-plan.md Step 10); the server checks each again.
   const canEdit = useCan('customers.edit');
   const canExport = useCan('customers.export');
+  const canSms = useCan('sms.manage');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('ALL');
   const [perPage, setPerPage] = useState(10);
@@ -326,6 +327,12 @@ export default function Customers() {
               <option value="BLACKLISTED">Blacklisted</option>
               <option value="DUE">Owes money (due)</option>
             </SelectBox>
+            {canSms && selected.size > 0 && (
+              <button type="button" onClick={() => navigate('/vendor/sms', { state: { smsPhones: Array.from(selected) } })} className={outlineBtn}>
+                <Send size={15} />
+                Send SMS ({selected.size})
+              </button>
+            )}
             {canExport && (
               <button type="button" onClick={handleExportCsv} disabled={exporting} className={outlineBtn}>
                 <Download size={15} />

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
@@ -33,6 +34,7 @@ import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCa
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
 import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/order/EditOrderItemsDialog';
+import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
@@ -139,6 +141,38 @@ export default function OrderDetail() {
   const canCancelRefund = useCan('orders.cancel_refund');
   const canCourier = useCan('orders.courier');
   const canContact = useCan('customers.contact');
+  const canSms = useCan('sms.manage');
+  const canCreate = useCan('orders.create');
+  const navigate = useNavigate();
+  // "Exchange": a new order for the same customer with these lines (change the size or product there),
+  // noted on this order's history once it's saved (OrdersService.linkExchange).
+  const startExchange = () => {
+    if (!order) return;
+    const state: CreateOrderFromIncompleteState = {
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerPhoneAlt: order.customerPhoneAlt,
+      customerEmail: order.customerEmail,
+      shippingAddress: order.shippingAddress,
+      shippingDistrict: order.shippingDistrict,
+      shippingCity: order.shippingCity,
+      staffNote: `Exchange for ${orderRef(order)}`,
+      items: order.items.map((i) => ({
+        productId: i.productId ?? undefined,
+        variantId: i.variantId ?? undefined,
+        productName: i.productName,
+        productSku: i.productSku,
+        productImage: i.productImage ?? undefined,
+        selectedOptions: i.selectedOptions,
+        listPrice: Number(i.listPrice),
+        unitPrice: Number(i.unitPrice),
+        quantity: i.quantity,
+      })),
+      exchangeForOrderId: order.id,
+    };
+    navigate('/vendor/orders/add', { state });
+  };
+  const [smsOpen, setSmsOpen] = useState(false);
 
   // The customer's delivery record (same lookup as the Orders list); by full phone number, so it needs contact.
   const { data: deliveryStats } = useQuery({
@@ -439,6 +473,11 @@ export default function OrderDetail() {
                 <button type="button" onClick={() => setEditingItems(true)} className="text-sm font-medium text-brand hover:underline">
                   Edit items
                 </button>
+              ) : canCreate && order.source !== 'POS' && (order.status === 'COMPLETED' || order.status === 'RETURN') ? (
+                // A size or product swap after delivery: Add Order with this customer and these lines, linked back here.
+                <button type="button" onClick={startExchange} className="text-sm font-medium text-brand hover:underline">
+                  Exchange
+                </button>
               ) : undefined
             }
           >
@@ -544,6 +583,12 @@ export default function OrderDetail() {
                     <MessageCircle size={14} />
                     WhatsApp
                   </a>
+                  {canSms && (
+                    <button type="button" onClick={() => setSmsOpen(true)} className={outlineBtn}>
+                      <Send size={14} />
+                      SMS
+                    </button>
+                  )}
                   <button type="button" onClick={() => setHistoryPhone(order.customerPhone)} className={outlineBtn}>
                     Order history
                   </button>
@@ -890,6 +935,7 @@ export default function OrderDetail() {
 
       <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
       <EditOrderItemsDialog order={order} open={editingItems} onOpenChange={setEditingItems} />
+      {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} />}
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
       <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ${orderRef(order)}`} maxWidth="max-w-md">

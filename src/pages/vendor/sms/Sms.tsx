@@ -9,8 +9,10 @@ import { Field, productInputClass } from '../../../components/product/ProductFor
 import { EmptyState, PageHeader, PillTabs, StackedList, TableFrame, TableSkeleton, primaryBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
 import { BuySmsDialog, perSms } from './BuySmsDialog';
 import { useCan } from '../../../lib/useStaffAccess';
+import { useLocation } from 'react-router-dom';
+import { SendToCustomers } from '../../../components/sms/SendToCustomers';
 
-type Tab = 'logs' | 'test';
+type Tab = 'send' | 'logs' | 'test';
 
 /**
  * Sent messages, newest first (the last 30). The gateway (bulksmsbd.net)
@@ -154,7 +156,9 @@ function TestSms() {
 export default function Sms() {
   const isOwner = useCan('owner');
   const canTest = useCan('sms.manage');
-  const [tab, setTab] = useState<Tab>('logs');
+  // Customers page "Send SMS" opens here with the picked customers' phones.
+  const pickedPhones = (useLocation().state as { smsPhones?: string[] } | null)?.smsPhones;
+  const [tab, setTab] = useState<Tab>(pickedPhones?.length ? 'send' : 'logs');
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
 
   const { data: creditsData, isLoading } = useQuery({ queryKey: ['sms-credits'], queryFn: () => smsApi.getCredits() });
@@ -193,9 +197,15 @@ export default function Sms() {
         <PillTabs<Tab>
           value={canTest ? tab : 'logs'}
           onChange={setTab}
-          tabs={[{ id: 'logs', label: 'Sent messages' }, ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : [])]}
+          tabs={[
+            ...(canTest ? [{ id: 'send' as const, label: 'Send to customers' }] : []),
+            { id: 'logs', label: 'Sent messages' },
+            ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : []),
+          ]}
         />
-        <div className="px-0.5">{tab === 'test' && canTest ? <TestSms /> : <SentLogs />}</div>
+        <div className="px-0.5">
+          {tab === 'test' && canTest ? <TestSms /> : tab === 'send' && canTest ? <SendToCustomers selectedPhones={pickedPhones} /> : <SentLogs />}
+        </div>
       </section>
 
       <BuySmsDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen} />

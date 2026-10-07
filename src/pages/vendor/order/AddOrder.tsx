@@ -35,6 +35,13 @@ export interface CreateOrderFromIncompleteState {
   customerEmail?: string | null;
   shippingAddress?: string | null;
   itemsSummary?: string; // e.g. "2x Men's Dress Shoes (wbie1158-brown-43)"
+  // Order detail "Exchange": the old order's other details and lines, and which order it replaces.
+  customerPhoneAlt?: string | null;
+  shippingDistrict?: string | null;
+  shippingCity?: string | null;
+  staffNote?: string;
+  items?: OrderItemInput[];
+  exchangeForOrderId?: string;
 }
 
 type ChargeMode = 'DHAKA' | 'OUTSIDE_DHAKA' | 'CUSTOM';
@@ -85,6 +92,11 @@ export default function AddOrder() {
     if (state.customerPhone) setCustomerPhone(state.customerPhone);
     if (state.customerEmail) setCustomerEmail(state.customerEmail);
     if (state.shippingAddress) setShippingAddress(state.shippingAddress);
+    if (state.customerPhoneAlt) setCustomerPhoneAlt(state.customerPhoneAlt);
+    if (state.shippingDistrict) setShippingDistrict(state.shippingDistrict);
+    if (state.shippingCity) setShippingCity(state.shippingCity);
+    if (state.staffNote) setStaffNote(state.staffNote);
+    if (state.items?.length) setCart(state.items.map((item) => ({ ...item, key: `${item.productId}:${item.variantId ?? ''}` })));
     if (state.itemsSummary) {
       setStaffNote(`Cart from incomplete checkout — please re-add these items with current pricing:\n${state.itemsSummary}`);
     }
@@ -320,6 +332,7 @@ export default function AddOrder() {
       discountLabel: showDiscount ? discountLabel.trim() || undefined : undefined,
       advanceAmount: advance > 0 ? advance : undefined,
       advanceNote: advance > 0 ? advanceNote.trim() || undefined : undefined,
+      exchangeForOrderId: (location.state as CreateOrderFromIncompleteState | null)?.exchangeForOrderId,
     });
   };
 

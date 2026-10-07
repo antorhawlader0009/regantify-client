@@ -220,6 +220,7 @@ export const vendorNav: NavSection[] = [
     children: [
       { label: 'Wallet', path: '/vendor/finance/wallet' },
       { label: 'Transactions', path: '/vendor/finance/transactions' },
+      { label: 'Expenses', path: '/vendor/finance/expenses' },
       { label: 'Earnings', path: '/vendor/finance/earnings' },
       { label: 'Withdraw', path: '/vendor/finance/withdraw' },
       { label: 'Fee Summary', path: '/vendor/finance/fee-summary' },

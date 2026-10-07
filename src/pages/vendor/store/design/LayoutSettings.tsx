@@ -9,11 +9,13 @@ export default function LayoutSettings() {
   const { settings, isLoading, save } = useDesignSettings();
   const [layoutType, setLayoutType] = useState<StoreLayoutType>('COMPACT');
   const [siteMenu, setSiteMenu] = useState<StoreMenuItem[]>([]);
+  const [storeLanguage, setStoreLanguage] = useState<'en' | 'bn'>('en');
 
   useEffect(() => {
     if (!settings) return;
     setLayoutType(settings.layoutType);
     setSiteMenu(settings.siteMenu);
+    setStoreLanguage(settings.storeLanguage ?? 'en');
   }, [settings]);
 
   const saveMenu = () => {
@@ -27,7 +29,7 @@ export default function LayoutSettings() {
 
   return (
     <div className="max-w-4xl">
-      <DesignPageHeader title="Layout Settings" description="Page width and main menu of your StorePal storefront." />
+      <DesignPageHeader title="Layout Settings" description="Page width, language and main menu of your StorePal storefront." />
       {isLoading || !settings ? (
         <DesignLoading />
       ) : (
@@ -47,6 +49,23 @@ export default function LayoutSettings() {
               work best for grocery and similar stores, where customers pick from a large variety of products.
             </p>
             <SaveButton pending={save.isPending} onClick={() => save.mutate({ layoutType })} />
+          </DesignSection>
+
+          <DesignSection title="Store Language">
+            <RadioGroup
+              label="Buttons and labels"
+              value={storeLanguage}
+              onChange={setStoreLanguage}
+              options={[
+                { value: 'en', label: 'English' },
+                { value: 'bn', label: 'বাংলা (Bangla)' },
+              ]}
+            />
+            <p className="text-xs text-regantify-text-muted -mt-3">
+              Shows your store's buttons and labels (Add to Cart, Buy Now, Cart, Search...) in the chosen language. Your product
+              names and descriptions stay exactly as you wrote them.
+            </p>
+            <SaveButton pending={save.isPending} onClick={() => save.mutate({ storeLanguage })} />
           </DesignSection>
 
           <DesignSection

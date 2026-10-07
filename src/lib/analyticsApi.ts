@@ -76,6 +76,9 @@ export interface SalesAnalytics {
     profit: number;
     /** % of item sales whose product cost is known; below 100 the profit is too high. */
     costCoverage: number;
+    /** Finance > Expenses recorded for the same days (ads, rent...). */
+    expenses: number;
+    profitAfterExpenses: number;
   };
   trend: { bucket: string; sales: number; profit: number }[];
   /** Best sellers with gross profit (sales − product cost); cost/profit null when a cost is missing. */

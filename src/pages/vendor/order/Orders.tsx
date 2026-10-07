@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ClipboardList,
   Copy,
+  Download,
   ExternalLink,
   FileText,
   History,
@@ -66,12 +67,52 @@ import { SearchBox, TableFooter, outlineBtn, td, th } from '../../../components/
 import { NeedsAttention } from '../../../components/order/NeedsAttention';
 import { BulkStatusMenu } from '../../../components/order/BulkStatusMenu';
 import { BulkInvoicePrint } from '../../../components/order/BulkInvoicePrint';
+import { downloadCsv, toCsv } from '../../../lib/csv';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 // Table + toolbar pieces come from PageKit; the bulk bar's smaller buttons are Orders' own.
 const toolbarBtn = outlineBtn;
 const bulkBtn =
   'inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text transition-colors hover:border-neutral-300';
+
+/** Columns of the Orders "Export" CSV. */
+const ORDER_EXPORT_HEADERS = [
+  'Order', 'Serial', 'Date', 'Status', 'Source', 'Customer', 'Phone', 'Second phone', 'Address', 'City', 'District',
+  'Items', 'Quantity', 'Subtotal', 'Delivery charge', 'Discount', 'Total', 'Advance paid', 'Payment', 'Courier', 'Tracking ID', 'Customer note', 'Label',
+];
+
+function toOrderExportRow(o: Order): string[] {
+  const items = o.items.map((i) => {
+    const options = Object.values(i.selectedOptions ?? {}).join('/');
+    return `${i.productName}${options ? ` (${options})` : ''} x${i.quantity}`;
+  });
+  return [
+    orderRef(o),
+    String(o.invoiceNumber),
+    new Date(o.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }),
+    orderStatusLabel(o.status),
+    o.source,
+    o.customerName,
+    // ="01712..." keeps Excel from reading the phone as a number and dropping the leading 0.
+    o.customerPhone ? `="${o.customerPhone}"` : '',
+    o.customerPhoneAlt ? `="${o.customerPhoneAlt}"` : '',
+    o.shippingAddress,
+    o.shippingCity ?? '',
+    o.shippingDistrict ?? '',
+    items.join('; '),
+    String(o.items.reduce((n, i) => n + i.quantity, 0)),
+    Number(o.subtotal).toFixed(2),
+    Number(o.deliveryCharge).toFixed(2),
+    Number(o.discountAmount).toFixed(2),
+    Number(vendorOrderTotal(o)).toFixed(2),
+    Number(o.advanceAmount ?? 0).toFixed(2),
+    paymentMethodLabel(o.paymentMethod),
+    o.courierProvider !== 'NONE' ? o.courierProvider : (o.manualCourierName ?? ''),
+    o.courierTrackingCode ?? o.courierConsignmentId ?? o.manualTrackingId ?? '',
+    o.customerNote ?? '',
+    o.label ?? '',
+  ];
+}
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -810,6 +851,40 @@ export default function Orders() {
 
   const orders = data?.orders ?? [];
   const total = data?.total ?? 0;
+
+  // "Export": the selected orders, or with nothing selected every order matching the current
+  // tab, search, dates and filters (all pages), as a CSV that opens in Excel.
+  const [exporting, setExporting] = useState(false);
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const rows =
+        selectedIds.size > 0
+          ? orders.filter((o) => selectedIds.has(o.id))
+          : (
+              await ordersApi.list({
+                search: search.trim() || undefined,
+                status: activeTab === 'ALL' || activeTab === 'ABANDONED' ? undefined : activeTab,
+                dateFrom: dateFrom || undefined,
+                dateTo: dateTo || undefined,
+                callStatus: (lmsOn && callStatus) || undefined,
+                courierBooking,
+                source: source || undefined,
+                page: 1,
+                perPage: 10000,
+              })
+            ).orders;
+      if (rows.length === 0) {
+        toast.error('No orders to export.');
+        return;
+      }
+      downloadCsv(`orders-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(ORDER_EXPORT_HEADERS, rows.map(toOrderExportRow)));
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not export the orders. Please try again.'));
+    } finally {
+      setExporting(false);
+    }
+  }
   const allOnPageSelected = orders.length > 0 && orders.every((o) => selectedIds.has(o.id));
 
   // Customer delivery records for this page's phones (Step 15). A number
@@ -930,6 +1005,13 @@ export default function Orders() {
                 </button>
               )}
             </>
+          )}
+
+          {activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={handleExport} disabled={exporting} className={toolbarBtn} title="Download as a CSV file (opens in Excel)">
+              <Download size={15} />
+              {exporting ? 'Exporting…' : selectedIds.size > 0 ? `Export ${selectedIds.size}` : 'Export'}
+            </button>
           )}
 
           {canCreate && (

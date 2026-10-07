@@ -318,6 +318,8 @@ export interface CreateOrderPayload {
   deliveryCharge?: number;
   discountAmount?: number;
   discountLabel?: string;
+  /** Order detail "Exchange": this order replaces items from that earlier one (noted on its history). */
+  exchangeForOrderId?: string;
   /** Part of the total already received outside the platform (e.g. the delivery charge on your own bKash). */
   advanceAmount?: number;
   advanceNote?: string;

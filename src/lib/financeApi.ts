@@ -104,3 +104,39 @@ export const financeApi = {
   getWithdrawRequests: () =>
     api.get<WithdrawRequest[]>('/v1/finance/withdraw-requests').then((r) => r.data),
 };
+
+/** Finance > Expenses: one of the store's own costs (ads, rent...). */
+export interface Expense {
+  id: string;
+  date: string;
+  category: string;
+  amount: string;
+  note?: string | null;
+  addedBy?: string | null;
+  createdAt: string;
+}
+
+export interface ExpenseList {
+  expenses: Expense[];
+  count: number;
+  page: number;
+  perPage: number;
+  total: number;
+  byCategory: { category: string; total: number }[];
+}
+
+export interface ExpenseInput {
+  date: string;
+  category: string;
+  amount: number;
+  note?: string;
+}
+
+export const expensesApi = {
+  list: (params: { from?: string; to?: string; category?: string; page?: number; perPage?: number }) =>
+    api.get<ExpenseList>('/v1/finance/expenses', { params }).then((r) => r.data),
+  categories: () => api.get<string[]>('/v1/finance/expenses/categories').then((r) => r.data),
+  create: (input: ExpenseInput) => api.post<Expense>('/v1/finance/expenses', input).then((r) => r.data),
+  update: (id: string, input: Partial<ExpenseInput>) => api.patch<Expense>(`/v1/finance/expenses/${id}`, input).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/finance/expenses/${id}`).then((r) => r.data),
+};

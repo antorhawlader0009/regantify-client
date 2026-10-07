@@ -10,6 +10,7 @@ import { ChangeLabelModal } from './ChangeLabelModal';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { useCan } from '../../../lib/useStaffAccess';
+import { CheckoutReminderButton } from '../../../components/order/CheckoutReminderSettings';
 
 const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
 
@@ -253,6 +254,7 @@ export default function AbandonedCart() {
   const queryClient = useQueryClient();
   const canEdit = useCan('orders.edit');
   const canDelete = useCan('orders.delete');
+  const canSms = useCan('sms.manage');
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -333,6 +335,8 @@ export default function AbandonedCart() {
             className="w-full bg-transparent text-regantify-text outline-none placeholder:text-neutral-500"
           />
         </div>
+
+        <CheckoutReminderButton canChange={canSms} />
 
         {(canEdit || canDelete) && (
         <DropdownMenu

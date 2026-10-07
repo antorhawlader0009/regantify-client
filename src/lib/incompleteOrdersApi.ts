@@ -66,8 +66,22 @@ export const incompleteOrdersApi = {
   bulkRemove: (ids: string[]) =>
     api.post<{ removed: number }>('/v1/incomplete-orders/bulk-remove', { ids }).then((r) => r.data),
 
+  /** Incomplete Orders > Reminder SMS settings (CheckoutReminderService). */
+  getReminderSettings: () => api.get<CheckoutReminderSettings>('/v1/incomplete-orders/reminder-settings').then((r) => r.data),
+
+  updateReminderSettings: (input: { enabled?: boolean; afterMinutes?: number; message?: string }) =>
+    api.put<CheckoutReminderSettings>('/v1/incomplete-orders/reminder-settings', input).then((r) => r.data),
+
   bulkChangeLabel: (ids: string[], label: string | null) =>
     api
       .post<{ updated: number }>('/v1/incomplete-orders/bulk-change-label', { ids, label })
       .then((r) => r.data),
 };
+
+export interface CheckoutReminderSettings {
+  enabled: boolean;
+  afterMinutes: number;
+  /** Empty = the built-in text (defaultMessage). */
+  message: string;
+  defaultMessage: string;
+}

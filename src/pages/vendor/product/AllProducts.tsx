@@ -480,6 +480,26 @@ export default function AllProducts() {
     onError: () => toast.error('Could not delete the product. Please try again.'),
   });
 
+  // Bulk bar "Make Public" / "Make Draft": the same visibility change as Change Status, for every
+  // selected product (e.g. hide a season's products at once).
+  const [bulkVisibility, setBulkVisibility] = useState(false);
+  async function handleBulkVisibility(visibility: 'PUBLIC' | 'DRAFT') {
+    const ids = Array.from(selected);
+    setBulkVisibility(true);
+    const results = await Promise.allSettled(ids.map((id) => productsApi.updateVisibility(id, visibility)));
+    setBulkVisibility(false);
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    const done = ids.length - failed;
+    const word = visibility === 'PUBLIC' ? 'Public' : 'Draft';
+    if (failed === 0) {
+      toast.success(`${done} ${done === 1 ? 'product' : 'products'} set to ${word}.`);
+      setSelected(new Set());
+    } else {
+      toast.error(`${done} set to ${word}, ${failed} failed. Please try again for the rest.`);
+    }
+  }
+
   // "Duplicate": the copy opens in Edit Product so only what differs needs changing.
   const duplicateMutation = useMutation({
     mutationFn: productsApi.duplicate,
@@ -717,6 +737,24 @@ export default function AllProducts() {
                 <Printer size={13} aria-hidden />
                 Print labels
               </button>
+              {canEditProducts && (
+                <>
+                  <button
+                    onClick={() => handleBulkVisibility('PUBLIC')}
+                    disabled={bulkVisibility}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+                  >
+                    Make Public
+                  </button>
+                  <button
+                    onClick={() => handleBulkVisibility('DRAFT')}
+                    disabled={bulkVisibility}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+                  >
+                    Make Draft
+                  </button>
+                </>
+              )}
               {canDeleteProducts && (
                 <button
                   onClick={handleBulkDelete}
