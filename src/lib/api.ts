@@ -31,14 +31,19 @@ api.interceptors.request.use((config) => {
 let isRefreshing = false;
 let pendingQueue: Array<() => void> = [];
 const REFRESH_URL = '/v1/auth/refresh';
+// Auth steps done while signed out (log in, OTP, forgot password, impersonation, log out).
+const SIGNED_OUT_AUTH = /\/v1\/auth\/(vendor\/(login|send-otp|verify-otp|forgot-password\/|impersonate-exchange)|admin\/login|logout)/;
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     const isRefreshCall = originalRequest?.url?.includes(REFRESH_URL);
+    // A 401 from a signed-out step (wrong password, wrong OTP...) is the answer itself: refreshing
+    // there would fail too and show its "Access denied." instead of the real reason.
+    const isSignedOutCall = SIGNED_OUT_AUTH.test(originalRequest?.url ?? '');
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshCall) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshCall && !isSignedOutCall) {
       originalRequest._retry = true;
 
       if (isRefreshing) {
