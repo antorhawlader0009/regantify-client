@@ -72,6 +72,7 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
         smsNewOrder: draft!.smsNewOrder,
         smsOrderAttention: draft!.smsOrderAttention,
         smsPlanEnding: draft!.smsPlanEnding,
+        smsLowStock: draft!.smsLowStock,
         smsQuietHours: draft!.smsQuietHours,
         smsPhone: phone.trim(),
       }),
@@ -82,7 +83,7 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the SMS alerts. Please try again.')),
   });
 
-  const anySms = draft ? draft.smsNewOrder || draft.smsOrderAttention || draft.smsPlanEnding : false;
+  const anySms = draft ? draft.smsNewOrder || draft.smsOrderAttention || draft.smsPlanEnding || draft.smsLowStock : false;
   const set = (patch: Partial<NotificationSettings>) => setDraft((d) => (d ? { ...d, ...patch } : d));
 
   return (
@@ -159,6 +160,12 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
                 hint="A parcel stuck or late with the courier, or an online payment that failed."
               />
               <ToggleRow checked={draft.smsPlanEnding} onChange={(v) => set({ smsPlanEnding: v })} label="Plan ending" hint="A few days before your plan ends, and when it has ended." />
+              <ToggleRow
+                checked={draft.smsLowStock}
+                onChange={(v) => set({ smsLowStock: v })}
+                label="Low stock"
+                hint="When products go under their low stock limit. At most one text a day."
+              />
 
               {anySms && (
                 <>

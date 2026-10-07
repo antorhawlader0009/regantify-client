@@ -31,7 +31,6 @@ export interface DashboardTodo {
   /** Set only when a paid plan ends within 7 days. */
   planExpiresAt: string | null;
   recentDays: number;
-  lowStockThreshold: number;
 }
 
 export interface DashboardRecentOrder {

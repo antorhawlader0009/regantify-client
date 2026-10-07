@@ -80,6 +80,8 @@ export interface Product {
   quoteOnly?: boolean;
   /** Fewest a shopper may order in one cart line; null = no minimum. */
   minOrderQuantity?: number | null;
+  /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
+  lowStockThreshold?: number | null;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -116,6 +118,8 @@ export interface CreateProductPayload {
   quoteOnly?: boolean;
   /** Fewest a shopper may order in one cart line; null = no minimum. */
   minOrderQuantity?: number | null;
+  /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
+  lowStockThreshold?: number | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -179,6 +183,8 @@ export interface UpdateProductPayload {
   quoteOnly?: boolean;
   /** Fewest a shopper may order in one cart line; null = no minimum. */
   minOrderQuantity?: number | null;
+  /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
+  lowStockThreshold?: number | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -207,12 +213,17 @@ export interface ListProductsParams {
 
 export interface LowStockProduct extends Omit<Product, 'variants'> {
   stock: number;
+  /** The limit it was checked against: its own, the store's, or the page's "Show stock under". */
+  lowStockLimit: number;
 }
 
 export interface LowStockResponse {
   products: LowStockProduct[];
   total: number;
-  threshold: number;
+  /** The page's "Show stock under" number; null = each product's own limit. */
+  threshold: number | null;
+  /** Stock Settings > Low Stock Alert, for products without their own limit. */
+  storeThreshold: number;
 }
 
 export const productsApi = {
@@ -220,7 +231,8 @@ export const productsApi = {
     api.get<ProductListResponse>('/v1/products', { params }).then((r) => r.data),
 
   // Low Stock page — products with effective stock (variant stock summed,
-  // or stockQuantity when no variants) below `threshold` (default 5).
+  // or stockQuantity when no variants) below `threshold`, or without it
+  // below each product's own low stock limit.
   lowStock: (threshold?: number) =>
     api
       .get<LowStockResponse>('/v1/products/low-stock', { params: threshold ? { threshold } : {} })

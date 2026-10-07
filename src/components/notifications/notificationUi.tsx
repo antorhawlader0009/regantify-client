@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CreditCard, Info, Landmark, LifeBuoy, ShoppingBag, Star, Wallet } from 'lucide-react';
+import { CreditCard, Info, Landmark, LifeBuoy, PackageMinus, ShoppingBag, Star, Wallet } from 'lucide-react';
 import type { NotificationType, VendorNotification } from '../../lib/notificationsApi';
 import { agoPhrase } from '../lms/format';
 
@@ -15,6 +15,7 @@ export const TYPE_ICON: Record<NotificationType, ReactNode> = {
   REVIEW: <Star size={16} strokeWidth={1.75} />,
   SUPPORT: <LifeBuoy size={16} strokeWidth={1.75} />,
   SYSTEM: <Info size={16} strokeWidth={1.75} />,
+  STOCK: <PackageMinus size={16} strokeWidth={1.75} />,
 };
 
 export const TYPE_LABEL: Record<NotificationType, string> = {
@@ -25,6 +26,7 @@ export const TYPE_LABEL: Record<NotificationType, string> = {
   REVIEW: 'Reviews',
   SUPPORT: 'Support',
   SYSTEM: 'System',
+  STOCK: 'Low stock',
 };
 
 const DHAKA = 'Asia/Dhaka';

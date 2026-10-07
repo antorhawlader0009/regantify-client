@@ -11,6 +11,8 @@ export interface StockSettings {
   backorderPopupMessage: string | null;
   backorderShortMessage: string | null;
   reduceStockOnCodCheckout: boolean;
+  /** Low stock limit for products without their own (Edit Product > Low stock alert). */
+  lowStockThreshold: number;
 }
 
 export type GdprPromptPosition = 'BOTTOM' | 'TOP' | 'BOTTOM_LEFT' | 'BOTTOM_RIGHT';

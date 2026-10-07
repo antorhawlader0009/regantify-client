@@ -110,7 +110,7 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
       key: 'lowStock',
       icon: PackageX,
       count: todo.lowStock,
-      text: `${plural(todo.lowStock, 'product', 'products')} low on stock (under ${todo.lowStockThreshold})`,
+      text: `${plural(todo.lowStock, 'product', 'products')} under their low stock limit`,
       tone: 'neutral',
       to: '/vendor/product/low-stock',
     },

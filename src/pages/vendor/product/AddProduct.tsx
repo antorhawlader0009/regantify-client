@@ -95,6 +95,7 @@ export default function AddProduct() {
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
+  const [lowStockThreshold, setLowStockThreshold] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('KG');
@@ -251,6 +252,7 @@ export default function AddProduct() {
       isPreOrder,
       quoteOnly,
       minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : undefined,
+      lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : undefined,
       stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
       weight: weight.trim() ? Number(weight) : undefined,
       weightUnit,
@@ -429,6 +431,18 @@ export default function AddProduct() {
                   placeholder="e.g. 10"
                   min={1}
                   max={100000}
+                  className={productInputClass}
+                />
+              </Field>
+              <Field label="Low stock alert" hint="Tell me when fewer than this are left. Empty uses the store's number (Stock Settings); 0 never alerts.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={lowStockThreshold}
+                  onChange={(e) => setLowStockThreshold(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Store default"
+                  min={0}
+                  max={1000000}
                   className={productInputClass}
                 />
               </Field>

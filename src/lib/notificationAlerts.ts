@@ -19,7 +19,7 @@ const PREFS_KEY = 'regantify.notificationAlerts';
 /** Newest notification already alerted on, shared by every open tab so a new order rings once, not once per tab. */
 const ALERTED_KEY = 'regantify.notificationAlerts.lastAt';
 
-export const ALL_ALERT_TYPES: NotificationType[] = ['ORDER', 'REVIEW', 'WITHDRAW', 'WALLET', 'SUBSCRIPTION', 'SUPPORT', 'SYSTEM'];
+export const ALL_ALERT_TYPES: NotificationType[] = ['ORDER', 'REVIEW', 'WITHDRAW', 'WALLET', 'SUBSCRIPTION', 'STOCK', 'SUPPORT', 'SYSTEM'];
 const DEFAULT_PREFS: DeviceAlertPrefs = { sound: true, desktop: false, types: ALL_ALERT_TYPES };
 
 export function readAlertPrefs(): DeviceAlertPrefs {

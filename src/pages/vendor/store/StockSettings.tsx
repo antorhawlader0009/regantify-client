@@ -121,6 +121,28 @@ export default function StockSettings() {
             />
           </section>
 
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Low Stock Alert</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              A product with fewer than this many left shows on the Low Stock page, and your notification bell tells you once
+              a day. A product can have its own number (Edit Product &gt; Low stock alert). Turn on a text for it in
+              Notifications &gt; Alert settings.
+            </p>
+            <label className="flex items-center gap-2 text-sm text-regantify-text">
+              Alert when stock is under
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={1000000}
+                value={form.lowStockThreshold}
+                onChange={(e) => set('lowStockThreshold', Number(e.target.value.replace(/\D/g, '') || 0))}
+                className={`${inputClass.replace('w-full ', '')} w-28`}
+              />
+            </label>
+            <p className="text-xs text-regantify-text-muted mt-2">0 turns the alert off for products without their own number.</p>
+          </section>
+
           <button
             onClick={() => save.mutate(form)}
             disabled={save.isPending}

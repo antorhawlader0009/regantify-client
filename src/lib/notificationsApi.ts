@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type NotificationType = 'ORDER' | 'WITHDRAW' | 'WALLET' | 'SUBSCRIPTION' | 'REVIEW' | 'SUPPORT' | 'SYSTEM';
+export type NotificationType = 'ORDER' | 'WITHDRAW' | 'WALLET' | 'SUBSCRIPTION' | 'REVIEW' | 'SUPPORT' | 'SYSTEM' | 'STOCK';
 export type NotificationTone = 'INFO' | 'SUCCESS' | 'WARNING' | 'DANGER';
 
 export interface VendorNotification {
@@ -12,7 +12,7 @@ export interface VendorNotification {
   /** In-app route, e.g. /vendor/orders/<id>. */
   link: string | null;
   /** What exactly happened, for the sound / SMS alerts; null for everything else. */
-  topic: 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | null;
+  topic: 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK' | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -57,6 +57,7 @@ export interface NotificationSettings {
   smsNewOrder: boolean;
   smsOrderAttention: boolean;
   smsPlanEnding: boolean;
+  smsLowStock: boolean;
   /** Null = the owner's own phone (ownerPhone). */
   smsPhone: string | null;
   /** No SMS 10 PM to 8 AM. */
