@@ -33,3 +33,45 @@ export async function updateAiSetting(feature: AiFeature, modelName: string, mon
   const { data } = await api.patch<AiFeatureSetting>('/v1/admin/ai/settings', { feature, modelName, monthlyLimitPerStore });
   return data;
 }
+
+// Model prices behind AI Credits (server ai-credits/ai-credit-pricing.ts).
+// ADMIN = set on this page, BUILT_IN = Cloudflare's published price in
+// the code, FALLBACK = no price anywhere, charged at the highest rate.
+export type AiRateSource = 'ADMIN' | 'BUILT_IN' | 'FALLBACK';
+
+export interface AiModelRate {
+  inputUsdPerM: number;
+  outputUsdPerM: number;
+}
+
+export interface AiModelPriceRow extends AiModelRate {
+  modelName: string;
+  source: AiRateSource;
+  /** Cloudflare's price from the built-in list, when the model is on it. */
+  builtIn: AiModelRate | null;
+  /** Features that run on this model now. */
+  inUseBy: AiFeature[];
+  /** Credits a 1,000-token prompt with a 200-token reply takes at this price. */
+  sampleCredits: number;
+}
+
+export interface AiModelPriceList {
+  /** US$ of AI cost one AI Credit stands for. */
+  usdPerCredit: number;
+  models: AiModelPriceRow[];
+}
+
+export async function getAiModelPrices(): Promise<AiModelPriceList> {
+  const { data } = await api.get<AiModelPriceList>('/v1/admin/ai/model-prices');
+  return data;
+}
+
+export async function setAiModelPrice(modelName: string, inputUsdPerM: number, outputUsdPerM: number) {
+  const { data } = await api.put('/v1/admin/ai/model-prices', { modelName, inputUsdPerM, outputUsdPerM });
+  return data;
+}
+
+export async function clearAiModelPrice(modelName: string) {
+  const { data } = await api.delete('/v1/admin/ai/model-prices', { params: { modelName } });
+  return data;
+}

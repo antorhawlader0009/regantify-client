@@ -14,7 +14,7 @@ import {
 import { paymentsApi } from '../../lib/paymentsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
-import { AiTokensLine, UsageBar } from '../../components/dashboard/SideCards';
+import { AiCreditsLine, UsageBar } from '../../components/dashboard/SideCards';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../components/ui/PageKit';
 import { useAuthStore } from '../../store/authStore';
@@ -25,11 +25,11 @@ function limitText(value: number | null, suffix = '') {
   return value === null ? 'Unlimited' : `${value.toLocaleString('en-US')}${suffix}`;
 }
 
-/** "1,000,000 AI chat tokens included (one time)"; Free gets its tokens once, at sign-up. */
-function aiTokensText(plan: Plan) {
-  if (!plan.aiTokenGrant) return 'No AI chat tokens included';
-  const n = plan.aiTokenGrant.toLocaleString('en-US');
-  return plan.code === 'FREE' ? `${n} AI chat tokens when you sign up (one time)` : `${n} AI chat tokens included (one time)`;
+/** "5,000 AI Credits included (one time)"; Free gets its credits once, at sign-up. */
+function aiCreditsText(plan: Plan) {
+  if (!plan.aiCreditGrant) return 'No AI Credits included';
+  const n = plan.aiCreditGrant.toLocaleString('en-US');
+  return plan.code === 'FREE' ? `${n} AI Credits when you sign up (one time)` : `${n} AI Credits included (one time)`;
 }
 
 function priceText(plan: Plan) {
@@ -151,7 +151,7 @@ export default function Billing() {
             <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
             <UsageBar label="Orders today" used={usage.usage.ordersToday.used} limit={usage.usage.ordersToday.limit} />
             <UsageBar label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
-            {usage.aiTokens && <AiTokensLine tokens={usage.aiTokens} showBuy={isOwner} />}
+            {usage.aiCredits && <AiCreditsLine credits={usage.aiCredits} showBuy={isOwner} />}
             <UsageBar label="Store visits this month" used={usage.usage.monthlyVisits.used} limit={usage.usage.monthlyVisits.limit} />
             <p className="text-xs text-neutral-500">Visits are for your information: your store keeps working for shoppers past the number.</p>
           </div>
@@ -195,7 +195,7 @@ export default function Billing() {
                     {plan.themeAllowance === null ? 'All themes' : `${plan.themeAllowance} ${plan.themeAllowance === 1 ? 'theme' : 'themes'}`}
                   </Feature>
                   <Feature>{limitText(plan.imageUploadLimit)} image uploads</Feature>
-                  <Feature on={!!plan.aiTokenGrant}>{aiTokensText(plan)}</Feature>
+                  <Feature on={!!plan.aiCreditGrant}>{aiCreditsText(plan)}</Feature>
                   <Feature on={plan.customDomainAllowed}>Your own domain</Feature>
                   <Feature on={plan.customPaymentGatewayAllowed}>Your own payment gateway</Feature>
                   <Feature on={plan.lmsEnabled}>LMS (calls and follow-ups)</Feature>

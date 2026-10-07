@@ -18,6 +18,33 @@ import { canOpenPath } from '../../lib/staffPermissions';
  */
 
 const MAX_CHATS = 10;
+
+/** Ask AI is paid from the store's AI Credits; the server answers 402 AI_CREDITS_EMPTY when they've run out. */
+const OUT_OF_CREDITS = '__AI_CREDITS_EMPTY__';
+const AI_CREDITS_PAGE = '/vendor/ai-automation/ai-chat-bot';
+
+function isOutOfCredits(e: unknown): boolean {
+  const res = (e as { response?: { status?: number; data?: { code?: string } } })?.response;
+  return res?.status === 402 && res.data?.code === 'AI_CREDITS_EMPTY';
+}
+
+/** The error line under the chat; for "out of AI Credits" it links to buying more (or says who can). */
+function ErrorNote({ error, onBuy }: { error: string; onBuy: () => void }) {
+  if (error !== OUT_OF_CREDITS) return <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>;
+  const canBuy = canOpenPath(viewerOf(useAuthStore.getState().user), AI_CREDITS_PAGE);
+  return (
+    <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+      Your store is out of AI Credits, so Ask AI can't answer right now.{' '}
+      {canBuy ? (
+        <button type="button" onClick={onBuy} className="font-medium underline">
+          Buy AI Credits
+        </button>
+      ) : (
+        'Ask your store owner to buy more.'
+      )}
+    </p>
+  );
+}
 /** Earlier messages sent with a new question (the server accepts up to 14 in all). */
 const SEND_MESSAGES = 12;
 
@@ -202,7 +229,7 @@ function PanelBody({
         return next;
       });
     } catch (e) {
-      setError(apiErrorMessage(e, "The assistant couldn't answer. Please try again."));
+      setError(isOutOfCredits(e) ? OUT_OF_CREDITS : apiErrorMessage(e, "The assistant couldn't answer. Please try again."));
     } finally {
       setSending(false);
     }
@@ -464,7 +491,15 @@ function PanelBody({
             <p className="text-sm text-neutral-500">Thinking...</p>
           </div>
         )}
-        {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+        {error && (
+          <ErrorNote
+            error={error}
+            onBuy={() => {
+              revealPage();
+              navigate(AI_CREDITS_PAGE);
+            }}
+          />
+        )}
         <div ref={bottomRef} />
         </div>
       </div>
@@ -586,7 +621,15 @@ function PanelBody({
             <p className="text-sm text-neutral-500">Thinking...</p>
           </div>
         )}
-        {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+        {error && (
+          <ErrorNote
+            error={error}
+            onBuy={() => {
+              revealPage();
+              navigate(AI_CREDITS_PAGE);
+            }}
+          />
+        )}
         <div ref={bottomRef} />
       </div>
 

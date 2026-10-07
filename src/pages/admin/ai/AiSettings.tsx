@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Bot, Sparkles, MessageSquareText, LayoutTemplate, PhoneCall, Save, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { ModelPrices, MODEL_PRICES_KEY } from './ModelPrices';
 import {
   getAiModels,
   getAiSettings,
@@ -56,6 +58,7 @@ const FEATURES: FeatureField[] = [
 ];
 
 export default function AiSettings() {
+  const queryClient = useQueryClient();
   const [models, setModels] = useState<AiModelOption[]>([]);
   const [settings, setSettings] = useState<Record<AiFeature, string>>({} as Record<AiFeature, string>);
   const [loading, setLoading] = useState(true);
@@ -114,6 +117,8 @@ export default function AiSettings() {
     try {
       await updateAiSetting(feature, modelName);
       toast.success('Model updated.');
+      // "In use" tags and the chat's credits per reply follow the new model.
+      void queryClient.invalidateQueries({ queryKey: MODEL_PRICES_KEY });
     } catch {
       setSettings((prev) => ({ ...prev, [feature]: previous }));
       toast.error('Could not save this change. Please try again.');
@@ -249,6 +254,8 @@ export default function AiSettings() {
           </p>
         </div>
       )}
+
+      <ModelPrices />
     </div>
   );
 }

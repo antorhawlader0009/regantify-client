@@ -19,8 +19,8 @@ export interface UpdatePlanPayload {
   monthlyVisitLimit?: number | null;
   themeAllowance?: number | null;
   imageUploadLimit?: number | null;
-  /** AI tokens given once when the plan is bought (0 = none). */
-  aiTokenGrant?: number | null;
+  /** AI Credits given once when the plan is bought (0 = none). */
+  aiCreditGrant?: number | null;
   staffLimit?: number | null;
   /** Which staff roles the plan may assign: 0 Admin only … 3 + Custom roles (rule-plan.md 5.5). */
   staffRoleTier?: number;

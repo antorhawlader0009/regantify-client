@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { AiTokenCredits } from './aiChatBotApi';
+import type { AiCreditSummary } from './aiChatBotApi';
 
 export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
@@ -32,8 +32,8 @@ export interface Plan {
   monthlyVisitLimit: number | null;
   themeAllowance: number | null;
   imageUploadLimit: number | null;
-  /** AI tokens the plan gives once, when it's bought. Free: once at sign-up. */
-  aiTokenGrant: number | null;
+  /** AI Credits the plan gives once, when it's bought. Free: once at sign-up. */
+  aiCreditGrant: number | null;
   staffLimit: number | null;
   /** Which staff roles the plan may assign: 0 Admin only … 3 + Custom roles (rule-plan.md 5.5). */
   staffRoleTier: number;
@@ -76,8 +76,8 @@ export interface VendorPlanUsage {
     ordersToday: UsageStat;
     monthlyVisits: UsageStat;
   };
-  /** The store's AI chat token wallet. */
-  aiTokens: AiTokenCredits;
+  /** The store's AI Credit wallet. */
+  aiCredits: AiCreditSummary;
 }
 
 export type PlanUpgradeRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';

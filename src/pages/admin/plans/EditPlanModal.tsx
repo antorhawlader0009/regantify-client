@@ -166,7 +166,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [monthlyVisitLimit, setMonthlyVisitLimit] = useState<number | null>(plan?.monthlyVisitLimit ?? null);
   const [themeAllowance, setThemeAllowance] = useState<number | null>(plan?.themeAllowance ?? null);
   const [imageUploadLimit, setImageUploadLimit] = useState<number | null>(plan?.imageUploadLimit ?? null);
-  const [aiTokenGrant, setAiTokenGrant] = useState<number>(plan?.aiTokenGrant ?? 0);
+  const [aiCreditGrant, setAiCreditGrant] = useState<number>(plan?.aiCreditGrant ?? 0);
   const [staffLimit, setStaffLimit] = useState<number | null>(plan?.staffLimit ?? null);
   const [staffRoleTier, setStaffRoleTier] = useState<number>(plan?.staffRoleTier ?? 0);
   const [customDomainAllowed, setCustomDomainAllowed] = useState(plan?.customDomainAllowed ?? false);
@@ -202,7 +202,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       monthlyVisitLimit,
       themeAllowance,
       imageUploadLimit,
-      aiTokenGrant,
+      aiCreditGrant,
       staffLimit,
       staffRoleTier,
       customDomainAllowed,
@@ -324,17 +324,17 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-regantify-text-muted mb-1">AI tokens included (one time)</label>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">AI Credits included (one time)</label>
             <input
               type="number"
               min={0}
-              step={1000}
-              value={aiTokenGrant}
-              onChange={(e) => setAiTokenGrant(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+              step={100}
+              value={aiCreditGrant}
+              onChange={(e) => setAiCreditGrant(Math.max(0, Math.round(Number(e.target.value) || 0)))}
               className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
             />
             <p className="mt-1 text-xs text-regantify-text-muted">
-              Added to the store's AI chat wallet each time this plan is bought (on top of what's left). Free: given once, when the
+              Added to the store's AI Credit wallet each time this plan is bought (on top of what's left). Free: given once, when the
               account is made. 0 = none.
             </p>
           </div>

@@ -12,28 +12,24 @@ import { apiErrorMessage } from '../../../lib/api';
 interface BuyChatBotDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Tokens one reply uses at this store's size, for "about N replies". */
-  tokensPerReply?: number;
+  /** About how many credits one chat reply takes at this store's size, for "about N replies". */
+  creditsPerReply?: number;
 }
 
-/** What 1 million tokens cost in a pack, e.g. "330". */
-function perMillion(pkg: Pick<ChatBotPackage, 'price' | 'tokenCount'>) {
-  return (pkg.price / pkg.tokenCount) * 1_000_000;
-}
-
-/** "200K", "1M", "15M". */
-function shortTokens(n: number) {
-  return n >= 1_000_000 ? `${(n / 1_000_000).toLocaleString('en-US')}M` : `${(n / 1_000).toLocaleString('en-US')}K`;
+/** What 1,000 credits cost in a pack, e.g. "66". */
+function perThousand(pkg: Pick<ChatBotPackage, 'price' | 'creditCount'>) {
+  return (pkg.price / pkg.creditCount) * 1_000;
 }
 
 /**
- * "Buy tokens": pick a pack (each shows its price per 1M tokens and about
- * how many replies it pays for at this store's size), then confirm. The
- * confirm step starts a real PayStation checkout and redirects there; the
- * tokens land in the store's wallet once PayStation confirms the payment
- * (PaymentsService.fulfill), not on click (ai-token-plan.md Step 8).
+ * "Buy AI Credits": pick a pack (each shows its price per 1,000 credits
+ * and about how many replies it pays for at this store's size), then
+ * confirm. The confirm step starts a real PayStation checkout and
+ * redirects there; the credits land in the store's wallet once PayStation
+ * confirms the payment (PaymentsService.fulfill), not on click
+ * (ai-token-plan.md Step 8).
  */
-export function BuyChatBotDialog({ open, onOpenChange, tokensPerReply }: BuyChatBotDialogProps) {
+export function BuyChatBotDialog({ open, onOpenChange, creditsPerReply }: BuyChatBotDialogProps) {
   const [selected, setSelected] = useState<ChatBotPackage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,11 +64,11 @@ export function BuyChatBotDialog({ open, onOpenChange, tokensPerReply }: BuyChat
     onOpenChange(next);
   };
 
-  const best = packages?.reduce<ChatBotPackage | null>((b, p) => (!b || perMillion(p) < perMillion(b) ? p : b), null);
-  const replies = (tokens: number) => (tokensPerReply ? Math.floor(tokens / tokensPerReply) : null);
+  const best = packages?.reduce<ChatBotPackage | null>((b, p) => (!b || perThousand(p) < perThousand(b) ? p : b), null);
+  const replies = (credits: number) => (creditsPerReply ? Math.floor(credits / creditsPerReply) : null);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange} title={selected ? 'Confirm purchase' : 'Buy AI tokens'} maxWidth="max-w-3xl">
+    <Dialog open={open} onOpenChange={handleOpenChange} title={selected ? 'Confirm purchase' : 'Buy AI Credits'} maxWidth="max-w-3xl">
       <div className="p-6 pt-3">
         {selected ? (
           <>
@@ -82,7 +78,7 @@ export function BuyChatBotDialog({ open, onOpenChange, tokensPerReply }: BuyChat
             </button>
             <dl className="space-y-1.5 rounded-lg border border-line bg-neutral-50 p-4 text-sm">
               <div className="flex justify-between gap-3">
-                <dt className="text-neutral-600">{selected.tokenCount.toLocaleString()} AI tokens</dt>
+                <dt className="text-neutral-600">{selected.creditCount.toLocaleString()} AI Credits</dt>
                 <dd className="tabular-nums">{formatTaka(selected.price)}</dd>
               </div>
               {deficit > 0 && (
@@ -97,7 +93,7 @@ export function BuyChatBotDialog({ open, onOpenChange, tokensPerReply }: BuyChat
               </div>
             </dl>
             <p className="mt-3 text-xs text-neutral-500">
-              Pay with bKash, Nagad or a card on PayStation. The tokens are added as soon as the payment is confirmed, and they never expire.
+              Pay with bKash, Nagad or a card on PayStation. The credits are added as soon as the payment is confirmed, and they never expire.
             </p>
             {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
             <button
@@ -120,16 +116,16 @@ export function BuyChatBotDialog({ open, onOpenChange, tokensPerReply }: BuyChat
             <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
               {(packages ?? []).map((pkg) => {
                 const isBest = best?.id === pkg.id;
-                const n = replies(pkg.tokenCount);
+                const n = replies(pkg.creditCount);
                 return (
                   <li key={pkg.id} className={`flex flex-col rounded-xl border p-4 ${isBest ? 'border-brand bg-brand-lime/20' : 'border-line bg-white'}`}>
                     {isBest && (
                       <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Best value</span>
                     )}
-                    <p className="text-xl font-semibold tabular-nums text-regantify-text">{shortTokens(pkg.tokenCount)} tokens</p>
+                    <p className="text-xl font-semibold tabular-nums text-regantify-text">{pkg.creditCount.toLocaleString('en-US')} credits</p>
                     <p className="text-sm text-neutral-600">{formatTaka(pkg.price)}</p>
                     <p className="mt-0.5 text-xs text-neutral-500">
-                      {formatTaka(perMillion(pkg))} per 1M tokens
+                      {formatTaka(perThousand(pkg))} per 1,000 credits
                       {n != null && ` · about ${n.toLocaleString()} replies`}
                     </p>
                     <button type="button" onClick={() => setSelected(pkg)} className={`${outlineBtn} mt-4 h-10`}>
@@ -139,9 +135,9 @@ export function BuyChatBotDialog({ open, onOpenChange, tokensPerReply }: BuyChat
                 );
               })}
             </ul>
-            {tokensPerReply != null && (
+            {creditsPerReply != null && (
               <p className="mt-4 text-xs text-neutral-500">
-                Replies are worked out for your store today (about {tokensPerReply.toLocaleString()} tokens a reply). Adding products makes each reply use a
+                Replies are worked out for your store today (about {creditsPerReply.toLocaleString()} credits a reply). Adding products makes each reply use a
                 little more.
               </p>
             )}

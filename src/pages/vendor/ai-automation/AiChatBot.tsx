@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Bot, Coins, Plus } from 'lucide-react';
-import { aiChatBotApi, type AiTokenCredits, type AiTokenLedgerRow, type AiTokenLedgerType } from '../../../lib/aiChatBotApi';
+import { aiChatBotApi, type AiCreditSummary, type AiCreditLedgerRow, type AiCreditLedgerType } from '../../../lib/aiChatBotApi';
 import { getVendorTheme } from '../../../lib/vendorApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import {
@@ -24,20 +24,29 @@ import { BuyChatBotDialog } from './BuyChatBotDialog';
 type HistoryTab = 'all' | 'USAGE' | 'PURCHASE';
 const PAGE_SIZE = 20;
 
-const TYPE_LABEL: Record<AiTokenLedgerType, string> = {
-  SIGNUP_GRANT: 'Free tokens for your new store',
+const TYPE_LABEL: Record<AiCreditLedgerType, string> = {
+  SIGNUP_GRANT: 'Free AI Credits for your new store',
   PLAN_GRANT: 'Included with your plan',
-  PURCHASE: 'Tokens bought',
-  USAGE: 'Chat reply',
+  PURCHASE: 'AI Credits bought',
+  USAGE: 'AI used',
   ADJUSTMENT: 'Changed by the Regantify team',
   MIGRATION: 'Old chat messages converted',
 };
 
+/** What a USAGE row paid for, by the AI feature that spent the credits. */
+const FEATURE_LABEL: Record<string, string> = {
+  STORE_CHATBOT: 'Chat reply',
+  DASHBOARD_ASSISTANT: 'Ask AI answer',
+};
+
+function rowTitle(row: AiCreditLedgerRow): string {
+  if (row.type === 'USAGE') return (row.feature && FEATURE_LABEL[row.feature]) || row.description || TYPE_LABEL.USAGE;
+  return TYPE_LABEL[row.type];
+}
+
+
 /** The small grey line under a history row's title. */
-function rowDetail(row: AiTokenLedgerRow): string | null {
-  if (row.type === 'USAGE' && row.promptTokens != null) {
-    return `Question and product list ${row.promptTokens.toLocaleString()} + answer ${(row.completionTokens ?? 0).toLocaleString()}`;
-  }
+function rowDetail(row: AiCreditLedgerRow): string | null {
   if (row.type === 'ADJUSTMENT' || row.type === 'MIGRATION' || row.type === 'PLAN_GRANT') return row.description;
   return null;
 }
@@ -52,7 +61,7 @@ function Amount({ value }: { value: number }) {
 }
 
 /** Is the chat showing on the store right now, and if not, what to do. */
-function BotStatus({ credits, theme }: { credits: AiTokenCredits; theme: string | undefined }) {
+function BotStatus({ credits, theme }: { credits: AiCreditSummary; theme: string | undefined }) {
   const canReply = credits.canReply;
   const onStorePal = theme === 'STOREPAL';
   const on = onStorePal && canReply;
@@ -78,7 +87,7 @@ function BotStatus({ credits, theme }: { credits: AiTokenCredits; theme: string 
             </Link>
           </>
         ) : !canReply ? (
-          'Out of tokens: shoppers don’t see the chat until you buy more.'
+          'Out of AI Credits: shoppers don’t see the chat until you buy more.'
         ) : (
           'Shoppers see the chat button on your store and can ask about your products.'
         )}
@@ -100,8 +109,8 @@ function History() {
   const empty = (
     <EmptyState
       icon={Coins}
-      title={tab === 'USAGE' ? 'No chat replies yet' : tab === 'PURCHASE' ? 'No tokens bought yet' : 'No token activity yet'}
-      hint="Each time the chat answers a shopper, the tokens it used show up here."
+      title={tab === 'USAGE' ? 'No AI use yet' : tab === 'PURCHASE' ? 'No AI Credits bought yet' : 'No AI Credit activity yet'}
+      hint="Each time the store chat answers a shopper or Ask AI answers you, the credits it used show up here."
     />
   );
 
@@ -115,7 +124,7 @@ function History() {
         }}
         tabs={[
           { id: 'all', label: 'All' },
-          { id: 'USAGE', label: 'Chat replies' },
+          { id: 'USAGE', label: 'Used' },
           { id: 'PURCHASE', label: 'Bought' },
         ]}
       />
@@ -126,7 +135,7 @@ function History() {
             <tr className={theadRow}>
               <th className={`${th} w-48`}>Date</th>
               <th className={th}>What</th>
-              <th className={`${th} w-32 text-right`}>Tokens</th>
+              <th className={`${th} w-32 text-right`}>Credits</th>
               <th className={`${th} w-36 text-right`}>Balance after</th>
             </tr>
           </thead>
@@ -144,7 +153,7 @@ function History() {
                   <tr key={row.id} className={trClass()}>
                     <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDhakaDateTime(row.createdAt)}</td>
                     <td className={td}>
-                      {TYPE_LABEL[row.type]}
+                      {rowTitle(row)}
                       {detail && <span className="mt-0.5 block text-xs text-neutral-500">{detail}</span>}
                     </td>
                     <td className={`${td} text-right`}>
@@ -175,7 +184,7 @@ function History() {
               return (
                 <li key={row.id} className="px-3 py-2.5">
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm text-regantify-text">{TYPE_LABEL[row.type]}</span>
+                    <span className="text-sm text-regantify-text">{rowTitle(row)}</span>
                     <span className="text-sm">
                       <Amount value={row.amount} />
                     </span>
@@ -199,7 +208,7 @@ function History() {
 
 /**
  * AI & Automation > AI Chat Bot (ai-token-plan.md Step 8): the store's AI
- * token wallet. Tokens left (big, amber when low) with Buy tokens and
+ * Credit wallet. Credits left (big, amber when low) with Buy AI Credits and
  * "about N replies left", whether the chat is on the store, and the
  * history of every reply and top-up.
  */
@@ -220,7 +229,7 @@ export default function AiChatBot() {
       <section className={`rounded-xl border p-4 ${low ? 'border-amber-200 bg-amber-50' : 'border-line bg-white'}`}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="mr-auto">
-            <p className="text-sm text-neutral-600">AI tokens left</p>
+            <p className="text-sm text-neutral-600">AI Credits left</p>
             {isLoading || !credits ? (
               <div className="mt-1 h-9 w-32 animate-pulse rounded bg-neutral-100" />
             ) : (
@@ -230,13 +239,13 @@ export default function AiChatBot() {
               <p className={`mt-0.5 text-xs ${low ? 'text-amber-800' : 'text-neutral-500'}`}>
                 {low && credits.available > 0 ? 'Running low. ' : ''}
                 About {credits.repliesLeft.toLocaleString()} replies left at your store’s size ({credits.productCount.toLocaleString()}{' '}
-                {credits.productCount === 1 ? 'product' : 'products'}, about {credits.tokensPerReply.toLocaleString()} tokens a reply).
+                {credits.productCount === 1 ? 'product' : 'products'}, about {credits.creditsPerReply.toLocaleString()} {credits.creditsPerReply === 1 ? 'credit' : 'credits'} a reply).
               </p>
             )}
           </div>
           <button type="button" onClick={() => setBuyDialogOpen(true)} className={`${primaryBtn} h-10 w-full px-4 sm:w-auto`}>
             <Plus size={15} aria-hidden />
-            Buy tokens
+            Buy AI Credits
           </button>
         </div>
         {credits && (
@@ -249,16 +258,16 @@ export default function AiChatBot() {
       <section className="rounded-xl border border-line bg-white p-3.5">
         <div className="mb-3 flex items-center gap-2 px-0.5">
           <Bot size={16} className="text-neutral-500" aria-hidden />
-          <h2 className="text-[15px] font-semibold text-regantify-text">Token history</h2>
+          <h2 className="text-[15px] font-semibold text-regantify-text">AI Credit history</h2>
         </div>
         <History />
         <p className="mt-3 px-0.5 text-xs text-neutral-500">
-          Every reply sends your product list along with the shopper’s question, so a store with more products uses more tokens a reply. Tokens never
-          expire. A reply that fails or gets cut off isn’t charged.
+          A reply takes credits for what it really costs to answer. Every reply sends your product list along with the shopper’s question, so a
+          store with more products uses a few more credits a reply. Ask AI in your dashboard is paid from the same AI Credits. AI Credits never expire. A reply that fails or gets cut off isn’t charged.
         </p>
       </section>
 
-      <BuyChatBotDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen} tokensPerReply={credits?.tokensPerReply} />
+      <BuyChatBotDialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen} creditsPerReply={credits?.creditsPerReply} />
     </div>
   );
 }
