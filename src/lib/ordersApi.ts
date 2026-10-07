@@ -310,8 +310,9 @@ export const ordersApi = {
   create: (payload: CreateOrderPayload) =>
     api.post<Order>('/v1/orders', payload).then((r) => r.data),
 
-  updateStatus: (id: string, status: OrderStatus, note?: string) =>
-    api.patch<Order>(`/v1/orders/${id}/status`, { status, note }).then((r) => r.data),
+  /** `correction`: the owner's "Correct a mistake", outside the forward-only flow (needs a `note`). */
+  updateStatus: (id: string, status: OrderStatus, note?: string, correction?: boolean) =>
+    api.patch<Order>(`/v1/orders/${id}/status`, { status, note, ...(correction && { correction: true }) }).then((r) => r.data),
 
   /** "Advance received": amount 0 clears it. */
   updateAdvance: (id: string, amount: number, note?: string) =>

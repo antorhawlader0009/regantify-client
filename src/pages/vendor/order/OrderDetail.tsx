@@ -19,6 +19,7 @@ import {
   type CourierAccountProvider,
 } from '../../../lib/courierApi';
 import { ALL_ORDER_STATUSES, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel } from './orderStatus';
+import { useStatusChangeDialogs, type StatusChangeRequest } from './StatusChangeDialogs';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { InvoiceModal } from './InvoiceModal';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
@@ -257,14 +258,25 @@ export default function OrderDetail() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: (status: OrderStatus) => ordersApi.updateStatus(id!, status, statusNote.trim() || undefined),
-    onSuccess: (_, status) => {
+    // A correction carries its own reason; any other move takes the timeline note typed below the menu.
+    mutationFn: ({ status, note, correction }: StatusChangeRequest) =>
+      ordersApi.updateStatus(id!, status, correction ? note : statusNote.trim() || undefined, correction),
+    onSuccess: (_, { status, correction }) => {
       invalidateOrder();
-      setStatusNote('');
-      toast.success(status === 'PROCESSING' ? 'Order confirmed.' : `Status changed to ${orderStatusLabel(status)}.`);
+      if (!correction) setStatusNote('');
+      toast.success(
+        correction ? `Status corrected to ${orderStatusLabel(status)}.` : status === 'PROCESSING' ? 'Order confirmed.' : `Status changed to ${orderStatusLabel(status)}.`,
+      );
     },
     // The server's own reason when the flow refuses the move ("already reached Processing…").
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not update the order status. Please try again.')),
+  });
+  // Asks before a closing step (Completed, Cancelled…); the owner's "Correct a mistake" form.
+  const isOwner = useCan('owner');
+  const statusDialogs = useStatusChangeDialogs({
+    order: order ?? { status: 'PENDING', invoiceNumber: 0 },
+    onChange: (req) => statusMutation.mutate(req),
+    busy: statusMutation.isPending,
   });
 
   // A hook, so it stays above the loading early return below (hooks must run in the same order every render).
@@ -331,7 +343,7 @@ export default function OrderDetail() {
   let nextStep: React.ReactNode = null;
   if (order.status === 'PENDING') {
     nextStep = (
-      <button type="button" onClick={() => statusMutation.mutate('PROCESSING')} disabled={statusMutation.isPending} className={primaryBtn}>
+      <button type="button" onClick={() => statusMutation.mutate({ status: 'PROCESSING' })} disabled={statusMutation.isPending} className={primaryBtn}>
         <CheckCircle2 size={15} />
         {statusMutation.isPending ? 'Confirming…' : 'Confirm order'}
       </button>
@@ -831,7 +843,7 @@ export default function OrderDetail() {
           <Card title="Change status">
             <select
               value=""
-              onChange={(e) => e.target.value && statusMutation.mutate(e.target.value as OrderStatus)}
+              onChange={(e) => e.target.value && statusDialogs.request(e.target.value as OrderStatus)}
               disabled={statusMutation.isPending}
               aria-label="Change status"
               className={productInputClass}
@@ -854,6 +866,12 @@ export default function OrderDetail() {
               className={`${productInputClass} mt-2 resize-y`}
             />
             <p className="mt-1.5 text-xs text-neutral-500">Write the note first; it’s saved with the next status change.</p>
+            {isOwner && order.source !== 'POS' && (
+              <button type="button" onClick={statusDialogs.openCorrection} className="mt-2 text-xs font-medium text-brand hover:underline">
+                Set by mistake? Correct the status
+              </button>
+            )}
+            {statusDialogs.dialogs}
           </Card>
           )}
         </div>

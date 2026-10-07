@@ -55,6 +55,7 @@ import type { PhoneCourierStats } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel } from './orderStatus';
 import { CustomizeTabsModal } from './CustomizeTabsModal';
+import { useStatusChangeDialogs, type StatusChangeRequest } from './StatusChangeDialogs';
 import AbandonedCart from './AbandonedCart';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { ChangeLabelModal } from './ChangeLabelModal';
@@ -200,7 +201,7 @@ function OrderRow({
   };
 
   const statusMutation = useMutation({
-    mutationFn: (status: OrderStatus) => ordersApi.updateStatus(order.id, status),
+    mutationFn: ({ status, note, correction }: StatusChangeRequest) => ordersApi.updateStatus(order.id, status, note, correction),
     onSuccess: () => {
       invalidate();
       toast.success('Order status updated.');
@@ -208,6 +209,9 @@ function OrderRow({
     // The server's own reason when the flow refuses the move ("already reached Processing…").
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not update the order status. Please try again.')),
   });
+  // Asks before a closing step (Completed, Cancelled…); the owner's "Correct a mistake" form.
+  const isOwner = useCan('owner');
+  const statusDialogs = useStatusChangeDialogs({ order, onChange: (req) => statusMutation.mutate(req), busy: statusMutation.isPending });
 
   const courierMutation = useMutation({
     mutationFn: (courierProvider: CourierProvider) => ordersApi.updateCourier(order.id, courierProvider),
@@ -488,12 +492,20 @@ function OrderRow({
                           disabled={status === order.status || statusMutation.isPending || (moneyBack && !canCancelRefund)}
                           hint={moneyBack && !canCancelRefund && status !== order.status ? 'Your role can’t cancel or refund' : undefined}
                           icon={status === order.status ? <Check /> : <span className="block w-4" />}
-                          onSelect={() => statusMutation.mutate(status)}
+                          onSelect={() => statusDialogs.request(status)}
                         >
                           {orderStatusLabel(status)}
                         </DropdownMenuItem>
                       );
                     })}
+                    {isOwner && order.source !== 'POS' && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem icon={<RotateCcw />} hint="Owner only, with a reason" onSelect={statusDialogs.openCorrection}>
+                          Correct a mistake…
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuSub>
                   <DropdownMenuItem icon={<Tag />} onSelect={() => onChangeLabel(order)}>
                     Change label
@@ -632,6 +644,7 @@ function OrderRow({
             </>
           )}
         </DropdownMenu>
+        {statusDialogs.dialogs}
       </td>
     </tr>
   );
