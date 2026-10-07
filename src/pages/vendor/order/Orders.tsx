@@ -64,6 +64,8 @@ import { DateRangeFilter } from './DateRangeFilter';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { SearchBox, TableFooter, outlineBtn, td, th } from '../../../components/ui/PageKit';
 import { NeedsAttention } from '../../../components/order/NeedsAttention';
+import { BulkStatusMenu } from '../../../components/order/BulkStatusMenu';
+import { BulkInvoicePrint } from '../../../components/order/BulkInvoicePrint';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 // Table + toolbar pieces come from PageKit; the bulk bar's smaller buttons are Orders' own.
@@ -689,6 +691,7 @@ export default function Orders() {
   // What this person's role can do on this page (rule-plan.md Step 10); the server checks each again.
   const canCreate = useCan('orders.create');
   const canEdit = useCan('orders.edit');
+  const canCancelRefund = useCan('orders.cancel_refund');
   const canCourier = useCan('orders.courier');
   const canTrash = useCan('orders.delete');
   const canContact = useCan('customers.contact');
@@ -713,6 +716,8 @@ export default function Orders() {
   // per page: changing page or filters clears it, so a vendor never
   // books orders they can no longer see.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // "Print invoices" in the bulk bar: the orders being printed, null when closed.
+  const [printingInvoices, setPrintingInvoices] = useState<string[] | null>(null);
   // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
   const [bulkBooking, setBulkBooking] = useState<{ provider: BulkCourierProvider; ids: string[] } | null>(null);
   useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page, courierBooking]);
@@ -995,6 +1000,9 @@ export default function Orders() {
             {!trashView && selectedIds.size > 0 && (
               <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-brand-lime bg-brand-lime/30 px-3 py-2">
                 <span className="mr-1 text-sm font-medium text-regantify-text">{selectedIds.size} selected</span>
+                {canEdit && (
+                  <BulkStatusMenu ids={[...selectedIds]} canCancel={canCancelRefund} className={bulkBtn} onDone={() => setSelectedIds(new Set())} />
+                )}
                 <button type="button" onClick={sendSelectedToPathao} className={bulkBtn}>
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
                   Send to Pathao
@@ -1006,6 +1014,10 @@ export default function Orders() {
                 <button type="button" onClick={sendSelectedToRedx} className={bulkBtn}>
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
                   Send to RedX
+                </button>
+                <button type="button" onClick={() => setPrintingInvoices([...selectedIds])} className={bulkBtn}>
+                  <Printer size={13} />
+                  Print invoices
                 </button>
                 <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
                   <Printer size={13} />
@@ -1139,6 +1151,7 @@ export default function Orders() {
         saving={labelMutation.isPending}
       />
       <InvoiceModal order={invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
+      <BulkInvoicePrint ids={printingInvoices ?? []} open={printingInvoices !== null} onOpenChange={(open) => !open && setPrintingInvoices(null)} />
       <Dialog
         open={timelineOrder != null}
         onOpenChange={(open) => !open && setTimelineOrder(null)}

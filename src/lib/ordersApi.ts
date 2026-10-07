@@ -276,6 +276,28 @@ export interface OrderItemInput {
   quantity: number;
 }
 
+/** What the Orders list can set on many orders at once (BULK_ORDER_STATUSES on the server). */
+export type BulkOrderStatus = 'PROCESSING' | 'ON_HOLD' | 'SHIPPING' | 'COMPLETED' | 'CANCELLED' | 'STOCK_OUT';
+
+export interface BulkStatusResult {
+  updated: number;
+  skipped: { id: string; ref: string; reason: string }[];
+}
+
+/** One line after "Edit items" (UpdateOrderItemsDto on the server). */
+export interface EditOrderItemInput {
+  productId?: string;
+  variantId?: string;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+}
+
+export interface UpdateOrderItemsPayload {
+  items: EditOrderItemInput[];
+  deliveryCharge?: number;
+}
+
 export interface CreateOrderPayload {
   customerName: string;
   customerPhone: string;
@@ -313,6 +335,14 @@ export const ordersApi = {
   /** `correction`: the owner's "Correct a mistake", outside the forward-only flow (needs a `note`). */
   updateStatus: (id: string, status: OrderStatus, note?: string, correction?: boolean) =>
     api.patch<Order>(`/v1/orders/${id}/status`, { status, note, ...(correction && { correction: true }) }).then((r) => r.data),
+
+  /** "Edit items": replaces the whole item list of a COD order not yet booked with a courier; the server works out the total and stock again. */
+  updateItems: (id: string, payload: UpdateOrderItemsPayload) =>
+    api.patch<Order>(`/v1/orders/${id}/items`, payload).then((r) => r.data),
+
+  /** Orders list "Change status" for many orders; ones that can't move are skipped with a reason. */
+  bulkUpdateStatus: (ids: string[], status: BulkOrderStatus, note?: string) =>
+    api.post<BulkStatusResult>('/v1/orders/bulk-status', { ids, status, note }).then((r) => r.data),
 
   /** "Advance received": amount 0 clears it. */
   updateAdvance: (id: string, amount: number, note?: string) =>

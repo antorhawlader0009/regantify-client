@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, ChevronLeft, Trash2, Sparkles, Loader2, PackageX } from 'lucide-react';
+import { X, ChevronLeft, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import {
@@ -29,6 +29,7 @@ import { productsApi, type VariationOptionInput, type ProductVariantInput, type 
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
+import { storefrontProductUrl } from '../../../lib/storefrontUrl';
 import { useCan } from '../../../lib/useStaffAccess';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
@@ -532,6 +533,19 @@ export default function EditProduct() {
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <h1 className="mr-auto min-w-0 truncate text-xl font-semibold text-regantify-text">{product.name}</h1>
+        {storeSubdomain && product.slug && (
+          // The saved link, so it opens the live page even while the URL field is being edited.
+          <a
+            href={storefrontProductUrl(storeSubdomain, product.slug)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={product.visibility === 'PUBLIC' ? 'Open this product in your store' : 'Hidden products don’t show in your store'}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-brand hover:bg-neutral-50"
+          >
+            <ExternalLink size={14} />
+            View in store
+          </a>
+        )}
       </div>
       <nav aria-label="Jump to" className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <span className="text-neutral-500">Jump to:</span>

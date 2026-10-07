@@ -32,6 +32,7 @@ import { CourierSetupModal } from '../../../components/courier/CourierSetupModal
 import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCard';
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
+import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/order/EditOrderItemsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
@@ -116,6 +117,7 @@ export default function OrderDetail() {
   const [cancellingRedx, setCancellingRedx] = useState(false);
   const [showRedxHistory, setShowRedxHistory] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [editingItems, setEditingItems] = useState(false);
   // "Not connected → setup popup" (COURIER-PLAN.md §5.2): the provider to
   // connect, and the booking to retry once it is. null closes the popup.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
@@ -430,7 +432,16 @@ export default function OrderDetail() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}
         <div className="min-w-0 space-y-4 lg:col-span-2">
-          <Card title="Items">
+          <Card
+            title="Items"
+            action={
+              canEdit && canEditOrderItems(order) ? (
+                <button type="button" onClick={() => setEditingItems(true)} className="text-sm font-medium text-brand hover:underline">
+                  Edit items
+                </button>
+              ) : undefined
+            }
+          >
             <ul className="divide-y divide-line">
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-center gap-3 py-3 first:pt-0">
@@ -878,6 +889,7 @@ export default function OrderDetail() {
       </div>
 
       <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
+      <EditOrderItemsDialog order={order} open={editingItems} onOpenChange={setEditingItems} />
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
       <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ${orderRef(order)}`} maxWidth="max-w-md">

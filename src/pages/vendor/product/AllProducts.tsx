@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as RadixDropdown from '@radix-ui/react-dropdown-menu';
@@ -24,6 +24,7 @@ import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
@@ -94,6 +95,7 @@ function ActionsMenu({
   onDelete,
   onChangeStatus,
   onCreateStockProduct,
+  onDuplicate,
   onPrintLabels,
   atProductLimit,
 }: {
@@ -101,6 +103,7 @@ function ActionsMenu({
   onDelete: () => void;
   onChangeStatus: () => void;
   onCreateStockProduct: () => void;
+  onDuplicate: () => void;
   onPrintLabels: () => void;
   atProductLimit: boolean;
 }) {
@@ -122,6 +125,14 @@ function ActionsMenu({
       <DropdownMenuItem onSelect={onEdit}>{canEdit ? 'Edit' : 'View'}</DropdownMenuItem>
       {canEdit && <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>}
       <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>
+      {canEdit && (
+        <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onDuplicate())}>
+          <span className="flex items-center gap-1.5">
+            Duplicate
+            {atProductLimit && <LockedBadge size={12} />}
+          </span>
+        </DropdownMenuItem>
+      )}
       {canEdit && (
         <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onCreateStockProduct())}>
           <span className="flex items-center gap-1.5">
@@ -236,12 +247,104 @@ function StatusBadge({ visibility }: { visibility: Product['visibility'] }) {
   );
 }
 
+/**
+ * Quick edit for the Price and Stock cells: click the value, type, Enter (or click away) saves
+ * through the normal product update, Esc cancels. Products with variations keep these on the
+ * Edit page, since each variation has its own price and stock there.
+ */
+function QuickEditCell({
+  productId,
+  field,
+  value,
+  display,
+  editable,
+}: {
+  productId: string;
+  field: 'price' | 'stockQuantity';
+  value: number | null;
+  display: ReactNode;
+  editable: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const save = useMutation({
+    mutationFn: (next: number | null) => productsApi.update(productId, { [field]: next }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success(field === 'price' ? 'Price updated.' : 'Stock updated.');
+      setEditing(false);
+    },
+    onError: (err: unknown) => {
+      const message = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
+      toast.error(Array.isArray(message) ? message[0] : message || 'Could not save. Please try again.');
+    },
+  });
+
+  if (!editable) return <>{display}</>;
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(value === null ? '' : String(value));
+          setEditing(true);
+        }}
+        title={field === 'price' ? 'Click to change the price' : 'Click to change the stock (empty = unlimited)'}
+        className="-mx-1.5 rounded px-1.5 py-0.5 text-left hover:bg-neutral-100 hover:ring-1 hover:ring-line"
+      >
+        {display}
+      </button>
+    );
+  }
+
+  const commit = () => {
+    const text = draft.trim();
+    if (field === 'price') {
+      if (!text || Number(text) < 0) {
+        toast.error('Enter a price.');
+        return;
+      }
+      if (Number(text) === value) return setEditing(false);
+      save.mutate(Number(text));
+    } else {
+      const next = text ? Math.floor(Number(text)) : null; // empty = unlimited
+      if (next === value) return setEditing(false);
+      save.mutate(next);
+    }
+  };
+
+  return (
+    <input
+      autoFocus
+      type="number"
+      inputMode={field === 'price' ? 'decimal' : 'numeric'}
+      min={0}
+      value={draft}
+      disabled={save.isPending}
+      onChange={(e) => setDraft(e.target.value)}
+      onFocus={(e) => e.target.select()}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') setEditing(false);
+      }}
+      placeholder={field === 'stockQuantity' ? 'Unlimited' : undefined}
+      aria-label={field === 'price' ? 'Price' : 'Stock'}
+      className="w-24 rounded-md border border-brand px-2 py-1 text-sm outline-none disabled:opacity-60"
+    />
+  );
+}
+
 export default function AllProducts() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   // What this person's role can do here (rule-plan.md Step 10); the server checks each again.
   const canEditProducts = useCan('products.edit');
   const canDeleteProducts = useCan('products.delete');
+  // Quick price edit also needs the price permission (the server checks it too).
+  const canChangePrices = useCan('products.price');
+  const canEditPrice = canEditProducts && canChangePrices;
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -375,6 +478,17 @@ export default function AllProducts() {
       toast.success('Product deleted.');
     },
     onError: () => toast.error('Could not delete the product. Please try again.'),
+  });
+
+  // "Duplicate": the copy opens in Edit Product so only what differs needs changing.
+  const duplicateMutation = useMutation({
+    mutationFn: productsApi.duplicate,
+    onSuccess: (copy) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast.success('Copy created as a Draft. Change what’s different, then set it to Public.');
+      navigate(`/vendor/product/edit/${copy.id}`);
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not duplicate the product. Please try again.')),
   });
 
   const visibilityMutation = useMutation({
@@ -732,18 +846,32 @@ export default function AllProducts() {
                   )}
                   {columns.stock && (
                     <td className={`${td} ${cellY} whitespace-nowrap`}>
-                      {p.stockQuantity === null || p.stockQuantity === undefined ? (
-                        <InfinityIcon size={16} className="text-neutral-500" aria-label="Unlimited" />
-                      ) : p.stockQuantity === 0 ? (
-                        <span className="font-medium text-red-600">0</span>
-                      ) : (
-                        p.stockQuantity
-                      )}
+                      <QuickEditCell
+                        productId={p.id}
+                        field="stockQuantity"
+                        value={p.stockQuantity ?? null}
+                        editable={canEditProducts && !p.variants?.length}
+                        display={
+                          p.stockQuantity === null || p.stockQuantity === undefined ? (
+                            <InfinityIcon size={16} className="text-neutral-500" aria-label="Unlimited" />
+                          ) : p.stockQuantity === 0 ? (
+                            <span className="font-medium text-red-600">0</span>
+                          ) : (
+                            p.stockQuantity
+                          )
+                        }
+                      />
                     </td>
                   )}
                   {columns.price && (
                     <td className={`${td} ${cellY} whitespace-nowrap font-medium`}>
-                      ৳{Number(p.price).toLocaleString('en-US')}
+                      <QuickEditCell
+                        productId={p.id}
+                        field="price"
+                        value={Number(p.price)}
+                        editable={canEditPrice && !p.variants?.length}
+                        display={`৳${Number(p.price).toLocaleString('en-US')}`}
+                      />
                     </td>
                   )}
                   {columns.status && (
@@ -763,6 +891,7 @@ export default function AllProducts() {
                       onDelete={() => handleDelete(p.id, p.name)}
                       onChangeStatus={() => setStatusModalProduct(p)}
                       onCreateStockProduct={() => setStockProductModalId(p.id)}
+                      onDuplicate={() => duplicateMutation.mutate(p.id)}
                       onPrintLabels={() => setLabelProductIds([p.id])}
                       atProductLimit={atProductLimit}
                     />

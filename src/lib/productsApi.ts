@@ -250,6 +250,9 @@ export const productsApi = {
 
   remove: (id: string) => api.delete(`/v1/products/${id}`).then((r) => r.data),
 
+  /** "Duplicate": a Draft copy named "<name> (copy)", stock 0, no barcodes. */
+  duplicate: (id: string) => api.post<Product>(`/v1/products/${id}/duplicate`).then((r) => r.data),
+
   // "Change Status" from the Actions menu — toggles Public/Draft.
   updateVisibility: (id: string, visibility: 'PUBLIC' | 'DRAFT') =>
     api.patch<Product>(`/v1/products/${id}/visibility`, { visibility }).then((r) => r.data),
