@@ -78,6 +78,8 @@ export interface Product {
   barcode?: string | null;
   isPreOrder: boolean;
   quoteOnly?: boolean;
+  /** Fewest a shopper may order in one cart line; null = no minimum. */
+  minOrderQuantity?: number | null;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -112,6 +114,8 @@ export interface CreateProductPayload {
   barcode?: string;
   isPreOrder?: boolean;
   quoteOnly?: boolean;
+  /** Fewest a shopper may order in one cart line; null = no minimum. */
+  minOrderQuantity?: number | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -173,6 +177,8 @@ export interface UpdateProductPayload {
   barcode?: string;
   isPreOrder?: boolean;
   quoteOnly?: boolean;
+  /** Fewest a shopper may order in one cart line; null = no minimum. */
+  minOrderQuantity?: number | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';

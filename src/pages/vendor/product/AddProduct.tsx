@@ -94,6 +94,7 @@ export default function AddProduct() {
   const [isPreOrder, setIsPreOrder] = useState(false);
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
+  const [minOrderQuantity, setMinOrderQuantity] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('KG');
@@ -249,6 +250,7 @@ export default function AddProduct() {
       barcode: barcode.trim() || undefined,
       isPreOrder,
       quoteOnly,
+      minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : undefined,
       stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
       weight: weight.trim() ? Number(weight) : undefined,
       weightUnit,
@@ -417,6 +419,18 @@ export default function AddProduct() {
                     <option value="LB">LB</option>
                   </select>
                 </div>
+              </Field>
+              <Field label="Minimum order" hint="Fewest a shopper can order, e.g. 10 bags. Leave empty for no minimum.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={minOrderQuantity}
+                  onChange={(e) => setMinOrderQuantity(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 10"
+                  min={1}
+                  max={100000}
+                  className={productInputClass}
+                />
               </Field>
             </div>
             <div className="mt-4 space-y-4 border-t border-line pt-4">

@@ -151,6 +151,7 @@ export default function EditProduct() {
   const [isPreOrder, setIsPreOrder] = useState(false);
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
+  const [minOrderQuantity, setMinOrderQuantity] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('KG');
@@ -201,6 +202,7 @@ export default function EditProduct() {
       barcode: p.barcode ?? '',
       isPreOrder: p.isPreOrder,
       quoteOnly: p.quoteOnly ?? false,
+      minOrderQuantity: p.minOrderQuantity ? String(p.minOrderQuantity) : '',
       stockQuantity: p.stockQuantity != null ? String(p.stockQuantity) : '',
       weight: (p.weight ?? '').toString(),
       weightUnit: p.weightUnit,
@@ -248,6 +250,7 @@ export default function EditProduct() {
       barcode,
       isPreOrder,
       quoteOnly,
+      minOrderQuantity,
       stockQuantity,
       weight: weight.toString(),
       weightUnit,
@@ -298,6 +301,7 @@ export default function EditProduct() {
     setBarcode(p.barcode ?? '');
     setIsPreOrder(p.isPreOrder);
     setQuoteOnly(p.quoteOnly ?? false);
+    setMinOrderQuantity(p.minOrderQuantity ? String(p.minOrderQuantity) : '');
     setStockQuantity(p.stockQuantity != null ? String(p.stockQuantity) : '');
     setWeight(p.weight ?? '');
     setWeightUnit(p.weightUnit);
@@ -394,6 +398,8 @@ export default function EditProduct() {
         barcode: barcode.trim(),
         isPreOrder,
         quoteOnly,
+        // Always sent: an empty field removes the minimum.
+        minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : null,
         stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
         weight: weight.toString().trim() ? Number(weight) : undefined,
         weightUnit,
@@ -664,6 +670,18 @@ export default function EditProduct() {
                     <option value="LB">LB</option>
                   </select>
                 </div>
+              </Field>
+              <Field label="Minimum order" hint="Fewest a shopper can order, e.g. 10 bags. Leave empty for no minimum.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={minOrderQuantity}
+                  onChange={(e) => setMinOrderQuantity(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 10"
+                  min={1}
+                  max={100000}
+                  className={productInputClass}
+                />
               </Field>
             </div>
             <div className="mt-4 space-y-4 border-t border-line pt-4">
