@@ -3,6 +3,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi, type NotificationType, type VendorNotification } from '../../lib/notificationsApi';
 import { DayHeading, NotificationRow, TYPE_LABEL, groupByDay } from '../../components/notifications/notificationUi';
+import { AlertSettingsDialog } from '../../components/notifications/AlertSettingsDialog';
+import { Settings2 } from 'lucide-react';
 
 const QUERY_KEY = ['notifications'];
 const TYPES = Object.keys(TYPE_LABEL) as NotificationType[];
@@ -18,6 +20,7 @@ export default function Notifications() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<Filter>({ unreadOnly: false, type: null });
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [...QUERY_KEY, 'all', page, filter.unreadOnly, filter.type],
@@ -67,6 +70,16 @@ export default function Notifications() {
           <h1 className="text-2xl font-semibold text-regantify-text">Notifications</h1>
           <p className="mt-1 text-sm text-regantify-text-muted">{unreadCount ? `${unreadCount} unread` : 'Nothing unread'}</p>
         </div>
+        <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-md border border-line bg-white px-3 py-2 text-sm font-medium text-regantify-text transition-colors
+            hover:bg-regantify-content/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+        >
+          <Settings2 size={15} aria-hidden />
+          Alert settings
+        </button>
         <button
           type="button"
           onClick={() => markAllRead.mutate()}
@@ -76,7 +89,9 @@ export default function Notifications() {
         >
           Mark all as read
         </button>
+        </div>
       </header>
+      <AlertSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-start">
         <nav aria-label="Filter notifications" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 lg:sticky lg:top-4 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">

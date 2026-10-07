@@ -11,6 +11,8 @@ export interface VendorNotification {
   body: string | null;
   /** In-app route, e.g. /vendor/orders/<id>. */
   link: string | null;
+  /** What exactly happened, for the sound / SMS alerts; null for everything else. */
+  topic: 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -42,4 +44,22 @@ export const notificationsApi = {
   markRead: (id: string) => api.post(`/v1/notifications/${id}/read`).then((r) => r.data),
 
   markAllRead: () => api.post('/v1/notifications/read-all').then((r) => r.data),
+
+  getSettings: () => api.get<NotificationSettings>('/v1/notifications/settings').then((r) => r.data),
+
+  /** Owner only. `smsPhone: ''` goes back to the owner's own phone. */
+  updateSettings: (patch: Partial<Omit<NotificationSettings, 'ownerPhone' | 'smsPhone'>> & { smsPhone?: string }) =>
+    api.patch<NotificationSettings>('/v1/notifications/settings', patch).then((r) => r.data),
 };
+
+/** Notifications > Alert settings, the store's SMS part (paid from its SMS credits). */
+export interface NotificationSettings {
+  smsNewOrder: boolean;
+  smsOrderAttention: boolean;
+  smsPlanEnding: boolean;
+  /** Null = the owner's own phone (ownerPhone). */
+  smsPhone: string | null;
+  /** No SMS 10 PM to 8 AM. */
+  smsQuietHours: boolean;
+  ownerPhone: string | null;
+}

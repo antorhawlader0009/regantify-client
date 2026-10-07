@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Popover from '@radix-ui/react-popover';
 import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi, type NotificationList, type VendorNotification } from '../lib/notificationsApi';
 import { DayHeading, NotificationRow, groupByDay } from './notifications/notificationUi';
+import { alertFor, takeNewForAlert } from '../lib/notificationAlerts';
 
 // The feed is written by the server where events really happen (withdraw
 // approved/rejected/paid, wallet top-up, plan changes, new orders, reviews...),
-// see server/src/notifications. The bell just polls it once a minute.
+// see server/src/notifications. The bell polls it every 30 seconds, and a
+// new one also rings / pops up as this device's Alert settings say
+// (lib/notificationAlerts.ts).
 
-const POLL_MS = 60_000;
+const POLL_MS = 30_000;
 const QUERY_KEY = ['notifications'];
 
 export function NotificationBell() {
@@ -26,6 +29,12 @@ export function NotificationBell() {
     refetchOnWindowFocus: true,
     retry: false,
   });
+
+  // Sound and desktop pop-up for what arrived since the last look (once across tabs and bells).
+  useEffect(() => {
+    if (!data) return;
+    alertFor(takeNewForAlert(data.items), (item) => openItemRef.current(item));
+  }, [data]);
 
   const all = data?.items ?? [];
   const unreadCount = data?.unreadCount ?? 0;
@@ -64,6 +73,8 @@ export function NotificationBell() {
     setOpen(false);
     if (item.link) navigate(item.link);
   };
+  const openItemRef = useRef(openItem);
+  openItemRef.current = openItem;
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
