@@ -193,7 +193,7 @@ export interface MarketingAnalytics {
   landingPages: { id: string; title: string; slug: string; visitors: number; checkouts: number }[];
 }
 
-const get = <T,>(report: AnalyticsTab | 'delivery') => async (range: DateRange) =>
+const get = <T,>(report: AnalyticsTab | 'delivery' | 'searches') => async (range: DateRange) =>
   (await api.get<T>(`/v1/analytics/${report}`, { params: { from: range.from, to: range.to } })).data;
 
 /** One reason an order ended without a sale (server/src/analytics/failed-orders-analytics.service.ts). */
@@ -222,7 +222,26 @@ export interface FailedOrdersAnalytics {
   repeaters: { phone: string; name: string; orders: number; value: number; reasons: { code: string; label: string }[]; blacklisted: boolean }[];
 }
 
+/** Analytics > Products > "What shoppers search for" (server/src/analytics/searches-analytics.service.ts). */
+export interface SearchedWord {
+  term: string;
+  searches: number;
+  /** How many of those searches found no product. */
+  noResults: number;
+}
+
+export interface SearchesAnalytics {
+  totals: { searches: number; previousSearches: number; noResults: number; previousNoResults: number; words: number };
+  top: SearchedWord[];
+  notFound: SearchedWord[];
+  /** The words are removed after this many days. */
+  keptDays: number;
+  /** First day a search was recorded, null when none yet. */
+  trackedSince: string | null;
+}
+
 export const analyticsApi = {
+  searches: get<SearchesAnalytics>('searches'),
   failedOrders: async (range: DateRange) =>
     (await api.get<FailedOrdersAnalytics>('/v1/analytics/failed-orders', { params: { from: range.from, to: range.to } })).data,
   overview: get<OverviewAnalytics>('overview'),

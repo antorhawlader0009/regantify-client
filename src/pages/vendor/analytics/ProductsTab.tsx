@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { ProductsAnalytics } from '../../../lib/analyticsApi';
+import type { ProductsAnalytics, SearchedWord, SearchesAnalytics } from '../../../lib/analyticsApi';
 import { Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, SERIES_1, StatCard, MobileRows } from '../../../components/analytics/AnalyticsUi';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
@@ -119,10 +119,77 @@ export function ProductsTab({ range }: TabProps) {
                   </ul>
                 )}
               </Card>
+
+              <SearchesSection range={range} />
           </>
         );
       }}
     </TabState>
+  );
+}
+
+/** What shoppers typed into the store's search box, and what found nothing. StorePal's search records it. */
+function SearchesSection({ range }: { range: TabProps['range'] }) {
+  const query = useAnalytics('searches', range);
+  return <TabState query={query}>{(data) => <SearchesCards data={data} />}</TabState>;
+}
+
+function WordList({ rows, empty, detail }: { rows: SearchedWord[]; empty: string; detail: (w: SearchedWord) => string }) {
+  if (rows.length === 0) return <EmptyState text={empty} />;
+  const max = Math.max(1, ...rows.map((w) => w.searches));
+  return (
+    <ul className="divide-y divide-line">
+      {rows.map((w) => (
+        <li key={w.term} className="py-2.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="min-w-0 truncate text-sm font-medium text-regantify-text">{w.term}</span>
+            <span className="whitespace-nowrap text-xs text-neutral-500 tabular-nums">{detail(w)}</span>
+          </div>
+          <div className="mt-1.5 h-1.5 rounded-full bg-neutral-100" aria-hidden>
+            <div className="h-1.5 rounded-full" style={{ width: `${Math.max(4, Math.round((w.searches / max) * 100))}%`, background: SERIES_1 }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SearchesCards({ data }: { data: SearchesAnalytics }) {
+  const { totals } = data;
+  const missPct = totals.searches > 0 ? Math.round((totals.noResults / totals.searches) * 100) : 0;
+  return (
+    <>
+      <KpiStrip cols={3}>
+        <KpiCard label="Searches" value={{ current: totals.searches, previous: totals.previousSearches }} kind="count" compareLabel={COMPARE_LABEL} />
+        <StatCard label="Found nothing" value={totals.noResults} hint={totals.searches > 0 ? `${missPct}% of searches` : undefined} />
+        <StatCard label="Different words" value={totals.words} hint="Typed into your store’s search" />
+      </KpiStrip>
+
+      {totals.searches === 0 ? (
+        <Card title="What shoppers search for">
+          <EmptyState
+            text={
+              data.trackedSince
+                ? 'Nobody searched your store in this period.'
+                : 'Nothing recorded yet. From now on, the words shoppers type into your store’s search show up here (StorePal theme).'
+            }
+          />
+        </Card>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card title="Most searched" subtitle={`What shoppers look for. Words are kept ${data.keptDays} days.`}>
+            <WordList rows={data.top} empty="No searches yet." detail={(w) => `${w.searches} ${w.searches === 1 ? 'search' : 'searches'}`} />
+          </Card>
+          <Card title="Searched but not found" subtitle="Shoppers wanted these and found nothing. Add the product, or use the word in a product’s name or description.">
+            <WordList
+              rows={data.notFound}
+              empty="Everything shoppers searched for was found."
+              detail={(w) => `${w.noResults} of ${w.searches} found nothing`}
+            />
+          </Card>
+        </div>
+      )}
+    </>
   );
 }
 
