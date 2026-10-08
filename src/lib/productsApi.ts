@@ -65,6 +65,10 @@ export interface Product {
   metaTitle?: string | null;
   metaDescription?: string | null;
   visibility: 'PUBLIC' | 'DRAFT';
+  /** Scheduled: a Draft product goes Public at this time. Null = not scheduled. */
+  publishAt?: string | null;
+  /** Scheduled: a Public product goes Draft at this time. Null = not scheduled. */
+  unpublishAt?: string | null;
   photoSize: 'SQUARE' | 'PORTRAIT';
   photoUrls: string[];
   videoUrl?: string | null;
@@ -106,6 +110,8 @@ export interface CreateProductPayload {
   // from `name` on the server when omitted/blank.
   slug?: string;
   visibility?: 'PUBLIC' | 'DRAFT';
+  publishAt?: string | null;
+  unpublishAt?: string | null;
   photoSize?: 'SQUARE' | 'PORTRAIT';
   photoUrls?: string[];
   videoUrl?: string;
@@ -170,6 +176,8 @@ export interface UpdateProductPayload {
   metaTitle?: string;
   metaDescription?: string;
   visibility?: 'PUBLIC' | 'DRAFT';
+  publishAt?: string | null;
+  unpublishAt?: string | null;
   photoSize?: 'SQUARE' | 'PORTRAIT';
   photoUrls?: string[];
   videoUrl?: string;
@@ -266,8 +274,9 @@ export const productsApi = {
   duplicate: (id: string) => api.post<Product>(`/v1/products/${id}/duplicate`).then((r) => r.data),
 
   // "Change Status" from the Actions menu — toggles Public/Draft.
-  updateVisibility: (id: string, visibility: 'PUBLIC' | 'DRAFT') =>
-    api.patch<Product>(`/v1/products/${id}/visibility`, { visibility }).then((r) => r.data),
+  /** Change Status. `schedule`: ISO instants, null clears, absent leaves alone (the server drops one that no longer makes sense). */
+  updateVisibility: (id: string, visibility: 'PUBLIC' | 'DRAFT', schedule: { publishAt?: string | null; unpublishAt?: string | null } = {}) =>
+    api.patch<Product>(`/v1/products/${id}/visibility`, { visibility, ...schedule }).then((r) => r.data),
 
   // "Create Stock Product" from the Actions menu — clones a pre-order
   // product into a new in-stock product with the given per-combination

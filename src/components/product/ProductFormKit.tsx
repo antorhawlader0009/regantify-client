@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
-import { Camera, ChevronDown, Eye, EyeOff, GripVertical, Plus, Star, UploadCloud, X } from 'lucide-react';
+import { Camera, ChevronDown, Clock, Eye, EyeOff, GripVertical, Plus, Star, UploadCloud, X } from 'lucide-react';
 import { productInputClass } from './ProductFormPieces';
 import { useCan } from '../../lib/useStaffAccess';
+import { dhakaInputToIso, isoToDhakaInput, nowDhakaInput } from '../../lib/dhakaInput';
 
 // Pieces shared by Add Product and Edit Product (theme-update-plan.md
 // Step 2), so both forms get the same photos, price, status, search
@@ -397,8 +398,31 @@ function SideCard({ title, children, action }: { title: string; children: ReactN
 
 export { SideCard as ProductSideCard };
 
-/** Public / Draft, with what each means. */
-export function StatusCard({ visibility, onChange }: { visibility: 'PUBLIC' | 'DRAFT'; onChange: (v: 'PUBLIC' | 'DRAFT') => void }) {
+/** What a product's schedule holds: ISO instants (or null), as the API sends them. */
+export interface ProductSchedule {
+  publishAt: string | null;
+  unpublishAt: string | null;
+}
+
+const scheduleInput =
+  'mt-1 block h-9 w-full rounded-lg border border-line bg-white px-2.5 text-sm font-normal text-regantify-text focus:outline-none focus:border-brand';
+
+/**
+ * Public / Draft, with what each means, and an optional schedule: a Draft product can go live by itself at a time
+ * ("Eid collection at midnight") and be hidden again later; a Public one can hide by itself ("offer ends Friday").
+ * Times are typed in Dhaka time. Leave them empty for no schedule.
+ */
+export function StatusCard({
+  visibility,
+  onChange,
+  schedule,
+  onSchedule,
+}: {
+  visibility: 'PUBLIC' | 'DRAFT';
+  onChange: (v: 'PUBLIC' | 'DRAFT') => void;
+  schedule?: ProductSchedule;
+  onSchedule?: (next: ProductSchedule) => void;
+}) {
   return (
     <SideCard title="Status">
       <Segmented
@@ -414,6 +438,44 @@ export function StatusCard({ visibility, onChange }: { visibility: 'PUBLIC' | 'D
         {visibility === 'PUBLIC' ? <Eye size={13} aria-hidden /> : <EyeOff size={13} aria-hidden />}
         {visibility === 'PUBLIC' ? 'Shoppers can see and buy this product.' : 'Hidden from your store until you make it public.'}
       </p>
+
+      {schedule && onSchedule && (
+        <div className="mt-4 space-y-3 border-t border-line pt-3">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-regantify-text">
+            <Clock size={13} aria-hidden />
+            Schedule <span className="font-normal text-neutral-500">(Dhaka time, optional)</span>
+          </p>
+          {visibility === 'DRAFT' && (
+            <label className="block text-xs text-neutral-600">
+              Go live at
+              <input
+                type="datetime-local"
+                value={isoToDhakaInput(schedule.publishAt)}
+                min={nowDhakaInput()}
+                onChange={(e) => onSchedule({ ...schedule, publishAt: dhakaInputToIso(e.target.value) })}
+                className={scheduleInput}
+              />
+            </label>
+          )}
+          {(visibility === 'PUBLIC' || schedule.publishAt) && (
+            <label className="block text-xs text-neutral-600">
+              Hide at
+              <input
+                type="datetime-local"
+                value={isoToDhakaInput(schedule.unpublishAt)}
+                min={nowDhakaInput()}
+                onChange={(e) => onSchedule({ ...schedule, unpublishAt: dhakaInputToIso(e.target.value) })}
+                className={scheduleInput}
+              />
+            </label>
+          )}
+          <p className="text-xs text-neutral-500">
+            {visibility === 'DRAFT'
+              ? 'The product stays hidden until then, then shows in your store by itself.'
+              : 'The product shows now, then hides by itself at that time.'}
+          </p>
+        </div>
+      )}
     </SideCard>
   );
 }

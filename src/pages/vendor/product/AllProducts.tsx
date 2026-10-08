@@ -18,6 +18,7 @@ import {
   X,
   Infinity as InfinityIcon,
   Printer,
+  Clock,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
@@ -26,6 +27,8 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { ChangeStatusModal } from './ChangeStatusModal';
+import { ScheduleProductsDialog } from './ScheduleProductsDialog';
+import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
 import { useCan } from '../../../lib/useStaffAccess';
@@ -239,11 +242,25 @@ function SortHeader({
 
 const badge = 'inline-block whitespace-nowrap rounded border px-2 py-0.5 text-sm';
 
-function StatusBadge({ visibility }: { visibility: Product['visibility'] }) {
-  return visibility === 'PUBLIC' ? (
-    <span className={`${badge} border-green-200 bg-green-50 text-green-700`}>Public</span>
-  ) : (
-    <span className={`${badge} border-neutral-200 bg-neutral-50 text-neutral-600`}>Draft</span>
+function StatusBadge({ visibility, publishAt, unpublishAt }: { visibility: Product['visibility']; publishAt?: string | null; unpublishAt?: string | null }) {
+  // A Draft that goes live by itself, or a Public that hides by itself (Status card > Schedule).
+  const when = visibility === 'DRAFT' ? publishAt : unpublishAt;
+  const note = when ? (
+    <span className="mt-1 flex items-center gap-1 text-[11px] text-neutral-500" title="Scheduled, Dhaka time">
+      <Clock size={11} aria-hidden />
+      {visibility === 'DRAFT' ? 'Live ' : 'Hides '}
+      {formatDhakaDateTime(when)}
+    </span>
+  ) : null;
+  return (
+    <>
+      {visibility === 'PUBLIC' ? (
+        <span className={`${badge} border-green-200 bg-green-50 text-green-700`}>Public</span>
+      ) : (
+        <span className={`${badge} border-neutral-200 bg-neutral-50 text-neutral-600`}>Draft</span>
+      )}
+      {note}
+    </>
   );
 }
 
@@ -483,6 +500,8 @@ export default function AllProducts() {
   // Bulk bar "Make Public" / "Make Draft": the same visibility change as Change Status, for every
   // selected product (e.g. hide a season's products at once).
   const [bulkVisibility, setBulkVisibility] = useState(false);
+  // Bulk bar "Schedule": go live / hide the selected products by themselves at a time.
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   async function handleBulkVisibility(visibility: 'PUBLIC' | 'DRAFT') {
     const ids = Array.from(selected);
     setBulkVisibility(true);
@@ -753,6 +772,14 @@ export default function AllProducts() {
                   >
                     Make Draft
                   </button>
+                  <button
+                    onClick={() => setScheduleOpen(true)}
+                    disabled={bulkVisibility}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+                  >
+                    <Clock size={13} aria-hidden />
+                    Schedule
+                  </button>
                 </>
               )}
               {canDeleteProducts && (
@@ -915,7 +942,7 @@ export default function AllProducts() {
                   {columns.status && (
                     <td className={`${td} ${cellY} whitespace-nowrap`}>
                       <div className="flex items-center gap-1.5">
-                        <StatusBadge visibility={p.visibility} />
+                        <StatusBadge visibility={p.visibility} publishAt={p.publishAt} unpublishAt={p.unpublishAt} />
                         {p.isPreOrder && <span className={`${badge} border-amber-200 bg-amber-50 text-amber-700`}>Pre-Order</span>}
                         {p.stockQuantity === 0 && (
                           <span className={`${badge} border-red-200 bg-red-50 text-red-700`}>Out of Stock</span>
@@ -951,6 +978,15 @@ export default function AllProducts() {
           currentStatus={statusModalProduct.visibility}
           submitting={visibilityMutation.isPending}
           onConfirm={(next) => visibilityMutation.mutate({ id: statusModalProduct.id, visibility: next })}
+        />
+      )}
+
+      {scheduleOpen && (
+        <ScheduleProductsDialog
+          open
+          onOpenChange={(open) => !open && setScheduleOpen(false)}
+          products={products.filter((p) => selected.has(p.id))}
+          onDone={() => setSelected(new Set())}
         />
       )}
 

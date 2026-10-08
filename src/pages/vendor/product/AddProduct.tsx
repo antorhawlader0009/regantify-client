@@ -12,6 +12,7 @@ import {
   SaveBar,
   SearchListingCard,
   StatusCard,
+  type ProductSchedule,
   ToggleRow,
   htmlToText,
   moveItem,
@@ -60,6 +61,8 @@ export default function AddProduct() {
   const [description, setDescription] = useState('');
   const [note, setNote] = useState('');
   const [visibility, setVisibility] = useState<'PUBLIC' | 'DRAFT'>('PUBLIC');
+  // Optional schedule (Status card): go live / hide by itself at a time, in Dhaka time.
+  const [schedule, setSchedule] = useState<ProductSchedule>({ publishAt: null, unpublishAt: null });
   const [showSummary, setShowSummary] = useState(false);
   const [category, setCategory] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -241,6 +244,9 @@ export default function AddProduct() {
       metaDescription: metaDescription.trim() || undefined,
       slug: slug.trim() || undefined,
       visibility,
+      // The server drops the one that doesn't fit the status (a go-live time on a Public product).
+      publishAt: visibility === 'DRAFT' ? schedule.publishAt : null,
+      unpublishAt: visibility === 'PUBLIC' || schedule.publishAt ? schedule.unpublishAt : null,
       photoSize,
       photoUrls: photos.filter((p) => p.uploadedUrl).map((p) => p.uploadedUrl!),
       videoUrl: videoUrl.trim() || undefined,
@@ -479,7 +485,7 @@ export default function AddProduct() {
 
         {/* Side column */}
         <div className="space-y-4">
-          <StatusCard visibility={visibility} onChange={setVisibility} />
+          <StatusCard visibility={visibility} onChange={setVisibility} schedule={schedule} onSchedule={setSchedule} />
 
           <ProductSideCard title="Category and brand">
             <div className="space-y-3">

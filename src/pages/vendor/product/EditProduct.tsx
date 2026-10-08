@@ -12,6 +12,7 @@ import {
   SaveBar,
   SearchListingCard,
   StatusCard,
+  type ProductSchedule,
   ToggleRow,
   htmlToText,
   moveItem,
@@ -100,6 +101,7 @@ export default function EditProduct() {
   const [note, setNote] = useState('');
   const [creator, setCreator] = useState('');
   const [visibility, setVisibility] = useState<'PUBLIC' | 'DRAFT'>('PUBLIC');
+  const [schedule, setSchedule] = useState<ProductSchedule>({ publishAt: null, unpublishAt: null });
   const [category, setCategory] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [secondaryCategories, setSecondaryCategories] = useState<string[]>([]);
@@ -185,6 +187,8 @@ export default function EditProduct() {
       note: p.note ?? '',
       creator: p.creator ?? '',
       visibility: p.visibility,
+      publishAt: p.publishAt ?? null,
+      unpublishAt: p.unpublishAt ?? null,
       category: p.category ?? '',
       // Same keys, same order and same types as buildSnapshot(), or the
       // form looks "changed" the moment it loads.
@@ -236,6 +240,8 @@ export default function EditProduct() {
       note,
       creator,
       visibility,
+      publishAt: schedule.publishAt,
+      unpublishAt: schedule.unpublishAt,
       category,
       categoryId,
       secondaryCategories,
@@ -281,6 +287,7 @@ export default function EditProduct() {
     setNote(p.note ?? '');
     setCreator(p.creator ?? '');
     setVisibility(p.visibility);
+    setSchedule({ publishAt: p.publishAt ?? null, unpublishAt: p.unpublishAt ?? null });
     setCategory(p.category ?? '');
     setCategoryId(p.categoryId ?? '');
     setSecondaryCategories(p.secondaryCategories ?? []);
@@ -392,6 +399,9 @@ export default function EditProduct() {
         metaTitle: metaTitle.trim() || undefined,
         metaDescription: metaDescription.trim() || undefined,
         visibility,
+        // null clears; the server also drops the one that doesn't fit the status.
+        publishAt: visibility === 'DRAFT' ? schedule.publishAt : null,
+        unpublishAt: visibility === 'PUBLIC' || schedule.publishAt ? schedule.unpublishAt : null,
         photoSize,
         photoUrls: photos.filter((p) => p.uploadedUrl && !p.uploading).map((p) => p.uploadedUrl),
         videoUrl: videoUrl.trim() || undefined,
@@ -744,7 +754,7 @@ export default function EditProduct() {
 
         {/* Side column */}
         <div className="space-y-4">
-          <StatusCard visibility={visibility} onChange={setVisibility} />
+          <StatusCard visibility={visibility} onChange={setVisibility} schedule={schedule} onSchedule={setSchedule} />
 
           <ProductSideCard title="Category and brand">
             <div className="space-y-3">
