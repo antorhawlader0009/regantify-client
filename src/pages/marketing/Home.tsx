@@ -1,18 +1,20 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import SiteNav, { readStoredLang, storeLang, readStoredNight, storeNight } from '../../components/marketing/SiteNav';
+import HeroFilmstrip from '../../components/marketing/HeroFilmstrip';
+import TemplateShowcase from '../../components/marketing/TemplateShowcase';
 import {
   Store,
-  Boxes,
-  Shirt,
-  Apple,
   ArrowUpRight,
   Check,
   Plus,
   Minus,
-  Languages,
   X,
   BarChart3,
   Sparkles,
+  CheckCircle2,
+  Zap,
+  ArrowRight,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -23,32 +25,36 @@ type Lang = 'en' | 'bn';
 
 const dict = {
   en: {
-    nav_who: "Who it's for",
-    nav_services: 'Services',
-    nav_features: 'Features',
-    nav_pricing: 'Pricing',
-    nav_faq: 'FAQ',
-    nav_login: 'Sign In',
-    nav_start: 'Start for free',
 
-    hero_title: 'Sell anything. Run it from one screen.',
-    hero_sub: 'Regantify gives you a shop, an order list, and a way to get paid — all in one simple app.',
+    hero_title: 'We handle everything for growing your business.',
+    hero_sub: 'Free setup and payment to orders and delivery, all in one place.',
     hero_cta: 'Start free',
-    hero_cta_2: 'See pricing',
-    hero_note: 'No card needed · Free 14-day trial',
-    hero_tag: 'All kinds of shops, 1 app',
+    hero_carousel_label: 'What Regantify does',
+    hero_s1_title: 'Your whole shop, one app',
+    hero_s1_detail: 'Orders, payments and deliveries in one simple dashboard, made for Bangladeshi sellers.',
+    hero_s2_title: 'Book couriers in a tap',
+    hero_s2_detail: 'Send parcels with Pathao, SteadFast or RedX and follow them without leaving the dashboard.',
+    hero_s3_title: 'Get paid your way',
+    hero_s3_detail: 'bKash, Nagad, Rocket and Upay payments reach your built-in wallet.',
+    hero_s4_title: 'Photo to product page',
+    hero_s4_detail: 'Snap a picture and AI drafts the title and details of your listing.',
 
-    who_title: 'Made for every kind of shop',
-    who_sub: 'Pick what you sell. The app sets itself up around it.',
-    cat1_name: 'Gadgets',
-    cat1_detail: 'Color and storage options for each item',
-    cat2_name: 'Clothes',
-    cat2_detail: 'Size and color options, easy to browse',
-    cat3_name: 'Food',
-    cat3_detail: 'Weight, pack size, and expiry dates',
+    who_title: 'Premium store designs',
+    who_sub: 'Pick a design that fits what you sell, then make it yours.',
+    tpl_cta: 'Start for free',
+    tpl1: 'Fashion Store',
+    tpl2: 'Grocery & Food',
+    tpl3: 'Baby Care',
+    tpl4: 'Furniture',
+    tpl5: 'Books',
+    tpl6: 'Pet Shop',
+    tpl7: 'Medical & Care',
+    tpl8: 'Gadgets',
 
     run_title: 'Everything a new shop needs, built in',
     run_sub: 'Payments, delivery, and product listing used to be three headaches. Now they are just part of the app.',
+    run_chip: 'Built in',
+    run_learn: 'Learn more',
 
     f1_eyebrow: 'Orders & delivery',
     f1_title: 'Run the whole business from one screen',
@@ -183,32 +189,36 @@ const dict = {
     footer_admin: 'Admin login',
   },
   bn: {
-    nav_who: 'কাদের জন্য',
-    nav_services: 'সেবাসমূহ',
-    nav_features: 'ফিচার',
-    nav_pricing: 'মূল্য',
-    nav_faq: 'প্রশ্ন',
-    nav_login: 'লগইন',
-    nav_start: 'ফ্রি শুরু করুন',
 
-    hero_title: 'যেকোনো কিছু বিক্রি করুন। এক স্ক্রিন থেকেই সব চালান।',
-    hero_sub: 'Regantify দিচ্ছে একটা দোকান, অর্ডার লিস্ট, আর টাকা নেওয়ার সহজ উপায় — সব এক অ্যাপে।',
+    hero_title: 'আপনার ব্যবসা বড় করার পুরো দায়িত্ব আমাদের।',
+    hero_sub: 'ফ্রি সেটআপ থেকে পেমেন্ট, অর্ডার ও ডেলিভারি সব এক জায়গায়।',
     hero_cta: 'ফ্রি শুরু করুন',
-    hero_cta_2: 'মূল্য দেখুন',
-    hero_note: 'কার্ড লাগবে না · ১৪ দিন ফ্রি ট্রায়াল',
-    hero_tag: 'সব ধরনের দোকান, ১টা অ্যাপ',
+    hero_carousel_label: 'Regantify যা যা করে',
+    hero_s1_title: 'পুরো দোকান, এক অ্যাপে',
+    hero_s1_detail: 'অর্ডার, পেমেন্ট আর ডেলিভারি, সব এক সহজ ড্যাশবোর্ডে। বাংলাদেশের বিক্রেতাদের জন্য তৈরি।',
+    hero_s2_title: 'এক ট্যাপে কুরিয়ার বুক',
+    hero_s2_detail: 'পাঠাও, স্টেডফাস্ট বা রেডএক্স দিয়ে পার্সেল পাঠান, ড্যাশবোর্ড ছেড়ে না গিয়েই ট্র্যাক করুন।',
+    hero_s3_title: 'পেমেন্ট নিন আপনার মতো',
+    hero_s3_detail: 'বিকাশ, নগদ, রকেট আর উপায়ের পেমেন্ট সরাসরি আপনার ওয়ালেটে।',
+    hero_s4_title: 'ছবি থেকে প্রোডাক্ট পেজ',
+    hero_s4_detail: 'একটা ছবি তুলুন, AI আপনার লিস্টিংয়ের টাইটেল আর বিবরণ লিখে দেবে।',
 
-    who_title: 'সব ধরনের দোকানের জন্য তৈরি',
-    who_sub: 'আপনি কী বিক্রি করেন বলুন। অ্যাপ নিজেই সাজিয়ে নেবে।',
-    cat1_name: 'গ্যাজেট',
-    cat1_detail: 'প্রতিটা পণ্যের রং আর মেমরি অপশন',
-    cat2_name: 'পোশাক',
-    cat2_detail: 'সাইজ আর রং অপশন, সহজে দেখা যায়',
-    cat3_name: 'খাবার',
-    cat3_detail: 'ওজন, প্যাক সাইজ, আর মেয়াদ তারিখ',
+    who_title: 'তৈরি স্টোর ডিজাইন',
+    who_sub: 'আপনি যা বিক্রি করেন তার সাথে মানানসই ডিজাইন বেছে নিন, তারপর নিজের মতো সাজান।',
+    tpl_cta: 'ফ্রি শুরু করুন',
+    tpl1: 'ফ্যাশন স্টোর',
+    tpl2: 'মুদি ও খাবার',
+    tpl3: 'বেবি কেয়ার',
+    tpl4: 'ফার্নিচার',
+    tpl5: 'বই',
+    tpl6: 'পোষা প্রাণীর দোকান',
+    tpl7: 'মেডিকেল ও কেয়ার',
+    tpl8: 'গ্যাজেট',
 
     run_title: 'নতুন দোকানের সব দরকার, একসাথে',
     run_sub: 'পেমেন্ট, ডেলিভারি, আর প্রোডাক্ট লিস্টিং — আগে তিনটা আলাদা ঝামেলা ছিল। এখন সব এক অ্যাপেই আছে।',
+    run_chip: 'অ্যাপেই আছে',
+    run_learn: 'আরও জানুন',
 
     f1_eyebrow: 'অর্ডার ও ডেলিভারি',
     f1_title: 'পুরো ব্যবসা চালান এক স্ক্রিন থেকে',
@@ -357,8 +367,13 @@ const LangContext = createContext<{
 });
 
 function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>('en');
-  const toggle = () => setLang((l) => (l === 'en' ? 'bn' : 'en'));
+  const [lang, setLang] = useState<Lang>(readStoredLang);
+  const toggle = () =>
+    setLang((l) => {
+      const next: Lang = l === 'en' ? 'bn' : 'en';
+      storeLang(next);
+      return next;
+    });
   const t = (key: Key) => dict[lang][key];
   return (
     <LangContext.Provider value={{ lang, toggle, t }}>
@@ -437,74 +452,6 @@ function AnimatedNumber({ value, duration = 700 }: { value: number; duration?: n
 }
 
 
-// Dock-style hover for the header links: the links near the pointer spring a
-// little wider and lower, more the closer they are. Tuned with the numbers
-// from ThreeUI's "Sable" dock (our own spring, not their source).
-const DOCK = { proximity: 122, spring: 0.19, damping: 0.7, widthGrowth: 17, heightGrowth: 16, drop: 3.5 };
-
-function useDockHover<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    const nav = ref.current;
-    if (!nav || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const items = Array.from(nav.querySelectorAll<HTMLElement>('[data-dock-item]'));
-    const state = items.map(() => ({ x: 0, v: 0, target: 0 }));
-    let pointerX: number | null = null;
-    let frame = 0;
-
-    const apply = (el: HTMLElement, k: number) => {
-      el.style.paddingInline = `${12 + (DOCK.widthGrowth * k) / 2}px`;
-      el.style.paddingBlock = `${6 + (DOCK.heightGrowth * k) / 2}px`;
-      el.style.transform = `translateY(${DOCK.drop * k}px)`;
-      el.style.backgroundColor = `rgba(255,255,255,${0.12 * Math.min(1, k)})`;
-    };
-
-    const tick = () => {
-      let moving = false;
-      items.forEach((el, i) => {
-        const s = state[i];
-        s.v = (s.v + (s.target - s.x) * DOCK.spring) * DOCK.damping;
-        s.x += s.v;
-        if (Math.abs(s.v) > 0.001 || Math.abs(s.target - s.x) > 0.001) moving = true;
-        else s.x = s.target;
-        apply(el, Math.max(0, s.x));
-      });
-      frame = moving ? requestAnimationFrame(tick) : 0;
-    };
-
-    const retarget = () => {
-      items.forEach((el, i) => {
-        if (pointerX === null) {
-          state[i].target = 0;
-          return;
-        }
-        const r = el.getBoundingClientRect();
-        const k = Math.max(0, 1 - Math.abs(pointerX - (r.left + r.width / 2)) / DOCK.proximity);
-        state[i].target = k * k * (3 - 2 * k);
-      });
-      if (!frame) frame = requestAnimationFrame(tick);
-    };
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
-      pointerX = e.clientX;
-      retarget();
-    };
-    const onLeave = () => {
-      pointerX = null;
-      retarget();
-    };
-    nav.addEventListener('pointermove', onMove, { passive: true });
-    nav.addEventListener('pointerleave', onLeave);
-    return () => {
-      cancelAnimationFrame(frame);
-      nav.removeEventListener('pointermove', onMove);
-      nav.removeEventListener('pointerleave', onLeave);
-      items.forEach((el) => el.removeAttribute('style'));
-    };
-  }, []);
-  return ref;
-}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -514,21 +461,34 @@ function HomeInner() {
   const navigate = useNavigate();
   const { t, lang, toggle } = useLang();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const dockRef = useDockHover<HTMLElement>();
 
-  // Navbar: fully transparent over the hero, glass effect once scrolled.
-  const [scrolled, setScrolled] = useState(false);
+  // Day / night for the whole page. The hero, pricing and closing sections are
+  // dark by design in both modes; the rest of the page follows this.
+  const [night, setNight] = useState(readStoredNight);
+  const toggleTheme = () =>
+    setNight((v) => {
+      storeNight(!v);
+      return !v;
+    });
+
+  // Arriving from the login / sign up bar with /#pricing and the like: scroll
+  // to that section once the page is drawn.
+  const { hash } = useLocation();
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash]);
 
-  const categories = [
-    { icon: Boxes, name: t('cat1_name'), detail: t('cat1_detail') },
-    { icon: Shirt, name: t('cat2_name'), detail: t('cat2_detail') },
-    { icon: Apple, name: t('cat3_name'), detail: t('cat3_detail') },
+  // Our own store screenshots (tall, full-page), kept in public/templates/.
+  // Eight cards = two rows of four.
+  const templates = [
+    { name: t('tpl1'), image: '/templates/fashion.png' },
+    { name: t('tpl2'), image: '/templates/grocery.png' },
+    { name: t('tpl3'), image: '/templates/baby-care.png' },
+    { name: t('tpl4'), image: '/templates/furniture.png' },
+    { name: t('tpl5'), image: '/templates/books.png' },
+    { name: t('tpl6'), image: '/templates/pets.png' },
+    { name: t('tpl7'), image: '/templates/medical.png' },
+    { name: t('tpl8'), image: '/templates/gadgets.png' },
   ];
 
   const features = [
@@ -536,6 +496,14 @@ function HomeInner() {
     { title: t('feat2_title'), detail: t('feat2_detail') },
     { title: t('feat3_title'), detail: t('feat3_detail') },
     { title: t('feat4_title'), detail: t('feat4_detail') },
+  ];
+
+  // The four pictures of the hero rail, in the order they should be met.
+  const heroSlides = [
+    { image: '/hero/slide-1.jpg', alt: 'A seller showing the Regantify dashboard on two phones, with courier and payment logos around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
+    { image: '/hero/slide-2.jpg', alt: 'A delivery rider with parcels and the Pathao, Steadfast and RedX logos', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
+    { image: '/hero/slide-3.jpg', alt: 'A shopkeeper holding a phone with bKash, Nagad, Rocket and Upay payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
+    { image: '/hero/slide-4.jpg', alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
   ];
 
   const runYourBusiness = [
@@ -714,7 +682,9 @@ function HomeInner() {
   }, [chartOpen]);
 
   return (
-    <div className="bg-white text-[#1A1A1A]">
+    // `dark:` variants only match INSIDE an element that has the class, so the class sits on a wrapper.
+    <div className={night ? 'dark' : ''}>
+    <div className="bg-white text-[#1A1A1A] transition-colors duration-300 dark:bg-[#141414] dark:text-white">
       {/* Local keyframes for the animated pricing section + chart popup */}
       <style>{`
         @keyframes rg-fade-up {
@@ -778,109 +748,42 @@ function HomeInner() {
         }
       `}</style>
 
-      {/* Header — floating bar, fully transparent over the hero; dark glass after
-          scroll so the links stay readable over the light sections */}
-      <header className="fixed top-0 inset-x-0 z-30 px-4 pt-4">
-        <div
-          className={`max-w-6xl mx-auto h-[60px] flex items-center justify-between pl-5 pr-2.5 rounded-2xl
-            border transition-all duration-300 ${
-              scrolled
-                ? 'bg-[#1A1A1A]/60 backdrop-blur-xl border-white/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)]'
-                : 'bg-transparent border-transparent'
-            }`}
-        >
-          <a href="#" className="flex items-center gap-2.5">
-            <Store className="text-[#95BF47]" size={24} strokeWidth={2} />
-            <span className="text-white text-xl font-semibold leading-none">Regantify</span>
-          </a>
-          <nav ref={dockRef} className="hidden md:flex items-center gap-1 py-2 text-sm text-white/75">
-            <a href="#categories" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_who')}</a>
-            <a href="#run" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_services')}</a>
-            <a href="#features" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_features')}</a>
-            <a href="#pricing" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_pricing')}</a>
-            <a href="#faq" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_faq')}</a>
-          </nav>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={toggle}
-              aria-label="Toggle language"
-              title={lang === 'en' ? 'বাংলা' : 'English'}
-              className="h-9 w-9 inline-flex items-center justify-center rounded-lg text-white/85
-                hover:text-white hover:bg-white/10 transition-colors"
-            >
-              <Languages size={17} />
-            </button>
-            <button
-              onClick={() => navigate('/vendor/login')}
-              className="hidden sm:inline-flex px-3.5 py-2 rounded-lg text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors"
-            >
-              {t('nav_login')}
-            </button>
-            <button
-              onClick={() => navigate('/vendor/signup')}
-              className="ml-1 px-4 py-2 rounded-lg text-sm font-semibold bg-[#95BF47] text-[#1A1A1A]
-                hover:bg-[#84AD3D] transition-colors"
-            >
-              {t('nav_start')}
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* Header: shared with the login / sign up pages. Transparent over the hero,
+          dark glass once scrolled. */}
+      <SiteNav lang={lang} onToggleLang={toggle} variant="hero" night={night} onToggleTheme={toggleTheme} light={!night} />
 
-      {/* Hero — full-bleed background image, copy overlaid.
-          Extra top padding since the navbar is now fixed/transparent
-          and sits on top of the hero instead of taking its own space. */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/hero.png" alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/90 via-[#1A1A1A]/70 to-[#1A1A1A]/20" />
-        </div>
+      {/* Hero: dark theme background, copy on top, the 4 product pictures in a
+          looping 3D rail underneath. The navbar is fixed and transparent, hence
+          the extra top padding. */}
+      <section className="relative overflow-hidden bg-[#F3F7EC] dark:bg-[#1A1A1A] transition-colors duration-300 min-h-screen flex flex-col justify-center pt-[92px] pb-8">
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-[156px] pb-28">
-          <span className="inline-flex items-center gap-2 text-sm font-medium text-white bg-[#008060] px-3 py-1.5 rounded-full mb-6">
-            {t('hero_tag')}
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-bold leading-[1.15] text-white max-w-xl">
+        <div className="relative max-w-6xl mx-auto px-6 flex flex-col items-center text-center">
+          <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.2] text-[#1A1A1A] dark:text-white max-w-3xl">
             {t('hero_title')}
           </h1>
-          <p className="mt-5 text-lg text-white/85 max-w-md leading-relaxed">
+          <p className="mt-4 text-lg sm:text-xl text-[#008060] dark:text-[#95BF47] font-medium">
             {t('hero_sub')}
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => navigate('/vendor/signup')}
-              className="px-6 py-3.5 rounded-full bg-[#95BF47] text-[#1A1A1A] font-medium
-                hover:bg-[#84AD3D] transition-colors inline-flex items-center gap-2"
-            >
-              {t('hero_cta')}
-              <ArrowUpRight size={18} />
-            </button>
-            <a
-              href="#pricing"
-              className="px-6 py-3.5 rounded-full border border-white/40 text-white font-medium
-                hover:border-white/70 transition-colors"
-            >
-              {t('hero_cta_2')}
-            </a>
-          </div>
-          <p className="mt-4 text-sm text-white/70">{t('hero_note')}</p>
+        </div>
+
+        <div className="relative mt-6">
+          <HeroFilmstrip slides={heroSlides} label={t('hero_carousel_label')} />
         </div>
       </section>
 
-      {/* Who it's for */}
-      <section id="categories" className="bg-white border-y border-black/10">
-        <div className="max-w-6xl mx-auto px-6 py-16">
+      {/* Ready-made store designs (nav link: #categories) */}
+      <section
+        id="categories"
+        className="relative overflow-hidden border-y border-black/10 bg-[#F3F7EC] dark:border-white/10 dark:bg-[#0F130D]"
+      >
+        <div className="relative max-w-6xl mx-auto px-6 py-16">
           <h2 className="text-2xl font-bold mb-2">{t('who_title')}</h2>
-          <p className="text-[#1A1A1A]/60 mb-10 max-w-lg">{t('who_sub')}</p>
-          <div className="grid sm:grid-cols-3 gap-6">
-            {categories.map((cat) => (
-              <div key={cat.name} className="p-6 rounded-2xl bg-[#F1F1F1]">
-                <cat.icon size={26} strokeWidth={1.75} className="text-[#008060]" />
-                <h3 className="mt-4 font-semibold">{cat.name}</h3>
-                <p className="mt-1.5 text-sm text-[#1A1A1A]/60">{cat.detail}</p>
-              </div>
-            ))}
-          </div>
+          <p className="text-[#1A1A1A]/60 dark:text-white/60 mb-10 max-w-lg">{t('who_sub')}</p>
+          <TemplateShowcase
+            templates={templates}
+            ctaLabel={t('tpl_cta')}
+            onCta={() => navigate('/vendor/signup')}
+          />
         </div>
       </section>
 
@@ -888,36 +791,50 @@ function HomeInner() {
       <section id="run" className="max-w-6xl mx-auto px-6 py-20">
         <div className="max-w-xl">
           <h2 className="text-2xl font-bold">{t('run_title')}</h2>
-          <p className="mt-3 text-[#1A1A1A]/60">{t('run_sub')}</p>
+          <p className="mt-3 text-[#1A1A1A]/60 dark:text-white/60">{t('run_sub')}</p>
         </div>
 
-        <div className="mt-14 space-y-4">
+        <div className="mt-14 space-y-20 md:space-y-24">
           {runYourBusiness.map((item, i) => {
             const imageFirst = i % 2 === 1;
             return (
-              <div
-                key={item.title}
-                className="grid md:grid-cols-2 gap-0 rounded-2xl overflow-hidden bg-white border border-black/10"
-              >
-                <div className={`p-8 md:p-10 flex flex-col justify-center ${imageFirst ? 'md:order-2' : ''}`}>
-                  <span className="text-xs font-medium text-[#008060]">{item.eyebrow}</span>
-                  <h3 className="mt-2 text-xl font-semibold leading-snug">{item.title}</h3>
-                  <p className="mt-3 text-sm text-[#1A1A1A]/60 leading-relaxed max-w-md">{item.detail}</p>
-                  <ul className="mt-5 space-y-2.5">
+              <div key={item.title} className="grid md:grid-cols-2 items-center gap-10 md:gap-16">
+                <div className={imageFirst ? 'md:order-2' : ''}>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#008060]/30 bg-[#008060]/[0.06] px-4 py-2 text-sm font-medium text-[#008060] dark:border-[#95BF47]/30 dark:bg-[#95BF47]/10 dark:text-[#95BF47]">
+                    <Zap size={16} />
+                    {item.eyebrow}
+                  </span>
+                  <h3 className="mt-5 text-3xl sm:text-4xl font-bold leading-tight">{item.title}</h3>
+                  <p className="mt-4 text-base sm:text-lg text-[#1A1A1A]/60 dark:text-white/60 leading-relaxed max-w-lg">{item.detail}</p>
+                  <ul className="mt-7 grid gap-x-8 gap-y-4 sm:grid-cols-2">
                     {item.bullets.map((b) => (
-                      <li key={b} className="flex items-start gap-2.5 text-sm">
-                        <Check size={16} className="text-[#008060] mt-0.5 shrink-0" />
+                      <li key={b} className="flex items-start gap-3 text-[15px] text-[#1A1A1A]/70 dark:text-white/70">
+                        <CheckCircle2 size={22} strokeWidth={1.5} className="mt-px shrink-0 text-[#008060] dark:text-[#95BF47]" />
                         <span>{b}</span>
                       </li>
                     ))}
                   </ul>
+                  <a
+                    href="#features"
+                    className="mt-8 inline-flex items-center gap-2 rounded-lg border border-[#008060]/30 px-5 py-3 text-sm font-medium transition-colors hover:bg-[#008060]/[0.06] dark:border-[#95BF47]/30 dark:hover:bg-[#95BF47]/10"
+                  >
+                    {t('run_learn')}
+                    <ArrowRight size={16} />
+                  </a>
                 </div>
-                <div className={`relative min-h-[280px] ${imageFirst ? 'md:order-1' : ''}`}>
-                  <img
-                    src={item.image}
-                    alt={item.alt}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                <div className={`relative ${imageFirst ? 'md:order-1' : ''}`}>
+                  <div className="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-[0_25px_60px_-20px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-[#1C1C1C]">
+                    <img src={item.image} alt={item.alt} className="block w-full h-auto" />
+                  </div>
+                  <div className="absolute -top-5 right-3 sm:-right-4 flex items-center gap-3 rounded-2xl border border-[#008060]/25 bg-white px-4 py-3 shadow-lg dark:border-[#95BF47]/30 dark:bg-[#1C1C1C]">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#008060]/10 text-[#008060] dark:bg-[#95BF47]/15 dark:text-[#95BF47]">
+                      <Zap size={20} />
+                    </span>
+                    <span className="leading-tight">
+                      <span className="block text-xs text-[#1A1A1A]/50 dark:text-white/50">{t('run_chip')}</span>
+                      <span className="block text-sm font-semibold">{item.bullets[0]}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -926,7 +843,7 @@ function HomeInner() {
       </section>
 
       {/* Features */}
-      <section id="features" className="bg-[#F1F1F1] border-y border-black/10">
+      <section id="features" className="bg-[#F1F1F1] border-y border-black/10 dark:bg-[#1A1A1A] dark:border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <h2 className="text-2xl font-bold mb-10">{t('feat_title')}</h2>
           <div className="grid sm:grid-cols-2 gap-x-10 gap-y-10">
@@ -937,7 +854,7 @@ function HomeInner() {
                 </div>
                 <div>
                   <h3 className="font-semibold">{f.title}</h3>
-                  <p className="mt-1.5 text-sm text-[#1A1A1A]/60">{f.detail}</p>
+                  <p className="mt-1.5 text-sm text-[#1A1A1A]/60 dark:text-white/60">{f.detail}</p>
                 </div>
               </div>
             ))}
@@ -950,18 +867,6 @@ function HomeInner() {
           numbers, hover-lift, shimmer on the popular plan. The full
           feature comparison chart is hidden and opens in a popup. */}
       <section id="pricing" className="relative overflow-hidden bg-[#1A1A1A]">
-        {/* Drifting background glows */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="rg-blob absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-[#95BF47]/20 blur-3xl" />
-          <div
-            className="rg-blob absolute top-1/3 -right-32 w-[460px] h-[460px] rounded-full bg-[#008060]/30 blur-3xl"
-            style={{ animationDelay: '-5s' }}
-          />
-          <div
-            className="rg-blob absolute -bottom-32 left-1/3 w-[380px] h-[380px] rounded-full bg-[#95BF47]/10 blur-3xl"
-            style={{ animationDelay: '-9s' }}
-          />
-        </div>
 
         <div ref={pricingRef} className="relative max-w-6xl mx-auto px-6 py-24">
           <div className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}>
@@ -1154,20 +1059,20 @@ function HomeInner() {
           aria-label={t('pricing_chart_title')}
         >
           <div
-            className="rg-pop-in relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden"
+            className="rg-pop-in relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden dark:bg-[#1C1C1C] dark:text-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Popup header */}
-            <div className="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-4 border-b border-black/10">
+            <div className="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-4 border-b border-black/10 dark:border-white/10">
               <div>
                 <h3 className="text-xl font-bold">{t('pricing_chart_title')}</h3>
-                <p className="mt-1 text-sm text-[#1A1A1A]/60">{t('pricing_chart_sub')}</p>
+                <p className="mt-1 text-sm text-[#1A1A1A]/60 dark:text-white/60">{t('pricing_chart_sub')}</p>
               </div>
               <button
                 onClick={() => setChartOpen(false)}
                 aria-label={t('pricing_close')}
-                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#F1F1F1]
-                  hover:bg-[#1A1A1A] hover:text-white hover:rotate-90 transition-all duration-300"
+                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#F1F1F1] dark:bg-white/10
+                  hover:bg-[#1A1A1A] hover:text-white dark:hover:bg-white/20 hover:rotate-90 transition-all duration-300"
               >
                 <X size={18} />
               </button>
@@ -1183,22 +1088,22 @@ function HomeInner() {
                   ))}
                 </colgroup>
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-[#F1F1F1]">
-                    <th className="text-left font-semibold px-5 py-3.5 border-b border-black/10">
+                  <tr className="bg-[#F1F1F1] dark:bg-[#262626]">
+                    <th className="text-left font-semibold px-5 py-3.5 border-b border-black/10 dark:border-white/10">
                       {t('pricing_feature_col')}
                     </th>
                     {plans.map((plan) => (
                       <th
                         key={plan.key}
-                        className={`text-left font-semibold px-5 py-3.5 border-b border-black/10 ${
-                          plan.highlighted ? 'bg-[#1A1A1A] text-white' : ''
+                        className={`text-left font-semibold px-5 py-3.5 border-b border-black/10 dark:border-white/10 ${
+                          plan.highlighted ? 'bg-[#1A1A1A] text-white dark:bg-black/50' : ''
                         }`}
                       >
                         {plan.highlighted && plan.badge && (
                           <div className="text-[10px] font-medium text-[#95BF47] mb-0.5">{plan.badge}</div>
                         )}
                         {plan.name}
-                        <div className={`mt-0.5 text-xs font-medium ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/50'}`}>
+                        <div className={`mt-0.5 text-xs font-medium ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/50 dark:text-white/50'}`}>
                           {plan.monthlyPrice === 0
                             ? '৳0'
                             : billing === 'yearly'
@@ -1213,18 +1118,18 @@ function HomeInner() {
                   {featureRows.map((row, i) => (
                     <tr
                       key={row.label}
-                      className={`rg-row-in ${i % 2 === 1 ? 'bg-[#F1F1F1]/40' : ''}`}
+                      className={`rg-row-in ${i % 2 === 1 ? 'bg-[#F1F1F1]/40 dark:bg-white/[0.03]' : ''}`}
                       style={{ animationDelay: `${0.1 + i * 0.035}s` }}
                     >
-                      <td className="px-5 py-3.5 border-b border-black/10 text-[#1A1A1A]/80 font-medium">
+                      <td className="px-5 py-3.5 border-b border-black/10 dark:border-white/10 text-[#1A1A1A]/80 dark:text-white/80 font-medium">
                         {row.label}
                       </td>
                       {row.values.map((val, j) => (
                         <td
                           key={j}
-                          className={`px-5 py-3.5 border-b border-black/10 ${
-                            plans[j].highlighted ? 'bg-[#1A1A1A]/[0.03]' : ''
-                          } ${val === '✓' ? 'text-[#008060] font-medium' : val === '—' ? 'text-[#1A1A1A]/30' : 'text-[#1A1A1A]/75'}`}
+                          className={`px-5 py-3.5 border-b border-black/10 dark:border-white/10 ${
+                            plans[j].highlighted ? 'bg-[#1A1A1A]/[0.03] dark:bg-white/[0.04]' : ''
+                          } ${val === '✓' ? 'text-[#008060] dark:text-[#95BF47] font-medium' : val === '—' ? 'text-[#1A1A1A]/30 dark:text-white/30' : 'text-[#1A1A1A]/75 dark:text-white/75'}`}
                         >
                           {val}
                         </td>
@@ -1236,10 +1141,10 @@ function HomeInner() {
             </div>
 
             {/* Popup footer */}
-            <div className="px-6 sm:px-8 py-4 border-t border-black/10 flex items-center justify-end gap-3 bg-white">
+            <div className="px-6 sm:px-8 py-4 border-t border-black/10 dark:border-white/10 flex items-center justify-end gap-3 bg-white dark:bg-[#1C1C1C]">
               <button
                 onClick={() => setChartOpen(false)}
-                className="px-5 py-2.5 rounded-full text-sm font-medium border border-black/15 hover:border-black/40 transition-colors"
+                className="px-5 py-2.5 rounded-full text-sm font-medium border border-black/15 hover:border-black/40 dark:border-white/20 dark:hover:border-white/50 transition-colors"
               >
                 {t('pricing_close')}
               </button>
@@ -1259,10 +1164,10 @@ function HomeInner() {
       )}
 
       {/* FAQ */}
-      <section id="faq" className="bg-white border-y border-black/10">
+      <section id="faq" className="bg-white border-y border-black/10 dark:bg-[#141414] dark:border-white/10">
         <div className="max-w-3xl mx-auto px-6 py-20">
           <h2 className="text-2xl font-bold mb-10">{t('faq_title')}</h2>
-          <div className="divide-y divide-black/10 border-t border-b border-black/10">
+          <div className="divide-y divide-black/10 border-t border-b border-black/10 dark:divide-white/10 dark:border-white/10">
             {faqs.map((item, i) => {
               const open = openFaq === i;
               return (
@@ -1273,12 +1178,12 @@ function HomeInner() {
                   >
                     <span className="font-medium">{item.q}</span>
                     {open ? (
-                      <Minus size={18} className="shrink-0 text-[#1A1A1A]/50" />
+                      <Minus size={18} className="shrink-0 text-[#1A1A1A]/50 dark:text-white/50" />
                     ) : (
-                      <Plus size={18} className="shrink-0 text-[#1A1A1A]/50" />
+                      <Plus size={18} className="shrink-0 text-[#1A1A1A]/50 dark:text-white/50" />
                     )}
                   </button>
-                  {open && <p className="pb-5 text-sm text-[#1A1A1A]/60 max-w-xl leading-relaxed">{item.a}</p>}
+                  {open && <p className="pb-5 text-sm text-[#1A1A1A]/60 dark:text-white/60 max-w-xl leading-relaxed">{item.a}</p>}
                 </div>
               );
             })}
@@ -1309,20 +1214,21 @@ function HomeInner() {
       </section>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#1A1A1A]/60">
+      <footer className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#1A1A1A]/60 dark:text-white/60">
         <div className="flex items-center gap-2">
           <Store size={18} />
           <span>Regantify</span>
         </div>
         <div className="flex items-center gap-6">
-          <button onClick={() => navigate('/vendor/login')} className="hover:text-[#1A1A1A]">
+          <button onClick={() => navigate('/vendor/login')} className="hover:text-[#1A1A1A] dark:hover:text-white">
             {t('footer_vendor')}
           </button>
-          <button onClick={() => navigate('/admin/login')} className="hover:text-[#1A1A1A]">
+          <button onClick={() => navigate('/admin/login')} className="hover:text-[#1A1A1A] dark:hover:text-white">
             {t('footer_admin')}
           </button>
         </div>
       </footer>
+    </div>
     </div>
   );
 }
