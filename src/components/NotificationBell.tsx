@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { notificationsApi, type NotificationList, type VendorNotification } from '../lib/notificationsApi';
 import { DayHeading, NotificationRow, groupByDay } from './notifications/notificationUi';
 import { alertFor, takeNewForAlert } from '../lib/notificationAlerts';
+import { syncPush } from '../lib/pushNotifications';
+import { useAuthStore } from '../store/authStore';
 
 // The feed is written by the server where events really happen (withdraw
 // approved/rejected/paid, wallet top-up, plan changes, new orders, reviews...),
@@ -21,6 +23,13 @@ export function NotificationBell() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
+
+  // A person who turned phone notifications on for this browser gets it re-registered when the dashboard opens.
+  const userId = useAuthStore((s) => s.user?.id);
+  const role = useAuthStore((s) => s.user?.role);
+  useEffect(() => {
+    if (userId && role !== 'SUPER_ADMIN') void syncPush(userId);
+  }, [userId, role]);
 
   const { data, isLoading } = useQuery({
     queryKey: QUERY_KEY,

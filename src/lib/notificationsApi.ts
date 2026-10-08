@@ -47,10 +47,36 @@ export const notificationsApi = {
 
   getSettings: () => api.get<NotificationSettings>('/v1/notifications/settings').then((r) => r.data),
 
+  // -- Phone notifications (push), see lib/pushNotifications.ts --
+  pushConfig: () => api.get<PushConfig>('/v1/notifications/push/config').then((r) => r.data),
+  pushDevices: () => api.get<PushDevice[]>('/v1/notifications/push/devices').then((r) => r.data),
+  pushSubscribe: (body: { endpoint: string; keys: { p256dh: string; auth: string }; deviceName?: string; topics?: PushTopic[] }) =>
+    api.post<PushDevice>('/v1/notifications/push/subscribe', body).then((r) => r.data),
+  pushUnsubscribe: (endpoint: string) => api.post('/v1/notifications/push/unsubscribe', { endpoint }).then((r) => r.data),
+  pushTopics: (endpoint: string, topics: PushTopic[]) => api.patch('/v1/notifications/push/topics', { endpoint, topics }).then((r) => r.data),
+  pushTest: () => api.post<{ sent: number; devices: number }>('/v1/notifications/push/test').then((r) => r.data),
+
   /** Owner only. `smsPhone: ''` goes back to the owner's own phone. */
   updateSettings: (patch: Partial<Omit<NotificationSettings, 'ownerPhone' | 'smsPhone'>> & { smsPhone?: string }) =>
     api.patch<NotificationSettings>('/v1/notifications/settings', patch).then((r) => r.data),
 };
+
+/** What a phone or browser can be told about (the bell topics). */
+export type PushTopic = 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK';
+
+export interface PushConfig {
+  /** False while the server has no VAPID keys: phone notifications are off for everyone. */
+  enabled: boolean;
+  publicKey: string | null;
+}
+
+export interface PushDevice {
+  id: string;
+  endpoint: string;
+  topics: PushTopic[];
+  deviceName: string | null;
+  createdAt: string;
+}
 
 /** Notifications > Alert settings, the store's SMS part (paid from its SMS credits). */
 export interface NotificationSettings {
