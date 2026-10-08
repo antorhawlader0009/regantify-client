@@ -34,6 +34,16 @@ const TRIGGERS: { value: CodVerificationTrigger; label: string; hint: string }[]
   },
 ];
 
+// How long the shopper has to enter the after-checkout SMS code (CodGuardSettings.verificationExpiryHours).
+const EXPIRY_CHOICES: { value: string; label: string }[] = [
+  { value: '6', label: 'After 6 hours' },
+  { value: '12', label: 'After 12 hours' },
+  { value: '24', label: 'After 24 hours (recommended)' },
+  { value: '48', label: 'After 2 days' },
+  { value: '72', label: 'After 3 days' },
+  { value: 'never', label: 'Never (I handle them myself)' },
+];
+
 export default function CodGuard() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['cod-guard-settings'], queryFn: storeSettingsApi.getCodGuard });
@@ -317,6 +327,45 @@ export default function CodGuard() {
                 </p>
               )}
             </div>
+
+            {isSms && form.verificationTrigger === 'AFTER_CHECKOUT' && (
+              <div className="rounded-xl border border-black/10 p-4">
+                <p className="text-sm font-medium text-regantify-text mb-2">If the shopper never enters the code</p>
+                <select
+                  value={form.verificationExpiryHours === null ? 'never' : String(form.verificationExpiryHours)}
+                  onChange={(e) => set('verificationExpiryHours', e.target.value === 'never' ? null : Number(e.target.value))}
+                  aria-label="Time allowed to enter the code"
+                  className="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
+                    focus:outline-none focus:border-regantify-cta transition-colors"
+                >
+                  {EXPIRY_CHOICES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                {form.verificationExpiryHours !== null && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <Radio
+                      name="verificationExpiryHold"
+                      label="Cancel the order (stock goes back)"
+                      checked={!form.verificationExpiryHold}
+                      onChange={() => set('verificationExpiryHold', false)}
+                    />
+                    <Radio
+                      name="verificationExpiryHold"
+                      label="Keep it On Hold and tell me, so I can call the customer"
+                      checked={form.verificationExpiryHold}
+                      onChange={() => set('verificationExpiryHold', true)}
+                    />
+                  </div>
+                )}
+                <p className="text-xs text-regantify-text-muted mt-2">
+                  Without this, an order whose code is never entered stays On Hold forever with its stock taken. Only orders from the
+                  last 7 days are looked at, and a code entered after the time is refused with an explanation.
+                </p>
+              </div>
+            )}
 
             {isSms && (
               <p className="text-xs text-regantify-text-muted">

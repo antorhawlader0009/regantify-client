@@ -45,6 +45,10 @@ export interface CodGuardSettings {
   // A new storefront order that looks like a copy of an open one (same phone and product within 24 hours)
   // starts On Hold instead of Pending. It is marked either way.
   duplicateOrderHold: boolean;
+  // After-checkout SMS code: hours the shopper has to enter it before the order is dealt with; null = never.
+  verificationExpiryHours: number | null;
+  // false = the order is cancelled (stock goes back); true = it stays On Hold and the store is told to call.
+  verificationExpiryHold: boolean;
 }
 
 // Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.
