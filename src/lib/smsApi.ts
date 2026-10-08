@@ -33,13 +33,42 @@ export const smsApi = {
   sendCampaign: (target: SmsCampaignTarget & { message: string }) =>
     api.post<{ queued: number; totalCredits: number }>('/v1/sms/campaign', target).then((r) => r.data),
 
+  /** "Send later": saved to go out at `sendAt` (an ISO time, 8 AM to 10 PM Dhaka). Nothing is sent or charged now. */
+  scheduleCampaign: (target: SmsCampaignTarget & { message: string; sendAt: string }) =>
+    api.post<{ scheduled: true; id: string; sendAt: string; recipients: number; totalCredits: number }>('/v1/sms/campaign', target).then((r) => r.data),
+
+  /** Upcoming campaigns first, then what already went out. */
+  listScheduled: () => api.get<ScheduledSms[]>('/v1/sms/campaign/scheduled').then((r) => r.data),
+
+  /** Cancels a campaign that hasn't started. */
+  cancelScheduled: (id: string) => api.delete(`/v1/sms/campaign/scheduled/${id}`).then((r) => r.data),
+
   /** One SMS to one customer (Order detail). */
   sendSingle: (phone: string, message: string) =>
     api.post<{ smsCredits: number }>('/v1/sms/send', { phone, message }).then((r) => r.data),
 };
 
 /** Who an SMS campaign goes to (SMS_AUDIENCES on the server). */
-export type SmsAudience = 'ALL' | 'RECENT' | 'SELECTED' | 'TAG';
+export type SmsAudience = 'ALL' | 'RECENT' | 'INACTIVE' | 'SELECTED' | 'TAG';
+
+export type ScheduledSmsStatus = 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED' | 'CANCELLED';
+
+/** A campaign saved for later (or already out). `recipients` and `sentCount` are filled in when it goes out. */
+export interface ScheduledSms {
+  id: string;
+  message: string;
+  audience: SmsAudience;
+  days: number | null;
+  tag: string | null;
+  /** How many hand-picked customers (audience SELECTED). */
+  selectedCount: number;
+  sendAt: string;
+  status: ScheduledSmsStatus;
+  recipients: number | null;
+  sentCount: number | null;
+  error: string | null;
+  sentAt: string | null;
+}
 
 export interface SmsCampaignTarget {
   audience: SmsAudience;
