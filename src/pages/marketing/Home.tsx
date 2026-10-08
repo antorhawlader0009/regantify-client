@@ -28,8 +28,8 @@ const dict = {
     nav_features: 'Features',
     nav_pricing: 'Pricing',
     nav_faq: 'FAQ',
-    nav_login: 'Login',
-    nav_start: 'Start free',
+    nav_login: 'Sign In',
+    nav_start: 'Start for free',
 
     hero_title: 'Sell anything. Run it from one screen.',
     hero_sub: 'Regantify gives you a shop, an order list, and a way to get paid — all in one simple app.',
@@ -436,6 +436,76 @@ function AnimatedNumber({ value, duration = 700 }: { value: number; duration?: n
   return <>{display.toLocaleString('en-US')}</>;
 }
 
+
+// Dock-style hover for the header links: the links near the pointer spring a
+// little wider and lower, more the closer they are. Tuned with the numbers
+// from ThreeUI's "Sable" dock (our own spring, not their source).
+const DOCK = { proximity: 122, spring: 0.19, damping: 0.7, widthGrowth: 17, heightGrowth: 16, drop: 3.5 };
+
+function useDockHover<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    const nav = ref.current;
+    if (!nav || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const items = Array.from(nav.querySelectorAll<HTMLElement>('[data-dock-item]'));
+    const state = items.map(() => ({ x: 0, v: 0, target: 0 }));
+    let pointerX: number | null = null;
+    let frame = 0;
+
+    const apply = (el: HTMLElement, k: number) => {
+      el.style.paddingInline = `${12 + (DOCK.widthGrowth * k) / 2}px`;
+      el.style.paddingBlock = `${6 + (DOCK.heightGrowth * k) / 2}px`;
+      el.style.transform = `translateY(${DOCK.drop * k}px)`;
+      el.style.backgroundColor = `rgba(255,255,255,${0.12 * Math.min(1, k)})`;
+    };
+
+    const tick = () => {
+      let moving = false;
+      items.forEach((el, i) => {
+        const s = state[i];
+        s.v = (s.v + (s.target - s.x) * DOCK.spring) * DOCK.damping;
+        s.x += s.v;
+        if (Math.abs(s.v) > 0.001 || Math.abs(s.target - s.x) > 0.001) moving = true;
+        else s.x = s.target;
+        apply(el, Math.max(0, s.x));
+      });
+      frame = moving ? requestAnimationFrame(tick) : 0;
+    };
+
+    const retarget = () => {
+      items.forEach((el, i) => {
+        if (pointerX === null) {
+          state[i].target = 0;
+          return;
+        }
+        const r = el.getBoundingClientRect();
+        const k = Math.max(0, 1 - Math.abs(pointerX - (r.left + r.width / 2)) / DOCK.proximity);
+        state[i].target = k * k * (3 - 2 * k);
+      });
+      if (!frame) frame = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'mouse') return;
+      pointerX = e.clientX;
+      retarget();
+    };
+    const onLeave = () => {
+      pointerX = null;
+      retarget();
+    };
+    nav.addEventListener('pointermove', onMove, { passive: true });
+    nav.addEventListener('pointerleave', onLeave);
+    return () => {
+      cancelAnimationFrame(frame);
+      nav.removeEventListener('pointermove', onMove);
+      nav.removeEventListener('pointerleave', onLeave);
+      items.forEach((el) => el.removeAttribute('style'));
+    };
+  }, []);
+  return ref;
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -444,6 +514,7 @@ function HomeInner() {
   const navigate = useNavigate();
   const { t, lang, toggle } = useLang();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const dockRef = useDockHover<HTMLElement>();
 
   // Navbar: fully transparent over the hero, glass effect once scrolled.
   const [scrolled, setScrolled] = useState(false);
@@ -707,45 +778,48 @@ function HomeInner() {
         }
       `}</style>
 
-      {/* Header — fixed + transparent over the hero, glass blur after scroll */}
-      <header
-        className={`fixed top-0 inset-x-0 z-30 transition-all duration-300 ${
-          scrolled
-            ? 'bg-[#1A1A1A]/70 backdrop-blur-xl border-b border-white/10 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.5)]'
-            : 'bg-transparent border-b border-transparent'
-        }`}
-      >
-        <div className="max-w-6xl mx-auto h-[76px] flex items-center justify-between px-6">
-          <div className="flex items-center gap-2.5">
-            <Store className="text-[#95BF47]" size={26} strokeWidth={2} />
+      {/* Header — floating bar, fully transparent over the hero; dark glass after
+          scroll so the links stay readable over the light sections */}
+      <header className="fixed top-0 inset-x-0 z-30 px-4 pt-4">
+        <div
+          className={`max-w-6xl mx-auto h-[60px] flex items-center justify-between pl-5 pr-2.5 rounded-2xl
+            border transition-all duration-300 ${
+              scrolled
+                ? 'bg-[#1A1A1A]/60 backdrop-blur-xl border-white/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)]'
+                : 'bg-transparent border-transparent'
+            }`}
+        >
+          <a href="#" className="flex items-center gap-2.5">
+            <Store className="text-[#95BF47]" size={24} strokeWidth={2} />
             <span className="text-white text-xl font-semibold leading-none">Regantify</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-7 text-sm text-white/75">
-            <a href="#categories" className="hover:text-white transition-colors">{t('nav_who')}</a>
-            <a href="#run" className="hover:text-white transition-colors">{t('nav_services')}</a>
-            <a href="#features" className="hover:text-white transition-colors">{t('nav_features')}</a>
-            <a href="#pricing" className="hover:text-white transition-colors">{t('nav_pricing')}</a>
-            <a href="#faq" className="hover:text-white transition-colors">{t('nav_faq')}</a>
+          </a>
+          <nav ref={dockRef} className="hidden md:flex items-center gap-1 py-2 text-sm text-white/75">
+            <a href="#categories" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_who')}</a>
+            <a href="#run" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_services')}</a>
+            <a href="#features" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_features')}</a>
+            <a href="#pricing" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_pricing')}</a>
+            <a href="#faq" data-dock-item className="rounded-full px-3 py-1.5 hover:text-white transition-colors will-change-transform">{t('nav_faq')}</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={toggle}
               aria-label="Toggle language"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium text-white/85
-                border border-white/25 hover:border-white/50 hover:text-white transition-colors"
+              title={lang === 'en' ? 'বাংলা' : 'English'}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-lg text-white/85
+                hover:text-white hover:bg-white/10 transition-colors"
             >
-              <Languages size={15} />
-              {lang === 'en' ? 'বাংলা' : 'English'}
+              <Languages size={17} />
             </button>
             <button
               onClick={() => navigate('/vendor/login')}
-              className="hidden sm:inline-flex px-3.5 py-2 rounded-full text-sm font-medium text-white/85 hover:text-white transition-colors"
+              className="hidden sm:inline-flex px-3.5 py-2 rounded-lg text-sm font-medium text-white/85 hover:text-white hover:bg-white/10 transition-colors"
             >
               {t('nav_login')}
             </button>
             <button
               onClick={() => navigate('/vendor/signup')}
-              className="px-4 py-2 rounded-full text-sm font-medium bg-[#95BF47] text-[#1A1A1A] hover:bg-[#84AD3D] transition-colors"
+              className="ml-1 px-4 py-2 rounded-lg text-sm font-semibold bg-[#95BF47] text-[#1A1A1A]
+                hover:bg-[#84AD3D] transition-colors"
             >
               {t('nav_start')}
             </button>
