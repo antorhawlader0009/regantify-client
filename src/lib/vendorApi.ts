@@ -82,6 +82,10 @@ export interface DeliveryCharges {
   // that zone), days to get an order ready, and the weekdays that don't count (0 = Sunday ... 6 = Saturday).
   insideDhakaDays: number | null;
   outsideDhakaDays: number | null;
+  // "Around Dhaka" (Savar, Gazipur, Narayanganj...): an optional third zone, StorePal checkout only.
+  aroundDhakaEnabled: boolean;
+  aroundDhakaCharge: string;
+  aroundDhakaDays: number | null;
   deliveryProcessingDays: number;
   deliveryOffDays: number[];
 }
@@ -92,6 +96,9 @@ export interface DeliveryChargesUpdate {
   vatChargeBdt?: number;
   insideDhakaDays?: number | null;
   outsideDhakaDays?: number | null;
+  aroundDhakaEnabled?: boolean;
+  aroundDhakaCharge?: number;
+  aroundDhakaDays?: number | null;
   deliveryProcessingDays?: number;
   deliveryOffDays?: number[];
 }

@@ -40,6 +40,11 @@ export interface CodGuardSettings {
   advanceMinOrder: string | number | null;
   // The advance isn't paid within an hour: true = the order goes On Hold for a call, false = Payment failed.
   advanceUnpaidHold: boolean;
+  // Pre-order advance: a COD order with pre-order products pays this % of them online first; null = off.
+  preOrderAdvancePercent: number | null;
+  // A new storefront order that looks like a copy of an open one (same phone and product within 24 hours)
+  // starts On Hold instead of Pending. It is marked either way.
+  duplicateOrderHold: boolean;
 }
 
 // Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.

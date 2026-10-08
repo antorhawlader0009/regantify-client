@@ -102,7 +102,7 @@ export interface Order {
   // RedX's single delivery-area id, set via RedxLocationPicker — RedX
   // has only one location tier, unlike Pathao's city/zone/area cascade.
   redxAreaId?: number | null;
-  deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA';
+  deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA';
   subtotal: string;
   deliveryCharge: string;
   // Flat VAT fee, shown to shoppers as "VAT" (StorePal) — applied to
@@ -141,6 +141,12 @@ export interface Order {
   advanceNote?: string | null;
   /** Order detail only: Customers > "Note & tags" on this phone; null when there are none. */
   vendorCustomerNote?: { note: string | null; tags: string[] } | null;
+  /** What an online advance is for (DELIVERY = delivery charge, PREORDER = pre-order products); null = no advance. */
+  advanceFor?: 'DELIVERY' | 'PREORDER' | null;
+  /** The earlier order this one may be a copy of (same phone and product within 24 hours); null = not flagged. */
+  possibleDuplicateOfId?: string | null;
+  /** Order detail only: that earlier order's summary, for the warning box. */
+  possibleDuplicateOf?: { id: string; invoiceNumber: number; publicCode?: string | null; status: OrderStatus; createdAt: string } | null;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
@@ -255,6 +261,8 @@ export interface ListOrdersParams {
   courierBooking?: 'NOT_BOOKED' | 'FAILED';
   /** Where it came from: the online store, added by hand, or sold at the counter (POS). */
   source?: 'STOREFRONT' | 'MANUAL' | 'POS';
+  /** Only orders marked as a possible duplicate of an earlier one. */
+  possibleDuplicate?: boolean;
   page?: number;
   perPage?: number;
 }
@@ -311,7 +319,7 @@ export interface CreateOrderPayload {
   shippingZip?: string;
   shippingCity?: string;
   shippingDistrict?: string;
-  deliveryZone?: 'DHAKA' | 'OUTSIDE_DHAKA';
+  deliveryZone?: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA';
   // Optional Pathao location (Add Order) — City → Zone → Area, may stop early.
   pathaoCityId?: number;
   pathaoZoneId?: number;
@@ -351,6 +359,10 @@ export const ordersApi = {
   /** "Advance received": amount 0 clears it. */
   updateAdvance: (id: string, amount: number, note?: string) =>
     api.patch<Order>(`/v1/orders/${id}/advance`, { amount, note }).then((r) => r.data),
+
+  /** Order detail's "Not a duplicate": clears the possible-duplicate mark. */
+  dismissDuplicate: (id: string) =>
+    api.post<{ id: string; possibleDuplicateOfId: null }>(`/v1/orders/${id}/not-duplicate`).then((r) => r.data),
 
   updateLabel: (id: string, label: string | null) =>
     api.patch<Order>(`/v1/orders/${id}/label`, { label }).then((r) => r.data),

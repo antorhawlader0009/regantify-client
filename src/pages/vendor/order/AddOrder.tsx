@@ -44,7 +44,7 @@ export interface CreateOrderFromIncompleteState {
   exchangeForOrderId?: string;
 }
 
-type ChargeMode = 'DHAKA' | 'OUTSIDE_DHAKA' | 'CUSTOM';
+type ChargeMode = 'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA' | 'CUSTOM';
 
 function formatPrice(value: number) {
   return `৳${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -213,10 +213,13 @@ export default function AddOrder() {
     queryKey: ['vendor-delivery-charges'],
     queryFn: getVendorDeliveryCharges,
   });
-  const DELIVERY_CHARGE: Record<'DHAKA' | 'OUTSIDE_DHAKA', number> = {
+  const DELIVERY_CHARGE: Record<'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA', number> = {
     DHAKA: Number(deliveryCharges?.insideDhakaCharge ?? 70),
+    AROUND_DHAKA: Number(deliveryCharges?.aroundDhakaCharge ?? 100),
     OUTSIDE_DHAKA: Number(deliveryCharges?.outsideDhakaCharge ?? 130),
   };
+  // Store > Delivery Charge > Around Dhaka: offered only while the vendor has it on.
+  const aroundDhakaOn = deliveryCharges?.aroundDhakaEnabled === true;
   const vatAmount = Number(deliveryCharges?.vatChargeBdt ?? 10);
 
   const addToCart = (product: Product) => {
@@ -318,7 +321,7 @@ export default function AddOrder() {
       shippingZip: shippingZip.trim() || undefined,
       shippingCity: shippingCity.trim() || undefined,
       shippingDistrict: shippingDistrict.trim() || undefined,
-      deliveryZone: chargeMode === 'DHAKA' || chargeMode === 'OUTSIDE_DHAKA' ? chargeMode : undefined,
+      deliveryZone: chargeMode === 'DHAKA' || chargeMode === 'OUTSIDE_DHAKA' || chargeMode === 'AROUND_DHAKA' ? chargeMode : undefined,
       ...(pathaoConnected
         ? {
             pathaoCityId: pathaoLocation.cityId ?? undefined,
@@ -670,6 +673,7 @@ export default function AddOrder() {
                   onChange={(id) => setChargeMode(id === 'NONE' ? null : id)}
                   options={[
                     { id: 'DHAKA', label: `Dhaka ৳${DELIVERY_CHARGE.DHAKA}` },
+                    ...(aroundDhakaOn ? [{ id: 'AROUND_DHAKA' as const, label: `Around ৳${DELIVERY_CHARGE.AROUND_DHAKA}` }] : []),
                     { id: 'OUTSIDE_DHAKA', label: `Outside ৳${DELIVERY_CHARGE.OUTSIDE_DHAKA}` },
                     { id: 'CUSTOM', label: 'Other' },
                   ]}

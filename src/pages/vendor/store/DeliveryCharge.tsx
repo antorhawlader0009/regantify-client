@@ -115,6 +115,12 @@ export default function DeliveryCharge() {
         </form>
       </section>
 
+      <AroundDhakaSection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
+
       <DeliveryTimeSection
         charges={charges}
         disabled={isLoading}
@@ -125,6 +131,117 @@ export default function DeliveryCharge() {
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/**
+ * "Around Dhaka": an optional third delivery zone for Savar, Ashulia, Gazipur, Tongi, Narayanganj, Keraniganj
+ * and nearby, because couriers price them between Dhaka and the rest of the country. Off by default, so
+ * nothing changes until the vendor turns it on. StorePal's checkout offers it as a third shipping option
+ * (and picks it from the district when the shopper has not chosen one); other themes keep two.
+ */
+function AroundDhakaSection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [enabled, setEnabled] = useState(false);
+  const [charge, setCharge] = useState('100');
+  const [days, setDays] = useState('');
+
+  useEffect(() => {
+    if (!charges) return;
+    setEnabled(charges.aroundDhakaEnabled);
+    setCharge(String(Number(charges.aroundDhakaCharge)));
+    setDays(charges.aroundDhakaDays === null ? '' : String(charges.aroundDhakaDays));
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      const amount = Number(charge);
+      if (!Number.isFinite(amount) || amount < 0) throw new Error('Enter the charge as a number.');
+      return updateVendorDeliveryCharges({
+        aroundDhakaEnabled: enabled,
+        aroundDhakaCharge: amount,
+        aroundDhakaDays: days.trim() === '' ? null : Number(days),
+      });
+    },
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Around Dhaka saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save Around Dhaka. Check the numbers and try again.')),
+  });
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-medium text-regantify-text">Around Dhaka</h2>
+          <p className="text-sm text-regantify-text-muted mt-1">
+            A third delivery option for Savar, Ashulia, Gazipur, Tongi, Narayanganj, Keraniganj and nearby, with its own
+            charge. Without it those shoppers pay either the Dhaka or the outside-Dhaka charge.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-regantify-text shrink-0 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={enabled}
+            disabled={disabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            className="h-4 w-4 accent-regantify-cta"
+          />
+          On
+        </label>
+      </div>
+
+      <div className={`grid sm:grid-cols-2 gap-4 mt-4 ${enabled ? '' : 'opacity-60'}`}>
+        <div>
+          <label className="block text-sm font-medium text-regantify-text mb-1.5">Around Dhaka (৳)</label>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            value={charge}
+            disabled={disabled || !enabled}
+            onChange={(e) => setCharge(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-regantify-text mb-1.5">Delivery time (working days)</label>
+          <input
+            type="number"
+            min={0}
+            max={60}
+            step={1}
+            inputMode="numeric"
+            value={days}
+            disabled={disabled || !enabled}
+            onChange={(e) => setDays(e.target.value)}
+            className={inputClass}
+          />
+          <p className="text-xs text-regantify-text-muted mt-1.5">Blank = no &ldquo;Expected by&rdquo; date for this zone.</p>
+        </div>
+      </div>
+
+      <p className="text-xs text-regantify-text-muted mt-3">
+        Works on the StorePal theme. Orders you add yourself can use it too.
+      </p>
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-4 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save Around Dhaka'}
+      </button>
+    </section>
+  );
+}
 
 /**
  * "Delivery time" (tracking-plan.md Step 7): how many working days a parcel takes, so shoppers see an

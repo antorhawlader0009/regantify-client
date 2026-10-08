@@ -40,6 +40,8 @@ export default function CodGuard() {
   const [form, setForm] = useState<CodGuardSettings | null>(null);
   // The minimum cart for the advance, as typed ("" = every order).
   const [minOrderText, setMinOrderText] = useState('');
+  // The pre-order advance percentage, as typed ("" = off).
+  const [preOrderText, setPreOrderText] = useState('');
 
   const minOrderToText = (value: CodGuardSettings['advanceMinOrder']) => (value ? String(Number(value)) : '');
 
@@ -47,6 +49,7 @@ export default function CodGuard() {
     if (data) {
       setForm(data);
       setMinOrderText(minOrderToText(data.advanceMinOrder));
+      setPreOrderText(data.preOrderAdvancePercent ? String(data.preOrderAdvancePercent) : '');
     }
   }, [data]);
 
@@ -54,6 +57,7 @@ export default function CodGuard() {
     queryClient.setQueryData(['cod-guard-settings'], updated);
     setForm(updated);
     setMinOrderText(minOrderToText(updated.advanceMinOrder));
+    setPreOrderText(updated.preOrderAdvancePercent ? String(updated.preOrderAdvancePercent) : '');
     toast.success(message);
   };
 
@@ -83,10 +87,45 @@ export default function CodGuard() {
       toast.error('Enter the minimum order amount as a number, or leave it empty for every order.');
       return;
     }
-    save.mutate({ ...form, advanceMinOrder: form.advanceEnabled && minOrder ? minOrder : null });
+    const preOrder = preOrderText.trim() === '' ? null : Number(preOrderText);
+    if (preOrder !== null && (!Number.isInteger(preOrder) || preOrder < 0 || preOrder > 100)) {
+      toast.error('Enter the pre-order advance as a whole percentage from 1 to 100, or leave it empty to turn it off.');
+      return;
+    }
+    save.mutate({
+      ...form,
+      advanceMinOrder: form.advanceEnabled && minOrder ? minOrder : null,
+      preOrderAdvancePercent: preOrder && preOrder > 0 ? preOrder : null,
+    });
   };
 
   const isSms = form?.verificationType === 'SMS';
+  const preOrderOn = preOrderText.trim() !== '' && Number(preOrderText) > 0;
+
+  // What happens to an order whose advance isn't paid in an hour: shared by the delivery-charge advance and
+  // the pre-order advance, shown under whichever is on.
+  const unpaidChoice = form ? (
+    <div>
+      <p className="text-sm font-medium text-regantify-text mb-2">If the shopper doesn't pay within an hour</p>
+      <div className="flex flex-col gap-2">
+        <Radio
+          name="advanceUnpaidHold"
+          label="Cancel the order (Payment failed, stock goes back)"
+          checked={!form.advanceUnpaidHold}
+          onChange={() => set('advanceUnpaidHold', false)}
+        />
+        <Radio
+          name="advanceUnpaidHold"
+          label="Keep it On Hold so I can call the shopper"
+          checked={form.advanceUnpaidHold}
+          onChange={() => set('advanceUnpaidHold', true)}
+        />
+      </div>
+      <p className="text-xs text-regantify-text-muted mt-1.5">
+        An order kept On Hold is collected in full by the courier unless the shopper pays the advance later.
+      </p>
+    </div>
+  ) : null;
 
   return (
     <div className="max-w-3xl">
@@ -147,26 +186,7 @@ export default function CodGuard() {
                       focus:outline-none focus:border-regantify-cta transition-colors"
                   />
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-regantify-text mb-2">If the shopper doesn't pay within an hour</p>
-                  <div className="flex flex-col gap-2">
-                    <Radio
-                      name="advanceUnpaidHold"
-                      label="Cancel the order (Payment failed, stock goes back)"
-                      checked={!form.advanceUnpaidHold}
-                      onChange={() => set('advanceUnpaidHold', false)}
-                    />
-                    <Radio
-                      name="advanceUnpaidHold"
-                      label="Keep it On Hold so I can call the shopper"
-                      checked={form.advanceUnpaidHold}
-                      onChange={() => set('advanceUnpaidHold', true)}
-                    />
-                  </div>
-                  <p className="text-xs text-regantify-text-muted mt-1.5">
-                    An order kept On Hold is collected in full by the courier unless the shopper pays the advance later.
-                  </p>
-                </div>
+                {unpaidChoice}
                 <ul className="text-xs text-regantify-text-muted space-y-1 list-disc pl-4">
                   <li>
                     Needs <b>Online Payment</b> to be on in{' '}
@@ -186,6 +206,55 @@ export default function CodGuard() {
                 </ul>
               </div>
             )}
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-base font-medium text-regantify-text">Advance for pre-order products</h2>
+            <p className="text-xs text-regantify-text-muted mt-1.5">
+              Products you brought in on pre-order are the ones shoppers are most likely to leave unpaid. With this on, a shopper who
+              chooses Cash on Delivery first pays this share of the pre-order products online, and the rest in cash when they arrive.
+              If the order also has a delivery-charge advance above, the larger of the two is taken, not both.
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                inputMode="numeric"
+                value={preOrderText}
+                onChange={(e) => setPreOrderText(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                placeholder="Off"
+                aria-label="Pre-order advance percentage"
+                className="w-28 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
+                  focus:outline-none focus:border-regantify-cta transition-colors"
+              />
+              <span className="text-sm text-regantify-text">% of the pre-order products</span>
+            </div>
+            <ul className="mt-3 text-xs text-regantify-text-muted space-y-1 list-disc pl-4">
+              <li>
+                Needs <b>Online Payment</b> to be on in{' '}
+                <Link to="/vendor/store/payment-gateway" className="text-regantify-cta hover:underline">
+                  Payment Gateway
+                </Link>{' '}
+                and the StorePal theme. Products are marked Pre-order on their own page.
+              </li>
+              <li>The full amount goes to your wallet. The payment page adds the same small processing fee as the delivery-charge advance.</li>
+            </ul>
+            {preOrderOn && !form.advanceEnabled && <div className="mt-4">{unpaidChoice}</div>}
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <Checkbox
+              checked={form.duplicateOrderHold}
+              onChange={(v) => set('duplicateOrderHold', v)}
+              label="Hold possible duplicate orders"
+            />
+            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+              When the same phone orders the same product again within 24 hours of an open order, the new order is always marked
+              &ldquo;Possible duplicate&rdquo; and you get a notice. With this on it also starts <b>On Hold</b>, so it can&apos;t ship
+              until you check with the customer and move it on. Orders that are paid online are marked but not held.
+            </p>
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">

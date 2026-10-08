@@ -399,6 +399,15 @@ function OrderRow({
       </td>
       <td className={td}>
         <OrderStatusBadge status={order.status} />
+        {order.possibleDuplicateOfId && (
+          <p
+            className="mt-1 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900"
+            title="Same phone and product as an earlier open order within 24 hours. Open the order to check."
+          >
+            <Copy size={10} aria-hidden />
+            Possible duplicate
+          </p>
+        )}
         {order.courierProvider !== 'NONE' && (
           <>
             <p className="mt-1.5 text-xs text-neutral-500">{COURIER_LABELS[order.courierProvider]}</p>
@@ -728,6 +737,9 @@ export default function Orders() {
   const [callStatus, setCallStatus] = useState<ListOrdersParams['callStatus'] | ''>('');
   // POS-system-plan.md D9: online / added by hand / sold at the counter.
   const [source, setSource] = useState<ListOrdersParams['source'] | ''>('');
+  // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
+  // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
+  const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
   const lmsMe = useQuery({ queryKey: ['lms', 'me'], queryFn: lmsApi.me, retry: false, staleTime: 5 * 60_000 });
   // What this person's role can do on this page (rule-plan.md Step 10); the server checks each again.
   const canCreate = useCan('orders.create');
@@ -751,7 +763,7 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -832,7 +844,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -843,6 +855,7 @@ export default function Orders() {
         callStatus: (lmsOn && callStatus) || undefined,
         courierBooking,
         source: source || undefined,
+        possibleDuplicate: duplicatesOnly || undefined,
         page,
         perPage,
       }),
@@ -870,6 +883,7 @@ export default function Orders() {
                 callStatus: (lmsOn && callStatus) || undefined,
                 courierBooking,
                 source: source || undefined,
+                possibleDuplicate: duplicatesOnly || undefined,
                 page: 1,
                 perPage: 10000,
               })
@@ -978,6 +992,16 @@ export default function Orders() {
                 </select>
                 <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
               </div>
+              <button
+                type="button"
+                aria-pressed={duplicatesOnly}
+                onClick={() => setDuplicatesOnly((v) => !v)}
+                title="Orders that look like a second copy of an open one (same phone and product within 24 hours)"
+                className={`${toolbarBtn} ${duplicatesOnly ? 'border-amber-300 bg-amber-50 text-amber-900' : ''}`}
+              >
+                <Copy size={15} />
+                Possible duplicates
+              </button>
               {lmsOn && (
                 <div className="relative">
                   <select
@@ -1181,7 +1205,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>

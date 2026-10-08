@@ -74,7 +74,7 @@ export function OrderAdvanceCard({ order, onChanged }: { order: Order; onChanged
   if (waitingOnline) {
     return (
       <p className="text-sm text-neutral-600">
-        Waiting for the customer to pay the <b>{money(advance)}</b> delivery charge online. The order moves to Pending as soon as it is paid.
+        Waiting for the customer to pay the <b>{money(advance)}</b> {order.advanceFor === 'PREORDER' ? 'pre-order advance' : 'delivery charge'} online. The order moves to Pending as soon as it is paid.
       </p>
     );
   }

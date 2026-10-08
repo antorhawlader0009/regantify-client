@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
 import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
@@ -214,6 +214,16 @@ export default function OrderDetail() {
     queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
     queryClient.invalidateQueries({ queryKey: ['orders'] });
   };
+
+  // "Not a duplicate" on the possible-duplicate warning.
+  const notDuplicate = useMutation({
+    mutationFn: () => ordersApi.dismissDuplicate(id!),
+    onSuccess: () => {
+      invalidateOrder();
+      toast.success('Marked as not a duplicate.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not update the order. Please try again.')),
+  });
 
   const refreshCourierMutation = useMutation({
     mutationFn: () => courierApi.refreshStatus(id!),
@@ -463,6 +473,37 @@ export default function OrderDetail() {
           </div>
         ))}
       </div>
+
+      {/* Same phone and product as an earlier open order within 24 hours (OrdersService.findPossibleDuplicate). */}
+      {order.possibleDuplicateOfId && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+          <Copy size={16} className="shrink-0 text-amber-700" aria-hidden />
+          <p className="min-w-0 flex-1 text-sm text-amber-900">
+            <span className="font-medium">Possible duplicate.</span> This customer ordered the same product again within 24 hours
+            {order.possibleDuplicateOf ? (
+              <>
+                {' '}
+                (earlier order{' '}
+                <Link to={`/vendor/orders/${order.possibleDuplicateOf.id}`} className="font-medium underline underline-offset-2">
+                  {orderRef(order.possibleDuplicateOf)}
+                </Link>
+                , {orderStatusLabel(order.possibleDuplicateOf.status)})
+              </>
+            ) : null}
+            . Check with the customer before you ship both.
+          </p>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => notDuplicate.mutate()}
+              disabled={notDuplicate.isPending}
+              className="shrink-0 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+            >
+              Not a duplicate
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Customers > "Note & tags" on this phone, so whoever calls sees it first. */}
       {order.vendorCustomerNote && (
