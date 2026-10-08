@@ -12,7 +12,7 @@ export interface VendorNotification {
   /** In-app route, e.g. /vendor/orders/<id>. */
   link: string | null;
   /** What exactly happened, for the sound / SMS alerts; null for everything else. */
-  topic: 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK' | null;
+  topic: 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK' | 'DAILY_SUMMARY' | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -90,7 +90,7 @@ export interface TelegramChat {
 }
 
 /** What a phone or browser can be told about (the bell topics). */
-export type PushTopic = 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK';
+export type PushTopic = 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK' | 'DAILY_SUMMARY';
 
 export interface PushConfig {
   /** False while the server has no VAPID keys: phone notifications are off for everyone. */
@@ -116,5 +116,9 @@ export interface NotificationSettings {
   smsPhone: string | null;
   /** No SMS 10 PM to 8 AM. */
   smsQuietHours: boolean;
+  /** The end-of-day summary (bell, plus the phones and Telegram chats that ticked it). */
+  dailySummary: boolean;
+  /** Dhaka hour, 0-23. */
+  dailySummaryHour: number;
   ownerPhone: string | null;
 }

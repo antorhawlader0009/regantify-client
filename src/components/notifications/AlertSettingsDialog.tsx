@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, MessageSquare, Monitor } from 'lucide-react';
+import { Bell, ClipboardList, MessageSquare, Monitor } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Dialog } from '../ui/Dialog';
 import { ToggleRow } from '../product/ProductFormKit';
@@ -85,6 +85,19 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the SMS alerts. Please try again.')),
   });
 
+  // The end-of-day summary: saved the moment it is changed (owner only).
+  const saveSummary = useMutation({
+    mutationFn: (patch: { dailySummary?: boolean; dailySummaryHour?: number }) => notificationsApi.updateSettings(patch),
+    onMutate: (patch) => {
+      queryClient.setQueryData<NotificationSettings>(SETTINGS_KEY, (old) => (old ? { ...old, ...patch } : old));
+    },
+    onSuccess: (saved) => queryClient.setQueryData(SETTINGS_KEY, saved),
+    onError: (err) => {
+      toast.error(apiErrorMessage(err, 'Could not save the daily summary. Please try again.'));
+      void queryClient.invalidateQueries({ queryKey: SETTINGS_KEY });
+    },
+  });
+
   const anySms = draft ? draft.smsNewOrder || draft.smsOrderAttention || draft.smsPlanEnding || draft.smsLowStock : false;
   const set = (patch: Partial<NotificationSettings>) => setDraft((d) => (d ? { ...d, ...patch } : d));
 
@@ -96,6 +109,44 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
         <PhoneNotificationsSection open={open} />
 
         <TelegramSection open={open} />
+
+        <section className="border-t border-line pt-5">
+          <SectionTitle
+            icon={ClipboardList}
+            title="Daily summary"
+            hint="One message at the end of the day: orders and sales so far, orders still pending, products running low. Free (no SMS credits)."
+          />
+          {!settings ? (
+            <div className="h-16 animate-pulse rounded-lg bg-neutral-100" aria-busy />
+          ) : (
+            <fieldset disabled={!isOwner} className="space-y-4 disabled:opacity-70">
+              <ToggleRow
+                checked={settings.dailySummary}
+                onChange={(on) => saveSummary.mutate({ dailySummary: on })}
+                label="Send me a daily summary"
+                hint="It always shows in the bell. To get it on a phone or in Telegram, tick “Daily summary” for that device or chat above."
+              />
+              {settings.dailySummary && (
+                <label className="block text-sm font-medium text-regantify-text">
+                  Send at
+                  <select
+                    value={settings.dailySummaryHour}
+                    onChange={(e) => saveSummary.mutate({ dailySummaryHour: Number(e.target.value) })}
+                    className="mt-1.5 block h-10 w-full rounded-lg border border-line bg-white px-3 text-sm font-normal sm:w-48"
+                  >
+                    {Array.from({ length: 24 }, (_, h) => (
+                      <option key={h} value={h}>
+                        {`${h % 12 === 0 ? 12 : h % 12}:00 ${h < 12 ? 'AM' : 'PM'}`}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-1 block text-xs font-normal text-neutral-500">Dhaka time. A day with no orders and nothing waiting sends nothing.</span>
+                </label>
+              )}
+              {!isOwner && <p className="text-xs text-neutral-500">Only the store owner can change the daily summary.</p>}
+            </fieldset>
+          )}
+        </section>
 
         <section className="border-t border-line pt-5">
           <SectionTitle icon={Monitor} title="On this device" hint="Saved in this browser only, so the shop PC and your laptop can differ. Only while the dashboard is open; use Phone notifications above for the rest." />

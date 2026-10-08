@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { X, ChevronLeft, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { StockHistoryDialog } from '../../../components/product/StockHistoryDialog';
 import {
   PhotoManager,
   PriceFields,
@@ -61,6 +62,15 @@ const JUMP_LINKS = [
   { id: 'stock', label: 'Stock' },
   { id: 'variations', label: 'Variations' },
 ];
+
+/** The stock counts of a product as one string, to tell whether a save changes any (variants matched by their option values). */
+function stockKeyOf(stockQuantity: string, variants: { optionValues: Record<string, string>; stock?: number }[]): string {
+  const own = variants.length > 0 ? '' : stockQuantity.trim();
+  const perVariant = variants
+    .map((v) => [Object.entries(v.optionValues).sort(([a], [b]) => a.localeCompare(b)).map(([k, val]) => `${k}=${val}`).join('|'), v.stock ?? 0])
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  return JSON.stringify([own, perVariant]);
+}
 
 export default function EditProduct() {
   const { id } = useParams<{ id: string }>();
@@ -164,6 +174,13 @@ export default function EditProduct() {
   const [variationOptions, setVariationOptions] = useState<VariationOptionInput[]>([]);
   const [variants, setVariants] = useState<ProductVariantInput[]>([]);
   const [variationPhotos, setVariationPhotos] = useState<VariationValuePhotoInput[]>([]);
+
+  // Stock history: when this save changes a stock count, the person says why (kept with the change).
+  const [loadedStockKey, setLoadedStockKey] = useState<string | null>(null);
+  const [stockReason, setStockReason] = useState<'' | 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER'>('');
+  const [stockNote, setStockNote] = useState('');
+  const [showStockHistory, setShowStockHistory] = useState(false);
+  const stockChanged = loadedStockKey !== null && loadedStockKey !== stockKeyOf(stockQuantity, variationOptions.length > 0 ? variants : []);
 
   const [formError, setFormError] = useState<string | null>(null);
   const displaySlug = slug.trim() || slugify(name) || 'your-product';
@@ -315,6 +332,9 @@ export default function EditProduct() {
     setMinOrderQuantity(p.minOrderQuantity ? String(p.minOrderQuantity) : '');
     setLowStockThreshold(p.lowStockThreshold != null ? String(p.lowStockThreshold) : '');
     setStockQuantity(p.stockQuantity != null ? String(p.stockQuantity) : '');
+    setLoadedStockKey(stockKeyOf(p.stockQuantity != null ? String(p.stockQuantity) : '', (p.variationOptions ?? []).length > 0 ? (p.variants ?? []) : []));
+    setStockReason('');
+    setStockNote('');
     setWeight(p.weight ?? '');
     setWeightUnit(p.weightUnit);
     setVariationOptions((p.variationOptions ?? []).map((o) => ({ name: o.name, values: o.values })));
@@ -418,6 +438,7 @@ export default function EditProduct() {
         // Always sent: an empty field goes back to the store default.
         lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : null,
         stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
+        ...(stockChanged ? { stockReason: stockReason || undefined, stockNote: stockNote.trim() || undefined } : {}),
         weight: weight.toString().trim() ? Number(weight) : undefined,
         weightUnit,
         variationOptions: variationOptions.filter((o) => o.values.length > 0),
@@ -726,6 +747,27 @@ export default function EditProduct() {
                 />
               </Field>
             </div>
+            {stockChanged && (
+              <div className="mt-4 grid gap-4 rounded-lg border border-line bg-neutral-50 px-3.5 py-3 sm:grid-cols-2">
+                <Field label="Why is the stock changing?" hint="Kept in this product’s stock history.">
+                  <select value={stockReason} onChange={(e) => setStockReason(e.target.value as typeof stockReason)} className={productInputClass}>
+                    <option value="">Not specified</option>
+                    <option value="RECEIVED">New stock received</option>
+                    <option value="DAMAGED">Damaged, lost or expired</option>
+                    <option value="COUNT">Counted the shelf and corrected</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </Field>
+                <Field label="Note" hint="Optional.">
+                  <input type="text" value={stockNote} onChange={(e) => setStockNote(e.target.value.slice(0, 300))} placeholder="e.g. supplier delivery" className={productInputClass} />
+                </Field>
+              </div>
+            )}
+            <div className="mt-3">
+              <button type="button" onClick={() => setShowStockHistory(true)} className="text-xs font-medium text-brand hover:underline">
+                View stock history
+              </button>
+            </div>
             <div className="mt-4 space-y-4 border-t border-line pt-4">
               <ToggleRow checked={isPreOrder} onChange={setIsPreOrder} label="Pre-order" hint="Shoppers can order it before it’s in stock." />
               <ToggleRow
@@ -911,6 +953,8 @@ export default function EditProduct() {
         </button>
       </SaveBar>
       )}
+
+      <StockHistoryDialog productId={product.id} open={showStockHistory} onOpenChange={setShowStockHistory} />
 
       <ConfirmDialog
         open={confirmDelete}

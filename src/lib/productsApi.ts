@@ -160,6 +160,32 @@ export interface VariationValuePhotoInput {
   photoUrls: string[];
 }
 
+/** One change to a stock count (Products > Edit > Stock history). */
+export interface StockMovement {
+  id: string;
+  variantLabel: string | null;
+  /** Negative = went out, positive = came in. */
+  delta: number;
+  stockBefore: number;
+  stockAfter: number;
+  /** ORDER, ORDER_BACK, ITEMS_EDITED, POS_SALE, POS_RETURN, CREATED, RECEIVED, DAMAGED, COUNT, EDIT, API. */
+  reason: string;
+  orderId: string | null;
+  orderRef: string | null;
+  actor: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface StockHistoryPage {
+  productName: string;
+  items: StockMovement[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 // Every field optional — a PATCH can update just one section (e.g. only
 // the variants table) without resending the whole form.
 export interface UpdateProductPayload {
@@ -194,6 +220,9 @@ export interface UpdateProductPayload {
   /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
   lowStockThreshold?: number | null;
   stockQuantity?: number;
+  /** Why stock was changed by hand in this save (kept in the stock history). */
+  stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';
+  stockNote?: string;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
   // When provided, REPLACES the product's full existing set — always
@@ -261,6 +290,10 @@ export const productsApi = {
     api.post<{ barcodes: string[] }>('/v1/products/barcodes/generate', { count }).then((r) => r.data.barcodes),
 
   findOne: (id: string) => api.get<Product>(`/v1/products/${id}`).then((r) => r.data),
+
+  /** Every change to the product's stock count, newest first. */
+  stockHistory: (id: string, page = 1) =>
+    api.get<StockHistoryPage>(`/v1/products/${id}/stock-history`, { params: { page } }).then((r) => r.data),
 
   create: (payload: CreateProductPayload) =>
     api.post<Product>('/v1/products', payload).then((r) => r.data),

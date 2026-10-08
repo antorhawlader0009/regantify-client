@@ -15,6 +15,7 @@ export const PUSH_TOPICS: { topic: PushTopic; label: string; hint: string }[] = 
   { topic: 'ORDER_ATTENTION', label: 'Problem orders', hint: 'A parcel stuck or late, a failed payment, a possible duplicate.' },
   { topic: 'PLAN_ENDING', label: 'Plan ending', hint: 'A few days before your plan ends.' },
   { topic: 'LOW_STOCK', label: 'Low stock', hint: 'When products go under their limit, at most once a day.' },
+  { topic: 'DAILY_SUMMARY', label: 'Daily summary', hint: 'Orders and sales at the end of the day, when the owner has turned it on.' },
 ];
 
 export type PushSupport =
