@@ -244,7 +244,7 @@ function OrderRow({
   };
 
   const statusMutation = useMutation({
-    mutationFn: ({ status, note, correction }: StatusChangeRequest) => ordersApi.updateStatus(order.id, status, note, correction),
+    mutationFn: ({ status, note, correction, reasonCode }: StatusChangeRequest) => ordersApi.updateStatus(order.id, status, note, correction, reasonCode),
     onSuccess: () => {
       invalidate();
       toast.success('Order status updated.');

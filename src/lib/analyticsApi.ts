@@ -196,7 +196,35 @@ export interface MarketingAnalytics {
 const get = <T,>(report: AnalyticsTab | 'delivery') => async (range: DateRange) =>
   (await api.get<T>(`/v1/analytics/${report}`, { params: { from: range.from, to: range.to } })).data;
 
+/** One reason an order ended without a sale (server/src/analytics/failed-orders-analytics.service.ts). */
+export interface FailedReasonRow {
+  /** Null = "No reason recorded". */
+  code: string | null;
+  label: string;
+  orders: number;
+  value: number;
+  previousOrders: number;
+  cancelled: number;
+  returned: number;
+  paymentFailed: number;
+}
+
+export interface FailedOrdersAnalytics {
+  period: AnalyticsPeriodInfo;
+  total: { current: { orders: number; value: number }; previous: { orders: number; value: number } };
+  cancelled: number;
+  returned: number;
+  paymentFailed: number;
+  /** Orders in the period that still have no reason: the share the owner can fix by adding one on the order. */
+  noReason: number;
+  reasons: FailedReasonRow[];
+  /** Customers with two or more cancelled or returned orders in the period. */
+  repeaters: { phone: string; name: string; orders: number; value: number; reasons: { code: string; label: string }[]; blacklisted: boolean }[];
+}
+
 export const analyticsApi = {
+  failedOrders: async (range: DateRange) =>
+    (await api.get<FailedOrdersAnalytics>('/v1/analytics/failed-orders', { params: { from: range.from, to: range.to } })).data,
   overview: get<OverviewAnalytics>('overview'),
   sales: get<SalesAnalytics>('sales'),
   orders: get<OrdersAnalytics>('orders'),

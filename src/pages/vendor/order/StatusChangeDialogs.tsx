@@ -3,10 +3,14 @@ import type { Order, OrderStatus } from '../../../lib/ordersApi';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { Dialog } from '../../../components/ui/Dialog';
 import { ALL_ORDER_STATUSES, orderStatusLabel } from './orderStatus';
+import { reasonChoices, type CloseReasonCode } from '../../../lib/closeReasons';
+import { CloseReasonSelect } from '../../../components/order/CloseReasonSelect';
 
 export interface StatusChangeRequest {
   status: OrderStatus;
   note?: string;
+  /** Why it was cancelled / returned (the dialog won't confirm without one). */
+  reasonCode?: CloseReasonCode;
   /** The owner's "Correct a mistake": outside the forward-only flow, with a reason (server checks both). */
   correction?: boolean;
 }
@@ -41,8 +45,12 @@ export function useStatusChangeDialogs({
   const [correcting, setCorrecting] = useState(false);
   const [target, setTarget] = useState<OrderStatus | ''>('');
   const [reason, setReason] = useState('');
+  // Why, asked when cancelling or returning (Analytics > Orders groups by it).
+  const [closeReason, setCloseReason] = useState<CloseReasonCode | ''>('');
+  const confirmChoices = confirming ? reasonChoices(confirming) : null;
 
   const request = (status: OrderStatus) => {
+    setCloseReason('');
     if (CONFIRM_TEXT[status]) setConfirming(status);
     else onChange({ status });
   };
@@ -65,14 +73,16 @@ export function useStatusChangeDialogs({
         message={
           <>
             {confirming && CONFIRM_TEXT[confirming]}
+            {confirmChoices && <CloseReasonSelect choices={confirmChoices} value={closeReason} onChange={setCloseReason} label="Why?" />}
             <span className="mt-2 block text-xs text-neutral-500">
               Clicked by mistake later? The store owner can fix it with Change status → Correct a mistake.
             </span>
           </>
         }
+        confirmDisabled={confirmChoices !== null && closeReason === ''}
         confirmLabel={confirming ? `Mark ${orderStatusLabel(confirming)}` : 'Confirm'}
         onConfirm={() => {
-          if (confirming) onChange({ status: confirming });
+          if (confirming) onChange({ status: confirming, ...(closeReason ? { reasonCode: closeReason } : {}) });
           setConfirming(null);
         }}
         danger={confirming === 'CANCELLED' || confirming === 'REFUNDED'}

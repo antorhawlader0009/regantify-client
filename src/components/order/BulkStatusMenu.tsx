@@ -9,6 +9,8 @@ import { ordersApi, type BulkOrderStatus, type BulkStatusResult } from '../../li
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { orderStatusLabel } from '../../pages/vendor/order/orderStatus';
+import { CANCEL_REASONS, type CloseReasonCode } from '../../lib/closeReasons';
+import { CloseReasonSelect } from './CloseReasonSelect';
 
 const STATUSES: BulkOrderStatus[] = ['PROCESSING', 'ON_HOLD', 'SHIPPING', 'COMPLETED', 'STOCK_OUT', 'CANCELLED'];
 /** Closing steps, asked about first (same as the single-order menu). */
@@ -22,9 +24,11 @@ export function BulkStatusMenu({ ids, canCancel, className, onDone }: { ids: str
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState<BulkOrderStatus | null>(null);
   const [result, setResult] = useState<BulkStatusResult | null>(null);
+  // Why, when cancelling many at once.
+  const [cancelReason, setCancelReason] = useState<CloseReasonCode | ''>('');
 
   const run = useMutation({
-    mutationFn: (status: BulkOrderStatus) => ordersApi.bulkUpdateStatus(ids, status),
+    mutationFn: (status: BulkOrderStatus) => ordersApi.bulkUpdateStatus(ids, status, undefined, status === 'CANCELLED' && cancelReason ? cancelReason : undefined),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       setConfirming(null);
@@ -38,7 +42,11 @@ export function BulkStatusMenu({ ids, canCancel, className, onDone }: { ids: str
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not change the status. Please try again.')),
   });
 
-  const choose = (status: BulkOrderStatus) => (ASK_FIRST.has(status) ? setConfirming(status) : run.mutate(status));
+  const choose = (status: BulkOrderStatus) => {
+    setCancelReason('');
+    if (ASK_FIRST.has(status)) setConfirming(status);
+    else run.mutate(status);
+  };
 
   return (
     <>
@@ -64,10 +72,16 @@ export function BulkStatusMenu({ ids, canCancel, className, onDone }: { ids: str
         onOpenChange={(open) => !open && setConfirming(null)}
         title={`Mark ${ids.length} ${ids.length === 1 ? 'order' : 'orders'} as ${confirming ? orderStatusLabel(confirming) : ''}?`}
         message={
-          confirming === 'CANCELLED'
-            ? 'These orders will be cancelled. This can’t be undone from the list.'
-            : 'These orders will be closed as completed, and the platform fee is taken for each one.'
+          confirming === 'CANCELLED' ? (
+            <>
+              These orders will be cancelled. This can’t be undone from the list.
+              <CloseReasonSelect choices={CANCEL_REASONS} value={cancelReason} onChange={setCancelReason} label="Why are they cancelled?" />
+            </>
+          ) : (
+            'These orders will be closed as completed, and the platform fee is taken for each one.'
+          )
         }
+        confirmDisabled={confirming === 'CANCELLED' && cancelReason === ''}
         confirmLabel={confirming === 'CANCELLED' ? 'Cancel orders' : 'Mark completed'}
         danger={confirming === 'CANCELLED'}
         busy={run.isPending}

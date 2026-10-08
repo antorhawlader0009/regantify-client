@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { CloseReasonCode, OrderCloseReason } from './closeReasons';
 
 export type OrderStatus =
   | 'PENDING'
@@ -147,6 +148,8 @@ export interface Order {
   possibleDuplicateOfId?: string | null;
   /** Order detail only: that earlier order's summary, for the warning box. */
   possibleDuplicateOf?: { id: string; invoiceNumber: number; publicCode?: string | null; status: OrderStatus; createdAt: string } | null;
+  /** Order detail only: why it was cancelled / returned / failed; null while it is in none of those states. */
+  closeReason?: OrderCloseReason | null;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
@@ -345,16 +348,20 @@ export const ordersApi = {
     api.post<Order>('/v1/orders', payload).then((r) => r.data),
 
   /** `correction`: the owner's "Correct a mistake", outside the forward-only flow (needs a `note`). */
-  updateStatus: (id: string, status: OrderStatus, note?: string, correction?: boolean) =>
-    api.patch<Order>(`/v1/orders/${id}/status`, { status, note, ...(correction && { correction: true }) }).then((r) => r.data),
+  updateStatus: (id: string, status: OrderStatus, note?: string, correction?: boolean, reasonCode?: CloseReasonCode) =>
+    api.patch<Order>(`/v1/orders/${id}/status`, { status, note, ...(correction && { correction: true }), ...(reasonCode && { reasonCode }) }).then((r) => r.data),
+
+  /** "Add the reason" on an order that was cancelled / returned / failed without one (or to change it). */
+  setCloseReason: (id: string, reasonCode: CloseReasonCode) =>
+    api.patch<OrderCloseReason>(`/v1/orders/${id}/close-reason`, { reasonCode }).then((r) => r.data),
 
   /** "Edit items": replaces the whole item list of a COD order not yet booked with a courier; the server works out the total and stock again. */
   updateItems: (id: string, payload: UpdateOrderItemsPayload) =>
     api.patch<Order>(`/v1/orders/${id}/items`, payload).then((r) => r.data),
 
   /** Orders list "Change status" for many orders; ones that can't move are skipped with a reason. */
-  bulkUpdateStatus: (ids: string[], status: BulkOrderStatus, note?: string) =>
-    api.post<BulkStatusResult>('/v1/orders/bulk-status', { ids, status, note }).then((r) => r.data),
+  bulkUpdateStatus: (ids: string[], status: BulkOrderStatus, note?: string, reasonCode?: CloseReasonCode) =>
+    api.post<BulkStatusResult>('/v1/orders/bulk-status', { ids, status, note, ...(reasonCode && { reasonCode }) }).then((r) => r.data),
 
   /** "Advance received": amount 0 clears it. */
   updateAdvance: (id: string, amount: number, note?: string) =>

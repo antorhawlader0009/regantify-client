@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Truck } from 'lucide-react';
-import type { DeliveryAnalytics, DeliveryCourier, DeliveryOutcome } from '../../../lib/analyticsApi';
+import type { DeliveryAnalytics, DeliveryCourier, DeliveryOutcome, FailedOrdersAnalytics } from '../../../lib/analyticsApi';
 import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, Share, StatCard, MobileRows } from '../../../components/analytics/AnalyticsUi';
 import { ColumnChart, PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
@@ -69,6 +69,7 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle?: string })
 export function OrdersTab({ range }: TabProps) {
   const orders = useAnalytics('orders', range);
   const delivery = useAnalytics('delivery', range);
+  const failed = useAnalytics('failedOrders', range);
   const compareLabel = COMPARE_LABEL;
 
   return (
@@ -172,8 +173,117 @@ export function OrdersTab({ range }: TabProps) {
 
       <TabState query={delivery}>{(data) => <DeliverySection data={data} compareLabel={compareLabel} />}</TabState>
 
+      <TabState query={failed}>{(data) => <FailedOrdersSection data={data} compareLabel={compareLabel} />}</TabState>
+
       <TrackingStats />
     </div>
+  );
+}
+
+/**
+ * Orders cancelled, returned or failed in the period, by the reason recorded when they were closed, against the
+ * period before (TellMe idea 5). A reason that is growing is the one to fix; "No reason recorded" is the share still
+ * to be filled in on the orders. Customers who keep costing orders are listed with a link to block them.
+ */
+function FailedOrdersSection({ data, compareLabel }: { data: FailedOrdersAnalytics; compareLabel: string }) {
+  const { total } = data;
+  const title = (
+    <SectionTitle
+      title="Why orders didn’t go through"
+      subtitle="Orders cancelled, returned or failed in this period, by the reason you picked when you closed them."
+    />
+  );
+
+  if (total.current.orders === 0 && total.previous.orders === 0) {
+    return (
+      <>
+        {title}
+        <Card>
+          <EmptyState text="No cancelled, returned or failed orders in this period." />
+        </Card>
+      </>
+    );
+  }
+
+  const known = data.reasons.filter((r) => r.orders > 0);
+  const missing = data.noReason;
+
+  return (
+    <>
+      {title}
+      <KpiStrip cols={4}>
+        <KpiCard label="Orders that failed" value={{ current: total.current.orders, previous: total.previous.orders }} kind="count" lowerIsBetter compareLabel={compareLabel} />
+        <KpiCard label="Sales lost" value={{ current: total.current.value, previous: total.previous.value }} kind="money" lowerIsBetter compareLabel={compareLabel} />
+        <StatCard label="Cancelled / returned" value={`${data.cancelled} / ${data.returned}`} hint={data.paymentFailed > 0 ? `and ${data.paymentFailed} with a failed payment` : undefined} />
+        <StatCard
+          label="Reason recorded"
+          value={`${Math.round(sharePct(total.current.orders - missing, total.current.orders))}%`}
+          hint={missing > 0 ? `${missing} still without one: open the order and add it` : 'every one has a reason'}
+        />
+      </KpiStrip>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card title="By reason" subtitle="Most orders first. The arrow is the change from the previous period.">
+          <BarList
+            labelHeader="Reason"
+            valueHeader="Orders"
+            emptyText="No reasons yet."
+            rows={known.map((r) => {
+              const change = r.orders - r.previousOrders;
+              return {
+                key: r.code ?? 'none',
+                label: r.label,
+                value: r.orders,
+                display: (
+                  <span className="inline-flex items-center gap-2">
+                    <span>
+                      {r.orders} <span className="font-normal text-neutral-500">({formatTaka(r.value)})</span>
+                    </span>
+                    {r.previousOrders > 0 || r.orders > 0 ? (
+                      <span
+                        className={`w-9 text-right text-xs ${change > 0 ? 'text-red-600' : change < 0 ? 'text-emerald-600' : 'text-neutral-400'}`}
+                        title={`${r.previousOrders} in the previous period`}
+                      >
+                        {change > 0 ? `▲${change}` : change < 0 ? `▼${-change}` : '–'}
+                      </span>
+                    ) : null}
+                  </span>
+                ),
+              };
+            })}
+          />
+        </Card>
+
+        <Card title="Customers who keep failing" subtitle="Two or more cancelled or returned orders in this period.">
+          {data.repeaters.length === 0 ? (
+            <EmptyState text="No customer has more than one failed order in this period." />
+          ) : (
+            <ul className="divide-y divide-line">
+              {data.repeaters.map((c) => (
+                <li key={c.phone} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-regantify-text">
+                      {c.name} <span className="font-normal text-neutral-500">{c.phone}</span>
+                    </p>
+                    <p className="truncate text-xs text-neutral-500">
+                      {c.orders} orders, {formatTaka(c.value)}
+                      {c.reasons.length > 0 ? ` · ${c.reasons.map((r) => r.label).join(', ')}` : ''}
+                    </p>
+                  </div>
+                  {c.blacklisted ? (
+                    <span className="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">Blocked</span>
+                  ) : (
+                    <Link to={`/vendor/customers/${encodeURIComponent(c.phone)}`} className="shrink-0 text-xs font-medium text-brand hover:underline">
+                      Review &amp; block
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      </div>
+    </>
   );
 }
 

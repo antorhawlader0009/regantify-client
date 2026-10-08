@@ -16,6 +16,7 @@ export function ConfirmDialog({
   onConfirm,
   danger = false,
   busy = false,
+  confirmDisabled = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,6 +27,8 @@ export function ConfirmDialog({
   /** Red button + warning icon, for deleting or anything that can't be undone. */
   danger?: boolean;
   busy?: boolean;
+  /** Keeps the confirm button off until something the message asks for (a reason) is filled in. */
+  confirmDisabled?: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={title} maxWidth="max-w-md">
@@ -50,7 +53,7 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            disabled={busy}
+            disabled={busy || confirmDisabled}
             className={`inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium text-white transition-colors disabled:opacity-60 ${
               danger ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand-dark'
             }`}

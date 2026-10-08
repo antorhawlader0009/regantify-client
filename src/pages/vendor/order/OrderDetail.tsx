@@ -38,6 +38,7 @@ import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { CustomerTagChips } from '../customer/CustomerNoteCard';
+import { OrderCloseReasonCard } from '../../../components/order/OrderCloseReasonCard';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
@@ -306,8 +307,8 @@ export default function OrderDetail() {
 
   const statusMutation = useMutation({
     // A correction carries its own reason; any other move takes the timeline note typed below the menu.
-    mutationFn: ({ status, note, correction }: StatusChangeRequest) =>
-      ordersApi.updateStatus(id!, status, correction ? note : statusNote.trim() || undefined, correction),
+    mutationFn: ({ status, note, correction, reasonCode }: StatusChangeRequest) =>
+      ordersApi.updateStatus(id!, status, correction ? note : statusNote.trim() || undefined, correction, reasonCode),
     onSuccess: (_, { status, correction }) => {
       invalidateOrder();
       if (!correction) setStatusNote('');
@@ -473,6 +474,9 @@ export default function OrderDetail() {
           </div>
         ))}
       </div>
+
+      {/* Why a cancelled / returned / failed order ended (Analytics > Orders groups by it). */}
+      <OrderCloseReasonCard order={order} canEdit={canEdit} onChanged={invalidateOrder} />
 
       {/* Same phone and product as an earlier open order within 24 hours (OrdersService.findPossibleDuplicate). */}
       {order.possibleDuplicateOfId && (
