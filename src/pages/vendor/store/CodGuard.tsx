@@ -147,6 +147,26 @@ export default function CodGuard() {
                       focus:outline-none focus:border-regantify-cta transition-colors"
                   />
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-regantify-text mb-2">If the shopper doesn't pay within an hour</p>
+                  <div className="flex flex-col gap-2">
+                    <Radio
+                      name="advanceUnpaidHold"
+                      label="Cancel the order (Payment failed, stock goes back)"
+                      checked={!form.advanceUnpaidHold}
+                      onChange={() => set('advanceUnpaidHold', false)}
+                    />
+                    <Radio
+                      name="advanceUnpaidHold"
+                      label="Keep it On Hold so I can call the shopper"
+                      checked={form.advanceUnpaidHold}
+                      onChange={() => set('advanceUnpaidHold', true)}
+                    />
+                  </div>
+                  <p className="text-xs text-regantify-text-muted mt-1.5">
+                    An order kept On Hold is collected in full by the courier unless the shopper pays the advance later.
+                  </p>
+                </div>
                 <ul className="text-xs text-regantify-text-muted space-y-1 list-disc pl-4">
                   <li>
                     Needs <b>Online Payment</b> to be on in{' '}

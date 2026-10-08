@@ -62,6 +62,7 @@ import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
+import StoreAway from './pages/vendor/store/StoreAway';
 import Integrations from './pages/vendor/store/integrations/Integrations';
 import FacebookPixel from './pages/vendor/store/integrations/FacebookPixel';
 import MetaConversionsApi from './pages/vendor/store/integrations/MetaConversionsApi';
@@ -183,6 +184,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/design' &&
     r.path !== '/vendor/store/gdpr' &&
     r.path !== '/vendor/store/cod-guard' &&
+    r.path !== '/vendor/store/store-away' &&
     r.path !== '/vendor/store/integrations' &&
     r.path !== '/vendor/store/header-editor' &&
     r.path !== '/vendor/store/layout-settings' &&
@@ -319,6 +321,7 @@ export default function App() {
                 <Route path="/vendor/store/design" element={<DesignHub />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
+                <Route path="/vendor/store/store-away" element={<StoreAway />} />
                 <Route path="/vendor/store/integrations" element={<Integrations />} />
                 <Route path="/vendor/store/integrations/facebook-pixel" element={<FacebookPixel />} />
                 <Route path="/vendor/store/integrations/meta-conversions-api" element={<MetaConversionsApi />} />

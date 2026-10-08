@@ -169,6 +169,7 @@ export const vendorNav: NavSection[] = [
           { label: 'Delivery Charge', path: '/vendor/store/delivery-charge' },
           { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
           { label: 'COD Guard', path: '/vendor/store/cod-guard' },
+          { label: 'Store Away', path: '/vendor/store/store-away' },
           { label: 'Order Tracking', path: '/vendor/store/order-tracking' },
         ],
       },

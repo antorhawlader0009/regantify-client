@@ -29,6 +29,7 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
+import { CustomerTagChips } from './CustomerNoteCard';
 import { useCan } from '../../../lib/useStaffAccess';
 
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -146,6 +147,11 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
                 <BlacklistedBadge />
               </div>
             )}
+            {customer.tags.length > 0 && (
+              <div className="mt-1.5">
+                <CustomerTagChips tags={customer.tags} />
+              </div>
+            )}
           </div>
         </div>
       </td>
@@ -192,6 +198,11 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
             <BlacklistedBadge />
           </div>
         )}
+        {customer.tags.length > 0 && (
+          <div className="mt-1">
+            <CustomerTagChips tags={customer.tags} />
+          </div>
+        )}
       </Link>
       {menu}
       {dialog}
@@ -203,7 +214,7 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
 type CustomerFilter = 'ALL' | 'BLACKLISTED' | 'DUE';
 
 /** One row of the exported CSV. */
-const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Due', 'Blacklisted'];
+const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Due', 'Blacklisted', 'Tags', 'Note'];
 
 function toExportRow(c: VendorCustomer): string[] {
   return [
@@ -218,6 +229,8 @@ function toExportRow(c: VendorCustomer): string[] {
     c.totalSpent.toFixed(2),
     c.dueBalance.toFixed(2),
     c.blacklisted ? 'Yes' : 'No',
+    c.tags.join(', '),
+    c.note ?? '',
   ];
 }
 
@@ -231,21 +244,26 @@ export default function Customers() {
   const canSms = useCan('sms.manage');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('ALL');
+  // Customers > tag filter ('' = any tag).
+  const [tag, setTag] = useState('');
   const [perPage, setPerPage] = useState(10);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => setPage(1), [search, filter, perPage]);
-  useEffect(() => setSelected(new Set()), [search, filter, page, perPage]);
+  useEffect(() => setPage(1), [search, filter, tag, perPage]);
+  useEffect(() => setSelected(new Set()), [search, filter, tag, page, perPage]);
+
+  const { data: storeTags } = useQuery({ queryKey: ['customer-tags'], queryFn: customersApi.listTags });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['customers', { search, filter, page, perPage }],
+    queryKey: ['customers', { search, filter, tag, page, perPage }],
     queryFn: () =>
       customersApi.list({
         search: search.trim() || undefined,
         blacklistedOnly: filter === 'BLACKLISTED',
         dueOnly: filter === 'DUE',
+        tag: tag || undefined,
         page,
         perPage,
       }),
@@ -278,6 +296,7 @@ export default function Customers() {
         search: search.trim() || undefined,
         blacklistedOnly: filter === 'BLACKLISTED',
         dueOnly: filter === 'DUE',
+        tag: tag || undefined,
         phones: selected.size > 0 ? Array.from(selected) : undefined,
       });
       if (rows.length === 0) {
@@ -292,7 +311,7 @@ export default function Customers() {
     }
   };
 
-  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : filter === 'DUE' ? 'Nobody owes you money' : search ? 'No customers match your search' : 'No customers yet';
+  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : filter === 'DUE' ? 'Nobody owes you money' : search || tag ? 'No customers match your search' : 'No customers yet';
   const emptyHint =
     filter === 'BLACKLISTED'
       ? 'Customers you blacklist show up here, and can’t order with Cash on Delivery.'
@@ -302,7 +321,7 @@ export default function Customers() {
         ? 'Try a different name or phone number.'
         : 'Customers appear here after their first order. You can also add them yourself.';
   const emptyAction =
-    filter === 'ALL' && !search && canEdit ? (
+    filter === 'ALL' && !search && !tag && canEdit ? (
       <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
         <Plus size={15} />
         Add customer
@@ -327,6 +346,16 @@ export default function Customers() {
               <option value="BLACKLISTED">Blacklisted</option>
               <option value="DUE">Owes money (due)</option>
             </SelectBox>
+            {(storeTags?.length ?? 0) > 0 && (
+              <SelectBox ariaLabel="Filter by tag" value={tag} onChange={setTag}>
+                <option value="">Any tag</option>
+                {storeTags!.map((t) => (
+                  <option key={t.tag} value={t.tag}>
+                    {t.tag} ({t.count})
+                  </option>
+                ))}
+              </SelectBox>
+            )}
             {canSms && selected.size > 0 && (
               <button type="button" onClick={() => navigate('/vendor/sms', { state: { smsPhones: Array.from(selected) } })} className={outlineBtn}>
                 <Send size={15} />

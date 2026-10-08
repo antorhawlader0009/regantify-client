@@ -38,6 +38,21 @@ export interface CodGuardSettings {
   advanceEnabled: boolean;
   // Only carts of at least this much (BDT). A string when it comes from the server (a decimal), a number when sent.
   advanceMinOrder: string | number | null;
+  // The advance isn't paid within an hour: true = the order goes On Hold for a call, false = Payment failed.
+  advanceUnpaidHold: boolean;
+}
+
+// Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.
+export type StoreAwayMode = 'TAKE_ORDERS' | 'BROWSE_ONLY';
+
+export interface StoreAwaySettings {
+  enabled: boolean;
+  mode: StoreAwayMode;
+  message: string;
+  /** The day the store is back (YYYY-MM-DD, Dhaka); null = until turned off. */
+  returnDate: string | null;
+  /** On right now (enabled and the return day hasn't come). Read-only. */
+  active: boolean;
 }
 
 // Store > Order Tracking (tracking-plan.md Step 5) — mirrors StoreSettingsService's
@@ -89,6 +104,10 @@ export const storeSettingsApi = {
   getCodGuard: async () => (await api.get<CodGuardSettings>('/v1/vendor/cod-guard')).data,
   updateCodGuard: async (body: CodGuardSettings) => (await api.patch<CodGuardSettings>('/v1/vendor/cod-guard', body)).data,
   deleteCodGuard: async () => (await api.delete<CodGuardSettings>('/v1/vendor/cod-guard')).data,
+
+  getStoreAway: async () => (await api.get<StoreAwaySettings>('/v1/vendor/store-away')).data,
+  updateStoreAway: async (body: Omit<StoreAwaySettings, 'active'>) =>
+    (await api.patch<StoreAwaySettings>('/v1/vendor/store-away', body)).data,
 };
 
 // An emptied RichTextEditor still emits markup like "<p></p>"; send that as

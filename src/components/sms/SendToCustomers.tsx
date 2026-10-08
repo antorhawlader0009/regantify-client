@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Send } from 'lucide-react';
 import { smsApi, type SmsAudience } from '../../lib/smsApi';
+import { customersApi } from '../../lib/customersApi';
 import { apiErrorMessage } from '../../lib/api';
 import { Field, productInputClass } from '../product/ProductFormPieces';
 import { primaryBtn } from '../ui/PageKit';
@@ -17,9 +18,11 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const queryClient = useQueryClient();
   const [audience, setAudience] = useState<SmsAudience>(selectedPhones?.length ? 'SELECTED' : 'ALL');
   const [days, setDays] = useState('30');
+  const [tag, setTag] = useState('');
   const [message, setMessage] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [debounced, setDebounced] = useState({ audience, days, message });
+  const { data: storeTags } = useQuery({ queryKey: ['customer-tags'], queryFn: customersApi.listTags });
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced({ audience, days, message }), 300);
@@ -30,11 +33,14 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
     audience: debounced.audience,
     days: debounced.audience === 'RECENT' ? Math.max(1, Number(debounced.days) || 30) : undefined,
     phones: debounced.audience === 'SELECTED' ? selectedPhones : undefined,
+    tag: debounced.audience === 'TAG' ? tag : undefined,
   };
+  const needsTag = debounced.audience === 'TAG' && !tag;
   const { data: preview } = useQuery({
     queryKey: ['sms-campaign-preview', target, debounced.message],
     queryFn: () => smsApi.previewCampaign({ ...target, message: debounced.message || undefined }),
     placeholderData: (prev) => prev,
+    enabled: !needsTag,
   });
 
   const send = useMutation({
@@ -55,11 +61,13 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   });
 
   const notEnough = preview ? preview.totalCredits > preview.smsCredits : false;
-  const canSend = message.trim().length > 0 && (preview?.recipients ?? 0) > 0 && !notEnough;
+  const canSend = message.trim().length > 0 && !needsTag && (preview?.recipients ?? 0) > 0 && !notEnough;
   const options: { id: SmsAudience; label: string }[] = [
     ...(selectedPhones?.length ? [{ id: 'SELECTED' as const, label: `Customers you picked (${selectedPhones.length})` }] : []),
     { id: 'ALL', label: 'Everyone who ordered' },
     { id: 'RECENT', label: 'Ordered in the last…' },
+    // Customers > note and tags: only once the store has tagged someone.
+    ...((storeTags?.length ?? 0) > 0 ? [{ id: 'TAG' as const, label: 'Customers with a tag…' }] : []),
   ];
 
   return (
@@ -86,6 +94,16 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
               days
             </span>
           )}
+          {audience === 'TAG' && (
+            <select value={tag} onChange={(e) => setTag(e.target.value)} aria-label="Tag" className={`${productInputClass} !w-auto !py-1.5`}>
+              <option value="">Pick a tag</option>
+              {(storeTags ?? []).map((t) => (
+                <option key={t.tag} value={t.tag}>
+                  {t.tag} ({t.count})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </Field>
       <Field label="Message" hint="English: 160 letters = 1 SMS. Bangla: 70 letters = 1 SMS.">
@@ -97,7 +115,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
           className={productInputClass}
         />
       </Field>
-      {preview && (
+      {preview && !needsTag && (
         <p className={`text-sm ${notEnough ? 'text-red-600' : 'text-neutral-600'}`}>
           {preview.recipients} {preview.recipients === 1 ? 'customer' : 'customers'} × {preview.smsPerMessage} SMS ={' '}
           <span className="font-medium">{preview.totalCredits} credits</span> (you have {preview.smsCredits}).

@@ -14,7 +14,20 @@ export interface VendorCustomer {
   blacklisted: boolean;
   /** What they owe from counter sales on due (POS); 0 for most customers. */
   dueBalance: number;
+  /** The vendor's own tags on this customer (VIP, Wholesale...). */
+  tags: string[];
+  /** The vendor's own note on this customer. */
+  note: string | null;
 }
+
+/** A tag the store uses and how many customers carry it. */
+export interface CustomerTagCount {
+  tag: string;
+  count: number;
+}
+
+/** Ready-made tags offered in the tag picker; vendors can type their own too. */
+export const SUGGESTED_CUSTOMER_TAGS = ['VIP', 'Wholesale', 'Regular', 'Returns often', 'Difficult'];
 
 export interface VendorCustomerOrder {
   id: string;
@@ -36,6 +49,8 @@ export interface ListCustomersParams {
   blacklistedOnly?: boolean;
   /** Only customers who owe money (POS due). */
   dueOnly?: boolean;
+  /** Only customers carrying this tag. */
+  tag?: string;
   page?: number;
   perPage?: number;
 }
@@ -86,6 +101,7 @@ export interface ExportCsvParams {
   search?: string;
   blacklistedOnly?: boolean;
   dueOnly?: boolean;
+  tag?: string;
   /** When given, only these phones are exported — the "select rows, then Export CSV" flow. */
   phones?: string[];
 }
@@ -112,6 +128,7 @@ export const customersApi = {
           search: params.search,
           blacklistedOnly: params.blacklistedOnly,
           dueOnly: params.dueOnly,
+          tag: params.tag,
           phones: params.phones && params.phones.length > 0 ? params.phones.join(',') : undefined,
         },
       })
@@ -124,6 +141,15 @@ export const customersApi = {
         `/v1/customers/${encodeURIComponent(phone)}/blacklist`,
         { blacklisted, reason: blacklisted && reason?.trim() ? reason.trim() : undefined },
       )
+      .then((r) => r.data),
+
+  /** Every tag the store uses, most used first. */
+  listTags: () => api.get<CustomerTagCount[]>('/v1/customers/tags').then((r) => r.data),
+
+  /** Customer Detail's "Note & tags". */
+  setNote: (phone: string, payload: { note: string; tags: string[] }) =>
+    api
+      .patch<{ phone: string; note: string | null; tags: string[] }>(`/v1/customers/${encodeURIComponent(phone)}/note`, payload)
       .then((r) => r.data),
 
   remove: (phone: string) =>

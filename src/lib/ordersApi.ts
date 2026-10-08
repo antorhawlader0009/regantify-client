@@ -139,6 +139,8 @@ export interface Order {
   advanceMethod?: 'ONLINE' | 'MANUAL' | null;
   advancePaidAt?: string | null;
   advanceNote?: string | null;
+  /** Order detail only: Customers > "Note & tags" on this phone; null when there are none. */
+  vendorCustomerNote?: { note: string | null; tags: string[] } | null;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;

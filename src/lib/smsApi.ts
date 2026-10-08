@@ -39,12 +39,14 @@ export const smsApi = {
 };
 
 /** Who an SMS campaign goes to (SMS_AUDIENCES on the server). */
-export type SmsAudience = 'ALL' | 'RECENT' | 'SELECTED';
+export type SmsAudience = 'ALL' | 'RECENT' | 'SELECTED' | 'TAG';
 
 export interface SmsCampaignTarget {
   audience: SmsAudience;
   days?: number;
   phones?: string[];
+  /** TAG: customers carrying this tag (Customers > note and tags). */
+  tag?: string;
 }
 
 export interface SmsCampaignPreview {

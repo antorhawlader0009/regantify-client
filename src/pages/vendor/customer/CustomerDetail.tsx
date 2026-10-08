@@ -14,6 +14,7 @@ import { ToggleRow } from '../../../components/product/ProductFormKit';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { CustomerDueSection } from './CustomerDueSection';
+import { CustomerNoteCard } from './CustomerNoteCard';
 import { useCan } from '../../../lib/useStaffAccess';
 import {
   EmptyState,
@@ -377,6 +378,8 @@ export default function CustomerDetail() {
 
         {/* Side column */}
         <div className="min-w-0 space-y-4">
+          <CustomerNoteCard customer={customer} canEdit={canEdit} />
+
           <Card
             title="Delivery address"
             action={

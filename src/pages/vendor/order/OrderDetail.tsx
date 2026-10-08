@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, Truck } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronLeft, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
 import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
@@ -37,6 +37,7 @@ import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/ord
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
+import { CustomerTagChips } from '../customer/CustomerNoteCard';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
@@ -462,6 +463,18 @@ export default function OrderDetail() {
           </div>
         ))}
       </div>
+
+      {/* Customers > "Note & tags" on this phone, so whoever calls sees it first. */}
+      {order.vendorCustomerNote && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <StickyNote size={15} className="text-amber-700" aria-hidden />
+            <span className="text-sm font-medium text-amber-900">About this customer</span>
+            <CustomerTagChips tags={order.vendorCustomerNote.tags} />
+          </div>
+          {order.vendorCustomerNote.note && <p className="mt-1.5 whitespace-pre-line text-sm text-regantify-text">{order.vendorCustomerNote.note}</p>}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}

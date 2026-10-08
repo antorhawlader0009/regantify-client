@@ -345,6 +345,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/delivery-charge': 'store.checkout',
   '/vendor/store/stock-settings': 'store.checkout',
   '/vendor/store/cod-guard': 'store.checkout',
+  '/vendor/store/store-away': 'store.checkout',
   '/vendor/store/order-tracking': 'store.checkout',
   '/vendor/store/seo': 'store.settings',
   '/vendor/store/integrations': 'store.code',

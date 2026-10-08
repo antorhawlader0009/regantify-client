@@ -23,6 +23,7 @@ import {
   Truck,
   UsersRound,
   Wallet,
+  Palmtree,
   type LucideIcon,
 } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
@@ -75,6 +76,7 @@ const MORE_SETTINGS: { label: string; description: string; path: string; icon: L
   { label: 'Social', description: 'Facebook, Instagram and other links', path: '/vendor/store/social', icon: Share2 },
   { label: 'Stock Settings', description: 'Backorders and when stock is reduced', path: '/vendor/store/stock-settings', icon: Package },
   { label: 'COD Guard', description: 'Blacklist and SMS check for COD orders', path: '/vendor/store/cod-guard', icon: BadgeCheck },
+  { label: 'Store Away', description: 'Close the store for a holiday', path: '/vendor/store/store-away', icon: Palmtree },
   { label: 'Integrations', description: 'Pixels, analytics and webhooks', path: '/vendor/store/integrations', icon: Plug },
   { label: 'Staff', description: 'Team members and their access', path: '/vendor/staff', icon: UsersRound },
   { label: 'Billing', description: 'Your plan, usage and upgrades', path: '/vendor/billing', icon: Wallet },
