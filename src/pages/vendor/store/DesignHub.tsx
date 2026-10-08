@@ -13,14 +13,14 @@ export default function DesignHub() {
         <p className="mt-1 text-sm text-regantify-text-muted">Choose what to change on your store. Each opens on its own page.</p>
       </div>
 
-      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+      <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
         {DESIGN_CARDS.map((card) => {
           const Icon = card.icon;
           return (
             <li key={card.path}>
               <Link
                 to={card.path}
-                className="group flex h-full items-start gap-4 rounded-xl border border-line bg-white p-5 transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
+                className="group flex h-full items-start gap-3 rounded-xl border border-line bg-white px-4 py-3 transition-colors hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand"
               >
                 <Icon size={22} strokeWidth={1.5} className="mt-0.5 shrink-0 text-neutral-500 group-hover:text-regantify-text" />
                 <span className="min-w-0">

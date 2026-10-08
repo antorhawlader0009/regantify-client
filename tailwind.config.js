@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  // Only the marketing home uses dark: variants (its day / night switch puts a
+  // `dark` class on its root), so it is a class, not the OS setting.
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -62,6 +65,9 @@ export default {
       fontFamily: {
         brand: ['"Irish Grover"', 'cursive'],
         sans: ['Inter', 'sans-serif'],
+        // Top bar of the marketing home / login / sign up. Bangla glyphs fall
+        // back to Hind Siliguri, which has them.
+        nav: ['"Plus Jakarta Sans"', '"Hind Siliguri"', 'sans-serif'],
       },
       borderRadius: {
         frame: '20px',

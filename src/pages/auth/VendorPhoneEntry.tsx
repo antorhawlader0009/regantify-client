@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { authApi, type LoginAccountChoice } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
+import SiteNav, { readStoredLang, storeLang } from '../../components/marketing/SiteNav';
 import {
   Lock,
   User,
@@ -16,7 +17,6 @@ import {
   PackageCheck,
   Wallet,
   BarChart3,
-  Languages,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -129,8 +129,13 @@ const LangContext = createContext<{
 });
 
 function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>('en');
-  const toggle = () => setLang((l) => (l === 'en' ? 'bn' : 'en'));
+  const [lang, setLang] = useState<Lang>(readStoredLang);
+  const toggle = () =>
+    setLang((l) => {
+      const next: Lang = l === 'en' ? 'bn' : 'en';
+      storeLang(next);
+      return next;
+    });
   const t = (key: Key) => dict[lang][key];
   return (
     <LangContext.Provider value={{ lang, toggle, t }}>
@@ -355,49 +360,24 @@ function VendorPhoneEntryInner() {
         }
       `}</style>
 
-      {/* Header */}
-      <header className={`sticky top-0 z-30 ${th.nav}`}>
-        <div className="max-w-6xl mx-auto h-[68px] flex items-center justify-between px-4 sm:px-6">
+      {/* Header: the same bar as Home and Sign up */}
+      <SiteNav
+        lang={lang}
+        onToggleLang={toggle}
+        variant="solid"
+        active="login"
+        extra={
           <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2.5"
-            aria-label={t('nav_home_label')}
+            type="button"
+            onClick={toggleMode}
+            aria-label={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
+            title={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white border border-white/30 hover:bg-white/15 transition-colors"
           >
-            <Store className={th.accentText} size={24} strokeWidth={2} />
-            <span className={`${th.brand} text-lg font-semibold leading-none`}>Regantify</span>
+            {mode === 'night' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <button
-              onClick={toggleMode}
-              aria-label={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
-              title={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${th.navBtnBorder}`}
-            >
-              {mode === 'night' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <button
-              onClick={toggle}
-              aria-label={t('toggle_lang_label')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-colors ${th.navBtnBorder}`}
-            >
-              <Languages size={15} />
-              {lang === 'en' ? 'বাংলা' : 'English'}
-            </button>
-            <span
-              className={`px-3.5 py-2 rounded-full text-sm font-medium cursor-default ${th.navActive}`}
-              aria-current="page"
-            >
-              {t('nav_login')}
-            </span>
-            <button
-              onClick={() => navigate('/vendor/signup')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${th.signupBtn}`}
-            >
-              {t('nav_signup')}
-            </button>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
       {/* Content */}
       <main className="max-w-6xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
