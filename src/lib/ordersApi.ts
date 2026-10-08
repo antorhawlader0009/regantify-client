@@ -344,6 +344,9 @@ export const ordersApi = {
 
   findOne: (id: string) => api.get<Order>(`/v1/orders/${id}`).then((r) => r.data),
 
+  /** A marker that changes when any order of the store does; polled by useOrdersAutoRefresh. */
+  pulse: () => api.get<{ marker: string }>('/v1/orders/pulse').then((r) => r.data),
+
   create: (payload: CreateOrderPayload) =>
     api.post<Order>('/v1/orders', payload).then((r) => r.data),
 

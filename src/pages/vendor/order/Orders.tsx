@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
 import {
   ArrowLeft,
   Check,
@@ -705,6 +706,7 @@ function OrderRow({
 export default function Orders() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  useOrdersAutoRefresh();
 
   const [search, setSearch] = useState('');
   // 'ABANDONED' is the fixed "Abandoned Cart" tab (IncompleteOrder rows,

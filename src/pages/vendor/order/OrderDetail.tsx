@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
 import { CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
 import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
@@ -114,6 +115,7 @@ function ReadOnlyDelivery({ order }: { order: Order }) {
 export default function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  useOrdersAutoRefresh();
   const [historyPhone, setHistoryPhone] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState('');
   const [bookingPathao, setBookingPathao] = useState(false);
