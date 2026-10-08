@@ -56,10 +56,38 @@ export const notificationsApi = {
   pushTopics: (endpoint: string, topics: PushTopic[]) => api.patch('/v1/notifications/push/topics', { endpoint, topics }).then((r) => r.data),
   pushTest: () => api.post<{ sent: number; devices: number }>('/v1/notifications/push/test').then((r) => r.data),
 
+  // -- Telegram --
+  telegramConfig: () => api.get<TelegramConfig>('/v1/notifications/telegram/config').then((r) => r.data),
+  telegramChats: () => api.get<TelegramChat[]>('/v1/notifications/telegram/chats').then((r) => r.data),
+  /** A one-time t.me link: opening it and pressing Start connects that chat. GROUP is for the store owner. */
+  telegramLink: (kind: 'PRIVATE' | 'GROUP') => api.post<{ url: string; expiresAt: string }>('/v1/notifications/telegram/link', { kind }).then((r) => r.data),
+  telegramTopics: (id: string, topics: TelegramTopic[]) => api.patch(`/v1/notifications/telegram/chats/${id}/topics`, { topics }).then((r) => r.data),
+  telegramRemove: (id: string) => api.delete(`/v1/notifications/telegram/chats/${id}`).then((r) => r.data),
+  telegramTest: () => api.post<{ sent: number; chats: number }>('/v1/notifications/telegram/test').then((r) => r.data),
+
   /** Owner only. `smsPhone: ''` goes back to the owner's own phone. */
   updateSettings: (patch: Partial<Omit<NotificationSettings, 'ownerPhone' | 'smsPhone'>> & { smsPhone?: string }) =>
     api.patch<NotificationSettings>('/v1/notifications/settings', patch).then((r) => r.data),
 };
+
+/** What a Telegram chat can be told about: the bell topics, plus lead alerts for an LMS agent (private chats only). */
+export type TelegramTopic = PushTopic | 'LMS';
+
+export interface TelegramConfig {
+  /** False while the server has no bot token. */
+  enabled: boolean;
+  botUsername: string | null;
+}
+
+export interface TelegramChat {
+  id: string;
+  kind: 'PRIVATE' | 'GROUP';
+  title: string | null;
+  topics: TelegramTopic[];
+  createdAt: string;
+  /** This person can change or remove it (their own chat, or any group for the owner). */
+  canManage: boolean;
+}
 
 /** What a phone or browser can be told about (the bell topics). */
 export type PushTopic = 'NEW_ORDER' | 'ORDER_ATTENTION' | 'PLAN_ENDING' | 'LOW_STOCK';

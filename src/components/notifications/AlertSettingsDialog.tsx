@@ -12,6 +12,7 @@ import { useCan } from '../../lib/useStaffAccess';
 import { ALL_ALERT_TYPES, desktopPermission, playChime, readAlertPrefs, saveAlertPrefs, type DeviceAlertPrefs } from '../../lib/notificationAlerts';
 import { TYPE_LABEL } from './notificationUi';
 import { PhoneNotificationsSection } from './PhoneNotificationsSection';
+import { TelegramSection } from './TelegramSection';
 
 const SETTINGS_KEY = ['notifications', 'settings'];
 
@@ -93,6 +94,8 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
         <p className="text-sm text-neutral-600">Everything always shows in the bell. Choose what else should get your attention.</p>
 
         <PhoneNotificationsSection open={open} />
+
+        <TelegramSection open={open} />
 
         <section className="border-t border-line pt-5">
           <SectionTitle icon={Monitor} title="On this device" hint="Saved in this browser only, so the shop PC and your laptop can differ. Only while the dashboard is open; use Phone notifications above for the rest." />
