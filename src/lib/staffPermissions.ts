@@ -316,6 +316,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/product/categories': 'products.view',
   '/vendor/product/collections': 'products.view',
   '/vendor/product/brands': 'products.view',
+  '/vendor/product/size-guides': 'products.view',
   '/vendor/product/low-stock': 'products.view',
   '/vendor/reviews': 'reviews.view',
   '/vendor/marketing/coupons': 'marketing.view',
@@ -336,6 +337,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/footer': 'store.design',
   '/vendor/store/layout-settings': 'store.design',
   '/vendor/store/site-banner': 'store.design',
+  '/vendor/store/chat-button': 'store.design',
   '/vendor/store/product-display': 'store.design',
   '/vendor/store/product-card': 'store.design',
   '/vendor/store/pages': 'store.content',
@@ -408,6 +410,7 @@ const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
   [/^\/vendor\/finance\//, 'finance.view'],
   [/^\/vendor\/analytics(\/|$)/, 'analytics.view'],
   [/^\/vendor\/orders\/add$/, 'orders.create'],
+  [/^\/vendor\/orders\/handover(\/|$)/, 'orders.courier'], // courier handover sheets
   [/^\/vendor\/orders(\/|$)/, 'orders.view'],
   [/^\/vendor\/customers\/(add|bulk-upload)$/, 'customers.edit'],
   [/^\/vendor\/customers\/[^/]+\/edit$/, 'customers.edit'],

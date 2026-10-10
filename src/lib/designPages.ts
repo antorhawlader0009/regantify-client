@@ -1,4 +1,4 @@
-import { Brush, Grid2x2, LayoutTemplate, PanelBottom, PanelTop, Palette, MessageSquareText, ShoppingBag, SlidersHorizontal, type LucideIcon } from 'lucide-react';
+import { Brush, Grid2x2, LayoutTemplate, MessageCircle, PanelBottom, PanelTop, Palette, MessageSquareText, ShoppingBag, SlidersHorizontal, type LucideIcon } from 'lucide-react';
 
 /**
  * The cards on Store > Design (the hub page): each one opens one existing design page. The sidebar has
@@ -20,6 +20,7 @@ export const DESIGN_CARDS: DesignCard[] = [
   { label: 'Layout Settings', description: 'Configure how your store details are laid out.', path: '/vendor/store/layout-settings', icon: LayoutTemplate },
   { label: 'Header', description: 'Configure the header and your menus.', path: '/vendor/store/header-editor', icon: PanelTop },
   { label: 'Footer', description: 'Configure the footer.', path: '/vendor/store/footer', icon: PanelBottom },
+  { label: 'Chat Button', description: 'A WhatsApp or Messenger button that floats over your store.', path: '/vendor/store/chat-button', icon: MessageCircle },
   { label: 'Site Banner', description: 'Show a notification banner on your website.', path: '/vendor/store/site-banner', icon: MessageSquareText },
   { label: 'Product Display', description: 'Choose how products are shown on the page.', path: '/vendor/store/product-display', icon: ShoppingBag },
   { label: 'Product Card', description: 'Choose what shows on each product card.', path: '/vendor/store/product-card', icon: SlidersHorizontal },

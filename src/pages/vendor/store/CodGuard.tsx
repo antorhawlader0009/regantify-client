@@ -267,6 +267,20 @@ export default function CodGuard() {
             </p>
           </section>
 
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <Checkbox
+              checked={form.customerCancelEnabled}
+              onChange={(v) => set('customerCancelEnabled', v)}
+              label="Let customers cancel their own order"
+            />
+            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+              Shows a <b>Cancel order</b> button on the order tracking page and the thank-you page (StorePal theme) while the order is
+              <b> Pending</b> or <b>On Hold</b>. The customer picks a reason, the order is cancelled, its stock and gift card go back, and
+              you get a notice (bell, phone and Telegram). It never shows once you move the order to Processing, for an order that has a
+              payment on it (online or advance), or one already booked with a courier. Those say &ldquo;call the store&rdquo;.
+            </p>
+          </section>
+
           <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">
             <h2 className="text-base font-medium text-regantify-text">Order Verification</h2>
 

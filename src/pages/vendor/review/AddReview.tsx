@@ -5,6 +5,7 @@ import { ImagePlus, Star, X } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { SaveBar, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
+import { ReviewReplyCard } from './ReviewReplyCard';
 import { outlineBtn } from '../../../components/ui/PageKit';
 import { reviewsApi } from '../../../lib/reviewsApi';
 import { ordersApi, type Order } from '../../../lib/ordersApi';
@@ -204,6 +205,8 @@ export default function AddReview() {
       />
 
       <div className="space-y-4">
+        {isEdit && existing && <ReviewReplyCard review={existing} />}
+
         <SectionCard title="Review">
           <div className="space-y-4">
             <Field label="Stars" required>

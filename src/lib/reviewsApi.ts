@@ -28,6 +28,11 @@ export interface Review {
   customerPhone: string | null;
   approved: boolean;
   featured: boolean;
+  /** The store's public reply, shown under the review on the store; null = none. */
+  replyText: string | null;
+  repliedAt: string | null;
+  /** Who wrote the reply ("Rahim (Manager)"); dashboard only. */
+  repliedBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -85,6 +90,9 @@ export const reviewsApi = {
       .post<{ url: string }>('/v1/reviews/photo', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
       .then((r) => r.data);
   },
+
+  /** The store's public reply under a review; "" removes it. */
+  reply: (id: string, reply: string) => api.put<Review>(`/v1/reviews/${id}/reply`, { reply }).then((r) => r.data),
 
   setFeatured: (id: string, featured: boolean) =>
     api.patch<Review>(`/v1/reviews/${id}/featured`, { featured }).then((r) => r.data),

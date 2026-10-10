@@ -9,6 +9,9 @@ export type ProductImageShape = 'SQUARE' | 'PORTRAIT';
 export type ProductGalleryStyle = 'LEFT' | 'BOTTOM' | 'RIGHT';
 export type SiteBannerStyle = 'STATIC' | 'MARQUEE';
 export type StoreLayoutType = 'COMPACT' | 'EXTENDED';
+export type ChatButtonChannel = 'WHATSAPP' | 'MESSENGER';
+/** HOME = home and shop lists, PRODUCT = product pages, OTHER = cart, info pages, account... */
+export type ChatButtonPage = 'HOME' | 'PRODUCT' | 'OTHER';
 
 export type StoreMenuItemType = 'PAGE' | 'PRODUCT' | 'CATEGORY' | 'BRAND' | 'OTHER' | 'CUSTOM';
 export type StoreMenuOtherTarget = 'ACCOUNT' | 'SHOP' | 'TRACK_ORDER';
@@ -104,6 +107,15 @@ export interface DesignSettings {
 
   /** StorePal's own buttons and labels: English or Bangla. Product names and descriptions stay as written. */
   storeLanguage: 'en' | 'bn';
+
+  /** The floating chat bubble on the storefront (Store > Design > Chat Button). Mirrored by the server's CHAT_BUTTON_* lists. */
+  chatButtonEnabled: boolean;
+  chatButtonChannel: ChatButtonChannel;
+  /** Messenger only, saved as https://m.me/<page>. */
+  chatButtonMessengerLink: string | null;
+  chatButtonSide: 'LEFT' | 'RIGHT';
+  chatButtonPages: ChatButtonPage[];
+  chatButtonProductMessage: boolean;
 }
 
 // Text fields go out as "" to clear them (the server stores null).

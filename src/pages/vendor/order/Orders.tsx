@@ -1040,6 +1040,13 @@ export default function Orders() {
             </button>
           )}
 
+          {canCourier && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/handover')} className={toolbarBtn} title="Hand parcels to a courier with a signed sheet">
+              <Truck size={15} />
+              Courier handover
+            </button>
+          )}
+
           {canCreate && (
           <button
             onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
@@ -1131,6 +1138,12 @@ export default function Orders() {
                   <Printer size={13} />
                   Print Pathao labels
                 </button>
+                {canCourier && (
+                  <button type="button" onClick={() => navigate('/vendor/orders/handover', { state: { orderIds: [...selectedIds] } })} className={bulkBtn}>
+                    <Truck size={13} />
+                    Handover sheet
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedIds(new Set())}

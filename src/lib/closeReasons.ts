@@ -14,6 +14,8 @@ export type CloseReasonCode =
   | 'OUT_OF_STOCK'
   | 'DAMAGED'
   | 'OTHER'
+  | 'ORDERED_BY_MISTAKE'
+  | 'BOUGHT_ELSEWHERE'
   | 'NOT_VERIFIED'
   | 'UNPAID'
   | 'COURIER_RETURN';
@@ -30,6 +32,9 @@ export const CLOSE_REASON_LABEL: Record<CloseReasonCode, string> = {
   OUT_OF_STOCK: 'Out of stock',
   DAMAGED: 'Product damaged or wrong item',
   OTHER: 'Other',
+  // Picked by the shopper on the "Cancel my order" button.
+  ORDERED_BY_MISTAKE: 'Ordered by mistake',
+  BOUGHT_ELSEWHERE: 'Bought from somewhere else',
   NOT_VERIFIED: 'SMS code not entered in time',
   UNPAID: 'Online payment not completed',
   COURIER_RETURN: 'Returned by the courier (reason not known)',

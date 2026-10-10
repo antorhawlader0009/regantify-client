@@ -49,6 +49,8 @@ export interface CodGuardSettings {
   verificationExpiryHours: number | null;
   // false = the order is cancelled (stock goes back); true = it stays On Hold and the store is told to call.
   verificationExpiryHold: boolean;
+  // "Cancel my order" on the shopper's tracking and thank-you pages, while the order is Pending or On Hold.
+  customerCancelEnabled: boolean;
 }
 
 // Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.

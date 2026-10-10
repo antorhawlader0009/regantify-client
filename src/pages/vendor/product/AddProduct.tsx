@@ -19,6 +19,7 @@ import {
   useUnsavedChangesWarning,
 } from '../../../components/product/ProductFormKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
+import { SizeGuideField } from '../../../components/product/SizeGuideField';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
 import { AddBrandModal } from './AddBrandModal';
@@ -99,6 +100,8 @@ export default function AddProduct() {
   const [quoteOnly, setQuoteOnly] = useState(false);
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
   const [lowStockThreshold, setLowStockThreshold] = useState('');
+  // The size guide beside the Size choice on the store; empty = the category's guide.
+  const [sizeGuideId, setSizeGuideId] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('KG');
@@ -259,6 +262,7 @@ export default function AddProduct() {
       quoteOnly,
       minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : undefined,
       lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : undefined,
+      sizeGuideId: sizeGuideId || undefined,
       stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
       weight: weight.trim() ? Number(weight) : undefined,
       weightUnit,
@@ -470,6 +474,7 @@ export default function AddProduct() {
           </SectionCard>
 
           <SectionCard title="Variations" id="variations" description="Sizes, colours and so on, each with its own stock and price.">
+            <SizeGuideField value={sizeGuideId} onChange={setSizeGuideId} />
             <VariationsEditor
               productSku={sku}
               weightUnit={weightUnit}

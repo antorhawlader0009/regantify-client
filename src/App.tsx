@@ -34,6 +34,7 @@ import AllProducts from './pages/vendor/product/AllProducts';
 import LowStock from './pages/vendor/product/LowStock';
 import Categories from './pages/vendor/product/Categories';
 import Brands from './pages/vendor/product/Brands';
+import SizeGuides from './pages/vendor/product/SizeGuides';
 import Collections from './pages/vendor/collection/Collections';
 import AddCollection from './pages/vendor/collection/AddCollection';
 import Themes from './pages/vendor/store/Themes';
@@ -58,6 +59,7 @@ import HeaderEditor from './pages/vendor/store/design/HeaderEditor';
 import LayoutSettings from './pages/vendor/store/design/LayoutSettings';
 import Customize from './pages/vendor/store/design/Customize';
 import SiteBanner from './pages/vendor/store/design/SiteBanner';
+import ChatButton from './pages/vendor/store/design/ChatButton';
 import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
@@ -73,6 +75,8 @@ import TiktokPixel from './pages/vendor/store/integrations/TiktokPixel';
 import Webhooks from './pages/vendor/store/integrations/Webhooks';
 import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
 import Orders from './pages/vendor/order/Orders';
+import HandoverSheets from './pages/vendor/order/HandoverSheets';
+import HandoverSheetPrintPage from './pages/vendor/order/HandoverSheetPrintPage';
 import AddOrder from './pages/vendor/order/AddOrder';
 import OrderDetail from './pages/vendor/order/OrderDetail';
 import Customers from './pages/vendor/customer/Customers';
@@ -167,6 +171,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/add' &&
     r.path !== '/vendor/product/categories' &&
     r.path !== '/vendor/product/brands' &&
+    r.path !== '/vendor/product/size-guides' &&
     r.path !== '/vendor/product/collections' &&
     r.path !== '/vendor/product/low-stock' &&
     r.path !== '/vendor/store/themes' &&
@@ -190,6 +195,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/layout-settings' &&
     r.path !== '/vendor/store/customize' &&
     r.path !== '/vendor/store/site-banner' &&
+    r.path !== '/vendor/store/chat-button' &&
     r.path !== '/vendor/store/product-display' &&
     r.path !== '/vendor/store/product-card' &&
     r.path !== '/vendor/store/custom-css' &&
@@ -301,6 +307,7 @@ export default function App() {
                 <Route path="/vendor/product/low-stock" element={<LowStock />} />
                 <Route path="/vendor/product/categories" element={<Categories />} />
                 <Route path="/vendor/product/brands" element={<Brands />} />
+                <Route path="/vendor/product/size-guides" element={<SizeGuides />} />
                 <Route path="/vendor/product/collections" element={<Collections />} />
                 <Route path="/vendor/product/collections/add" element={<AddCollection />} />
                 <Route path="/vendor/product/collections/edit/:id" element={<AddCollection />} />
@@ -336,6 +343,7 @@ export default function App() {
                 {/* Menus are edited in the Header Editor (and Layout Settings, Footer); there is no separate Navigation page. */}
                 <Route path="/vendor/store/navigation" element={<Navigate to="/vendor/store/header-editor" replace />} />
                 <Route path="/vendor/store/site-banner" element={<SiteBanner />} />
+                <Route path="/vendor/store/chat-button" element={<ChatButton />} />
                 <Route path="/vendor/store/product-display" element={<ProductDisplay />} />
                 <Route path="/vendor/store/product-card" element={<ProductCardDisplay />} />
                 <Route path="/vendor/store/custom-css" element={<CustomCss />} />
@@ -347,6 +355,7 @@ export default function App() {
                 {/* Old sidebar link; Abandoned Cart is now a tab on the Orders page. */}
                 <Route path="/vendor/orders/incomplete" element={<Navigate to="/vendor/orders?tab=abandoned-cart" replace />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
+                <Route path="/vendor/orders/handover" element={<HandoverSheets />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />
@@ -436,6 +445,8 @@ export default function App() {
               {/* Pathao shipping labels (pathao-plan.md Step 12) — also
                   outside <VendorLayout>, so only the labels print. */}
               <Route path="/vendor/courier/pathao/labels" element={<PathaoLabelsPrintPage />} />
+              {/* Courier handover sheet (TellMe idea 18): also outside <VendorLayout>, so only the sheet prints. */}
+              <Route path="/vendor/orders/handover/:id/print" element={<HandoverSheetPrintPage />} />
               {/* POS counter (POS-system-plan.md Step 4): full screen, outside <VendorLayout>. */}
               <Route path="/vendor/pos/sell" element={<PosSellPage />} />
               {/* The customer-facing screen (Step 12): a second window fed by the counter tab. */}

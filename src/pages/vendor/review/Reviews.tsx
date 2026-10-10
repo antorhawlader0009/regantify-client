@@ -112,6 +112,7 @@ function useReviewMenu(review: Review) {
       }
     >
       <DropdownMenuItem onSelect={() => navigate(`/vendor/reviews/${review.id}/edit`)}>Edit</DropdownMenuItem>
+      <DropdownMenuItem onSelect={() => navigate(`/vendor/reviews/${review.id}/edit`)}>{review.replyText ? 'Edit reply' : 'Reply'}</DropdownMenuItem>
       <DropdownMenuItem onSelect={() => featuredMutation.mutate(!review.featured)}>{review.featured ? 'Stop featuring' : 'Feature it'}</DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem onSelect={() => setConfirmDelete(true)} danger>
@@ -134,6 +135,15 @@ function useReviewMenu(review: Review) {
   return { menu, dialog };
 }
 
+/** Shown on a review the store has answered. */
+function RepliedBadge() {
+  return (
+    <span className="ml-1.5 inline-flex items-center gap-1 rounded border border-green-200 bg-green-50 px-1.5 py-0.5 align-middle text-[11px] font-medium text-green-700">
+      Replied
+    </span>
+  );
+}
+
 function FeaturedBadge() {
   return (
     <span className="ml-1.5 inline-flex items-center gap-1 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 align-middle text-[11px] font-medium text-amber-700">
@@ -154,6 +164,7 @@ function ReviewRow({ review }: { review: Review }) {
             {review.title}
           </Link>
           {review.featured && <FeaturedBadge />}
+          {review.replyText && <RepliedBadge />}
         </p>
         {review.content && <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{stripHtml(review.content)}</p>}
         {review.products.length > 0 && (
@@ -201,6 +212,7 @@ function ReviewItem({ review }: { review: Review }) {
           <p className="mt-0.5 text-sm font-medium text-regantify-text">
             {review.title}
             {review.featured && <FeaturedBadge />}
+            {review.replyText && <RepliedBadge />}
           </p>
           {review.content && <p className="line-clamp-2 text-xs text-neutral-500">{stripHtml(review.content)}</p>}
           <p className="mt-0.5 text-xs text-neutral-500">

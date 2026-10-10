@@ -19,6 +19,7 @@ import {
   Infinity as InfinityIcon,
   Printer,
   Clock,
+  Tag,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
@@ -28,6 +29,8 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { ScheduleProductsDialog } from './ScheduleProductsDialog';
+import { ChangePricesDialog } from './ChangePricesDialog';
+import { PriceChangeHistoryDialog } from './PriceChangeHistoryDialog';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
@@ -502,6 +505,9 @@ export default function AllProducts() {
   const [bulkVisibility, setBulkVisibility] = useState(false);
   // Bulk bar "Schedule": go live / hide the selected products by themselves at a time.
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  // Change prices (bulk selling-price change, with preview and undo) and its list of recent changes.
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
   async function handleBulkVisibility(visibility: 'PUBLIC' | 'DRAFT') {
     const ids = Array.from(selected);
     setBulkVisibility(true);
@@ -640,6 +646,13 @@ export default function AllProducts() {
           />
 
           <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
+
+          {canEditPrice && (
+            <button onClick={() => setPriceOpen(true)} className={toolbarBtn} title="Raise or lower prices of many products at once">
+              <Tag size={14} />
+              Change prices
+            </button>
+          )}
 
           <button
             onClick={() => setShowFilters((v) => !v)}
@@ -780,6 +793,15 @@ export default function AllProducts() {
                     <Clock size={13} aria-hidden />
                     Schedule
                   </button>
+                  {canChangePrices && (
+                    <button
+                      onClick={() => setPriceOpen(true)}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50"
+                    >
+                      <Tag size={13} aria-hidden />
+                      Change prices
+                    </button>
+                  )}
                 </>
               )}
               {canDeleteProducts && (
@@ -989,6 +1011,28 @@ export default function AllProducts() {
           onDone={() => setSelected(new Set())}
         />
       )}
+
+      {priceOpen && (
+        <ChangePricesDialog
+          open
+          onOpenChange={(open) => !open && setPriceOpen(false)}
+          selectedIds={Array.from(selected)}
+          filter={{
+            search: search.trim() || undefined,
+            category: category || undefined,
+            visibility: visibility === 'ALL' ? undefined : visibility,
+            stockType: stockType === 'ALL' ? undefined : stockType,
+          }}
+          filterTotal={total}
+          onDone={() => setSelected(new Set())}
+          onShowHistory={() => {
+            setPriceOpen(false);
+            setPriceHistoryOpen(true);
+          }}
+        />
+      )}
+
+      {priceHistoryOpen && <PriceChangeHistoryDialog open onOpenChange={(open) => !open && setPriceHistoryOpen(false)} />}
 
       {stockProductModalId && stockProductSource && (
         <CreateStockProductModal

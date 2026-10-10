@@ -86,6 +86,8 @@ export interface Product {
   minOrderQuantity?: number | null;
   /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
   lowStockThreshold?: number | null;
+  /** The size guide shown beside the Size choice; null = the category's guide, if any. */
+  sizeGuideId?: string | null;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -126,6 +128,8 @@ export interface CreateProductPayload {
   minOrderQuantity?: number | null;
   /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
   lowStockThreshold?: number | null;
+  /** The size guide shown beside the Size choice; null = the category's guide, if any. */
+  sizeGuideId?: string | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -219,6 +223,8 @@ export interface UpdateProductPayload {
   minOrderQuantity?: number | null;
   /** Low stock alert below this many; null = the store default (Stock Settings), 0 = never. */
   lowStockThreshold?: number | null;
+  /** The size guide shown beside the Size choice; null = the category's guide, if any. */
+  sizeGuideId?: string | null;
   stockQuantity?: number;
   /** Why stock was changed by hand in this save (kept in the stock history). */
   stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';
@@ -263,7 +269,87 @@ export interface LowStockResponse {
   storeThreshold: number;
 }
 
+// All Products > Change prices (server: products/bulk-price.service.ts).
+export interface PriceChangeOptions {
+  /** PRICE = the regular price, DISCOUNT = the sale price (only where one is set), BOTH = both. */
+  target: 'PRICE' | 'DISCOUNT' | 'BOTH';
+  mode: 'PERCENT' | 'AMOUNT';
+  direction: 'INCREASE' | 'DECREASE';
+  value: number;
+  rounding: 'NONE' | 'ONE' | 'FIVE' | 'TEN';
+}
+
+/** Which products: the ticked ones, or everything matching the page's filters. */
+export interface PriceChangeScope {
+  productIds?: string[];
+  filter?: Pick<ListProductsParams, 'search' | 'category' | 'visibility' | 'stockType'>;
+}
+
+export type PriceChangeRequest = PriceChangeOptions & PriceChangeScope;
+
+export interface PriceChangeVariant {
+  id: string;
+  label: string;
+  oldListPrice: number | null;
+  newListPrice: number | null;
+  oldDiscountPrice: number | null;
+  newDiscountPrice: number | null;
+}
+
+export interface PriceChangePreviewItem {
+  productId: string;
+  name: string;
+  sku: string;
+  /** CHANGE = will change, SKIPPED = would give a bad price (see reason), SAME = nothing to change. */
+  status: 'CHANGE' | 'SKIPPED' | 'SAME';
+  reason: string | null;
+  oldPrice: number;
+  newPrice: number;
+  oldDiscountPrice: number | null;
+  newDiscountPrice: number | null;
+  variantCount: number;
+  /** Only the variants whose own price moves. */
+  variants: PriceChangeVariant[];
+}
+
+export interface PriceChangePreview {
+  total: number;
+  willChange: number;
+  skipped: number;
+  unchanged: number;
+  items: PriceChangePreviewItem[];
+}
+
+export interface PriceChangeResult {
+  batchId: string | null;
+  changed: number;
+  skipped: number;
+  unchanged: number;
+  skippedList: { name: string; reason: string }[];
+}
+
+export interface PriceChangeBatch {
+  id: string;
+  actor: string;
+  params: PriceChangeOptions;
+  productCount: number;
+  createdAt: string;
+  undoneAt: string | null;
+  undoneBy: string | null;
+}
+
 export const productsApi = {
+  previewPriceChange: (body: PriceChangeRequest) =>
+    api.post<PriceChangePreview>('/v1/products/price-changes/preview', body).then((r) => r.data),
+
+  applyPriceChange: (body: PriceChangeRequest) =>
+    api.post<PriceChangeResult>('/v1/products/price-changes', body).then((r) => r.data),
+
+  listPriceChanges: () => api.get<PriceChangeBatch[]>('/v1/products/price-changes').then((r) => r.data),
+
+  undoPriceChange: (batchId: string) =>
+    api.post<{ restored: number; skipped: number }>(`/v1/products/price-changes/${batchId}/undo`).then((r) => r.data),
+
   list: (params: ListProductsParams = {}) =>
     api.get<ProductListResponse>('/v1/products', { params }).then((r) => r.data),
 
