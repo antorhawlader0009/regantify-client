@@ -18,6 +18,25 @@ export interface VendorCustomer {
   tags: string[];
   /** The vendor's own note on this customer. */
   note: string | null;
+  /** The automatic group (server customers/customer-groups.ts); null with no real order. */
+  group?: CustomerGroup | null;
+}
+
+/** Automatic customer groups, worked out by the server from real sales (cancelled/returned/unpaid orders don't count). */
+export type CustomerGroup = 'NEW' | 'RETURNING' | 'VIP' | 'SLEEPING';
+
+export const CUSTOMER_GROUP_LABELS: Record<CustomerGroup, string> = {
+  NEW: 'New',
+  RETURNING: 'Returning',
+  VIP: 'VIP',
+  SLEEPING: 'Sleeping',
+};
+
+/** The store's limits for VIP and Sleeping (Customers > Group settings). 0 turns that VIP half off. */
+export interface CustomerGroupSettings {
+  vipMinOrders: number;
+  vipMinSpent: number;
+  sleepingDays: number;
 }
 
 /** A tag the store uses and how many customers carry it. */
@@ -51,6 +70,8 @@ export interface ListCustomersParams {
   dueOnly?: boolean;
   /** Only customers carrying this tag. */
   tag?: string;
+  /** Only customers in this automatic group. */
+  group?: CustomerGroup;
   page?: number;
   perPage?: number;
 }
@@ -60,6 +81,9 @@ export interface CustomerListResponse {
   total: number;
   page: number;
   perPage: number;
+  /** Customers per group across the whole store (before filters). */
+  groupCounts: Record<CustomerGroup, number>;
+  groupSettings: CustomerGroupSettings;
 }
 
 /** "+ Add New" (Add Customer page) and Bulk Upload both post this shape — one call per customer. */
@@ -102,6 +126,7 @@ export interface ExportCsvParams {
   blacklistedOnly?: boolean;
   dueOnly?: boolean;
   tag?: string;
+  group?: CustomerGroup;
   /** When given, only these phones are exported — the "select rows, then Export CSV" flow. */
   phones?: string[];
 }
@@ -111,6 +136,11 @@ export const customersApi = {
     api.get<CustomerListResponse>('/v1/customers', { params }).then((r) => r.data),
 
   getStats: () => api.get<CustomerStats>('/v1/customers/stats').then((r) => r.data),
+
+  getGroupSettings: () => api.get<CustomerGroupSettings>('/v1/customers/group-settings').then((r) => r.data),
+
+  updateGroupSettings: (payload: CustomerGroupSettings) =>
+    api.patch<CustomerGroupSettings>('/v1/customers/group-settings', payload).then((r) => r.data),
 
   findOne: (phone: string) =>
     api.get<VendorCustomerDetail>(`/v1/customers/${encodeURIComponent(phone)}`).then((r) => r.data),

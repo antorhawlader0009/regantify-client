@@ -409,8 +409,9 @@ const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
   [/^\/vendor\/finance\/(withdraw|payment-callback)(\/|$)/, 'owner'],
   [/^\/vendor\/finance\//, 'finance.view'],
   [/^\/vendor\/analytics(\/|$)/, 'analytics.view'],
-  [/^\/vendor\/orders\/add$/, 'orders.create'],
+  [/^\/vendor\/orders\/(add|import)$/, 'orders.create'],
   [/^\/vendor\/orders\/handover(\/|$)/, 'orders.courier'], // courier handover sheets
+  [/^\/vendor\/orders\/return-check-in$/, 'orders.edit'], // counting returned parcels back in
   [/^\/vendor\/orders(\/|$)/, 'orders.view'],
   [/^\/vendor\/customers\/(add|bulk-upload)$/, 'customers.edit'],
   [/^\/vendor\/customers\/[^/]+\/edit$/, 'customers.edit'],

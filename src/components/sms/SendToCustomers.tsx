@@ -23,7 +23,7 @@ function isQuietInput(value: string): boolean {
 
 /**
  * SMS > Send to customers: an offer or news to everyone who ordered from the store, those who ordered
- * recently, those who bought before but haven't for a while (win-back), a tag, or the customers picked on
+ * recently, those who bought before but haven't for a while (win-back), the VIP or returning group, a tag, or the customers picked on
  * the Customers page (`selectedPhones`). Shows how many get it and the credits it takes before anything is
  * sent. "Send later" saves it for a time (8 AM to 10 PM Dhaka); the audience is then worked out when it goes
  * out, and the scheduled messages are listed underneath.
@@ -113,6 +113,9 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
     { id: 'ALL', label: 'Everyone who ordered' },
     { id: 'RECENT', label: 'Ordered in the last…' },
     { id: 'INACTIVE', label: 'Haven’t ordered for…' },
+    // The automatic customer groups (Customers > Group settings decides who is VIP).
+    { id: 'VIP', label: 'VIP customers' },
+    { id: 'RETURNING', label: 'Returning customers' },
     // Customers > note and tags: only once the store has tagged someone.
     ...((storeTags?.length ?? 0) > 0 ? [{ id: 'TAG' as const, label: 'Customers with a tag…' }] : []),
   ];

@@ -11,6 +11,8 @@ export interface StockSettings {
   backorderPopupMessage: string | null;
   backorderShortMessage: string | null;
   reduceStockOnCodCheckout: boolean;
+  /** A Returned order puts its stock back only once the parcel is checked in at the shop (Orders > Return check-in). */
+  returnStockAfterCheckIn: boolean;
   /** Low stock limit for products without their own (Edit Product > Low stock alert). */
   lowStockThreshold: number;
 }
@@ -51,6 +53,8 @@ export interface CodGuardSettings {
   verificationExpiryHold: boolean;
   // "Cancel my order" on the shopper's tracking and thank-you pages, while the order is Pending or On Hold.
   customerCancelEnabled: boolean;
+  // "Fix my address" on the same pages: the shopper corrects the street address, thana and a second phone.
+  customerEditEnabled: boolean;
 }
 
 // Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.

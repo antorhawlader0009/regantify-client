@@ -7,8 +7,12 @@ import {
   Clock,
   CreditCard,
   FileText,
+  Gift,
+  Headphones,
   Layers,
   LayoutGrid,
+  UsersRound,
+  Zap,
   Loader2,
   type LucideIcon,
   Megaphone,
@@ -16,6 +20,7 @@ import {
   Plus,
   ReceiptText,
   Search,
+  Settings2,
   Star,
   Tag,
   User,
@@ -30,7 +35,7 @@ import { useSearchUi } from '../../store/searchStore';
 
 /*
  * Top-bar search for the vendor dashboard, a "command palette": one box
- * that finds dashboard pages and "Add ..." actions instantly (no server),
+ * that finds dashboard pages, settings (searchCatalog.ts) and "Add ..." actions instantly (no server),
  * and the store's own products, orders, customers, coupons and more through
  * GET /v1/search. Opens from the top bar, Ctrl/Cmd+K or "/", and works
  * entirely from the keyboard. Recently opened results show when it is empty.
@@ -49,7 +54,14 @@ interface Row {
 const ICONS: Record<string, LucideIcon> = {
   recent: Clock,
   page: LayoutGrid,
+  setting: Settings2,
   action: Plus,
+  discounts: Tag,
+  flashSales: Zap,
+  giftCards: Gift,
+  sizeGuides: Layers,
+  tickets: Headphones,
+  staff: UsersRound,
   products: Package,
   orders: ReceiptText,
   customers: User,
@@ -61,6 +73,25 @@ const ICONS: Record<string, LucideIcon> = {
   pages: FileText,
   reviews: Star,
 };
+
+/**
+ * A result like `/vendor/lms/settings#team` opens the page, then scrolls to the section with that id. The page may
+ * still be loading its data, so it looks for the section for up to 3 seconds.
+ */
+function scrollToHash(path: string) {
+  const id = path.split('#')[1];
+  if (!id) return;
+  let tries = 0;
+  const timer = window.setInterval(() => {
+    const el = document.getElementById(id);
+    if (el) {
+      window.clearInterval(timer);
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (++tries >= 30) {
+      window.clearInterval(timer);
+    }
+  }, 100);
+}
 
 const isMac = typeof navigator !== 'undefined' && /mac|iphone|ipad/i.test(navigator.platform);
 
@@ -189,17 +220,25 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
         .forEach((a) => out.push({ key: `qa-${a.path}`, group: 'Quick actions', icon: 'action', title: a.title, path: a.path }));
       return out;
     }
-    const matches = searchStatic(q, 40)
+    const matches = searchStatic(q, 60)
       .filter((m) => canGo(m.path))
-      .slice(0, 12);
-    matches
-      .filter((m) => m.kind === 'page')
-      .slice(0, 4)
-      .forEach((m) => out.push({ key: `page-${m.path}-${m.title}`, group: 'Go to', icon: 'page', title: m.title, subtitle: m.subtitle, path: m.path }));
-    matches
-      .filter((m) => m.kind === 'action')
-      .slice(0, 3)
-      .forEach((m) => out.push({ key: `act-${m.path}`, group: 'Actions', icon: 'action', title: m.title, path: m.path }));
+      .slice(0, 24);
+    // Pages, settings and actions, the group holding the best match first.
+    const kinds = [
+      { kind: 'page' as const, group: 'Go to', icon: 'page', max: 4 },
+      { kind: 'setting' as const, group: 'Settings', icon: 'setting', max: 6 },
+      { kind: 'action' as const, group: 'Actions', icon: 'action', max: 3 },
+    ].sort((a, b) => {
+      const ia = matches.findIndex((m) => m.kind === a.kind);
+      const ib = matches.findIndex((m) => m.kind === b.kind);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    for (const k of kinds) {
+      matches
+        .filter((m) => m.kind === k.kind)
+        .slice(0, k.max)
+        .forEach((m) => out.push({ key: `${k.kind}-${m.path}-${m.title}`, group: k.group, icon: k.icon, title: m.title, subtitle: m.subtitle, path: m.path }));
+    }
     // Results for the previous word stay visible while the new ones load, but only if they still fit what is typed.
     for (const g of remote.data?.groups ?? []) {
       for (const it of g.items) {
@@ -219,6 +258,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
     if (userId) setRecents(saveRecent(userId, { title: row.title, subtitle: row.subtitle, path: row.path }));
     onClose();
     navigate(row.path);
+    scrollToHash(row.path);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -246,7 +286,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
     body = (
       <div className="px-6 py-12 text-center text-sm text-neutral-500">
         <p className="font-medium text-neutral-800">No results for &ldquo;{query.trim()}&rdquo;</p>
-        <p className="mt-1">Try a product name, an order number (or its last few characters), a phone number, or a page name.</p>
+        <p className="mt-1">Try a product name, an order number, a phone number, a page, or what a setting does (for example &ldquo;low stock&rdquo;, &ldquo;block fake orders&rdquo; or &ldquo;delivery charge&rdquo;).</p>
       </div>
     );
   } else {
@@ -322,7 +362,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             maxLength={80}
-            placeholder="Search products, orders, customers, pages..."
+            placeholder="Search products, orders, customers, settings, pages..."
             aria-label="Search"
             className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-neutral-400"
           />
@@ -342,7 +382,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
           <span>&uarr;&darr; to move</span>
           <span>&crarr; to open</span>
           <span>Esc to close</span>
-          <span className="ml-auto">Tip: type an order number or a phone number</span>
+          <span className="ml-auto">Tip: search a setting by what it does</span>
         </div>
       </div>
     </div>

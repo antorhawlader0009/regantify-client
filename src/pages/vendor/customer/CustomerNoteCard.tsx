@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Plus, X } from 'lucide-react';
-import { customersApi, SUGGESTED_CUSTOMER_TAGS, type VendorCustomerDetail } from '../../../lib/customersApi';
+import { Crown, Loader2, Plus, X } from 'lucide-react';
+import { CUSTOMER_GROUP_LABELS, customersApi, SUGGESTED_CUSTOMER_TAGS, type CustomerGroup, type VendorCustomerDetail } from '../../../lib/customersApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
@@ -27,6 +27,26 @@ export function CustomerTagChips({ tags, onRemove }: { tags: string[]; onRemove?
         </span>
       ))}
     </div>
+  );
+}
+
+
+const GROUP_CHIP_CLASS: Record<CustomerGroup, string> = {
+  NEW: 'border-sky-200 bg-sky-50 text-sky-800',
+  RETURNING: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  VIP: 'border-violet-300 bg-violet-50 text-violet-800',
+  SLEEPING: 'border-neutral-300 bg-neutral-100 text-neutral-600',
+};
+
+/** The automatic customer group as a chip (Customers list, Customer Detail, Order detail); nothing for no group. */
+export function CustomerGroupChip({ group, suffix }: { group: CustomerGroup | null | undefined; suffix?: string }) {
+  if (!group) return null;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${GROUP_CHIP_CLASS[group]}`}>
+      {group === 'VIP' && <Crown size={12} aria-hidden />}
+      {CUSTOMER_GROUP_LABELS[group]}
+      {suffix && <span className="font-normal">· {suffix}</span>}
+    </span>
   );
 }
 

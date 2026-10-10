@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronRight, Download, MoreVertical, Plus, Send, Upload, Users, X } from 'lucide-react';
-import { customersApi, type VendorCustomer } from '../../../lib/customersApi';
+import { ChevronRight, Download, MoreVertical, Plus, Send, Settings2, Upload, Users, X } from 'lucide-react';
+import { CUSTOMER_GROUP_LABELS, customersApi, type CustomerGroup, type VendorCustomer } from '../../../lib/customersApi';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import {
@@ -29,7 +29,8 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
-import { CustomerTagChips } from './CustomerNoteCard';
+import { CustomerGroupChip, CustomerTagChips } from './CustomerNoteCard';
+import { CustomerGroupSettingsDialog } from './CustomerGroupSettingsDialog';
 import { useCan } from '../../../lib/useStaffAccess';
 
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -142,6 +143,11 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
               <span className="font-medium text-regantify-text">{customer.name}</span>
             )}
             <p className="mt-0.5 text-xs text-neutral-500">{customer.phone}</p>
+            {customer.group && (
+              <div className="mt-1.5">
+                <CustomerGroupChip group={customer.group} />
+              </div>
+            )}
             {customer.blacklisted && (
               <div className="mt-1.5">
                 <BlacklistedBadge />
@@ -193,6 +199,11 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
           {customer.phone} · {customer.orderCount} {customer.orderCount === 1 ? 'order' : 'orders'} · {formatMoney(customer.totalSpent)}
           {customer.dueBalance > 0 && <span className="font-medium text-amber-700"> · owes {formatMoney(customer.dueBalance)}</span>}
         </p>
+        {customer.group && (
+          <div className="mt-1">
+            <CustomerGroupChip group={customer.group} />
+          </div>
+        )}
         {customer.blacklisted && (
           <div className="mt-1">
             <BlacklistedBadge />
@@ -214,7 +225,7 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
 type CustomerFilter = 'ALL' | 'BLACKLISTED' | 'DUE';
 
 /** One row of the exported CSV. */
-const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Due', 'Blacklisted', 'Tags', 'Note'];
+const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Address', 'City', 'District', 'Zip', 'Orders', 'Total Spent', 'Due', 'Group', 'Blacklisted', 'Tags', 'Note'];
 
 function toExportRow(c: VendorCustomer): string[] {
   return [
@@ -228,6 +239,7 @@ function toExportRow(c: VendorCustomer): string[] {
     String(c.orderCount),
     c.totalSpent.toFixed(2),
     c.dueBalance.toFixed(2),
+    c.group ? CUSTOMER_GROUP_LABELS[c.group] : '',
     c.blacklisted ? 'Yes' : 'No',
     c.tags.join(', '),
     c.note ?? '',
@@ -251,19 +263,23 @@ export default function Customers() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => setPage(1), [search, filter, tag, perPage]);
-  useEffect(() => setSelected(new Set()), [search, filter, tag, page, perPage]);
+  // Automatic group filter (customer-groups.ts on the server); '' = every group.
+  const [group, setGroup] = useState<CustomerGroup | ''>('');
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+  useEffect(() => setPage(1), [search, filter, tag, group, perPage]);
+  useEffect(() => setSelected(new Set()), [search, filter, tag, group, page, perPage]);
 
   const { data: storeTags } = useQuery({ queryKey: ['customer-tags'], queryFn: customersApi.listTags });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['customers', { search, filter, tag, page, perPage }],
+    queryKey: ['customers', { search, filter, tag, group, page, perPage }],
     queryFn: () =>
       customersApi.list({
         search: search.trim() || undefined,
         blacklistedOnly: filter === 'BLACKLISTED',
         dueOnly: filter === 'DUE',
         tag: tag || undefined,
+        group: group || undefined,
         page,
         perPage,
       }),
@@ -297,6 +313,7 @@ export default function Customers() {
         blacklistedOnly: filter === 'BLACKLISTED',
         dueOnly: filter === 'DUE',
         tag: tag || undefined,
+        group: group || undefined,
         phones: selected.size > 0 ? Array.from(selected) : undefined,
       });
       if (rows.length === 0) {
@@ -311,7 +328,7 @@ export default function Customers() {
     }
   };
 
-  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : filter === 'DUE' ? 'Nobody owes you money' : search || tag ? 'No customers match your search' : 'No customers yet';
+  const emptyTitle = filter === 'BLACKLISTED' ? 'No blacklisted customers' : filter === 'DUE' ? 'Nobody owes you money' : group ? `No ${CUSTOMER_GROUP_LABELS[group]} customers yet` : search || tag ? 'No customers match your search' : 'No customers yet';
   const emptyHint =
     filter === 'BLACKLISTED'
       ? 'Customers you blacklist show up here, and can’t order with Cash on Delivery.'
@@ -321,7 +338,7 @@ export default function Customers() {
         ? 'Try a different name or phone number.'
         : 'Customers appear here after their first order. You can also add them yourself.';
   const emptyAction =
-    filter === 'ALL' && !search && !tag && canEdit ? (
+    filter === 'ALL' && !search && !tag && !group && canEdit ? (
       <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
         <Plus size={15} />
         Add customer
@@ -383,6 +400,39 @@ export default function Customers() {
           </>
         }
       />
+
+      {/* Automatic groups: one chip per group with its count; tap again to clear. */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setGroup('')}
+          className={`rounded-full border px-3 py-1 text-sm ${group === '' ? 'border-brand bg-brand/5 font-medium text-brand' : 'border-line text-neutral-600 hover:bg-neutral-50'}`}
+        >
+          All groups
+        </button>
+        {(Object.keys(CUSTOMER_GROUP_LABELS) as CustomerGroup[]).map((g) => (
+          <button
+            key={g}
+            type="button"
+            onClick={() => setGroup(group === g ? '' : g)}
+            className={`rounded-full border px-3 py-1 text-sm ${group === g ? 'border-brand bg-brand/5 font-medium text-brand' : 'border-line text-neutral-600 hover:bg-neutral-50'}`}
+          >
+            {CUSTOMER_GROUP_LABELS[g]}
+            {data?.groupCounts && <span className="ml-1 text-neutral-400">{data.groupCounts[g].toLocaleString()}</span>}
+          </button>
+        ))}
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => setGroupSettingsOpen(true)}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
+          >
+            <Settings2 size={14} aria-hidden />
+            Group settings
+          </button>
+        )}
+      </div>
+      <CustomerGroupSettingsDialog open={groupSettingsOpen} onOpenChange={setGroupSettingsOpen} current={data?.groupSettings} />
 
       {/* Selection bar */}
       {selected.size > 0 && (

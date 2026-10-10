@@ -25,6 +25,10 @@ function audienceText(row: ScheduledSms): string {
       return `Haven’t ordered for ${row.days ?? 60} days`;
     case 'TAG':
       return `Customers tagged ${row.tag ?? ''}`;
+    case 'VIP':
+      return 'VIP customers';
+    case 'RETURNING':
+      return 'Returning customers';
     default:
       return `${row.selectedCount} picked ${row.selectedCount === 1 ? 'customer' : 'customers'}`;
   }

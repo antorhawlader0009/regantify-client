@@ -28,6 +28,8 @@ export interface OrderItem {
   unitPrice: string;
   quantity: number;
   lineTotal: string;
+  /** Return check-in finding for this line (vendor only); null until the returned parcel is checked in. */
+  returnOutcome?: 'GOOD' | 'DAMAGED' | 'MISSING' | null;
   // Live product snapshot for the "view on storefront" link — null when
   // the product was since deleted, or DRAFT (no public page to link to).
   // See OrdersService.itemsInclude.
@@ -159,6 +161,11 @@ export interface Order {
   advanceNote?: string | null;
   /** Order detail only: Customers > "Note & tags" on this phone; null when there are none. */
   vendorCustomerNote?: { note: string | null; tags: string[] } | null;
+  /** Vendor only: when and by whom a returned parcel was counted in at the shop (Orders > Return check-in); null = not yet. */
+  returnCheckedAt?: string | null;
+  returnCheckedBy?: string | null;
+  /** Order detail only: this phone's automatic customer group with its real orders and spend; null = none yet. */
+  customerGroup?: { group: 'NEW' | 'RETURNING' | 'VIP' | 'SLEEPING'; orders: number; spent: number } | null;
   /** What an online advance is for (DELIVERY = delivery charge, PREORDER = pre-order products, LINK = a payment link the vendor sent); null = no advance. */
   advanceFor?: 'DELIVERY' | 'PREORDER' | 'LINK' | null;
   /** Order detail only: the payment link on an order the vendor entered (see PaymentLinkInfo); null = none. */
@@ -285,6 +292,8 @@ export interface ListOrdersParams {
   source?: 'STOREFRONT' | 'MANUAL' | 'POS';
   /** Only orders marked as a possible duplicate of an earlier one. */
   possibleDuplicate?: boolean;
+  /** Only orders that lost money (needs analytics.profit). */
+  lossOnly?: boolean;
   page?: number;
   perPage?: number;
 }

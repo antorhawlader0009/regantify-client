@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  ClipboardCheck,
   ClipboardList,
   Copy,
   Download,
@@ -14,6 +15,7 @@ import {
   History,
   MoreVertical,
   ListChecks,
+  Package,
   Phone,
   Plus,
   Printer,
@@ -23,7 +25,9 @@ import {
   Settings2,
   Tag,
   Trash2,
+  TrendingDown,
   Truck,
+  Upload,
   Undo2,
   User,
   X,
@@ -68,6 +72,8 @@ import { SearchBox, TableFooter, outlineBtn, td, th } from '../../../components/
 import { NeedsAttention } from '../../../components/order/NeedsAttention';
 import { BulkStatusMenu } from '../../../components/order/BulkStatusMenu';
 import { BulkInvoicePrint } from '../../../components/order/BulkInvoicePrint';
+import { PackingListPrint } from '../../../components/order/PackingListPrint';
+import { orderProfitApi, type OrderProfit } from '../../../lib/orderProfitApi';
 import { downloadCsv, toCsv } from '../../../lib/csv';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
@@ -181,6 +187,8 @@ const BOOKING_STATUS_LABELS: Record<Order['courierBookingStatus'], string> = {
 
 interface OrderRowProps {
   order: Order;
+  /** Profit on this order (for people with analytics.profit, when the list shows it); undefined = not loaded or not a sale. */
+  profit?: OrderProfit;
   trashView: boolean;
   onCheckHistory: (phone: string) => void;
   onChangeLabel: (order: Order) => void;
@@ -217,6 +225,7 @@ interface OrderRowProps {
 
 function OrderRow({
   order,
+  profit,
   trashView,
   onCheckHistory,
   onChangeLabel,
@@ -504,6 +513,12 @@ function OrderRow({
       <td className={`${td} whitespace-nowrap`}>
         <p className="font-medium">{formatPrice(vendorOrderTotal(order))}</p>
         <p className="mt-0.5 text-xs text-neutral-500">{order.source === 'POS' ? paymentMethodLabel(order.paymentMethod) : order.paymentMethod}</p>
+        {profit && (
+          <p className={`mt-0.5 text-xs font-medium ${profit.profit < 0 ? 'text-red-700' : 'text-green-700'}`} title={profit.costKnown ? 'Profit on this order' : 'Some products have no cost set, so the real profit is lower'}>
+            {profit.returned ? 'Loss' : 'Profit'} {profit.profit < 0 ? '-' : ''}৳{Math.abs(profit.profit).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            {!profit.costKnown && !profit.returned ? '*' : ''}
+          </p>
+        )}
       </td>
       <td className={td}>
         <DropdownMenu
@@ -742,6 +757,15 @@ export default function Orders() {
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
   const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
+  // Profit (TellMe idea 27), for people with analytics.profit: orders that lost money, and a profit line under each total.
+  const canProfit = useCan('analytics.profit');
+  const [lossOnly, setLossOnly] = useState(false);
+  const [showProfit, setShowProfit] = useState(() => localStorage.getItem('regantify-orders-show-profit') === '1');
+  const toggleShowProfit = () => {
+    const next = !showProfit;
+    setShowProfit(next);
+    localStorage.setItem('regantify-orders-show-profit', next ? '1' : '0');
+  };
   const lmsMe = useQuery({ queryKey: ['lms', 'me'], queryFn: lmsApi.me, retry: false, staleTime: 5 * 60_000 });
   // What this person's role can do on this page (rule-plan.md Step 10); the server checks each again.
   const canCreate = useCan('orders.create');
@@ -765,7 +789,7 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, lossOnly]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -773,6 +797,7 @@ export default function Orders() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   // "Print invoices" in the bulk bar: the orders being printed, null when closed.
   const [printingInvoices, setPrintingInvoices] = useState<string[] | null>(null);
+  const [printingPacking, setPrintingPacking] = useState<string[] | null>(null);
   // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
   const [bulkBooking, setBulkBooking] = useState<{ provider: BulkCourierProvider; ids: string[] } | null>(null);
   useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page, courierBooking]);
@@ -846,7 +871,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, lossOnly }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -858,6 +883,7 @@ export default function Orders() {
         courierBooking,
         source: source || undefined,
         possibleDuplicate: duplicatesOnly || undefined,
+        lossOnly: (canProfit && lossOnly) || undefined,
         page,
         perPage,
       }),
@@ -865,6 +891,15 @@ export default function Orders() {
   });
 
   const orders = data?.orders ?? [];
+  // Profit for the orders on this page (one request), only when asked for.
+  const profitIds = orders.map((o) => o.id);
+  const { data: profits } = useQuery({
+    queryKey: ['order-profits', profitIds],
+    queryFn: () => orderProfitApi.get(profitIds),
+    enabled: canProfit && (showProfit || lossOnly) && profitIds.length > 0,
+    retry: false,
+  });
+  const profitById = new Map((profits ?? []).map((p) => [p.orderId, p]));
   const total = data?.total ?? 0;
 
   // "Export": the selected orders, or with nothing selected every order matching the current
@@ -886,6 +921,7 @@ export default function Orders() {
                 courierBooking,
                 source: source || undefined,
                 possibleDuplicate: duplicatesOnly || undefined,
+                lossOnly: (canProfit && lossOnly) || undefined,
                 page: 1,
                 perPage: 10000,
               })
@@ -1004,6 +1040,29 @@ export default function Orders() {
                 <Copy size={15} />
                 Possible duplicates
               </button>
+              {canProfit && (
+                <>
+                  <button
+                    type="button"
+                    aria-pressed={lossOnly}
+                    onClick={() => setLossOnly((v) => !v)}
+                    title="Orders that lost money: profit under zero (newest 2,000)"
+                    className={`${toolbarBtn} ${lossOnly ? 'border-red-300 bg-red-50 text-red-800' : ''}`}
+                  >
+                    <TrendingDown size={15} />
+                    Loss-making
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={showProfit}
+                    onClick={toggleShowProfit}
+                    title="Show the profit under each order's total"
+                    className={`${toolbarBtn} ${showProfit ? 'border-green-300 bg-green-50 text-green-800' : ''}`}
+                  >
+                    Show profit
+                  </button>
+                </>
+              )}
               {lmsOn && (
                 <div className="relative">
                   <select
@@ -1040,10 +1099,24 @@ export default function Orders() {
             </button>
           )}
 
+          {canCreate && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/import')} className={toolbarBtn} title="Bring orders in from an Excel or CSV file">
+              <Upload size={15} />
+              Import
+            </button>
+          )}
+
           {canCourier && activeTab !== 'ABANDONED' && !trashView && (
             <button type="button" onClick={() => navigate('/vendor/orders/handover')} className={toolbarBtn} title="Hand parcels to a courier with a signed sheet">
               <Truck size={15} />
               Courier handover
+            </button>
+          )}
+
+          {canEdit && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/return-check-in')} className={toolbarBtn} title="Count returned parcels back in and sort the stock">
+              <ClipboardCheck size={15} />
+              Return check-in
             </button>
           )}
 
@@ -1134,6 +1207,10 @@ export default function Orders() {
                   <Printer size={13} />
                   Print invoices
                 </button>
+                <button type="button" onClick={() => setPrintingPacking([...selectedIds])} className={bulkBtn} title="Pick list and packing slips for whoever packs">
+                  <Package size={13} />
+                  Packing list
+                </button>
                 <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
                   <Printer size={13} />
                   Print Pathao labels
@@ -1220,7 +1297,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || lossOnly) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>
@@ -1230,6 +1307,7 @@ export default function Orders() {
                       <OrderRow
                         key={order.id}
                         order={order}
+                        profit={profitById.get(order.id)}
                         trashView={trashView}
                         onCheckHistory={setHistoryPhone}
                         onChangeLabel={setLabelOrder}
@@ -1273,6 +1351,7 @@ export default function Orders() {
       />
       <InvoiceModal order={invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
       <BulkInvoicePrint ids={printingInvoices ?? []} open={printingInvoices !== null} onOpenChange={(open) => !open && setPrintingInvoices(null)} />
+      <PackingListPrint ids={printingPacking ?? []} open={printingPacking !== null} onOpenChange={(open) => !open && setPrintingPacking(null)} />
       <Dialog
         open={timelineOrder != null}
         onOpenChange={(open) => !open && setTimelineOrder(null)}

@@ -725,6 +725,8 @@ export function offerSentence(o: {
   startsAt?: string;
   endsAt?: string;
   usageLimit?: string;
+  /** Coupons: how many times one customer may use it. */
+  perCustomer?: string;
 }): string {
   const amount = Number(o.amount);
   const what =
@@ -748,6 +750,7 @@ export function offerSentence(o: {
   if (o.endsAt) parts.push(`until ${fmt(o.endsAt)}`);
   let sentence = `${parts.join(' ')}.`;
   if (o.usageLimit && Number(o.usageLimit) > 0) sentence += ` Can be used ${o.usageLimit} ${Number(o.usageLimit) === 1 ? 'time' : 'times'}.`;
+  if (o.perCustomer && Number(o.perCustomer) > 0) sentence += ` Each customer can use it ${Number(o.perCustomer) === 1 ? 'once' : `${o.perCustomer} times`}.`;
   return sentence;
 }
 

@@ -49,7 +49,7 @@ export const smsApi = {
 };
 
 /** Who an SMS campaign goes to (SMS_AUDIENCES on the server). */
-export type SmsAudience = 'ALL' | 'RECENT' | 'INACTIVE' | 'SELECTED' | 'TAG';
+export type SmsAudience = 'ALL' | 'RECENT' | 'INACTIVE' | 'SELECTED' | 'TAG' | 'VIP' | 'RETURNING';
 
 export type ScheduledSmsStatus = 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED' | 'CANCELLED';
 

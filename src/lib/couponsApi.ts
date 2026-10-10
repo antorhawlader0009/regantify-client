@@ -30,6 +30,8 @@ export interface Coupon {
   products: CouponProductRef[];
   categories: CouponCategoryRef[];
   usageLimit: number | null;
+  /** How many times one customer (by phone) may use it; null = no per-customer limit. */
+  usagePerCustomer: number | null;
   usageCount: number;
   active: boolean;
   createdAt: string;
@@ -69,6 +71,7 @@ export interface CouponPayload {
   productIds?: string[];
   categoryIds?: string[];
   usageLimit?: number | null;
+  usagePerCustomer?: number | null;
 }
 
 export const couponsApi = {

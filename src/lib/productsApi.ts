@@ -88,6 +88,8 @@ export interface Product {
   lowStockThreshold?: number | null;
   /** The size guide shown beside the Size choice; null = the category's guide, if any. */
   sizeGuideId?: string | null;
+  /** Hidden words that also find this product in the store's search ("also found as"). */
+  searchKeywords?: string[];
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -130,6 +132,8 @@ export interface CreateProductPayload {
   lowStockThreshold?: number | null;
   /** The size guide shown beside the Size choice; null = the category's guide, if any. */
   sizeGuideId?: string | null;
+  /** Hidden words that also find this product in the store's search ("also found as"). */
+  searchKeywords?: string[];
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -172,7 +176,7 @@ export interface StockMovement {
   delta: number;
   stockBefore: number;
   stockAfter: number;
-  /** ORDER, ORDER_BACK, ITEMS_EDITED, POS_SALE, POS_RETURN, CREATED, RECEIVED, DAMAGED, COUNT, EDIT, API. */
+  /** ORDER, ORDER_BACK, RETURN_DAMAGED, RETURN_MISSING, ITEMS_EDITED, POS_SALE, POS_RETURN, CREATED, RECEIVED, DAMAGED, COUNT, EDIT, API. */
   reason: string;
   orderId: string | null;
   orderRef: string | null;
@@ -225,6 +229,8 @@ export interface UpdateProductPayload {
   lowStockThreshold?: number | null;
   /** The size guide shown beside the Size choice; null = the category's guide, if any. */
   sizeGuideId?: string | null;
+  /** Hidden words that also find this product in the store's search ("also found as"). */
+  searchKeywords?: string[];
   stockQuantity?: number;
   /** Why stock was changed by hand in this save (kept in the stock history). */
   stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';
@@ -339,6 +345,10 @@ export interface PriceChangeBatch {
 }
 
 export const productsApi = {
+  /** Adds one hidden search word to a product (Analytics > "searched but not found" > Add to a product). */
+  addSearchWord: (id: string, word: string) =>
+    api.post<{ id: string; name: string; searchKeywords: string[]; added: boolean }>(`/v1/products/${id}/search-words`, { word }).then((r) => r.data),
+
   previewPriceChange: (body: PriceChangeRequest) =>
     api.post<PriceChangePreview>('/v1/products/price-changes/preview', body).then((r) => r.data),
 

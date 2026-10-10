@@ -20,6 +20,7 @@ import {
 } from '../../../components/product/ProductFormKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
+import { SearchWordsField } from '../../../components/product/SearchWordsField';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
 import { AddBrandModal } from './AddBrandModal';
@@ -70,6 +71,8 @@ export default function AddProduct() {
   const [brand, setBrand] = useState('');
   const [summary, setSummary] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
+  // Hidden words that also find the product in the store's search ("also found as").
+  const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
   const [metaDescription, setMetaDescription] = useState('');
 
   // Web address: follows the name until the vendor edits it.
@@ -245,6 +248,7 @@ export default function AddProduct() {
       summary: showSummary ? summary.trim() || undefined : undefined,
       metaTitle: metaTitle.trim() || undefined,
       metaDescription: metaDescription.trim() || undefined,
+      searchKeywords: searchKeywords.length > 0 ? searchKeywords : undefined,
       slug: slug.trim() || undefined,
       visibility,
       // The server drops the one that doesn't fit the status (a go-live time on a Public product).
@@ -337,6 +341,7 @@ export default function AddProduct() {
                   Add a short summary
                 </button>
               )}
+              <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
             </div>
           </SectionCard>
 

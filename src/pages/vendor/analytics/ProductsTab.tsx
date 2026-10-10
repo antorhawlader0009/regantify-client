@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ProductsAnalytics, SearchedWord, SearchesAnalytics } from '../../../lib/analyticsApi';
+import { AddSearchWordDialog } from '../../../components/analytics/AddSearchWordDialog';
+import { useCan } from '../../../lib/useStaffAccess';
 import { Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, SERIES_1, StatCard, MobileRows } from '../../../components/analytics/AnalyticsUi';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
@@ -134,7 +137,18 @@ function SearchesSection({ range }: { range: TabProps['range'] }) {
   return <TabState query={query}>{(data) => <SearchesCards data={data} />}</TabState>;
 }
 
-function WordList({ rows, empty, detail }: { rows: SearchedWord[]; empty: string; detail: (w: SearchedWord) => string }) {
+function WordList({
+  rows,
+  empty,
+  detail,
+  onAdd,
+}: {
+  rows: SearchedWord[];
+  empty: string;
+  detail: (w: SearchedWord) => string;
+  /** Shows "Add to a product" on each word (the not-found list, for people who can edit products). */
+  onAdd?: (word: string) => void;
+}) {
   if (rows.length === 0) return <EmptyState text={empty} />;
   const max = Math.max(1, ...rows.map((w) => w.searches));
   return (
@@ -143,7 +157,14 @@ function WordList({ rows, empty, detail }: { rows: SearchedWord[]; empty: string
         <li key={w.term} className="py-2.5">
           <div className="flex items-baseline justify-between gap-3">
             <span className="min-w-0 truncate text-sm font-medium text-regantify-text">{w.term}</span>
-            <span className="whitespace-nowrap text-xs text-neutral-500 tabular-nums">{detail(w)}</span>
+            <span className="flex items-baseline gap-3">
+              <span className="whitespace-nowrap text-xs text-neutral-500 tabular-nums">{detail(w)}</span>
+              {onAdd && (
+                <button type="button" onClick={() => onAdd(w.term)} className="whitespace-nowrap text-xs font-medium text-brand hover:underline">
+                  Add to a product
+                </button>
+              )}
+            </span>
           </div>
           <div className="mt-1.5 h-1.5 rounded-full bg-neutral-100" aria-hidden>
             <div className="h-1.5 rounded-full" style={{ width: `${Math.max(4, Math.round((w.searches / max) * 100))}%`, background: SERIES_1 }} />
@@ -156,6 +177,8 @@ function WordList({ rows, empty, detail }: { rows: SearchedWord[]; empty: string
 
 function SearchesCards({ data }: { data: SearchesAnalytics }) {
   const { totals } = data;
+  const canEdit = useCan('products.edit');
+  const [adding, setAdding] = useState<string | null>(null);
   const missPct = totals.searches > 0 ? Math.round((totals.noResults / totals.searches) * 100) : 0;
   return (
     <>
@@ -180,15 +203,17 @@ function SearchesCards({ data }: { data: SearchesAnalytics }) {
           <Card title="Most searched" subtitle={`What shoppers look for. Words are kept ${data.keptDays} days.`}>
             <WordList rows={data.top} empty="No searches yet." detail={(w) => `${w.searches} ${w.searches === 1 ? 'search' : 'searches'}`} />
           </Card>
-          <Card title="Searched but not found" subtitle="Shoppers wanted these and found nothing. Add the product, or use the word in a product’s name or description.">
+          <Card title="Searched but not found" subtitle="Shoppers wanted these and found nothing. Add the product, or make the word find one you already sell.">
             <WordList
               rows={data.notFound}
               empty="Everything shoppers searched for was found."
               detail={(w) => `${w.noResults} of ${w.searches} found nothing`}
+              onAdd={canEdit ? setAdding : undefined}
             />
           </Card>
         </div>
       )}
+      {adding !== null && <AddSearchWordDialog word={adding} open onOpenChange={(open) => !open && setAdding(null)} />}
     </>
   );
 }

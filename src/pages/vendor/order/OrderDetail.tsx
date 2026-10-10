@@ -38,8 +38,10 @@ import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/ord
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
-import { CustomerTagChips } from '../customer/CustomerNoteCard';
+import { CustomerGroupChip, CustomerTagChips } from '../customer/CustomerNoteCard';
 import { OrderCloseReasonCard } from '../../../components/order/OrderCloseReasonCard';
+import { OrderReturnCheckCard } from '../../../components/order/OrderReturnCheckCard';
+import { OrderProfitCard } from '../../../components/order/OrderProfitCard';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
@@ -479,6 +481,8 @@ export default function OrderDetail() {
 
       {/* Why a cancelled / returned / failed order ended (Analytics > Orders groups by it). */}
       <OrderCloseReasonCard order={order} canEdit={canEdit} onChanged={invalidateOrder} />
+      <OrderReturnCheckCard order={order} canEdit={canEdit} />
+      <OrderProfitCard orderId={order.id} />
 
       {/* Same phone and product as an earlier open order within 24 hours (OrdersService.findPossibleDuplicate). */}
       {order.possibleDuplicateOfId && (
@@ -511,15 +515,19 @@ export default function OrderDetail() {
         </div>
       )}
 
-      {/* Customers > "Note & tags" on this phone, so whoever calls sees it first. */}
-      {order.vendorCustomerNote && (
+      {/* Customers > "Note & tags" on this phone plus its automatic group ("VIP · 7 orders"), so whoever calls sees it first. */}
+      {(order.vendorCustomerNote || order.customerGroup) && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
             <StickyNote size={15} className="text-amber-700" aria-hidden />
             <span className="text-sm font-medium text-amber-900">About this customer</span>
-            <CustomerTagChips tags={order.vendorCustomerNote.tags} />
+            <CustomerGroupChip
+              group={order.customerGroup?.group}
+              suffix={order.customerGroup ? `${order.customerGroup.orders} ${order.customerGroup.orders === 1 ? 'order' : 'orders'}, ৳${Math.round(order.customerGroup.spent).toLocaleString('en-US')}` : undefined}
+            />
+            <CustomerTagChips tags={order.vendorCustomerNote?.tags ?? []} />
           </div>
-          {order.vendorCustomerNote.note && <p className="mt-1.5 whitespace-pre-line text-sm text-regantify-text">{order.vendorCustomerNote.note}</p>}
+          {order.vendorCustomerNote?.note && <p className="mt-1.5 whitespace-pre-line text-sm text-regantify-text">{order.vendorCustomerNote.note}</p>}
         </div>
       )}
 

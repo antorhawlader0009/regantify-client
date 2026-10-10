@@ -54,6 +54,7 @@ function todoSentence(data: DashboardSummary, isOwner: boolean): ReactNode {
     { count: t.bookingFailed, text: (n) => `courier ${plural(n, 'booking', 'bookings')} failed` },
     { count: t.incompletePayment, text: (n) => `online ${plural(n, 'payment is', 'payments are')} not completed` },
     { count: t.returnedRecently, text: (n) => `${plural(n, 'parcel', 'parcels')} came back recently` },
+    { count: t.returnsToCheck, text: (n) => `returned ${plural(n, 'parcel', 'parcels')} to check in at the shop` },
   ];
   const open = items.filter((i) => i.count > 0);
   // The rest of the list's rows, so "N more" always matches what the list shows (SMS / plan rows are owner only, like there).

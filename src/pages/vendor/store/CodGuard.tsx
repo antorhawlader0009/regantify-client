@@ -281,6 +281,20 @@ export default function CodGuard() {
             </p>
           </section>
 
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <Checkbox
+              checked={form.customerEditEnabled}
+              onChange={(v) => set('customerEditEnabled', v)}
+              label="Let customers fix their delivery address"
+            />
+            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+              Shows a <b>Fix my address</b> button on the order tracking page and the thank-you page (StorePal theme) while the order is
+              <b> Pending</b> or <b>On Hold</b> and not yet booked with a courier. The customer can correct the street address, the thana
+              or area and a second phone. The main phone and the district stay as ordered. You get a notice, and the order&apos;s history
+              keeps the old and the new address. Fewer parcels come back for a wrong address.
+            </p>
+          </section>
+
           <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">
             <h2 className="text-base font-medium text-regantify-text">Order Verification</h2>
 

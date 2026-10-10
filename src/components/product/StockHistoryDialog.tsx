@@ -9,6 +9,8 @@ import { formatDhakaDateTime } from '../../lib/dhakaDate';
 const REASON: Record<string, string> = {
   ORDER: 'Order',
   ORDER_BACK: 'Order cancelled or returned, put back',
+  RETURN_DAMAGED: 'Returned parcel came back damaged',
+  RETURN_MISSING: 'Returned parcel never came back',
   ITEMS_EDITED: 'Order items edited',
   POS_SALE: 'Counter sale',
   POS_RETURN: 'Counter return',

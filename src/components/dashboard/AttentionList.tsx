@@ -107,6 +107,14 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
       to: '/vendor/orders?status=RETURN',
     },
     {
+      key: 'returnCheck',
+      icon: ClipboardCheck,
+      count: todo.returnsToCheck,
+      text: `returned ${plural(todo.returnsToCheck, 'parcel', 'parcels')} to check in at the shop`,
+      tone: 'neutral',
+      to: '/vendor/orders/return-check-in',
+    },
+    {
       key: 'lowStock',
       icon: PackageX,
       count: todo.lowStock,

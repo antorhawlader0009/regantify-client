@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { notificationsApi, type NotificationType, type VendorNotification } from '../../lib/notificationsApi';
 import { DayHeading, NotificationRow, TYPE_LABEL, groupByDay } from '../../components/notifications/notificationUi';
 import { AlertSettingsDialog } from '../../components/notifications/AlertSettingsDialog';
@@ -21,6 +21,13 @@ export default function Notifications() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<Filter>({ unreadOnly: false, type: null });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // The top-bar search opens Alert settings with ?settings=alerts (also while this page is already open).
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('settings') !== 'alerts') return;
+    setSettingsOpen(true);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [...QUERY_KEY, 'all', page, filter.unreadOnly, filter.type],

@@ -71,6 +71,7 @@ export default function AddCoupon() {
   const [categories, setCategories] = useState<PickedItem[]>([]);
 
   const [usageLimit, setUsageLimit] = useState('');
+  const [perCustomer, setPerCustomer] = useState('');
 
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -98,6 +99,7 @@ export default function AddCoupon() {
     setProducts(existing.products.map((p) => ({ id: p.id, label: p.name, photoUrl: null })));
     setCategories(existing.categories.map((c) => ({ id: c.id, label: c.name })));
     setUsageLimit(existing.usageLimit ? String(existing.usageLimit) : '');
+    setPerCustomer(existing.usagePerCustomer ? String(existing.usagePerCustomer) : '');
   }, [existing]);
 
   // On Edit an emptied field is sent as null so it's cleared; on create it's left out.
@@ -119,6 +121,7 @@ export default function AddCoupon() {
     productIds: limitProducts ? products.map((p) => p.id) : [],
     categoryIds: limitCategories ? categories.map((c) => c.id) : [],
     usageLimit: usageLimit ? Number(usageLimit) : blank,
+    usagePerCustomer: perCustomer ? Number(perCustomer) : blank,
   };
 
   // Unsaved-changes warning: compare with what was loaded (or the empty form).
@@ -173,8 +176,9 @@ export default function AddCoupon() {
         who: newCustomerOnly ? 'for first-time customers' : limitCustomers && customers.length ? `for ${customers.length} chosen ${customers.length === 1 ? 'customer' : 'customers'}` : undefined,
         endsAt: validTill,
         usageLimit,
+        perCustomer,
       }),
-    [discountType, amount, maxDiscount, minCartAmount, limitProducts, limitCategories, products.length, categories.length, newCustomerOnly, limitCustomers, customers.length, validTill, usageLimit],
+    [discountType, amount, maxDiscount, minCartAmount, limitProducts, limitCategories, products.length, categories.length, newCustomerOnly, limitCustomers, customers.length, validTill, usageLimit, perCustomer],
   );
 
   const shareUrl = subdomain && customLink.trim() ? `${storefrontStoreUrl(subdomain)}?coupon=${encodeURIComponent(customLink.trim())}` : null;
@@ -338,6 +342,12 @@ export default function AddCoupon() {
             <DateField label="Last day" value={validTill} onChange={setValidTill} role="end" kind="date" optional hint="Works until the end of this day." />
             <Field label="How many times in total" hint={existing ? `Used ${existing.usageCount} so far. Empty means no limit.` : 'Empty means no limit.'}>
               <UnitInput unit={null} integer value={usageLimit} onChange={setUsageLimit} placeholder="No limit" />
+            </Field>
+            <Field
+              label="Times per customer"
+              hint="Put 1 so each customer can use it once. A customer is known by phone number. Cancelled, returned and unpaid orders don’t count. Empty means no limit."
+            >
+              <UnitInput unit={null} integer value={perCustomer} onChange={setPerCustomer} placeholder="No limit" />
             </Field>
           </div>
         </SectionCard>

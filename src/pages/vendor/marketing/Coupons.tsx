@@ -39,6 +39,7 @@ function conditionsLabel(c: Coupon): string {
   const parts: string[] = [];
   if (c.minCartAmount && Number(c.minCartAmount) > 0) parts.push(`Orders over ${taka(c.minCartAmount)}`);
   if (c.newCustomerOnly) parts.push('First-time customers');
+  if (c.usagePerCustomer) parts.push(c.usagePerCustomer === 1 ? 'Once per customer' : `${c.usagePerCustomer} per customer`);
   if (c.customerPhones.length) parts.push(`${c.customerPhones.length} ${c.customerPhones.length === 1 ? 'customer' : 'customers'}`);
   if (c.products.length) parts.push(`${c.products.length} ${c.products.length === 1 ? 'product' : 'products'}`);
   if (c.categories.length) parts.push(`${c.categories.length} ${c.categories.length === 1 ? 'category' : 'categories'}`);

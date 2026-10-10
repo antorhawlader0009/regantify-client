@@ -15,6 +15,8 @@ export interface DashboardTodo {
   incompletePayment: number;
   /** Parcels that turned RETURN in the last `recentDays`. */
   returnedRecently: number;
+  /** Returned parcels not counted in at the shop yet (Orders > Return check-in). */
+  returnsToCheck: number;
   abandonedCarts: number;
   lowStock: number;
   /** Products running out within 14 days at the last 30 days' pace. */

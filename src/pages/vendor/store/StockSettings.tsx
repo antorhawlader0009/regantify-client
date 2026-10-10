@@ -122,6 +122,20 @@ export default function StockSettings() {
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-2">Returned Parcels</h2>
+            <Checkbox
+              checked={form.returnStockAfterCheckIn}
+              onChange={(v) => set('returnStockAfterCheckIn', v)}
+              label="Put returned stock back only after I check the parcel in"
+              hint={
+                'Off (default): when an order is marked Returned its stock goes back at once, and the check-in on Orders > ' +
+                'Return check-in only takes off what came back damaged or never came. On: nothing goes back until you check ' +
+                'the parcel in, and only the products you find in good shape are added back.'
+              }
+            />
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
             <h2 className="text-sm font-medium text-regantify-text mb-1">Low Stock Alert</h2>
             <p className="text-xs text-regantify-text-muted mb-3">
               A product with fewer than this many left shows on the Low Stock page, and your notification bell tells you once

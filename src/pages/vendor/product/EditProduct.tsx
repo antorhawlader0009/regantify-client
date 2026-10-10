@@ -24,6 +24,7 @@ import { BarcodeInput } from '../../../components/product/BarcodeField';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
+import { SearchWordsField } from '../../../components/product/SearchWordsField';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
@@ -120,6 +121,8 @@ export default function EditProduct() {
   const [brand, setBrand] = useState('');
   const [summary, setSummary] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
+  // Hidden words that also find the product in the store's search ("also found as").
+  const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
   const [metaDescription, setMetaDescription] = useState('');
 
   // Main/Sub Category are just two views onto the same `categoryId` FK —
@@ -217,6 +220,7 @@ export default function EditProduct() {
       brand: p.brand ?? '',
       summary: p.summary ?? '',
       metaTitle: p.metaTitle ?? '',
+      searchKeywords: p.searchKeywords ?? [],
       metaDescription: p.metaDescription ?? '',
       photoSize: p.photoSize,
       photoUrls: p.photoUrls,
@@ -269,6 +273,7 @@ export default function EditProduct() {
       brand,
       summary,
       metaTitle,
+      searchKeywords,
       metaDescription,
       photoSize,
       photoUrls: photos.map((p) => p.uploadedUrl),
@@ -316,6 +321,7 @@ export default function EditProduct() {
     setBrand(p.brand ?? '');
     setSummary(p.summary ?? '');
     setMetaTitle(p.metaTitle ?? '');
+    setSearchKeywords(p.searchKeywords ?? []);
     setMetaDescription(p.metaDescription ?? '');
     setPhotoSize(p.photoSize);
     setPhotos(
@@ -424,6 +430,8 @@ export default function EditProduct() {
         summary: summary || undefined,
         metaTitle: metaTitle.trim() || undefined,
         metaDescription: metaDescription.trim() || undefined,
+        // Always sent: the list replaces the words (an empty list removes them).
+        searchKeywords,
         visibility,
         // null clears; the server also drops the one that doesn't fit the status.
         publishAt: visibility === 'DRAFT' ? schedule.publishAt : null,
@@ -629,6 +637,7 @@ export default function EditProduct() {
               <Field label="Short summary" hint="Shown near the price on the product page.">
                 <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" maxLength={500} />
               </Field>
+              <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
             </div>
           </SectionCard>
 

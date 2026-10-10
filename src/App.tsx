@@ -76,6 +76,8 @@ import Webhooks from './pages/vendor/store/integrations/Webhooks';
 import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
 import Orders from './pages/vendor/order/Orders';
 import HandoverSheets from './pages/vendor/order/HandoverSheets';
+import ReturnCheckIn from './pages/vendor/order/ReturnCheckIn';
+import ImportOrders from './pages/vendor/order/ImportOrders';
 import HandoverSheetPrintPage from './pages/vendor/order/HandoverSheetPrintPage';
 import AddOrder from './pages/vendor/order/AddOrder';
 import OrderDetail from './pages/vendor/order/OrderDetail';
@@ -356,6 +358,8 @@ export default function App() {
                 <Route path="/vendor/orders/incomplete" element={<Navigate to="/vendor/orders?tab=abandoned-cart" replace />} />
                 <Route path="/vendor/orders/add" element={<AddOrder />} />
                 <Route path="/vendor/orders/handover" element={<HandoverSheets />} />
+                <Route path="/vendor/orders/import" element={<ImportOrders />} />
+                <Route path="/vendor/orders/return-check-in" element={<ReturnCheckIn />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />
