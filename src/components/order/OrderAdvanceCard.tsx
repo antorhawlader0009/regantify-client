@@ -6,6 +6,7 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { outlineBtn, primaryBtn } from '../ui/PageKit';
 import { productInputClass } from '../product/ProductFormPieces';
+import { PaymentLinkPanel } from './PaymentLinkPanel';
 
 const money = (value: number) => `৳${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
@@ -57,18 +58,23 @@ export function OrderAdvanceCard({ order, onChanged }: { order: Order; onChanged
     save.mutate({ value, text: note.trim() || undefined });
   };
 
-  // Paid online through the store: final, nothing to edit.
+  // Paid online through the store (or through the payment link you sent): final, nothing to edit.
   if (online && paid) {
     return (
       <div className="space-y-1.5 text-sm">
         <p className="text-regantify-text">
-          The customer paid <b>{money(advance)}</b> online at checkout
+          The customer paid <b>{money(advance)}</b> {order.advanceFor === 'LINK' ? 'online through your payment link' : 'online at checkout'}
           {order.advancePaidAt ? ` on ${new Date(order.advancePaidAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}. It
           is in your wallet in full.
         </p>
         <p className="font-medium text-regantify-text">Courier collects {money(codDue(order))} on delivery.</p>
       </div>
     );
+  }
+
+  // A payment link is out (or ran out) on an order you entered: its own panel.
+  if (order.paymentLink && (order.paymentLink.state === 'READY' || order.paymentLink.state === 'EXPIRED')) {
+    return <PaymentLinkPanel order={order} onChanged={onChanged} />;
   }
 
   if (waitingOnline) {
@@ -95,6 +101,12 @@ export function OrderAdvanceCard({ order, onChanged }: { order: Order; onChanged
 
   return (
     <div className="space-y-3">
+      {order.source === 'MANUAL' && (
+        <>
+          <PaymentLinkPanel order={order} onChanged={onChanged} />
+          <hr className="border-line" />
+        </>
+      )}
       <p className="text-xs text-neutral-500">
         Took part of the payment yourself, like the delivery charge on your own bKash? Record it here and the courier is asked to collect only
         the rest. Nothing is added to your wallet.

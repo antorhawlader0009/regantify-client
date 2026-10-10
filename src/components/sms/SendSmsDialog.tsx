@@ -16,11 +16,23 @@ function smsCount(text: string): number {
 }
 
 /** Order detail "SMS": one message to this customer, paid from the store's SMS credits. */
-export function SendSmsDialog({ phone, open, onOpenChange }: { phone: string; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function SendSmsDialog({
+  phone,
+  open,
+  onOpenChange,
+  initialMessage = '',
+}: {
+  phone: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Text to start the message with (a payment link, say); the sender can edit it. */
+  initialMessage?: string;
+}) {
   const queryClient = useQueryClient();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initialMessage);
   useEffect(() => {
-    if (open) setMessage('');
+    if (open) setMessage(initialMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const send = useMutation({

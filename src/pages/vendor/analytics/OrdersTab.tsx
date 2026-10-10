@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Truck } from 'lucide-react';
-import type { DeliveryAnalytics, DeliveryCourier, DeliveryOutcome, FailedOrdersAnalytics } from '../../../lib/analyticsApi';
+import type { DeliveryAnalytics, DeliveryCourier, DeliveryOutcome, FailedOrdersAnalytics, TeamWorkAnalytics } from '../../../lib/analyticsApi';
 import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, Share, StatCard, MobileRows } from '../../../components/analytics/AnalyticsUi';
 import { ColumnChart, PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
@@ -70,6 +70,7 @@ export function OrdersTab({ range }: TabProps) {
   const orders = useAnalytics('orders', range);
   const delivery = useAnalytics('delivery', range);
   const failed = useAnalytics('failedOrders', range);
+  const teamWork = useAnalytics('teamWork', range);
   const compareLabel = COMPARE_LABEL;
 
   return (
@@ -174,6 +175,8 @@ export function OrdersTab({ range }: TabProps) {
       <TabState query={delivery}>{(data) => <DeliverySection data={data} compareLabel={compareLabel} />}</TabState>
 
       <TabState query={failed}>{(data) => <FailedOrdersSection data={data} compareLabel={compareLabel} />}</TabState>
+
+      <TabState query={teamWork}>{(data) => <TeamWorkSection data={data} compareLabel={compareLabel} />}</TabState>
 
       <TrackingStats />
     </div>
@@ -401,6 +404,121 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
           />
         </Card>
       </div>
+    </>
+  );
+}
+
+/** "12 min", "3.5 h", "2 days"; a dash when there is nothing to average. */
+function minutesText(value: number | null) {
+  if (value == null) return '—';
+  if (value < 60) return `${value} min`;
+  if (value < 24 * 60) return `${Math.round((value / 60) * 10) / 10} h`;
+  return `${Math.round((value / (24 * 60)) * 10) / 10} days`;
+}
+
+/**
+ * Who confirmed, completed and cancelled how many orders in the period, and how long confirming takes (TellMe idea 20).
+ * Read from the order history, so it needs nothing set up. The people are the team; the platform's own steps and the
+ * shopper's are listed apart, without a time, so they don't pass for a person. The "waiting" card is about right now.
+ */
+function TeamWorkSection({ data, compareLabel }: { data: TeamWorkAnalytics; compareLabel: string }) {
+  const { confirm, waiting } = data;
+  const title = (
+    <SectionTitle title="Team work" subtitle="Who confirmed, completed and cancelled orders in this period, and how long confirming takes." />
+  );
+  const hasWork = data.people.length > 0 || data.others.length > 0;
+
+  return (
+    <>
+      {title}
+      <KpiStrip cols={4}>
+        <KpiCard label="Orders confirmed by the team" value={{ current: confirm.count, previous: confirm.previousCount }} kind="count" compareLabel={compareLabel} />
+        <StatCard
+          label="Average time to confirm"
+          value={minutesText(confirm.averageMinutes)}
+          hint={
+            confirm.count === 0
+              ? 'No order was confirmed by a person in this period.'
+              : `Typical (median) ${minutesText(confirm.medianMinutes)}${confirm.previousAverageMinutes != null ? ` · ${minutesText(confirm.previousAverageMinutes)} in the previous period` : ''}`
+          }
+        />
+        <StatCard
+          label={`Pending for over ${waiting.afterHours} hours`}
+          value={waiting.count}
+          hint={
+            waiting.count > 0 ? (
+              <>
+                Oldest has waited {minutesText(waiting.oldestHours == null ? null : Math.round(waiting.oldestHours * 60))}.{' '}
+                <Link to="/vendor/orders?status=PENDING" className="font-medium text-brand hover:underline">
+                  Open them
+                </Link>
+              </>
+            ) : (
+              'Nothing is waiting too long right now.'
+            )
+          }
+        />
+        <StatCard label="People who handled orders" value={data.people.length} hint="Owner and staff who moved an order in this period." />
+      </KpiStrip>
+
+      <Card
+        title="By person"
+        subtitle="Confirmed means moved to Processing. The time is from the order being placed to that step, nights included."
+      >
+        {!hasWork ? (
+          <EmptyState text="No order was confirmed, completed or cancelled in this period." />
+        ) : data.people.length === 0 ? (
+          <EmptyState text="No person confirmed, completed or cancelled an order in this period." />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="text-left text-xs text-neutral-500">
+                  <th className="py-2 pr-3 font-medium">Person</th>
+                  <th className="py-2 px-3 text-right font-medium">Confirmed</th>
+                  <th className="py-2 px-3 text-right font-medium">Completed</th>
+                  <th className="py-2 px-3 text-right font-medium">Cancelled</th>
+                  <th className="py-2 px-3 text-right font-medium">Average time</th>
+                  <th className="py-2 pl-3 text-right font-medium">Typical time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {data.people.map((p) => (
+                  <tr key={p.key}>
+                    <td className="py-2.5 pr-3">
+                      <p className="font-medium text-regantify-text">
+                        {p.name}
+                        {p.role && <span className="ml-1.5 text-xs font-normal text-neutral-500">{p.role}</span>}
+                      </p>
+                      {p.viaTelegram > 0 && <p className="text-xs text-neutral-500">{p.viaTelegram} confirmed in Telegram</p>}
+                    </td>
+                    <td className="py-2.5 px-3 text-right tabular-nums">{p.confirmed}</td>
+                    <td className="py-2.5 px-3 text-right tabular-nums">{p.completed}</td>
+                    <td className="py-2.5 px-3 text-right tabular-nums">{p.cancelled}</td>
+                    <td className="py-2.5 px-3 text-right tabular-nums">{minutesText(p.avgConfirmMinutes)}</td>
+                    <td className="py-2.5 pl-3 text-right tabular-nums">{minutesText(p.medianConfirmMinutes)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      {data.others.length > 0 && (
+        <Card title="Done by the system, couriers or customers" subtitle="Counted apart so they don’t look like a person. Couriers and payments usually complete orders on their own.">
+          <ul className="divide-y divide-line">
+            {data.others.map((o) => (
+              <li key={o.key} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                <span className="font-medium text-regantify-text">{o.name}</span>
+                <span className="text-neutral-600">
+                  {o.confirmed} confirmed · {o.completed} completed · {o.cancelled} cancelled
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </>
   );
 }

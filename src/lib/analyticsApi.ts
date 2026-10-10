@@ -240,8 +240,43 @@ export interface SearchesAnalytics {
   trackedSince: string | null;
 }
 
+/** One person (or the platform, the shopper...) in Analytics > Orders > "Team work" (server/src/analytics/staff-work-analytics.service.ts). */
+export interface TeamWorkRow {
+  key: string;
+  name: string;
+  /** "Manager", "Owner"...; null for a plain name or a Telegram-only line. */
+  role: string | null;
+  /** Orders moved to Processing in the period. */
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  /** How many of those confirms were done in Telegram. */
+  viaTelegram: number;
+  /** Minutes from the order being placed to this person confirming it; null for the platform rows. */
+  avgConfirmMinutes: number | null;
+  medianConfirmMinutes: number | null;
+}
+
+export interface TeamWorkAnalytics {
+  period: AnalyticsPeriodInfo;
+  people: TeamWorkRow[];
+  /** Steps by the system, payments, couriers, the shopper or the API: counts only. */
+  others: TeamWorkRow[];
+  confirm: {
+    count: number;
+    averageMinutes: number | null;
+    medianMinutes: number | null;
+    previousCount: number;
+    previousAverageMinutes: number | null;
+  };
+  /** Orders still Pending right now after more than `afterHours`. */
+  waiting: { count: number; afterHours: number; oldestHours: number | null };
+}
+
 export const analyticsApi = {
   searches: get<SearchesAnalytics>('searches'),
+  teamWork: async (range: DateRange) =>
+    (await api.get<TeamWorkAnalytics>('/v1/analytics/team-work', { params: { from: range.from, to: range.to } })).data,
   failedOrders: async (range: DateRange) =>
     (await api.get<FailedOrdersAnalytics>('/v1/analytics/failed-orders', { params: { from: range.from, to: range.to } })).data,
   overview: get<OverviewAnalytics>('overview'),

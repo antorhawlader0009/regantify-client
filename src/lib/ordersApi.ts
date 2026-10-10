@@ -44,6 +44,23 @@ export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
 // CANCELLED = the courier cancelled the pickup on its side; re-bookable.
 export type CourierBookingStatus = 'NOT_BOOKED' | 'BOOKING' | 'BOOKED' | 'FAILED' | 'CANCELLED';
 
+/**
+ * The payment link on an order the vendor entered (server: orders/payment-link.ts). READY = waiting for the
+ * customer, PAID = paid, EXPIRED = ran out unpaid, UNAVAILABLE = the order ended first.
+ */
+export interface PaymentLinkInfo {
+  state: 'READY' | 'PAID' | 'EXPIRED' | 'UNAVAILABLE';
+  /** The advance asked for. */
+  amount: number;
+  /** The platform's fee on it, added on top on the payment page. */
+  fee: number;
+  /** What the customer pays on the page (amount plus fee). */
+  payable: number;
+  expiresAt: string | null;
+  /** The address to send the customer. */
+  url: string | null;
+}
+
 export interface Order {
   id: string;
   vendorId: string;
@@ -142,8 +159,10 @@ export interface Order {
   advanceNote?: string | null;
   /** Order detail only: Customers > "Note & tags" on this phone; null when there are none. */
   vendorCustomerNote?: { note: string | null; tags: string[] } | null;
-  /** What an online advance is for (DELIVERY = delivery charge, PREORDER = pre-order products); null = no advance. */
-  advanceFor?: 'DELIVERY' | 'PREORDER' | null;
+  /** What an online advance is for (DELIVERY = delivery charge, PREORDER = pre-order products, LINK = a payment link the vendor sent); null = no advance. */
+  advanceFor?: 'DELIVERY' | 'PREORDER' | 'LINK' | null;
+  /** Order detail only: the payment link on an order the vendor entered (see PaymentLinkInfo); null = none. */
+  paymentLink?: PaymentLinkInfo | null;
   /** The earlier order this one may be a copy of (same phone and product within 24 hours); null = not flagged. */
   possibleDuplicateOfId?: string | null;
   /** Order detail only: that earlier order's summary, for the warning box. */
@@ -369,6 +388,13 @@ export const ordersApi = {
   /** "Advance received": amount 0 clears it. */
   updateAdvance: (id: string, amount: number, note?: string) =>
     api.patch<Order>(`/v1/orders/${id}/advance`, { amount, note }).then((r) => r.data),
+
+  /** Make (or replace) a payment link asking for an advance of `amount`, working for `hours` (default 24). */
+  createPaymentLink: (id: string, amount: number, hours?: number) =>
+    api.post<{ ref: string; link: PaymentLinkInfo | null }>(`/v1/orders/${id}/payment-link`, { amount, hours }).then((r) => r.data),
+
+  /** Take an unpaid payment link back. */
+  cancelPaymentLink: (id: string) => api.delete<{ cancelled: boolean }>(`/v1/orders/${id}/payment-link`).then((r) => r.data),
 
   /** Order detail's "Not a duplicate": clears the possible-duplicate mark. */
   dismissDuplicate: (id: string) =>
