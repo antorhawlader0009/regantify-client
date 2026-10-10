@@ -32,6 +32,12 @@ export interface IncompleteOrder {
   shippingAddress?: string | null;
   customerNote?: string | null;
   label?: string | null;
+  // The reminder SMS and its cart link (TellMe idea 40). The link's token itself never leaves the server.
+  reminderSmsAt?: string | null;
+  hasRecoveryLink?: boolean;
+  recoveryOpens?: number;
+  recoveryOpenedAt?: string | null;
+  orderedAfterReminder?: boolean;
   items: IncompleteOrderItem[];
   staffNotes: IncompleteOrderNote[];
   createdAt: string;

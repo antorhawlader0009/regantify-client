@@ -43,10 +43,34 @@ export const smsApi = {
   /** Cancels a campaign that hasn't started. */
   cancelScheduled: (id: string) => api.delete(`/v1/sms/campaign/scheduled/${id}`).then((r) => r.data),
 
-  /** One SMS to one customer (Order detail). */
-  sendSingle: (phone: string, message: string) =>
-    api.post<{ smsCredits: number }>('/v1/sms/send', { phone, message }).then((r) => r.data),
+  /** One SMS to one customer (Order detail). `orderId` makes {order} and {name} in the text that order's. */
+  sendSingle: (phone: string, message: string, orderId?: string) =>
+    api.post<{ smsCredits: number }>('/v1/sms/send', { phone, message, orderId }).then((r) => r.data),
+
+  /** Messages the store saved to use again (at most 20). */
+  listTemplates: () => api.get<SmsTemplate[]>('/v1/sms/templates').then((r) => r.data),
+
+  createTemplate: (name: string, body: string) => api.post<SmsTemplate>('/v1/sms/templates', { name, body }).then((r) => r.data),
+
+  updateTemplate: (id: string, name: string, body: string) => api.patch<SmsTemplate>(`/v1/sms/templates/${id}`, { name, body }).then((r) => r.data),
+
+  deleteTemplate: (id: string) => api.delete(`/v1/sms/templates/${id}`).then((r) => r.data),
 };
+
+/** A saved message. The text may hold {name}, {order} and {store}, filled in per customer when it is sent. */
+export interface SmsTemplate {
+  id: string;
+  name: string;
+  body: string;
+  updatedAt: string;
+}
+
+/** The words a message can hold (server sms-template.ts). */
+export const SMS_WORDS: { word: string; hint: string }[] = [
+  { word: '{name}', hint: 'The customer’s name' },
+  { word: '{order}', hint: 'Their latest order number' },
+  { word: '{store}', hint: 'Your store’s name' },
+];
 
 /** Who an SMS campaign goes to (SMS_AUDIENCES on the server). */
 export type SmsAudience = 'ALL' | 'RECENT' | 'INACTIVE' | 'SELECTED' | 'TAG' | 'VIP' | 'RETURNING';

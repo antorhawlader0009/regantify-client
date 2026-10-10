@@ -35,6 +35,7 @@ import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCa
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
 import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/order/EditOrderItemsDialog';
+import { MergeOrdersDialog, canMergeOrder } from '../../../components/order/MergeOrdersDialog';
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
@@ -126,6 +127,7 @@ export default function OrderDetail() {
   const [showRedxHistory, setShowRedxHistory] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
+  const [merging, setMerging] = useState(false);
   // "Not connected → setup popup" (COURIER-PLAN.md §5.2): the provider to
   // connect, and the booking to retry once it is. null closes the popup.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
@@ -538,9 +540,16 @@ export default function OrderDetail() {
             title="Items"
             action={
               canEdit && canEditOrderItems(order) ? (
-                <button type="button" onClick={() => setEditingItems(true)} className="text-sm font-medium text-brand hover:underline">
-                  Edit items
-                </button>
+                <span className="flex items-center gap-3">
+                  {canCancelRefund && canMergeOrder(order) && (
+                    <button type="button" onClick={() => setMerging(true)} className="text-sm font-medium text-brand hover:underline" title="Fold this customer's other open order into this one">
+                      Merge order
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setEditingItems(true)} className="text-sm font-medium text-brand hover:underline">
+                    Edit items
+                  </button>
+                </span>
               ) : canCreate && order.source !== 'POS' && (order.status === 'COMPLETED' || order.status === 'RETURN') ? (
                 // A size or product swap after delivery: Add Order with this customer and these lines, linked back here.
                 <button type="button" onClick={startExchange} className="text-sm font-medium text-brand hover:underline">
@@ -1003,7 +1012,8 @@ export default function OrderDetail() {
 
       <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
       <EditOrderItemsDialog order={order} open={editingItems} onOpenChange={setEditingItems} />
-      {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} />}
+      {merging && <MergeOrdersDialog order={order} open onOpenChange={setMerging} />}
+      {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} orderId={order.id} />}
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
       <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ${orderRef(order)}`} maxWidth="max-w-md">

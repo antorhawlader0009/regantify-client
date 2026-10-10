@@ -37,9 +37,13 @@ const ITEMS: { key: CardKey; label: string; hint: string }[] = [
 export default function ProductCardDisplay() {
   const { settings, isLoading, save } = useDesignSettings();
   const [form, setForm] = useState<Pick<DesignSettings, CardKey> | null>(null);
+  const [badgeColor, setBadgeColor] = useState('');
 
   useEffect(() => {
-    if (settings) setForm(Object.fromEntries(ITEMS.map(({ key }) => [key, settings[key]])) as Pick<DesignSettings, CardKey>);
+    if (settings) {
+      setForm(Object.fromEntries(ITEMS.map(({ key }) => [key, settings[key]])) as Pick<DesignSettings, CardKey>);
+      setBadgeColor(settings.productBadgeColor ?? '');
+    }
   }, [settings]);
 
   return (
@@ -67,7 +71,27 @@ export default function ProductCardDisplay() {
               </div>
             ))}
           </div>
-          <SaveButton pending={save.isPending} onClick={() => save.mutate(form)} />
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Product badge color</label>
+            <div className="flex items-center gap-2 max-w-xs">
+              <input
+                type="color"
+                value={badgeColor || '#E11D48'}
+                onChange={(e) => setBadgeColor(e.target.value.toUpperCase())}
+                className="w-10 h-10 rounded-full border border-black/10 cursor-pointer p-0.5 bg-white"
+              />
+              <input
+                type="text"
+                value={badgeColor}
+                onChange={(e) => setBadgeColor(e.target.value)}
+                placeholder="Theme accent"
+                maxLength={7}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors"
+              />
+            </div>
+            <p className="text-xs text-regantify-text-muted mt-1">The colour of the badges you put on products (Add or Edit Product, Badge; or All Products, Set badge). One colour for all.</p>
+          </div>
+          <SaveButton pending={save.isPending} onClick={() => save.mutate({ ...form, productBadgeColor: badgeColor.trim() })} />
         </DesignSection>
       )}
     </div>

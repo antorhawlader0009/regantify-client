@@ -17,6 +17,7 @@ export const PUSH_TOPICS: { topic: PushTopic; label: string; hint: string }[] = 
   { topic: 'LOW_STOCK', label: 'Low stock', hint: 'When products go under their limit, at most once a day.' },
   { topic: 'DAILY_SUMMARY', label: 'Daily summary', hint: 'Orders and sales at the end of the day, when the owner has turned it on.' },
   { topic: 'NEW_REVIEW', label: 'New reviews', hint: 'A customer left a review to approve. Low ratings are the ones to answer first.' },
+  { topic: 'NEW_QUESTION', label: 'New questions', hint: 'A shopper asked a question on a product page. Answering it puts the answer on the page for everyone.' },
 ];
 
 export type PushSupport =

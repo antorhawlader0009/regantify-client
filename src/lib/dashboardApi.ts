@@ -73,6 +73,8 @@ export interface DashboardSummary {
     codWithCouriers: { amount: number; count: number };
     withdrawInProgress: { amount: number; count: number };
   } | null;
+  /** The monthly goal (TellMe idea 33); for the owner and staff with finance.view, null for others. */
+  target: SalesTargetProgress | null;
   delivery: { courierConnected: boolean; days: number; successRate: number | null; returnRate: number | null };
   /** Last 7 days. */
   topProducts: TopProduct[];
@@ -95,6 +97,27 @@ export interface DashboardSummary {
   } | null;
 }
 
+/** How this month is going against the owner's goal (server dashboard/sales-target.ts). */
+export interface SalesTargetProgress {
+  /** "2026-10". */
+  month: string;
+  salesTarget: number | null;
+  ordersTarget: number | null;
+  /** Sold so far this month, as Analytics counts it. */
+  sales: number;
+  orders: number;
+  dayOfMonth: number;
+  daysInMonth: number;
+  daysLeft: number;
+  /** Where the month ends at the pace so far; null in the first days. */
+  projectedSales: number | null;
+  projectedOrders: number | null;
+}
+
 export const dashboardApi = {
   summary: () => api.get<DashboardSummary>('/v1/dashboard').then((r) => r.data),
+
+  /** Owner only. Empty or 0 clears a goal; a field left out stays as it is. */
+  setTarget: (target: { salesTarget?: number | null; ordersTarget?: number | null }) =>
+    api.put<SalesTargetProgress>('/v1/dashboard/target', target).then((r) => r.data),
 };

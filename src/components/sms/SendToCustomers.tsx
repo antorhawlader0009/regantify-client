@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarClock, Send } from 'lucide-react';
 import { smsApi, type SmsAudience } from '../../lib/smsApi';
@@ -10,6 +10,7 @@ import { Field, productInputClass } from '../product/ProductFormPieces';
 import { primaryBtn } from '../ui/PageKit';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { ScheduledSmsList } from './ScheduledSmsList';
+import { SmsTemplatePicker } from './SmsTemplatePicker';
 import { toast } from '../../lib/toast';
 
 /** What the server answers: sent now (queued) or saved for later (scheduled). */
@@ -35,6 +36,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const [inactiveDays, setInactiveDays] = useState('60');
   const [tag, setTag] = useState('');
   const [message, setMessage] = useState('');
+  const messageRef = useRef<HTMLTextAreaElement>(null);
   const [when, setWhen] = useState<'NOW' | 'LATER'>('NOW');
   // "Send later" time in Dhaka time, as a datetime-local value.
   const [sendInput, setSendInput] = useState('');
@@ -155,8 +157,12 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
           <p className="mt-1.5 text-xs text-neutral-500">Customers who bought before, but not in the last {inactiveDays || '…'} days. A good way to bring them back.</p>
         )}
       </Field>
-      <Field label="Message" hint="English: 160 letters = 1 SMS. Bangla: 70 letters = 1 SMS.">
+      <Field label="Message" hint="English: 160 letters = 1 SMS. Bangla: 70 letters = 1 SMS. {order} is each customer’s latest order.">
+        <div className="mb-2">
+          <SmsTemplatePicker message={message} setMessage={setMessage} textareaRef={messageRef} />
+        </div>
         <textarea
+          ref={messageRef}
           value={message}
           onChange={(e) => setMessage(e.target.value.slice(0, 1000))}
           rows={4}

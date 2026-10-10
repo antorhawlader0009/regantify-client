@@ -318,6 +318,8 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/product/brands': 'products.view',
   '/vendor/product/size-guides': 'products.view',
   '/vendor/product/low-stock': 'products.view',
+  '/vendor/product/stock-count': 'products.edit',
+  '/vendor/product/stock-history': 'products.view',
   '/vendor/reviews': 'reviews.view',
   '/vendor/marketing/coupons': 'marketing.view',
   '/vendor/marketing/campaigns': 'marketing.view',
@@ -360,6 +362,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/courier/steadfast': 'courier.manage',
   '/vendor/courier/pathao': 'courier.manage',
   '/vendor/courier/redx': 'courier.manage',
+  '/vendor/courier/rules': 'courier.manage',
   '/vendor/shipping/tracking': 'orders.view',
   '/vendor/finance/wallet': 'finance.view',
   '/vendor/finance/transactions': 'finance.view',
@@ -412,12 +415,14 @@ const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
   [/^\/vendor\/orders\/(add|import)$/, 'orders.create'],
   [/^\/vendor\/orders\/handover(\/|$)/, 'orders.courier'], // courier handover sheets
   [/^\/vendor\/orders\/return-check-in$/, 'orders.edit'], // counting returned parcels back in
+  [/^\/vendor\/orders\/rider-cash$/, 'orders.courier'], // own riders' cash
   [/^\/vendor\/orders(\/|$)/, 'orders.view'],
   [/^\/vendor\/customers\/(add|bulk-upload)$/, 'customers.edit'],
   [/^\/vendor\/customers\/[^/]+\/edit$/, 'customers.edit'],
   [/^\/vendor\/customers\/.+/, 'customers.contact'], // opened by phone number
   [/^\/vendor\/product\/(add|collections\/add)$/, 'products.edit'],
   [/^\/vendor\/product\//, 'products.view'],
+  [/^\/vendor\/reviews\/questions$/, 'reviews.view'], // product questions: seeing them; answering is checked on the page and by the server
   [/^\/vendor\/reviews\/(add|[^/]+\/edit)$/, 'reviews.edit'],
   [/^\/vendor\/marketing\/gift-cards\/add$/, 'marketing.gift_cards'],
   [/^\/vendor\/marketing\/[^/]+\/(add|[^/]+\/edit|popup\/new|popup\/[^/]+\/edit)$/, 'marketing.edit'],

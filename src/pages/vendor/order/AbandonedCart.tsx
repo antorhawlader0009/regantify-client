@@ -148,6 +148,18 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
       </td>
       <td className="border-r border-line p-3 last:border-r-0 min-w-[130px]">
         <p className="text-xs text-regantify-text-muted">{formatDateTime(order.updatedAt)}</p>
+        {order.reminderSmsAt && (
+          <p className="mt-1.5 text-[11px] text-regantify-text-muted">
+            Reminder sent {formatDateTime(order.reminderSmsAt)}
+            {order.hasRecoveryLink && (
+              <>
+                {' · '}
+                {order.recoveryOpens ? `link opened${order.recoveryOpens > 1 ? ` ${order.recoveryOpens}x` : ''}` : 'link not opened'}
+              </>
+            )}
+            {order.orderedAfterReminder && <span className="font-semibold text-emerald-700">{' · ordered'}</span>}
+          </p>
+        )}
         {order.label && (
           <span className="mt-1.5 inline-flex items-center rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-[11px] font-medium text-brand">
             {order.label}
@@ -319,8 +331,18 @@ export default function AbandonedCart() {
 
   const liveNotesOrder = notesOrder ? incompleteOrders.find((o) => o.id === notesOrder.id) ?? notesOrder : null;
 
+  // The reminder SMS's cart link (TellMe idea 40), over the rows on this page.
+  const reminded = incompleteOrders.filter((o) => o.reminderSmsAt);
+  const linkOpened = reminded.filter((o) => (o.recoveryOpens ?? 0) > 0).length;
+  const orderedAfter = reminded.filter((o) => o.orderedAfterReminder).length;
+
   return (
     <>
+      {reminded.length > 0 && (
+        <p className="mb-3 text-xs text-regantify-text-muted">
+          On this page: {reminded.length} reminded by SMS · {linkOpened} opened the cart link · {orderedAfter} ordered afterwards
+        </p>
+      )}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm sm:w-[215px]">
           <Search size={15} className="shrink-0" />

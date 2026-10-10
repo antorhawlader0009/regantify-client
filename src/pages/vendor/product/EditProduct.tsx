@@ -25,6 +25,7 @@ import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
 import { SearchWordsField } from '../../../components/product/SearchWordsField';
+import { BadgeField, badgeUntilDate, badgeUntilIso } from '../../../components/product/BadgeField';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
@@ -123,6 +124,7 @@ export default function EditProduct() {
   const [metaTitle, setMetaTitle] = useState('');
   // Hidden words that also find the product in the store's search ("also found as").
   const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
+  const [badge, setBadge] = useState({ text: '', until: '' });
   const [metaDescription, setMetaDescription] = useState('');
 
   // Main/Sub Category are just two views onto the same `categoryId` FK —
@@ -221,6 +223,7 @@ export default function EditProduct() {
       summary: p.summary ?? '',
       metaTitle: p.metaTitle ?? '',
       searchKeywords: p.searchKeywords ?? [],
+      badge: { text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) },
       metaDescription: p.metaDescription ?? '',
       photoSize: p.photoSize,
       photoUrls: p.photoUrls,
@@ -274,6 +277,7 @@ export default function EditProduct() {
       summary,
       metaTitle,
       searchKeywords,
+      badge,
       metaDescription,
       photoSize,
       photoUrls: photos.map((p) => p.uploadedUrl),
@@ -322,6 +326,7 @@ export default function EditProduct() {
     setSummary(p.summary ?? '');
     setMetaTitle(p.metaTitle ?? '');
     setSearchKeywords(p.searchKeywords ?? []);
+    setBadge({ text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) });
     setMetaDescription(p.metaDescription ?? '');
     setPhotoSize(p.photoSize);
     setPhotos(
@@ -432,6 +437,9 @@ export default function EditProduct() {
         metaDescription: metaDescription.trim() || undefined,
         // Always sent: the list replaces the words (an empty list removes them).
         searchKeywords,
+        // Always sent: empty text takes the badge off.
+        badgeText: badge.text.trim(),
+        badgeUntil: badge.text.trim() ? badgeUntilIso(badge.until) : null,
         visibility,
         // null clears; the server also drops the one that doesn't fit the status.
         publishAt: visibility === 'DRAFT' ? schedule.publishAt : null,
@@ -638,6 +646,7 @@ export default function EditProduct() {
                 <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" maxLength={500} />
               </Field>
               <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
+              <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
             </div>
           </SectionCard>
 

@@ -88,6 +88,8 @@ export interface DesignSettings {
   cardDisplayAsCard: boolean;
   cardShowVideo: boolean;
   cardShowWishlist: boolean;
+  /** The one colour of every product badge (Product > Badge); null = the theme's accent. */
+  productBadgeColor: string | null;
 
   bannerEnabled: boolean;
   bannerContent: string | null;

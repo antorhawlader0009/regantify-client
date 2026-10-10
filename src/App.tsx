@@ -77,6 +77,11 @@ import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
 import Orders from './pages/vendor/order/Orders';
 import HandoverSheets from './pages/vendor/order/HandoverSheets';
 import ReturnCheckIn from './pages/vendor/order/ReturnCheckIn';
+import RiderCash from './pages/vendor/order/RiderCash';
+import StockCount from './pages/vendor/product/StockCount';
+import Questions from './pages/vendor/review/Questions';
+import CourierRules from './pages/vendor/courier/CourierRules';
+import StockHistory from './pages/vendor/product/StockHistory';
 import ImportOrders from './pages/vendor/order/ImportOrders';
 import HandoverSheetPrintPage from './pages/vendor/order/HandoverSheetPrintPage';
 import AddOrder from './pages/vendor/order/AddOrder';
@@ -176,6 +181,8 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/size-guides' &&
     r.path !== '/vendor/product/collections' &&
     r.path !== '/vendor/product/low-stock' &&
+    r.path !== '/vendor/product/stock-count' &&
+    r.path !== '/vendor/product/stock-history' &&
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/landing-pages' &&
@@ -225,6 +232,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/pathao' &&
     r.path !== '/vendor/courier/steadfast' &&
     r.path !== '/vendor/courier/redx' &&
+    r.path !== '/vendor/courier/rules' &&
     r.path !== '/vendor/analytics' &&
     !r.path.startsWith('/vendor/lms') &&
     !r.path.startsWith('/vendor/pos'),
@@ -307,6 +315,8 @@ export default function App() {
                 <Route path="/vendor/product/edit/:id" element={<EditProduct />} />
                 <Route path="/vendor/product/all" element={<AllProducts />} />
                 <Route path="/vendor/product/low-stock" element={<LowStock />} />
+                <Route path="/vendor/product/stock-count" element={<StockCount />} />
+                <Route path="/vendor/product/stock-history" element={<StockHistory />} />
                 <Route path="/vendor/product/categories" element={<Categories />} />
                 <Route path="/vendor/product/brands" element={<Brands />} />
                 <Route path="/vendor/product/size-guides" element={<SizeGuides />} />
@@ -360,6 +370,7 @@ export default function App() {
                 <Route path="/vendor/orders/handover" element={<HandoverSheets />} />
                 <Route path="/vendor/orders/import" element={<ImportOrders />} />
                 <Route path="/vendor/orders/return-check-in" element={<ReturnCheckIn />} />
+                <Route path="/vendor/orders/rider-cash" element={<RiderCash />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />
@@ -369,6 +380,7 @@ export default function App() {
                 <Route path="/vendor/customers/:phone" element={<CustomerDetail />} />
                 <Route path="/vendor/reviews" element={<Reviews />} />
                 <Route path="/vendor/reviews/add" element={<AddReview />} />
+                <Route path="/vendor/reviews/questions" element={<Questions />} />
                 <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
                 <Route path="/vendor/staff" element={<Staff />} />
                 <Route path="/vendor/staff/add" element={<AddStaffMember />} />
@@ -402,6 +414,7 @@ export default function App() {
                 <Route path="/vendor/courier/pathao" element={<PathaoPage />} />
                 <Route path="/vendor/courier/steadfast" element={<SteadfastPage />} />
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
+                <Route path="/vendor/courier/rules" element={<CourierRules />} />
                 <Route path="/vendor/analytics" element={<AnalyticsPage />} />
                 <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
                 {/* LMS: a dashboard page with its own shell (LmsLayout: section tabs, lead

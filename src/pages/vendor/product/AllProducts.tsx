@@ -20,8 +20,10 @@ import {
   Printer,
   Clock,
   Tag,
+  Download,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
+import { downloadProducts } from '../../../lib/productExport';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
@@ -29,6 +31,7 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { ScheduleProductsDialog } from './ScheduleProductsDialog';
+import { SetBadgeDialog } from './SetBadgeDialog';
 import { ChangePricesDialog } from './ChangePricesDialog';
 import { PriceChangeHistoryDialog } from './PriceChangeHistoryDialog';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
@@ -505,9 +508,31 @@ export default function AllProducts() {
   const [bulkVisibility, setBulkVisibility] = useState(false);
   // Bulk bar "Schedule": go live / hide the selected products by themselves at a time.
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [badgeOpen, setBadgeOpen] = useState(false);
   // Change prices (bulk selling-price change, with preview and undo) and its list of recent changes.
   const [priceOpen, setPriceOpen] = useState(false);
   const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
+  // Export: the ticked products, or with none ticked everything matching the filters (all pages).
+  const [exporting, setExporting] = useState(false);
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const { count, truncated } = await downloadProducts({
+        search: search.trim() || undefined,
+        category: category || undefined,
+        visibility: visibility === 'ALL' ? undefined : visibility,
+        stockType: stockType === 'ALL' ? undefined : stockType,
+        ids: selected.size > 0 ? Array.from(selected) : undefined,
+      });
+      if (count === 0) toast.error('No products to export.');
+      else toast.success(`${count.toLocaleString()} ${count === 1 ? 'product' : 'products'} exported${truncated ? ' (the first 10,000; filter to export the rest)' : ''}.`);
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Couldn’t export the products. Please try again.'));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function handleBulkVisibility(visibility: 'PUBLIC' | 'DRAFT') {
     const ids = Array.from(selected);
     setBulkVisibility(true);
@@ -646,6 +671,16 @@ export default function AllProducts() {
           />
 
           <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
+
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className={toolbarBtn}
+            title={selected.size > 0 ? 'Download the ticked products as a CSV' : 'Download every product matching the filters as a CSV'}
+          >
+            <Download size={14} />
+            {exporting ? 'Exporting…' : selected.size > 0 ? `Export (${selected.size})` : 'Export'}
+          </button>
 
           {canEditPrice && (
             <button onClick={() => setPriceOpen(true)} className={toolbarBtn} title="Raise or lower prices of many products at once">
@@ -792,6 +827,15 @@ export default function AllProducts() {
                   >
                     <Clock size={13} aria-hidden />
                     Schedule
+                  </button>
+                  <button
+                    onClick={() => setBadgeOpen(true)}
+                    disabled={bulkVisibility}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+                    title="Put a badge like New or Hot on the selected products"
+                  >
+                    <Tag size={13} aria-hidden />
+                    Set badge
                   </button>
                   {canChangePrices && (
                     <button
@@ -1002,6 +1046,8 @@ export default function AllProducts() {
           onConfirm={(next) => visibilityMutation.mutate({ id: statusModalProduct.id, visibility: next })}
         />
       )}
+
+      {badgeOpen && <SetBadgeDialog ids={Array.from(selected)} onOpenChange={(open) => !open && setBadgeOpen(false)} onDone={() => setSelected(new Set())} />}
 
       {scheduleOpen && (
         <ScheduleProductsDialog

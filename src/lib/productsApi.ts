@@ -90,6 +90,10 @@ export interface Product {
   sizeGuideId?: string | null;
   /** Hidden words that also find this product in the store's search ("also found as"). */
   searchKeywords?: string[];
+  /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
+  badgeText?: string | null;
+  /** When the badge goes away by itself (an instant); null = it stays. */
+  badgeUntil?: string | null;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -134,6 +138,10 @@ export interface CreateProductPayload {
   sizeGuideId?: string | null;
   /** Hidden words that also find this product in the store's search ("also found as"). */
   searchKeywords?: string[];
+  /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
+  badgeText?: string | null;
+  /** When the badge goes away by itself (an instant); null = it stays. */
+  badgeUntil?: string | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -231,6 +239,10 @@ export interface UpdateProductPayload {
   sizeGuideId?: string | null;
   /** Hidden words that also find this product in the store's search ("also found as"). */
   searchKeywords?: string[];
+  /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
+  badgeText?: string | null;
+  /** When the badge goes away by itself (an instant); null = it stays. */
+  badgeUntil?: string | null;
   stockQuantity?: number;
   /** Why stock was changed by hand in this save (kept in the stock history). */
   stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';
@@ -345,6 +357,10 @@ export interface PriceChangeBatch {
 }
 
 export const productsApi = {
+  /** All Products > Set badge: the same badge on many products (empty text clears); `days` makes it go away by itself. */
+  setBadge: (ids: string[], badgeText: string | null, days: number | null) =>
+    api.post<{ updated: number }>('/v1/products/badge', { ids, badgeText, days }).then((r) => r.data),
+
   /** Adds one hidden search word to a product (Analytics > "searched but not found" > Add to a product). */
   addSearchWord: (id: string, word: string) =>
     api.post<{ id: string; name: string; searchKeywords: string[]; added: boolean }>(`/v1/products/${id}/search-words`, { word }).then((r) => r.data),

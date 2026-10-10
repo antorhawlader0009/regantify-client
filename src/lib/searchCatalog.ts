@@ -107,7 +107,17 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Collections', where: 'Product > Collections', path: '/vendor/product/collections', keywords: 'collection group featured set কালেকশন' },
   { title: 'Size guides', where: 'Product > Size Guides', path: '/vendor/product/size-guides', keywords: 'size chart measurement table সাইজ চার্ট' },
   { title: 'Low stock products', where: 'Product > Low Stock', path: '/vendor/product/low-stock', keywords: 'running out restock reorder কম স্টক' },
+  { title: 'Stock count (count the shelf)', where: 'Product > Stock Count', path: '/vendor/product/stock-count', keywords: 'stocktake stock take count shelf inventory check physical count correct stock difference scan barcode স্টক গণনা' },
+  { title: 'Stock history of the whole store', where: 'Product > Stock History', path: '/vendor/product/stock-history', keywords: 'stock movements log who changed stock every change received damaged count returns orders history স্টকের ইতিহাস' },
+  { title: 'Telegram commands: /today /pending /order /stock', where: 'Notifications > Alert settings > Telegram', path: '/vendor/notifications?settings=alerts', keywords: 'telegram bot command today pending order stock ask orders from phone status' },
   { title: 'Words people also search a product by', where: 'Product > Edit Product', path: '/vendor/product/all', keywords: 'search keywords synonyms also found as hidden words searched but not found' },
+  { title: 'Monthly sales goal', where: 'Dashboard > Monthly goal', path: '/vendor/dashboard', keywords: 'target sales goal month progress orders target projection pace লক্ষ্য টার্গেট' },
+  { title: 'Export products to CSV / Excel', where: 'Product > All Products > Export', path: '/vendor/product/all', keywords: 'download products csv excel backup export list accountant স্টক তালিকা' },
+  { title: 'Product questions and answers', where: 'Reviews > Questions', path: '/vendor/reviews/questions', keywords: 'customer questions answer qna ask question product page reply প্রশ্ন উত্তর' },
+  { title: 'Product badges (New, Hot)', where: 'Add/Edit Product > Badge, All Products > Set badge', path: '/vendor/product/all', keywords: 'badge label tag new hot sale eid offer ribbon product card colour ব্যাজ' },
+  { title: 'Merge two orders of one customer', where: 'Order detail > Merge order', path: '/vendor/orders', keywords: 'combine join merge orders same customer same phone one parcel delivery charge once অর্ডার এক করা' },
+  { title: 'Courier rules by delivery zone', where: 'Courier Integration > Courier Rules', path: '/vendor/courier/rules', keywords: 'automatic courier choose pathao steadfast redx inside dhaka outside dhaka zone rule default courier কুরিয়ার নিয়ম' },
+  { title: 'Rider cash (own delivery riders)', where: 'Orders > Rider cash', path: '/vendor/orders/rider-cash', keywords: 'rider settlement cash collected handed in own rider cod balance owed delivery boy hisab রাইডার হিসাব' },
   { title: 'Customer reviews', where: 'Reviews', path: '/vendor/reviews', keywords: 'review rating reply approve hide রিভিউ' },
 
   // ------------------------------------------------------------------ Marketing
@@ -122,6 +132,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   // ------------------------------------------------------------------ SMS
   { title: 'Buy SMS credits', where: 'SMS', path: '/vendor/sms', keywords: 'sms balance recharge top up package credits এসএমএস কিনুন' },
   { title: 'Send an SMS to customers', where: 'SMS > Send to customers', path: '/vendor/sms', keywords: 'bulk sms offer marketing everyone vip returning win back schedule later audience tag' },
+  { title: 'Saved SMS messages (templates)', where: 'SMS > Send to customers', path: '/vendor/sms', keywords: 'sms template saved message reuse canned name order store placeholder fill in সেভ করা মেসেজ টেমপ্লেট' },
   { title: 'Sent SMS logs', where: 'SMS > Sent logs', path: '/vendor/sms', keywords: 'sms history delivered failed log' },
   { title: 'Send a test SMS', where: 'SMS > Test', path: '/vendor/sms', keywords: 'test sms check sender' },
   { title: 'Reminder SMS for abandoned checkouts', where: 'Orders > Abandoned Cart', path: '/vendor/orders?tab=abandoned-cart', keywords: 'abandoned reminder sms wait hours automatic' },

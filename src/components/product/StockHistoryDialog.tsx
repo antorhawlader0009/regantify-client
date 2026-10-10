@@ -5,8 +5,8 @@ import { Dialog } from '../ui/Dialog';
 import { productsApi, type StockMovement } from '../../lib/productsApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 
-/** What each reason code means, in the owner's words. */
-const REASON: Record<string, string> = {
+/** What each reason code means, in the owner's words (also used by Product > Stock history). */
+export const STOCK_REASON_LABEL: Record<string, string> = {
   ORDER: 'Order',
   ORDER_BACK: 'Order cancelled or returned, put back',
   RETURN_DAMAGED: 'Returned parcel came back damaged',
@@ -39,7 +39,7 @@ function Row({ move }: { move: StockMovement }) {
         </span>
       </div>
       <p className="text-regantify-text">
-        {REASON[move.reason] ?? move.reason}
+        {STOCK_REASON_LABEL[move.reason] ?? move.reason}
         {move.variantLabel ? <span className="text-neutral-500"> · {move.variantLabel}</span> : null}
         {move.orderId ? (
           <>

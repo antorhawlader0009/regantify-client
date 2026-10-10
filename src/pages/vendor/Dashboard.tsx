@@ -12,6 +12,7 @@ import { toast } from '../../lib/toast';
 import { LockedBadge, upgradeToast } from '../../components/ui/UpgradePrompt';
 import { SetupChecklist } from '../../components/dashboard/SetupChecklist';
 import { TodayKpis } from '../../components/dashboard/TodayKpis';
+import { GoalCard } from '../../components/dashboard/GoalCard';
 import { AttentionList } from '../../components/dashboard/AttentionList';
 import { SalesOverview } from '../../components/dashboard/SalesOverview';
 import { RecentOrders } from '../../components/dashboard/RecentOrders';
@@ -105,7 +106,7 @@ export default function VendorDashboard() {
 
   const isOwner = user?.role === 'VENDOR';
   // Money is owner only and delivery needs a courier: without either, the to-dos take the full width.
-  const hasMoneyColumn = !!dashboard.data && (!!dashboard.data.money || dashboard.data.delivery.courierConnected || !!dashboard.data.pos);
+  const hasMoneyColumn = !!dashboard.data && (!!dashboard.data.money || dashboard.data.delivery.courierConnected || !!dashboard.data.pos || !!dashboard.data.target);
 
   const now = new Date();
   const greet = greeting(now);
@@ -231,6 +232,7 @@ export default function VendorDashboard() {
             </div>
             {hasMoneyColumn && (
               <div className="space-y-4">
+                {dashboard.data.target && <GoalCard target={dashboard.data.target} isOwner={isOwner} />}
                 {dashboard.data.money && <MoneyCard money={dashboard.data.money} />}
                 {dashboard.data.pos && <InStoreCard pos={dashboard.data.pos} />}
                 {(dashboard.data.money || dashboard.data.delivery.courierConnected) && <DeliveryCard delivery={dashboard.data.delivery} />}

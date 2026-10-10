@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog } from '../ui/Dialog';
 import { outlineBtn, primaryBtn } from '../ui/PageKit';
 import { productInputClass } from '../product/ProductFormPieces';
 import { smsApi } from '../../lib/smsApi';
+import { SmsTemplatePicker } from './SmsTemplatePicker';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 
@@ -21,22 +22,26 @@ export function SendSmsDialog({
   open,
   onOpenChange,
   initialMessage = '',
+  orderId,
 }: {
   phone: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Text to start the message with (a payment link, say); the sender can edit it. */
   initialMessage?: string;
+  /** The order this is sent from: {order} and {name} in the text become that order's. */
+  orderId?: string;
 }) {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState(initialMessage);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     if (open) setMessage(initialMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const send = useMutation({
-    mutationFn: () => smsApi.sendSingle(phone, message.trim()),
+    mutationFn: () => smsApi.sendSingle(phone, message.trim(), orderId),
     onSuccess: (data) => {
       queryClient.setQueryData(['sms-credits'], data);
       queryClient.invalidateQueries({ queryKey: ['sms-logs'] });
@@ -49,11 +54,12 @@ export function SendSmsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title={`SMS to ${phone}`} maxWidth="max-w-md">
       <div className="space-y-3 px-6 pb-6 pt-3">
+        <SmsTemplatePicker message={message} setMessage={setMessage} textareaRef={messageRef} />
         <textarea
+          ref={messageRef}
           value={message}
           onChange={(e) => setMessage(e.target.value.slice(0, 1000))}
           rows={4}
-          autoFocus
           placeholder="Write your message"
           className={productInputClass}
         />

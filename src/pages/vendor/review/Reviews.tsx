@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageSquareQuote, MoreVertical, Plus, Star } from 'lucide-react';
+import { MessageCircleQuestion, MessageSquareQuote, MoreVertical, Plus, Star } from 'lucide-react';
 import { reviewsApi, type Review } from '../../../lib/reviewsApi';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
@@ -17,6 +17,7 @@ import {
   TableFrame,
   TableSkeleton,
   iconBtn,
+  outlineBtn,
   primaryBtn,
   td,
   th,
@@ -282,9 +283,16 @@ export default function Reviews() {
       <PageHeader
         title="Reviews"
         description={counts && counts.pending > 0 ? `${counts.pending} not shown on your store. Turn on Shown to publish them.` : 'What customers say about your products.'}
-        actions={addButton}
+        actions={
+          <>
+            <Link to="/vendor/reviews/questions" className={outlineBtn}>
+              <MessageCircleQuestion size={15} aria-hidden />
+              Questions
+            </Link>
+            {addButton}
+          </>
+        }
       />
-
       <PillTabs<StatusTab>
         value={status}
         onChange={setStatus}

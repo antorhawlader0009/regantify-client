@@ -186,6 +186,7 @@ export function PaymentLinkPanel({ order, onChanged }: { order: Order; onChanged
       {link?.url && (
         <SendSmsDialog
           phone={order.customerPhone}
+          orderId={order.id}
           open={smsOpen}
           onOpenChange={setSmsOpen}
           initialMessage={`Please pay ${money(link.payable)} in advance for your order ${ref}: ${link.url}`}

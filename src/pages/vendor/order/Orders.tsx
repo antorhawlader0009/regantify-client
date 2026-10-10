@@ -30,6 +30,7 @@ import {
   Upload,
   Undo2,
   User,
+  Wallet,
   X,
   XCircle,
 } from 'lucide-react';
@@ -1110,6 +1111,13 @@ export default function Orders() {
             <button type="button" onClick={() => navigate('/vendor/orders/handover')} className={toolbarBtn} title="Hand parcels to a courier with a signed sheet">
               <Truck size={15} />
               Courier handover
+            </button>
+          )}
+
+          {canCourier && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/rider-cash')} className={toolbarBtn} title="Cash your own delivery riders collected and handed in">
+              <Wallet size={15} />
+              Rider cash
             </button>
           )}
 

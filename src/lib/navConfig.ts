@@ -105,6 +105,8 @@ export const vendorNav: NavSection[] = [
       { label: 'Brands', path: '/vendor/product/brands' },
       { label: 'Size Guides', path: '/vendor/product/size-guides' },
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
+      { label: 'Stock Count', path: '/vendor/product/stock-count' },
+      { label: 'Stock History', path: '/vendor/product/stock-history' },
     ],
   },
   { label: 'Reviews', icon: Star, group: 'Product', path: '/vendor/reviews' },
@@ -213,6 +215,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Steadfast', path: '/vendor/courier/steadfast' },
       { label: 'Pathao', path: '/vendor/courier/pathao' },
       { label: 'RedX', path: '/vendor/courier/redx' },
+      { label: 'Courier Rules', path: '/vendor/courier/rules' },
       // The only other real standalone page in this group — see Tracking.tsx.
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
     ],

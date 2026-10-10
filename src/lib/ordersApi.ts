@@ -366,6 +366,25 @@ export interface CreateOrderPayload {
   advanceNote?: string;
 }
 
+/** One of a customer's other open orders in the merge dialog. */
+export interface MergeCandidate {
+  id: string;
+  ref: string;
+  status: string;
+  total: number;
+  deliveryCharge: number;
+  createdAt: string;
+  address: string;
+  items: string[];
+  /** Why it can't be merged; null = it can. */
+  blocker: string | null;
+}
+
+export interface MergeCandidates {
+  orderRef: string;
+  orders: MergeCandidate[];
+}
+
 export const ordersApi = {
   list: (params: ListOrdersParams = {}) =>
     api.get<OrderListResponse>('/v1/orders', { params }).then((r) => r.data),
@@ -385,6 +404,12 @@ export const ordersApi = {
   /** "Add the reason" on an order that was cancelled / returned / failed without one (or to change it). */
   setCloseReason: (id: string, reasonCode: CloseReasonCode) =>
     api.patch<OrderCloseReason>(`/v1/orders/${id}/close-reason`, { reasonCode }).then((r) => r.data),
+
+  /** "Merge with another order": this customer's other open orders, each with why it can't be merged (null = it can). */
+  mergeCandidates: (id: string) => api.get<MergeCandidates>(`/v1/orders/${id}/merge-candidates`).then((r) => r.data),
+
+  /** Moves the other order's items onto this one and cancels the other as merged; answers with this order. */
+  mergeOrders: (id: string, otherOrderId: string) => api.post<Order>(`/v1/orders/${id}/merge`, { otherOrderId }).then((r) => r.data),
 
   /** "Edit items": replaces the whole item list of a COD order not yet booked with a courier; the server works out the total and stock again. */
   updateItems: (id: string, payload: UpdateOrderItemsPayload) =>
