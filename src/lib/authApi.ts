@@ -187,6 +187,13 @@ export const authApi = {
 
   logout: () => api.post('/v1/auth/logout'),
 
+  /** The caller's recent sign-ins (TellMe idea 92). */
+  loginHistory: () =>
+    api.get<Array<{ id: string; at: string; via: 'OTP' | 'PASSWORD' | 'STAFF'; browser: string; ip: string | null; newDevice: boolean }>>('/v1/auth/vendor/login-history').then((r) => r.data),
+
+  /** Signs this account out everywhere: the refresh token is dropped, so no device can renew its session (an open one lasts at most 15 minutes). */
+  signOutEverywhere: () => api.post('/v1/auth/vendor/sign-out-all'),
+
   // Super Admin > All Vendors > "Login as Vendor" — exchanges the
   // one-time token from adminApi.impersonateVendor for a 15-min vendor
   // access token. No refresh token/cookie involved; see

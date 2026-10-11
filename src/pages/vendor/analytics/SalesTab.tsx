@@ -1,4 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { analyticsApi } from '../../../lib/analyticsApi';
+import { downloadCsv, toCsv } from '../../../lib/csv';
 import type { SalesAnalytics } from '../../../lib/analyticsApi';
 import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, Share } from '../../../components/analytics/AnalyticsUi';
 import { PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
@@ -120,6 +124,8 @@ export function SalesTab({ range }: TabProps) {
             <div className="grid lg:grid-cols-3 gap-4">
               <ChannelSplitCard channels={data.channels} />
             </div>
+
+            {canProfit && <VatReportCard />}
           </>
         );
       }}
@@ -256,5 +262,73 @@ function ProductProfitTable({ products, showProfit }: { products: SalesAnalytics
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** The month's VAT collected (TellMe idea 78), counted with the same rules as the profit figures. */
+function VatReportCard() {
+  const nowMonth = new Date(Date.now() + 6 * 3600_000).toISOString().slice(0, 7);
+  const [month, setMonth] = useState(nowMonth);
+  const query = useQuery({ queryKey: ['analytics', 'vat', month], queryFn: () => analyticsApi.vat(month), enabled: /^\d{4}-\d{2}$/.test(month) });
+  const data = query.data;
+
+  const download = () => {
+    if (!data) return;
+    const rows = data.lines.map((l) => [`ORDER-${l.invoiceNumber}`, l.day, String(l.salesExVat), String(l.vat)]);
+    rows.push(['Total', '', String(data.salesExVat), String(data.vat)]);
+    downloadCsv(`vat-report-${month}.csv`, toCsv(['Order', 'Date', 'Sales without VAT', 'VAT'], rows));
+  };
+
+  return (
+    <Card
+      className="mt-4"
+      title="VAT report"
+      subtitle="VAT collected in a month. Cancelled, unpaid, returned and refunded orders are left out, the same as the profit figures."
+      action={
+        <div className="flex items-center gap-2">
+          <input type="month" value={month} max={nowMonth} onChange={(e) => e.target.value && setMonth(e.target.value)} className="h-9 rounded-lg border border-line bg-white px-2 text-sm" />
+          <button type="button" onClick={download} disabled={!data || data.lines.length === 0} className="h-9 rounded-lg border border-line bg-white px-3 text-sm text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
+            Download CSV
+          </button>
+        </div>
+      }
+    >
+      {!data ? (
+        <div className="h-16 animate-pulse rounded-lg bg-neutral-100" aria-busy />
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div><p className="text-xs text-neutral-500">Sales without VAT</p><p className="text-lg font-semibold tabular-nums">{formatTaka(data.salesExVat)}</p></div>
+            <div><p className="text-xs text-neutral-500">VAT collected</p><p className="text-lg font-semibold tabular-nums">{formatTaka(data.vat)}</p></div>
+            <div><p className="text-xs text-neutral-500">Orders with VAT</p><p className="text-lg font-semibold tabular-nums">{data.vatOrders} of {data.orders}</p></div>
+          </div>
+          {data.days.length > 0 && (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-neutral-500">
+                    <th className="pb-2 font-normal">Day</th>
+                    <th className="pb-2 text-right font-normal">Orders</th>
+                    <th className="pb-2 text-right font-normal">Sales without VAT</th>
+                    <th className="pb-2 text-right font-normal">VAT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.days.map((d) => (
+                    <tr key={d.day} className="border-t border-line">
+                      <td className="py-2">{d.day}</td>
+                      <td className="py-2 text-right tabular-nums">{d.orders}</td>
+                      <td className="py-2 text-right tabular-nums">{formatTaka(d.salesExVat)}</td>
+                      <td className="py-2 text-right tabular-nums">{formatTaka(d.vat)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="mt-3 text-xs text-neutral-500">This is a calculation from your orders, not tax advice. Delivery charges are inside the sales figure. Check the amounts with your accountant before filing a return.</p>
+        </>
+      )}
+    </Card>
   );
 }

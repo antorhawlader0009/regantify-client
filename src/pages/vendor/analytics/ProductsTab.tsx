@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../../lib/api';
 import { Link } from 'react-router-dom';
 import type { ProductsAnalytics, SearchedWord, SearchesAnalytics } from '../../../lib/analyticsApi';
 import { AddSearchWordDialog } from '../../../components/analytics/AddSearchWordDialog';
@@ -6,6 +8,9 @@ import { useCan } from '../../../lib/useStaffAccess';
 import { Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, SERIES_1, StatCard, MobileRows } from '../../../components/analytics/AnalyticsUi';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
+import { DeadStockCard } from './DeadStockCard';
+import { ProfitByProductCard } from './ProfitByProductCard';
+import { ReturnRateCard } from './ReturnRateCard';
 
 export function ProductsTab({ range }: TabProps) {
   const query = useAnalytics('products', range);
@@ -97,6 +102,7 @@ export function ProductsTab({ range }: TabProps) {
               <div className="grid lg:grid-cols-2 gap-4">
                 <MostViewed rows={data.mostViewed} trackedSince={data.viewsTrackedSince} />
                 <SellingOutSoon rows={data.sellingOutSoon} />
+                <WishlistInterest />
               </div>
 
               <Card
@@ -122,6 +128,12 @@ export function ProductsTab({ range }: TabProps) {
                   </ul>
                 )}
               </Card>
+
+              <ProfitByProductCard range={range} />
+
+              <ReturnRateCard range={range} />
+
+              <DeadStockCard />
 
               <SearchesSection range={range} />
           </>
@@ -281,6 +293,32 @@ function SellingOutSoon({ rows }: { rows: ProductsAnalytics['sellingOutSoon'] })
           ))}
         </ul>
       )}
+    </Card>
+  );
+}
+
+/** Products shoppers saved in their wishlist, and how many wait for a price drop (TellMe idea 62). Empty until the first one. */
+function WishlistInterest() {
+  const { data } = useQuery({
+    queryKey: ['wishlist-stats'],
+    queryFn: () => api.get<Array<{ productId: string; name: string; saved: number; waiting: number }>>('/v1/products/wishlist-stats').then((r) => r.data),
+    retry: false,
+  });
+  if (!data || data.length === 0) return null;
+  return (
+    <Card title="Saved in wishlists" subtitle="How many logged-in shoppers saved each product, and how many wait for a price drop. A price cut could win them.">
+      <ul className="divide-y divide-line">
+        {data.map((p) => (
+          <li key={p.productId}>
+            <Link to={`/vendor/product/edit/${p.productId}`} className="flex items-center justify-between gap-3 py-2.5 text-sm hover:underline">
+              <span className="min-w-0 truncate font-medium text-regantify-text">{p.name}</span>
+              <span className="shrink-0 text-xs tabular-nums text-neutral-500">
+                {p.saved} saved{p.waiting > 0 ? ` · ${p.waiting} waiting for a drop` : ''}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

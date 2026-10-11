@@ -7,7 +7,7 @@ import { ordersApi } from '../../lib/ordersApi';
 import { getVendorSettings } from '../../lib/vendorApi';
 import { printElement } from '../../lib/printElement';
 import { toast } from '../../lib/toast';
-import { InvoiceSheet } from '../../pages/vendor/order/InvoiceModal';
+import { InvoiceSheet, invoicePage, useInvoicePrintData } from '../../pages/vendor/order/InvoiceModal';
 
 /**
  * Orders list "Print invoices": every selected order's invoice in one print, one per page, for
@@ -32,11 +32,13 @@ export function BulkInvoicePrint({ ids, open, onOpenChange }: { ids: string[]; o
     staleTime: 5 * 60_000,
   });
 
+  const { data: invoice } = useInvoicePrintData(open);
+
   async function print() {
     if (!sheetsRef.current || !orders) return;
     setPrinting(true);
     try {
-      await printElement(sheetsRef.current, `Invoices (${orders.length})`);
+      await printElement(sheetsRef.current, `Invoices (${orders.length})`, invoicePage(invoice));
     } catch {
       toast.error('Could not open the print window. Please try again.');
     } finally {
@@ -67,11 +69,11 @@ export function BulkInvoicePrint({ ids, open, onOpenChange }: { ids: string[]; o
 
       {/* What gets printed: kept off-screen, printElement copies it into its own page. */}
       {orders && (
-        <div aria-hidden className="pointer-events-none fixed -left-[10000px] top-0 w-[210mm]">
+        <div aria-hidden className={`pointer-events-none fixed -left-[10000px] top-0 ${invoice?.settings.paperSize === 'RECEIPT80' ? 'w-[80mm]' : 'w-[210mm]'}`}>
           <div ref={sheetsRef}>
             {orders.map((order, i) => (
               <div key={order.id} style={i < orders.length - 1 ? { breakAfter: 'page' } : undefined}>
-                <InvoiceSheet order={order} store={store} />
+                <InvoiceSheet order={order} store={store} invoice={invoice} />
               </div>
             ))}
           </div>

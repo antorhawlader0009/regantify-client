@@ -52,6 +52,8 @@ export default function CodGuard() {
   const [minOrderText, setMinOrderText] = useState('');
   // The pre-order advance percentage, as typed ("" = off).
   const [preOrderText, setPreOrderText] = useState('');
+  // The biggest order that is confirmed by itself, as typed ("" = no limit).
+  const [autoMaxText, setAutoMaxText] = useState('');
 
   const minOrderToText = (value: CodGuardSettings['advanceMinOrder']) => (value ? String(Number(value)) : '');
 
@@ -60,6 +62,7 @@ export default function CodGuard() {
       setForm(data);
       setMinOrderText(minOrderToText(data.advanceMinOrder));
       setPreOrderText(data.preOrderAdvancePercent ? String(data.preOrderAdvancePercent) : '');
+      setAutoMaxText(data.autoConfirmMaxAmount ? String(Number(data.autoConfirmMaxAmount)) : '');
     }
   }, [data]);
 
@@ -102,8 +105,14 @@ export default function CodGuard() {
       toast.error('Enter the pre-order advance as a whole percentage from 1 to 100, or leave it empty to turn it off.');
       return;
     }
+    const autoMax = autoMaxText.trim() === '' ? null : Number(autoMaxText);
+    if (autoMax !== null && (!Number.isFinite(autoMax) || autoMax < 0)) {
+      toast.error('Enter the biggest auto-confirmed order as a number, or leave it empty for no limit.');
+      return;
+    }
     save.mutate({
       ...form,
+      autoConfirmMaxAmount: autoMax && autoMax > 0 ? autoMax : null,
       advanceMinOrder: form.advanceEnabled && minOrder ? minOrder : null,
       preOrderAdvancePercent: preOrder && preOrder > 0 ? preOrder : null,
     });
@@ -265,6 +274,42 @@ export default function CodGuard() {
               &ldquo;Possible duplicate&rdquo; and you get a notice. With this on it also starts <b>On Hold</b>, so it can&apos;t ship
               until you check with the customer and move it on. Orders that are paid online are marked but not held.
             </p>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <Checkbox checked={form.autoConfirmTrusted} onChange={(v) => set('autoConfirmTrusted', v)} label="Confirm trusted customers' orders by itself" />
+            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+              A new online order moves from Pending to Processing a couple of minutes after it is placed when the customer has completed at least{' '}
+              {form.autoConfirmMinOrders} orders before, none of them returned, refunded or cancelled because of the customer, they are not blacklisted, the order is not a
+              possible duplicate and it is not above the limit below. Orders waiting for an SMS code or an advance payment are On Hold and are never touched. The history
+              says &ldquo;Auto-confirmed&rdquo; by System.
+            </p>
+            {form.autoConfirmTrusted && (
+              <div className="mt-3 ml-7 flex flex-wrap gap-4">
+                <label className="text-xs text-regantify-text-muted">
+                  Completed orders needed
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={form.autoConfirmMinOrders}
+                    onChange={(e) => set('autoConfirmMinOrders', Math.max(1, Math.min(50, Number(e.target.value) || 1)))}
+                    className="mt-1 block h-10 w-28 rounded-lg border border-black/10 px-3 text-sm text-regantify-text"
+                  />
+                </label>
+                <label className="text-xs text-regantify-text-muted">
+                  Biggest order confirmed by itself (৳)
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={autoMaxText}
+                    onChange={(e) => setAutoMaxText(e.target.value.replace(/[^\d.]/g, ''))}
+                    placeholder="No limit"
+                    className="mt-1 block h-10 w-40 rounded-lg border border-black/10 px-3 text-sm text-regantify-text"
+                  />
+                </label>
+              </div>
+            )}
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5">

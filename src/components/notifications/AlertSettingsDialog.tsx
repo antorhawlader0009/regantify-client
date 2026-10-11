@@ -87,7 +87,7 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
 
   // The end-of-day summary: saved the moment it is changed (owner only).
   const saveSummary = useMutation({
-    mutationFn: (patch: { dailySummary?: boolean; dailySummaryHour?: number }) => notificationsApi.updateSettings(patch),
+    mutationFn: (patch: { dailySummary?: boolean; dailySummaryHour?: number; weeklySummary?: boolean }) => notificationsApi.updateSettings(patch),
     onMutate: (patch) => {
       queryClient.setQueryData<NotificationSettings>(SETTINGS_KEY, (old) => (old ? { ...old, ...patch } : old));
     },
@@ -143,6 +143,12 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
                   <span className="mt-1 block text-xs font-normal text-neutral-500">Dhaka time. A day with no orders and nothing waiting sends nothing.</span>
                 </label>
               )}
+              <ToggleRow
+                checked={settings.weeklySummary}
+                onChange={(on) => saveSummary.mutate({ weeklySummary: on })}
+                label="Send me a weekly report"
+                hint="Every Sunday at 9 AM (Dhaka): last week's orders and sales against the week before, best sellers, new buyers, cancelled or returned orders and low stock. It shows in the bell; tick “Weekly summary” for a phone or Telegram chat above to get it there. Never sent by SMS."
+              />
               {!isOwner && <p className="text-xs text-neutral-500">Only the store owner can change the daily summary.</p>}
             </fieldset>
           )}

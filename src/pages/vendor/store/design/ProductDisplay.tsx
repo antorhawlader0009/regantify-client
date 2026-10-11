@@ -6,6 +6,7 @@ import {
   DesignSection,
   RadioGroup,
   SaveButton,
+  Switch,
   inputClass,
   useDesignSettings,
 } from './designShared';
@@ -21,12 +22,18 @@ export default function ProductDisplay() {
   const { settings, isLoading, save } = useDesignSettings();
   const [shape, setShape] = useState<ProductImageShape>('SQUARE');
   const [gallery, setGallery] = useState<ProductGalleryStyle>('BOTTOM');
+  const [share, setShare] = useState(true);
+  const [proofDays, setProofDays] = useState<0 | 7 | 30>(0);
+  const [wishAlerts, setWishAlerts] = useState(false);
   const [messages, setMessages] = useState({ inStockMessage: '', outOfStockMessage: '', preOrderMessage: '' });
 
   useEffect(() => {
     if (!settings) return;
     setShape(settings.productImageShape);
     setGallery(settings.galleryStyle);
+    setShare(settings.productShareEnabled);
+    setProofDays((settings.socialProofDays as 0 | 7 | 30) ?? 0);
+    setWishAlerts(settings.wishlistAlertsEnabled);
     setMessages({
       inStockMessage: settings.inStockMessage ?? '',
       outOfStockMessage: settings.outOfStockMessage ?? '',
@@ -69,6 +76,33 @@ export default function ProductDisplay() {
             <SaveButton
               pending={save.isPending}
               onClick={() => save.mutate({ productImageShape: shape, galleryStyle: gallery })}
+            />
+          </DesignSection>
+
+          <DesignSection title="Share, sales and wishlist (StorePal)">
+            <div className="flex items-center gap-3">
+              <Switch checked={share} onChange={setShare} label="Share button" />
+              <span className="text-sm text-regantify-text">Show a Share button on the product page (WhatsApp, Messenger, copy link)</span>
+            </div>
+            <RadioGroup
+              label="“N bought in the last days” on products"
+              value={String(proofDays) as '0' | '7' | '30'}
+              onChange={(v) => setProofDays(Number(v) as 0 | 7 | 30)}
+              options={[
+                { value: '0', label: 'Off' },
+                { value: '7', label: 'Last 7 days' },
+                { value: '30', label: 'Last 30 days' },
+              ]}
+              hint="Real sales only (cancelled, returned and unpaid orders left out), counted every night. Shown only from 5 buyers up. It also decides the Top Selling row."
+            />
+            <div className="flex items-center gap-3">
+              <Switch checked={wishAlerts} onChange={setWishAlerts} label="Wishlist alerts" />
+              <span className="text-sm text-regantify-text">Let logged-in shoppers ask for an SMS when a wishlist product gets cheaper or is back in stock</span>
+            </div>
+            <p className="text-xs text-regantify-text-muted">Alert texts come from your SMS credits, at most one a day per product, never at night.</p>
+            <SaveButton
+              pending={save.isPending}
+              onClick={() => save.mutate({ productShareEnabled: share, socialProofDays: proofDays, wishlistAlertsEnabled: wishAlerts })}
             />
           </DesignSection>
 

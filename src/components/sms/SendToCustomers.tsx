@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarClock, Send } from 'lucide-react';
 import { smsApi, type SmsAudience } from '../../lib/smsApi';
 import { customersApi } from '../../lib/customersApi';
+import { couponsApi } from '../../lib/couponsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { dhakaInputToIso, nowDhakaInput } from '../../lib/dhakaInput';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
@@ -41,6 +42,10 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   // "Send later" time in Dhaka time, as a datetime-local value.
   const [sendInput, setSendInput] = useState('');
   const [confirming, setConfirming] = useState(false);
+  // {personal_coupon} (TellMe idea 83): a fresh one-time code for each customer, copied from this coupon.
+  const [couponTemplateId, setCouponTemplateId] = useState('');
+  const usesPersonalCoupon = /\{personal_coupon\}/i.test(message);
+  const { data: couponList } = useQuery({ queryKey: ['coupons', 'sms-template-pick'], queryFn: () => couponsApi.list({ perPage: 100 }), enabled: usesPersonalCoupon });
   const days = audience === 'INACTIVE' ? inactiveDays : recentDays;
   const [debounced, setDebounced] = useState({ audience, days, message });
   const { data: storeTags } = useQuery({ queryKey: ['customer-tags'], queryFn: customersApi.listTags });
@@ -85,7 +90,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const send = useMutation<SendResult>({
     mutationFn: async () => {
       const body = { ...target, message: message.trim() };
-      return when === 'LATER' ? smsApi.scheduleCampaign({ ...body, sendAt: sendAtIso! }) : smsApi.sendCampaign(body);
+      return when === 'LATER' ? smsApi.scheduleCampaign({ ...body, sendAt: sendAtIso! }) : smsApi.sendCampaign({ ...body, couponTemplateId: usesPersonalCoupon ? couponTemplateId : undefined });
     },
     onSuccess: (res) => {
       setConfirming(false);
@@ -109,7 +114,11 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const notEnough = preview ? preview.totalCredits > preview.smsCredits : false;
   // Sending now needs the credits now; a scheduled one is checked when it goes out, so it may be bought before then.
   const canSend =
-    message.trim().length > 0 && !needsTag && (preview?.recipients ?? 0) > 0 && (when === 'LATER' ? laterProblem === null : !notEnough);
+    message.trim().length > 0 &&
+    !needsTag &&
+    (preview?.recipients ?? 0) > 0 &&
+    (!usesPersonalCoupon || (when === 'NOW' && couponTemplateId !== '')) &&
+    (when === 'LATER' ? laterProblem === null : !notEnough);
   const options: { id: SmsAudience; label: string }[] = [
     ...(selectedPhones?.length ? [{ id: 'SELECTED' as const, label: `Customers you picked (${selectedPhones.length})` }] : []),
     { id: 'ALL', label: 'Everyone who ordered' },
@@ -170,6 +179,19 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
           className={productInputClass}
         />
       </Field>
+
+      {usesPersonalCoupon && (
+        <Field label="Personal coupon" hint="{personal_coupon} becomes a new one-time code made for each customer at the moment their SMS goes out, and it works only with their phone number. Send now only.">
+          <select value={couponTemplateId} onChange={(e) => setCouponTemplateId(e.target.value)} className={productInputClass}>
+            <option value="">Copy the discount from…</option>
+            {(couponList?.coupons ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.code}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       <Field label="When">
         <div className="flex flex-wrap items-center gap-2">

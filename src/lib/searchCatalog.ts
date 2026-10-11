@@ -21,6 +21,7 @@ export interface CatalogEntry {
 
 const STOCK = '/vendor/store/stock-settings';
 const COD = '/vendor/store/cod-guard';
+const INVOICE = '/vendor/store/invoice';
 const DELIVERY = '/vendor/store/delivery-charge';
 const NOTIF = '/vendor/notifications?settings=alerts';
 const LMS = '/vendor/lms/settings';
@@ -39,6 +40,9 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Allow backorders (sell without stock)', where: 'Store > Stock Settings', path: STOCK, keywords: 'backorder pre order out of stock order allow negative popup message স্টক নাই তবুও অর্ডার' },
   { title: 'Reduce stock when a COD order is placed', where: 'Store > Stock Settings', path: STOCK, keywords: 'cod stock deduct processing deferred stock reduce when স্টক কমবে' },
   { title: 'Returned stock: put back after check-in', where: 'Store > Stock Settings', path: STOCK, keywords: 'return restock returned parcels check in stock back ফেরত স্টক' },
+  { title: 'Show "Only 3 left" on low stock', where: 'Store > Stock Settings', path: STOCK, keywords: 'low stock urgency only few left hide stock count মাত্র বাকি স্টক কম' },
+  { title: 'Default warranty and return policy', where: 'Store > Stock Settings', path: STOCK, keywords: 'warranty return exchange policy days product ওয়ারেন্টি ফেরত বদল' },
+  { title: 'Invoice: thank-you note, terms, signature, paper size', where: 'Store > Invoice', path: INVOICE, keywords: 'invoice receipt 80mm a4 bin trade licence bkash bank signature seal terms memo ইনভয়েস রসিদ সই' },
   { title: 'Low stock alert limit', where: 'Store > Stock Settings', path: STOCK, keywords: 'low stock threshold minimum quantity alert warning running out কম স্টক সতর্কতা' },
   { title: 'Block fake or bad customers (auto block)', where: 'Store > COD Guard', path: COD, keywords: 'blacklist fake order cod block auto block blocked customer ব্ল্যাকলিস্ট ভুয়া অর্ডার' },
   { title: 'SMS code to verify COD orders', where: 'Store > COD Guard', path: COD, keywords: 'otp verification phone verify code before after checkout fake order sms ভেরিফিকেশন ওটিপি' },

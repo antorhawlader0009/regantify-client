@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getVendorDeliveryCharges, updateVendorDeliveryCharges, type DeliveryCharges } from '../../../lib/vendorApi';
+import { getBlockedAreas, getVendorDeliveryCharges, updateVendorDeliveryCharges, type DeliveryCharges } from '../../../lib/vendorApi';
+import { BD_DISTRICTS } from '../../../lib/bdDistricts';
 import { apiErrorMessage } from '../../../lib/api';
 
 const deliveryChargeSchema = z.object({
@@ -133,12 +134,290 @@ export default function DeliveryCharge() {
         onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
       />
 
+      <DeliveryAreaSection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
+
+      <CheckoutRulesSection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
+
       <DeliveryTimeSection
         charges={charges}
         disabled={isLoading}
         onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
       />
     </div>
+  );
+}
+
+/**
+ * "Where we deliver" (TellMe idea 65), StorePal checkout only, off by default (every area). Either only the districts ticked,
+ * or every district except the ones ticked. A shopper who picks a refused district sees the message at once and cannot place
+ * the order; the server judges again when the order is placed. Pickup from the shop, your own Add Order and the POS ignore it.
+ * The list under it shows where shoppers tried and were refused.
+ */
+function DeliveryAreaSection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [mode, setMode] = useState<'OFF' | 'ONLY' | 'EXCEPT'>('OFF');
+  const [districts, setDistricts] = useState<Set<string>>(new Set());
+  const [message, setMessage] = useState('');
+  const blocked = useQuery({ queryKey: ['blocked-areas'], queryFn: getBlockedAreas, retry: false });
+
+  useEffect(() => {
+    if (!charges) return;
+    setMode(charges.deliveryAreaMode);
+    setDistricts(new Set(charges.deliveryAreaDistricts));
+    setMessage(charges.deliveryAreaMessage ?? '');
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      if (mode !== 'OFF' && districts.size === 0) throw new Error(mode === 'ONLY' ? 'Tick at least one district you deliver to.' : 'Tick the districts you do not deliver to, or turn this off.');
+      return updateVendorDeliveryCharges({ deliveryAreaMode: mode, deliveryAreaDistricts: [...districts], deliveryAreaMessage: message.trim() || null });
+    },
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Delivery area saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the delivery area.')),
+  });
+
+  const toggle = (d: string) =>
+    setDistricts((prev) => {
+      const next = new Set(prev);
+      if (next.has(d)) next.delete(d);
+      else next.add(d);
+      return next;
+    });
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <h2 className="text-base font-medium text-regantify-text">Where we deliver</h2>
+      <p className="text-sm text-regantify-text-muted mt-1">
+        Stop orders for districts you do not serve before they are placed. Off means every area is served. Works on the StorePal theme.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-4 text-sm text-regantify-text">
+        {([
+          ['OFF', 'Every area'],
+          ['ONLY', 'Only these districts'],
+          ['EXCEPT', 'Everywhere except these districts'],
+        ] as const).map(([value, text]) => (
+          <label key={value} className="flex cursor-pointer items-center gap-2">
+            <input type="radio" name="area-mode" checked={mode === value} disabled={disabled} onChange={() => setMode(value)} className="accent-regantify-cta" />
+            {text}
+          </label>
+        ))}
+      </div>
+
+      {mode !== 'OFF' && (
+        <>
+          <div className="mt-4 grid max-h-64 grid-cols-2 gap-x-4 gap-y-1.5 overflow-y-auto rounded-xl border border-black/10 p-3 sm:grid-cols-3 lg:grid-cols-4">
+            {BD_DISTRICTS.map((d) => (
+              <label key={d} className="flex cursor-pointer items-center gap-2 text-sm text-regantify-text">
+                <input type="checkbox" checked={districts.has(d)} onChange={() => toggle(d)} className="h-4 w-4 accent-regantify-cta" />
+                {d}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-regantify-text-muted">{districts.size} selected.</p>
+          <div className="mt-3 max-w-xl">
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Message to the shopper (optional)</label>
+            <input
+              type="text"
+              maxLength={200}
+              value={message}
+              disabled={disabled}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Sorry, we do not deliver to this district right now."
+              className={inputClass}
+            />
+            <p className="text-xs text-regantify-text-muted mt-1.5">For example: “Visit our showroom to collect it.”</p>
+          </div>
+        </>
+      )}
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-4 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save delivery area'}
+      </button>
+
+      {(blocked.data?.length ?? 0) > 0 && (
+        <div className="mt-5 border-t border-black/5 pt-4">
+          <h3 className="text-sm font-medium text-regantify-text">Orders stopped by this setting</h3>
+          <p className="text-xs text-regantify-text-muted mt-0.5">Where shoppers asked for delivery and were refused. A district with many tries may be worth serving.</p>
+          <ul className="mt-2 grid gap-1 text-sm text-regantify-text sm:grid-cols-2">
+            {blocked.data?.map((b) => (
+              <li key={b.district} className="flex justify-between rounded-lg bg-black/[0.03] px-3 py-1.5">
+                <span>{b.district}</span>
+                <span className="tabular-nums text-regantify-text-muted">{b.count}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Checkout rules (TellMe ideas 56, 57, 58), all off by default:
+ * - a minimum order (goods total before discounts) that storefront orders must reach;
+ * - the gift option: a "this is a gift" tick with a message and a wrap charge that is its own line in the total (StorePal);
+ * - a weight charge for heavy carts: each started kg above the free weight adds the zone's per-kg amount, up to a cap.
+ * The server judges all three again when the order is placed. Your own Add Order and the POS skip them.
+ */
+function CheckoutRulesSection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [minOrder, setMinOrder] = useState('');
+  const [gift, setGift] = useState(false);
+  const [wrap, setWrap] = useState('0');
+  const [weightOn, setWeightOn] = useState(false);
+  const [freeKg, setFreeKg] = useState('1');
+  const [perInside, setPerInside] = useState('0');
+  const [perAround, setPerAround] = useState('0');
+  const [perOutside, setPerOutside] = useState('0');
+  const [maxExtra, setMaxExtra] = useState('');
+  const [dailyLimit, setDailyLimit] = useState('');
+  const [cutoff, setCutoff] = useState('');
+
+  useEffect(() => {
+    if (!charges) return;
+    setMinOrder(charges.minOrderAmount && Number(charges.minOrderAmount) > 0 ? String(Number(charges.minOrderAmount)) : '');
+    setGift(charges.giftOptionEnabled);
+    setWrap(String(Number(charges.giftWrapCharge)));
+    setWeightOn(charges.weightChargeEnabled);
+    setFreeKg(String(Number(charges.weightFreeKg)));
+    setPerInside(String(Number(charges.weightPerKgInside)));
+    setPerAround(String(Number(charges.weightPerKgAround)));
+    setPerOutside(String(Number(charges.weightPerKgOutside)));
+    setMaxExtra(charges.weightChargeMax && Number(charges.weightChargeMax) > 0 ? String(Number(charges.weightChargeMax)) : '');
+    setDailyLimit(charges.dailyOrderLimit ? String(charges.dailyOrderLimit) : '');
+    setCutoff(charges.orderCutoffMinutes === null || charges.orderCutoffMinutes === undefined ? '' : `${String(Math.floor(charges.orderCutoffMinutes / 60)).padStart(2, '0')}:${String(charges.orderCutoffMinutes % 60).padStart(2, '0')}`);
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      const num = (text: string, label: string) => {
+        const n = Number(text || 0);
+        if (!Number.isFinite(n) || n < 0) throw new Error(`${label} must be a number, 0 or more.`);
+        return n;
+      };
+      return updateVendorDeliveryCharges({
+        minOrderAmount: minOrder.trim() ? num(minOrder, 'The minimum order') : null,
+        giftOptionEnabled: gift,
+        giftWrapCharge: num(wrap, 'The gift wrap charge'),
+        weightChargeEnabled: weightOn,
+        weightFreeKg: num(freeKg, 'The free weight'),
+        weightPerKgInside: num(perInside, 'The Inside Dhaka amount'),
+        weightPerKgAround: num(perAround, 'The Around Dhaka amount'),
+        weightPerKgOutside: num(perOutside, 'The Outside Dhaka amount'),
+        weightChargeMax: maxExtra.trim() ? num(maxExtra, 'The cap') : null,
+        dailyOrderLimit: dailyLimit.trim() ? Math.floor(num(dailyLimit, 'The daily limit')) : null,
+        orderCutoffMinutes: cutoff ? Number(cutoff.slice(0, 2)) * 60 + Number(cutoff.slice(3, 5)) : null,
+      });
+    },
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Checkout rules saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save. Check the numbers and try again.')),
+  });
+
+  const field = (label: string, value: string, set: (v: string) => void, hint?: string, off?: boolean) => (
+    <div className={off ? 'opacity-60' : ''}>
+      <label className="block text-sm font-medium text-regantify-text mb-1.5">{label}</label>
+      <input type="number" min={0} step="any" inputMode="decimal" value={value} disabled={disabled || off} onChange={(e) => set(e.target.value)} className={inputClass} />
+      {hint && <p className="text-xs text-regantify-text-muted mt-1.5">{hint}</p>}
+    </div>
+  );
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <h2 className="text-base font-medium text-regantify-text">Checkout rules</h2>
+      <p className="text-sm text-regantify-text-muted mt-1">
+        Minimum order, gift option and a weight charge for heavy parcels. All are off until you fill them in, and your own Add Order and the POS ignore them.
+      </p>
+
+      <div className="mt-4 max-w-xs">
+        {field('Minimum order (৳)', minOrder, setMinOrder, 'The goods total, before discounts. Empty = no minimum. The cart tells the shopper how much more to add.')}
+      </div>
+
+      <div className="mt-6 border-t border-black/5 pt-4">
+        <h3 className="text-sm font-medium text-regantify-text">Orders per day and cut-off time (StorePal)</h3>
+        <p className="text-xs text-regantify-text-muted mt-1">
+          For shops that cannot take unlimited orders, or that ship same day before a certain hour. Dhaka time. Cancelled, unpaid and returned orders do not use up a slot.
+          Your own Add Order and the POS ignore both, and your plan&apos;s own daily limit still applies on top.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {field('Most orders per day', dailyLimit, setDailyLimit, 'Empty = no limit. When full, shoppers see “today’s orders are full” and cannot order.')}
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Cut-off time</label>
+            <input type="time" value={cutoff} disabled={disabled} onChange={(e) => setCutoff(e.target.value)} className={inputClass} />
+            <p className="text-xs text-regantify-text-muted mt-1.5">Empty = none. An order after this time counts as the next day for the expected delivery date, and the shopper is told.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 border-t border-black/5 pt-4">
+        <label className="flex items-center gap-2 text-sm font-medium text-regantify-text cursor-pointer">
+          <input type="checkbox" checked={gift} disabled={disabled} onChange={(e) => setGift(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          Gift option at checkout (StorePal)
+        </label>
+        <p className="text-xs text-regantify-text-muted mt-1">
+          The shopper can tick &quot;this is a gift&quot;, write a short message and hide the prices on the invoice. You see a big gift note on the order and the packing list.
+        </p>
+        <div className="mt-3 max-w-xs">{field('Gift wrap charge (৳)', wrap, setWrap, '0 = free wrapping. Added to the total as its own line.', !gift)}</div>
+      </div>
+
+      <div className="mt-6 border-t border-black/5 pt-4">
+        <label className="flex items-center gap-2 text-sm font-medium text-regantify-text cursor-pointer">
+          <input type="checkbox" checked={weightOn} disabled={disabled} onChange={(e) => setWeightOn(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          Extra delivery charge for heavy carts
+        </label>
+        <p className="text-xs text-regantify-text-muted mt-1">
+          Uses the weight set on each product (Edit Product &gt; Stock). A product with no weight adds nothing. A free-shipping coupon or discount waives this too.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {field('Free up to (kg)', freeKg, setFreeKg, 'Nothing extra up to this weight.', !weightOn)}
+          {field('Cap on the extra (৳)', maxExtra, setMaxExtra, 'Empty = no cap.', !weightOn)}
+          {field('Each extra kg, Inside Dhaka (৳)', perInside, setPerInside, undefined, !weightOn)}
+          {field('Each extra kg, Around Dhaka (৳)', perAround, setPerAround, undefined, !weightOn)}
+          {field('Each extra kg, Outside Dhaka (৳)', perOutside, setPerOutside, undefined, !weightOn)}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-5 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save checkout rules'}
+      </button>
+    </section>
   );
 }
 
@@ -457,18 +736,29 @@ function PreferredDaySection({
 }) {
   const [enabled, setEnabled] = useState(false);
   const [minDays, setMinDays] = useState('2');
+  // Delivery time slots (TellMe idea 90): up to 4, each with a name, hours and an optional daily maximum.
+  const [slots, setSlots] = useState<Array<{ name: string; from: string; to: string; max: string }>>([]);
 
   useEffect(() => {
     if (!charges) return;
     setEnabled(charges.preferredDeliveryEnabled);
     setMinDays(String(charges.preferredDeliveryMinDays));
+    setSlots((charges.deliverySlots ?? []).map((s) => ({ name: s.name, from: s.from, to: s.to, max: s.maxPerDay ? String(s.maxPerDay) : '' })));
   }, [charges]);
 
   const save = useMutation({
     mutationFn: () => {
       const days = Number(minDays);
       if (!Number.isInteger(days) || days < 0 || days > 14) throw new Error('The earliest day must be a whole number from 0 to 14.');
-      return updateVendorDeliveryCharges({ preferredDeliveryEnabled: enabled, preferredDeliveryMinDays: days });
+      for (const s of slots) {
+        if (!s.name.trim()) throw new Error('Give every time slot a name.');
+        if (!s.from || !s.to || s.from >= s.to) throw new Error(`${s.name.trim()}: the start must be earlier than the end.`);
+      }
+      return updateVendorDeliveryCharges({
+        preferredDeliveryEnabled: enabled,
+        preferredDeliveryMinDays: days,
+        deliverySlots: slots.map((s) => ({ name: s.name.trim(), from: s.from, to: s.to, maxPerDay: Number(s.max) > 0 ? Math.floor(Number(s.max)) : null })),
+      });
     },
     onSuccess: (updated) => {
       onSaved(updated);
@@ -497,6 +787,49 @@ function PreferredDaySection({
         <label className="block text-sm font-medium text-regantify-text mb-1.5">Earliest day (days from today)</label>
         <input type="number" min={0} max={14} step={1} inputMode="numeric" value={minDays} disabled={disabled || !enabled} onChange={(e) => setMinDays(e.target.value)} className={inputClass} />
         <p className="text-xs text-regantify-text-muted mt-1.5">The latest is 30 days ahead. Weekdays you switch off in Delivery time below are left out.</p>
+      </div>
+
+      <div className={`mt-5 ${enabled ? '' : 'opacity-60'}`}>
+        <h3 className="text-sm font-medium text-regantify-text">Delivery time slots (optional)</h3>
+        <p className="text-xs text-regantify-text-muted mt-1">
+          Up to 4, like Morning 9–12. After picking a day the customer may pick a slot. It shows on the order, packing list, handover sheet and parcel sticker.
+          A wish, not a promise; it is not sent to the courier. A daily maximum greys the slot out once it is full.
+        </p>
+        <div className="mt-3 space-y-2">
+          {slots.map((s, i) => (
+            <div key={i} className="flex flex-wrap items-end gap-2">
+              <label className="text-xs text-regantify-text-muted">
+                Name
+                <input value={s.name} maxLength={30} disabled={disabled || !enabled} onChange={(e) => setSlots((cur) => cur.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className={`${inputClass} !w-36`} />
+              </label>
+              <label className="text-xs text-regantify-text-muted">
+                From
+                <input type="time" value={s.from} disabled={disabled || !enabled} onChange={(e) => setSlots((cur) => cur.map((x, j) => (j === i ? { ...x, from: e.target.value } : x)))} className={`${inputClass} !w-28`} />
+              </label>
+              <label className="text-xs text-regantify-text-muted">
+                To
+                <input type="time" value={s.to} disabled={disabled || !enabled} onChange={(e) => setSlots((cur) => cur.map((x, j) => (j === i ? { ...x, to: e.target.value } : x)))} className={`${inputClass} !w-28`} />
+              </label>
+              <label className="text-xs text-regantify-text-muted">
+                Most a day
+                <input value={s.max} inputMode="numeric" placeholder="No limit" disabled={disabled || !enabled} onChange={(e) => setSlots((cur) => cur.map((x, j) => (j === i ? { ...x, max: e.target.value.replace(/\D/g, '') } : x)))} className={`${inputClass} !w-24`} />
+              </label>
+              <button type="button" disabled={disabled} onClick={() => setSlots((cur) => cur.filter((_, j) => j !== i))} className="h-10 px-2 text-sm text-red-600 hover:underline">
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        {slots.length < 4 && (
+          <button
+            type="button"
+            disabled={disabled || !enabled}
+            onClick={() => setSlots((cur) => [...cur, { name: cur.length === 0 ? 'Morning' : '', from: cur.length === 0 ? '09:00' : '', to: cur.length === 0 ? '12:00' : '', max: '' }])}
+            className="mt-2 text-sm text-regantify-cta hover:underline disabled:opacity-60"
+          >
+            + Add a time slot
+          </button>
+        )}
       </div>
 
       <p className="text-xs text-regantify-text-muted mt-3">Works on the StorePal theme. Auto-booking waits until the chosen day.</p>

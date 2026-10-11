@@ -31,7 +31,21 @@ function buildPickList(orders: Order[]): PickLine[] {
   const lines = new Map<string, PickLine>();
   for (const order of orders) {
     for (const item of order.items) {
-      const options = optionsText(item.selectedOptions);
+      // A bundle (TellMe idea 51) is picked as the products inside it, since those are what sit on the shelf.
+      if (item.bundleParts && item.bundleParts.length > 0) {
+        for (const part of item.bundleParts) {
+          const qty = part.quantity * item.quantity;
+          const partKey = `${part.productId}|${part.name}|`;
+          const partLine = lines.get(partKey) ?? { key: partKey, name: part.name, options: '', sku: part.sku, image: null, quantity: 0, orders: [] };
+          partLine.quantity += qty;
+          partLine.orders.push({ ref: orderRef(order), quantity: qty });
+          lines.set(partKey, partLine);
+        }
+        continue;
+      }
+      // The customer's own text (TellMe idea 75) keeps its own pick line: a name to print is not the same product as the next one.
+      const custom = (item.customValues ?? []).map((v) => `${v.label}: ${v.value}`).join(' · ');
+      const options = [optionsText(item.selectedOptions), custom].filter(Boolean).join(' · ');
       const key = `${item.variantId ?? item.productId ?? item.productSku}|${item.productName}|${options}`;
       const line = lines.get(key) ?? { key, name: item.productName, options, sku: item.productSku, image: item.productImage ?? null, quantity: 0, orders: [] };
       line.quantity += item.quantity;
@@ -196,7 +210,7 @@ export function PackingListPrint({ ids, open, onOpenChange }: { ids: string[]; o
                           </p>
                         </div>
                         <div className="shrink-0 text-right text-xs text-neutral-600">
-                          {order.preferredDeliveryDate && <p className="font-semibold text-regantify-text">Deliver on {new Date(order.preferredDeliveryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}</p>}
+                          {order.preferredDeliveryDate && <p className="font-semibold text-regantify-text">Deliver on {new Date(order.preferredDeliveryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}{order.preferredSlot ? `, ${order.preferredSlot}` : ''}</p>}
                           {courier && <p>{String(courier).charAt(0) + String(courier).slice(1).toLowerCase()}</p>}
                           {tracking && <p className="tabular-nums">{tracking}</p>}
                           {showCash && (
@@ -204,6 +218,12 @@ export function PackingListPrint({ ids, open, onOpenChange }: { ids: string[]; o
                           )}
                         </div>
                       </div>
+                      {order.isGift && (
+                        <div className="mt-1.5 rounded border-2 border-neutral-800 px-2 py-1.5 text-sm font-semibold">
+                          GIFT: wrap it{order.giftMessage ? `. Card message: “${order.giftMessage}”` : ''}
+                          {order.hidePricesOnInvoice ? '. Invoice without prices.' : ''}
+                        </div>
+                      )}
                       <ul className="divide-y divide-neutral-100">
                         {order.items.map((item) => (
                           <li key={item.id} className="flex items-center gap-3 py-1.5">
@@ -212,6 +232,18 @@ export function PackingListPrint({ ids, open, onOpenChange }: { ids: string[]; o
                             <span className="min-w-0 flex-1 text-sm">
                               <span className="block font-medium">{item.productName}</span>
                               <span className="block text-xs text-neutral-600">{[optionsText(item.selectedOptions), item.productSku && `SKU ${item.productSku}`].filter(Boolean).join(' · ')}</span>
+                              {/* The customer's own text (name to print...), the point of the slip for this line (TellMe idea 75). */}
+                              {item.customValues && item.customValues.length > 0 && (
+                                <span className="mt-0.5 block rounded border border-neutral-800 px-1.5 py-0.5 text-sm font-semibold">
+                                  {item.customValues.map((v) => `${v.label}: ${v.value}`).join(' · ')}
+                                </span>
+                              )}
+                              {/* A bundle: what goes in the box for each set (TellMe idea 51). */}
+                              {item.bundleParts && item.bundleParts.length > 0 && (
+                                <span className="mt-0.5 block text-xs text-neutral-700">
+                                  Contains: {item.bundleParts.map((part) => `${part.quantity} × ${part.name}`).join(', ')}
+                                </span>
+                              )}
                             </span>
                             <span className="shrink-0 text-lg font-semibold tabular-nums">×{item.quantity}</span>
                           </li>

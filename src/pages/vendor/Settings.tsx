@@ -8,6 +8,7 @@ import {
   BadgeCheck,
   ChevronRight,
   CreditCard,
+  FileText,
   Globe,
   Link as LinkIcon,
   Lock,
@@ -75,8 +76,10 @@ const MORE_SETTINGS: { label: string; description: string; path: string; icon: L
   { label: 'SEO', description: 'Search titles, descriptions and sharing', path: '/vendor/store/seo', icon: Search },
   { label: 'Social', description: 'Facebook, Instagram and other links', path: '/vendor/store/social', icon: Share2 },
   { label: 'Stock Settings', description: 'Backorders and when stock is reduced', path: '/vendor/store/stock-settings', icon: Package },
+  { label: 'Invoice', description: 'Thank-you note, terms, signature and paper size', path: '/vendor/store/invoice', icon: FileText },
   { label: 'COD Guard', description: 'Blacklist and SMS check for COD orders', path: '/vendor/store/cod-guard', icon: BadgeCheck },
   { label: 'Store Away', description: 'Close the store for a holiday', path: '/vendor/store/store-away', icon: Palmtree },
+  { label: 'Backup', description: 'Download a copy of your store, or restore one', path: '/vendor/store/backup', icon: Package },
   { label: 'Integrations', description: 'Pixels, analytics and webhooks', path: '/vendor/store/integrations', icon: Plug },
   { label: 'Staff', description: 'Team members and their access', path: '/vendor/staff', icon: UsersRound },
   { label: 'Billing', description: 'Your plan, usage and upgrades', path: '/vendor/billing', icon: Wallet },
@@ -249,6 +252,58 @@ function GeneralTab() {
   );
 }
 
+const VIA_LABEL = { OTP: 'SMS code', PASSWORD: 'Password', STAFF: 'Staff login' } as const;
+
+/** Settings > Security > "Recent sign-ins" (TellMe idea 92): the last 20 sign-ins, a mark on a new device, and sign-out everywhere. */
+function LoginHistorySection() {
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const [rows, setRows] = useState<Awaited<ReturnType<typeof authApi.loginHistory>> | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    authApi.loginHistory().then(setRows).catch(() => setRows([]));
+  }, []);
+
+  const signOutAll = async () => {
+    if (!window.confirm('Sign out of every device, including this one? You will have to sign in again.')) return;
+    setBusy(true);
+    try {
+      await authApi.signOutEverywhere();
+    } finally {
+      clearAuth();
+      window.location.assign('/vendor/login');
+    }
+  };
+
+  return (
+    <Section title="Recent sign-ins" description="Where your account was signed in lately. We text you when a new device signs in.">
+      {rows === null ? (
+        <div className="h-16 animate-pulse rounded-lg bg-neutral-100" aria-busy />
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-neutral-500">Nothing recorded yet.</p>
+      ) : (
+        <ul className="divide-y divide-line text-sm">
+          {rows.map((r) => (
+            <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+              <span className="min-w-0">
+                <span className="font-medium text-regantify-text">{r.browser}</span>
+                {r.newDevice && <span className="ml-2 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">New device</span>}
+                <span className="block text-xs text-neutral-500">
+                  {VIA_LABEL[r.via]}
+                  {r.ip ? ` · ${r.ip}` : ''}
+                </span>
+              </span>
+              <span className="text-xs text-neutral-500">{new Date(r.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Dhaka' })}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" onClick={signOutAll} disabled={busy} className="mt-4 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60">
+        Sign out of all devices
+      </button>
+    </Section>
+  );
+}
+
 function SecurityTab() {
   const user = useAuthStore((s) => s.user);
   const [submitting, setSubmitting] = useState(false);
@@ -298,6 +353,8 @@ function SecurityTab() {
           </SaveButton>
         </form>
       </Section>
+
+      <LoginHistorySection />
     </>
   );
 }

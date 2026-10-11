@@ -19,11 +19,17 @@ import {
   useUnsavedChangesWarning,
 } from '../../../components/product/ProductFormKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
+import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
+import { WholesalePriceField } from '../../../components/product/WholesalePriceField';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
 import { SearchWordsField } from '../../../components/product/SearchWordsField';
 import { AddonProductsField } from '../../../components/product/AddonProductsField';
 import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilIso } from '../../../components/product/BadgeField';
+import { EMPTY_POLICY, PolicyField, policyToPayload } from '../../../components/product/PolicyField';
+import { CustomFieldsField, customFieldsPayload, customRowsFromProduct, type CustomFieldRow } from '../../../components/product/CustomFieldsField';
+import { PriceBreaksField, breakPayload, breakRowsFromProduct, type PriceBreakRow } from '../../../components/product/PriceBreaksField';
+import { BundleCard, bundleError, bundleItemsPayload, type BundlePart } from '../../../components/product/BundleCard';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
 import { AddBrandModal } from './AddBrandModal';
@@ -78,6 +84,11 @@ export default function AddProduct() {
   const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
   const [addons, setAddons] = useState<PickedItem[]>([]);
   const [badge, setBadge] = useState({ text: '', until: '' });
+  const [policy, setPolicy] = useState(EMPTY_POLICY);
+  const [isBundle, setIsBundle] = useState(false);
+  const [maxOrderQty, setMaxOrderQty] = useState('');
+  const [maxPerPhone, setMaxPerPhone] = useState('');
+  const [bundleParts, setBundleParts] = useState<BundlePart[]>([]);
   const [metaDescription, setMetaDescription] = useState('');
 
   // Web address: follows the name until the vendor edits it.
@@ -104,6 +115,12 @@ export default function AddProduct() {
   const [sku, setSku] = useState('');
   const [barcode, setBarcode] = useState('');
   const [isPreOrder, setIsPreOrder] = useState(false);
+  const [preOrderDate, setPreOrderDate] = useState('');
+  const [breakRows, setBreakRows] = useState<PriceBreakRow[]>([]);
+  const [customRows, setCustomRows] = useState<CustomFieldRow[]>([]);
+  const [customFee, setCustomFee] = useState('');
+  const [wholesalePrice, setWholesalePrice] = useState('');
+  const [reorderDays, setReorderDays] = useState('');
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
@@ -242,6 +259,11 @@ export default function AddProduct() {
       setFormError('Wait for the photos to finish uploading.');
       return;
     }
+    const partsProblem = isBundle ? bundleError(bundleParts) : null;
+    if (partsProblem) {
+      setFormError(partsProblem);
+      return;
+    }
 
     createMutation.mutate({
       name: name.trim(),
@@ -257,6 +279,8 @@ export default function AddProduct() {
       addonProductIds: addons.length > 0 ? addons.map((a) => a.id) : undefined,
       badgeText: badge.text.trim() || undefined,
       badgeUntil: badge.text.trim() ? badgeUntilIso(badge.until) : undefined,
+      ...policyToPayload(policy),
+      ...(isBundle ? { isBundle: true, bundleItems: bundleItemsPayload(bundleParts) } : {}),
       slug: slug.trim() || undefined,
       visibility,
       // The server drops the one that doesn't fit the status (a go-live time on a Public product).
@@ -271,21 +295,30 @@ export default function AddProduct() {
       sku: sku.trim(),
       barcode: barcode.trim() || undefined,
       isPreOrder,
+      preOrderDate: isPreOrder && preOrderDate ? preOrderDate : undefined,
+      priceBreaks: breakPayload(breakRows).length > 0 ? breakPayload(breakRows) : undefined,
+      wholesalePrice: Number(wholesalePrice) > 0 ? Number(wholesalePrice) : undefined,
+      reorderAfterDays: Number(reorderDays) > 0 ? Number(reorderDays) : undefined,
+      ...(!isBundle && customFieldsPayload(customRows).length > 0
+        ? { customFields: customFieldsPayload(customRows), customFee: Number(customFee) > 0 ? Number(customFee) : undefined }
+        : {}),
       quoteOnly,
       minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : undefined,
+      maxOrderQuantity: Number(maxOrderQty) > 0 ? Number(maxOrderQty) : undefined,
+      maxPerPhone24h: Number(maxPerPhone) > 0 ? Number(maxPerPhone) : undefined,
       lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : undefined,
       sizeGuideId: sizeGuideId || undefined,
-      stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
+      stockQuantity: !isBundle && variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
       weight: weight.trim() ? Number(weight) : undefined,
       weightUnit,
-      variationOptions: variationOptions.length > 0 ? variationOptions : undefined,
-      variants: variants.length > 0 ? variants : undefined,
+      variationOptions: !isBundle && variationOptions.length > 0 ? variationOptions : undefined,
+      variants: !isBundle && variants.length > 0 ? variants : undefined,
       variationPhotos: (() => {
         // Drop entries with no photos (a leftover from switching "Photos by"
         // before uploading): an empty first entry can make the storefront
         // pick the wrong option as "the one with photos".
         const withPhotos = variationPhotos.filter((vp) => vp.photoUrls.length > 0);
-        return withPhotos.length > 0 ? withPhotos : undefined;
+        return !isBundle && withPhotos.length > 0 ? withPhotos : undefined;
       })(),
     });
   };
@@ -352,6 +385,7 @@ export default function AddProduct() {
               <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
               <AddonProductsField value={addons} onChange={setAddons} />
               <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
+              <PolicyField value={policy} onChange={setPolicy} />
             </div>
           </SectionCard>
 
@@ -378,6 +412,15 @@ export default function AddProduct() {
             </div>
           </SectionCard>
 
+          <BundleCard
+            isBundle={isBundle}
+            onIsBundle={setIsBundle}
+            parts={bundleParts}
+            onParts={setBundleParts}
+            price={price}
+            discountPrice={discountPrice}
+          />
+
           <SectionCard title="Price">
             <PriceFields
               price={price}
@@ -388,6 +431,10 @@ export default function AddProduct() {
               onCost={setCost}
               priceError={priceError}
             />
+            <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.trim() || price} cost={cost} />
+            <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.trim() || price} />
+            <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
+            {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
           </SectionCard>
 
           <SectionCard title="Stock" id="stock">
@@ -405,7 +452,11 @@ export default function AddProduct() {
               <Field label="Barcode" tooltip="What a barcode scanner reads at your POS counter. Use the code printed on the pack, or Generate one for your own goods." hint="Optional.">
                 <BarcodeInput value={barcode} onChange={setBarcode} />
               </Field>
-              {variationOptions.length === 0 ? (
+              {isBundle ? (
+                <Field label="Stock quantity">
+                  <p className="rounded-lg border border-dashed border-line px-3.5 py-2.5 text-sm text-neutral-500">Comes from the products in the bundle.</p>
+                </Field>
+              ) : variationOptions.length === 0 ? (
                 <Field label="Stock quantity" hint="Leave empty for unlimited stock.">
                   <input
                     type="number"
@@ -459,6 +510,30 @@ export default function AddProduct() {
                   className={productInputClass}
                 />
               </Field>
+              <Field label="Most per order" hint="Most pieces one shopper can order at once. Leave empty for no limit.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={maxOrderQty}
+                  onChange={(e) => setMaxOrderQty(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 3"
+                  min={1}
+                  max={100000}
+                  className={productInputClass}
+                />
+              </Field>
+              <Field label="Most per phone in 24 hours" hint="Stops one person buying up limited stock over several orders. Leave empty for no limit.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={maxPerPhone}
+                  onChange={(e) => setMaxPerPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 5"
+                  min={1}
+                  max={100000}
+                  className={productInputClass}
+                />
+              </Field>
               <Field label="Low stock alert" hint="Tell me when fewer than this are left. Empty uses the store's number (Stock Settings); 0 never alerts.">
                 <input
                   type="number"
@@ -479,6 +554,11 @@ export default function AddProduct() {
                 label="Pre-order"
                 hint="Shoppers can order it before it’s in stock."
               />
+              {isPreOrder && (
+                <Field label="Expected date" hint="Shown to shoppers as “about 20 Nov”. Optional. After this date the pre-order delivery estimate counts from it.">
+                  <input type="date" value={preOrderDate} onChange={(e) => setPreOrderDate(e.target.value)} className={productInputClass} />
+                </Field>
+              )}
               <ToggleRow
                 checked={quoteOnly}
                 onChange={setQuoteOnly}
@@ -488,6 +568,7 @@ export default function AddProduct() {
             </div>
           </SectionCard>
 
+          {!isBundle && (
           <SectionCard title="Variations" id="variations" description="Sizes, colours and so on, each with its own stock and price.">
             <SizeGuideField value={sizeGuideId} onChange={setSizeGuideId} />
             <VariationsEditor
@@ -501,6 +582,7 @@ export default function AddProduct() {
               onVariationPhotosChange={setVariationPhotos}
             />
           </SectionCard>
+          )}
         </div>
 
         {/* Side column */}

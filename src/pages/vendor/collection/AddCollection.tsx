@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, X, ImagePlus, Search } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
-import { collectionsApi } from '../../../lib/collectionsApi';
+import { collectionsApi, type CollectionRules } from '../../../lib/collectionsApi';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { apiErrorMessage } from '../../../lib/api';
@@ -46,6 +46,29 @@ export default function AddCollection() {
 
   const [skuInput, setSkuInput] = useState('');
 
+  // Smart collection (TellMe idea 72): rules instead of hand-picked products. Fields are kept as typed.
+  const [smart, setSmart] = useState(false);
+  const [ruleCats, setRuleCats] = useState('');
+  const [ruleBrands, setRuleBrands] = useState('');
+  const [ruleMin, setRuleMin] = useState('');
+  const [ruleMax, setRuleMax] = useState('');
+  const [ruleSale, setRuleSale] = useState(false);
+  const [ruleNew, setRuleNew] = useState('');
+  const [ruleStock, setRuleStock] = useState(false);
+  const [ruleBadge, setRuleBadge] = useState('');
+  const [preview, setPreview] = useState<{ count: number; names: string[] } | null>(null);
+  const list = (t: string) => t.split(',').map((x) => x.trim()).filter(Boolean);
+  const buildRules = (): CollectionRules => ({
+    categories: list(ruleCats),
+    brands: list(ruleBrands),
+    minPrice: Number(ruleMin) > 0 ? Number(ruleMin) : undefined,
+    maxPrice: Number(ruleMax) > 0 ? Number(ruleMax) : undefined,
+    onSale: ruleSale || undefined,
+    newDays: Number(ruleNew) > 0 ? Number(ruleNew) : undefined,
+    inStock: ruleStock || undefined,
+    badge: ruleBadge.trim() || undefined,
+  });
+
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [productQuery, setProductQuery] = useState('');
   const [productFocused, setProductFocused] = useState(false);
@@ -67,6 +90,18 @@ export default function AddCollection() {
     setHideSidebar(existing.hideSidebar);
     setHideBreadcrumb(existing.hideBreadcrumb);
     setCategoryNames(existing.categoryNames);
+    if (existing.rules) {
+      const r = existing.rules;
+      setSmart(true);
+      setRuleCats((r.categories ?? []).join(', '));
+      setRuleBrands((r.brands ?? []).join(', '));
+      setRuleMin(r.minPrice ? String(r.minPrice) : '');
+      setRuleMax(r.maxPrice ? String(r.maxPrice) : '');
+      setRuleSale(!!r.onSale);
+      setRuleNew(r.newDays ? String(r.newDays) : '');
+      setRuleStock(!!r.inStock);
+      setRuleBadge(r.badge ?? '');
+    }
     setSelectedProducts(
       existing.products.map((p) => ({ id: p.id, name: p.name, sku: p.sku, photoUrls: p.photoUrls }) as Product),
     );
@@ -121,6 +156,8 @@ export default function AddCollection() {
       hideBreadcrumb,
       categoryNames,
       productIds: selectedProducts.map((p) => p.id),
+      // Always sent: off clears the rules.
+      rules: smart ? buildRules() : null,
     };
   }
 
@@ -277,6 +314,62 @@ export default function AddCollection() {
               Hide breadcrumb
             </label>
           </div>
+        </SectionCard>
+
+        <SectionCard title="Fill by rules (smart collection)">
+          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-regantify-text">
+            <input type="checkbox" checked={smart} onChange={(e) => setSmart(e.target.checked)} />
+            Fill this collection by rules instead of hand-picked products
+          </label>
+          <p className="mt-1 text-xs text-regantify-text-muted">
+            The store finds the products when the page is opened, so new products come in and changed ones go out by themselves. All rules you fill in
+            must match. Draft and hidden products never show. At most 200 products. The products picked below are ignored while this is on.
+          </p>
+          {smart && (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <Field label="Categories" hint="Comma separated, e.g. Shoes, Bags">
+                <input type="text" value={ruleCats} onChange={(e) => setRuleCats(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Brands" hint="Comma separated">
+                <input type="text" value={ruleBrands} onChange={(e) => setRuleBrands(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Price from (৳)">
+                <input type="number" min={0} value={ruleMin} onChange={(e) => setRuleMin(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Price up to (৳)" hint="The price shoppers pay, the sale price when there is one.">
+                <input type="number" min={0} value={ruleMax} onChange={(e) => setRuleMax(e.target.value)} className={inputClass} />
+              </Field>
+              <Field label="Added in the last (days)">
+                <input type="number" min={1} value={ruleNew} onChange={(e) => setRuleNew(e.target.value)} placeholder="e.g. 14" className={inputClass} />
+              </Field>
+              <Field label="Badge text" hint="Products carrying this badge (Edit Product > Badge), while it shows.">
+                <input type="text" maxLength={15} value={ruleBadge} onChange={(e) => setRuleBadge(e.target.value)} className={inputClass} />
+              </Field>
+              <label className="flex items-center gap-2.5 text-sm text-regantify-text">
+                <input type="checkbox" checked={ruleSale} onChange={(e) => setRuleSale(e.target.checked)} />
+                On sale (has a sale price)
+              </label>
+              <label className="flex items-center gap-2.5 text-sm text-regantify-text">
+                <input type="checkbox" checked={ruleStock} onChange={(e) => setRuleStock(e.target.checked)} />
+                In stock
+              </label>
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={() => collectionsApi.previewRules(buildRules()).then(setPreview).catch(() => toast.error('Could not check the rules.'))}
+                  className="rounded-lg border border-line px-3.5 py-2 text-sm text-regantify-text hover:bg-neutral-50"
+                >
+                  Preview
+                </button>
+                {preview && (
+                  <p className="mt-2 text-sm text-regantify-text">
+                    {preview.count === 0 ? 'No products match these rules right now.' : `${preview.count} ${preview.count === 1 ? 'product matches' : 'products match'} these rules now`}
+                    {preview.names.length > 0 && <span className="text-regantify-text-muted">: {preview.names.join(', ')}{preview.count > preview.names.length ? '…' : ''}</span>}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title="Add from Category">

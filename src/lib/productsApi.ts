@@ -94,10 +94,38 @@ export interface Product {
   addonProductIds?: string[];
   /** The same products with names and photos, for the form. */
   addonProducts?: Array<{ id: string; name: string; photoUrl: string | null }>;
+  /** What real orders pair with this product, worked out each night (TellMe idea 97); read only. */
+  togetherProducts?: Array<{ id: string; name: string; photoUrl: string | null }>;
   /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
   badgeText?: string | null;
   /** When the badge goes away by itself (an instant); null = it stays. */
   badgeUntil?: string | null;
+  /** Warranty and return policy (TellMe idea 54); null = the store default. */
+  warrantyKind?: string | null;
+  warrantyCustom?: string | null;
+  returnDays?: number | null;
+  returnCondition?: string | null;
+  /** Pre-order expected date, YYYY-MM-DD (TellMe idea 64); null = none. */
+  /** Quantity price breaks (TellMe idea 67): from minQty pieces each costs price. Empty or null = none. */
+  priceBreaks?: Array<{ minQty: number; price: number }> | null;
+  /** Information asked from the shopper (TellMe idea 75): up to 3 boxes, and a fee per piece. */
+  customFields?: Array<{ id?: string; label: string; required?: boolean; maxLength?: number }> | null;
+  customFee?: string | number | null;
+  /** Wholesale price (TellMe idea 79). */
+  wholesalePrice?: string | number | null;
+  /** Reorder reminder (TellMe idea 85): days one purchase lasts. */
+  reorderAfterDays?: number | null;
+  preOrderDate?: string | null;
+  /** Purchase limits (TellMe idea 56), storefront orders only; null = no limit. */
+  maxOrderQuantity?: number | null;
+  maxPerPhone24h?: number | null;
+  /** Bundle / combo (TellMe idea 51): made of `bundleItems`, no stock or variations of its own. */
+  isBundle?: boolean;
+  /** A bundle's parts, with what the form needs to show them (the product detail only). */
+  bundleItems?: Array<{
+    quantity: number;
+    component: { id: string; name: string; sku: string; photoUrls: string[]; price: string; discountPrice?: string | null; stockQuantity: number | null };
+  }>;
   stockQuantity?: number | null;
   weight?: string | null;
   weightUnit: 'KG' | 'G' | 'LB';
@@ -148,6 +176,26 @@ export interface CreateProductPayload {
   badgeText?: string | null;
   /** When the badge goes away by itself (an instant); null = it stays. */
   badgeUntil?: string | null;
+  /** Warranty and return policy (TellMe idea 54); null = the store default. */
+  warrantyKind?: string | null;
+  warrantyCustom?: string | null;
+  returnDays?: number | null;
+  returnCondition?: string | null;
+  /** Quantity price breaks (TellMe idea 67): from minQty pieces each costs price. Empty or null = none. */
+  priceBreaks?: Array<{ minQty: number; price: number }> | null;
+  /** Information asked from the shopper (TellMe idea 75): up to 3 boxes, and a fee per piece. */
+  customFields?: Array<{ id?: string; label: string; required?: boolean; maxLength?: number }> | null;
+  customFee?: string | number | null;
+  /** Wholesale price (TellMe idea 79). */
+  wholesalePrice?: string | number | null;
+  /** Reorder reminder (TellMe idea 85): days one purchase lasts. */
+  reorderAfterDays?: number | null;
+  preOrderDate?: string | null;
+  maxOrderQuantity?: number | null;
+  maxPerPhone24h?: number | null;
+  /** Bundle / combo (TellMe idea 51): true with `bundleItems` (2 to 10 parts); false turns a bundle back into a plain product. */
+  isBundle?: boolean;
+  bundleItems?: Array<{ productId: string; quantity: number }>;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -251,6 +299,26 @@ export interface UpdateProductPayload {
   badgeText?: string | null;
   /** When the badge goes away by itself (an instant); null = it stays. */
   badgeUntil?: string | null;
+  /** Warranty and return policy (TellMe idea 54); null = the store default. */
+  warrantyKind?: string | null;
+  warrantyCustom?: string | null;
+  returnDays?: number | null;
+  returnCondition?: string | null;
+  /** Quantity price breaks (TellMe idea 67): from minQty pieces each costs price. Empty or null = none. */
+  priceBreaks?: Array<{ minQty: number; price: number }> | null;
+  /** Information asked from the shopper (TellMe idea 75): up to 3 boxes, and a fee per piece. */
+  customFields?: Array<{ id?: string; label: string; required?: boolean; maxLength?: number }> | null;
+  customFee?: string | number | null;
+  /** Wholesale price (TellMe idea 79). */
+  wholesalePrice?: string | number | null;
+  /** Reorder reminder (TellMe idea 85): days one purchase lasts. */
+  reorderAfterDays?: number | null;
+  preOrderDate?: string | null;
+  maxOrderQuantity?: number | null;
+  maxPerPhone24h?: number | null;
+  /** Bundle / combo (TellMe idea 51): true with `bundleItems` (2 to 10 parts); false turns a bundle back into a plain product. */
+  isBundle?: boolean;
+  bundleItems?: Array<{ productId: string; quantity: number }>;
   stockQuantity?: number;
   /** Why stock was changed by hand in this save (kept in the stock history). */
   stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';

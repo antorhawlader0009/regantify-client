@@ -49,6 +49,7 @@ import Media from './pages/vendor/store/Media';
 import Domain from './pages/vendor/store/Domain';
 import PaymentGateway from './pages/vendor/store/PaymentGateway';
 import StockSettings from './pages/vendor/store/StockSettings';
+import InvoiceSettings from './pages/vendor/store/InvoiceSettings';
 import OrderTracking from './pages/vendor/store/OrderTracking';
 import DesignHub from './pages/vendor/store/DesignHub';
 import DeliveryCharge from './pages/vendor/store/DeliveryCharge';
@@ -64,6 +65,7 @@ import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
+import StoreBackup from './pages/vendor/store/StoreBackup';
 import StoreAway from './pages/vendor/store/StoreAway';
 import Integrations from './pages/vendor/store/integrations/Integrations';
 import FacebookPixel from './pages/vendor/store/integrations/FacebookPixel';
@@ -196,6 +198,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/payment-gateway' &&
     r.path !== '/vendor/store/delivery-charge' &&
     r.path !== '/vendor/store/stock-settings' &&
+    r.path !== '/vendor/store/invoice' &&
     r.path !== '/vendor/store/order-tracking' &&
     r.path !== '/vendor/store/design' &&
     r.path !== '/vendor/store/gdpr' &&
@@ -339,10 +342,12 @@ export default function App() {
                 <Route path="/vendor/store/payment-gateway" element={<PaymentGateway />} />
                 <Route path="/vendor/store/delivery-charge" element={<DeliveryCharge />} />
                 <Route path="/vendor/store/stock-settings" element={<StockSettings />} />
+                <Route path="/vendor/store/invoice" element={<InvoiceSettings />} />
                 <Route path="/vendor/store/order-tracking" element={<OrderTracking />} />
                 <Route path="/vendor/store/design" element={<DesignHub />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
+                <Route path="/vendor/store/backup" element={<StoreBackup />} />
                 <Route path="/vendor/store/store-away" element={<StoreAway />} />
                 <Route path="/vendor/store/integrations" element={<Integrations />} />
                 <Route path="/vendor/store/integrations/facebook-pixel" element={<FacebookPixel />} />

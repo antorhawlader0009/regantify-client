@@ -118,6 +118,12 @@ export interface DesignSettings {
   chatButtonSide: 'LEFT' | 'RIGHT';
   chatButtonPages: ChatButtonPage[];
   chatButtonProductMessage: boolean;
+  /** Share button on the product page (TellMe idea 61). */
+  productShareEnabled: boolean;
+  /** "N bought in the last X days" window (TellMe idea 63): 0 = off, 7 or 30. */
+  socialProofDays: number;
+  /** Wishlist price / restock alerts by SMS (TellMe idea 62). */
+  wishlistAlertsEnabled: boolean;
 }
 
 // Text fields go out as "" to clear them (the server stores null).

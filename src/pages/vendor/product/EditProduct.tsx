@@ -23,11 +23,17 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { BarcodeInput } from '../../../components/product/BarcodeField';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
+import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
+import { WholesalePriceField } from '../../../components/product/WholesalePriceField';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
 import { SearchWordsField } from '../../../components/product/SearchWordsField';
 import { AddonProductsField } from '../../../components/product/AddonProductsField';
 import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilDate, badgeUntilIso } from '../../../components/product/BadgeField';
+import { EMPTY_POLICY, PolicyField, policyFromProduct, policyToPayload } from '../../../components/product/PolicyField';
+import { CustomFieldsField, customFieldsPayload, customRowsFromProduct, type CustomFieldRow } from '../../../components/product/CustomFieldsField';
+import { PriceBreaksField, breakPayload, breakRowsFromProduct, type PriceBreakRow } from '../../../components/product/PriceBreaksField';
+import { BundleCard, bundleError, bundleItemsPayload, bundlePartsFromProduct, type BundlePart } from '../../../components/product/BundleCard';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
@@ -38,6 +44,7 @@ import { toast } from '../../../lib/toast';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontProductUrl } from '../../../lib/storefrontUrl';
 import { useCan } from '../../../lib/useStaffAccess';
+import { analyticsApi } from '../../../lib/analyticsApi';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -88,6 +95,14 @@ export default function EditProduct() {
   const canPrice = useCan('products.price');
   const storeName = useAuthStore((s) => s.user?.vendor?.storeName);
 
+  // Return warning (TellMe idea 96): a high share of this product's last 90 days of orders came back.
+  const canSeeOrders = useCan('orders.view');
+  const { data: returnWarning } = useQuery({
+    queryKey: ['product-return-warning', id],
+    queryFn: () => analyticsApi.productReturnWarning(id!),
+    enabled: Boolean(id) && canSeeOrders,
+    staleTime: 5 * 60_000,
+  });
   const { data: product, isLoading } = useQuery({
     queryKey: ['products', id],
     queryFn: () => productsApi.findOne(id!),
@@ -128,6 +143,11 @@ export default function EditProduct() {
   const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
   const [addons, setAddons] = useState<PickedItem[]>([]);
   const [badge, setBadge] = useState({ text: '', until: '' });
+  const [policy, setPolicy] = useState(EMPTY_POLICY);
+  const [isBundle, setIsBundle] = useState(false);
+  const [maxOrderQty, setMaxOrderQty] = useState('');
+  const [maxPerPhone, setMaxPerPhone] = useState('');
+  const [bundleParts, setBundleParts] = useState<BundlePart[]>([]);
   const [metaDescription, setMetaDescription] = useState('');
 
   // Main/Sub Category are just two views onto the same `categoryId` FK —
@@ -171,6 +191,12 @@ export default function EditProduct() {
   const [barcode, setBarcode] = useState('');
   const [editingSku, setEditingSku] = useState(false);
   const [isPreOrder, setIsPreOrder] = useState(false);
+  const [preOrderDate, setPreOrderDate] = useState('');
+  const [breakRows, setBreakRows] = useState<PriceBreakRow[]>([]);
+  const [customRows, setCustomRows] = useState<CustomFieldRow[]>([]);
+  const [customFee, setCustomFee] = useState('');
+  const [wholesalePrice, setWholesalePrice] = useState('');
+  const [reorderDays, setReorderDays] = useState('');
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
@@ -228,6 +254,11 @@ export default function EditProduct() {
       searchKeywords: p.searchKeywords ?? [],
       addons: (p.addonProducts ?? []).map((a) => a.id),
       badge: { text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) },
+      policy: policyFromProduct(p),
+      isBundle: p.isBundle === true,
+      maxOrderQty: p.maxOrderQuantity ? String(p.maxOrderQuantity) : '',
+      maxPerPhone: p.maxPerPhone24h ? String(p.maxPerPhone24h) : '',
+      bundleParts: bundlePartsFromProduct(p.bundleItems).map((b) => [b.productId, b.quantity]),
       metaDescription: p.metaDescription ?? '',
       photoSize: p.photoSize,
       photoUrls: p.photoUrls,
@@ -238,6 +269,12 @@ export default function EditProduct() {
       sku: p.sku,
       barcode: p.barcode ?? '',
       isPreOrder: p.isPreOrder,
+      preOrderDate: p.preOrderDate ? p.preOrderDate.slice(0, 10) : '',
+      breakRows: breakRowsFromProduct(p.priceBreaks),
+      customRows: customRowsFromProduct(p.customFields as never),
+      customFee: p.customFee ? String(Number(p.customFee)) : '',
+      wholesalePrice: p.wholesalePrice ? String(Number(p.wholesalePrice)) : '',
+      reorderDays: p.reorderAfterDays ? String(p.reorderAfterDays) : '',
       quoteOnly: p.quoteOnly ?? false,
       minOrderQuantity: p.minOrderQuantity ? String(p.minOrderQuantity) : '',
       lowStockThreshold: p.lowStockThreshold != null ? String(p.lowStockThreshold) : '',
@@ -283,6 +320,11 @@ export default function EditProduct() {
       searchKeywords,
       addons: addons.map((a) => a.id),
       badge,
+      policy,
+      isBundle,
+      maxOrderQty,
+      maxPerPhone,
+      bundleParts: bundleParts.map((b) => [b.productId, b.quantity]),
       metaDescription,
       photoSize,
       photoUrls: photos.map((p) => p.uploadedUrl),
@@ -293,6 +335,12 @@ export default function EditProduct() {
       sku,
       barcode,
       isPreOrder,
+      preOrderDate,
+      breakRows,
+      customRows,
+      customFee,
+      wholesalePrice,
+      reorderDays,
       quoteOnly,
       minOrderQuantity,
       lowStockThreshold,
@@ -333,6 +381,11 @@ export default function EditProduct() {
     setSearchKeywords(p.searchKeywords ?? []);
     setAddons((p.addonProducts ?? []).map((a) => ({ id: a.id, label: a.name, photoUrl: a.photoUrl })));
     setBadge({ text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) });
+    setPolicy(policyFromProduct(p));
+    setIsBundle(p.isBundle === true);
+    setMaxOrderQty(p.maxOrderQuantity ? String(p.maxOrderQuantity) : '');
+    setMaxPerPhone(p.maxPerPhone24h ? String(p.maxPerPhone24h) : '');
+    setBundleParts(bundlePartsFromProduct(p.bundleItems));
     setMetaDescription(p.metaDescription ?? '');
     setPhotoSize(p.photoSize);
     setPhotos(
@@ -350,6 +403,12 @@ export default function EditProduct() {
     setSku(p.sku);
     setBarcode(p.barcode ?? '');
     setIsPreOrder(p.isPreOrder);
+    setPreOrderDate(p.preOrderDate ? p.preOrderDate.slice(0, 10) : '');
+    setBreakRows(breakRowsFromProduct(p.priceBreaks));
+    setCustomRows(customRowsFromProduct(p.customFields as never));
+    setCustomFee(p.customFee ? String(Number(p.customFee)) : '');
+    setWholesalePrice(p.wholesalePrice ? String(Number(p.wholesalePrice)) : '');
+    setReorderDays(p.reorderAfterDays ? String(p.reorderAfterDays) : '');
     setQuoteOnly(p.quoteOnly ?? false);
     setMinOrderQuantity(p.minOrderQuantity ? String(p.minOrderQuantity) : '');
     setLowStockThreshold(p.lowStockThreshold != null ? String(p.lowStockThreshold) : '');
@@ -448,6 +507,10 @@ export default function EditProduct() {
         // Always sent: empty text takes the badge off.
         badgeText: badge.text.trim(),
         badgeUntil: badge.text.trim() ? badgeUntilIso(badge.until) : null,
+        ...policyToPayload(policy),
+        // Always sent: unticking turns a bundle back into a plain product.
+        isBundle,
+        ...(isBundle ? { bundleItems: bundleItemsPayload(bundleParts) } : {}),
         visibility,
         // null clears; the server also drops the one that doesn't fit the status.
         publishAt: visibility === 'DRAFT' ? schedule.publishAt : null,
@@ -462,14 +525,26 @@ export default function EditProduct() {
         // Always sent: an empty field removes the barcode.
         barcode: barcode.trim(),
         isPreOrder,
+        // Always sent: empty removes the date.
+        preOrderDate: isPreOrder && preOrderDate ? preOrderDate : null,
+        // Always sent: no rows clears the steps.
+        priceBreaks: breakPayload(breakRows),
+        // Always sent: no boxes clears them.
+        customFields: isBundle ? [] : customFieldsPayload(customRows),
+        customFee: Number(customFee) > 0 ? Number(customFee) : null,
+        wholesalePrice: Number(wholesalePrice) > 0 ? Number(wholesalePrice) : null,
+        reorderAfterDays: Number(reorderDays) > 0 ? Number(reorderDays) : null,
         quoteOnly,
         // Always sent: an empty field removes the minimum.
         minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : null,
+        // Always sent: an empty field removes the limit.
+        maxOrderQuantity: Number(maxOrderQty) > 0 ? Number(maxOrderQty) : null,
+        maxPerPhone24h: Number(maxPerPhone) > 0 ? Number(maxPerPhone) : null,
         // Always sent: an empty field goes back to the store default.
         lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : null,
         // Always sent: an empty choice goes back to the category's guide.
         sizeGuideId: sizeGuideId || null,
-        stockQuantity: variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
+        stockQuantity: !isBundle && variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
         ...(stockChanged ? { stockReason: stockReason || undefined, stockNote: stockNote.trim() || undefined } : {}),
         weight: weight.toString().trim() ? Number(weight) : undefined,
         weightUnit,
@@ -560,6 +635,11 @@ export default function EditProduct() {
       setFormError('Wait for the photos to finish uploading.');
       return;
     }
+    const partsProblem = isBundle ? bundleError(bundleParts) : null;
+    if (partsProblem) {
+      setFormError(partsProblem);
+      return;
+    }
     updateMutation.mutate();
   };
 
@@ -616,6 +696,17 @@ export default function EditProduct() {
           </a>
         )}
       </div>
+      {returnWarning?.warn && (
+        <div role="status" className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+          In the last 90 days {returnWarning.returned} of {returnWarning.sold} orders ({returnWarning.rate?.toFixed(0)}%) with this product came back
+          {returnWarning.topReason ? `, mostly: ${returnWarning.topReason}` : ''}.
+          {returnWarning.worstOption ? ` ${returnWarning.worstOption.options} is the worst: ${returnWarning.worstOption.returned} of ${returnWarning.worstOption.sold}.` : ''} Check the photos and the{' '}
+          <Link to="/vendor/product/size-guides" className="font-medium underline">
+            size guide
+          </Link>
+          .
+        </div>
+      )}
       <nav aria-label="Jump to" className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <span className="text-neutral-500">Jump to:</span>
         {JUMP_LINKS.map((link) => (
@@ -654,8 +745,9 @@ export default function EditProduct() {
                 <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" maxLength={500} />
               </Field>
               <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
-              <AddonProductsField value={addons} onChange={setAddons} excludeId={id} />
+              <AddonProductsField value={addons} onChange={setAddons} excludeId={id} together={product.togetherProducts} />
               <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
+              <PolicyField value={policy} onChange={setPolicy} />
             </div>
           </SectionCard>
 
@@ -682,6 +774,16 @@ export default function EditProduct() {
             </div>
           </SectionCard>
 
+          <BundleCard
+            isBundle={isBundle}
+            onIsBundle={setIsBundle}
+            parts={bundleParts}
+            onParts={setBundleParts}
+            price={price}
+            discountPrice={discountPrice}
+            excludeId={id}
+          />
+
           <SectionCard title="Price" id="price">
             <PriceFields
               price={price}
@@ -693,6 +795,10 @@ export default function EditProduct() {
               priceError={priceError}
               priceLocked={!canPrice}
             />
+            <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.toString().trim() || price.toString()} cost={cost.toString()} />
+            <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.toString().trim() || price.toString()} />
+            <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
+            {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
           </SectionCard>
 
           <SectionCard title="Stock" id="stock">
@@ -712,7 +818,11 @@ export default function EditProduct() {
               <Field label="Barcode" tooltip="What a barcode scanner reads at your POS counter. Use the code printed on the pack, or Generate one for your own goods." hint="Optional.">
                 <BarcodeInput value={barcode} onChange={setBarcode} />
               </Field>
-              {variationOptions.length === 0 ? (
+              {isBundle ? (
+                <Field label="Stock quantity">
+                  <p className="rounded-lg border border-dashed border-line px-3.5 py-2.5 text-sm text-neutral-500">Comes from the products in the bundle.</p>
+                </Field>
+              ) : variationOptions.length === 0 ? (
                 <Field label="Stock quantity" hint="Leave empty for unlimited stock.">
                   <input
                     type="number"
@@ -769,6 +879,30 @@ export default function EditProduct() {
                   className={productInputClass}
                 />
               </Field>
+              <Field label="Most per order" hint="Most pieces one shopper can order at once. Leave empty for no limit.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={maxOrderQty}
+                  onChange={(e) => setMaxOrderQty(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 3"
+                  min={1}
+                  max={100000}
+                  className={productInputClass}
+                />
+              </Field>
+              <Field label="Most per phone in 24 hours" hint="Stops one person buying up limited stock over several orders. Leave empty for no limit.">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={maxPerPhone}
+                  onChange={(e) => setMaxPerPhone(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 5"
+                  min={1}
+                  max={100000}
+                  className={productInputClass}
+                />
+              </Field>
               <Field label="Low stock alert" hint="Tell me when fewer than this are left. Empty uses the store's number (Stock Settings); 0 never alerts.">
                 <input
                   type="number"
@@ -805,6 +939,11 @@ export default function EditProduct() {
             </div>
             <div className="mt-4 space-y-4 border-t border-line pt-4">
               <ToggleRow checked={isPreOrder} onChange={setIsPreOrder} label="Pre-order" hint="Shoppers can order it before it’s in stock." />
+              {isPreOrder && (
+                <Field label="Expected date" hint="Shown to shoppers as “about 20 Nov”. Optional. After this date the pre-order delivery estimate counts from it.">
+                  <input type="date" value={preOrderDate} onChange={(e) => setPreOrderDate(e.target.value)} className={productInputClass} />
+                </Field>
+              )}
               <ToggleRow
                 checked={quoteOnly}
                 onChange={setQuoteOnly}
@@ -814,6 +953,7 @@ export default function EditProduct() {
             </div>
           </SectionCard>
 
+          {!isBundle && (
           <SectionCard title="Variations" id="variations" description="Sizes, colours and so on, each with its own stock and price.">
             <SizeGuideField value={sizeGuideId} onChange={setSizeGuideId} />
             <VariationsEditor
@@ -828,6 +968,7 @@ export default function EditProduct() {
               priceLocked={!canPrice}
             />
           </SectionCard>
+          )}
         </div>
 
         {/* Side column */}

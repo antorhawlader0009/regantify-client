@@ -75,8 +75,12 @@ import { NeedsAttention } from '../../../components/order/NeedsAttention';
 import { BulkStatusMenu } from '../../../components/order/BulkStatusMenu';
 import { BulkInvoicePrint } from '../../../components/order/BulkInvoicePrint';
 import { PackingListPrint } from '../../../components/order/PackingListPrint';
+import { ParcelLabelPrint } from '../../../components/order/ParcelLabelPrint';
+import { OrderLabelsDialog, LabelChip } from '../../../components/order/OrderLabelsDialog';
+import { AssigneeChip, AssignSettingsDialog, BulkAssignDialog, useAssignment } from '../../../components/order/OrderAssign';
 import { orderProfitApi, type OrderProfit } from '../../../lib/orderProfitApi';
 import { downloadCsv, toCsv } from '../../../lib/csv';
+import { CartLinkDialog } from '../../../components/order/CartLinkDialog';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 
 // Table + toolbar pieces come from PageKit; the bulk bar's smaller buttons are Orders' own.
@@ -244,6 +248,8 @@ function OrderRow({
   deliveryStats,
 }: OrderRowProps) {
   const queryClient = useQueryClient();
+  // The store's label list (TellMe idea 91); the same cached answer the list's filter uses.
+  const { data: labelCatalog } = useQuery({ queryKey: ['order-labels'], queryFn: ordersApi.labelCatalog, staleTime: 60_000 });
   // What this person's role can do to an order (rule-plan.md Step 10); the server checks each again.
   const canEdit = useCan('orders.edit');
   const canCancelRefund = useCan('orders.cancel_refund');
@@ -402,6 +408,13 @@ function OrderRow({
         <p className="mt-0.5 text-xs text-neutral-500">
           #{order.invoiceNumber} · {formatDateTime(order.createdAt)}
         </p>
+        {(order.labels ?? []).length > 0 && (
+          <span className="mt-1.5 flex flex-wrap gap-1">
+            {(order.labels ?? []).map((name) => (
+              <LabelChip key={name} name={name} catalog={labelCatalog} />
+            ))}
+          </span>
+        )}
         {order.label && (
           <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-brand-lime bg-brand-lime/40 px-1.5 py-0.5 text-[11px] font-medium text-brand">
             <Tag size={10} />
@@ -411,6 +424,12 @@ function OrderRow({
       </td>
       <td className={td}>
         <OrderStatusBadge status={order.status} />
+        <AssigneeChip order={order} />
+        {order.isGift && (
+          <p className="mt-1 inline-flex items-center gap-1 rounded border border-pink-200 bg-pink-50 px-1.5 py-0.5 text-[11px] font-medium text-pink-800" title="Gift: wrap it and add the message">
+            Gift
+          </p>
+        )}
         {order.possibleDuplicateOfId && (
           <p
             className="mt-1 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900"
@@ -427,6 +446,7 @@ function OrderRow({
           >
             <CalendarDays size={10} aria-hidden />
             Wants {preferredDayLabel(order.preferredDeliveryDate)}
+            {order.preferredSlot ? ` · ${order.preferredSlot}` : ''}
           </p>
         )}
         {order.courierProvider !== 'NONE' && (
@@ -802,7 +822,6 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, preferredDate, lossOnly]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -811,6 +830,21 @@ export default function Orders() {
   // "Print invoices" in the bulk bar: the orders being printed, null when closed.
   const [printingInvoices, setPrintingInvoices] = useState<string[] | null>(null);
   const [printingPacking, setPrintingPacking] = useState<string[] | null>(null);
+  const [printingStickers, setPrintingStickers] = useState<string[] | null>(null);
+  const [labelIds, setLabelIds] = useState<string[] | null>(null);
+  const [labelFilter, setLabelFilter] = useState(() => searchParams.get('label') ?? '');
+  const { data: labelCatalog } = useQuery({ queryKey: ['order-labels'], queryFn: ordersApi.labelCatalog, staleTime: 60_000 });
+  // Assign orders to staff (TellMe idea 60): the filter, the bulk box and the owner's sharing-out settings.
+  const [assignee, setAssignee] = useState('');
+  // Pre-orders (TellMe idea 64): 'any' or the expected date.
+  const [preOrder, setPreOrder] = useState(() => searchParams.get('preOrder') ?? '');
+  const [channel, setChannel] = useState(() => searchParams.get('channel') ?? '');
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, preferredDate, lossOnly, assignee, preOrder, channel, labelFilter]);
+  const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
+  const [assignSettingsOpen, setAssignSettingsOpen] = useState(false);
+  const [cartLinkOpen, setCartLinkOpen] = useState(false);
+  const isOwner = useCan('owner');
+  const assignment = useAssignment();
   // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
   const [bulkBooking, setBulkBooking] = useState<{ provider: BulkCourierProvider; ids: string[] } | null>(null);
   useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page, courierBooking]);
@@ -884,7 +918,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, preferredDate, lossOnly }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, preferredDate, lossOnly, assignee, preOrder, channel, labelFilter }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -897,6 +931,10 @@ export default function Orders() {
         source: source || undefined,
         possibleDuplicate: duplicatesOnly || undefined,
         preferredDate: preferredDate || undefined,
+        assignee: assignee || undefined,
+        preOrder: preOrder || undefined,
+        channel: channel || undefined,
+        label: labelFilter || undefined,
         lossOnly: (canProfit && lossOnly) || undefined,
         page,
         perPage,
@@ -1045,6 +1083,69 @@ export default function Orders() {
                 </select>
                 <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
               </div>
+              {(assignment.data?.staff.length ?? 0) > 0 && (
+                <select value={assignee} onChange={(e) => setAssignee(e.target.value)} aria-label="Handled by" className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text">
+                  <option value="">All orders</option>
+                  {assignment.data?.myStaffId && <option value="me">My orders</option>}
+                  <option value="none">Nobody handles</option>
+                  {assignment.data?.staff.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <label className="flex items-center gap-1.5 text-xs text-neutral-500" title="Orders with a pre-order item, by the date it was expected">
+                Pre-order
+                <select
+                  value={preOrder === 'any' || preOrder === '' ? preOrder : 'date'}
+                  onChange={(e) => setPreOrder(e.target.value === 'date' ? new Date().toISOString().slice(0, 10) : e.target.value)}
+                  className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text"
+                >
+                  <option value="">Any</option>
+                  <option value="any">All pre-orders</option>
+                  <option value="date">By expected date…</option>
+                </select>
+                {preOrder && preOrder !== 'any' && (
+                  <input type="date" value={preOrder} onChange={(e) => setPreOrder(e.target.value || 'any')} className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text" />
+                )}
+              </label>
+              {(labelCatalog ?? []).length > 0 && (
+                <label className="flex items-center gap-1.5 text-xs text-neutral-500" title="Orders with one of your labels">
+                  Label
+                  <select value={labelFilter} onChange={(e) => setLabelFilter(e.target.value)} className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text">
+                    <option value="">Any</option>
+                    {(labelCatalog ?? []).map((l) => (
+                      <option key={l.name} value={l.name}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label className="flex items-center gap-1.5 text-xs text-neutral-500" title="Online store orders by where the shopper came from">
+                Came from
+                <select value={channel} onChange={(e) => setChannel(e.target.value)} className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text">
+                  <option value="">Any</option>
+                  <option value="direct">Direct</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="google">Google</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="other">Other websites</option>
+                  <option value="untracked">Not tracked</option>
+                </select>
+              </label>
+              <button type="button" onClick={() => setCartLinkOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Make a link that fills a customer's cart">
+                Cart link
+              </button>
+              {isOwner && (
+                <button type="button" onClick={() => setAssignSettingsOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Give new orders to staff in turn">
+                  Share out orders
+                </button>
+              )}
               <label className="flex items-center gap-1.5 text-xs text-neutral-500" title="Orders whose customer asked for this delivery day">
                 Delivery day
                 <input type="date" value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)} className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text" />
@@ -1233,9 +1334,22 @@ export default function Orders() {
                   <Printer size={13} />
                   Print invoices
                 </button>
+                {(assignment.data?.staff.length ?? 0) > 0 && (
+                  <button type="button" onClick={() => setAssigningIds([...selectedIds])} className={bulkBtn} title="Who handles these orders">
+                    Assign
+                  </button>
+                )}
                 <button type="button" onClick={() => setPrintingPacking([...selectedIds])} className={bulkBtn} title="Pick list and packing slips for whoever packs">
                   <Package size={13} />
                   Packing list
+                </button>
+                <button type="button" onClick={() => setLabelIds([...selectedIds])} className={bulkBtn} title="Put your own colored labels on these orders">
+                  <Tag size={13} />
+                  Labels
+                </button>
+                <button type="button" onClick={() => setPrintingStickers([...selectedIds])} className={bulkBtn} title="A sticker for the parcel: address, phone, cash to collect, barcode">
+                  <Printer size={13} />
+                  Parcel stickers
                 </button>
                 <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
                   <Printer size={13} />
@@ -1323,7 +1437,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || preferredDate || lossOnly) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || preferredDate || lossOnly || assignee || preOrder || channel || labelFilter) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>
@@ -1377,7 +1491,12 @@ export default function Orders() {
       />
       <InvoiceModal order={invoiceOrder} onOpenChange={(open) => !open && setInvoiceOrder(null)} />
       <BulkInvoicePrint ids={printingInvoices ?? []} open={printingInvoices !== null} onOpenChange={(open) => !open && setPrintingInvoices(null)} />
+      <OrderLabelsDialog ids={labelIds ?? []} open={labelIds !== null} onOpenChange={(open) => !open && setLabelIds(null)} onDone={() => setSelectedIds(new Set())} />
+      <ParcelLabelPrint ids={printingStickers ?? []} open={printingStickers !== null} onOpenChange={(open) => !open && setPrintingStickers(null)} />
       <PackingListPrint ids={printingPacking ?? []} open={printingPacking !== null} onOpenChange={(open) => !open && setPrintingPacking(null)} />
+      <BulkAssignDialog ids={assigningIds ?? []} open={assigningIds !== null} onOpenChange={(open) => !open && setAssigningIds(null)} onDone={() => setSelectedIds(new Set())} />
+      <AssignSettingsDialog open={assignSettingsOpen} onOpenChange={setAssignSettingsOpen} />
+      <CartLinkDialog open={cartLinkOpen} onOpenChange={setCartLinkOpen} />
       <Dialog
         open={timelineOrder != null}
         onOpenChange={(open) => !open && setTimelineOrder(null)}

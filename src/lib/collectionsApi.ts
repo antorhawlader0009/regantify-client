@@ -7,6 +7,18 @@ export interface CollectionProduct {
   photoUrls: string[];
 }
 
+/** Smart collection rules (TellMe idea 72); every rule that is set must match. */
+export interface CollectionRules {
+  categories?: string[];
+  brands?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  onSale?: boolean;
+  newDays?: number;
+  inStock?: boolean;
+  badge?: string;
+}
+
 export interface Collection {
   id: string;
   vendorId: string;
@@ -19,6 +31,8 @@ export interface Collection {
   hideSidebar: boolean;
   hideBreadcrumb: boolean;
   categoryNames: string[];
+  /** Rules instead of hand-picked products; null = hand-picked. */
+  rules?: CollectionRules | null;
   products: CollectionProduct[];
   createdAt: string;
   updatedAt: string;
@@ -35,6 +49,8 @@ export interface CollectionPayload {
   hideBreadcrumb?: boolean;
   categoryNames?: string[];
   productIds?: string[];
+  /** null clears the rules (hand-picked again). */
+  rules?: CollectionRules | null;
 }
 
 export const collectionsApi = {
@@ -42,6 +58,10 @@ export const collectionsApi = {
     api
       .get<Collection[]>('/v1/collections', { params: search ? { search } : undefined })
       .then((r) => r.data),
+
+  /** How many products these rules match now, and the first few names. */
+  previewRules: (rules: CollectionRules) =>
+    api.post<{ count: number; names: string[] }>('/v1/collections/preview-rules', { rules }).then((r) => r.data),
 
   findOne: (id: string) => api.get<Collection>(`/v1/collections/${id}`).then((r) => r.data),
 

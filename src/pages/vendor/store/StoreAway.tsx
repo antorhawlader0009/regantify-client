@@ -5,6 +5,7 @@ import { storeSettingsApi, type StoreAwayMode, type StoreAwaySettings } from '..
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { BusinessHoursSection } from '../../../components/store/BusinessHoursSection';
 
 type Form = Omit<StoreAwaySettings, 'active'>;
 
@@ -161,6 +162,7 @@ export default function StoreAway() {
           </button>
         </div>
       )}
+      <BusinessHoursSection />
     </div>
   );
 }

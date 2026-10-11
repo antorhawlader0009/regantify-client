@@ -8,6 +8,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { DropdownMenuItem } from '../../../components/ui/DropdownMenu';
+import { GenerateCouponsDialog } from '../../../components/marketing/GenerateCouponsDialog';
 import {
   EmptyState,
   PageHeader,
@@ -56,6 +57,7 @@ function useCouponActions(coupon: Coupon, subdomain?: string) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const activeMutation = useMutation({
     mutationFn: () => couponsApi.setActive(coupon.id, !coupon.active),
@@ -87,12 +89,15 @@ function useCouponActions(coupon: Coupon, subdomain?: string) {
       extra={
         <>
           <DropdownMenuItem onSelect={() => copyText(coupon.code, 'Code')}>Copy code</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setGenerating(true)}>Make codes like this</DropdownMenuItem>
           {shareUrl && <DropdownMenuItem onSelect={() => copyText(shareUrl, 'Share link')}>Copy share link</DropdownMenuItem>}
         </>
       }
     />
   );
   const dialog = (
+    <>
+    <GenerateCouponsDialog coupon={coupon} open={generating} onOpenChange={setGenerating} />
     <ConfirmDialog
       open={confirmDelete}
       onOpenChange={setConfirmDelete}
@@ -103,6 +108,7 @@ function useCouponActions(coupon: Coupon, subdomain?: string) {
       busy={deleteMutation.isPending}
       danger
     />
+    </>
   );
   return { menu, dialog, shareUrl };
 }

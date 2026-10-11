@@ -8,7 +8,7 @@ function formatTaka(value: number) {
 }
 
 /** Code128 barcode of `value`, stretched to the container's width (bars keep their proportions, so it still scans). */
-function Barcode({ value }: { value: string }) {
+export function Barcode({ value }: { value: string }) {
   const ref = useRef<SVGSVGElement>(null);
   useEffect(() => {
     if (!ref.current) return;
@@ -26,7 +26,7 @@ function Barcode({ value }: { value: string }) {
 }
 
 /** QR code of `value` as inline SVG (generated locally — no network call). */
-function QrCode({ value }: { value: string }) {
+export function QrCode({ value }: { value: string }) {
   const [svg, setSvg] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;

@@ -44,7 +44,7 @@ export const smsApi = {
     api.post<SmsCampaignPreview>('/v1/sms/campaign/preview', target).then((r) => r.data),
 
   /** Sends to every customer in the audience (in the background on the server). */
-  sendCampaign: (target: SmsCampaignTarget & { message: string }) =>
+  sendCampaign: (target: SmsCampaignTarget & { message: string; couponTemplateId?: string }) =>
     api.post<{ queued: number; totalCredits: number }>('/v1/sms/campaign', target).then((r) => r.data),
 
   /** "Send later": saved to go out at `sendAt` (an ISO time, 8 AM to 10 PM Dhaka). Nothing is sent or charged now. */

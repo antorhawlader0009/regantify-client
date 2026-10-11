@@ -273,7 +273,94 @@ export interface TeamWorkAnalytics {
   waiting: { count: number; afterHours: number; oldestHours: number | null };
 }
 
+/** Monthly VAT report (TellMe idea 78) — mirrors VatReportService.report. */
+export interface VatReport {
+  month: string;
+  orders: number;
+  salesExVat: number;
+  vat: number;
+  vatOrders: number;
+  days: Array<{ day: string; orders: number; salesExVat: number; vat: number }>;
+  lines: Array<{ invoiceNumber: number; day: string; salesExVat: number; vat: number }>;
+}
+
+/** Not selling (TellMe idea 84) — mirrors DeadStockService.report. */
+export interface DeadStockReport {
+  days: number;
+  count: number;
+  stuckTotal: number | null;
+  products: Array<{ id: string; name: string; slug: string; image: string | null; stock: number; lastSoldAt: string | null; stuck: number | null; estimated: boolean }>;
+}
+
+/** How customers rated the delivery (TellMe idea 89) — mirrors DeliveryRatingsService.ratings. */
+export interface DeliveryRatings {
+  count: number;
+  average: number | null;
+  byCourier: Array<{ name: string; count: number; average: number; low: number }>;
+  lowComments: Array<{ orderId: string; ref: string; customerName: string; rating: number | null; comment: string | null; at: string | null }>;
+}
+
+/** Coupon results (TellMe idea 93) — mirrors CouponPerformanceService.report. */
+export interface CouponPerformance {
+  coupons: Array<{ couponId: string; code: string; orders: number; sales: number; discount: number; averageOrder: number | null; newCustomers: number; returned: number; cancelled: number; profit: number | null }>;
+  best: string | null;
+  worst: string | null;
+}
+
+/** Profit by product (TellMe idea 94) — mirrors AnalyticsService.profitByProduct. */
+export interface ProfitByProduct {
+  products: Array<{ productId: string | null; name: string; image: string | null; units: number; sales: number; cost: number | null; profit: number | null; margin: number | null; profitPerUnit: number | null }>;
+  withoutCost: number;
+}
+
+/** Return rate by product (TellMe idea 96) — mirrors ReturnRateService. */
+export interface ReturnRates {
+  minOrders: number;
+  notRated: number;
+  products: Array<{
+    productId: string;
+    name: string;
+    sold: number;
+    returned: number;
+    rate: number;
+    good: number;
+    damaged: number;
+    missing: number;
+    topReason: string | null;
+    worstOptions: Array<{ options: string; sold: number; returned: number; rate: number }>;
+  }>;
+}
+
+export interface ProductReturnWarning {
+  warn: boolean;
+  sold?: number;
+  returned?: number;
+  rate?: number;
+  topReason?: string | null;
+  worstOption?: { options: string; sold: number; returned: number; rate: number } | null;
+}
+
+/** What customers say vs. tracked links (TellMe idea 100) — mirrors HeardFromService.report. */
+export interface HeardFromReport {
+  enabled: boolean;
+  total: number;
+  answered: number;
+  said: Array<{ key: string; label: string; count: number }>;
+  linked: Array<{ channel: string; count: number }>;
+}
+
 export const analyticsApi = {
+  heardFrom: async (range: DateRange) => (await api.get<HeardFromReport>('/v1/analytics/heard-from', { params: { from: range.from, to: range.to } })).data,
+  returnRates: async (range: DateRange) => (await api.get<ReturnRates>('/v1/analytics/return-rates', { params: { from: range.from, to: range.to } })).data,
+  productReturnWarning: async (id: string) => (await api.get<ProductReturnWarning>(`/v1/analytics/product-return-warning/${id}`)).data,
+  couponPerformance: async (range: DateRange) =>
+    (await api.get<CouponPerformance>('/v1/analytics/coupon-performance', { params: { from: range.from, to: range.to } })).data,
+  profitByProduct: async (range: DateRange) =>
+    (await api.get<ProfitByProduct>('/v1/analytics/profit-by-product', { params: { from: range.from, to: range.to } })).data,
+  deliveryRatings: async (range: DateRange) =>
+    (await api.get<DeliveryRatings>('/v1/analytics/delivery-ratings', { params: { from: range.from, to: range.to } })).data,
+  deadStock: async (days: number) => (await api.get<DeadStockReport>('/v1/analytics/dead-stock', { params: { days } })).data,
+  vat: async (month: string) => (await api.get<VatReport>('/v1/analytics/vat', { params: { month } })).data,
   searches: get<SearchesAnalytics>('searches'),
   teamWork: async (range: DateRange) =>
     (await api.get<TeamWorkAnalytics>('/v1/analytics/team-work', { params: { from: range.from, to: range.to } })).data,

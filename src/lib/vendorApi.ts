@@ -51,6 +51,8 @@ export interface VendorSettings {
   storeName: string;
   subdomain: string;
   address: string | null;
+  /** The owner's phone (read only; used by the ready policy pages). */
+  phone?: string | null;
 }
 
 export async function getVendorSettings(): Promise<VendorSettings> {
@@ -93,6 +95,25 @@ export interface DeliveryCharges {
   // Preferred delivery day (TellMe idea 50): the shopper may pick a day at checkout (StorePal).
   preferredDeliveryEnabled: boolean;
   preferredDeliveryMinDays: number;
+  /** Delivery time slots (TellMe idea 90); null = none. */
+  deliverySlots?: DeliverySlotInput[] | null;
+  // Checkout rules (TellMe ideas 56, 57, 58). Decimals arrive as strings.
+  minOrderAmount: string | null;
+  giftOptionEnabled: boolean;
+  giftWrapCharge: string;
+  weightChargeEnabled: boolean;
+  weightFreeKg: string;
+  weightPerKgInside: string;
+  weightPerKgAround: string;
+  weightPerKgOutside: string;
+  weightChargeMax: string | null;
+  // Delivery area control (TellMe idea 65), StorePal checkout only.
+  deliveryAreaMode: 'OFF' | 'ONLY' | 'EXCEPT';
+  deliveryAreaDistricts: string[];
+  deliveryAreaMessage: string | null;
+  // Daily order limit and cut-off (TellMe idea 69).
+  dailyOrderLimit: number | null;
+  orderCutoffMinutes: number | null;
   deliveryProcessingDays: number;
   deliveryOffDays: number[];
 }
@@ -111,8 +132,46 @@ export interface DeliveryChargesUpdate {
   pickupHours?: string | null;
   preferredDeliveryEnabled?: boolean;
   preferredDeliveryMinDays?: number;
+  /** Up to 4 slots; an empty list clears them. */
+  deliverySlots?: DeliverySlotInput[] | null;
+  /** 0 or null clears the minimum / the cap. */
+  minOrderAmount?: number | null;
+  giftOptionEnabled?: boolean;
+  giftWrapCharge?: number;
+  weightChargeEnabled?: boolean;
+  weightFreeKg?: number;
+  weightPerKgInside?: number;
+  weightPerKgAround?: number;
+  weightPerKgOutside?: number;
+  weightChargeMax?: number | null;
+  deliveryAreaMode?: 'OFF' | 'ONLY' | 'EXCEPT';
+  deliveryAreaDistricts?: string[];
+  deliveryAreaMessage?: string | null;
+  /** 0 or null = no limit. */
+  dailyOrderLimit?: number | null;
+  /** Minutes after midnight (Dhaka); null = no cut-off. */
+  orderCutoffMinutes?: number | null;
   deliveryProcessingDays?: number;
   deliveryOffDays?: number[];
+}
+
+/** Shop and support hours (TellMe idea 73): keys "0" (Sunday) to "6" (Saturday), Dhaka time. */
+export type BusinessHours = Record<string, { open: boolean; from: string; to: string }>;
+
+export async function getBusinessHours(): Promise<{ businessHours: BusinessHours | null }> {
+  const { data } = await api.get('/v1/vendor/business-hours');
+  return data;
+}
+
+export async function updateBusinessHours(businessHours: BusinessHours | null): Promise<{ businessHours: BusinessHours | null }> {
+  const { data } = await api.patch('/v1/vendor/business-hours', { businessHours });
+  return data;
+}
+
+/** Districts shoppers asked for delivery to and were refused (TellMe idea 65), most attempts first. */
+export async function getBlockedAreas(): Promise<Array<{ district: string; count: number; lastAt: string }>> {
+  const { data } = await api.get('/v1/vendor/blocked-areas');
+  return data;
 }
 
 export async function getVendorDeliveryCharges(): Promise<DeliveryCharges> {
@@ -210,4 +269,30 @@ export async function connectVendorDomain(domain: string): Promise<string | null
 
 export async function removeVendorDomain(): Promise<void> {
   await api.delete('/v1/vendor/domain');
+}
+
+/** One delivery time slot (TellMe idea 90): times are 24 hour "HH:MM" in Dhaka time. */
+export interface DeliverySlotInput {
+  id?: string;
+  name: string;
+  from: string;
+  to: string;
+  maxPerDay?: number | null;
+}
+
+/** Store > Order Tracking > "How did you hear about us?" (TellMe idea 100). `options` are the store's own answers; empty = the built-in six (`defaults`). */
+export interface HeardFromSettings {
+  enabled: boolean;
+  options: string[];
+  defaults: string[];
+}
+
+export async function getHeardFromSettings(): Promise<HeardFromSettings> {
+  const { data } = await api.get<HeardFromSettings>('/v1/vendor/heard-from');
+  return data;
+}
+
+export async function updateHeardFromSettings(body: { enabled?: boolean; options?: string[] }): Promise<HeardFromSettings> {
+  const { data } = await api.patch<HeardFromSettings>('/v1/vendor/heard-from', body);
+  return data;
 }

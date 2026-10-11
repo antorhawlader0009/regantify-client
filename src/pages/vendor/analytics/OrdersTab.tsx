@@ -7,6 +7,7 @@ import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analyti
 import { orderStatusLabel } from '../order/orderStatus';
 import { TrackingStats } from '../../../components/analytics/TrackingStats';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
+import type { DeliveryRatings } from '../../../lib/analyticsApi';
 
 const COURIERS: Record<DeliveryCourier, { label: string; path: string }> = {
   PATHAO: { label: 'Pathao', path: '/vendor/courier/pathao' },
@@ -71,6 +72,7 @@ export function OrdersTab({ range }: TabProps) {
   const delivery = useAnalytics('delivery', range);
   const failed = useAnalytics('failedOrders', range);
   const teamWork = useAnalytics('teamWork', range);
+  const ratings = useAnalytics('deliveryRatings', range);
   const compareLabel = COMPARE_LABEL;
 
   return (
@@ -173,6 +175,8 @@ export function OrdersTab({ range }: TabProps) {
       </TabState>
 
       <TabState query={delivery}>{(data) => <DeliverySection data={data} compareLabel={compareLabel} />}</TabState>
+
+      <TabState query={ratings}>{(data) => <DeliveryRatingsSection data={data} />}</TabState>
 
       <TabState query={failed}>{(data) => <FailedOrdersSection data={data} compareLabel={compareLabel} />}</TabState>
 
@@ -520,5 +524,55 @@ function TeamWorkSection({ data, compareLabel }: { data: TeamWorkAnalytics; comp
         </Card>
       )}
     </>
+  );
+}
+
+/** How customers rated the delivery (TellMe idea 89): average stars per courier or own rider and the latest low-star comments. */
+function DeliveryRatingsSection({ data }: { data: DeliveryRatings }) {
+  return (
+    <Card title="How customers rated the delivery" subtitle="One-tap stars from the tracking page after a delivered order. Separate from product reviews.">
+      {data.count === 0 ? (
+        <EmptyState text="No delivery ratings in this period yet." />
+      ) : (
+        <>
+          <p className="mb-3 text-sm text-regantify-text">
+            <span className="text-lg font-semibold tabular-nums">{data.average?.toFixed(1)}</span> / 5 from {data.count} {data.count === 1 ? 'customer' : 'customers'}
+          </p>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-neutral-500">
+                <th className="pb-2 font-normal">Courier or rider</th>
+                <th className="pb-2 text-right font-normal">Ratings</th>
+                <th className="pb-2 text-right font-normal">Average</th>
+                <th className="pb-2 text-right font-normal">1–2 stars</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.byCourier.map((c) => (
+                <tr key={c.name} className="border-t border-line">
+                  <td className="py-2">{c.name}</td>
+                  <td className="py-2 text-right tabular-nums">{c.count}</td>
+                  <td className="py-2 text-right tabular-nums font-medium">{c.average.toFixed(1)}</td>
+                  <td className={`py-2 text-right tabular-nums ${c.low > 0 ? 'text-red-700' : ''}`}>{c.low}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {data.lowComments.length > 0 && (
+            <ul className="mt-4 space-y-2 text-sm">
+              {data.lowComments.map((c) => (
+                <li key={c.orderId} className="rounded-lg border border-line px-3 py-2">
+                  <Link to={`/vendor/orders/${c.orderId}`} className="font-medium text-regantify-cta hover:underline">
+                    {c.ref}
+                  </Link>{' '}
+                  · {c.customerName} · {'★'.repeat(c.rating ?? 0)}
+                  {c.comment && <span className="block text-neutral-600">“{c.comment}”</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </Card>
   );
 }

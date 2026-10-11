@@ -60,6 +60,8 @@ export interface VendorCustomerOrder {
 export interface VendorCustomerDetail extends VendorCustomer {
   /** Why the vendor blacklisted this phone; null when not blacklisted or no reason was given. */
   blacklistReason: string | null;
+  /** "No promotional SMS" (TellMe idea 95). */
+  smsPromoOptOut?: boolean;
   /** Birthday and special day (day and month only), for the birthday wishes SMS; null when not set. */
   birthdayMonth: number | null;
   birthdayDay: number | null;
@@ -177,6 +179,10 @@ export const customersApi = {
         { blacklisted, reason: blacklisted && reason?.trim() ? reason.trim() : undefined },
       )
       .then((r) => r.data),
+
+  /** "No promotional SMS" switch (TellMe idea 95). */
+  setSmsPromoOptOut: (phone: string, optOut: boolean) =>
+    api.patch<{ phone: string; smsPromoOptOut: boolean }>(`/v1/customers/${encodeURIComponent(phone)}/sms-opt-out`, { optOut }).then((r) => r.data),
 
   /** Every tag the store uses, most used first. */
   listTags: () => api.get<CustomerTagCount[]>('/v1/customers/tags').then((r) => r.data),

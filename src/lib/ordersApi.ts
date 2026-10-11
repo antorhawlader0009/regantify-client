@@ -33,10 +33,34 @@ export interface OrderItem {
   returnOutcome?: 'GOOD' | 'DAMAGED' | 'MISSING' | null;
   /** A free gift line from Marketing > Discounts > Free gifts (price 0). */
   isGift?: boolean;
+  /** The customer's own text for the product (TellMe idea 75), like a name to print; customFee is the per-piece fee inside the price. */
+  customValues?: Array<{ label: string; value: string }> | null;
+  customFee?: string | null;
+  /** Charged the product's wholesale price (TellMe idea 79). */
+  wholesale?: boolean;
+  /** Pre-order expected date when it was ordered (YYYY-MM-DD at midnight UTC), TellMe idea 64. */
+  preOrderDate?: string | null;
+  /** A bundle line (TellMe idea 51): what one set held when the order was placed. Null on other lines. */
+  bundleParts?: Array<{ productId: string; name: string; sku: string; quantity: number }> | null;
   // Live product snapshot for the "view on storefront" link — null when
   // the product was since deleted, or DRAFT (no public page to link to).
   // See OrdersService.itemsInclude.
-  product?: { slug: string; visibility: 'PUBLIC' | 'DRAFT' } | null;
+  product?: {
+    slug: string;
+    visibility: 'PUBLIC' | 'DRAFT';
+    /** Warranty and return policy (TellMe idea 54), printed under the item on the invoice; null = the store default. */
+    warrantyKind?: string | null;
+    warrantyCustom?: string | null;
+    returnDays?: number | null;
+    returnCondition?: string | null;
+  } | null;
+}
+
+export interface AssignmentOverview {
+  staff: Array<{ id: string; name: string; role: string; active: boolean; handlesOrders: boolean }>;
+  autoAssign: boolean;
+  /** The caller's own staff id; null for the owner. */
+  myStaffId: string | null;
 }
 
 export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
@@ -177,6 +201,23 @@ export interface Order {
   possibleDuplicateOfId?: string | null;
   /** The day the shopper asked to have it delivered (an ISO date at midnight UTC = that calendar day); null when none. */
   preferredDeliveryDate?: string | null;
+  /** The delivery time slot the customer preferred (TellMe idea 90), as it read then. */
+  preferredSlot?: string | null;
+  /** The customer's rating of the delivery (TellMe idea 89). */
+  deliveryRating?: number | null;
+  deliveryComment?: string | null;
+  /** The store's own colored labels on this order (TellMe idea 91). */
+  labels?: string[];
+  /** Gift (TellMe idea 57): wrapped, with a message, optionally with the prices hidden on the invoice. giftWrapCharge is part of total. */
+  isGift?: boolean;
+  giftMessage?: string | null;
+  hidePricesOnInvoice?: boolean;
+  giftWrapCharge?: string;
+  /** Split order (TellMe idea 59): the order this one was split off from. */
+  splitFromOrderId?: string | null;
+  /** Who handles it (TellMe idea 60): a staff member id; null = nobody. */
+  assignedStaffId?: string | null;
+  assignedAt?: string | null;
   /** Order detail only: that earlier order's summary, for the warning box. */
   possibleDuplicateOf?: { id: string; invoiceNumber: number; publicCode?: string | null; status: OrderStatus; createdAt: string } | null;
   /** Order detail only: why it was cancelled / returned / failed; null while it is in none of those states. */
@@ -299,6 +340,14 @@ export interface ListOrdersParams {
   possibleDuplicate?: boolean;
   /** Only orders whose shopper asked for this delivery day (YYYY-MM-DD). */
   preferredDate?: string;
+  /** Pre-orders (TellMe idea 64): a date (YYYY-MM-DD) or 'any'. */
+  preOrder?: string;
+  /** Only orders carrying this label (TellMe idea 91). */
+  label?: string;
+  /** Traffic channel of the order (TellMe idea 71): facebook, google, direct, ... or 'untracked'. */
+  channel?: string;
+  /** Who handles it: 'me', 'none' (nobody) or a staff member id (TellMe idea 60). */
+  assignee?: string;
   /** Only orders that lost money (needs analytics.profit). */
   lossOnly?: boolean;
   page?: number;
@@ -398,6 +447,16 @@ export const ordersApi = {
 
   findOne: (id: string) => api.get<Order>(`/v1/orders/${id}`).then((r) => r.data),
 
+  /** Split order (TellMe idea 59): moves these lines (or pieces of them) into a new order. */
+  split: (id: string, lines: Array<{ itemId: string; quantity: number }>) =>
+    api.post<{ order: Order; newOrder: { id: string; ref: string } }>(`/v1/orders/${id}/split`, { lines }).then((r) => r.data),
+
+  /** Assign orders to staff (TellMe idea 60). */
+  assignmentOverview: () => api.get<AssignmentOverview>('/v1/orders/assignment').then((r) => r.data),
+  updateAssignmentSettings: (body: { autoAssignOrders?: boolean; handlerIds?: string[] }) =>
+    api.patch<AssignmentOverview>('/v1/orders/assignment-settings', body).then((r) => r.data),
+  assign: (ids: string[], staffId: string | null) => api.post<{ updated: number }>('/v1/orders/assign', { ids, staffId }).then((r) => r.data),
+
   /** A marker that changes when any order of the store does; polled by useOrdersAutoRefresh. */
   pulse: () => api.get<{ marker: string }>('/v1/orders/pulse').then((r) => r.data),
 
@@ -470,6 +529,17 @@ export const ordersApi = {
   getCustomerHistory: (phone: string) =>
     api.get<CustomerHistory>(`/v1/orders/customer-history/${encodeURIComponent(phone)}`).then((r) => r.data),
 
+  labelCatalog: () => api.get<OrderLabelDef[]>('/v1/orders/labels').then((r) => r.data),
+  saveLabelCatalog: (labels: OrderLabelDef[]) => api.patch<OrderLabelDef[]>('/v1/orders/labels', { labels }).then((r) => r.data),
+  applyLabels: (ids: string[], add: string[], remove: string[]) => api.post<{ updated: number }>('/v1/orders/labels/apply', { ids, add, remove }).then((r) => r.data),
+
+  listComments: (id: string) =>
+    api
+      .get<{ legacyNote: string | null; comments: Array<{ id: string; authorName: string; authorRole: string; body: string; createdAt: string; canDelete: boolean }> }>(`/v1/orders/${id}/comments`)
+      .then((r) => r.data),
+  addComment: (id: string, body: string) => api.post<{ id: string }>(`/v1/orders/${id}/comments`, { body }).then((r) => r.data),
+  deleteComment: (id: string, commentId: string) => api.delete(`/v1/orders/${id}/comments/${commentId}`).then((r) => r.data),
+
   getCustomerCourierStats: (phones: string[]) =>
     api.post<CustomerCourierStats>('/v1/orders/customer-courier-stats', { phones }).then((r) => r.data),
 };
@@ -498,4 +568,10 @@ export function paymentMethodLabel(method: string): string {
   if (method === 'ONLINE_PAYMENT') return 'Paid online';
   if (method.startsWith('POS_')) return `${POS_METHOD_LABELS[method.slice(4)] ?? method.slice(4)} (counter)`;
   return method.replace(/_/g, ' ').toLowerCase().replace(/^./, (c) => c.toUpperCase());
+}
+
+/** One of the store's order labels (TellMe idea 91). */
+export interface OrderLabelDef {
+  name: string;
+  color: string;
 }

@@ -36,6 +36,8 @@ import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
 import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/order/EditOrderItemsDialog';
 import { MergeOrdersDialog, canMergeOrder } from '../../../components/order/MergeOrdersDialog';
+import { SplitOrderDialog, canSplitOrder } from '../../../components/order/SplitOrderDialog';
+import { AssignCard } from '../../../components/order/OrderAssign';
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
@@ -51,6 +53,7 @@ import { Dialog } from '../../../components/ui/Dialog';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { OrderComments } from '../../../components/order/OrderComments';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 
 function formatPrice(value: string) {
@@ -128,6 +131,7 @@ export default function OrderDetail() {
   const [showInvoice, setShowInvoice] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [splitting, setSplitting] = useState(false);
   // "Not connected → setup popup" (COURIER-PLAN.md §5.2): the provider to
   // connect, and the booking to retry once it is. null closes the popup.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
@@ -536,6 +540,22 @@ export default function OrderDetail() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}
         <div className="min-w-0 space-y-4 lg:col-span-2">
+          {order.isGift && (
+            <div className="rounded-xl border-2 border-pink-300 bg-pink-50 px-4 py-3 text-sm text-pink-900">
+              <p className="font-semibold">Gift: wrap it nicely</p>
+              {order.giftMessage && <p className="mt-1">Message for the card: “{order.giftMessage}”</p>}
+              {order.hidePricesOnInvoice && <p className="mt-1">Print the invoice without prices.</p>}
+            </div>
+          )}
+          {order.splitFromOrderId && (
+            <p className="rounded-lg border border-line bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+              This order was split from{' '}
+              <Link to={`/vendor/orders/${order.splitFromOrderId}`} className="font-medium text-brand hover:underline">
+                another order
+              </Link>
+              . The delivery charge is on that one.
+            </p>
+          )}
           <Card
             title="Items"
             action={
@@ -544,6 +564,11 @@ export default function OrderDetail() {
                   {canCancelRefund && canMergeOrder(order) && (
                     <button type="button" onClick={() => setMerging(true)} className="text-sm font-medium text-brand hover:underline" title="Fold this customer's other open order into this one">
                       Merge order
+                    </button>
+                  )}
+                  {canSplitOrder(order) && (
+                    <button type="button" onClick={() => setSplitting(true)} className="text-sm font-medium text-brand hover:underline" title="Send what is in stock first: move some items into a new order">
+                      Split order
                     </button>
                   )}
                   <button type="button" onClick={() => setEditingItems(true)} className="text-sm font-medium text-brand hover:underline">
@@ -572,6 +597,7 @@ export default function OrderDetail() {
                     <p className="flex items-center gap-1.5 text-sm text-regantify-text">
                       <span className="truncate">{item.productName}</span>
                       {item.isGift && <span className="ml-1.5 shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">Free gift</span>}
+                      {item.wholesale && <span className="ml-1.5 shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-700">Wholesale price</span>}
                       {item.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={item.product.slug} />}
                     </p>
                     <p className="truncate text-xs text-neutral-500">
@@ -579,6 +605,24 @@ export default function OrderDetail() {
                       {Object.entries(item.selectedOptions).length > 0 &&
                         ` · ${Object.entries(item.selectedOptions).map(([k, v]) => `${k}: ${v}`).join(', ')}`}
                     </p>
+                    {item.customValues && item.customValues.length > 0 && (
+                      <ul className="mt-0.5 space-y-0.5 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
+                        {item.customValues.map((v, i) => (
+                          <li key={i}>
+                            <span className="font-medium">{v.label}:</span> {v.value}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {item.preOrderDate && (
+                      <p className="text-xs font-medium text-sky-800">
+                        Pre-order, expected {new Date(item.preOrderDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}
+                      </p>
+                    )}
+                    {/* A bundle (TellMe idea 51): what each set holds; stock was taken from these. */}
+                    {item.bundleParts && item.bundleParts.length > 0 && (
+                      <p className="text-xs text-neutral-600">Contains: {item.bundleParts.map((part) => `${part.quantity} × ${part.name}`).join(', ')}</p>
+                    )}
                     <p className="text-xs text-neutral-500">
                       {formatPrice(item.unitPrice)} × {item.quantity}
                     </p>
@@ -602,6 +646,12 @@ export default function OrderDetail() {
                   {/* A POS sale with VAT-inclusive prices: the VAT is inside the subtotal, not added. */}
                   <dt>{order.vatIncluded ? 'Includes VAT' : 'COD charge'}</dt>
                   <dd className="tabular-nums">{formatPrice(order.vatAmount)}</dd>
+                </div>
+              )}
+              {Number(order.giftWrapCharge ?? 0) > 0 && (
+                <div className="flex justify-between text-neutral-600">
+                  <dt>Gift wrap</dt>
+                  <dd className="tabular-nums">{formatPrice(order.giftWrapCharge ?? '0')}</dd>
                 </div>
               )}
               {Number(order.discountAmount) > 0 && (
@@ -636,6 +686,10 @@ export default function OrderDetail() {
             </Card>
           )}
 
+          <Card title="Comments">
+            <OrderComments orderId={order.id} />
+          </Card>
+
           <Card title="Timeline">
             <OrderTimeline orderId={order.id} history={history} hasCourier={provider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED'} />
           </Card>
@@ -643,6 +697,7 @@ export default function OrderDetail() {
 
         {/* Side column */}
         <div className="min-w-0 space-y-4">
+          <AssignCard order={order} onChanged={invalidateOrder} />
           <Card title="Customer">
             <p className="text-sm font-medium text-regantify-text">{order.customerName}</p>
             <p className="text-sm text-neutral-600">{order.customerPhone}</p>
@@ -711,7 +766,8 @@ export default function OrderDetail() {
             {order.preferredDeliveryDate && (
               <p className="mb-2 inline-flex items-center gap-1.5 rounded border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-800">
                 <CalendarDays size={12} aria-hidden />
-                Customer wants it on {preferredDayLabel(order.preferredDeliveryDate)} (a courier cannot always keep to it)
+                Customer wants it on {preferredDayLabel(order.preferredDeliveryDate)}
+                {order.preferredSlot ? `, ${order.preferredSlot}` : ''} (a courier cannot always keep to it)
               </p>
             )}
             <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
@@ -1020,6 +1076,7 @@ export default function OrderDetail() {
       <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
       <EditOrderItemsDialog order={order} open={editingItems} onOpenChange={setEditingItems} />
       {merging && <MergeOrdersDialog order={order} open onOpenChange={setMerging} />}
+      {splitting && <SplitOrderDialog order={order} open onOpenChange={setSplitting} />}
       {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} orderId={order.id} />}
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />

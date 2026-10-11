@@ -80,6 +80,10 @@ export const couponsApi = {
 
   findOne: (id: string) => api.get<Coupon>(`/v1/coupons/${id}`).then((r) => r.data),
 
+  /** One-time codes copied from this coupon (TellMe idea 83). */
+  generateLike: (id: string, count: number, prefix?: string) =>
+    api.post<{ count: number; coupons: Array<{ code: string; validTill: string | null }> }>(`/v1/coupons/${id}/generate`, { count, prefix }).then((r) => r.data),
+
   create: (payload: CouponPayload) => api.post<Coupon>('/v1/coupons', payload).then((r) => r.data),
 
   update: (id: string, payload: Partial<CouponPayload>) =>

@@ -15,6 +15,23 @@ export interface StockSettings {
   returnStockAfterCheckIn: boolean;
   /** Low stock limit for products without their own (Edit Product > Low stock alert). */
   lowStockThreshold: number;
+  /** Storefront "Only 3 left" message (display only). */
+  lowStockMessageEnabled: boolean;
+  lowStockMessageLimit: number;
+  /** Hide the exact count while stock is above the limit. */
+  hideStockCount: boolean;
+  /** What StorePal's lists do with sold-out products (TellMe idea 70). */
+  soldOutDisplay: 'KEEP' | 'LAST' | 'HIDE';
+  /** The customer tag that earns the wholesale price (TellMe idea 79). */
+  wholesaleTag: string;
+  /** Reorder reminder SMS (TellMe idea 85). */
+  reorderSmsEnabled: boolean;
+  reorderSmsDailyLimit: number;
+  /** Store-wide warranty and return policy for products that set none of their own (Edit Product > Warranty and returns). */
+  defaultWarrantyKind: string | null;
+  defaultWarrantyCustom: string | null;
+  defaultReturnDays: number | null;
+  defaultReturnCondition: string | null;
 }
 
 export type GdprPromptPosition = 'BOTTOM' | 'TOP' | 'BOTTOM_LEFT' | 'BOTTOM_RIGHT';
@@ -47,6 +64,11 @@ export interface CodGuardSettings {
   // A new storefront order that looks like a copy of an open one (same phone and product within 24 hours)
   // starts On Hold instead of Pending. It is marked either way.
   duplicateOrderHold: boolean;
+  /** Auto-confirm trusted customers (TellMe idea 86). */
+  autoConfirmTrusted: boolean;
+  autoConfirmMinOrders: number;
+  /** Decimal string from the server, a number when sent; empty = no limit. */
+  autoConfirmMaxAmount: string | number | null;
   // After-checkout SMS code: hours the shopper has to enter it before the order is dealt with; null = never.
   verificationExpiryHours: number | null;
   // false = the order is cancelled (stock goes back); true = it stays On Hold and the store is told to call.

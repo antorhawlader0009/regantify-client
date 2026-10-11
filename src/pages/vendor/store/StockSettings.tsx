@@ -6,6 +6,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { PolicyField, policyFromProduct, policyToPayload } from '../../../components/product/PolicyField';
 
 // Shown as the editor/input placeholders, and what StorePal falls back to
 // when a message is left blank (keep in sync with storefront's
@@ -155,6 +156,132 @@ export default function StockSettings() {
               />
             </label>
             <p className="text-xs text-regantify-text-muted mt-2">0 turns the alert off for products without their own number.</p>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Sold-out products on the store lists</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              StorePal only. Pre-order, backorder and unlimited-stock products are never sold out; a product with variations is sold out when
+              every variation is. Pinned products stay where you pinned them, even when sold out. The product&apos;s own link and the search keep working.
+            </p>
+            <div className="space-y-2 text-sm text-regantify-text">
+              {([
+                ['KEEP', 'Leave them where they are (default)'],
+                ['LAST', 'Move them to the end of the list'],
+                ['HIDE', 'Hide them from the lists'],
+              ] as const).map(([value, text]) => (
+                <label key={value} className="flex cursor-pointer items-center gap-2">
+                  <input type="radio" name="soldOutDisplay" checked={form.soldOutDisplay === value} onChange={() => set('soldOutDisplay', value)} className="accent-regantify-cta" />
+                  {text}
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Reorder reminder SMS</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              For products where you set “Lasts about (days)”: when that time has passed since a Completed order, the customer gets one SMS with a one-tap link to buy it again, once per purchase. Sent between 10 AM and 8 PM, from your SMS credits. Not sent to blacklisted customers or to anyone who bought the product again.
+            </p>
+            <label className="flex items-center gap-2 text-sm text-regantify-text">
+              <input type="checkbox" checked={form.reorderSmsEnabled} onChange={(e) => set('reorderSmsEnabled', e.target.checked)} />
+              Send reorder reminders
+            </label>
+            {form.reorderSmsEnabled && (
+              <label className="mt-3 block text-xs text-regantify-text-muted">
+                Most texts per day
+                <input
+                  type="number"
+                  min={1}
+                  max={1000}
+                  value={form.reorderSmsDailyLimit}
+                  onChange={(e) => set('reorderSmsDailyLimit', Math.max(1, Math.min(1000, Number(e.target.value) || 1)))}
+                  className={`${inputClass.replace('w-full ', '')} mt-1 block w-28`}
+                />
+              </label>
+            )}
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Wholesale customers</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              A customer who is logged in and whose phone has this tag (Customers &gt; Note &amp; tags) sees and pays the product&apos;s wholesale price, when it has one. StorePal only.
+            </p>
+            <input
+              type="text"
+              maxLength={40}
+              value={form.wholesaleTag}
+              onChange={(e) => set('wholesaleTag', e.target.value)}
+              className={`${inputClass.replace('w-full ', '')} w-56`}
+            />
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Low Stock Message on the Store</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              Shows shoppers a red &quot;Only 3 left&quot; on the product page and product cards when stock is running low, so
+              they do not wait. Display only: stock and prices do not change. Products with backorder or pre-order never
+              show it. With variations, the chosen variation&apos;s stock is used.
+            </p>
+            <div className="space-y-4">
+              <Checkbox
+                checked={form.lowStockMessageEnabled}
+                onChange={(v) => set('lowStockMessageEnabled', v)}
+                label='Show "Only N left" when stock is low'
+              />
+              <div className={form.lowStockMessageEnabled ? '' : 'opacity-60'}>
+                <label className="flex items-center gap-2 text-sm text-regantify-text">
+                  Show the message when stock is
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={1000}
+                    value={form.lowStockMessageLimit}
+                    onChange={(e) => set('lowStockMessageLimit', Math.min(1000, Math.max(1, Number(e.target.value.replace(/\D/g, '') || 1))))}
+                    className={`${inputClass.replace('w-full ', '')} w-24`}
+                  />
+                  or fewer
+                </label>
+              </div>
+              <Checkbox
+                checked={form.hideStockCount}
+                onChange={(v) => set('hideStockCount', v)}
+                label='Hide the exact stock count when stock is high (show only "In stock")'
+                hint="Stops competitors from seeing how many units you hold."
+              />
+            </div>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Warranty and Returns (store default)</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              Shown under the Buy button and printed under each item on the invoice, for every product that does not set its own
+              (Edit Product &gt; Warranty and returns). Leave both on &quot;Not set&quot; to show nothing.
+            </p>
+            <PolicyField
+              compact
+              value={policyFromProduct({
+                warrantyKind: form.defaultWarrantyKind,
+                warrantyCustom: form.defaultWarrantyCustom,
+                returnDays: form.defaultReturnDays,
+                returnCondition: form.defaultReturnCondition,
+              })}
+              onChange={(next) => {
+                const p = policyToPayload(next);
+                setForm((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        defaultWarrantyKind: p.warrantyKind,
+                        defaultWarrantyCustom: next.warrantyKind === 'CUSTOM' ? next.warrantyCustom : null,
+                        defaultReturnDays: p.returnDays,
+                        defaultReturnCondition: next.returnCondition || null,
+                      }
+                    : prev,
+                );
+              }}
+            />
           </section>
 
           <button

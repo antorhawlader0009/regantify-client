@@ -85,7 +85,7 @@ export default function HandoverSheetPrintPage() {
                   <td className="px-2 py-1.5 font-mono text-[11.5px]">{r.trackingId ?? '–'}</td>
                   <td className="px-2 py-1.5">
                     {r.customerName}
-                    {r.preferredDate && <span className="block text-[11px] text-neutral-700">Wants it on {r.preferredDate}</span>}
+                    {r.preferredDate && <span className="block text-[11px] text-neutral-700">Wants it on {r.preferredDate}{r.preferredSlot ? `, ${r.preferredSlot}` : ''}</span>}
                   </td>
                   <td className="px-2 py-1.5">{r.district ?? '–'}</td>
                   <td className="px-2 py-1.5 text-right">{taka(r.codAmount)}</td>

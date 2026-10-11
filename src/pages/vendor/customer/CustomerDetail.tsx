@@ -66,6 +66,29 @@ function DetailSkeleton() {
   );
 }
 
+/** "No promotional SMS" (TellMe idea 95): keeps this number out of campaigns, birthday wishes and reorder reminders. Orders still go through. */
+function SmsOptOutCard({ customer }: { customer: VendorCustomerDetail }) {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: (optOut: boolean) => customersApi.setSmsPromoOptOut(customer.phone, optOut),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success(res.smsPromoOptOut ? 'No more promotional SMS to this customer' : 'Promotional SMS allowed again');
+    },
+    onError: () => toast.error('Couldn’t update this. Check your connection and try again.'),
+  });
+  return (
+    <Card title="Promotional SMS">
+      <ToggleRow
+        checked={customer.smsPromoOptOut ?? false}
+        onChange={(on) => mutation.mutate(on)}
+        label={customer.smsPromoOptOut ? 'No promotional SMS' : 'Promotional SMS allowed'}
+        hint="Use this when the customer asks you to stop. They are left out of SMS campaigns, birthday wishes and reorder reminders, but can still order. Order, tracking, OTP and payment texts still go."
+      />
+    </Card>
+  );
+}
+
 /** Blacklist switch + the reason, with a dialog that asks for the reason before blacklisting. */
 function BlacklistCard({ customer }: { customer: VendorCustomerDetail }) {
   const queryClient = useQueryClient();
@@ -411,6 +434,7 @@ export default function CustomerDetail() {
           )}
 
           {canEdit && <BlacklistCard customer={customer} />}
+          {canEdit && <SmsOptOutCard customer={customer} />}
 
           {canDelete && (
             <button

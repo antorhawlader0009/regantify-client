@@ -3,6 +3,8 @@ import { Card, CardLink, EmptyState, KpiCard, KpiStrip, SERIES_1, MobileRows } f
 import { PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
+import { CouponResultsCard } from './CouponResultsCard';
+import { HeardFromCard } from './HeardFromCard';
 
 const CHANNEL_LABELS: Record<string, string> = {
   facebook: 'Facebook',
@@ -124,6 +126,10 @@ export function MarketingTab({ range }: TabProps) {
                 )}
               </Card>
             </div>
+
+            <HeardFromCard range={range} />
+
+            <CouponResultsCard range={range} />
         </>
       )}
     </TabState>

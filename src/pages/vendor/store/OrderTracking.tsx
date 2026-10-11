@@ -12,6 +12,7 @@ import { smsApi } from '../../../lib/smsApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { HeardFromSection } from '../../../components/store/HeardFromSection';
 
 // Store > Order Tracking (tracking-plan.md Step 5): which texts a shopper gets as their order moves,
 // and their wording. Every text costs SMS credits, so each one is off until the owner turns it on.
@@ -272,6 +273,8 @@ export default function OrderTracking() {
           </button>
         </div>
       )}
+
+      <HeardFromSection />
     </div>
   );
 }
