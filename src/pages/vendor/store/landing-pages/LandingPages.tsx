@@ -16,6 +16,7 @@ import { landingPagesApi, type LandingPage } from '../../../../lib/landingPagesA
 import { toast } from '../../../../lib/toast';
 import { useAuthStore } from '../../../../store/authStore';
 import { storefrontLandingPageUrl } from '../../../../lib/storefrontUrl';
+import { QrDialog } from '../../../../components/store/QrDialog';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -85,6 +86,7 @@ function LandingPageCard({ page, subdomain }: CardProps) {
   };
 
   const publicUrl = subdomain ? storefrontLandingPageUrl(subdomain, page.slug) : null;
+  const [qrOpen, setQrOpen] = useState(false);
   const isPublished = page.status === 'PUBLISHED';
   const sectionCount = page.sections?.length ?? 0;
 
@@ -201,6 +203,11 @@ function LandingPageCard({ page, subdomain }: CardProps) {
       <div className="flex items-center justify-between border-t border-black/5 px-4 py-2.5">
         <span className="text-[11px] text-regantify-text-muted">{formatDate(page.createdAt)}</span>
         {publicUrl && isPublished && (
+          <button type="button" onClick={() => setQrOpen(true)} className="text-[11px] font-medium text-regantify-text-muted hover:underline">
+            QR
+          </button>
+        )}
+        {publicUrl && isPublished && (
           <a
             href={publicUrl}
             target="_blank"
@@ -212,6 +219,7 @@ function LandingPageCard({ page, subdomain }: CardProps) {
           </a>
         )}
       </div>
+      {publicUrl && qrOpen && <QrDialog open onOpenChange={setQrOpen} title={`QR code: ${page.title}`} url={publicUrl} campaign={page.slug === '/' ? 'home' : page.slug} />}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Copy, Gift } from 'lucide-react';
 import { giftCardsApi, giftCardStatus, type GiftCard } from '../../../lib/giftCardsApi';
+import { GiftCardSaleCard } from './GiftCardSaleCard';
 import { formatDhakaDate } from '../../../lib/dhakaDate';
 import { DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { PromoListPage, StandardPromoMenu, copyText, taka } from './MarketingKit';
@@ -50,6 +51,8 @@ function GiftCardMenu({ item }: { item: GiftCard }) {
  */
 export default function GiftCards() {
   return (
+    <>
+    <GiftCardSaleCard />
     <PromoListPage<GiftCard>
       editPermission="marketing.gift_cards"
       title="Gift cards"
@@ -79,7 +82,7 @@ export default function GiftCards() {
           ),
           className: 'whitespace-nowrap',
         },
-        { header: 'Status', cell: (g) => <GiftCardBadge card={g} /> },
+        { header: 'Status', cell: (g) => <span className="inline-flex items-center gap-1.5"><GiftCardBadge card={g} />{g.soldOnline && <span className="rounded border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] text-sky-800">Sold online</span>}</span> },
         { header: 'Balance', cell: (g) => <BalanceCell card={g} /> },
         {
           header: 'For',
@@ -101,5 +104,6 @@ export default function GiftCards() {
         lines: [`${taka(g.balance)} left of ${taka(g.initialAmount)}`, [g.recipientName, g.expiresAt ? `expires ${formatDhakaDate(g.expiresAt)}` : null].filter(Boolean).join(' · ')],
       })}
     />
+    </>
   );
 }

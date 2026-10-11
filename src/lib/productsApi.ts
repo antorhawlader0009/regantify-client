@@ -120,6 +120,15 @@ export interface Product {
   /** Sold in packs (TellMe idea 102). */
   quantityStep?: number;
   unitLabel?: string | null;
+  /** Expected restock day (YYYY-MM-DD) of a sold-out product (TellMe idea 114). */
+  restockDate?: string | null;
+  /** Extra delivery charge and whether it is per piece (TellMe idea 117). */
+  extraDeliveryCharge?: string | number | null;
+  extraDeliveryPerPiece?: boolean;
+  /** Extra information tabs (TellMe idea 119), up to 3. */
+  infoTabs?: Array<{ title: string; text: string }> | null;
+  /** Payment rule (TellMe idea 126): ANY or ONLINE_ONLY. */
+  paymentRule?: 'ANY' | 'ONLINE_ONLY';
   /** Coming soon (TellMe idea 104). */
   comingSoon?: boolean;
   comingSoonUntil?: string | null;
@@ -201,6 +210,15 @@ export interface CreateProductPayload {
   /** Sold in packs (TellMe idea 102). */
   quantityStep?: number;
   unitLabel?: string | null;
+  /** Expected restock day (YYYY-MM-DD) of a sold-out product (TellMe idea 114). */
+  restockDate?: string | null;
+  /** Extra delivery charge and whether it is per piece (TellMe idea 117). */
+  extraDeliveryCharge?: string | number | null;
+  extraDeliveryPerPiece?: boolean;
+  /** Extra information tabs (TellMe idea 119), up to 3. */
+  infoTabs?: Array<{ title: string; text: string }> | null;
+  /** Payment rule (TellMe idea 126): ANY or ONLINE_ONLY. */
+  paymentRule?: 'ANY' | 'ONLINE_ONLY';
   /** Coming soon (TellMe idea 104). */
   comingSoon?: boolean;
   comingSoonUntil?: string | null;
@@ -330,6 +348,15 @@ export interface UpdateProductPayload {
   /** Sold in packs (TellMe idea 102). */
   quantityStep?: number;
   unitLabel?: string | null;
+  /** Expected restock day (YYYY-MM-DD) of a sold-out product (TellMe idea 114). */
+  restockDate?: string | null;
+  /** Extra delivery charge and whether it is per piece (TellMe idea 117). */
+  extraDeliveryCharge?: string | number | null;
+  extraDeliveryPerPiece?: boolean;
+  /** Extra information tabs (TellMe idea 119), up to 3. */
+  infoTabs?: Array<{ title: string; text: string }> | null;
+  /** Payment rule (TellMe idea 126): ANY or ONLINE_ONLY. */
+  paymentRule?: 'ANY' | 'ONLINE_ONLY';
   /** Coming soon (TellMe idea 104). */
   comingSoon?: boolean;
   comingSoonUntil?: string | null;
@@ -476,6 +503,11 @@ export const productsApi = {
   applyPriceChange: (body: PriceChangeRequest) =>
     api.post<PriceChangeResult>('/v1/products/price-changes', body).then((r) => r.data),
 
+  /** Update existing products from a CSV (TellMe idea 124): what the rows would do, then do it. Rows are matched by SKU. */
+  csvUpdatePreview: (fields: string[], rows: Array<Record<string, string>>) => api.post<CsvUpdatePreview>('/v1/products/csv-update/preview', { fields, rows }).then((r) => r.data),
+  csvUpdateApply: (fields: string[], rows: Array<Record<string, string>>) =>
+    api.post<{ changed: number; batchId: string | null; total: number; unchanged: number; notFound: number; invalid: number }>('/v1/products/csv-update', { fields, rows }).then((r) => r.data),
+
   listPriceChanges: () => api.get<PriceChangeBatch[]>('/v1/products/price-changes').then((r) => r.data),
 
   undoPriceChange: (batchId: string) =>
@@ -549,3 +581,22 @@ export const productsApi = {
       .then((r) => r.data);
   },
 };
+
+/** One row of the "Update existing products" preview (TellMe idea 124), mirrors CsvUpdateService.preview. */
+export interface CsvUpdatePreviewItem {
+  rowNumber: number;
+  sku: string;
+  status: 'CHANGE' | 'SAME' | 'INVALID' | 'NOT_FOUND';
+  reason: string | null;
+  name: string | null;
+  label: string | null;
+  changes: Array<{ field: 'price' | 'discountPrice' | 'stock' | 'cost' | 'badge' | 'visibility'; old: string | number | null; new: string | number }>;
+}
+export interface CsvUpdatePreview {
+  total: number;
+  willChange: number;
+  unchanged: number;
+  notFound: number;
+  invalid: number;
+  items: CsvUpdatePreviewItem[];
+}

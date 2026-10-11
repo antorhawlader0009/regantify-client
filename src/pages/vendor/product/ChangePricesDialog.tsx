@@ -22,6 +22,8 @@ const taka = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDig
 
 /** What a change was, in a sentence: "Raised regular prices by 10%". */
 export function describePriceChange(p: PriceChangeOptions): string {
+  // A batch made by "Update existing products" from a CSV (TellMe idea 124) has no percent or amount.
+  if ((p as unknown as { source?: string }).source === 'csv') return 'Prices updated from a CSV file';
   const what = p.target === 'PRICE' ? 'regular prices' : p.target === 'DISCOUNT' ? 'sale prices' : 'regular and sale prices';
   const amount = p.mode === 'PERCENT' ? `${p.value}%` : `${taka(p.value)}`;
   const rounding = p.rounding === 'NONE' ? '' : `, rounded to the nearest ${p.rounding === 'ONE' ? '৳1' : p.rounding === 'FIVE' ? '৳5' : '৳10'}`;

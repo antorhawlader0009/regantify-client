@@ -161,7 +161,7 @@ export interface CustomersAnalytics {
 }
 
 /** 'untracked' = visits/orders recorded before attribution existed. */
-export type TrafficChannel = 'facebook' | 'instagram' | 'google' | 'tiktok' | 'youtube' | 'whatsapp' | 'direct' | 'other' | 'untracked';
+export type TrafficChannel = 'facebook' | 'instagram' | 'google' | 'tiktok' | 'youtube' | 'whatsapp' | 'qr' | 'direct' | 'other' | 'untracked';
 
 /** Visits, online-store orders and sales for one channel or campaign in the period. */
 export interface MarketingRow {
@@ -292,12 +292,40 @@ export interface DeadStockReport {
   products: Array<{ id: string; name: string; slug: string; image: string | null; stock: number; lastSoldAt: string | null; stuck: number | null; estimated: boolean }>;
 }
 
+/** Stock value (TellMe idea 133) — mirrors StockValueService.report. Money is null without the cost permission. */
+export interface StockValueRow {
+  name: string;
+  products: number;
+  pieces: number;
+  cost: number | null;
+  sell: number | null;
+  profit: number | null;
+  noCostProducts: number;
+}
+export interface StockValueReport {
+  includeDrafts: boolean;
+  products: number;
+  pieces: number;
+  costValue: number | null;
+  sellValue: number | null;
+  potentialProfit: number | null;
+  noCostProducts: number;
+  noCostPieces: number;
+  byCategory: StockValueRow[];
+  byBrand: StockValueRow[];
+}
+
 /** How customers rated the delivery (TellMe idea 89) — mirrors DeliveryRatingsService.ratings. */
 export interface DeliveryRatings {
   count: number;
   average: number | null;
   byCourier: Array<{ name: string; count: number; average: number; low: number }>;
   lowComments: Array<{ orderId: string; ref: string; customerName: string; rating: number | null; comment: string | null; at: string | null }>;
+}
+
+/** Hand-made orders by channel (TellMe idea 121) — mirrors ManualChannelReportService. */
+export interface ManualChannelReport {
+  channels: Array<{ channel: string | null; orders: number; sales: number; averageOrder: number | null; returned: number; returnRate: number | null }>;
 }
 
 /** Coupon results (TellMe idea 93) — mirrors CouponPerformanceService.report. */
@@ -353,6 +381,8 @@ export const analyticsApi = {
   heardFrom: async (range: DateRange) => (await api.get<HeardFromReport>('/v1/analytics/heard-from', { params: { from: range.from, to: range.to } })).data,
   returnRates: async (range: DateRange) => (await api.get<ReturnRates>('/v1/analytics/return-rates', { params: { from: range.from, to: range.to } })).data,
   productReturnWarning: async (id: string) => (await api.get<ProductReturnWarning>(`/v1/analytics/product-return-warning/${id}`)).data,
+  manualChannels: async (range: DateRange) =>
+    (await api.get<ManualChannelReport>('/v1/analytics/manual-channels', { params: { from: range.from, to: range.to } })).data,
   couponPerformance: async (range: DateRange) =>
     (await api.get<CouponPerformance>('/v1/analytics/coupon-performance', { params: { from: range.from, to: range.to } })).data,
   profitByProduct: async (range: DateRange) =>
@@ -360,6 +390,7 @@ export const analyticsApi = {
   deliveryRatings: async (range: DateRange) =>
     (await api.get<DeliveryRatings>('/v1/analytics/delivery-ratings', { params: { from: range.from, to: range.to } })).data,
   deadStock: async (days: number) => (await api.get<DeadStockReport>('/v1/analytics/dead-stock', { params: { days } })).data,
+  stockValue: async (drafts: boolean) => (await api.get<StockValueReport>('/v1/analytics/stock-value', { params: { drafts } })).data,
   vat: async (month: string) => (await api.get<VatReport>('/v1/analytics/vat', { params: { month } })).data,
   searches: get<SearchesAnalytics>('searches'),
   teamWork: async (range: DateRange) =>

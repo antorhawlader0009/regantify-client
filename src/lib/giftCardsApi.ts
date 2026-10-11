@@ -19,6 +19,8 @@ export interface GiftCard {
   recipientPhone: string | null;
   note: string | null;
   active: boolean;
+  /** Bought on the store (TellMe idea 135). */
+  soldOnline?: boolean;
   /** Only on the single-card endpoints, newest first. */
   usages?: GiftCardUsage[];
   createdAt: string;
@@ -81,3 +83,33 @@ export function giftCardStatus(card: GiftCard): { label: 'Active' | 'Off' | 'Exp
   if (Number(card.balance) <= 0) return { label: 'Used up', className: 'border-amber-200 bg-amber-50 text-amber-700' };
   return { label: 'Active', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' };
 }
+
+/** Gift cards sold on the store (TellMe idea 135) — mirrors the server's GiftCardSalesService. */
+export interface GiftCardSaleSettings {
+  giftCardSaleEnabled: boolean;
+  giftCardSaleAmounts: number[];
+  giftCardSaleExpiryDays: number | null;
+  /** An active SSLCommerz gateway is connected. */
+  gatewayReady: boolean;
+}
+
+export interface GiftCardPurchaseRow {
+  id: string;
+  amount: number;
+  status: 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED';
+  buyerName: string;
+  buyerPhone: string;
+  recipientName: string;
+  recipientPhone: string;
+  giftCardId: string | null;
+  smsSent: boolean;
+  smsError: string | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+export const giftCardSalesApi = {
+  settings: () => api.get<GiftCardSaleSettings>('/v1/gift-card-sales').then((r) => r.data),
+  save: (body: { enabled: boolean; amounts: number[]; expiryDays: number | null }) => api.put<GiftCardSaleSettings>('/v1/gift-card-sales', body).then((r) => r.data),
+  purchases: () => api.get<GiftCardPurchaseRow[]>('/v1/gift-card-sales/purchases').then((r) => r.data),
+};

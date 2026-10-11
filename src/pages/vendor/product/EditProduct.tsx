@@ -26,6 +26,10 @@ import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { BatchesField } from '../../../components/product/BatchesField';
 import { ComingSoonField } from '../../../components/product/ComingSoonField';
 import { PackSizeField } from '../../../components/product/PackSizeField';
+import { RestockDateField } from '../../../components/product/RestockDateField';
+import { ExtraDeliveryField } from '../../../components/product/ExtraDeliveryField';
+import { PaymentRuleField } from '../../../components/product/PaymentRuleField';
+import { InfoTabsField, type InfoTabRow } from '../../../components/product/InfoTabsField';
 import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
 import { WholesalePriceField } from '../../../components/product/WholesalePriceField';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
@@ -202,6 +206,11 @@ export default function EditProduct() {
   const [reorderDays, setReorderDays] = useState('');
   const [quantityStep, setQuantityStep] = useState('');
   const [unitLabel, setUnitLabel] = useState('');
+  const [restockDate, setRestockDate] = useState('');
+  const [extraDelivery, setExtraDelivery] = useState('');
+  const [extraPerPiece, setExtraPerPiece] = useState(false);
+  const [infoTabs, setInfoTabs] = useState<InfoTabRow[]>([]);
+  const [paymentRule, setPaymentRule] = useState<'ANY' | 'ONLINE_ONLY'>('ANY');
   const [comingSoon, setComingSoon] = useState(false);
   const [comingSoonUntil, setComingSoonUntil] = useState('');
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
@@ -284,6 +293,11 @@ export default function EditProduct() {
       reorderDays: p.reorderAfterDays ? String(p.reorderAfterDays) : '',
       quantityStep: p.quantityStep && p.quantityStep > 1 ? String(p.quantityStep) : '',
       unitLabel: p.unitLabel ?? '',
+      restockDate: p.restockDate ? p.restockDate.slice(0, 10) : '',
+      extraDelivery: p.extraDeliveryCharge ? String(Number(p.extraDeliveryCharge)) : '',
+      extraPerPiece: p.extraDeliveryPerPiece ?? false,
+      infoTabs: (p.infoTabs ?? []) as InfoTabRow[],
+      paymentRule: (p.paymentRule ?? 'ANY') as string,
       comingSoon: p.comingSoon ?? false,
       comingSoonUntil: p.comingSoonUntil ? p.comingSoonUntil.slice(0, 10) : '',
       quoteOnly: p.quoteOnly ?? false,
@@ -354,6 +368,11 @@ export default function EditProduct() {
       reorderDays,
       quantityStep,
       unitLabel,
+      restockDate,
+      extraDelivery,
+      extraPerPiece,
+      infoTabs,
+      paymentRule,
       comingSoon,
       comingSoonUntil,
       quoteOnly,
@@ -426,6 +445,11 @@ export default function EditProduct() {
     setReorderDays(p.reorderAfterDays ? String(p.reorderAfterDays) : '');
     setQuantityStep(p.quantityStep && p.quantityStep > 1 ? String(p.quantityStep) : '');
     setUnitLabel(p.unitLabel ?? '');
+    setRestockDate(p.restockDate ? p.restockDate.slice(0, 10) : '');
+    setExtraDelivery(p.extraDeliveryCharge ? String(Number(p.extraDeliveryCharge)) : '');
+    setExtraPerPiece(p.extraDeliveryPerPiece ?? false);
+    setInfoTabs((p.infoTabs ?? []) as InfoTabRow[]);
+    setPaymentRule(p.paymentRule === 'ONLINE_ONLY' ? 'ONLINE_ONLY' : 'ANY');
     setComingSoon(p.comingSoon ?? false);
     setComingSoonUntil(p.comingSoonUntil ? p.comingSoonUntil.slice(0, 10) : '');
     setQuoteOnly(p.quoteOnly ?? false);
@@ -555,6 +579,11 @@ export default function EditProduct() {
         reorderAfterDays: Number(reorderDays) > 0 ? Number(reorderDays) : null,
         quantityStep: Number(quantityStep) > 1 ? Number(quantityStep) : 1,
         unitLabel: unitLabel.trim() || null,
+        restockDate: restockDate || null,
+        extraDeliveryCharge: Number(extraDelivery) > 0 ? Number(extraDelivery) : null,
+        extraDeliveryPerPiece: extraPerPiece,
+        infoTabs: infoTabs.filter((t) => t.title.trim() && t.text.trim()),
+        paymentRule,
         comingSoon,
         comingSoonUntil: comingSoon && comingSoonUntil ? comingSoonUntil : null,
         quoteOnly,
@@ -822,6 +851,10 @@ export default function EditProduct() {
             <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.toString().trim() || price.toString()} />
             <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
             <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
+            <RestockDateField value={restockDate} onChange={setRestockDate} />
+            <ExtraDeliveryField amount={extraDelivery} onAmount={setExtraDelivery} perPiece={extraPerPiece} onPerPiece={setExtraPerPiece} />
+            <PaymentRuleField value={paymentRule} onChange={setPaymentRule} />
+            <InfoTabsField tabs={infoTabs} onChange={setInfoTabs} />
             <ComingSoonField on={comingSoon} onToggle={setComingSoon} until={comingSoonUntil} onUntil={setComingSoonUntil} waiting={product.waitlistCount} />
             {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
             <BatchesField productId={product.id} />

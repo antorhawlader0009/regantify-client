@@ -9,7 +9,7 @@ export interface TabProps {
 }
 
 // The reports that take the picked dates (VAT and Not selling take a month and a day count instead).
-type Report = Exclude<keyof typeof analyticsApi, 'vat' | 'deadStock' | 'productReturnWarning'>;
+type Report = Exclude<keyof typeof analyticsApi, 'vat' | 'deadStock' | 'productReturnWarning' | 'stockValue'>;
 type Data<T extends Report> = Awaited<ReturnType<(typeof analyticsApi)[T]>>;
 
 /** One report's data for the picked dates; the previous numbers stay on screen while new ones load. */

@@ -21,6 +21,10 @@ import {
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { ComingSoonField } from '../../../components/product/ComingSoonField';
 import { PackSizeField } from '../../../components/product/PackSizeField';
+import { RestockDateField } from '../../../components/product/RestockDateField';
+import { ExtraDeliveryField } from '../../../components/product/ExtraDeliveryField';
+import { PaymentRuleField } from '../../../components/product/PaymentRuleField';
+import { InfoTabsField, type InfoTabRow } from '../../../components/product/InfoTabsField';
 import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
 import { WholesalePriceField } from '../../../components/product/WholesalePriceField';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
@@ -125,6 +129,11 @@ export default function AddProduct() {
   const [reorderDays, setReorderDays] = useState('');
   const [quantityStep, setQuantityStep] = useState('');
   const [unitLabel, setUnitLabel] = useState('');
+  const [restockDate, setRestockDate] = useState('');
+  const [extraDelivery, setExtraDelivery] = useState('');
+  const [extraPerPiece, setExtraPerPiece] = useState(false);
+  const [infoTabs, setInfoTabs] = useState<InfoTabRow[]>([]);
+  const [paymentRule, setPaymentRule] = useState<'ANY' | 'ONLINE_ONLY'>('ANY');
   const [comingSoon, setComingSoon] = useState(false);
   const [comingSoonUntil, setComingSoonUntil] = useState('');
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
@@ -307,6 +316,11 @@ export default function AddProduct() {
       reorderAfterDays: Number(reorderDays) > 0 ? Number(reorderDays) : undefined,
       quantityStep: Number(quantityStep) > 1 ? Number(quantityStep) : undefined,
       unitLabel: unitLabel.trim() || undefined,
+      restockDate: restockDate || undefined,
+      extraDeliveryCharge: Number(extraDelivery) > 0 ? Number(extraDelivery) : undefined,
+      extraDeliveryPerPiece: extraPerPiece || undefined,
+      infoTabs: infoTabs.filter((t) => t.title.trim() && t.text.trim()),
+      paymentRule: paymentRule === 'ONLINE_ONLY' ? paymentRule : undefined,
       comingSoon: comingSoon || undefined,
       comingSoonUntil: comingSoon && comingSoonUntil ? comingSoonUntil : undefined,
       ...(!isBundle && customFieldsPayload(customRows).length > 0
@@ -445,6 +459,10 @@ export default function AddProduct() {
             <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.trim() || price} />
             <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
             <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
+            <RestockDateField value={restockDate} onChange={setRestockDate} />
+            <ExtraDeliveryField amount={extraDelivery} onAmount={setExtraDelivery} perPiece={extraPerPiece} onPerPiece={setExtraPerPiece} />
+            <PaymentRuleField value={paymentRule} onChange={setPaymentRule} />
+            <InfoTabsField tabs={infoTabs} onChange={setInfoTabs} />
             <ComingSoonField on={comingSoon} onToggle={setComingSoon} until={comingSoonUntil} onUntil={setComingSoonUntil} />
             {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
           </SectionCard>

@@ -1,3 +1,4 @@
+import { AnnouncementBanner } from '../AnnouncementBanner';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
@@ -34,6 +35,7 @@ export function VendorLayout() {
       <Sidebar sections={nav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
       <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
         <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
+        {!isLms && <AnnouncementBanner />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={nav} />
           <VendorPageGate>

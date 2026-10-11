@@ -41,6 +41,9 @@ import Themes from './pages/vendor/store/Themes';
 import Pages from './pages/vendor/store/Pages';
 import AddPage from './pages/vendor/store/AddPage';
 import Magazine from './pages/vendor/store/Magazine';
+import Faq from './pages/vendor/store/Faq';
+import ShareQr from './pages/vendor/store/ShareQr';
+import CheckoutFormFields from './pages/vendor/store/design/CheckoutFormFields';
 import AddPost from './pages/vendor/store/AddPost';
 import LandingPages from './pages/vendor/store/landing-pages/LandingPages';
 import LandingPageBuilder from './pages/vendor/store/landing-pages/LandingPageBuilder';
@@ -64,6 +67,7 @@ import Customize from './pages/vendor/store/design/Customize';
 import SiteBanner from './pages/vendor/store/design/SiteBanner';
 import ChatButton from './pages/vendor/store/design/ChatButton';
 import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
+import TrustStripPage from './pages/vendor/store/design/TrustStrip';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
@@ -81,6 +85,7 @@ import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
 import Orders from './pages/vendor/order/Orders';
 import HandoverSheets from './pages/vendor/order/HandoverSheets';
 import ReturnCheckIn from './pages/vendor/order/ReturnCheckIn';
+import TrackingBulk from './pages/vendor/order/TrackingBulk';
 import RiderCash from './pages/vendor/order/RiderCash';
 import StockCount from './pages/vendor/product/StockCount';
 import Questions from './pages/vendor/review/Questions';
@@ -135,6 +140,7 @@ import AiSettings from './pages/admin/ai/AiSettings';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
+import Announcements from './pages/admin/Announcements';
 import SupportInbox from './pages/admin/support/SupportInbox';
 import Support from './pages/vendor/support/Support';
 import SupportTicket from './pages/vendor/support/SupportTicket';
@@ -192,6 +198,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/magazine' &&
+    r.path !== '/vendor/store/faq' &&
+    r.path !== '/vendor/store/share' &&
+    r.path !== '/vendor/store/checkout-form' &&
     r.path !== '/vendor/store/landing-pages' &&
     r.path !== '/vendor/store/footer' &&
     r.path !== '/vendor/store/social' &&
@@ -214,6 +223,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/site-banner' &&
     r.path !== '/vendor/store/chat-button' &&
     r.path !== '/vendor/store/product-display' &&
+    r.path !== '/vendor/store/trust-strip' &&
     r.path !== '/vendor/store/product-card' &&
     r.path !== '/vendor/store/custom-css' &&
     r.path !== '/vendor/store/head-scripts' &&
@@ -252,6 +262,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/plans' &&
     r.path !== '/admin/plan-requests' &&
+    r.path !== '/admin/announcements' &&
     r.path !== '/admin/support' &&
     r.path !== '/admin/payment-gateway' &&
     r.path !== '/admin/finance/payouts',
@@ -336,6 +347,9 @@ export default function App() {
                 <Route path="/vendor/store/pages" element={<Pages />} />
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
+                <Route path="/vendor/store/faq" element={<Faq />} />
+                <Route path="/vendor/store/share" element={<ShareQr />} />
+                <Route path="/vendor/store/checkout-form" element={<CheckoutFormFields />} />
                 <Route path="/vendor/store/magazine" element={<Magazine />} />
                 <Route path="/vendor/store/magazine/add" element={<AddPost />} />
                 <Route path="/vendor/store/magazine/edit/:id" element={<AddPost />} />
@@ -371,6 +385,7 @@ export default function App() {
                 <Route path="/vendor/store/site-banner" element={<SiteBanner />} />
                 <Route path="/vendor/store/chat-button" element={<ChatButton />} />
                 <Route path="/vendor/store/product-display" element={<ProductDisplay />} />
+                <Route path="/vendor/store/trust-strip" element={<TrustStripPage />} />
                 <Route path="/vendor/store/product-card" element={<ProductCardDisplay />} />
                 <Route path="/vendor/store/custom-css" element={<CustomCss />} />
                 <Route path="/vendor/store/head-scripts" element={<CustomHeadScripts />} />
@@ -384,6 +399,7 @@ export default function App() {
                 <Route path="/vendor/orders/handover" element={<HandoverSheets />} />
                 <Route path="/vendor/orders/import" element={<ImportOrders />} />
                 <Route path="/vendor/orders/return-check-in" element={<ReturnCheckIn />} />
+                <Route path="/vendor/orders/tracking-bulk" element={<TrackingBulk />} />
                 <Route path="/vendor/orders/rider-cash" element={<RiderCash />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
@@ -495,6 +511,7 @@ export default function App() {
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />
+                <Route path="/admin/announcements" element={<Announcements />} />
                 <Route path="/admin/support" element={<SupportInbox />} />
                 <Route path="/admin/support/:id" element={<SupportInbox />} />
                 <Route path="/admin/payment-gateway" element={<PaymentGatewayManagement />} />

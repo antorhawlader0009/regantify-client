@@ -25,6 +25,10 @@ export default function ProductDisplay() {
   const [share, setShare] = useState(true);
   const [proofDays, setProofDays] = useState<0 | 7 | 30>(0);
   const [wishAlerts, setWishAlerts] = useState(false);
+  // "Someone bought" popup (TellMe idea 123).
+  const [buyersOn, setBuyersOn] = useState(false);
+  const [buyersPos, setBuyersPos] = useState<'LEFT' | 'RIGHT'>('LEFT');
+  const [buyersSeconds, setBuyersSeconds] = useState('20');
   const [messages, setMessages] = useState({ inStockMessage: '', outOfStockMessage: '', preOrderMessage: '' });
 
   useEffect(() => {
@@ -34,6 +38,9 @@ export default function ProductDisplay() {
     setShare(settings.productShareEnabled);
     setProofDays((settings.socialProofDays as 0 | 7 | 30) ?? 0);
     setWishAlerts(settings.wishlistAlertsEnabled);
+    setBuyersOn(settings.recentBuyersEnabled ?? false);
+    setBuyersPos(settings.recentBuyersPosition ?? 'LEFT');
+    setBuyersSeconds(String(settings.recentBuyersSeconds ?? 20));
     setMessages({
       inStockMessage: settings.inStockMessage ?? '',
       outOfStockMessage: settings.outOfStockMessage ?? '',
@@ -103,6 +110,37 @@ export default function ProductDisplay() {
             <SaveButton
               pending={save.isPending}
               onClick={() => save.mutate({ productShareEnabled: share, socialProofDays: proofDays, wishlistAlertsEnabled: wishAlerts })}
+            />
+          </DesignSection>
+
+          <DesignSection title="“Someone bought” messages (StorePal)">
+            <div className="flex items-center gap-3">
+              <Switch checked={buyersOn} onChange={setBuyersOn} label="Recent buyers popup" />
+              <span className="text-sm text-regantify-text">Show a small card now and then: “Someone from Dhaka bought … 2 hours ago”</span>
+            </div>
+            <p className="text-xs text-regantify-text-muted">
+              Only real orders of the last 48 hours (cancelled, unpaid and returned ones left out). No names: just the district (or “Bangladesh” when fewer than 2 orders share it), the product and how long ago. Nothing shows until you have at least 5 such orders, and nothing is ever made up. Not shown on cart, checkout and payment pages. A shopper can close it.
+            </p>
+            {buyersOn && (
+              <div className="flex flex-wrap gap-4">
+                <label className="text-xs text-regantify-text-muted">
+                  Corner
+                  <select value={buyersPos} onChange={(e) => setBuyersPos(e.target.value as 'LEFT' | 'RIGHT')} className={`${inputClass} mt-1 w-40`}>
+                    <option value="LEFT">Bottom left</option>
+                    <option value="RIGHT">Bottom right</option>
+                  </select>
+                </label>
+                <label className="text-xs text-regantify-text-muted">
+                  Seconds between messages (10 to 120)
+                  <input type="number" min={10} max={120} value={buyersSeconds} onChange={(e) => setBuyersSeconds(e.target.value)} className={`${inputClass} mt-1 w-40`} />
+                </label>
+              </div>
+            )}
+            <SaveButton
+              pending={save.isPending}
+              onClick={() =>
+                save.mutate({ recentBuyersEnabled: buyersOn, recentBuyersPosition: buyersPos, recentBuyersSeconds: Math.min(120, Math.max(10, Number(buyersSeconds) || 20)) })
+              }
             />
           </DesignSection>
 

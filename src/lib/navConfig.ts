@@ -158,6 +158,7 @@ export const vendorNav: NavSection[] = [
           { label: 'Chat Button', path: '/vendor/store/chat-button' },
           { label: 'Product Display', path: '/vendor/store/product-display' },
           { label: 'Product Card', path: '/vendor/store/product-card' },
+          { label: 'Trust Strip', path: '/vendor/store/trust-strip' },
         ],
       },
       {
@@ -165,6 +166,8 @@ export const vendorNav: NavSection[] = [
         children: [
           { label: 'Pages', path: '/vendor/store/pages' },
           { label: 'Magazine', path: '/vendor/store/magazine' },
+          { label: 'FAQ', path: '/vendor/store/faq' },
+          { label: 'Share & QR', path: '/vendor/store/share' },
           { label: 'Landing Page', path: '/vendor/store/landing-pages' },
           { label: 'Media', path: '/vendor/store/media' },
         ],
@@ -177,6 +180,7 @@ export const vendorNav: NavSection[] = [
           { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
           { label: 'Invoice', path: '/vendor/store/invoice' },
           { label: 'COD Guard', path: '/vendor/store/cod-guard' },
+          { label: 'Form Fields', path: '/vendor/store/checkout-form' },
           { label: 'Store Away', path: '/vendor/store/store-away' },
           { label: 'Backup', path: '/vendor/store/backup' },
           { label: 'Order Tracking', path: '/vendor/store/order-tracking' },
@@ -280,6 +284,7 @@ export const adminNav: NavSection[] = [
       { label: 'Payouts', path: '/admin/finance/payouts' },
     ],
   },
+  { label: 'Announcements', icon: Megaphone, group: 'Operations', path: '/admin/announcements' },
   { label: 'Marketing', icon: Megaphone, group: 'Operations', path: '/admin/marketing' },
   { label: 'Reviews', icon: Star, group: 'Operations', path: '/admin/reviews' },
   { label: 'AI Settings', icon: Bot, group: 'Operations', path: '/admin/ai-settings' },

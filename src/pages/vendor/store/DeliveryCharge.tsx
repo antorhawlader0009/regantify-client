@@ -122,6 +122,12 @@ export default function DeliveryCharge() {
         onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
       />
 
+      <ExpressSection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
+
       <PickupSection
         charges={charges}
         disabled={isLoading}
@@ -529,6 +535,134 @@ function AroundDhakaSection({
         className="mt-4 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
       >
         {save.isPending ? 'Saving…' : 'Save Around Dhaka'}
+      </button>
+    </section>
+  );
+}
+
+const EXPRESS_ZONE_LABELS: Record<string, string> = { DHAKA: 'Inside Dhaka', AROUND_DHAKA: 'Around Dhaka', OUTSIDE_DHAKA: 'Outside Dhaka' };
+
+/**
+ * "Express delivery" (TellMe idea 132): an optional faster choice at checkout for a higher charge, usually with the store's own rider in Dhaka.
+ * Off by default. The extra is added to the zone's charge; a free-delivery offer takes off the normal charge but, unless ticked below, not the
+ * express extra (it pays for the faster service). After the cut-off the choice is not shown. Express orders are never booked with a courier
+ * automatically, and show an Express mark in Orders. StorePal checkout only.
+ */
+function ExpressSection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [enabled, setEnabled] = useState(false);
+  const [zones, setZones] = useState<string[]>(['DHAKA']);
+  const [charge, setCharge] = useState('80');
+  const [cutoff, setCutoff] = useState('');
+  const [day, setDay] = useState<'TODAY' | 'NEXT_DAY'>('TODAY');
+  const [waived, setWaived] = useState(false);
+
+  useEffect(() => {
+    if (!charges) return;
+    setEnabled(charges.expressEnabled ?? false);
+    setZones(charges.expressZones ?? ['DHAKA']);
+    setCharge(String(Number(charges.expressCharge ?? 80)));
+    const m = charges.expressCutoffMinutes;
+    setCutoff(m === null || m === undefined ? '' : `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+    setDay(charges.expressDay ?? 'TODAY');
+    setWaived(charges.expressWaivedByFree ?? false);
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      const amount = Number(charge);
+      if (!Number.isFinite(amount) || amount < 0) throw new Error('Enter the charge as a number.');
+      if (enabled && zones.length === 0) throw new Error('Pick at least one area for express delivery.');
+      return updateVendorDeliveryCharges({
+        expressEnabled: enabled,
+        expressZones: zones,
+        expressCharge: amount,
+        expressCutoffMinutes: cutoff ? Number(cutoff.slice(0, 2)) * 60 + Number(cutoff.slice(3, 5)) : null,
+        expressDay: day,
+        expressWaivedByFree: waived,
+      });
+    },
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Express delivery saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save express delivery. Check the details and try again.')),
+  });
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-medium text-regantify-text">Express delivery</h2>
+          <p className="text-sm text-regantify-text-muted mt-1">
+            Let shoppers pay a little more for a faster delivery, such as the same day in Dhaka with your own rider. They choose between standard and express at checkout.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-regantify-text shrink-0 cursor-pointer">
+          <input type="checkbox" checked={enabled} disabled={disabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          On
+        </label>
+      </div>
+
+      <div className={`mt-4 space-y-4 ${enabled ? '' : 'opacity-60'}`}>
+        <div>
+          <p className="text-sm font-medium text-regantify-text mb-1.5">Runs in</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+            {Object.entries(EXPRESS_ZONE_LABELS).map(([zone, label]) => (
+              <label key={zone} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  disabled={disabled || !enabled}
+                  checked={zones.includes(zone)}
+                  onChange={(e) => setZones(e.target.checked ? [...zones, zone] : zones.filter((z) => z !== zone))}
+                  className="h-4 w-4 accent-regantify-cta"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Extra charge (৳)</label>
+            <input type="number" min={0} step="0.01" value={charge} disabled={disabled || !enabled} onChange={(e) => setCharge(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Arrives</label>
+            <select value={day} disabled={disabled || !enabled} onChange={(e) => setDay(e.target.value as 'TODAY' | 'NEXT_DAY')} className={inputClass}>
+              <option value="TODAY">Today</option>
+              <option value="NEXT_DAY">Next day</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Last order time (Dhaka)</label>
+            <input type="time" value={cutoff} disabled={disabled || !enabled} onChange={(e) => setCutoff(e.target.value)} className={inputClass} />
+            <p className="text-xs text-regantify-text-muted mt-1.5">Blank = express is offered all day.</p>
+          </div>
+        </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" checked={waived} disabled={disabled || !enabled} onChange={(e) => setWaived(e.target.checked)} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
+          <span>
+            A free-delivery offer also waives the express extra
+            <span className="block text-xs text-regantify-text-muted">Off by default: the extra pays for the faster service.</span>
+          </span>
+        </label>
+      </div>
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-4 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save express delivery'}
       </button>
     </section>
   );

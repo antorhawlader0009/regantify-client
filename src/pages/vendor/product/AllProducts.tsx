@@ -41,6 +41,9 @@ import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
 import { useCan } from '../../../lib/useStaffAccess';
 import { PrintLabelsDialog } from '../../../components/product/PrintLabelsDialog';
+import { QrDialog } from '../../../components/store/QrDialog';
+import { useAuthStore } from '../../../store/authStore';
+import { storefrontProductUrl } from '../../../lib/storefrontUrl';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -108,6 +111,7 @@ function ActionsMenu({
   onCreateStockProduct,
   onDuplicate,
   onPrintLabels,
+  onQr,
   atProductLimit,
 }: {
   onEdit: () => void;
@@ -116,6 +120,8 @@ function ActionsMenu({
   onCreateStockProduct: () => void;
   onDuplicate: () => void;
   onPrintLabels: () => void;
+  /** QR code of this product's page (TellMe idea 125); absent when the store has no address yet. */
+  onQr?: () => void;
   atProductLimit: boolean;
 }) {
   // Only what this person's role can do (rule-plan.md Step 10); the server checks each again.
@@ -136,6 +142,7 @@ function ActionsMenu({
       <DropdownMenuItem onSelect={onEdit}>{canEdit ? 'Edit' : 'View'}</DropdownMenuItem>
       {canEdit && <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>}
       <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>
+      {onQr && <DropdownMenuItem onSelect={onQr}>QR code</DropdownMenuItem>}
       {canEdit && (
         <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onDuplicate())}>
           <span className="flex items-center gap-1.5">
@@ -382,6 +389,9 @@ export default function AllProducts() {
   const [stockProductModalId, setStockProductModalId] = useState<string | null>(null);
   // Print labels: the products whose barcode/price labels are being printed (one from the row menu, or the selection).
   const [labelProductIds, setLabelProductIds] = useState<string[] | null>(null);
+  // QR code of one product's page (TellMe idea 125).
+  const [qrProduct, setQrProduct] = useState<{ name: string; slug: string } | null>(null);
+  const storeSubdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Table look & feel (from the design reference): filter panel toggle,
@@ -1044,6 +1054,7 @@ export default function AllProducts() {
                       onCreateStockProduct={() => setStockProductModalId(p.id)}
                       onDuplicate={() => duplicateMutation.mutate(p.id)}
                       onPrintLabels={() => setLabelProductIds([p.id])}
+                      onQr={storeSubdomain ? () => setQrProduct({ name: p.name, slug: p.slug }) : undefined}
                       atProductLimit={atProductLimit}
                     />
                   </td>
@@ -1111,6 +1122,9 @@ export default function AllProducts() {
 
       {showImportModal && <ImportCsvModal onClose={() => setShowImportModal(false)} />}
 
+      {qrProduct && storeSubdomain && (
+        <QrDialog open onOpenChange={(o) => !o && setQrProduct(null)} title={`QR code: ${qrProduct.name}`} url={storefrontProductUrl(storeSubdomain, qrProduct.slug)} campaign={qrProduct.slug} />
+      )}
       {labelProductIds && <PrintLabelsDialog productIds={labelProductIds} onClose={() => setLabelProductIds(null)} />}
 
       <ConfirmDialog

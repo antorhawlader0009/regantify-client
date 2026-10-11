@@ -9,6 +9,7 @@ import { Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, SERIES_1, 
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import { DeadStockCard } from './DeadStockCard';
+import { StockValueCard } from './StockValueCard';
 import { ProfitByProductCard } from './ProfitByProductCard';
 import { ReturnRateCard } from './ReturnRateCard';
 
@@ -132,6 +133,8 @@ export function ProductsTab({ range }: TabProps) {
               <ProfitByProductCard range={range} />
 
               <ReturnRateCard range={range} />
+
+              <StockValueCard />
 
               <DeadStockCard />
 

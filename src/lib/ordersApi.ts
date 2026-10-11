@@ -150,6 +150,9 @@ export interface Order {
   // has only one location tier, unlike Pathao's city/zone/area cascade.
   redxAreaId?: number | null;
   deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA' | 'PICKUP';
+  /** Express delivery (TellMe idea 132): the extra the shopper paid is already inside deliveryCharge. */
+  deliverySpeed?: 'STANDARD' | 'EXPRESS';
+  expressCharge?: string;
   subtotal: string;
   deliveryCharge: string;
   // Flat VAT fee, shown to shoppers as "VAT" (StorePal) — applied to
@@ -208,6 +211,8 @@ export interface Order {
   deliveryComment?: string | null;
   /** The store's own colored labels on this order (TellMe idea 91). */
   labels?: string[];
+  /** Where a hand-made order came from (TellMe idea 121); vendor only. */
+  manualChannel?: string | null;
   /** Gift (TellMe idea 57): wrapped, with a message, optionally with the prices hidden on the invoice. giftWrapCharge is part of total. */
   isGift?: boolean;
   giftMessage?: string | null;
@@ -350,6 +355,8 @@ export interface ListOrdersParams {
   assignee?: string;
   /** Only orders that lost money (needs analytics.profit). */
   lossOnly?: boolean;
+  /** Only express orders (TellMe idea 132). */
+  speed?: 'EXPRESS';
   page?: number;
   perPage?: number;
 }
@@ -402,6 +409,8 @@ export interface CreateOrderPayload {
   customerEmail?: string;
   customerNote?: string;
   staffNote?: string;
+  /** Add Order: where the order came from (TellMe idea 121). */
+  manualChannel?: string;
   shippingAddress: string;
   shippingZip?: string;
   shippingCity?: string;
@@ -532,6 +541,15 @@ export const ordersApi = {
   getCustomerHistory: (phone: string) =>
     api.get<CustomerHistory>(`/v1/orders/customer-history/${encodeURIComponent(phone)}`).then((r) => r.data),
 
+  /** Saved order views (TellMe idea 127): your own and the team's, with how many orders each matches now. */
+  listViews: () => api.get<SavedOrderView[]>('/v1/orders/views').then((r) => r.data),
+  createView: (name: string, filters: OrderViewFilters, shared: boolean) => api.post<{ id: string }>('/v1/orders/views', { name, filters, shared }).then((r) => r.data),
+  deleteView: (id: string) => api.delete(`/v1/orders/views/${id}`).then((r) => r.data),
+
+  /** The channels a hand-made order can come from (TellMe idea 121): six built-in names and the store's own (the owner changes those). */
+  channelCatalog: () => api.get<{ builtIn: string[]; custom: string[] }>('/v1/orders/channels').then((r) => r.data),
+  saveChannelCatalog: (custom: string[]) => api.patch<{ builtIn: string[]; custom: string[] }>('/v1/orders/channels', { custom }).then((r) => r.data),
+
   labelCatalog: () => api.get<OrderLabelDef[]>('/v1/orders/labels').then((r) => r.data),
   saveLabelCatalog: (labels: OrderLabelDef[]) => api.patch<OrderLabelDef[]>('/v1/orders/labels', { labels }).then((r) => r.data),
   applyLabels: (ids: string[], add: string[], remove: string[]) => api.post<{ updated: number }>('/v1/orders/labels/apply', { ids, add, remove }).then((r) => r.data),
@@ -577,4 +595,35 @@ export function paymentMethodLabel(method: string): string {
 export interface OrderLabelDef {
   name: string;
   color: string;
+}
+
+/** The Orders list's filters kept in a saved view (TellMe idea 127), mirrors the server's OrderViewFilters. */
+export interface OrderViewFilters {
+  status?: string;
+  search?: string;
+  /** TODAY / YESTERDAY / LAST_7 (Dhaka) instead of fixed dates, so the view keeps meaning "today". */
+  dateRange?: 'TODAY' | 'YESTERDAY' | 'LAST_7';
+  dateFrom?: string;
+  dateTo?: string;
+  callStatus?: string;
+  courierBooking?: string;
+  source?: string;
+  possibleDuplicate?: boolean;
+  preferredDate?: string;
+  lossOnly?: boolean;
+  speed?: 'EXPRESS';
+  assignee?: string;
+  preOrder?: string;
+  channel?: string;
+  label?: string;
+}
+
+export interface SavedOrderView {
+  id: string;
+  name: string;
+  shared: boolean;
+  mine: boolean;
+  filters: OrderViewFilters;
+  /** Orders matching now; null when it can't be shown (a loss-making view without the profit permission). */
+  count: number | null;
 }

@@ -10,6 +10,21 @@ export type ProductGalleryStyle = 'LEFT' | 'BOTTOM' | 'RIGHT';
 export type SiteBannerStyle = 'STATIC' | 'MARQUEE';
 
 /** One scheduled banner (TellMe idea 110): shown from startAt to endAt (ISO instants, null = no limit). */
+export type TrustIcon = 'truck' | 'return' | 'shield' | 'support' | 'genuine' | 'lock' | 'cash' | 'gift';
+export interface TrustStripItem {
+  icon: TrustIcon;
+  title: string;
+  text: string;
+}
+/** Store > Design > Trust Strip (TellMe idea 130). */
+export interface TrustStripSettings {
+  enabled: boolean;
+  items: TrustStripItem[];
+  product: boolean;
+  checkout: boolean;
+  home: boolean;
+}
+
 export interface ScheduledBanner {
   id: string;
   content: string;
@@ -48,7 +63,8 @@ export type HomeSectionId =
   | 'CATEGORY_SECTIONS'
   | 'HIGHLIGHTS'
   | 'REVIEWS'
-  | 'MAGAZINE';
+  | 'MAGAZINE'
+  | 'FAQ';
 
 export interface HomeSection {
   id: HomeSectionId;
@@ -105,6 +121,7 @@ export interface DesignSettings {
   bannerEnabled: boolean;
   /** Scheduled banners (TellMe idea 110). */
   bannerSchedule: ScheduledBanner[];
+  trustStrip: TrustStripSettings;
   bannerContent: string | null;
   bannerStyle: SiteBannerStyle;
   bannerBackgroundColor: string | null;
@@ -147,6 +164,15 @@ export interface DesignSettings {
   autoBadgeNewDays: number;
   autoBadgeSale: boolean;
   autoBadgeBestSeller: boolean;
+  /** "Someone bought" popup (TellMe idea 123), off by default. */
+  /** Checkout form fields (TellMe idea 128). */
+  checkoutAltPhone: 'HIDDEN' | 'OPTIONAL' | 'REQUIRED';
+  checkoutEmail: 'HIDDEN' | 'OPTIONAL' | 'REQUIRED';
+  checkoutThana: 'OPTIONAL' | 'REQUIRED';
+  checkoutNote: 'SHOWN' | 'HIDDEN';
+  recentBuyersEnabled: boolean;
+  recentBuyersPosition: 'LEFT' | 'RIGHT';
+  recentBuyersSeconds: number;
 }
 
 // Text fields go out as "" to clear them (the server stores null).

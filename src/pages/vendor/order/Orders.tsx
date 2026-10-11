@@ -35,7 +35,7 @@ import {
   XCircle,
   CalendarDays,
 } from 'lucide-react';
-import { orderRef, ordersApi, paymentMethodLabel, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
+import { orderRef, ordersApi, paymentMethodLabel, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams, type OrderViewFilters } from '../../../lib/ordersApi';
 import { lmsApi } from '../../../lib/lmsApi';
 import { useCan } from '../../../lib/useStaffAccess';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
@@ -70,6 +70,7 @@ import { ChangeLabelModal } from './ChangeLabelModal';
 import { InvoiceModal } from './InvoiceModal';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
+import { SavedViewsBar } from '../../../components/order/SavedViewsBar';
 import { SearchBox, TableFooter, outlineBtn, td, th } from '../../../components/ui/PageKit';
 import { NeedsAttention } from '../../../components/order/NeedsAttention';
 import { BulkStatusMenu } from '../../../components/order/BulkStatusMenu';
@@ -408,6 +409,11 @@ function OrderRow({
         <p className="mt-0.5 text-xs text-neutral-500">
           #{order.invoiceNumber} · {formatDateTime(order.createdAt)}
         </p>
+        {order.manualChannel && (
+          <span className="mt-1.5 inline-flex items-center rounded border border-line bg-neutral-50 px-1.5 py-0.5 text-[11px] font-medium text-neutral-700" title="Where this order came from">
+            {order.manualChannel}
+          </span>
+        )}
         {(order.labels ?? []).length > 0 && (
           <span className="mt-1.5 flex flex-wrap gap-1">
             {(order.labels ?? []).map((name) => (
@@ -428,6 +434,14 @@ function OrderRow({
         {order.isGift && (
           <p className="mt-1 inline-flex items-center gap-1 rounded border border-pink-200 bg-pink-50 px-1.5 py-0.5 text-[11px] font-medium text-pink-800" title="Gift: wrap it and add the message">
             Gift
+          </p>
+        )}
+        {order.deliverySpeed === 'EXPRESS' && (
+          <p
+            className="mt-1 inline-flex items-center gap-1 rounded border border-red-300 bg-red-50 px-1.5 py-0.5 text-[11px] font-semibold text-red-700"
+            title="The customer paid for express delivery. Send it with your own rider; it is not booked with a courier automatically."
+          >
+            Express
           </p>
         )}
         {order.possibleDuplicateOfId && (
@@ -793,6 +807,8 @@ export default function Orders() {
   // Profit (TellMe idea 27), for people with analytics.profit: orders that lost money, and a profit line under each total.
   const canProfit = useCan('analytics.profit');
   const [lossOnly, setLossOnly] = useState(false);
+  // Express orders only (TellMe idea 132).
+  const [expressOnly, setExpressOnly] = useState(false);
   const [showProfit, setShowProfit] = useState(() => localStorage.getItem('regantify-orders-show-profit') === '1');
   const toggleShowProfit = () => {
     const next = !showProfit;
@@ -834,12 +850,14 @@ export default function Orders() {
   const [labelIds, setLabelIds] = useState<string[] | null>(null);
   const [labelFilter, setLabelFilter] = useState(() => searchParams.get('label') ?? '');
   const { data: labelCatalog } = useQuery({ queryKey: ['order-labels'], queryFn: ordersApi.labelCatalog, staleTime: 60_000 });
+  // Channels of hand-made orders (TellMe idea 121), for the "Came from" filter.
+  const { data: channelCatalog } = useQuery({ queryKey: ['order-channels'], queryFn: ordersApi.channelCatalog, staleTime: 60_000 });
   // Assign orders to staff (TellMe idea 60): the filter, the bulk box and the owner's sharing-out settings.
   const [assignee, setAssignee] = useState('');
   // Pre-orders (TellMe idea 64): 'any' or the expected date.
   const [preOrder, setPreOrder] = useState(() => searchParams.get('preOrder') ?? '');
   const [channel, setChannel] = useState(() => searchParams.get('channel') ?? '');
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, preferredDate, lossOnly, assignee, preOrder, channel, labelFilter]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter]);
   const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
   const [assignSettingsOpen, setAssignSettingsOpen] = useState(false);
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
@@ -918,7 +936,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, preferredDate, lossOnly, assignee, preOrder, channel, labelFilter }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -936,6 +954,7 @@ export default function Orders() {
         channel: channel || undefined,
         label: labelFilter || undefined,
         lossOnly: (canProfit && lossOnly) || undefined,
+        speed: expressOnly ? 'EXPRESS' : undefined,
         page,
         perPage,
       }),
@@ -975,6 +994,7 @@ export default function Orders() {
                 possibleDuplicate: duplicatesOnly || undefined,
                 preferredDate: preferredDate || undefined,
                 lossOnly: (canProfit && lossOnly) || undefined,
+                speed: expressOnly ? 'EXPRESS' : undefined,
                 page: 1,
                 perPage: 10000,
               })
@@ -1043,10 +1063,57 @@ export default function Orders() {
     setBulkBooking({ provider: 'STEADFAST', ids });
   }
 
+  // Saved views (TellMe idea 127): the filters now set, and putting a saved set back. A date that means today is kept as the word.
+  const dhakaOn = (offset: number) => new Date(Date.now() + 6 * 3_600_000 + offset * 86_400_000).toISOString().slice(0, 10);
+  const currentViewFilters: OrderViewFilters = {};
+  if (activeTab !== 'ALL' && activeTab !== 'ABANDONED') currentViewFilters.status = activeTab;
+  if (search.trim()) currentViewFilters.search = search.trim();
+  if (dateFrom || dateTo) {
+    if (dateFrom === dhakaOn(0) && dateTo === dhakaOn(0)) currentViewFilters.dateRange = 'TODAY';
+    else if (dateFrom === dhakaOn(-1) && dateTo === dhakaOn(-1)) currentViewFilters.dateRange = 'YESTERDAY';
+    else if (dateFrom === dhakaOn(-6) && dateTo === dhakaOn(0)) currentViewFilters.dateRange = 'LAST_7';
+    else {
+      if (dateFrom) currentViewFilters.dateFrom = dateFrom;
+      if (dateTo) currentViewFilters.dateTo = dateTo;
+    }
+  }
+  if (callStatus) currentViewFilters.callStatus = callStatus;
+  if (courierBooking) currentViewFilters.courierBooking = courierBooking;
+  if (source) currentViewFilters.source = source;
+  if (duplicatesOnly) currentViewFilters.possibleDuplicate = true;
+  if (preferredDate) currentViewFilters.preferredDate = preferredDate;
+  if (lossOnly) currentViewFilters.lossOnly = true;
+  if (expressOnly) currentViewFilters.speed = 'EXPRESS';
+  if (assignee) currentViewFilters.assignee = assignee;
+  if (preOrder) currentViewFilters.preOrder = preOrder;
+  if (channel) currentViewFilters.channel = channel;
+  if (labelFilter) currentViewFilters.label = labelFilter;
+
+  function applyView(f: OrderViewFilters) {
+    setActiveTab((f.status && ALL_ORDER_STATUSES.includes(f.status as OrderStatus) ? f.status : 'ALL') as OrderStatus | 'ALL');
+    setSearch(f.search ?? '');
+    const range = f.dateRange === 'TODAY' ? [dhakaOn(0), dhakaOn(0)] : f.dateRange === 'YESTERDAY' ? [dhakaOn(-1), dhakaOn(-1)] : f.dateRange === 'LAST_7' ? [dhakaOn(-6), dhakaOn(0)] : [f.dateFrom ?? '', f.dateTo ?? ''];
+    setDateFrom(range[0]);
+    setDateTo(range[1]);
+    setCallStatus((f.callStatus ?? '') as ListOrdersParams['callStatus'] | '');
+    setCourierBooking(f.courierBooking === 'NOT_BOOKED' || f.courierBooking === 'FAILED' ? f.courierBooking : undefined);
+    setSource((f.source ?? '') as ListOrdersParams['source'] | '');
+    setDuplicatesOnly(!!f.possibleDuplicate);
+    setPreferredDate(f.preferredDate ?? '');
+    setLossOnly(!!f.lossOnly && canProfit);
+    setExpressOnly(f.speed === 'EXPRESS');
+    setAssignee(f.assignee ?? '');
+    setPreOrder(f.preOrder ?? '');
+    setChannel(f.channel ?? '');
+    setLabelFilter(f.label ?? '');
+    setTrashView(false);
+  }
+
   return (
     <div>
       {!trashView && activeTab !== 'ABANDONED' && <NeedsAttention />}
       <section className="rounded-xl border border-line bg-white p-3.5">
+        {!trashView && activeTab !== 'ABANDONED' && <SavedViewsBar current={currentViewFilters} onApply={applyView} />}
         {/* Toolbar */}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="mr-auto">
@@ -1134,8 +1201,17 @@ export default function Orders() {
                   <option value="tiktok">TikTok</option>
                   <option value="youtube">YouTube</option>
                   <option value="whatsapp">WhatsApp</option>
+                  <option value="qr">QR code</option>
                   <option value="other">Other websites</option>
                   <option value="untracked">Not tracked</option>
+                  <optgroup label="Orders you entered">
+                    {[...(channelCatalog?.builtIn ?? []), ...(channelCatalog?.custom ?? [])].map((c) => (
+                      <option key={c} value={`manual:${c}`}>
+                        {c}
+                      </option>
+                    ))}
+                    <option value="manual:none">No channel chosen</option>
+                  </optgroup>
                 </select>
               </label>
               <button type="button" onClick={() => setCartLinkOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Make a link that fills a customer's cart">
@@ -1150,6 +1226,15 @@ export default function Orders() {
                 Delivery day
                 <input type="date" value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)} className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text" />
               </label>
+              <button
+                type="button"
+                aria-pressed={expressOnly}
+                onClick={() => setExpressOnly((v) => !v)}
+                title="Orders the customer paid extra to get faster"
+                className={`${toolbarBtn} ${expressOnly ? 'border-red-300 bg-red-50 text-red-800' : ''}`}
+              >
+                Express
+              </button>
               <button
                 type="button"
                 aria-pressed={duplicatesOnly}
@@ -1244,6 +1329,13 @@ export default function Orders() {
             <button type="button" onClick={() => navigate('/vendor/orders/return-check-in')} className={toolbarBtn} title="Count returned parcels back in and sort the stock">
               <ClipboardCheck size={15} />
               Return check-in
+            </button>
+          )}
+
+          {canEdit && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/tracking-bulk')} className={toolbarBtn} title="Paste your courier’s list of tracking IDs and mark them delivered or returned">
+              <ListChecks size={15} />
+              Bulk by tracking ID
             </button>
           )}
 
@@ -1437,7 +1529,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || preferredDate || lossOnly || assignee || preOrder || channel || labelFilter) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || preferredDate || lossOnly || expressOnly || assignee || preOrder || channel || labelFilter) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>

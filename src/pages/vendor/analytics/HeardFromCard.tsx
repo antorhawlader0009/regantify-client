@@ -10,6 +10,7 @@ const CHANNEL_LABELS: Record<string, string> = {
   tiktok: 'TikTok',
   youtube: 'YouTube',
   whatsapp: 'WhatsApp',
+  qr: 'QR code',
   direct: 'Direct (no link)',
   other: 'Other websites',
 };

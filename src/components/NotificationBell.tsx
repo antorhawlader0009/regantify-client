@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Popover from '@radix-ui/react-popover';
-import { Bell } from 'lucide-react';
+import { Bell, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi, type NotificationList, type VendorNotification } from '../lib/notificationsApi';
 import { DayHeading, NotificationRow, groupByDay } from './notifications/notificationUi';
 import { alertFor, takeNewForAlert } from '../lib/notificationAlerts';
 import { syncPush } from '../lib/pushNotifications';
 import { useAuthStore } from '../store/authStore';
+import { announcementsApi } from '../lib/announcementsApi';
+import { ANNOUNCEMENTS_KEY, AnnouncementLink } from './AnnouncementBanner';
 
 // The feed is written by the server where events really happen (withdraw
 // approved/rejected/paid, wallet top-up, plan changes, new orders, reviews...),
@@ -45,6 +47,8 @@ export function NotificationBell() {
     alertFor(takeNewForAlert(data.items), (item) => openItemRef.current(item));
   }, [data]);
 
+  // Super Admin's announcements keep a row here after the banner is closed (TellMe idea 131). Not for Super Admin itself.
+  const { data: announcements = [] } = useQuery({ queryKey: ANNOUNCEMENTS_KEY, queryFn: announcementsApi.forMe, enabled: role !== 'SUPER_ADMIN', retry: false });
   const all = data?.items ?? [];
   const unreadCount = data?.unreadCount ?? 0;
   const items = unreadOnly ? all.filter((i) => !i.readAt) : all;
@@ -161,19 +165,32 @@ export function NotificationBell() {
                   </div>
                 ))}
               </div>
-            ) : groups.length === 0 ? (
+            ) : groups.length === 0 && (unreadOnly || announcements.length === 0) ? (
               <p className="px-6 py-12 text-center text-sm text-regantify-text-muted">
                 {unreadOnly ? 'No unread notifications.' : 'No notifications yet. Orders, payments and plan updates will show up here.'}
               </p>
             ) : (
-              groups.map((group) => (
+              <>
+              {!unreadOnly &&
+                announcements.map((a) => (
+                  <div key={a.id} className="border-b border-line px-4 py-3 text-[13px]">
+                    <p className="m-0 font-semibold text-regantify-text">
+                      <Megaphone size={13} className="mr-1.5 inline -translate-y-px" />
+                      {a.title}
+                    </p>
+                    <p className="m-0 mt-0.5 whitespace-pre-line text-regantify-text-muted">{a.body}</p>
+                    <AnnouncementLink a={a} className="mt-1 inline-block font-medium text-regantify-cta hover:underline" />
+                  </div>
+                ))}
+              {groups.map((group) => (
                 <section key={group.heading}>
                   <DayHeading>{group.heading}</DayHeading>
                   {group.items.map((item) => (
                     <NotificationRow key={item.id} item={item} onOpen={openItem} />
                   ))}
                 </section>
-              ))
+              ))}
+              </>
             )}
           </div>
 

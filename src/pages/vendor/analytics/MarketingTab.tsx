@@ -4,6 +4,7 @@ import { PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import { CouponResultsCard } from './CouponResultsCard';
+import { ManualChannelsCard } from './ManualChannelsCard';
 import { HeardFromCard } from './HeardFromCard';
 
 const CHANNEL_LABELS: Record<string, string> = {
@@ -13,6 +14,7 @@ const CHANNEL_LABELS: Record<string, string> = {
   tiktok: 'TikTok',
   youtube: 'YouTube',
   whatsapp: 'WhatsApp',
+  qr: 'QR code',
   direct: 'Direct',
   other: 'Other websites',
   untracked: 'Not tracked',
@@ -126,6 +128,8 @@ export function MarketingTab({ range }: TabProps) {
                 )}
               </Card>
             </div>
+
+            <ManualChannelsCard range={range} />
 
             <HeardFromCard range={range} />
 

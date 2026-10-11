@@ -14,16 +14,70 @@ import { toast } from '../../lib/toast';
  * read. One label row per product, or per variant when it has variants.
  * An item with no barcode gets its SKU as a Code 128 barcode instead, which
  * the POS lookup also understands, so every product can have a label.
+ *
+ * TellMe idea 116 added: a 50 x 30 mm roll and a 39-label A4 sheet next to the
+ * first two, a choice of what each label shows (name, size/colour, barcode,
+ * code number, price), and "as many labels as stock" for the copies. The price is
+ * the regular selling price (never a campaign or flash sale price, a label lasts)
+ * and the cost is never printed.
  */
 
-type Layout = 'roll' | 'sheet';
+type Layout = 'roll38' | 'roll50' | 'sheet24' | 'sheet39';
 
-const LAYOUTS: Record<Layout, { label: string; hint: string }> = {
-  roll: { label: 'Label roll, 38 x 25 mm', hint: 'One label per page, for a thermal label printer.' },
-  sheet: { label: 'A4 sheet, 24 labels (3 x 8)', hint: 'For A4 sticker sheets on a normal printer.' },
+interface LayoutDef {
+  label: string;
+  hint: string;
+  /** Label size in mm. */
+  w: number;
+  h: number;
+  /** Labels per A4 page (sheets only). */
+  perPage?: number;
+  /** printElement's paper. */
+  page: { size: string; padding: string };
+  /** Text sizes in pt and the barcode height in bars' units. */
+  fs: { name: number; opt: number; code: number; price: number };
+  bar: number;
+}
+
+const LAYOUTS: Record<Layout, LayoutDef> = {
+  roll38: {
+    label: 'Label roll, 38 x 25 mm',
+    hint: 'One label per page, for a thermal label printer.',
+    w: 38, h: 25, page: { size: '38mm 25mm', padding: '0' }, fs: { name: 6.5, opt: 5.5, code: 5.5, price: 7.5 }, bar: 26,
+  },
+  roll50: {
+    label: 'Label roll, 50 x 30 mm',
+    hint: 'One label per page, a bigger thermal label.',
+    w: 50, h: 30, page: { size: '50mm 30mm', padding: '0' }, fs: { name: 8, opt: 6.5, code: 6.5, price: 10 }, bar: 32,
+  },
+  sheet24: {
+    label: 'A4 sheet, 24 labels (3 x 8)',
+    hint: 'For A4 sticker sheets on a normal printer.',
+    // The common 24-up A4 sheet: 63.5 x 33.9 mm labels, 12.9 mm top and 6.4 mm side margins.
+    w: 63.5, h: 33.9, perPage: 24, page: { size: 'A4', padding: '12.9mm 6.4mm 0' }, fs: { name: 8.5, opt: 7, code: 7, price: 10 }, bar: 34,
+  },
+  sheet39: {
+    label: 'A4 sheet, 39 labels (3 x 13)',
+    hint: 'Smaller stickers, 63.5 x 21.2 mm, for A4 sticker sheets.',
+    w: 63.5, h: 21.2, perPage: 39, page: { size: 'A4', padding: '10.7mm 6.4mm 0' }, fs: { name: 7, opt: 6, code: 6, price: 9 }, bar: 20,
+  },
 };
 
-const SHEET_PER_PAGE = 24;
+/** What a label shows (TellMe idea 116). The barcode and the code number below it are separate, so a label can hold just a name and a price. */
+interface Show {
+  name: boolean;
+  options: boolean;
+  barcode: boolean;
+  code: boolean;
+  price: boolean;
+}
+const SHOW_LABELS: { key: keyof Show; label: string }[] = [
+  { key: 'name', label: 'Name' },
+  { key: 'options', label: 'Size / colour' },
+  { key: 'barcode', label: 'Barcode' },
+  { key: 'code', label: 'Code number' },
+  { key: 'price', label: 'Price' },
+];
 
 interface LabelRow {
   key: string;
@@ -33,6 +87,8 @@ interface LabelRow {
   /** What the barcode encodes: the barcode, or the SKU when there's none. */
   code: string;
   fromSku: boolean;
+  /** Pieces in stock; null when the item has no stock count (not tracked). */
+  stock: number | null;
 }
 
 const isEan13 = (code: string) => /^\d{13}$/.test(code);
@@ -56,6 +112,7 @@ function rowsFor(product: Product): LabelRow[] {
         price: num(product.discountPrice) ?? num(product.price) ?? 0,
         code,
         fromSku: !product.barcode?.trim(),
+        stock: product.stockQuantity ?? null,
       },
     ];
   }
@@ -66,6 +123,7 @@ function rowsFor(product: Product): LabelRow[] {
     price: num(v.discountPrice) ?? num(v.listPrice) ?? num(product.discountPrice) ?? num(product.price) ?? 0,
     code: v.barcode?.trim() || v.sku,
     fromSku: !v.barcode?.trim(),
+    stock: typeof v.stock === 'number' ? v.stock : null,
   }));
 }
 
@@ -83,25 +141,38 @@ function BarcodeSvg({ code, height }: { code: string; height: number }) {
   return <svg ref={ref} className="mx-auto block h-auto max-w-full" aria-label={`Barcode ${code}`} />;
 }
 
-function Label({ row, layout }: { row: LabelRow; layout: Layout }) {
-  const roll = layout === 'roll';
+function Label({ row, layout, show }: { row: LabelRow; layout: Layout; show: Show }) {
+  const def = LAYOUTS[layout];
+  const roll = !def.perPage;
   return (
     <div
-      className={`flex flex-col justify-between overflow-hidden bg-white text-black ${
-        roll ? 'h-[25mm] w-[38mm] break-after-page p-[1.5mm]' : 'h-[33.9mm] w-[63.5mm] p-[2.5mm]'
-      }`}
-      style={{ fontFamily: "'IBM Plex Sans', 'Hind Siliguri', sans-serif" }}
+      className={`flex flex-col justify-between overflow-hidden bg-white text-black ${roll ? 'break-after-page p-[1.5mm]' : 'p-[2mm]'}`}
+      style={{ width: `${def.w}mm`, height: `${def.h}mm`, fontFamily: "'IBM Plex Sans', 'Hind Siliguri', sans-serif" }}
     >
       <div className="min-w-0 leading-tight">
-        <p className={`truncate font-semibold ${roll ? 'text-[6.5pt]' : 'text-[8.5pt]'}`}>{row.name}</p>
-        {row.options && <p className={`truncate ${roll ? 'text-[5.5pt]' : 'text-[7pt]'}`}>{row.options}</p>}
+        {show.name && (
+          <p className="truncate font-semibold" style={{ fontSize: `${def.fs.name}pt` }}>
+            {row.name}
+          </p>
+        )}
+        {show.options && row.options && (
+          <p className="truncate" style={{ fontSize: `${def.fs.opt}pt` }}>
+            {row.options}
+          </p>
+        )}
       </div>
       <div>
-        <BarcodeSvg code={row.code} height={roll ? 26 : 34} />
-        <div className={`mt-[0.5mm] flex items-baseline justify-between gap-1 ${roll ? 'text-[5.5pt]' : 'text-[7pt]'}`}>
-          <span className="truncate font-mono">{row.code}</span>
-          <span className={`shrink-0 font-bold ${roll ? 'text-[7.5pt]' : 'text-[10pt]'}`}>{money(row.price)}</span>
-        </div>
+        {show.barcode && <BarcodeSvg code={row.code} height={def.bar} />}
+        {(show.code || show.price) && (
+          <div className={`flex items-baseline gap-1 ${show.barcode ? 'mt-[0.5mm]' : ''} ${show.code ? 'justify-between' : 'justify-end'}`} style={{ fontSize: `${def.fs.code}pt` }}>
+            {show.code && <span className="truncate font-mono">{row.code}</span>}
+            {show.price && (
+              <span className="shrink-0 font-bold" style={{ fontSize: `${def.fs.price}pt` }}>
+                {money(row.price)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -119,29 +190,30 @@ export function PrintLabelsDialog({ productIds, onClose }: { productIds: string[
     [queries.map((q) => q.dataUpdatedAt).join(',')],
   );
 
-  const [layout, setLayout] = useState<Layout>('roll');
+  const [layout, setLayout] = useState<Layout>('roll38');
+  const [show, setShow] = useState<Show>({ name: true, options: true, barcode: true, code: true, price: true });
+  // How many labels each item gets until a number is typed: one, or as many as it has in stock.
+  const [copyMode, setCopyMode] = useState<'one' | 'stock'>('one');
   const [copies, setCopies] = useState<Record<string, string>>({});
   const [printing, setPrinting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const copiesOf = (key: string) => {
-    const n = Number(copies[key] ?? '1');
+  const defaultCopies = (row: LabelRow) => (copyMode === 'stock' && row.stock !== null ? Math.min(Math.max(row.stock, 0), 500) : 1);
+  const copiesOf = (row: LabelRow) => {
+    const typed = copies[row.key];
+    const n = typed === undefined ? defaultCopies(row) : Number(typed);
     return Number.isFinite(n) ? Math.min(Math.max(Math.trunc(n), 0), 500) : 0;
   };
-  const labels = rows.flatMap((row) => Array.from({ length: copiesOf(row.key) }, () => row));
+  const labels = rows.flatMap((row) => Array.from({ length: copiesOf(row) }, () => row));
   const withoutBarcode = rows.filter((r) => r.fromSku).length;
-  const pages = layout === 'sheet' ? Array.from({ length: Math.ceil(labels.length / SHEET_PER_PAGE) }, (_, i) => labels.slice(i * SHEET_PER_PAGE, (i + 1) * SHEET_PER_PAGE)) : [];
+  const perPage = LAYOUTS[layout].perPage;
+  const pages = perPage ? Array.from({ length: Math.ceil(labels.length / perPage) }, (_, i) => labels.slice(i * perPage, (i + 1) * perPage)) : [];
 
   async function print() {
     if (!printRef.current || labels.length === 0) return;
     setPrinting(true);
     try {
-      await printElement(
-        printRef.current,
-        'Product labels',
-        layout === 'roll' ? { size: '38mm 25mm', padding: '0' } : // The common 24-up A4 sheet: 63.5 x 33.9 mm labels, 12.9 mm top and 6.4 mm side margins.
-        { size: 'A4', padding: '12.9mm 6.4mm 0' },
-      );
+      await printElement(printRef.current, 'Product labels', LAYOUTS[layout].page);
     } catch {
       toast.error('Could not open the print window. Please try again.');
     } finally {
@@ -168,6 +240,33 @@ export function PrintLabelsDialog({ productIds, onClose }: { productIds: string[
               </label>
             ))}
           </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-1.5 text-sm font-medium text-regantify-text">What to print</legend>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            {SHOW_LABELS.map(({ key, label }) => (
+              <label key={key} className="flex items-center gap-1.5 text-sm text-regantify-text">
+                <input type="checkbox" checked={show[key]} onChange={(e) => setShow((cur) => ({ ...cur, [key]: e.target.checked }))} />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-1.5 text-sm font-medium text-regantify-text">How many labels</legend>
+          <div className="flex flex-wrap gap-4 text-sm text-regantify-text">
+            <label className="flex items-center gap-1.5">
+              <input type="radio" name="label-copies" checked={copyMode === 'one'} onChange={() => { setCopyMode('one'); setCopies({}); }} />
+              One for each item
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input type="radio" name="label-copies" checked={copyMode === 'stock'} onChange={() => { setCopyMode('stock'); setCopies({}); }} />
+              As many as the stock (a label for every piece)
+            </label>
+          </div>
+          <p className="mt-1 text-xs text-neutral-500">You can still change the number for each item below. An item with no stock count gets one.</p>
         </fieldset>
 
         {loading ? (
@@ -207,7 +306,7 @@ export function PrintLabelsDialog({ productIds, onClose }: { productIds: string[
                           type="number"
                           min={0}
                           max={500}
-                          value={copies[row.key] ?? '1'}
+                          value={copies[row.key] ?? String(defaultCopies(row))}
                           onChange={(e) => setCopies((c) => ({ ...c, [row.key]: e.target.value }))}
                           aria-label={`Copies of ${row.name} ${row.options}`}
                           className="w-20 rounded-lg border border-line px-2 py-1.5 text-sm"
@@ -238,12 +337,12 @@ export function PrintLabelsDialog({ productIds, onClose }: { productIds: string[
       {/* What gets printed: kept off screen, printed through printElement's iframe. */}
       <div aria-hidden className="pointer-events-none fixed left-[-10000px] top-0">
         <div ref={printRef}>
-          {layout === 'roll'
-            ? labels.map((row, i) => <Label key={`${row.key}-${i}`} row={row} layout="roll" />)
+          {!perPage
+            ? labels.map((row, i) => <Label key={`${row.key}-${i}`} row={row} layout={layout} show={show} />)
             : pages.map((page, p) => (
                 <div key={p} className="grid grid-cols-[repeat(3,63.5mm)] gap-x-[2.5mm] break-after-page">
                   {page.map((row, i) => (
-                    <Label key={`${row.key}-${i}`} row={row} layout="sheet" />
+                    <Label key={`${row.key}-${i}`} row={row} layout={layout} show={show} />
                   ))}
                 </div>
               ))}

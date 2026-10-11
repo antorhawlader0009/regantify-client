@@ -88,6 +88,13 @@ export interface DeliveryCharges {
   aroundDhakaEnabled: boolean;
   aroundDhakaCharge: string;
   aroundDhakaDays: number | null;
+  // Express delivery (TellMe idea 132), StorePal checkout only.
+  expressEnabled: boolean;
+  expressZones: string[];
+  expressCharge: string;
+  expressCutoffMinutes: number | null;
+  expressDay: 'TODAY' | 'NEXT_DAY';
+  expressWaivedByFree: boolean;
   // Store pickup (TellMe idea 46): the shopper collects the order at the shop, StorePal checkout only.
   pickupEnabled: boolean;
   pickupAddress: string | null;
@@ -127,6 +134,13 @@ export interface DeliveryChargesUpdate {
   aroundDhakaEnabled?: boolean;
   aroundDhakaCharge?: number;
   aroundDhakaDays?: number | null;
+  expressEnabled?: boolean;
+  expressZones?: string[];
+  expressCharge?: number;
+  /** Minutes after midnight (Dhaka); null = no cut-off. */
+  expressCutoffMinutes?: number | null;
+  expressDay?: 'TODAY' | 'NEXT_DAY';
+  expressWaivedByFree?: boolean;
   pickupEnabled?: boolean;
   pickupAddress?: string | null;
   pickupHours?: string | null;

@@ -16,6 +16,7 @@ import { MoneyInput, SaveBar, Segmented, useUnsavedChangesWarning } from '../../
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
+import { ChannelPicker } from '../../../components/order/ChannelPicker';
 import { lmsApi } from '../../../lib/lmsApi';
 
 interface CartLine extends OrderItemInput {
@@ -71,6 +72,7 @@ export default function AddOrder() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerNote, setCustomerNote] = useState('');
   const [staffNote, setStaffNote] = useState('');
+  const [manualChannel, setManualChannel] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingZip, setShippingZip] = useState('');
   const [shippingCity, setShippingCity] = useState('');
@@ -317,6 +319,7 @@ export default function AddOrder() {
       customerEmail: customerEmail.trim() || undefined,
       customerNote: customerNote.trim() || undefined,
       staffNote: staffNote.trim() || undefined,
+      manualChannel: manualChannel || undefined,
       shippingAddress: shippingAddress.trim(),
       shippingZip: shippingZip.trim() || undefined,
       shippingCity: shippingCity.trim() || undefined,
@@ -647,6 +650,12 @@ export default function AddOrder() {
                   />
                 </Field>
               )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Where did this order come from?" description="Optional. For your own records and reports: only you see it.">
+            <div className="max-w-xs">
+              <ChannelPicker value={manualChannel} onChange={setManualChannel} />
             </div>
           </SectionCard>
 

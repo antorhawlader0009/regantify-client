@@ -343,9 +343,12 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/site-banner': 'store.design',
   '/vendor/store/chat-button': 'store.design',
   '/vendor/store/product-display': 'store.design',
+  '/vendor/store/trust-strip': 'store.design',
   '/vendor/store/product-card': 'store.design',
   '/vendor/store/pages': 'store.content',
   '/vendor/store/magazine': 'store.content',
+  '/vendor/store/faq': 'store.content',
+  '/vendor/store/share': 'store.content',
   '/vendor/store/landing-pages': 'store.content',
   '/vendor/store/media': 'store.content',
   '/vendor/store/payment-gateway': 'store.checkout',
@@ -353,6 +356,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/stock-settings': 'store.checkout',
   '/vendor/store/invoice': 'store.design',
   '/vendor/store/cod-guard': 'store.checkout',
+  '/vendor/store/checkout-form': 'store.checkout',
   '/vendor/store/store-away': 'store.checkout',
   '/vendor/store/order-tracking': 'store.checkout',
   '/vendor/store/seo': 'store.settings',
@@ -420,6 +424,7 @@ const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
   [/^\/vendor\/orders\/(add|import)$/, 'orders.create'],
   [/^\/vendor\/orders\/handover(\/|$)/, 'orders.courier'], // courier handover sheets
   [/^\/vendor\/orders\/return-check-in$/, 'orders.edit'], // counting returned parcels back in
+  [/^\/vendor\/orders\/tracking-bulk$/, 'orders.edit'], // bulk update by tracking ID
   [/^\/vendor\/orders\/rider-cash$/, 'orders.courier'], // own riders' cash
   [/^\/vendor\/orders(\/|$)/, 'orders.view'],
   [/^\/vendor\/customers\/(add|bulk-upload)$/, 'customers.edit'],

@@ -12,6 +12,7 @@ import {
 } from '../../../lib/productCsvImport';
 import { productsApi } from '../../../lib/productsApi';
 import { toast } from '../../../lib/toast';
+import { UpdateCsvModal } from './UpdateCsvModal';
 
 interface ImportCsvModalProps {
   onClose: () => void;
@@ -46,7 +47,13 @@ interface RowResult {
  * for CSV import — those still get added on the Add/Edit Product page
  * after import, since a flat CSV row doesn't map cleanly onto that table.
  */
+/** Import products from a CSV: new products (this modal), or "Update existing products" by SKU (UpdateCsvModal, TellMe idea 124). */
 export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
+  const [mode, setMode] = useState<'new' | 'update'>('new');
+  return mode === 'update' ? <UpdateCsvModal onClose={onClose} onBack={() => setMode('new')} /> : <ImportNewCsvModal onClose={onClose} onUpdateMode={() => setMode('update')} />;
+}
+
+function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { onUpdateMode: () => void }) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -220,6 +227,9 @@ export function ImportCsvModal({ onClose }: ImportCsvModalProps) {
               {parseError && <p className="text-red-500 text-sm">{parseError}</p>}
 
               <div className="flex items-center justify-between pt-2 border-t border-line">
+                <button type="button" onClick={onUpdateMode} className="text-sm font-medium text-regantify-text underline">
+                  Update existing products instead (match by SKU)
+                </button>
                 <p className="text-xs text-regantify-text-muted">Not sure where to start?</p>
                 <button
                   type="button"
