@@ -60,6 +60,11 @@ export interface VendorCustomerOrder {
 export interface VendorCustomerDetail extends VendorCustomer {
   /** Why the vendor blacklisted this phone; null when not blacklisted or no reason was given. */
   blacklistReason: string | null;
+  /** Birthday and special day (day and month only), for the birthday wishes SMS; null when not set. */
+  birthdayMonth: number | null;
+  birthdayDay: number | null;
+  specialMonth: number | null;
+  specialDay: number | null;
   orders: VendorCustomerOrder[];
 }
 
@@ -177,7 +182,10 @@ export const customersApi = {
   listTags: () => api.get<CustomerTagCount[]>('/v1/customers/tags').then((r) => r.data),
 
   /** Customer Detail's "Note & tags". */
-  setNote: (phone: string, payload: { note: string; tags: string[] }) =>
+  setNote: (
+    phone: string,
+    payload: { note: string; tags: string[]; birthdayMonth?: number | null; birthdayDay?: number | null; specialMonth?: number | null; specialDay?: number | null },
+  ) =>
     api
       .patch<{ phone: string; note: string | null; tags: string[] }>(`/v1/customers/${encodeURIComponent(phone)}/note`, payload)
       .then((r) => r.data),

@@ -25,6 +25,8 @@ import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
 import { SearchWordsField } from '../../../components/product/SearchWordsField';
+import { AddonProductsField } from '../../../components/product/AddonProductsField';
+import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilDate, badgeUntilIso } from '../../../components/product/BadgeField';
 import { CategoryCombobox } from '../../../components/product/CategoryCombobox';
 import { categoriesApi } from '../../../lib/categoriesApi';
@@ -124,6 +126,7 @@ export default function EditProduct() {
   const [metaTitle, setMetaTitle] = useState('');
   // Hidden words that also find the product in the store's search ("also found as").
   const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
+  const [addons, setAddons] = useState<PickedItem[]>([]);
   const [badge, setBadge] = useState({ text: '', until: '' });
   const [metaDescription, setMetaDescription] = useState('');
 
@@ -223,6 +226,7 @@ export default function EditProduct() {
       summary: p.summary ?? '',
       metaTitle: p.metaTitle ?? '',
       searchKeywords: p.searchKeywords ?? [],
+      addons: (p.addonProducts ?? []).map((a) => a.id),
       badge: { text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) },
       metaDescription: p.metaDescription ?? '',
       photoSize: p.photoSize,
@@ -277,6 +281,7 @@ export default function EditProduct() {
       summary,
       metaTitle,
       searchKeywords,
+      addons: addons.map((a) => a.id),
       badge,
       metaDescription,
       photoSize,
@@ -326,6 +331,7 @@ export default function EditProduct() {
     setSummary(p.summary ?? '');
     setMetaTitle(p.metaTitle ?? '');
     setSearchKeywords(p.searchKeywords ?? []);
+    setAddons((p.addonProducts ?? []).map((a) => ({ id: a.id, label: a.name, photoUrl: a.photoUrl })));
     setBadge({ text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) });
     setMetaDescription(p.metaDescription ?? '');
     setPhotoSize(p.photoSize);
@@ -437,6 +443,8 @@ export default function EditProduct() {
         metaDescription: metaDescription.trim() || undefined,
         // Always sent: the list replaces the words (an empty list removes them).
         searchKeywords,
+        // Always sent: the list replaces the suggestions (an empty list removes them).
+        addonProductIds: addons.map((a) => a.id),
         // Always sent: empty text takes the badge off.
         badgeText: badge.text.trim(),
         badgeUntil: badge.text.trim() ? badgeUntilIso(badge.until) : null,
@@ -646,6 +654,7 @@ export default function EditProduct() {
                 <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" maxLength={500} />
               </Field>
               <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
+              <AddonProductsField value={addons} onChange={setAddons} excludeId={id} />
               <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
             </div>
           </SectionCard>

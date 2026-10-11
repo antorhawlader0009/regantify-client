@@ -13,6 +13,7 @@ export const ALL_ORDER_STATUSES: OrderStatus[] = [
   'RETURN',
   'REFUNDED',
   'STOCK_OUT',
+  'READY_FOR_PICKUP',
 ];
 
 // Which statuses an order can move to from `from`: forward only, never back.
@@ -25,12 +26,16 @@ const FLOW_STEP: Partial<Record<OrderStatus, number>> = {
   PARTIAL_PAYMENT_PENDING: 0,
   PENDING: 1,
   PROCESSING: 2,
+  READY_FOR_PICKUP: 3, // a store-pickup order's version of Shipping
   SHIPPING: 3,
   COMPLETED: 4,
 };
 
-export function canMoveOrderStatus(from: OrderStatus, to: OrderStatus): boolean {
+export function canMoveOrderStatus(from: OrderStatus, to: OrderStatus, zone?: string): boolean {
   if (from === to) return false;
+  // Store pickup: a pickup order is never Shipping, and only a pickup order can be Ready for pickup.
+  if (to === 'READY_FOR_PICKUP' && zone !== 'PICKUP') return false;
+  if (to === 'SHIPPING' && zone === 'PICKUP') return false;
   switch (from) {
     case 'REFUNDED':
       return false;
@@ -84,7 +89,13 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   RETURN: 'Return',
   REFUNDED: 'Refunded',
   STOCK_OUT: 'Stock Out',
+  READY_FOR_PICKUP: 'Ready for pickup',
 };
+
+/** "20 Oct" for an order's preferred delivery day (a date at midnight UTC, so it is read in UTC). */
+export function preferredDayLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+}
 
 export function orderStatusLabel(status: OrderStatus): string {
   return STATUS_LABELS[status] ?? status;
@@ -105,6 +116,7 @@ const STATUS_BADGE_CLASSES: Record<OrderStatus, string> = {
   RETURN: 'border-red-200 bg-red-50 text-red-700',
   REFUNDED: 'border-purple-200 bg-purple-50 text-purple-700',
   STOCK_OUT: 'border-red-200 bg-red-50 text-red-700',
+  READY_FOR_PICKUP: 'border-teal-200 bg-teal-50 text-teal-700',
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {

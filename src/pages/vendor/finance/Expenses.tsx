@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2, Wallet as WalletIcon } from 'lucide-react';
-import { expensesApi, type Expense } from '../../../lib/financeApi';
+import { expensesApi, recurringExpensesApi, type Expense, type RecurringExpense } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { Dialog } from '../../../components/ui/Dialog';
@@ -95,6 +95,8 @@ export default function Expenses() {
         ))}
       </div>
 
+      <MonthlyExpenses />
+
       {!isLoading && expenses.length === 0 ? (
         <EmptyState
           icon={WalletIcon}
@@ -163,9 +165,11 @@ function ExpenseDialog({ expense, categories, onClose }: { expense: Expense | 'n
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [monthly, setMonthly] = useState(false);
 
   useEffect(() => {
     if (!expense) return;
+    setMonthly(false);
     if (expense === 'new') {
       setDate(today());
       setCategory(categories[0] ?? 'Other');
@@ -179,15 +183,19 @@ function ExpenseDialog({ expense, categories, onClose }: { expense: Expense | 'n
     }
   }, [expense, categories]);
 
-  const save = useMutation({
+  const save = useMutation<unknown>({
     mutationFn: () => {
       const input = { date, category: category.trim(), amount: Number(amount), note: note.trim() };
+      if (monthly && expense === 'new') {
+        return recurringExpensesApi.create({ category: input.category, amount: input.amount, note: input.note, dayOfMonth: Number(date.slice(8, 10)) });
+      }
       return expense && expense !== 'new' ? expensesApi.update(expense.id, input) : expensesApi.create(input);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] });
       queryClient.invalidateQueries({ queryKey: ['analytics'] });
-      toast.success(expense === 'new' ? 'Expense added.' : 'Expense updated.');
+      toast.success(monthly && expense === 'new' ? 'Monthly expense added.' : expense === 'new' ? 'Expense added.' : 'Expense updated.');
       onClose();
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save. Please try again.')),
@@ -220,6 +228,17 @@ function ExpenseDialog({ expense, categories, onClose }: { expense: Expense | 'n
         <Field label="Note (optional)">
           <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 300))} placeholder="e.g. Facebook ads for the Eid collection" className={productInputClass} />
         </Field>
+        {expense === 'new' && (
+          <label className="flex cursor-pointer items-start gap-2 text-sm">
+            <input type="checkbox" checked={monthly} onChange={(e) => setMonthly(e.target.checked)} className="mt-0.5" />
+            <span>
+              Repeat every month
+              <span className="block text-xs text-neutral-500">
+                Added by itself on day {Number(date.slice(8, 10)) || 1} of each month (the last day in a shorter month), starting with the next one if that day has passed.
+              </span>
+            </span>
+          </label>
+        )}
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} className={outlineBtn}>
             Cancel
@@ -230,5 +249,65 @@ function ExpenseDialog({ expense, categories, onClose }: { expense: Expense | 'n
         </div>
       </form>
     </Dialog>
+  );
+}
+
+/** The expenses that repeat every month (TellMe idea 45): pause, resume or remove. Rows already added stay. */
+function MonthlyExpenses() {
+  const queryClient = useQueryClient();
+  const { data = [] } = useQuery({ queryKey: ['recurring-expenses'], queryFn: recurringExpensesApi.list });
+  const [removing, setRemoving] = useState<RecurringExpense | null>(null);
+  const toggle = useMutation({
+    mutationFn: (r: RecurringExpense) => recurringExpensesApi.update(r.id, { active: !r.active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] }),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not change it. Please try again.')),
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => recurringExpensesApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] });
+      setRemoving(null);
+      toast.success('Monthly expense removed. Rows already added stay.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not remove it. Please try again.')),
+  });
+  if (data.length === 0) return null;
+  return (
+    <div className="mb-3 rounded-lg border border-line bg-white">
+      <p className="border-b border-line px-3 py-2 text-sm font-semibold">Every month</p>
+      <ul className="divide-y divide-neutral-100">
+        {data.map((r) => (
+          <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+            <div className={r.active ? '' : 'opacity-60'}>
+              <p className="font-medium">
+                {r.category} · {formatTaka(r.amount)}
+              </p>
+              <p className="text-xs text-neutral-500">
+                Day {r.dayOfMonth} of each month{r.note ? ` · ${r.note}` : ''}
+                {r.active ? '' : ' · paused'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => toggle.mutate(r)} className={outlineBtn}>
+                {r.active ? 'Pause' : 'Resume'}
+              </button>
+              <button type="button" onClick={() => setRemoving(r)} className="rounded p-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-600" aria-label="Remove">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <ConfirmDialog
+        open={removing !== null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        title="Stop this monthly expense?"
+        message="Nothing more is added from next month. Expenses already added stay in the list."
+        confirmLabel="Remove"
+        danger
+        busy={remove.isPending}
+        onConfirm={() => removing && remove.mutate(removing.id)}
+      />
+    </div>
   );
 }

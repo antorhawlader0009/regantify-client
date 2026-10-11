@@ -14,6 +14,7 @@ import { ToggleRow } from '../../../components/product/ProductFormKit';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { CustomerDueSection } from './CustomerDueSection';
+import { CustomerRewardsCard } from './CustomerRewardsCard';
 import { CustomerGroupChip, CustomerNoteCard } from './CustomerNoteCard';
 import { useCan } from '../../../lib/useStaffAccess';
 import {
@@ -375,6 +376,9 @@ export default function CustomerDetail() {
 
         {/* Due (baki) from counter sales, POS-system-plan.md Step 9 */}
         <CustomerDueSection phone={customer.phone} />
+
+        {/* Reward points (TellMe idea 41) */}
+        <CustomerRewardsCard phone={customer.phone} />
         </div>
 
         {/* Side column */}

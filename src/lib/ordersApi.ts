@@ -13,7 +13,8 @@ export type OrderStatus =
   | 'CANCELLED'
   | 'RETURN'
   | 'REFUNDED'
-  | 'STOCK_OUT';
+  | 'STOCK_OUT'
+  | 'READY_FOR_PICKUP';
 
 export interface OrderItem {
   id: string;
@@ -30,6 +31,8 @@ export interface OrderItem {
   lineTotal: string;
   /** Return check-in finding for this line (vendor only); null until the returned parcel is checked in. */
   returnOutcome?: 'GOOD' | 'DAMAGED' | 'MISSING' | null;
+  /** A free gift line from Marketing > Discounts > Free gifts (price 0). */
+  isGift?: boolean;
   // Live product snapshot for the "view on storefront" link — null when
   // the product was since deleted, or DRAFT (no public page to link to).
   // See OrdersService.itemsInclude.
@@ -122,7 +125,7 @@ export interface Order {
   // RedX's single delivery-area id, set via RedxLocationPicker — RedX
   // has only one location tier, unlike Pathao's city/zone/area cascade.
   redxAreaId?: number | null;
-  deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA';
+  deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA' | 'PICKUP';
   subtotal: string;
   deliveryCharge: string;
   // Flat VAT fee, shown to shoppers as "VAT" (StorePal) — applied to
@@ -172,6 +175,8 @@ export interface Order {
   paymentLink?: PaymentLinkInfo | null;
   /** The earlier order this one may be a copy of (same phone and product within 24 hours); null = not flagged. */
   possibleDuplicateOfId?: string | null;
+  /** The day the shopper asked to have it delivered (an ISO date at midnight UTC = that calendar day); null when none. */
+  preferredDeliveryDate?: string | null;
   /** Order detail only: that earlier order's summary, for the warning box. */
   possibleDuplicateOf?: { id: string; invoiceNumber: number; publicCode?: string | null; status: OrderStatus; createdAt: string } | null;
   /** Order detail only: why it was cancelled / returned / failed; null while it is in none of those states. */
@@ -292,6 +297,8 @@ export interface ListOrdersParams {
   source?: 'STOREFRONT' | 'MANUAL' | 'POS';
   /** Only orders marked as a possible duplicate of an earlier one. */
   possibleDuplicate?: boolean;
+  /** Only orders whose shopper asked for this delivery day (YYYY-MM-DD). */
+  preferredDate?: string;
   /** Only orders that lost money (needs analytics.profit). */
   lossOnly?: boolean;
   page?: number;

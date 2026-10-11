@@ -21,6 +21,8 @@ import {
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
 import { SearchWordsField } from '../../../components/product/SearchWordsField';
+import { AddonProductsField } from '../../../components/product/AddonProductsField';
+import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilIso } from '../../../components/product/BadgeField';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { AddCategoryModal } from './AddCategoryModal';
@@ -74,6 +76,7 @@ export default function AddProduct() {
   const [metaTitle, setMetaTitle] = useState('');
   // Hidden words that also find the product in the store's search ("also found as").
   const [searchKeywords, setSearchKeywords] = useState<string[]>([]);
+  const [addons, setAddons] = useState<PickedItem[]>([]);
   const [badge, setBadge] = useState({ text: '', until: '' });
   const [metaDescription, setMetaDescription] = useState('');
 
@@ -251,6 +254,7 @@ export default function AddProduct() {
       metaTitle: metaTitle.trim() || undefined,
       metaDescription: metaDescription.trim() || undefined,
       searchKeywords: searchKeywords.length > 0 ? searchKeywords : undefined,
+      addonProductIds: addons.length > 0 ? addons.map((a) => a.id) : undefined,
       badgeText: badge.text.trim() || undefined,
       badgeUntil: badge.text.trim() ? badgeUntilIso(badge.until) : undefined,
       slug: slug.trim() || undefined,
@@ -346,6 +350,7 @@ export default function AddProduct() {
                 </button>
               )}
               <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
+              <AddonProductsField value={addons} onChange={setAddons} />
               <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
             </div>
           </SectionCard>

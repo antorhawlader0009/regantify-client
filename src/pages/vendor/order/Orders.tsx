@@ -33,6 +33,7 @@ import {
   Wallet,
   X,
   XCircle,
+  CalendarDays,
 } from 'lucide-react';
 import { orderRef, ordersApi, paymentMethodLabel, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams } from '../../../lib/ordersApi';
 import { lmsApi } from '../../../lib/lmsApi';
@@ -60,7 +61,7 @@ import { PathaoBulkBookDialog } from '../../../components/courier/PathaoBulkBook
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import type { PhoneCourierStats } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
-import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel } from './orderStatus';
+import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel, preferredDayLabel } from './orderStatus';
 import { CustomizeTabsModal } from './CustomizeTabsModal';
 import { useStatusChangeDialogs, type StatusChangeRequest } from './StatusChangeDialogs';
 import AbandonedCart from './AbandonedCart';
@@ -419,6 +420,15 @@ function OrderRow({
             Possible duplicate
           </p>
         )}
+        {order.preferredDeliveryDate && (
+          <p
+            className="mt-1 inline-flex items-center gap-1 rounded border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-800"
+            title="The day the customer asked to have it delivered. A courier cannot always keep to it."
+          >
+            <CalendarDays size={10} aria-hidden />
+            Wants {preferredDayLabel(order.preferredDeliveryDate)}
+          </p>
+        )}
         {order.courierProvider !== 'NONE' && (
           <>
             <p className="mt-1.5 text-xs text-neutral-500">{COURIER_LABELS[order.courierProvider]}</p>
@@ -553,7 +563,7 @@ function OrderRow({
                 <>
                   <DropdownMenuSub icon={<ListChecks />} label="Change status" value={orderStatusLabel(order.status)}>
                     {/* Forward only: the current status (ticked) plus the moves the flow allows. */}
-                    {ALL_ORDER_STATUSES.filter((s) => s === order.status || canMoveOrderStatus(order.status, s)).map((status) => {
+                    {ALL_ORDER_STATUSES.filter((s) => s === order.status || canMoveOrderStatus(order.status, s, order.deliveryZone)).map((status) => {
                       const moneyBack = status === 'CANCELLED' || status === 'REFUNDED';
                       return (
                         <DropdownMenuItem
@@ -758,6 +768,8 @@ export default function Orders() {
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
   const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
+  // "Delivery day" (TellMe idea 50): only orders whose shopper asked for this day.
+  const [preferredDate, setPreferredDate] = useState('');
   // Profit (TellMe idea 27), for people with analytics.profit: orders that lost money, and a profit line under each total.
   const canProfit = useCan('analytics.profit');
   const [lossOnly, setLossOnly] = useState(false);
@@ -790,7 +802,7 @@ export default function Orders() {
   // connects instead of making them re-click. null closes the modal.
   const [setupPending, setSetupPending] = useState<{ provider: CourierAccountProvider; retry: () => void } | null>(null);
 
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, lossOnly]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, preferredDate, lossOnly]);
 
   // Bulk "Send to Pathao" (pathao-plan.md Step 11). The selection is
   // per page: changing page or filters clears it, so a vendor never
@@ -872,7 +884,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, lossOnly }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, preferredDate, lossOnly }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -884,6 +896,7 @@ export default function Orders() {
         courierBooking,
         source: source || undefined,
         possibleDuplicate: duplicatesOnly || undefined,
+        preferredDate: preferredDate || undefined,
         lossOnly: (canProfit && lossOnly) || undefined,
         page,
         perPage,
@@ -922,6 +935,7 @@ export default function Orders() {
                 courierBooking,
                 source: source || undefined,
                 possibleDuplicate: duplicatesOnly || undefined,
+                preferredDate: preferredDate || undefined,
                 lossOnly: (canProfit && lossOnly) || undefined,
                 page: 1,
                 perPage: 10000,
@@ -1031,6 +1045,10 @@ export default function Orders() {
                 </select>
                 <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
               </div>
+              <label className="flex items-center gap-1.5 text-xs text-neutral-500" title="Orders whose customer asked for this delivery day">
+                Delivery day
+                <input type="date" value={preferredDate} onChange={(e) => setPreferredDate(e.target.value)} className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text" />
+              </label>
               <button
                 type="button"
                 aria-pressed={duplicatesOnly}
@@ -1305,7 +1323,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || lossOnly) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || preferredDate || lossOnly) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>

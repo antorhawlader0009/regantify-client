@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
-import { CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
+import { CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
 import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
@@ -20,7 +20,7 @@ import {
   redxTrackingUrl,
   type CourierAccountProvider,
 } from '../../../lib/courierApi';
-import { ALL_ORDER_STATUSES, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel } from './orderStatus';
+import { ALL_ORDER_STATUSES, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel, preferredDayLabel } from './orderStatus';
 import { useStatusChangeDialogs, type StatusChangeRequest } from './StatusChangeDialogs';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { InvoiceModal } from './InvoiceModal';
@@ -571,6 +571,7 @@ export default function OrderDetail() {
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-1.5 text-sm text-regantify-text">
                       <span className="truncate">{item.productName}</span>
+                      {item.isGift && <span className="ml-1.5 shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">Free gift</span>}
                       {item.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={item.product.slug} />}
                     </p>
                     <p className="truncate text-xs text-neutral-500">
@@ -707,6 +708,12 @@ export default function OrderDetail() {
             <ReadOnlyDelivery order={order} />
           ) : (
           <Card title="Delivery" id="delivery">
+            {order.preferredDeliveryDate && (
+              <p className="mb-2 inline-flex items-center gap-1.5 rounded border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-800">
+                <CalendarDays size={12} aria-hidden />
+                Customer wants it on {preferredDayLabel(order.preferredDeliveryDate)} (a courier cannot always keep to it)
+              </p>
+            )}
             <p className="text-sm text-regantify-text">{order.shippingAddress}</p>
             <p className="mt-1 text-xs text-neutral-500">
               {[order.shippingCity && `City: ${order.shippingCity}`, order.shippingDistrict && `District: ${order.shippingDistrict}`, order.shippingZip && `ZIP: ${order.shippingZip}`]
@@ -985,7 +992,7 @@ export default function OrderDetail() {
                 Move this order to…
               </option>
               {/* Forward only (canMoveOrderStatus). Cancelled / Refunded need their own permission (rule-plan.md 5.3). */}
-              {ALL_ORDER_STATUSES.filter((s) => canMoveOrderStatus(order.status, s) && (canCancelRefund || (s !== 'CANCELLED' && s !== 'REFUNDED'))).map((status) => (
+              {ALL_ORDER_STATUSES.filter((s) => canMoveOrderStatus(order.status, s, order.deliveryZone) && (canCancelRefund || (s !== 'CANCELLED' && s !== 'REFUNDED'))).map((status) => (
                 <option key={status} value={status}>
                   {orderStatusLabel(status)}
                 </option>

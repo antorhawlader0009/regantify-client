@@ -104,6 +104,8 @@ import Campaigns from './pages/vendor/marketing/Campaigns';
 import AddCampaign from './pages/vendor/marketing/AddCampaign';
 import PopupCampaignBuilder from './pages/vendor/marketing/PopupCampaignBuilder';
 import Discounts from './pages/vendor/marketing/Discounts';
+import GiftOffers from './pages/vendor/marketing/GiftOffers';
+import RewardPoints from './pages/vendor/marketing/RewardPoints';
 import AddDiscount from './pages/vendor/marketing/AddDiscount';
 import FlashSales from './pages/vendor/marketing/FlashSales';
 import AddFlashSale from './pages/vendor/marketing/AddFlashSale';
@@ -220,6 +222,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/discounts' &&
     r.path !== '/vendor/marketing/flash-sale' &&
     r.path !== '/vendor/marketing/gift-cards' &&
+    r.path !== '/vendor/marketing/rewards' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
@@ -393,6 +396,8 @@ export default function App() {
                 <Route path="/vendor/marketing/campaigns/add" element={<AddCampaign />} />
                 <Route path="/vendor/marketing/campaigns/:id/edit" element={<AddCampaign />} />
                 <Route path="/vendor/marketing/discounts" element={<Discounts />} />
+                <Route path="/vendor/marketing/discounts/gifts" element={<GiftOffers />} />
+                <Route path="/vendor/marketing/rewards" element={<RewardPoints />} />
                 <Route path="/vendor/marketing/discounts/add" element={<AddDiscount />} />
                 <Route path="/vendor/marketing/discounts/:id/edit" element={<AddDiscount />} />
                 <Route path="/vendor/marketing/flash-sale" element={<FlashSales />} />

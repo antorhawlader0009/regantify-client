@@ -90,6 +90,10 @@ export interface Product {
   sizeGuideId?: string | null;
   /** Hidden words that also find this product in the store's search ("also found as"). */
   searchKeywords?: string[];
+  /** "Show with this": ids of up to 3 other products suggested in the cart (StorePal). */
+  addonProductIds?: string[];
+  /** The same products with names and photos, for the form. */
+  addonProducts?: Array<{ id: string; name: string; photoUrl: string | null }>;
   /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
   badgeText?: string | null;
   /** When the badge goes away by itself (an instant); null = it stays. */
@@ -138,6 +142,8 @@ export interface CreateProductPayload {
   sizeGuideId?: string | null;
   /** Hidden words that also find this product in the store's search ("also found as"). */
   searchKeywords?: string[];
+  /** "Show with this": ids of up to 3 other products suggested in the cart (StorePal). */
+  addonProductIds?: string[];
   /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
   badgeText?: string | null;
   /** When the badge goes away by itself (an instant); null = it stays. */
@@ -239,6 +245,8 @@ export interface UpdateProductPayload {
   sizeGuideId?: string | null;
   /** Hidden words that also find this product in the store's search ("also found as"). */
   searchKeywords?: string[];
+  /** "Show with this": ids of up to 3 other products suggested in the cart (StorePal). */
+  addonProductIds?: string[];
   /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
   badgeText?: string | null;
   /** When the badge goes away by itself (an instant); null = it stays. */
@@ -357,6 +365,15 @@ export interface PriceChangeBatch {
 }
 
 export const productsApi = {
+  /** All Products > Pinned products (TellMe idea 47): the products shown first on the store, in order. */
+  listPinned: () =>
+    api
+      .get<Array<{ id: string; name: string; photoUrl: string | null; visibility: string; until: string | null }>>('/v1/products/pinned')
+      .then((r) => r.data),
+  /** Replaces the pinned list (the first is shown first, up to 12). */
+  setPinned: (items: Array<{ id: string; until: string | null }>) =>
+    api.put('/v1/products/pinned', { items }).then((r) => r.data),
+
   /** All Products > Set badge: the same badge on many products (empty text clears); `days` makes it go away by itself. */
   setBadge: (ids: string[], badgeText: string | null, days: number | null) =>
     api.post<{ updated: number }>('/v1/products/badge', { ids, badgeText, days }).then((r) => r.data),

@@ -21,6 +21,7 @@ import {
   Clock,
   Tag,
   Download,
+  Pin,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { downloadProducts } from '../../../lib/productExport';
@@ -32,6 +33,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { ChangeStatusModal } from './ChangeStatusModal';
 import { ScheduleProductsDialog } from './ScheduleProductsDialog';
 import { SetBadgeDialog } from './SetBadgeDialog';
+import { PinnedProductsDialog } from './PinnedProductsDialog';
 import { ChangePricesDialog } from './ChangePricesDialog';
 import { PriceChangeHistoryDialog } from './PriceChangeHistoryDialog';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
@@ -509,6 +511,8 @@ export default function AllProducts() {
   // Bulk bar "Schedule": go live / hide the selected products by themselves at a time.
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [badgeOpen, setBadgeOpen] = useState(false);
+  // Pinned products (TellMe idea 47): null = closed, an array = open with those ticked products to add.
+  const [pinAdding, setPinAdding] = useState<Array<{ id: string; name: string; photoUrl: string | null }> | null>(null);
   // Change prices (bulk selling-price change, with preview and undo) and its list of recent changes.
   const [priceOpen, setPriceOpen] = useState(false);
   const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
@@ -682,6 +686,13 @@ export default function AllProducts() {
             {exporting ? 'Exporting…' : selected.size > 0 ? `Export (${selected.size})` : 'Export'}
           </button>
 
+          {canEditProducts && (
+            <button onClick={() => setPinAdding([])} className={toolbarBtn} title="Products shown first on your store">
+              <Pin size={14} />
+              Pinned
+            </button>
+          )}
+
           {canEditPrice && (
             <button onClick={() => setPriceOpen(true)} className={toolbarBtn} title="Raise or lower prices of many products at once">
               <Tag size={14} />
@@ -836,6 +847,15 @@ export default function AllProducts() {
                   >
                     <Tag size={13} aria-hidden />
                     Set badge
+                  </button>
+                  <button
+                    onClick={() => setPinAdding(rawProducts.filter((p) => selected.has(p.id)).map((p) => ({ id: p.id, name: p.name, photoUrl: p.photoUrls[0] ?? null })))}
+                    disabled={bulkVisibility}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+                    title="Show the selected products first on your store"
+                  >
+                    <Pin size={13} aria-hidden />
+                    Pin to top
                   </button>
                   {canChangePrices && (
                     <button
@@ -1047,6 +1067,7 @@ export default function AllProducts() {
         />
       )}
 
+      {pinAdding && <PinnedProductsDialog adding={pinAdding} onOpenChange={(open) => !open && setPinAdding(null)} onDone={() => setSelected(new Set())} />}
       {badgeOpen && <SetBadgeDialog ids={Array.from(selected)} onOpenChange={(open) => !open && setBadgeOpen(false)} onDone={() => setSelected(new Set())} />}
 
       {scheduleOpen && (

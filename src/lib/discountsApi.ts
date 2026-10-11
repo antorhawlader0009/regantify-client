@@ -71,3 +71,39 @@ export const discountsApi = {
 
   remove: (id: string) => api.delete<{ success: boolean }>(`/v1/discounts/${id}`).then((r) => r.data),
 };
+
+/** Marketing > Discounts > Free gifts (server GiftOffersService). */
+export interface GiftOffer {
+  id: string;
+  name: string;
+  mode: 'BUY_PRODUCT' | 'CART_AMOUNT';
+  buyProduct: DiscountRef | null;
+  buyQuantity: number | null;
+  minCartAmount: string | null;
+  giftProduct: DiscountRef;
+  giftQuantity: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  usageCount: number;
+  active: boolean;
+}
+
+export interface GiftOfferPayload {
+  name: string;
+  mode: 'BUY_PRODUCT' | 'CART_AMOUNT';
+  buyProductId?: string;
+  buyQuantity?: number;
+  minCartAmount?: number;
+  giftProductId: string;
+  giftQuantity?: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  active?: boolean;
+}
+
+export const giftOffersApi = {
+  list: () => api.get<GiftOffer[]>('/v1/discounts/gifts').then((r) => r.data),
+  create: (payload: GiftOfferPayload) => api.post<GiftOffer>('/v1/discounts/gifts', payload).then((r) => r.data),
+  update: (id: string, payload: Partial<GiftOfferPayload>) => api.patch<GiftOffer>(`/v1/discounts/gifts/${id}`, payload).then((r) => r.data),
+  remove: (id: string) => api.delete<{ success: boolean }>(`/v1/discounts/gifts/${id}`).then((r) => r.data),
+};

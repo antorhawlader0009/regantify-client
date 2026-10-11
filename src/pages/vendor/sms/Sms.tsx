@@ -11,8 +11,9 @@ import { BuySmsDialog, perSms } from './BuySmsDialog';
 import { useCan } from '../../../lib/useStaffAccess';
 import { useLocation } from 'react-router-dom';
 import { SendToCustomers } from '../../../components/sms/SendToCustomers';
+import { BirthdayWishes } from '../../../components/sms/BirthdayWishes';
 
-type Tab = 'send' | 'logs' | 'test';
+type Tab = 'send' | 'logs' | 'test' | 'birthday';
 
 /**
  * Sent messages, newest first (the last 30). The gateway (bulksmsbd.net)
@@ -200,11 +201,12 @@ export default function Sms() {
           tabs={[
             ...(canTest ? [{ id: 'send' as const, label: 'Send to customers' }] : []),
             { id: 'logs', label: 'Sent messages' },
+            ...(canTest ? [{ id: 'birthday' as const, label: 'Birthday wishes' }] : []),
             ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : []),
           ]}
         />
         <div className="px-0.5">
-          {tab === 'test' && canTest ? <TestSms /> : tab === 'send' && canTest ? <SendToCustomers selectedPhones={pickedPhones} /> : <SentLogs />}
+          {tab === 'birthday' && canTest ? <BirthdayWishes /> : tab === 'test' && canTest ? <TestSms /> : tab === 'send' && canTest ? <SendToCustomers selectedPhones={pickedPhones} /> : <SentLogs />}
         </div>
       </section>
 

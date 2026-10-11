@@ -8,6 +8,47 @@ import { productInputClass } from '../../../components/product/ProductFormPieces
 
 const MAX_TAGS = 10;
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** A day and month with no year (a birthday), as two small dropdowns. Empty month = no date. */
+function MonthDayInput({ label, month, day, onChange }: { label: string; month: number | null; day: number | null; onChange: (month: number | null, day: number | null) => void }) {
+  const daysIn = (m: number) => (m === 2 ? 29 : [4, 6, 9, 11].includes(m) ? 30 : 31);
+  const maxDay = daysIn(month ?? 1);
+  return (
+    <div className="mt-3">
+      <span className="mb-1 block text-xs font-medium text-neutral-600">{label}</span>
+      <div className="flex gap-2">
+        <select
+          value={month ?? ''}
+          onChange={(e) => (e.target.value ? onChange(Number(e.target.value), Math.min(day ?? 1, daysIn(Number(e.target.value)))) : onChange(null, null))}
+          className={productInputClass}
+          aria-label={`${label}: month`}
+        >
+          <option value="">Not set</option>
+          {MONTHS.map((m, i) => (
+            <option key={m} value={i + 1}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <select
+          value={month ? (day ?? 1) : ''}
+          disabled={!month}
+          onChange={(e) => onChange(month, Number(e.target.value))}
+          className={`${productInputClass} !w-24`}
+          aria-label={`${label}: day`}
+        >
+          {Array.from({ length: maxDay }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 /** A customer's tags as small chips (Customers list, Customer Detail, Order detail). */
 export function CustomerTagChips({ tags, onRemove }: { tags: string[]; onRemove?: (tag: string) => void }) {
   if (tags.length === 0) return null;
@@ -59,15 +100,27 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
   const [note, setNote] = useState(customer.note ?? '');
   const [tags, setTags] = useState<string[]>(customer.tags);
   const [draft, setDraft] = useState('');
+  const [birthday, setBirthday] = useState<{ month: number | null; day: number | null }>({ month: customer.birthdayMonth, day: customer.birthdayDay });
+  const [special, setSpecial] = useState<{ month: number | null; day: number | null }>({ month: customer.specialMonth, day: customer.specialDay });
   const { data: storeTags } = useQuery({ queryKey: ['customer-tags'], queryFn: customersApi.listTags, enabled: canEdit });
 
   useEffect(() => {
     setNote(customer.note ?? '');
     setTags(customer.tags);
-  }, [customer.note, customer.tags]);
+    setBirthday({ month: customer.birthdayMonth, day: customer.birthdayDay });
+    setSpecial({ month: customer.specialMonth, day: customer.specialDay });
+  }, [customer.note, customer.tags, customer.birthdayMonth, customer.birthdayDay, customer.specialMonth, customer.specialDay]);
 
   const save = useMutation({
-    mutationFn: () => customersApi.setNote(customer.phone, { note, tags }),
+    mutationFn: () =>
+      customersApi.setNote(customer.phone, {
+        note,
+        tags,
+        birthdayMonth: birthday.month,
+        birthdayDay: birthday.day,
+        specialMonth: special.month,
+        specialDay: special.day,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer-tags'] });
@@ -88,7 +141,13 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
     setDraft('');
   };
 
-  const changed = note.trim() !== (customer.note ?? '').trim() || tags.join('\n') !== customer.tags.join('\n');
+  const changed =
+    note.trim() !== (customer.note ?? '').trim() ||
+    tags.join('\n') !== customer.tags.join('\n') ||
+    birthday.month !== customer.birthdayMonth ||
+    birthday.day !== customer.birthdayDay ||
+    special.month !== customer.specialMonth ||
+    special.day !== customer.specialDay;
   // Tags this store already uses plus the ready-made ones, minus what this customer has.
   const suggestions = [...new Set([...(storeTags ?? []).map((t) => t.tag), ...SUGGESTED_CUSTOMER_TAGS])].filter((t) => !has(t)).slice(0, 8);
 
@@ -155,6 +214,9 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
         placeholder="e.g. Office address, deliver after 2 PM"
         className={`${productInputClass} mt-3 resize-y`}
       />
+
+      <MonthDayInput label="Birthday" month={birthday.month} day={birthday.day} onChange={(month, day) => setBirthday({ month, day })} />
+      <MonthDayInput label="Special day (anniversary...)" month={special.month} day={special.day} onChange={(month, day) => setSpecial({ month, day })} />
 
       <button
         type="button"

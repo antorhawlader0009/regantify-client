@@ -196,6 +196,7 @@ export function PackingListPrint({ ids, open, onOpenChange }: { ids: string[]; o
                           </p>
                         </div>
                         <div className="shrink-0 text-right text-xs text-neutral-600">
+                          {order.preferredDeliveryDate && <p className="font-semibold text-regantify-text">Deliver on {new Date(order.preferredDeliveryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}</p>}
                           {courier && <p>{String(courier).charAt(0) + String(courier).slice(1).toLowerCase()}</p>}
                           {tracking && <p className="tabular-nums">{tracking}</p>}
                           {showCash && (

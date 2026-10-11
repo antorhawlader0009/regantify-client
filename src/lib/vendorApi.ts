@@ -86,6 +86,13 @@ export interface DeliveryCharges {
   aroundDhakaEnabled: boolean;
   aroundDhakaCharge: string;
   aroundDhakaDays: number | null;
+  // Store pickup (TellMe idea 46): the shopper collects the order at the shop, StorePal checkout only.
+  pickupEnabled: boolean;
+  pickupAddress: string | null;
+  pickupHours: string | null;
+  // Preferred delivery day (TellMe idea 50): the shopper may pick a day at checkout (StorePal).
+  preferredDeliveryEnabled: boolean;
+  preferredDeliveryMinDays: number;
   deliveryProcessingDays: number;
   deliveryOffDays: number[];
 }
@@ -99,6 +106,11 @@ export interface DeliveryChargesUpdate {
   aroundDhakaEnabled?: boolean;
   aroundDhakaCharge?: number;
   aroundDhakaDays?: number | null;
+  pickupEnabled?: boolean;
+  pickupAddress?: string | null;
+  pickupHours?: string | null;
+  preferredDeliveryEnabled?: boolean;
+  preferredDeliveryMinDays?: number;
   deliveryProcessingDays?: number;
   deliveryOffDays?: number[];
 }

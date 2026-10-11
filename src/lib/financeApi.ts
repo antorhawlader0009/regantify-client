@@ -140,3 +140,22 @@ export const expensesApi = {
   update: (id: string, input: Partial<ExpenseInput>) => api.patch<Expense>(`/v1/finance/expenses/${id}`, input).then((r) => r.data),
   remove: (id: string) => api.delete(`/v1/finance/expenses/${id}`).then((r) => r.data),
 };
+
+/** Monthly expenses (server RecurringExpensesService): booked into Expenses by itself on their day each month. */
+export interface RecurringExpense {
+  id: string;
+  category: string;
+  amount: string;
+  note: string | null;
+  dayOfMonth: number;
+  active: boolean;
+}
+
+export const recurringExpensesApi = {
+  list: () => api.get<RecurringExpense[]>('/v1/finance/expenses/recurring').then((r) => r.data),
+  create: (input: { category: string; amount: number; note?: string; dayOfMonth: number }) =>
+    api.post<RecurringExpense>('/v1/finance/expenses/recurring', input).then((r) => r.data),
+  update: (id: string, input: Partial<{ category: string; amount: number; note: string; dayOfMonth: number; active: boolean }>) =>
+    api.patch<RecurringExpense>(`/v1/finance/expenses/recurring/${id}`, input).then((r) => r.data),
+  remove: (id: string) => api.delete(`/v1/finance/expenses/recurring/${id}`).then((r) => r.data),
+};

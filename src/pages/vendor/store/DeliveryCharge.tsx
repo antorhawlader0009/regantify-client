@@ -121,6 +121,18 @@ export default function DeliveryCharge() {
         onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
       />
 
+      <PickupSection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
+
+      <PreferredDaySection
+        charges={charges}
+        disabled={isLoading}
+        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+      />
+
       <DeliveryTimeSection
         charges={charges}
         disabled={isLoading}
@@ -345,6 +357,157 @@ function DeliveryTimeSection({
         className="mt-5 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
       >
         {save.isPending ? 'Saving…' : 'Save delivery time'}
+      </button>
+    </section>
+  );
+}
+
+/**
+ * "Pick up from the shop" (TellMe idea 46): a fourth checkout option on StorePal at no delivery charge. The shopper
+ * gives a name and phone only; the order goes Pending, Processing, Ready for pickup (the customer is texted, from
+ * your SMS credits), Completed. It never goes to a courier, a handover sheet or rider cash.
+ */
+function PickupSection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [enabled, setEnabled] = useState(false);
+  const [address, setAddress] = useState('');
+  const [hours, setHours] = useState('');
+
+  useEffect(() => {
+    if (!charges) return;
+    setEnabled(charges.pickupEnabled);
+    setAddress(charges.pickupAddress ?? '');
+    setHours(charges.pickupHours ?? '');
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      if (enabled && !address.trim()) throw new Error('Write the shop address shoppers should come to.');
+      return updateVendorDeliveryCharges({ pickupEnabled: enabled, pickupAddress: address.trim() || null, pickupHours: hours.trim() || null });
+    },
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Store pickup saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save store pickup. Try again.')),
+  });
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-medium text-regantify-text">Pick up from the shop</h2>
+          <p className="text-sm text-regantify-text-muted mt-1">
+            Shoppers who live nearby can choose to collect the order themselves: no delivery charge, no address needed. Mark the
+            order &ldquo;Ready for pickup&rdquo; and they get a text with your address and opening hours.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-regantify-text shrink-0 cursor-pointer">
+          <input type="checkbox" checked={enabled} disabled={disabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          On
+        </label>
+      </div>
+
+      <div className={`grid gap-4 mt-4 ${enabled ? '' : 'opacity-60'}`}>
+        <div>
+          <label className="block text-sm font-medium text-regantify-text mb-1.5">Shop address</label>
+          <input value={address} maxLength={300} disabled={disabled || !enabled} onChange={(e) => setAddress(e.target.value)} className={inputClass} placeholder="e.g. Shop 12, Mirpur 10, Dhaka" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-regantify-text mb-1.5">Opening hours</label>
+          <input value={hours} maxLength={120} disabled={disabled || !enabled} onChange={(e) => setHours(e.target.value)} className={inputClass} placeholder="e.g. 10 AM to 9 PM, closed Friday" />
+        </div>
+      </div>
+
+      <p className="text-xs text-regantify-text-muted mt-3">Works on the StorePal theme.</p>
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-4 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save store pickup'}
+      </button>
+    </section>
+  );
+}
+
+/**
+ * "Customer picks the delivery day" (TellMe idea 50): an optional date box at StorePal's checkout. The earliest day is this
+ * many days from today, the latest 30 days ahead, and the weekdays you switched off under Delivery time are left out.
+ * The day shows on the order, the packing list and the handover sheet; a courier cannot always keep to it, so the
+ * shopper is told "we will try". Orders with a later day are not booked by auto-booking until that day comes.
+ */
+function PreferredDaySection({
+  charges,
+  disabled,
+  onSaved,
+}: {
+  charges: DeliveryCharges | undefined;
+  disabled: boolean;
+  onSaved: (updated: DeliveryCharges) => void;
+}) {
+  const [enabled, setEnabled] = useState(false);
+  const [minDays, setMinDays] = useState('2');
+
+  useEffect(() => {
+    if (!charges) return;
+    setEnabled(charges.preferredDeliveryEnabled);
+    setMinDays(String(charges.preferredDeliveryMinDays));
+  }, [charges]);
+
+  const save = useMutation({
+    mutationFn: () => {
+      const days = Number(minDays);
+      if (!Number.isInteger(days) || days < 0 || days > 14) throw new Error('The earliest day must be a whole number from 0 to 14.');
+      return updateVendorDeliveryCharges({ preferredDeliveryEnabled: enabled, preferredDeliveryMinDays: days });
+    },
+    onSuccess: (updated) => {
+      onSaved(updated);
+      toast.success('Delivery day choice saved.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save. Check the number and try again.')),
+  });
+
+  return (
+    <section className="bg-white rounded-2xl border border-black/5 p-5 mt-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-medium text-regantify-text">Customer picks the delivery day</h2>
+          <p className="text-sm text-regantify-text-muted mt-1">
+            For gifts and occasions: an optional date box at checkout. The day shows on the order, the packing list and the handover
+            sheet, and you can filter orders by it. We tell the customer we will try, since a courier cannot always promise a day.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-regantify-text shrink-0 cursor-pointer">
+          <input type="checkbox" checked={enabled} disabled={disabled} onChange={(e) => setEnabled(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          On
+        </label>
+      </div>
+
+      <div className={`mt-4 max-w-xs ${enabled ? '' : 'opacity-60'}`}>
+        <label className="block text-sm font-medium text-regantify-text mb-1.5">Earliest day (days from today)</label>
+        <input type="number" min={0} max={14} step={1} inputMode="numeric" value={minDays} disabled={disabled || !enabled} onChange={(e) => setMinDays(e.target.value)} className={inputClass} />
+        <p className="text-xs text-regantify-text-muted mt-1.5">The latest is 30 days ahead. Weekdays you switch off in Delivery time below are left out.</p>
+      </div>
+
+      <p className="text-xs text-regantify-text-muted mt-3">Works on the StorePal theme. Auto-booking waits until the chosen day.</p>
+
+      <button
+        type="button"
+        disabled={save.isPending || disabled}
+        onClick={() => save.mutate()}
+        className="mt-4 bg-regantify-black text-white font-medium py-2.5 px-5 rounded-xl hover:bg-regantify-cta-dark transition-colors disabled:opacity-60"
+      >
+        {save.isPending ? 'Saving…' : 'Save delivery day choice'}
       </button>
     </section>
   );

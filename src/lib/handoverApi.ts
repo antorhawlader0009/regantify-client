@@ -10,6 +10,8 @@ export interface HandoverRow {
   trackingId: string | null;
   customerName: string;
   district: string | null;
+  /** The day the shopper asked for (YYYY-MM-DD); absent on older sheets. */
+  preferredDate?: string | null;
   /** The cash the courier collects for this parcel. */
   codAmount: number;
 }

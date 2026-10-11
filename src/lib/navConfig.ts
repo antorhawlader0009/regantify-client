@@ -121,6 +121,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Discounts', path: '/vendor/marketing/discounts' },
       { label: 'Flash Sale', path: '/vendor/marketing/flash-sale' },
       { label: 'Gift Cards', path: '/vendor/marketing/gift-cards' },
+      { label: 'Reward Points', path: '/vendor/marketing/rewards' },
     ],
   },
   { label: 'SMS', icon: MessageSquare, group: 'Sales Marketing', path: '/vendor/sms' },

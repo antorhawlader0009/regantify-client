@@ -15,7 +15,21 @@ export interface SmsPackage {
   price: number;
 }
 
+export interface BirthdaySmsSettings {
+  enabled: boolean;
+  birthdayMessage: string;
+  specialMessage: string;
+  couponCode: string;
+  defaultBirthdayMessage: string;
+  defaultSpecialMessage: string;
+}
+
 export const smsApi = {
+  /** SMS > Birthday wishes (TellMe idea 49). */
+  getBirthday: () => api.get<BirthdaySmsSettings>('/v1/sms/birthday').then((r) => r.data),
+  updateBirthday: (payload: Partial<Pick<BirthdaySmsSettings, 'enabled' | 'birthdayMessage' | 'specialMessage' | 'couponCode'>>) =>
+    api.patch<BirthdaySmsSettings>('/v1/sms/birthday', payload).then((r) => r.data),
+
   getCredits: () => api.get<{ smsCredits: number }>('/v1/sms/credits').then((r) => r.data),
 
   getLogs: () => api.get<SmsLog[]>('/v1/sms/logs').then((r) => r.data),
