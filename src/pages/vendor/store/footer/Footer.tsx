@@ -9,6 +9,7 @@ import { FOOTER_TEMPLATES, type FooterTemplateKey } from '../../../../lib/footer
 import { FooterPreview } from './FooterPreview';
 import { FooterTemplateModal } from './FooterTemplateModal';
 import { FooterItemSettings } from './FooterItemSettings';
+import { FooterExtras } from './FooterExtras';
 
 type SelectedBlock = 'logo' | 'menu' | 'info' | 'about' | null;
 
@@ -129,6 +130,8 @@ export default function Footer() {
       <p className="text-xs text-regantify-text-muted mt-3">
         Click a block above to edit its content. Currently using the <strong>{FOOTER_TEMPLATES[draft.template].label}</strong> template.
       </p>
+
+      <FooterExtras config={draft} onChange={patchDraft} storeAddress={settings?.address} storePhone={settings?.phone} />
 
       {templateModalOpen && (
         <FooterTemplateModal

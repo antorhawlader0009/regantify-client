@@ -84,6 +84,12 @@ export const SMS_WORDS: { word: string; hint: string }[] = [
   { word: '{name}', hint: 'The customer’s name' },
   { word: '{order}', hint: 'Their latest order number' },
   { word: '{store}', hint: 'Your store’s name' },
+  // Only filled when the message is sent from an order (Order detail); left out in a campaign (TellMe idea 107).
+  { word: '{total}', hint: 'The order’s total (from an order)' },
+  { word: '{items}', hint: 'The products, shortened (from an order)' },
+  { word: '{address}', hint: 'The delivery address (from an order)' },
+  { word: '{tracking}', hint: 'The tracking link (from an order)' },
+  { word: '{cod}', hint: 'The cash to collect (from an order)' },
 ];
 
 /** Who an SMS campaign goes to (SMS_AUDIENCES on the server). */

@@ -9,6 +9,7 @@ import {
   type Branding as BrandingState,
 } from '../../../lib/vendorApi';
 import { toast } from 'sonner';
+import { WatermarkSection } from '../../../components/store/WatermarkSection';
 
 // Same upload guard as the old standalone Logo page (see git history) —
 // the server resizes/recompresses regardless (see CloudinaryService's
@@ -482,6 +483,8 @@ export default function Branding() {
           {saving ? 'Saving…' : 'Update Branding'}
         </button>
       </div>
+
+      <WatermarkSection />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Search, ShoppingBag, User } from 'lucide-react';
+import { Phone, Search, ShoppingBag, User } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getVendorSettings } from '../../../../lib/vendorApi';
 import type { DesignSettings, StoreMenuItem } from '../../../../lib/designSettingsApi';
 import { toast } from '../../../../lib/toast';
 import { MenuEditor } from './MenuEditor';
@@ -30,6 +32,11 @@ export default function HeaderEditor() {
   const { settings, isLoading, save } = useDesignSettings();
   const [menus, setMenus] = useState<Menus | null>(null);
   const [editing, setEditing] = useState<MenuKey>('headerLeftMenu');
+  // "Call Us Now" beside the search bar: off by default, shown only with a number.
+  const [phoneOn, setPhoneOn] = useState(false);
+  const [phoneLabel, setPhoneLabel] = useState('');
+  const [phone, setPhone] = useState('');
+  const { data: vendor } = useQuery({ queryKey: ['vendor-settings'], queryFn: getVendorSettings });
 
   useEffect(() => {
     if (!settings) return;
@@ -39,6 +46,9 @@ export default function HeaderEditor() {
       siteMenu: settings.siteMenu,
       mobileMenu: settings.mobileMenu,
     });
+    setPhoneOn(settings.headerPhoneEnabled ?? false);
+    setPhoneLabel(settings.headerPhoneLabel ?? '');
+    setPhone(settings.headerPhone ?? '');
   }, [settings]);
 
   const handleSave = () => {
@@ -51,7 +61,11 @@ export default function HeaderEditor() {
         return;
       }
     }
-    save.mutate(menus);
+    if (phoneOn && !phone.trim()) {
+      toast.error('Add the phone number to show, or turn the phone off.');
+      return;
+    }
+    save.mutate({ ...menus, headerPhoneEnabled: phoneOn, headerPhoneLabel: phoneLabel.trim(), headerPhone: phone.trim() });
   };
 
   return (
@@ -82,6 +96,15 @@ export default function HeaderEditor() {
                   <span className="flex-1">Search</span>
                   <Search size={15} />
                 </div>
+                {phoneOn && phone.trim() && (
+                  <span className="flex items-center gap-2 text-regantify-text">
+                    <Phone size={18} />
+                    <span className="leading-tight">
+                      <span className="block text-[10px] text-regantify-text-muted">{phoneLabel.trim() || 'Call Us Now'}</span>
+                      <span className="block text-xs font-semibold">{phone}</span>
+                    </span>
+                  </span>
+                )}
                 <div className="ml-auto flex items-center gap-3 text-regantify-text">
                   <User size={20} />
                   <ShoppingBag size={20} />
@@ -121,6 +144,30 @@ export default function HeaderEditor() {
               items={menus[editing]}
               onChange={(items) => setMenus((m) => (m ? { ...m, [editing]: items } : m))}
             />
+          </div>
+          <div className="bg-white rounded-2xl border border-black/5 p-5 space-y-3">
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-base font-medium text-regantify-text">Show a phone number beside the search bar</span>
+              <input type="checkbox" checked={phoneOn} onChange={(e) => setPhoneOn(e.target.checked)} className="w-4 h-4" />
+            </label>
+            <p className="text-xs text-regantify-text-muted">Like “Call Us Now 01777…”. Off by default. Customers on a computer can click it to call.</p>
+            {phoneOn && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium text-regantify-text-muted mb-1">Small text above the number</label>
+                  <input type="text" maxLength={30} value={phoneLabel} onChange={(e) => setPhoneLabel(e.target.value)} placeholder="Call Us Now" className="w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-regantify-text-muted mb-1">Phone number</label>
+                  <input type="text" maxLength={60} value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta" />
+                  {!phone.trim() && vendor?.phone && (
+                    <button type="button" onClick={() => setPhone(vendor.phone ?? '')} className="mt-1 text-xs font-medium text-regantify-cta hover:underline">
+                      Use my number ({vendor.phone})
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <SaveButton pending={save.isPending} onClick={handleSave} />
         </div>

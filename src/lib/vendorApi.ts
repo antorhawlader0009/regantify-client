@@ -296,3 +296,25 @@ export async function updateHeardFromSettings(body: { enabled?: boolean; options
   const { data } = await api.patch<HeardFromSettings>('/v1/vendor/heard-from', body);
   return data;
 }
+
+/** Store > Branding > Photo watermark (TellMe idea 103). */
+export interface WatermarkSettings {
+  mode: 'OFF' | 'LOGO' | 'TEXT';
+  position: 'TOP_LEFT' | 'TOP_RIGHT' | 'BOTTOM_LEFT' | 'BOTTOM_RIGHT' | 'CENTER';
+  opacity: number;
+  /** The logo is a Cloudinary upload, which the LOGO mark needs. */
+  hasLogo: boolean;
+  logoUrl: string | null;
+  storeName: string;
+  subdomain: string;
+}
+
+export async function getWatermarkSettings(): Promise<WatermarkSettings> {
+  const { data } = await api.get<WatermarkSettings>('/v1/vendor/watermark');
+  return data;
+}
+
+export async function updateWatermarkSettings(body: Partial<Pick<WatermarkSettings, 'mode' | 'position' | 'opacity'>>): Promise<WatermarkSettings> {
+  const { data } = await api.patch<WatermarkSettings>('/v1/vendor/watermark', body);
+  return data;
+}

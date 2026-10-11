@@ -40,6 +40,8 @@ import AddCollection from './pages/vendor/collection/AddCollection';
 import Themes from './pages/vendor/store/Themes';
 import Pages from './pages/vendor/store/Pages';
 import AddPage from './pages/vendor/store/AddPage';
+import Magazine from './pages/vendor/store/Magazine';
+import AddPost from './pages/vendor/store/AddPost';
 import LandingPages from './pages/vendor/store/landing-pages/LandingPages';
 import LandingPageBuilder from './pages/vendor/store/landing-pages/LandingPageBuilder';
 import Footer from './pages/vendor/store/footer/Footer';
@@ -189,6 +191,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/stock-history' &&
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
+    r.path !== '/vendor/store/magazine' &&
     r.path !== '/vendor/store/landing-pages' &&
     r.path !== '/vendor/store/footer' &&
     r.path !== '/vendor/store/social' &&
@@ -333,6 +336,9 @@ export default function App() {
                 <Route path="/vendor/store/pages" element={<Pages />} />
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
+                <Route path="/vendor/store/magazine" element={<Magazine />} />
+                <Route path="/vendor/store/magazine/add" element={<AddPost />} />
+                <Route path="/vendor/store/magazine/edit/:id" element={<AddPost />} />
                 <Route path="/vendor/store/landing-pages" element={<LandingPages />} />
                 <Route path="/vendor/store/footer" element={<Footer />} />
                 <Route path="/vendor/store/social" element={<Social />} />

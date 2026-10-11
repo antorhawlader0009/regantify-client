@@ -30,6 +30,7 @@ const ACTIONS: StaticEntry[] = [
   { kind: 'action', title: 'Add discount', path: '/vendor/marketing/discounts/add', keywords: 'new create offer' },
   { kind: 'action', title: 'Add flash sale', path: '/vendor/marketing/flash-sale/add', keywords: 'new create offer' },
   { kind: 'action', title: 'Add gift card', path: '/vendor/marketing/gift-cards/add', keywords: 'new create voucher' },
+  { kind: 'action', title: 'Add Magazine post', path: '/vendor/store/magazine/add', keywords: 'blog article news story magazine' },
   { kind: 'action', title: 'Add page', path: '/vendor/store/pages/add', keywords: 'new create about contact' },
   { kind: 'action', title: 'Add review', path: '/vendor/reviews/add', keywords: 'new create' },
   { kind: 'action', title: 'Abandoned carts', path: '/vendor/orders?tab=abandoned-cart', keywords: 'incomplete orders recover' },

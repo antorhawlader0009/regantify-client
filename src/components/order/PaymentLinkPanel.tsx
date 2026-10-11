@@ -21,7 +21,7 @@ const HOURS = [
 ];
 
 /**
- * Order Detail > Advance > "Payment link" (TellMe idea 19): for an order you entered yourself (from a Facebook or
+ * Order Detail > Advance > "Payment link" (TellMe idea 19; also for a store Cash on Delivery order, so a customer who changes their mind can pay now): for an order you entered yourself (from a Facebook or
  * WhatsApp chat), ask the customer to pay an advance online. You pick the amount (the delivery charge, the whole
  * total, or any amount) and how long the link works; send it by SMS or copy it into the chat. The customer pays through
  * PayStation, and it lands like the store's own COD advance: in your wallet, with the courier told to collect only the
@@ -137,7 +137,9 @@ export function PaymentLinkPanel({ order, onChanged }: { order: Order; onChanged
       {showForm && (
         <div className="space-y-3">
           <p className="text-xs text-neutral-500">
-            Ordered over Facebook or WhatsApp? Ask for an advance (or the whole amount) with a link. The customer pays online and you don’t chase a bKash TrxID.
+            {order.source === 'STOREFRONT'
+              ? 'The customer chose Cash on Delivery, but may prefer to pay now. Make a link, then copy it or send it by SMS: they can pay the delivery charge, or the whole amount, online.'
+              : 'Ordered over Facebook or WhatsApp? Ask for an advance (or the whole amount) with a link. The customer pays online and you don’t chase a bKash TrxID.'}
           </p>
           <div className="grid gap-3 sm:grid-cols-[10rem_12rem]">
             <div>

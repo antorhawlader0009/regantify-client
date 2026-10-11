@@ -101,7 +101,7 @@ export function OrderAdvanceCard({ order, onChanged }: { order: Order; onChanged
 
   return (
     <div className="space-y-3">
-      {order.source === 'MANUAL' && (
+      {(order.source === 'MANUAL' || order.source === 'STOREFRONT') && order.paymentMethod === 'COD' && (
         <>
           <PaymentLinkPanel order={order} onChanged={onChanged} />
           <hr className="border-line" />

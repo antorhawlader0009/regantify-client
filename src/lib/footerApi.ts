@@ -22,6 +22,16 @@ export interface FooterConfig {
   subscribeSubheading: string;
   showPaymentIcons: boolean;
   paymentIcons: PaymentIconKey[];
+  showContact: boolean;
+  contactTitle: string;
+  contactAddress: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  showApps: boolean;
+  appsTitle: string;
+  playStoreUrl: string | null;
+  appStoreUrl: string | null;
+  showCredit: boolean;
 }
 
 export type FooterConfigPayload = Partial<FooterConfig>;

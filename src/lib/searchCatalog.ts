@@ -67,6 +67,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'WhatsApp / Messenger chat button', where: 'Store > Design > Chat Button', path: '/vendor/store/chat-button', keywords: 'chat bubble whatsapp messenger floating button contact হোয়াটসঅ্যাপ মেসেঞ্জার' },
   { title: 'Product page display options', where: 'Store > Design > Product Display', path: '/vendor/store/product-display', keywords: 'product page sku stock countdown share related reviews tabs show hide' },
   { title: 'Product card (grid) options', where: 'Store > Design > Product Card', path: '/vendor/store/product-card', keywords: 'card grid sale badge price quick add to cart rating show' },
+  { title: 'Magazine (blog posts)', where: 'Store > Content > Magazine', path: '/vendor/store/magazine', keywords: 'magazine blog article news story post ম্যাগাজিন ব্লগ' },
   { title: 'Pages (About, Contact, Privacy)', where: 'Store > Content > Pages', path: '/vendor/store/pages', keywords: 'about us contact privacy policy terms refund return policy page cms পেজ' },
   { title: 'Landing pages', where: 'Store > Content > Landing Page', path: '/vendor/store/landing-pages', keywords: 'landing page builder one product sales page facebook ad ল্যান্ডিং পেজ' },
   { title: 'Media library (uploaded images)', where: 'Store > Content > Media', path: '/vendor/store/media', keywords: 'images photos upload gallery files delete unused মিডিয়া ছবি' },

@@ -164,6 +164,7 @@ export const vendorNav: NavSection[] = [
         label: 'Content',
         children: [
           { label: 'Pages', path: '/vendor/store/pages' },
+          { label: 'Magazine', path: '/vendor/store/magazine' },
           { label: 'Landing Page', path: '/vendor/store/landing-pages' },
           { label: 'Media', path: '/vendor/store/media' },
         ],

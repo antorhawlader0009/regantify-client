@@ -493,6 +493,9 @@ export const ordersApi = {
   createPaymentLink: (id: string, amount: number, hours?: number) =>
     api.post<{ ref: string; link: PaymentLinkInfo | null }>(`/v1/orders/${id}/payment-link`, { amount, hours }).then((r) => r.data),
 
+  /** The words of a message filled in for this order (TellMe idea 107). Nothing is sent. */
+  fillMessage: (id: string, message: string) => api.post<{ text: string }>(`/v1/orders/${id}/message`, { message }).then((r) => r.data),
+
   /** Take an unpaid payment link back. */
   cancelPaymentLink: (id: string) => api.delete<{ cancelled: boolean }>(`/v1/orders/${id}/payment-link`).then((r) => r.data),
 

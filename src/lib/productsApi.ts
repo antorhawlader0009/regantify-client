@@ -95,6 +95,8 @@ export interface Product {
   /** The same products with names and photos, for the form. */
   addonProducts?: Array<{ id: string; name: string; photoUrl: string | null }>;
   /** What real orders pair with this product, worked out each night (TellMe idea 97); read only. */
+  /** People waiting for it (TellMe idea 104); read only. */
+  waitlistCount?: number;
   togetherProducts?: Array<{ id: string; name: string; photoUrl: string | null }>;
   /** The store's own badge on the card and page ("New"); StorePal only. Empty or null clears it on save. */
   badgeText?: string | null;
@@ -115,6 +117,12 @@ export interface Product {
   wholesalePrice?: string | number | null;
   /** Reorder reminder (TellMe idea 85): days one purchase lasts. */
   reorderAfterDays?: number | null;
+  /** Sold in packs (TellMe idea 102). */
+  quantityStep?: number;
+  unitLabel?: string | null;
+  /** Coming soon (TellMe idea 104). */
+  comingSoon?: boolean;
+  comingSoonUntil?: string | null;
   preOrderDate?: string | null;
   /** Purchase limits (TellMe idea 56), storefront orders only; null = no limit. */
   maxOrderQuantity?: number | null;
@@ -190,6 +198,12 @@ export interface CreateProductPayload {
   wholesalePrice?: string | number | null;
   /** Reorder reminder (TellMe idea 85): days one purchase lasts. */
   reorderAfterDays?: number | null;
+  /** Sold in packs (TellMe idea 102). */
+  quantityStep?: number;
+  unitLabel?: string | null;
+  /** Coming soon (TellMe idea 104). */
+  comingSoon?: boolean;
+  comingSoonUntil?: string | null;
   preOrderDate?: string | null;
   maxOrderQuantity?: number | null;
   maxPerPhone24h?: number | null;
@@ -313,6 +327,12 @@ export interface UpdateProductPayload {
   wholesalePrice?: string | number | null;
   /** Reorder reminder (TellMe idea 85): days one purchase lasts. */
   reorderAfterDays?: number | null;
+  /** Sold in packs (TellMe idea 102). */
+  quantityStep?: number;
+  unitLabel?: string | null;
+  /** Coming soon (TellMe idea 104). */
+  comingSoon?: boolean;
+  comingSoonUntil?: string | null;
   preOrderDate?: string | null;
   maxOrderQuantity?: number | null;
   maxPerPhone24h?: number | null;

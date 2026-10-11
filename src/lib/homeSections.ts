@@ -16,6 +16,7 @@ export const HOME_SECTION_INFO: Record<HomeSectionId, { label: string; descripti
   CATEGORY_SECTIONS: { label: 'Products by category', description: 'A row of products for each category, with a View all link.' },
   HIGHLIGHTS: { label: 'Store highlights', description: 'Short points with an icon, such as free delivery or easy returns. You write them below.' },
   REVIEWS: { label: 'Customer reviews', description: 'Recent reviews from your customers. Hidden on its own when there are none.' },
+  MAGAZINE: { label: 'Magazine', description: 'Your latest Magazine posts as photo cards. Hidden on its own until you publish a post (Store > Content > Magazine).' },
 };
 
 export const HOME_SECTION_ORDER: HomeSectionId[] = [
@@ -27,6 +28,7 @@ export const HOME_SECTION_ORDER: HomeSectionId[] = [
   'CATEGORY_SECTIONS',
   'HIGHLIGHTS',
   'REVIEWS',
+  'MAGAZINE',
 ];
 
 /** The saved sections in the vendor's order, then any StorePal section they haven't placed yet (shown), so the list is always complete. */

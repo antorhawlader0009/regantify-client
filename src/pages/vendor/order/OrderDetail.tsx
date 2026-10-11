@@ -39,6 +39,7 @@ import { MergeOrdersDialog, canMergeOrder } from '../../../components/order/Merg
 import { SplitOrderDialog, canSplitOrder } from '../../../components/order/SplitOrderDialog';
 import { AssignCard } from '../../../components/order/OrderAssign';
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
+import { OrderMessageDialog } from '../../../components/order/OrderMessageDialog';
 import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { CustomerGroupChip, CustomerTagChips } from '../customer/CustomerNoteCard';
@@ -185,6 +186,7 @@ export default function OrderDetail() {
     navigate('/vendor/orders/add', { state });
   };
   const [smsOpen, setSmsOpen] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
 
   // The customer's delivery record (same lookup as the Orders list); by full phone number, so it needs contact.
   const { data: deliveryStats } = useQuery({
@@ -716,6 +718,10 @@ export default function OrderDetail() {
                     <MessageCircle size={14} />
                     WhatsApp
                   </a>
+                  <button type="button" onClick={() => setMessageOpen(true)} className={outlineBtn}>
+                    <MessageCircle size={14} />
+                    Message
+                  </button>
                   {canSms && (
                     <button type="button" onClick={() => setSmsOpen(true)} className={outlineBtn}>
                       <Send size={14} />
@@ -1077,6 +1083,7 @@ export default function OrderDetail() {
       <EditOrderItemsDialog order={order} open={editingItems} onOpenChange={setEditingItems} />
       {merging && <MergeOrdersDialog order={order} open onOpenChange={setMerging} />}
       {splitting && <SplitOrderDialog order={order} open onOpenChange={setSplitting} />}
+      {canContact && <OrderMessageDialog order={order} open={messageOpen} onOpenChange={setMessageOpen} canSms={canSms} />}
       {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} orderId={order.id} />}
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />

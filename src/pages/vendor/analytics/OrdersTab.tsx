@@ -5,6 +5,7 @@ import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, Share, StatCard
 import { ColumnChart, PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { orderStatusLabel } from '../order/orderStatus';
+import { StaffIncentives } from '../../../components/analytics/StaffIncentives';
 import { TrackingStats } from '../../../components/analytics/TrackingStats';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import type { DeliveryRatings } from '../../../lib/analyticsApi';
@@ -181,6 +182,8 @@ export function OrdersTab({ range }: TabProps) {
       <TabState query={failed}>{(data) => <FailedOrdersSection data={data} compareLabel={compareLabel} />}</TabState>
 
       <TabState query={teamWork}>{(data) => <TeamWorkSection data={data} compareLabel={compareLabel} />}</TabState>
+
+      <StaffIncentives />
 
       <TrackingStats />
     </div>

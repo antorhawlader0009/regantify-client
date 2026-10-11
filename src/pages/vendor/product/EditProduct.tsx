@@ -23,6 +23,9 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { BarcodeInput } from '../../../components/product/BarcodeField';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
+import { BatchesField } from '../../../components/product/BatchesField';
+import { ComingSoonField } from '../../../components/product/ComingSoonField';
+import { PackSizeField } from '../../../components/product/PackSizeField';
 import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
 import { WholesalePriceField } from '../../../components/product/WholesalePriceField';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
@@ -197,6 +200,10 @@ export default function EditProduct() {
   const [customFee, setCustomFee] = useState('');
   const [wholesalePrice, setWholesalePrice] = useState('');
   const [reorderDays, setReorderDays] = useState('');
+  const [quantityStep, setQuantityStep] = useState('');
+  const [unitLabel, setUnitLabel] = useState('');
+  const [comingSoon, setComingSoon] = useState(false);
+  const [comingSoonUntil, setComingSoonUntil] = useState('');
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
@@ -275,6 +282,10 @@ export default function EditProduct() {
       customFee: p.customFee ? String(Number(p.customFee)) : '',
       wholesalePrice: p.wholesalePrice ? String(Number(p.wholesalePrice)) : '',
       reorderDays: p.reorderAfterDays ? String(p.reorderAfterDays) : '',
+      quantityStep: p.quantityStep && p.quantityStep > 1 ? String(p.quantityStep) : '',
+      unitLabel: p.unitLabel ?? '',
+      comingSoon: p.comingSoon ?? false,
+      comingSoonUntil: p.comingSoonUntil ? p.comingSoonUntil.slice(0, 10) : '',
       quoteOnly: p.quoteOnly ?? false,
       minOrderQuantity: p.minOrderQuantity ? String(p.minOrderQuantity) : '',
       lowStockThreshold: p.lowStockThreshold != null ? String(p.lowStockThreshold) : '',
@@ -341,6 +352,10 @@ export default function EditProduct() {
       customFee,
       wholesalePrice,
       reorderDays,
+      quantityStep,
+      unitLabel,
+      comingSoon,
+      comingSoonUntil,
       quoteOnly,
       minOrderQuantity,
       lowStockThreshold,
@@ -409,6 +424,10 @@ export default function EditProduct() {
     setCustomFee(p.customFee ? String(Number(p.customFee)) : '');
     setWholesalePrice(p.wholesalePrice ? String(Number(p.wholesalePrice)) : '');
     setReorderDays(p.reorderAfterDays ? String(p.reorderAfterDays) : '');
+    setQuantityStep(p.quantityStep && p.quantityStep > 1 ? String(p.quantityStep) : '');
+    setUnitLabel(p.unitLabel ?? '');
+    setComingSoon(p.comingSoon ?? false);
+    setComingSoonUntil(p.comingSoonUntil ? p.comingSoonUntil.slice(0, 10) : '');
     setQuoteOnly(p.quoteOnly ?? false);
     setMinOrderQuantity(p.minOrderQuantity ? String(p.minOrderQuantity) : '');
     setLowStockThreshold(p.lowStockThreshold != null ? String(p.lowStockThreshold) : '');
@@ -534,6 +553,10 @@ export default function EditProduct() {
         customFee: Number(customFee) > 0 ? Number(customFee) : null,
         wholesalePrice: Number(wholesalePrice) > 0 ? Number(wholesalePrice) : null,
         reorderAfterDays: Number(reorderDays) > 0 ? Number(reorderDays) : null,
+        quantityStep: Number(quantityStep) > 1 ? Number(quantityStep) : 1,
+        unitLabel: unitLabel.trim() || null,
+        comingSoon,
+        comingSoonUntil: comingSoon && comingSoonUntil ? comingSoonUntil : null,
         quoteOnly,
         // Always sent: an empty field removes the minimum.
         minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : null,
@@ -798,7 +821,10 @@ export default function EditProduct() {
             <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.toString().trim() || price.toString()} cost={cost.toString()} />
             <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.toString().trim() || price.toString()} />
             <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
+            <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
+            <ComingSoonField on={comingSoon} onToggle={setComingSoon} until={comingSoonUntil} onUntil={setComingSoonUntil} waiting={product.waitlistCount} />
             {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
+            <BatchesField productId={product.id} />
           </SectionCard>
 
           <SectionCard title="Stock" id="stock">

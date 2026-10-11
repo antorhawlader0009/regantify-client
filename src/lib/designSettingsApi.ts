@@ -8,6 +8,16 @@ import { api } from './api';
 export type ProductImageShape = 'SQUARE' | 'PORTRAIT';
 export type ProductGalleryStyle = 'LEFT' | 'BOTTOM' | 'RIGHT';
 export type SiteBannerStyle = 'STATIC' | 'MARQUEE';
+
+/** One scheduled banner (TellMe idea 110): shown from startAt to endAt (ISO instants, null = no limit). */
+export interface ScheduledBanner {
+  id: string;
+  content: string;
+  startAt: string | null;
+  endAt: string | null;
+  style: SiteBannerStyle | null;
+  backgroundColor: string | null;
+}
 export type StoreLayoutType = 'COMPACT' | 'EXTENDED';
 export type ChatButtonChannel = 'WHATSAPP' | 'MESSENGER';
 /** HOME = home and shop lists, PRODUCT = product pages, OTHER = cart, info pages, account... */
@@ -37,7 +47,8 @@ export type HomeSectionId =
   | 'CATEGORY_SHORTCUTS'
   | 'CATEGORY_SECTIONS'
   | 'HIGHLIGHTS'
-  | 'REVIEWS';
+  | 'REVIEWS'
+  | 'MAGAZINE';
 
 export interface HomeSection {
   id: HomeSectionId;
@@ -92,6 +103,8 @@ export interface DesignSettings {
   productBadgeColor: string | null;
 
   bannerEnabled: boolean;
+  /** Scheduled banners (TellMe idea 110). */
+  bannerSchedule: ScheduledBanner[];
   bannerContent: string | null;
   bannerStyle: SiteBannerStyle;
   bannerBackgroundColor: string | null;
@@ -101,6 +114,11 @@ export interface DesignSettings {
   headerLeftMenu: StoreMenuItem[];
   headerRightMenu: StoreMenuItem[];
   mobileMenu: StoreMenuItem[];
+
+  // "Call Us Now" and a number beside the search bar (StorePal header). Off by default.
+  headerPhoneEnabled: boolean;
+  headerPhoneLabel: string | null;
+  headerPhone: string | null;
 
   // Empty = StorePal's own order with everything on / its three built-in highlights.
   homeSections: HomeSection[];
@@ -124,6 +142,11 @@ export interface DesignSettings {
   socialProofDays: number;
   /** Wishlist price / restock alerts by SMS (TellMe idea 62). */
   wishlistAlertsEnabled: boolean;
+  /** Automatic badges (TellMe idea 108), all off by default. */
+  autoBadgeNew: boolean;
+  autoBadgeNewDays: number;
+  autoBadgeSale: boolean;
+  autoBadgeBestSeller: boolean;
 }
 
 // Text fields go out as "" to clear them (the server stores null).

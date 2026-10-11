@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { DESIGN_SETTINGS_KEY, designSettingsApi, type SiteBannerStyle } from '../../../../lib/designSettingsApi';
+import { DESIGN_SETTINGS_KEY, designSettingsApi, type ScheduledBanner, type SiteBannerStyle } from '../../../../lib/designSettingsApi';
 import { blankHtmlToEmpty } from '../../../../lib/storeSettingsApi';
 import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { RichTextEditor } from '../../../../components/editor/RichTextEditor';
+import { ScheduledBanners } from './ScheduledBanners';
 import { DesignLoading, DesignPageHeader, SaveButton, inputClass, useDesignSettings } from './designShared';
+
+// A stable empty list, so the scheduled-banner editor is not reset on every render.
+const NO_SCHEDULE: ScheduledBanner[] = [];
 
 // StorePal's built-in banner text, shown while the content is empty
 // (keep in sync with storefront's themes/storepal/components/StoreHeader.tsx).
@@ -104,6 +108,7 @@ export default function SiteBanner() {
           </div>
         </div>
       )}
+      {settings && <ScheduledBanners saved={settings.bannerSchedule ?? NO_SCHEDULE} pending={save.isPending} onSave={(bannerSchedule) => save.mutate({ bannerSchedule })} />}
     </div>
   );
 }

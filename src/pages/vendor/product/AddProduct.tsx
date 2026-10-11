@@ -19,6 +19,8 @@ import {
   useUnsavedChangesWarning,
 } from '../../../components/product/ProductFormKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
+import { ComingSoonField } from '../../../components/product/ComingSoonField';
+import { PackSizeField } from '../../../components/product/PackSizeField';
 import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
 import { WholesalePriceField } from '../../../components/product/WholesalePriceField';
 import { SizeGuideField } from '../../../components/product/SizeGuideField';
@@ -121,6 +123,10 @@ export default function AddProduct() {
   const [customFee, setCustomFee] = useState('');
   const [wholesalePrice, setWholesalePrice] = useState('');
   const [reorderDays, setReorderDays] = useState('');
+  const [quantityStep, setQuantityStep] = useState('');
+  const [unitLabel, setUnitLabel] = useState('');
+  const [comingSoon, setComingSoon] = useState(false);
+  const [comingSoonUntil, setComingSoonUntil] = useState('');
   // LMS-plan.md Step 9: StorePal shows "Request a price" instead of the price.
   const [quoteOnly, setQuoteOnly] = useState(false);
   const [minOrderQuantity, setMinOrderQuantity] = useState('');
@@ -299,6 +305,10 @@ export default function AddProduct() {
       priceBreaks: breakPayload(breakRows).length > 0 ? breakPayload(breakRows) : undefined,
       wholesalePrice: Number(wholesalePrice) > 0 ? Number(wholesalePrice) : undefined,
       reorderAfterDays: Number(reorderDays) > 0 ? Number(reorderDays) : undefined,
+      quantityStep: Number(quantityStep) > 1 ? Number(quantityStep) : undefined,
+      unitLabel: unitLabel.trim() || undefined,
+      comingSoon: comingSoon || undefined,
+      comingSoonUntil: comingSoon && comingSoonUntil ? comingSoonUntil : undefined,
       ...(!isBundle && customFieldsPayload(customRows).length > 0
         ? { customFields: customFieldsPayload(customRows), customFee: Number(customFee) > 0 ? Number(customFee) : undefined }
         : {}),
@@ -434,6 +444,8 @@ export default function AddProduct() {
             <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.trim() || price} cost={cost} />
             <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.trim() || price} />
             <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
+            <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
+            <ComingSoonField on={comingSoon} onToggle={setComingSoon} until={comingSoonUntil} onUntil={setComingSoonUntil} />
             {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
           </SectionCard>
 

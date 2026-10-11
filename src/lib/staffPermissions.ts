@@ -345,6 +345,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/product-display': 'store.design',
   '/vendor/store/product-card': 'store.design',
   '/vendor/store/pages': 'store.content',
+  '/vendor/store/magazine': 'store.content',
   '/vendor/store/landing-pages': 'store.content',
   '/vendor/store/media': 'store.content',
   '/vendor/store/payment-gateway': 'store.checkout',
