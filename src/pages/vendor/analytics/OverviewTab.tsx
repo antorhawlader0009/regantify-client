@@ -6,6 +6,15 @@ import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analyti
 import { orderStatusLabel } from '../order/orderStatus';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import { ChannelSplitCard } from '../../../components/analytics/ChannelSplit';
+import { OrderMapCard } from '../../../components/analytics/OrderMapCard';
+import type { DateRange } from '../../../lib/analyticsApi';
+
+/** Loads the order map on its own, so a slow or failed map never holds back the rest of the Overview. */
+function OrderMapSection({ range }: { range: DateRange }) {
+  const { data } = useAnalytics('orderMap', range);
+  if (!data) return <div className="h-64 animate-pulse rounded-xl bg-neutral-100" aria-busy />;
+  return <OrderMapCard report={data} />;
+}
 
 /** Another Analytics tab, keeping the picked dates (the page's own URL parameters). */
 export function tabLink(tab: AnalyticsTab) {
@@ -116,6 +125,8 @@ export function OverviewTab({ range }: TabProps) {
             <div className="grid lg:grid-cols-2 gap-4">
               <ChannelSplitCard channels={data.channels} />
             </div>
+
+            <OrderMapSection range={range} />
           </>
         );
       }}

@@ -315,6 +315,17 @@ export interface StockValueReport {
   byBrand: StockValueRow[];
 }
 
+/** Where customers buy from, per district — mirrors OrderMapService.report. Keys match src/data/bdDistrictMap.json. */
+export interface OrderMapReport {
+  from: string;
+  to: string;
+  totals: { orders: number; sales: number; customers: number };
+  districts: { key: string; name: string; orders: number; sales: number; customers: number; share: number }[];
+  /** Orders whose district text is none of the 64 (counted, but not on the map). */
+  unplaced: { orders: number; sales: number };
+  reached: number;
+}
+
 /** How customers rated the delivery (TellMe idea 89) — mirrors DeliveryRatingsService.ratings. */
 export interface DeliveryRatings {
   count: number;
@@ -378,6 +389,7 @@ export interface HeardFromReport {
 }
 
 export const analyticsApi = {
+  orderMap: async (range: DateRange) => (await api.get<OrderMapReport>('/v1/analytics/order-map', { params: { from: range.from, to: range.to } })).data,
   heardFrom: async (range: DateRange) => (await api.get<HeardFromReport>('/v1/analytics/heard-from', { params: { from: range.from, to: range.to } })).data,
   returnRates: async (range: DateRange) => (await api.get<ReturnRates>('/v1/analytics/return-rates', { params: { from: range.from, to: range.to } })).data,
   productReturnWarning: async (id: string) => (await api.get<ProductReturnWarning>(`/v1/analytics/product-return-warning/${id}`)).data,
