@@ -136,6 +136,7 @@ export const vendorNav: NavSection[] = [
     tabs: true,
     children: [
       { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot' },
+      { label: 'n8n', path: '/vendor/ai-automation/n8n' },
     ],
   },
   {

@@ -330,6 +330,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/marketing/rewards': 'marketing.view',
   '/vendor/sms': 'sms.view',
   '/vendor/ai-automation/ai-chat-bot': 'ai.manage',
+  '/vendor/ai-automation/n8n': 'ai.manage',
   '/vendor/store/themes': 'store.design',
   '/vendor/store/design': 'store.design',
   '/vendor/store/branding': 'store.design',
