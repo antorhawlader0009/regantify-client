@@ -72,6 +72,8 @@ interface Indexed {
   entry: StaticEntry;
   title: string;
   titleWords: string[];
+  /** The title with no spaces, so "lowstock" finds "Low stock". */
+  compact: string;
   /** The section breadcrumb's words, then the keyword list's. */
   otherWords: string[];
 }
@@ -94,7 +96,7 @@ function index(): Indexed[] {
       continue;
     }
     const title = norm(entry.title);
-    const ix: Indexed = { entry, title, titleWords: title.split(' '), otherWords: words };
+    const ix: Indexed = { entry, title, titleWords: title.split(' '), compact: title.replace(/ /g, ''), otherWords: words };
     byKey.set(key, ix);
     out.push(ix);
   }
@@ -133,44 +135,69 @@ function isSubsequence(needle: string, hay: string): boolean {
   return false;
 }
 
-/** Higher is better; 0 means no match. Every word typed has to match something: the title first, then the section and keywords. */
-function score(tokens: string[], ix: Indexed): number {
-  const { title, titleWords, otherWords } = ix;
+/** Filler words people type in a sentence ("how to block fake orders"): they help when they match but never decide a result. */
+const STOP = new Set([
+  'a', 'an', 'the', 'to', 'of', 'for', 'in', 'on', 'at', 'by', 'my', 'me', 'i', 'is', 'it', 'and', 'or', 'with', 'from', 'this', 'that',
+  'how', 'what', 'where', 'can', 'do', 'does', 'want', 'need', 'show', 'open', 'go', 'get', 'find', 'change', 'set', 'setting', 'settings', 'page', 'option',
+]);
+
+/** Points for one typed word against one entry; 0 = this word matches nothing in it. */
+function wordScore(t: string, ix: Indexed): number {
+  const { title, titleWords, otherWords, compact } = ix;
+  const ts = stem(t);
+  // One wrong letter is forgiven in a word of 4 to 6 letters, two in a longer one.
+  const maxEdits = t.length >= 7 ? 2 : t.length >= 4 ? 1 : 0;
+  if (title === t) return 120;
+  if (title.startsWith(t)) return 100;
+  if (titleWords.some((w) => w.startsWith(t))) return 80;
+  if (titleWords.some((w) => stem(w) === ts)) return 75;
+  if (title.includes(t)) return 60;
+  if (t.length >= 4 && compact.includes(t)) return 55; // "lowstock" finds "Low stock"
+  if (otherWords.some((w) => w === t || stem(w) === ts)) return 50;
+  if (otherWords.some((w) => w.startsWith(t))) return 40;
+  if (t.length >= 3 && otherWords.some((w) => w.includes(t))) return 25;
+  if (maxEdits > 0 && titleWords.some((w) => editDistance(t, w, maxEdits) <= maxEdits)) return 30; // a typo in the title
+  // A typo in the part of a longer word typed so far ("delivry" -> "delivery", "inovic" -> "invoice").
+  if (t.length >= 4 && titleWords.some((w) => w.length > t.length && editDistance(t, w.slice(0, t.length), 1) <= 1)) return 28;
+  if (maxEdits > 0 && otherWords.some((w) => editDistance(t, w, maxEdits) <= maxEdits)) return 20; // a typo in a keyword
+  if (t.length >= 4 && otherWords.some((w) => w.length > t.length && editDistance(t, w.slice(0, t.length), 1) <= 1)) return 18;
+  if (t.length >= 3 && title.length <= 24 && isSubsequence(t, title)) return 12; // letters in order, short titles only
+  return 0;
+}
+
+/**
+ * Higher is better; 0 means no match. Every real word typed has to match something (the title first, then the section
+ * and keywords); filler words are optional. With `lenient`, a long query may leave one word unmatched (`miss` is set).
+ */
+function score(tokens: string[], ix: Indexed, lenient: boolean): { s: number; miss: boolean } {
+  const real = tokens.filter((t) => !STOP.has(t));
+  const needed = real.length ? real : tokens;
   let total = 0;
+  let missed = 0;
   for (const t of tokens) {
-    const ts = stem(t);
-    // One wrong letter is forgiven in a word of 4 to 7 letters, two in a longer one.
-    const maxEdits = t.length >= 8 ? 2 : t.length >= 4 ? 1 : 0;
-    let s = 0;
-    if (title === t) s = 120;
-    else if (title.startsWith(t)) s = 100;
-    else if (titleWords.some((w) => w.startsWith(t))) s = 80;
-    else if (titleWords.some((w) => stem(w) === ts)) s = 75;
-    else if (title.includes(t)) s = 60;
-    else if (otherWords.some((w) => w === t || stem(w) === ts)) s = 50;
-    else if (otherWords.some((w) => w.startsWith(t))) s = 40;
-    else if (t.length >= 3 && otherWords.some((w) => w.includes(t))) s = 25;
-    else if (maxEdits > 0 && titleWords.some((w) => editDistance(t, w, maxEdits) <= maxEdits)) s = 30; // a typo in the title
-    else if (maxEdits > 0 && otherWords.some((w) => editDistance(t, w, maxEdits) <= maxEdits)) s = 20; // a typo in a keyword
-    else if (t.length >= 3 && title.length <= 24 && isSubsequence(t, title)) s = 12; // letters in order, short titles only
-    if (!s) return 0;
-    total += s;
+    const s = wordScore(t, ix);
+    if (s) total += s;
+    else if (needed.includes(t)) missed++;
   }
+  if (missed > 0 && !(lenient && needed.length >= 3 && missed === 1)) return { s: 0, miss: true };
+  if (total === 0) return { s: 0, miss: true };
   // The whole phrase inside the title beats the same words found apart.
-  if (tokens.length > 1 && title.includes(tokens.join(' '))) total += 40;
-  return total;
+  if (tokens.length > 1 && ix.title.includes(tokens.join(' '))) total += 40;
+  return { s: missed ? total * 0.4 : total, miss: missed > 0 };
 }
 
 /** Pages, settings and actions matching `query`, best first. */
 export function searchStatic(query: string, limit = 8): StaticEntry[] {
   const tokens = norm(query).split(' ').filter(Boolean);
   if (!tokens.length) return [];
-  return index()
-    .map((ix) => ({ e: ix.entry, s: score(tokens, ix) }))
-    .filter((x) => x.s > 0)
-    .sort((a, b) => b.s - a.s)
-    .slice(0, limit)
-    .map((x) => x.e);
+  const all = index()
+    .map((ix) => ({ e: ix.entry, ...score(tokens, ix, true) }))
+    .filter((x) => x.s > 0);
+  const byScore = (a: { s: number }, b: { s: number }) => b.s - a.s;
+  const strict = all.filter((x) => !x.miss).sort(byScore);
+  // Not enough exact answers: a long query may drop its one odd word ("block fake orders xyz") instead of showing nothing.
+  const ranked = strict.length >= 5 ? strict : [...strict, ...all.filter((x) => x.miss).sort(byScore)];
+  return ranked.slice(0, limit).map((x) => x.e);
 }
 
 /* ------------------------------------------------------------- recents */

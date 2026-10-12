@@ -220,14 +220,14 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
         .forEach((a) => out.push({ key: `qa-${a.path}`, group: 'Quick actions', icon: 'action', title: a.title, path: a.path }));
       return out;
     }
-    const matches = searchStatic(q, 60)
+    const matches = searchStatic(q, 120)
       .filter((m) => canGo(m.path))
-      .slice(0, 24);
+      .slice(0, 40);
     // Pages, settings and actions, the group holding the best match first.
     const kinds = [
-      { kind: 'page' as const, group: 'Go to', icon: 'page', max: 4 },
-      { kind: 'setting' as const, group: 'Settings', icon: 'setting', max: 6 },
-      { kind: 'action' as const, group: 'Actions', icon: 'action', max: 3 },
+      { kind: 'page' as const, group: 'Go to', icon: 'page', max: 6 },
+      { kind: 'setting' as const, group: 'Settings', icon: 'setting', max: 10 },
+      { kind: 'action' as const, group: 'Actions', icon: 'action', max: 4 },
     ].sort((a, b) => {
       const ia = matches.findIndex((m) => m.kind === a.kind);
       const ib = matches.findIndex((m) => m.kind === b.kind);

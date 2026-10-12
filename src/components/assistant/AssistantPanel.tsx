@@ -8,6 +8,7 @@ import { useAssistantUi } from '../../store/assistantStore';
 import { useAuthStore } from '../../store/authStore';
 import { viewerOf } from '../../lib/useStaffAccess';
 import { canOpenPath } from '../../lib/staffPermissions';
+import { searchStatic } from '../../lib/searchIndex';
 
 /*
  * Dashboard "Ask AI" side panel: docked on the right of the vendor
@@ -226,7 +227,18 @@ function PanelBody({
       const page = { path: location.pathname, fields: collectPageFields() };
       // It may only point to pages this person's role can open (rule-plan.md Step 7).
       const routes = assistantRoutes().filter((r) => canOpenPath(viewerOf(useAuthStore.getState().user), r.path));
-      const answer = await assistantApi.chat(history, routes, page);
+      // The pages and settings the top-bar search finds for this question (and the one before it, for a short follow-up),
+      // so the assistant names real ones instead of guessing.
+      const viewer = viewerOf(useAuthStore.getState().user);
+      const previous = withQuestion.messages.filter((m) => m.role === 'user').slice(-2, -1)[0]?.content ?? '';
+      const found = searchStatic(text, 12);
+      if (found.length < 4 && previous) found.push(...searchStatic(`${previous} ${text}`, 8));
+      const seen = new Set<string>();
+      const topics = found
+        .filter((e) => canOpenPath(viewer, e.path) && /^\/vendor\/[a-zA-Z0-9/_\-?#=&.]*$/.test(e.path) && !seen.has(e.path + e.title) && seen.add(e.path + e.title))
+        .slice(0, 14)
+        .map((e) => ({ path: e.path, title: e.title, ...(e.subtitle ? { where: e.subtitle } : {}) }));
+      const answer = await assistantApi.chat(history, routes.filter((r) => /^\/vendor\/[a-zA-Z0-9/_-]*$/.test(r.path)), page, topics);
       const reply: ChatMessage = {
         role: 'assistant',
         content: answer.reply,

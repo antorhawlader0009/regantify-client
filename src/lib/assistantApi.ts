@@ -14,6 +14,13 @@ export interface AssistantRoute {
   label: string;
 }
 
+/** A page or setting the top-bar search found for the question (path may carry ?query or #section). */
+export interface AssistantTopic {
+  path: string;
+  title: string;
+  where?: string;
+}
+
 export type AssistantFieldKind = 'text' | 'number' | 'textarea' | 'select' | 'richtext' | 'email' | 'tel' | 'url' | 'date';
 
 export interface AssistantField {
@@ -37,6 +44,6 @@ export interface AssistantAnswer {
 }
 
 export const assistantApi = {
-  chat: (messages: AssistantMessage[], routes: AssistantRoute[], page: { path: string; fields: AssistantField[] }) =>
-    api.post<AssistantAnswer>('/v1/assistant/chat', { messages, routes, page }).then((r) => r.data),
+  chat: (messages: AssistantMessage[], routes: AssistantRoute[], page: { path: string; fields: AssistantField[] }, topics: AssistantTopic[] = []) =>
+    api.post<AssistantAnswer>('/v1/assistant/chat', { messages, routes, page, topics }).then((r) => r.data),
 };
