@@ -136,9 +136,6 @@ export const vendorNav: NavSection[] = [
     tabs: true,
     children: [
       { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot' },
-      { label: 'AI Tools', path: '/vendor/ai-automation/ai-tools' },
-      { label: 'Automation', path: '/vendor/ai-automation/automation' },
-      { label: 'n8n', path: '/vendor/ai-automation/n8n' },
     ],
   },
   {
@@ -241,7 +238,6 @@ export const vendorNav: NavSection[] = [
       { label: 'Wallet', path: '/vendor/finance/wallet' },
       { label: 'Transactions', path: '/vendor/finance/transactions' },
       { label: 'Expenses', path: '/vendor/finance/expenses' },
-      { label: 'Earnings', path: '/vendor/finance/earnings' },
       { label: 'Withdraw', path: '/vendor/finance/withdraw' },
       { label: 'Fee Summary', path: '/vendor/finance/fee-summary' },
       { label: 'Receipts', path: '/vendor/finance/receipts' },
