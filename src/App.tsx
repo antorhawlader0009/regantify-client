@@ -146,6 +146,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
 import SystemStatus from './pages/admin/SystemStatus';
 import ReceiptDetails from './pages/admin/ReceiptDetails';
+import AdminSettings from './pages/admin/Settings';
 import Receipts from './pages/vendor/finance/Receipts';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import PlanManagement from './pages/admin/plans/PlanManagement';
@@ -275,6 +276,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/system-status' &&
     r.path !== '/admin/verification' &&
     r.path !== '/admin/receipt-details' &&
+    r.path !== '/admin/settings' &&
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/plans' &&
     r.path !== '/admin/plan-requests' &&
@@ -534,6 +536,7 @@ export default function App() {
                 <Route path="/admin/system-status" element={<SystemStatus />} />
                 <Route path="/admin/verification" element={<AdminVerification />} />
                 <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />

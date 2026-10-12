@@ -34,6 +34,25 @@ export interface AuthTokensResponse {
   refreshToken: string;
 }
 
+/** What a Super Admin's password step answers with: never a session. */
+export type AdminPasswordStep =
+  | { step: 'TOTP'; challengeToken: string }
+  | { step: 'SETUP'; setupToken: string };
+
+export interface AdminSessionResponse extends AuthTokensResponse {
+  step: 'DONE';
+  /** True when a recovery code (not the app) was used for this sign-in. */
+  usedRecoveryCode?: boolean;
+  recoveryCodesLeft?: number;
+}
+
+export interface AdminSecurityResponse {
+  totpEnabled: boolean;
+  totpEnabledAt: string | null;
+  recoveryCodesLeft: number;
+  signIns: Array<{ id: string; at: string; via: string; browser: string; ip: string | null; newDevice: boolean }>;
+}
+
 // Response of POST /auth/refresh — now includes the user profile (not just
 // tokens) so the app can rehydrate its in-memory auth store after a hard
 // page reload, using only the httpOnly refresh cookie.
@@ -177,8 +196,28 @@ export const authApi = {
       .post('/v1/auth/vendor/forgot-password/reset', { resetToken, password })
       .then((r) => r.data),
 
+  // Super Admin sign-in is three steps (super-admin-plan.md Step 1): the password only returns a short-lived token for the next step,
+  // `adminLoginTotp` (2FA is on) or `adminSetup*` (first sign-in: enrol an authenticator app). Only those finish with a session.
   adminLogin: (email: string, password: string) =>
-    api.post<AuthTokensResponse>('/v1/auth/admin/login', { email, password }).then((r) => r.data),
+    api.post<AdminPasswordStep>('/v1/auth/admin/login', { email, password }).then((r) => r.data),
+
+  adminLoginTotp: (challengeToken: string, code: string) =>
+    api.post<AdminSessionResponse>('/v1/auth/admin/login/totp', { challengeToken, code }).then((r) => r.data),
+
+  adminSetupStart: (setupToken: string) =>
+    api.post<{ secret: string; otpauthUrl: string }>('/v1/auth/admin/2fa/setup/start', { setupToken }).then((r) => r.data),
+
+  adminSetupConfirm: (setupToken: string, code: string) =>
+    api.post<AdminSessionResponse & { recoveryCodes: string[] }>('/v1/auth/admin/2fa/setup/confirm', { setupToken, code }).then((r) => r.data),
+
+  /** Admin > Settings > Security: 2FA status and the recent sign-ins. */
+  adminSecurity: () => api.get<AdminSecurityResponse>('/v1/auth/admin/security').then((r) => r.data),
+
+  /** New set of recovery codes (the old ones stop working). Needs a fresh code from the app. */
+  adminNewRecoveryCodes: (code: string) =>
+    api.post<{ recoveryCodes: string[] }>('/v1/auth/admin/2fa/recovery-codes', { code }).then((r) => r.data),
+
+  adminSignOutEverywhere: () => api.post('/v1/auth/admin/sign-out-all'),
 
   // Silently restores a session on app boot using the httpOnly refresh
   // cookie. Rejects (no cookie / expired) if there's nothing to restore —

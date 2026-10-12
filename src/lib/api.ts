@@ -32,7 +32,7 @@ let isRefreshing = false;
 let pendingQueue: Array<() => void> = [];
 const REFRESH_URL = '/v1/auth/refresh';
 // Auth steps done while signed out (log in, OTP, forgot password, impersonation, log out).
-const SIGNED_OUT_AUTH = /\/v1\/auth\/(vendor\/(login|send-otp|verify-otp|forgot-password\/|impersonate-exchange)|admin\/login|logout)/;
+const SIGNED_OUT_AUTH = /\/v1\/auth\/(vendor\/(login|send-otp|verify-otp|forgot-password\/|impersonate-exchange)|admin\/login|admin\/2fa\/setup|logout)/;
 
 api.interceptors.response.use(
   (response) => response,
