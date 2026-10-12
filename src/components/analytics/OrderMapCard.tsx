@@ -78,7 +78,7 @@ export function OrderMapCard({ report }: { report: OrderMapReport }) {
       {report.totals.orders === 0 ? (
         <EmptyState text="No orders in this period yet. Districts light up here as customers buy." />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="relative mx-auto w-full max-w-[460px]">
             {!map ? (
               <div className="aspect-[474/675] animate-pulse rounded-xl bg-neutral-100" aria-busy />

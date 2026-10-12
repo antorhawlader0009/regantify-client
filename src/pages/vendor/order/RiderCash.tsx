@@ -215,7 +215,7 @@ export default function RiderCash() {
       ) : riders.length === 0 ? (
         <EmptyState icon={Wallet} title="No rider cash yet" hint="When an order delivered by your own rider (a rider name on the order) is marked Completed, the rider shows up here with the cash they collected." />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+        <div className="grid items-start gap-4 lg:grid-cols-[260px_1fr]">
           <ul className="space-y-2">
             {riders.map((r) => (
               <li key={r.name}>

@@ -216,7 +216,7 @@ export function TabSkeleton() {
     <div className="space-y-4 animate-pulse motion-reduce:animate-none" aria-label="Loading">
       <div className="h-[118px] rounded-xl bg-neutral-100" />
       <div className="h-80 rounded-xl bg-neutral-100" />
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid items-start lg:grid-cols-2 gap-4">
         <div className="h-64 rounded-xl bg-neutral-100" />
         <div className="h-64 rounded-xl bg-neutral-100" />
       </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import type { DashboardSummary } from '../../lib/dashboardApi';
@@ -29,7 +29,7 @@ const METRICS: { id: Metric; label: string }[] = [
  * days. The chart is the Analytics TrendChart in the brand colour; the
  * deeper view is a click away on Analytics.
  */
-export function SalesOverview({ data }: { data: DashboardSummary }) {
+export function SalesOverview({ data, layout }: { data: DashboardSummary; layout: (trend: ReactNode, status: ReactNode) => ReactNode }) {
   const [range, setRange] = useState<Range>('7');
   const [metric, setMetric] = useState<Metric>('sales');
 
@@ -42,10 +42,8 @@ export function SalesOverview({ data }: { data: DashboardSummary }) {
   const maxStatus = Math.max(1, ...statuses.map((s) => s.count));
   const analyticsLink = `/vendor/analytics?tab=overview&preset=${range === '7' ? 'last7' : 'last30'}`;
 
-  return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      {/* Trend */}
-      <section className="min-w-0 rounded-xl border border-line bg-white p-4 lg:col-span-2" aria-labelledby="trend-title">
+  const trendCard = (
+      <section className="min-w-0 rounded-xl border border-line bg-white p-4" aria-labelledby="trend-title">
         <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 id="trend-title" className="text-[15px] font-semibold text-regantify-text">
@@ -93,8 +91,9 @@ export function SalesOverview({ data }: { data: DashboardSummary }) {
           </Link>
         </div>
       </section>
+  );
 
-      {/* Orders by status, same days */}
+  const statusCard = (
       <section className="min-w-0 rounded-xl border border-line bg-white p-4" aria-labelledby="status-title">
         <h2 id="status-title" className="text-[15px] font-semibold text-regantify-text">
           Orders by status
@@ -128,6 +127,8 @@ export function SalesOverview({ data }: { data: DashboardSummary }) {
           </ul>
         )}
       </section>
-    </div>
   );
+
+  // The page decides where the two cards sit (they go in different columns, so neither stretches to the other).
+  return <>{layout(trendCard, statusCard)}</>;
 }

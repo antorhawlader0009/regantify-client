@@ -119,7 +119,7 @@ export function OrdersTab({ range }: TabProps) {
                 />
               </KpiStrip>
 
-              <div className="grid lg:grid-cols-3 gap-4">
+              <div className="grid items-start lg:grid-cols-3 gap-4">
                 <Card className="lg:col-span-2" title="Orders over time" subtitle={`Orders placed each ${data.bucket === 'month' ? 'month' : 'day'}. Cancelled and unpaid orders left out.`}>
                   {!hasOrders ? (
                     <EmptyState text="No orders in this period yet." />
@@ -232,7 +232,7 @@ function FailedOrdersSection({ data, compareLabel }: { data: FailedOrdersAnalyti
         />
       </KpiStrip>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-6 lg:grid-cols-2">
         <Card title="By reason" subtitle="Most orders first. The arrow is the change from the previous period.">
           <BarList
             labelHeader="Reason"
@@ -399,7 +399,7 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
         </div>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="grid items-start lg:grid-cols-2 gap-4">
         <Card title="By area" subtitle="Areas with the most returns first">
           <OutcomeList rows={data.byArea} labelOf={(k) => k} emptyText="No parcel delivered or returned yet." />
         </Card>

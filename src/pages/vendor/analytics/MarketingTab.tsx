@@ -49,7 +49,7 @@ export function MarketingTab({ range }: TabProps) {
               <ChannelTable rows={data.channels} />
             </Card>
 
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid items-start lg:grid-cols-3 gap-4">
               <Card className="lg:col-span-2" title="Visits and orders" subtitle={`Store visits and online store orders each ${data.bucket === 'month' ? 'month' : 'day'}.`}>
                 {data.trend.every((d) => d.visits === 0 && d.orders === 0) ? (
                   <EmptyState text="No visits recorded in this period yet." />
@@ -88,7 +88,7 @@ export function MarketingTab({ range }: TabProps) {
               </Card>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid items-start lg:grid-cols-3 gap-4">
               <Card className="lg:col-span-2" title="Campaigns" subtitle="Links tagged with utm_campaign, like your ad links">
                 {data.campaigns.length === 0 ? (
                   <div className="py-6 text-center">

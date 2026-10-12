@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { DashboardSummary } from '../../lib/dashboardApi';
+import { SETUP_ILLUSTRATIONS } from './SetupIllustrations';
 
 type Setup = DashboardSummary['setup'];
 
@@ -174,30 +175,30 @@ export function SetupChecklist({
       </div>
 
       {!collapsed && (
-        <ol id="setup-steps" className="border-t border-line">
+        <ol id="setup-steps" className="grid gap-4 border-t border-line p-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => {
             const done = setup[item.key];
             const isNext = item.key === nextKey;
-            const Icon = item.icon;
             return (
               <li
                 key={item.key}
-                className={`flex items-center gap-3 border-b border-line px-4 py-3 last:border-b-0 ${isNext ? 'bg-brand-lime/15' : ''}`}
+                className={`relative flex flex-col rounded-2xl border bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-shadow hover:shadow-md ${
+                  isNext ? 'border-brand/40' : 'border-line'
+                }`}
               >
-                {done ? (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-white" aria-label="Done">
-                    <Check size={15} strokeWidth={2.5} />
-                  </span>
-                ) : (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-neutral-300 text-neutral-400">
-                    <Icon size={14} aria-hidden />
+                {done && (
+                  <span className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white" aria-label="Done">
+                    <Check size={14} strokeWidth={2.5} />
                   </span>
                 )}
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-medium ${done ? 'text-neutral-400 line-through' : 'text-regantify-text'}`}>{item.title}</p>
-                  {!done && <p className="mt-0.5 text-xs text-neutral-500">{item.description}</p>}
+                <div className={done ? 'opacity-50' : ''}>
+                  <p className="pr-8 text-[15px] font-semibold text-regantify-text">{item.title}</p>
+                  <p className="mt-1 text-sm leading-snug text-neutral-500">{item.description}</p>
                 </div>
-                {!done && <StepAction action={item.action} primary={isNext} />}
+                <Illustration id={item.key} muted={done} />
+                <div className="mt-auto">
+                  {done ? <span className="text-xs font-medium text-neutral-400">Done</span> : <StepAction action={item.action} primary={isNext} />}
+                </div>
               </li>
             );
           })}
@@ -207,8 +208,18 @@ export function SetupChecklist({
   );
 }
 
+/** The step's drawn scene (SetupIllustrations), dimmed once the step is done. */
+function Illustration({ id, muted }: { id: string; muted: boolean }) {
+  const Scene = SETUP_ILLUSTRATIONS[id];
+  return (
+    <div className={`my-3 h-36 ${muted ? 'opacity-40 grayscale' : ''}`} aria-hidden>
+      {Scene ? <Scene /> : null}
+    </div>
+  );
+}
+
 function StepAction({ action, primary }: { action: Action; primary: boolean }) {
-  const cls = `inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
+  const cls = `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm transition-colors ${
     primary ? 'bg-brand text-white hover:bg-brand-dark' : 'border border-line bg-white text-regantify-text hover:bg-neutral-50'
   }`;
   const icon =

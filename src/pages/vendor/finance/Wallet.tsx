@@ -80,7 +80,7 @@ export default function Wallet() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="space-y-3">
           <section className="rounded-xl bg-brand p-4 text-white">
             <div className="flex items-center justify-between gap-2">

@@ -50,7 +50,7 @@ export default function Support() {
         </button>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="min-w-0">
           {/* AI assistant goes here (planned). */}
 

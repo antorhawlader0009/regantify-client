@@ -58,7 +58,7 @@ export function SalesTab({ range }: TabProps) {
               </KpiStrip>
             )}
 
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid items-start lg:grid-cols-3 gap-4">
               <Card
                 className={canProfit ? 'lg:col-span-2' : 'lg:col-span-3'}
                 title={canProfit ? 'Sales and profit' : 'Sales'}
@@ -87,7 +87,7 @@ export function SalesTab({ range }: TabProps) {
               {canProfit && <MoneyLedger breakdown={data.breakdown} missingCost={data.missingCost} />}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-4">
+            <div className="grid items-start lg:grid-cols-3 gap-4">
               <Card
                 className="lg:col-span-2"
                 title={canProfit ? 'Profit by product' : 'Best sellers'}
@@ -96,33 +96,32 @@ export function SalesTab({ range }: TabProps) {
                 <ProductProfitTable products={data.products} showProfit={canProfit} />
               </Card>
 
-              <Card title="By payment method" subtitle="How shoppers paid">
-                <BarList
-                  emptyText="No sales in this period."
-                  rows={data.byPaymentMethod.map((r) => ({
-                    key: r.key,
-                    label: (
-                      <>
-                        {paymentLabel(r.key)}
-                        <span className="ml-1.5 text-xs text-neutral-500">
-                          {r.orders} order{r.orders === 1 ? '' : 's'}
-                        </span>
-                      </>
-                    ),
-                    value: r.sales,
-                    display: (
-                      <>
-                        {formatTaka(r.sales)}
-                        <Share pct={sharePct(r.sales, paymentTotal)} />
-                      </>
-                    ),
-                  }))}
-                />
-              </Card>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-4">
-              <ChannelSplitCard channels={data.channels} />
+              <div className="space-y-4">
+                <Card title="By payment method" subtitle="How shoppers paid">
+                  <BarList
+                    emptyText="No sales in this period."
+                    rows={data.byPaymentMethod.map((r) => ({
+                      key: r.key,
+                      label: (
+                        <>
+                          {paymentLabel(r.key)}
+                          <span className="ml-1.5 text-xs text-neutral-500">
+                            {r.orders} order{r.orders === 1 ? '' : 's'}
+                          </span>
+                        </>
+                      ),
+                      value: r.sales,
+                      display: (
+                        <>
+                          {formatTaka(r.sales)}
+                          <Share pct={sharePct(r.sales, paymentTotal)} />
+                        </>
+                      ),
+                    }))}
+                  />
+                </Card>
+                <ChannelSplitCard channels={data.channels} />
+              </div>
             </div>
 
             {canProfit && <VatReportCard />}

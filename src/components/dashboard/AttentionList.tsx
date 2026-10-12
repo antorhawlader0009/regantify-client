@@ -200,7 +200,7 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
   const rows = candidates.filter((r) => (r.count > 0 || r.key === 'sms' || r.key === 'plan') && canOpenPath(viewer, r.to));
 
   return (
-    <section className="h-full rounded-xl border border-line bg-white" aria-labelledby="attention-title">
+    <section className="rounded-xl border border-line bg-white" aria-labelledby="attention-title">
       <div className="flex items-center gap-2 px-4 pb-3 pt-4">
         <h2 id="attention-title" className="text-[15px] font-semibold text-regantify-text">
           Needs your attention

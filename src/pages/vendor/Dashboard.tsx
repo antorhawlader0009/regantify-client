@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, Check, Copy, Eye, EyeOff, Moon, Plus, RefreshCw, Sun, Sunrise, type LucideIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useCan } from '../../lib/useStaffAccess';
-import { dashboardApi } from '../../lib/dashboardApi';
+import { dashboardApi, type DashboardSummary } from '../../lib/dashboardApi';
 import { getVendorPlanUsage } from '../../lib/plansApi';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { apiErrorMessage } from '../../lib/api';
@@ -76,6 +76,12 @@ function DashboardSkeleton() {
       </div>
     </div>
   );
+}
+
+/** SalesOverview needs the sales numbers (dashboard.view); without them the page lays out the rest with no trend or status card. */
+function SalesOverviewOrNothing({ data, render }: { data: DashboardSummary; render: (trend: ReactNode, status: ReactNode) => ReactNode }) {
+  if (!data.today) return <>{render(null, null)}</>;
+  return <SalesOverview data={data} layout={render} />;
 }
 
 export default function VendorDashboard() {
@@ -225,35 +231,51 @@ export default function VendorDashboard() {
             refreshing={dashboard.isFetching}
           />
 
-          {/* To-dos, with money and delivery beside them (one column on phones, in this order) */}
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className={hasMoneyColumn ? 'lg:col-span-2' : 'lg:col-span-3'}>
-              <AttentionList todo={dashboard.data.todo} isOwner={isOwner} planName={dashboard.data.plan.name} />
-            </div>
-            {hasMoneyColumn && (
-              <div className="space-y-4">
-                {dashboard.data.target && <GoalCard target={dashboard.data.target} isOwner={isOwner} />}
-                {dashboard.data.money && <MoneyCard money={dashboard.data.money} />}
-                {dashboard.data.pos && <InStoreCard pos={dashboard.data.pos} />}
-                {(dashboard.data.money || dashboard.data.delivery.courierConnected) && <DeliveryCard delivery={dashboard.data.delivery} />}
-              </div>
-            )}
-          </div>
-
-          {/* Sales numbers need dashboard.view, the latest orders orders.view (rule-plan.md Step 7). */}
-          {dashboard.data.today && <SalesOverview data={dashboard.data} />}
-
-          <div className="grid items-start gap-4 lg:grid-cols-3">
-            {canSeeOrders && (
-              <div className="lg:col-span-2">
-                <RecentOrders orders={dashboard.data.recentOrders} />
-              </div>
-            )}
-            <div className={canSeeOrders ? 'space-y-4' : 'space-y-4 lg:col-span-3'}>
-              {dashboard.data.today && <TopProductsCard products={dashboard.data.topProducts} />}
-              {planUsage && <PlanCard usage={planUsage} isOwner={isOwner} />}
-            </div>
-          </div>
+          {/*
+            Two independent columns, so a tall card on one side never leaves a gap under a short card on the other.
+            On a phone the wrappers vanish (display: contents) and the order classes keep the reading order:
+            to-dos, money and delivery, sales, status, latest orders, top products, plan.
+          */}
+          <SalesOverviewOrNothing
+            data={dashboard.data}
+            render={(trend, status) => {
+              const right = [
+                hasMoneyColumn && dashboard.data.target ? (
+                  <div key="goal" className="order-2"><GoalCard target={dashboard.data.target} isOwner={isOwner} /></div>
+                ) : null,
+                hasMoneyColumn && dashboard.data.money ? (
+                  <div key="money" className="order-2"><MoneyCard money={dashboard.data.money} /></div>
+                ) : null,
+                hasMoneyColumn && dashboard.data.pos ? (
+                  <div key="pos" className="order-2"><InStoreCard pos={dashboard.data.pos} /></div>
+                ) : null,
+                hasMoneyColumn && (dashboard.data.money || dashboard.data.delivery.courierConnected) ? (
+                  <div key="delivery" className="order-2"><DeliveryCard delivery={dashboard.data.delivery} /></div>
+                ) : null,
+                status ? <div key="status" className="order-4">{status}</div> : null,
+                dashboard.data.today ? (
+                  <div key="top" className="order-6"><TopProductsCard products={dashboard.data.topProducts} /></div>
+                ) : null,
+                planUsage ? <div key="plan" className="order-7"><PlanCard usage={planUsage} isOwner={isOwner} /></div> : null,
+              ].filter(Boolean);
+              return (
+                <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:items-start">
+                  <div className={`contents lg:flex lg:flex-col lg:gap-4 ${right.length ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+                    <div className="order-1">
+                      <AttentionList todo={dashboard.data.todo} isOwner={isOwner} planName={dashboard.data.plan.name} />
+                    </div>
+                    {trend && <div className="order-3">{trend}</div>}
+                    {canSeeOrders && (
+                      <div className="order-5">
+                        <RecentOrders orders={dashboard.data.recentOrders} />
+                      </div>
+                    )}
+                  </div>
+                  {right.length > 0 && <div className="contents lg:flex lg:flex-col lg:gap-4">{right}</div>}
+                </div>
+              );
+            }}
+          />
         </>
       ) : null}
     </div>

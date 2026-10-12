@@ -21,7 +21,7 @@ export function CustomersTab({ range }: TabProps) {
                 <KpiCard label="Returning customers" value={returningCustomers} kind="count" hint="Had ordered from you before" compareLabel={compareLabel} />
               </KpiStrip>
 
-              <div className="grid lg:grid-cols-3 gap-4">
+              <div className="grid items-start lg:grid-cols-3 gap-4">
                 <Card className="lg:col-span-2" title="New vs returning customers" subtitle={`Customers who ordered each ${data.bucket === 'month' ? 'month' : 'day'}: first order ever, or ordered before.`}>
                   {customers.current === 0 ? (
                     <EmptyState text="No customers ordered in this period yet." />

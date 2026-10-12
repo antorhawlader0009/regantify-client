@@ -111,7 +111,7 @@ function ReportsBody() {
               <Tile label="Discounts and coupons" value={taka(r.totals.discounts)} sub={r.totals.vat > 0 ? `VAT ${taka(r.totals.vat)}` : undefined} />
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid items-start gap-4 lg:grid-cols-2">
               <Section title="By day">
                 <table className="w-full text-sm">
                   <thead className="text-left text-pos-muted">

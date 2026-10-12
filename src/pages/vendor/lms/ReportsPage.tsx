@@ -149,7 +149,7 @@ function ReportBody({ me, data }: { me: LmsMe; data: LmsReport }) {
         <AgentTable rows={data.agents} />
       </Block>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <Block title="Where leads come from" subtitle="Leads that came in during the period, and how they ended.">
           {data.sources.length ? (
             <div className="-mx-5 overflow-x-auto">

@@ -100,7 +100,7 @@ export function ProductsTab({ range }: TabProps) {
                 )}
               </Card>
 
-              <div className="grid lg:grid-cols-2 gap-4">
+              <div className="grid items-start lg:grid-cols-2 gap-4">
                 <MostViewed rows={data.mostViewed} trackedSince={data.viewsTrackedSince} />
                 <SellingOutSoon rows={data.sellingOutSoon} />
                 <WishlistInterest />
@@ -214,7 +214,7 @@ function SearchesCards({ data }: { data: SearchesAnalytics }) {
           />
         </Card>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid items-start gap-4 lg:grid-cols-2">
           <Card title="Most searched" subtitle={`What shoppers look for. Words are kept ${data.keptDays} days.`}>
             <WordList rows={data.top} empty="No searches yet." detail={(w) => `${w.searches} ${w.searches === 1 ? 'search' : 'searches'}`} />
           </Card>

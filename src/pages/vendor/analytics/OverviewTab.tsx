@@ -81,7 +81,7 @@ export function OverviewTab({ range }: TabProps) {
               )}
             </Card>
 
-            <div className="grid lg:grid-cols-2 gap-4">
+            <div className="grid items-start lg:grid-cols-2 gap-4">
               <Card title="Top products" subtitle="By sales in this period" action={<CardLink to={tabLink('products')}>All products</CardLink>}>
                 {data.topProducts.length === 0 ? (
                   <EmptyState text="No products sold in this period." />
@@ -104,26 +104,25 @@ export function OverviewTab({ range }: TabProps) {
                 )}
               </Card>
 
-              <Card title="Orders by status" subtitle={`${totalStatuses} placed in this period`} action={<CardLink to={tabLink('orders')}>Orders and delivery</CardLink>}>
-                <BarList
-                  emptyText="No orders in this period."
-                  rows={data.statuses.map((s) => ({
-                    key: s.status,
-                    label: orderStatusLabel(s.status),
-                    value: s.count,
-                    display: (
-                      <>
-                        {s.count}
-                        <Share pct={sharePct(s.count, totalStatuses)} />
-                      </>
-                    ),
-                  }))}
-                />
-              </Card>
-            </div>
-
-            <div className="grid lg:grid-cols-2 gap-4">
-              <ChannelSplitCard channels={data.channels} />
+              <div className="space-y-4">
+                <Card title="Orders by status" subtitle={`${totalStatuses} placed in this period`} action={<CardLink to={tabLink('orders')}>Orders and delivery</CardLink>}>
+                  <BarList
+                    emptyText="No orders in this period."
+                    rows={data.statuses.map((s) => ({
+                      key: s.status,
+                      label: orderStatusLabel(s.status),
+                      value: s.count,
+                      display: (
+                        <>
+                          {s.count}
+                          <Share pct={sharePct(s.count, totalStatuses)} />
+                        </>
+                      ),
+                    }))}
+                  />
+                </Card>
+                <ChannelSplitCard channels={data.channels} />
+              </div>
             </div>
 
             <OrderMapSection range={range} />
