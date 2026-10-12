@@ -52,6 +52,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Hold possible duplicate orders', where: 'Store > COD Guard', path: COD, keywords: 'duplicate double order same phone same product on hold ডুপ্লিকেট' },
   { title: 'Let customers cancel their own order', where: 'Store > COD Guard', path: COD, keywords: 'customer cancel button tracking page self cancel অর্ডার বাতিল' },
   { title: 'Let customers fix their delivery address', where: 'Store > COD Guard', path: COD, keywords: 'customer edit address change phone correct address ঠিকানা ঠিক' },
+  { title: 'SEO: show my store on Google', where: 'Store > SEO', path: '/vendor/store/seo', keywords: 'seo google search engine rank ranking top first page store name title description meta sitemap robots indexing noindex hide from google search console verification bing canonical share preview facebook link গুগল সার্চ র‍্যাংক সাইটম্যাপ' },
   { title: 'Store away / holiday mode', where: 'Store > Store Away', path: '/vendor/store/store-away', keywords: 'closed vacation eid break not taking orders return date pause store banner ছুটি দোকান বন্ধ ঈদ' },
   { title: 'Order tracking page and customer status SMS', where: 'Store > Order Tracking', path: '/vendor/store/order-tracking', keywords: 'tracking sms customer order update message confirmed shipped delivered টেমপ্লেট ট্র্যাকিং এসএমএস' },
   { title: 'Order tracking SMS quiet hours', where: 'Store > Order Tracking', path: '/vendor/store/order-tracking', keywords: 'quiet hours night no sms 10pm 8am রাত' },
