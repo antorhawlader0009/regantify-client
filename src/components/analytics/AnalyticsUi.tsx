@@ -1,3 +1,4 @@
+import { kpiIconFor } from './kpiIcons';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
@@ -45,14 +46,19 @@ const STRIP_COLS: Record<2 | 3 | 4 | 5, string> = {
 };
 
 /**
- * A tab's headline numbers as one joined strip, cells split by hairlines,
- * so they read as one set rather than a row of separate cards. On two
- * columns an odd last cell spans the row, so no empty gap shows.
+ * A tab's headline numbers as a row of white cards, each with its own accent (icon chip and number; Tailwind 700 on 100, the cell reads
+ * --kpi and --kpi-soft). The same family as the Dashboard's coloured "Today so far". On two columns an odd last cell spans the row.
  */
 export function KpiStrip({ cols, children }: { cols: 2 | 3 | 4 | 5; children: ReactNode }) {
   return (
     <div
-      className={`grid grid-cols-2 ${STRIP_COLS[cols]} gap-px overflow-hidden rounded-xl border border-line bg-line
+      className={`grid grid-cols-2 ${STRIP_COLS[cols]} gap-3 sm:gap-4
+        [&>*:nth-child(6n+1)]:[--kpi:#047857] [&>*:nth-child(6n+1)]:[--kpi-soft:#d1fae5]
+        [&>*:nth-child(6n+2)]:[--kpi:#1d4ed8] [&>*:nth-child(6n+2)]:[--kpi-soft:#dbeafe]
+        [&>*:nth-child(6n+3)]:[--kpi:#6d28d9] [&>*:nth-child(6n+3)]:[--kpi-soft:#ede9fe]
+        [&>*:nth-child(6n+4)]:[--kpi:#c2410c] [&>*:nth-child(6n+4)]:[--kpi-soft:#ffedd5]
+        [&>*:nth-child(6n+5)]:[--kpi:#0e7490] [&>*:nth-child(6n+5)]:[--kpi-soft:#cffafe]
+        [&>*:nth-child(6n+6)]:[--kpi:#be185d] [&>*:nth-child(6n+6)]:[--kpi-soft:#fce7f3]
         [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1`}
     >
       {children}
@@ -86,14 +92,20 @@ export function ChangeBadge({ value, kind, lowerIsBetter }: { value: Compared | 
 }
 
 function Cell({ label, aside, value, hint }: { label: string; aside?: ReactNode; value: ReactNode; hint?: ReactNode }) {
+  const Icon = kpiIconFor(label);
   return (
-    <div className="bg-white px-5 py-4 min-w-0">
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="text-[13px] text-neutral-500 truncate">{label}</p>
+    <div className="min-w-0 rounded-xl border border-line bg-white px-5 py-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--kpi-soft,#dbeafe)] text-[var(--kpi,#1d4ed8)]">
+            <Icon size={16} strokeWidth={1.9} aria-hidden />
+          </span>
+          <p className="truncate text-[13px] text-neutral-500">{label}</p>
+        </div>
         {aside}
       </div>
-      <p className="mt-1.5 text-[28px] leading-none font-semibold tracking-tight text-regantify-text tabular-nums truncate">{value}</p>
-      {hint && <p className="mt-2 text-[12px] text-neutral-500 truncate">{hint}</p>}
+      <p className="mt-3 truncate text-[28px] font-semibold leading-none tracking-tight tabular-nums text-[var(--kpi,#1d4ed8)]">{value}</p>
+      {hint && <p className="mt-2 truncate text-[12px] text-neutral-500">{hint}</p>}
     </div>
   );
 }

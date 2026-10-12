@@ -4,6 +4,7 @@ import { BarList, Card, CardLink, EmptyState, KpiCard, KpiStrip, ProductThumb, S
 import { PALETTE, TrendChart } from '../../../components/analytics/TrendChart';
 import { formatTaka, COMPARE_LABEL, sharePct } from '../../../components/analytics/format';
 import { orderStatusLabel } from '../order/orderStatus';
+import { DonutChart, STATUS_COLOR } from '../../../components/charts/DonutChart';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import { ChannelSplitCard } from '../../../components/analytics/ChannelSplit';
 import { OrderMapCard } from '../../../components/analytics/OrderMapCard';
@@ -54,6 +55,10 @@ export function OverviewTab({ range }: TabProps) {
               />
             </KpiStrip>
 
+            {/* Pictures first, in two independent columns so a tall card (the map) never leaves a gap under a short one:
+                the trend and the map on the left, the status ring, the channel ring and best sellers on the right. */}
+            <div className="grid items-start gap-4 lg:grid-cols-3">
+              <div className="min-w-0 space-y-4 lg:col-span-2">
             <Card
               title={metric === 'sales' ? 'Sales over time' : 'Orders over time'}
               subtitle={
@@ -80,8 +85,23 @@ export function OverviewTab({ range }: TabProps) {
                 <TrendChart data={data.trend} series={[{ key: 'orders', label: 'Orders', color: PALETTE.blue }]} kind="count" bucket={data.bucket} ariaLabel="Orders over time" />
               )}
             </Card>
-
-            <div className="grid items-start lg:grid-cols-2 gap-4">
+                <OrderMapSection range={range} />
+              </div>
+              <div className="min-w-0 space-y-4">
+              <Card title="Orders by status" subtitle={`${totalStatuses} placed in this period`} action={<CardLink to={tabLink('orders')}>Orders and delivery</CardLink>}>
+                <DonutChart
+                  emptyText="No orders in this period."
+                  centerValue={totalStatuses.toLocaleString()}
+                  centerLabel={totalStatuses === 1 ? 'order' : 'orders'}
+                  slices={data.statuses.map((st) => ({
+                    key: st.status,
+                    label: orderStatusLabel(st.status),
+                    value: st.count,
+                    color: STATUS_COLOR[st.status] ?? '#94a3b8',
+                  }))}
+                />
+              </Card>
+              <ChannelSplitCard channels={data.channels} />
               <Card title="Top products" subtitle="By sales in this period" action={<CardLink to={tabLink('products')}>All products</CardLink>}>
                 {data.topProducts.length === 0 ? (
                   <EmptyState text="No products sold in this period." />
@@ -97,35 +117,14 @@ export function OverviewTab({ range }: TabProps) {
                             {p.units} sold in {p.orders} order{p.orders === 1 ? '' : 's'}
                           </p>
                         </div>
-                        <span className="text-sm font-semibold text-regantify-text tabular-nums">{formatTaka(p.revenue)}</span>
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </Card>
-
-              <div className="space-y-4">
-                <Card title="Orders by status" subtitle={`${totalStatuses} placed in this period`} action={<CardLink to={tabLink('orders')}>Orders and delivery</CardLink>}>
-                  <BarList
-                    emptyText="No orders in this period."
-                    rows={data.statuses.map((s) => ({
-                      key: s.status,
-                      label: orderStatusLabel(s.status),
-                      value: s.count,
-                      display: (
-                        <>
-                          {s.count}
-                          <Share pct={sharePct(s.count, totalStatuses)} />
-                        </>
-                      ),
-                    }))}
-                  />
+                          <span className="text-sm font-semibold text-regantify-text tabular-nums">{formatTaka(p.revenue)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                 </Card>
-                <ChannelSplitCard channels={data.channels} />
               </div>
             </div>
-
-            <OrderMapSection range={range} />
           </>
         );
       }}

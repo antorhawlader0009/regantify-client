@@ -5,7 +5,8 @@ import type { DashboardSummary } from '../../lib/dashboardApi';
 import { Segmented } from '../analytics/AnalyticsUi';
 import { TrendChart } from '../analytics/TrendChart';
 import { formatValue } from '../analytics/format';
-import { OrderStatusBadge } from '../../pages/vendor/order/orderStatus';
+import { orderStatusLabel } from '../../pages/vendor/order/orderStatus';
+import { DonutChart, STATUS_COLOR } from '../charts/DonutChart';
 
 type Range = '7' | '30';
 type Metric = 'sales' | 'orders';
@@ -39,7 +40,6 @@ export function SalesOverview({ data, layout }: { data: DashboardSummary; layout
   const totalOrders = trend.reduce((sum, d) => sum + d.orders, 0);
   const statuses = range === '7' ? data.statuses.last7 : data.statuses.last30;
   const placed = statuses.reduce((sum, s) => sum + s.count, 0);
-  const maxStatus = Math.max(1, ...statuses.map((s) => s.count));
   const analyticsLink = `/vendor/analytics?tab=overview&preset=${range === '7' ? 'last7' : 'last30'}`;
 
   const trendCard = (
@@ -69,7 +69,7 @@ export function SalesOverview({ data, layout }: { data: DashboardSummary; layout
             series={[{ key: 'sales', label: 'Sales', color: BRAND }]}
             kind="money"
             bucket="day"
-            height={220}
+            height={270}
             ariaLabel={`Sales per day, last ${days} days`}
           />
           </div>
@@ -79,7 +79,7 @@ export function SalesOverview({ data, layout }: { data: DashboardSummary; layout
             series={[{ key: 'orders', label: 'Orders', color: BRAND }]}
             kind="count"
             bucket="day"
-            height={220}
+            height={270}
             ariaLabel={`Orders per day, last ${days} days`}
           />
         )}
@@ -102,30 +102,20 @@ export function SalesOverview({ data, layout }: { data: DashboardSummary; layout
           {placed.toLocaleString()} {placed === 1 ? 'order' : 'orders'} placed in the last {days} days, every status
         </p>
 
-        {statuses.length === 0 ? (
-          <p className="py-10 text-center text-sm text-neutral-500">No orders in the last {days} days.</p>
-        ) : (
-          <ul className="mt-3 space-y-1">
-            {statuses.map((s) => (
-              <li key={s.status}>
-                <Link
-                  to={`/vendor/orders?status=${s.status}`}
-                  className="relative flex items-center justify-between gap-3 overflow-hidden rounded-lg px-2.5 py-2 transition-colors hover:bg-neutral-50"
-                >
-                  <span
-                    className="absolute inset-y-0 left-0 rounded-lg bg-brand-lime/40"
-                    style={{ width: `${Math.max(3, (s.count / maxStatus) * 100)}%` }}
-                    aria-hidden
-                  />
-                  <span className="relative">
-                    <OrderStatusBadge status={s.status} />
-                  </span>
-                  <span className="relative text-sm font-semibold tabular-nums text-regantify-text">{s.count.toLocaleString()}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="mt-3">
+          <DonutChart
+            emptyText={`No orders in the last ${days} days.`}
+            centerValue={placed.toLocaleString()}
+            centerLabel={placed === 1 ? 'order' : 'orders'}
+            slices={statuses.map((s) => ({
+              key: s.status,
+              label: orderStatusLabel(s.status),
+              value: s.count,
+              color: STATUS_COLOR[s.status] ?? '#94a3b8',
+              to: `/vendor/orders?status=${s.status}`,
+            }))}
+          />
+        </div>
       </section>
   );
 

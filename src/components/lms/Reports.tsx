@@ -1,3 +1,4 @@
+import { kpiIconFor } from '../analytics/kpiIcons';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
@@ -44,10 +45,20 @@ export function MyDay() {
   );
 }
 
-/** Headline numbers as one joined strip, split by hairlines. */
+/** Headline numbers as a row of white cards, each with its own accent (icon chip and number). */
 export function Strip({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-lms-line bg-lms-line sm:grid-cols-3 lg:grid-cols-6">{children}</div>
+    <div
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6
+        [&>*:nth-child(6n+1)]:[--cell:var(--lms-kpi-1)] [&>*:nth-child(6n+1)]:[--cell-soft:var(--lms-kpi-soft-1)]
+        [&>*:nth-child(6n+2)]:[--cell:var(--lms-kpi-2)] [&>*:nth-child(6n+2)]:[--cell-soft:var(--lms-kpi-soft-2)]
+        [&>*:nth-child(6n+3)]:[--cell:var(--lms-kpi-3)] [&>*:nth-child(6n+3)]:[--cell-soft:var(--lms-kpi-soft-3)]
+        [&>*:nth-child(6n+4)]:[--cell:var(--lms-kpi-4)] [&>*:nth-child(6n+4)]:[--cell-soft:var(--lms-kpi-soft-4)]
+        [&>*:nth-child(6n+5)]:[--cell:var(--lms-kpi-5)] [&>*:nth-child(6n+5)]:[--cell-soft:var(--lms-kpi-soft-5)]
+        [&>*:nth-child(6n+6)]:[--cell:var(--lms-kpi-6)] [&>*:nth-child(6n+6)]:[--cell-soft:var(--lms-kpi-soft-6)]"
+    >
+      {children}
+    </div>
   );
 }
 
@@ -71,12 +82,18 @@ export function StripCell({
   lowerIsBetter?: boolean;
   hint?: ReactNode;
 }) {
+  const Icon = kpiIconFor(label);
   const current = typeof value === 'number' ? value : value.current;
   const text = current == null ? '—' : display ? display(current) : formatValue(current, kind ?? 'count');
   return (
-    <div className="min-w-0 bg-lms-surface px-4 py-3">
-      <p className="truncate text-[13px] text-lms-muted">{label}</p>
-      <p className="mt-1 truncate text-2xl font-semibold tabular-nums">{text}</p>
+    <div className="min-w-0 rounded-[10px] border border-lms-line bg-lms-surface px-4 py-3">
+      <div className="flex items-center gap-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--cell-soft,var(--lms-kpi-soft-2))] text-[var(--cell,var(--lms-kpi-2))]">
+          <Icon size={15} strokeWidth={1.9} aria-hidden />
+        </span>
+        <p className="truncate text-[13px] text-lms-muted">{label}</p>
+      </div>
+      <p className="mt-2 truncate text-2xl font-semibold tabular-nums text-[var(--cell,var(--lms-kpi-2))]">{text}</p>
       <p className="mt-1 truncate text-xs text-lms-muted">
         {typeof value === 'number' ? hint : <Change value={value} kind={kind ?? 'count'} lowerIsBetter={lowerIsBetter} display={display} />}
       </p>

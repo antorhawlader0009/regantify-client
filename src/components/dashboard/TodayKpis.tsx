@@ -5,6 +5,7 @@ import type { Compared } from '../../lib/analyticsApi';
 import type { DashboardSummary } from '../../lib/dashboardApi';
 import { ChangeBadge } from '../analytics/AnalyticsUi';
 import { formatValue, type ValueKind } from '../analytics/format';
+import { Sparkline } from '../charts/Sparkline';
 
 /** "Updated just now" / "Updated 3 min ago", ticking every 30 s so it stays true between refreshes. */
 function useUpdatedLabel(iso: string) {
@@ -22,6 +23,19 @@ function dhakaTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dhaka' });
 }
 
+/** One accent per tile (Tailwind 700 on its 100 tint, same family as the Analytics cards): the icon chip, the number and the line. */
+interface Tone {
+  accent: string;
+  soft: string;
+}
+
+const TONES: Record<'green' | 'blue' | 'violet' | 'amber', Tone> = {
+  green: { accent: '#047857', soft: '#d1fae5' },
+  blue: { accent: '#1d4ed8', soft: '#dbeafe' },
+  violet: { accent: '#6d28d9', soft: '#ede9fe' },
+  amber: { accent: '#c2410c', soft: '#ffedd5' },
+};
+
 interface Kpi {
   label: string;
   icon: LucideIcon;
@@ -29,10 +43,14 @@ interface Kpi {
   to: string;
   kind: ValueKind;
   value: Compared | number;
+  /** The last days of this number, drawn as a small line. */
+  spark?: number[];
+  tone: keyof typeof TONES;
 }
 
 function KpiTile({ kpi }: { kpi: Kpi }) {
   const Icon = kpi.icon;
+  const tone = TONES[kpi.tone];
   const compared = typeof kpi.value === 'number' ? null : kpi.value;
   const current = compared ? compared.current : (kpi.value as number);
   // Two zeros say nothing: no badge rather than "No data" on a quiet morning.
@@ -45,13 +63,19 @@ function KpiTile({ kpi }: { kpi: Kpi }) {
     >
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-sm text-neutral-600">{kpi.label}</p>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-lime/60 text-brand">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: tone.soft, color: tone.accent }}>
           <Icon size={16} strokeWidth={1.8} aria-hidden />
         </span>
       </div>
-      <p className={`mt-2 truncate text-[26px] font-semibold leading-tight tracking-tight text-regantify-text tabular-nums ${kpi.kind === 'money' ? 'dash-money' : ''}`}>
-        {formatValue(current, kpi.kind)}
-      </p>
+      <div className="mt-2 flex items-end justify-between gap-2">
+        <p
+          className={`min-w-0 truncate text-[26px] font-semibold leading-tight tracking-tight tabular-nums ${kpi.kind === 'money' ? 'dash-money' : ''}`}
+          style={{ color: tone.accent }}
+        >
+          {formatValue(current, kpi.kind)}
+        </p>
+        {kpi.spark && <Sparkline values={kpi.spark} color={tone.accent} className="h-9 w-20 shrink-0" />}
+      </div>
       <div className="mt-1.5 flex min-h-[18px] flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral-500">
         {showBadge && <ChangeBadge value={compared!} kind={kpi.kind} />}
         {compared ? (
@@ -145,11 +169,13 @@ export function TodayKpis({
     );
   }
 
+  // The last 7 days drawn behind each number (today is the last point). Visitors are not in the trend, so they get none.
+  const week = data.trend.slice(-7);
   const kpis: Kpi[] = [
-    { label: 'Today’s sales', icon: Banknote, to: '/vendor/analytics?tab=sales&preset=today', kind: 'money', value: today.sales },
-    { label: 'Orders today', icon: Receipt, to: '/vendor/analytics?tab=orders&preset=today', kind: 'count', value: today.orders },
-    { label: 'Visitors', icon: Eye, to: '/vendor/analytics?tab=marketing&preset=today', kind: 'count', value: today.visitors },
-    { label: 'Avg order value', icon: ShoppingBag, to: '/vendor/analytics?tab=overview&preset=today', kind: 'money', value: today.aov },
+    { label: 'Today’s sales', icon: Banknote, to: '/vendor/analytics?tab=sales&preset=today', kind: 'money', value: today.sales, spark: week.map((d) => d.sales), tone: 'green' },
+    { label: 'Orders today', icon: Receipt, to: '/vendor/analytics?tab=orders&preset=today', kind: 'count', value: today.orders, spark: week.map((d) => d.orders), tone: 'blue' },
+    { label: 'Visitors', icon: Eye, to: '/vendor/analytics?tab=marketing&preset=today', kind: 'count', value: today.visitors, tone: 'violet' },
+    { label: 'Avg order value', icon: ShoppingBag, to: '/vendor/analytics?tab=overview&preset=today', kind: 'money', value: today.aov, spark: week.map((d) => (d.orders ? d.sales / d.orders : 0)), tone: 'amber' },
   ];
 
   return (

@@ -15,6 +15,7 @@ import { TodayKpis } from '../../components/dashboard/TodayKpis';
 import { GoalCard } from '../../components/dashboard/GoalCard';
 import { AttentionList } from '../../components/dashboard/AttentionList';
 import { SalesOverview } from '../../components/dashboard/SalesOverview';
+import { OrderMapPanel } from '../../components/dashboard/OrderMapPanel';
 import { RecentOrders } from '../../components/dashboard/RecentOrders';
 import { DeliveryCard, InStoreCard, MoneyCard, PlanCard, TopProductsCard } from '../../components/dashboard/SideCards';
 import { DailyBrief } from '../../components/dashboard/DailyBrief';
@@ -88,6 +89,7 @@ export default function VendorDashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const canSeeOrders = useCan('orders.view');
+  const canSeeMap = useCan('analytics.view');
   const [copied, setCopied] = useState(false);
   const [hideNumbers, setHideNumbers] = useState(readHideNumbers);
   const toggleHideNumbers = () => {
@@ -232,45 +234,45 @@ export default function VendorDashboard() {
           />
 
           {/*
-            Two independent columns, so a tall card on one side never leaves a gap under a short card on the other.
-            On a phone the wrappers vanish (display: contents) and the order classes keep the reading order:
-            to-dos, money and delivery, sales, status, latest orders, top products, plan.
+            Charts first (what people look at), then the lists. Everything sits in two independent columns, so a tall card on one side
+            (the map) never leaves a gap under a short card on the other. On a phone the wrappers vanish (display: contents) and the
+            order classes keep the reading order: trend, map, status, best sellers, to-dos, latest orders, money and delivery, plan.
           */}
           <SalesOverviewOrNothing
             data={dashboard.data}
             render={(trend, status) => {
+              const left = [
+                trend ? <div key="trend" className="order-1 min-w-0">{trend}</div> : null,
+                status ? <div key="top" className="order-4 min-w-0"><TopProductsCard products={dashboard.data.topProducts} /></div> : null,
+                <div key="attention" className="order-5 min-w-0">
+                  <AttentionList todo={dashboard.data.todo} isOwner={isOwner} planName={dashboard.data.plan.name} />
+                </div>,
+                canSeeOrders ? (
+                  <div key="recent" className="order-6 min-w-0">
+                    <RecentOrders orders={dashboard.data.recentOrders} />
+                  </div>
+                ) : null,
+              ].filter(Boolean);
               const right = [
+                trend && canSeeMap ? <div key="map" className="order-2 min-w-0"><OrderMapPanel /></div> : null,
+                status ? <div key="status" className="order-3 min-w-0">{status}</div> : null,
                 hasMoneyColumn && dashboard.data.target ? (
-                  <div key="goal" className="order-2"><GoalCard target={dashboard.data.target} isOwner={isOwner} /></div>
+                  <div key="goal" className="order-7"><GoalCard target={dashboard.data.target} isOwner={isOwner} /></div>
                 ) : null,
                 hasMoneyColumn && dashboard.data.money ? (
-                  <div key="money" className="order-2"><MoneyCard money={dashboard.data.money} /></div>
+                  <div key="money" className="order-7"><MoneyCard money={dashboard.data.money} /></div>
                 ) : null,
                 hasMoneyColumn && dashboard.data.pos ? (
-                  <div key="pos" className="order-2"><InStoreCard pos={dashboard.data.pos} /></div>
+                  <div key="pos" className="order-7"><InStoreCard pos={dashboard.data.pos} /></div>
                 ) : null,
                 hasMoneyColumn && (dashboard.data.money || dashboard.data.delivery.courierConnected) ? (
-                  <div key="delivery" className="order-2"><DeliveryCard delivery={dashboard.data.delivery} /></div>
+                  <div key="delivery" className="order-7"><DeliveryCard delivery={dashboard.data.delivery} /></div>
                 ) : null,
-                status ? <div key="status" className="order-4">{status}</div> : null,
-                dashboard.data.today ? (
-                  <div key="top" className="order-6"><TopProductsCard products={dashboard.data.topProducts} /></div>
-                ) : null,
-                planUsage ? <div key="plan" className="order-7"><PlanCard usage={planUsage} isOwner={isOwner} /></div> : null,
+                planUsage ? <div key="plan" className="order-8"><PlanCard usage={planUsage} isOwner={isOwner} /></div> : null,
               ].filter(Boolean);
               return (
                 <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:items-start">
-                  <div className={`contents lg:flex lg:flex-col lg:gap-4 ${right.length ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
-                    <div className="order-1">
-                      <AttentionList todo={dashboard.data.todo} isOwner={isOwner} planName={dashboard.data.plan.name} />
-                    </div>
-                    {trend && <div className="order-3">{trend}</div>}
-                    {canSeeOrders && (
-                      <div className="order-5">
-                        <RecentOrders orders={dashboard.data.recentOrders} />
-                      </div>
-                    )}
-                  </div>
+                  <div className={`contents lg:flex lg:flex-col lg:gap-4 ${right.length ? 'lg:col-span-2' : 'lg:col-span-3'}`}>{left}</div>
                   {right.length > 0 && <div className="contents lg:flex lg:flex-col lg:gap-4">{right}</div>}
                 </div>
               );

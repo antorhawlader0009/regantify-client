@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { OrderMapReport } from '../../lib/analyticsApi';
 import { Card, EmptyState, Segmented } from './AnalyticsUi';
 import { formatTaka } from './format';
@@ -28,7 +28,7 @@ function colorFor(value: number, max: number): string {
  * picked dates, with the top districts listed beside it. The shapes are static SVG (geoBoundaries ADM2, CC BY 4.0, simplified), so
  * no map library or tile server is loaded; the data file is fetched as its own chunk the first time this card shows.
  */
-export function OrderMapCard({ report }: { report: OrderMapReport }) {
+export function OrderMapCard({ report, compact = false, title, subtitle, link }: { report: OrderMapReport; compact?: boolean; title?: string; subtitle?: string; link?: ReactNode }) {
   const [map, setMap] = useState<MapData | null>(null);
   const [metric, setMetric] = useState<Metric>('orders');
   const [hover, setHover] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export function OrderMapCard({ report }: { report: OrderMapReport }) {
   };
   const max = useMemo(() => Math.max(0, ...report.districts.map((d) => (metric === 'orders' ? d.orders : d.sales))), [report.districts, metric]);
   const ranked = useMemo(
-    () => [...report.districts].sort((a, b) => (metric === 'orders' ? b.orders - a.orders : b.sales - a.sales)).slice(0, 10),
+    () => [...report.districts].sort((a, b) => (metric === 'orders' ? b.orders - a.orders : b.sales - a.sales)).slice(0, compact ? 5 : 10),
     [report.districts, metric],
   );
 
@@ -62,8 +62,8 @@ export function OrderMapCard({ report }: { report: OrderMapReport }) {
 
   return (
     <Card
-      title="Where your customers are"
-      subtitle={`${report.reached} of 64 districts ordered in this period`}
+      title={title ?? "Where your customers are"}
+      subtitle={subtitle ?? `${report.reached} of 64 districts ordered in this period`}
       action={
         <Segmented
           options={[
@@ -78,8 +78,8 @@ export function OrderMapCard({ report }: { report: OrderMapReport }) {
       {report.totals.orders === 0 ? (
         <EmptyState text="No orders in this period yet. Districts light up here as customers buy." />
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="relative mx-auto w-full max-w-[460px]">
+        <div className={compact ? "grid items-start gap-4" : "grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"}>
+          <div className={`relative mx-auto w-full ${compact ? "max-w-[300px]" : "max-w-[460px]"}`}>
             {!map ? (
               <div className="aspect-[474/675] animate-pulse rounded-xl bg-neutral-100" aria-busy />
             ) : (
@@ -181,6 +181,7 @@ export function OrderMapCard({ report }: { report: OrderMapReport }) {
           </div>
         </div>
       )}
+      {link && <div className="mt-3 flex justify-end">{link}</div>}
     </Card>
   );
 }

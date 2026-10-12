@@ -22,6 +22,20 @@
   --lms-stage-lost: #64748b;
   --lms-alert: #b91c1c;
 
+  /* Report strip accents (icon chip + number): a 700 hue on its own 100 tint, each clears 4.5:1 on white. */
+  --lms-kpi-1: #047857;
+  --lms-kpi-soft-1: #d1fae5;
+  --lms-kpi-2: #1d4ed8;
+  --lms-kpi-soft-2: #dbeafe;
+  --lms-kpi-3: #6d28d9;
+  --lms-kpi-soft-3: #ede9fe;
+  --lms-kpi-4: #c2410c;
+  --lms-kpi-soft-4: #ffedd5;
+  --lms-kpi-5: #0e7490;
+  --lms-kpi-soft-5: #cffafe;
+  --lms-kpi-6: #be185d;
+  --lms-kpi-soft-6: #fce7f3;
+
   /* Report charts: one hue for magnitude (dataviz reference slot 1, checked on white). */
   --lms-chart: #2a78d6;
 
