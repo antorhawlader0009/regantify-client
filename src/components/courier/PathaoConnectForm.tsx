@@ -29,7 +29,9 @@ export function PathaoConnectForm({ onConnected, footer }: PathaoConnectFormProp
   const [clientSecret, setClientSecret] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showLogin, setShowLogin] = useState(false);
+  // Pathao's documented login is email + password with the keys, so the
+  // fields are open by default (still optional: keys alone are tried too).
+  const [showLogin, setShowLogin] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
@@ -101,7 +103,7 @@ export function PathaoConnectForm({ onConnected, footer }: PathaoConnectFormProp
       {showLogin ? (
         <>
           <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Pathao email (optional)</label>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Pathao email (recommended)</label>
             <input
               type="email"
               value={username}
@@ -111,7 +113,7 @@ export function PathaoConnectForm({ onConnected, footer }: PathaoConnectFormProp
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Password (optional)</label>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Password (recommended)</label>
             <input
               type="password"
               value={password}
