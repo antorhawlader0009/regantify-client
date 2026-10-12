@@ -1,3 +1,4 @@
+import { AdminActivityLog } from '../../components/admin/AdminActivityLog';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -8,13 +9,16 @@ import { RecoveryCodes } from '../../components/admin/RecoveryCodes';
 
 // Admin > Settings (super-admin-plan.md). Step 1 creates the page with its Security tab; later steps add their own tabs
 // (Activity log, Platform, Receipt details...) to TABS.
-const TABS = [{ id: 'security', label: 'Security' }] as const;
+const TABS = [
+  { id: 'security', label: 'Security' },
+  { id: 'activity', label: 'Activity log' },
+] as const;
 
 export default function AdminSettings() {
   const [tab, setTab] = useState<(typeof TABS)[number]['id']>('security');
 
   return (
-    <div className="max-w-3xl">
+    <div className={tab === 'activity' ? 'max-w-5xl' : 'max-w-3xl'}>
       <h1 className="text-2xl font-semibold text-regantify-text">Settings</h1>
       <p className="text-regantify-text-muted mt-1">Platform settings for Super Admin.</p>
 
@@ -33,7 +37,8 @@ export default function AdminSettings() {
         ))}
       </div>
 
-      <div className="mt-6">{tab === 'security' && <SecurityTab />}</div>
+      <div className="mt-6">{tab === 'security' && <SecurityTab />}
+        {tab === 'activity' && <AdminActivityLog />}</div>
     </div>
   );
 }

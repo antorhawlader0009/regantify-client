@@ -9,6 +9,7 @@ import { StatusBadge } from './StatusBadge';
 import { VendorDetailsDialog } from './VendorDetailsDialog';
 import { ChangeVendorStatusModal } from './ChangeVendorStatusModal';
 import { ChangeVendorPlanModal } from './ChangeVendorPlanModal';
+import { ImpersonateDialog } from '../../../components/admin/ImpersonateDialog';
 
 function copyToClipboard(value: string, label: string) {
   navigator.clipboard.writeText(value).then(() => toast.success(`${label} copied.`));
@@ -33,13 +34,8 @@ export default function AllVendors() {
   // "Login as Vendor" — generates the one-time token and immediately
   // opens it in a new tab, which VendorImpersonateEntry exchanges for a
   // 15-min vendor session. See adminApi.impersonateVendor's comment.
-  const impersonateMutation = useMutation({
-    mutationFn: adminApi.impersonateVendor,
-    onSuccess: ({ token }) => {
-      window.open(`/vendor-impersonate?token=${encodeURIComponent(token)}`, '_blank', 'noopener');
-    },
-    onError: () => toast.error('Could not start a vendor session. Please try again.'),
-  });
+  // The reason and the View only / Can make changes choice are asked in ImpersonateDialog, which opens the tab.
+  const [impersonateVendor, setImpersonateVendor] = useState<AdminVendor | null>(null);
 
   const statusMutation = useMutation({
     mutationFn: ({ vendorId, status }: { vendorId: string; status: VendorStatus }) =>
@@ -186,8 +182,7 @@ export default function AllVendors() {
                         Change Plan
                       </button>
                       <button
-                        onClick={() => impersonateMutation.mutate(v.id)}
-                        disabled={impersonateMutation.isPending}
+                        onClick={() => setImpersonateVendor(v)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-sm
                           text-regantify-text hover:bg-regantify-content disabled:opacity-50"
                         title="Open this vendor's dashboard for support/troubleshooting"
@@ -241,6 +236,8 @@ export default function AllVendors() {
           onConfirm={(next) => statusMutation.mutate({ vendorId: statusModalVendor.id, status: next })}
         />
       )}
+
+      <ImpersonateDialog vendor={impersonateVendor} onClose={() => setImpersonateVendor(null)} />
 
       {planModalVendor && (
         <ChangeVendorPlanModal

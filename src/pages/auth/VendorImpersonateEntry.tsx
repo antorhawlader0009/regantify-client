@@ -31,7 +31,7 @@ export default function VendorImpersonateEntry() {
       .then((data) => {
         if (cancelled) return;
         setAuth(data.accessToken, data.user);
-        markImpersonated();
+        markImpersonated(data.impersonation);
         navigate('/vendor/dashboard', { replace: true });
       })
       .catch(() => {

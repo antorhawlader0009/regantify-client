@@ -42,6 +42,43 @@ export interface ListVendorsParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+export type ImpersonationMode = 'VIEW' | 'EDIT';
+
+export interface AdminAuditItem {
+  id: string;
+  at: string;
+  adminUserId: string;
+  adminName: string;
+  action: string;
+  summary: string;
+  targetType: string | null;
+  targetId: string | null;
+  vendorId: string | null;
+  storeName: string | null;
+  /** [{ field, before, after }] or { sent: {...} } */
+  changes: unknown;
+  reason: string | null;
+  ip: string | null;
+}
+
+export interface AdminAuditPage {
+  total: number;
+  page: number;
+  perPage: number;
+  items: AdminAuditItem[];
+  actions: string[];
+  admins: Array<{ id: string; name: string }>;
+}
+
+export interface AdminAuditQuery {
+  admin?: string;
+  action?: string;
+  vendorId?: string;
+  from?: string;
+  to?: string;
+  search?: string;
+}
+
 export const adminApi = {
   listVendors: (params: ListVendorsParams = {}) =>
     api.get<AdminVendorListResponse>('/v1/admin/vendors', { params }).then((r) => r.data),
@@ -49,8 +86,12 @@ export const adminApi = {
   // "Login as Vendor" — returns a one-time token, valid 24h if unused,
   // that VendorImpersonateEntry exchanges for a 15-min vendor session in
   // a separate tab. See server/src/admin/admin.service.ts.
-  impersonateVendor: (vendorId: string) =>
-    api.post<{ token: string }>(`/v1/admin/vendors/${vendorId}/impersonate`).then((r) => r.data),
+  impersonateVendor: (vendorId: string, reason: string, mode: ImpersonationMode) =>
+    api.post<{ token: string }>(`/v1/admin/vendors/${vendorId}/impersonate`, { reason, mode }).then((r) => r.data),
+
+  // Settings > Activity log (super-admin-plan.md Step 2).
+  auditLog: (params: AdminAuditQuery & { page?: number }) => api.get<AdminAuditPage>('/v1/admin/audit-log', { params }).then((r) => r.data),
+  auditLogCsv: (params: AdminAuditQuery) => api.get<string>('/v1/admin/audit-log/export', { params, responseType: 'text' }).then((r) => r.data),
 
   // Actions column — SUSPENDED blocks the vendor's dashboard login/session
   // AND their public storefront; see AdminService.updateVendorStatus.

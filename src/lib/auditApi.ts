@@ -42,6 +42,7 @@ export const AREA_LABEL: Record<string, string> = {
   COURIER: 'Courier',
   CUSTOMER: 'Customers',
   DOMAIN: 'Domain',
+  PLATFORM: 'Regantify team',
   TEAM: 'Team',
 };
 

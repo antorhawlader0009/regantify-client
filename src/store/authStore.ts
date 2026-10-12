@@ -33,6 +33,12 @@ export interface AuthUser {
   // the Settings page (see getVendorSettings/updateVendorSettings).
 }
 
+export interface ImpersonationInfo {
+  adminName: string;
+  readOnly: boolean;
+  reason: string | null;
+}
+
 interface AuthState {
   accessToken: string | null;
   user: AuthUser | null;
@@ -45,8 +51,10 @@ interface AuthState {
   // refresh cookie of its own, so it only works in the tab it was opened in
   // (VendorImpersonateEntry).
   impersonated: boolean;
+  /** Who is looking and whether changes are allowed (shown in the red bar). */
+  impersonation: ImpersonationInfo | null;
   setAuth: (accessToken: string, user: AuthUser) => void;
-  markImpersonated: () => void;
+  markImpersonated: (info?: ImpersonationInfo) => void;
   clearAuth: () => void;
   setHasHydrated: () => void;
 }
@@ -61,8 +69,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   hasHydrated: false,
   impersonated: false,
+  impersonation: null,
   setAuth: (accessToken, user) => set({ accessToken, user }),
-  markImpersonated: () => set({ impersonated: true }),
-  clearAuth: () => set({ accessToken: null, user: null, impersonated: false }),
+  markImpersonated: (info) => set({ impersonated: true, impersonation: info ?? null }),
+  clearAuth: () => set({ accessToken: null, user: null, impersonated: false, impersonation: null }),
   setHasHydrated: () => set({ hasHydrated: true }),
 }));

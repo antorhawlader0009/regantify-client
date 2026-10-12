@@ -240,6 +240,6 @@ export const authApi = {
   // AuthBootstrap cookie refresh.
   impersonateExchange: (token: string) =>
     api
-      .post<{ accessToken: string; user: AuthUser }>('/v1/auth/vendor/impersonate-exchange', { token })
+      .post<{ accessToken: string; user: AuthUser; impersonation: { adminName: string; readOnly: boolean; reason: string | null } }>('/v1/auth/vendor/impersonate-exchange', { token })
       .then((r) => r.data),
 };

@@ -1,3 +1,4 @@
+import { ImpersonationBar } from '../ImpersonationBar';
 import { AnnouncementBanner } from '../AnnouncementBanner';
 import { KycBanner } from '../KycBanner';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -35,6 +36,7 @@ export function VendorLayout() {
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar sections={nav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
       <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
+        <ImpersonationBar />
         <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
         {!isLms && <KycBanner />}
         {!isLms && <AnnouncementBanner />}
