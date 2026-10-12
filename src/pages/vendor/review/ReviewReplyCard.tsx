@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Sparkles } from 'lucide-react';
 import { SectionCard } from '../../../components/product/ProductFormPieces';
 import { reviewsApi, type Review } from '../../../lib/reviewsApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
@@ -27,6 +28,16 @@ export function ReviewReplyCard({ review }: { review: Review }) {
       toast.success(updated.replyText ? 'Reply saved. It shows on your store if the review is shown.' : 'Reply removed.');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the reply.')),
+  });
+
+  // The AI only fills the box; the store reads and edits it, then posts (TellMe idea 137).
+  const draft = useMutation({
+    mutationFn: () => reviewsApi.aiDraft(review.id),
+    onSuccess: (d) => {
+      setText(d.text.slice(0, MAX_REPLY));
+      toast.success('Draft written. Read it, change what you like, then post.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'The AI could not write a draft.')),
   });
 
   return (
@@ -58,6 +69,16 @@ export function ReviewReplyCard({ review }: { review: Review }) {
           )}
         </p>
         <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => draft.mutate()}
+            disabled={draft.isPending || save.isPending}
+            title="The AI writes a short reply for you to edit. It uses a few AI Credits."
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+          >
+            <Sparkles className="h-4 w-4" />
+            {draft.isPending ? 'Writing…' : 'AI draft'}
+          </button>
           {saved && (
             <button
               type="button"

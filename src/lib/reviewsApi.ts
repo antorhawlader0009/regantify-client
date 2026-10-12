@@ -93,6 +93,8 @@ export const reviewsApi = {
 
   /** The store's public reply under a review; "" removes it. */
   reply: (id: string, reply: string) => api.put<Review>(`/v1/reviews/${id}/reply`, { reply }).then((r) => r.data),
+  /** An AI draft of the reply (TellMe idea 137). Costs AI Credits; nothing is saved. */
+  aiDraft: (id: string) => api.post<{ text: string }>(`/v1/reviews/${id}/ai-draft`).then((r) => r.data),
 
   setFeatured: (id: string, featured: boolean) =>
     api.patch<Review>(`/v1/reviews/${id}/featured`, { featured }).then((r) => r.data),

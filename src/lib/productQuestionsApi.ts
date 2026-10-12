@@ -37,6 +37,8 @@ export const productQuestionsApi = {
 
   /** An empty text takes the answer back, and the question leaves the page. */
   answer: (id: string, answer: string) => api.put<ProductQuestion>(`/v1/product-questions/${id}/answer`, { answer }).then((r) => r.data),
+  /** An AI draft of the answer (TellMe idea 137). Costs AI Credits; nothing is saved. */
+  aiDraft: (id: string) => api.post<{ text: string }>(`/v1/product-questions/${id}/ai-draft`).then((r) => r.data),
 
   setHidden: (id: string, hidden: boolean) => api.patch(`/v1/product-questions/${id}/hidden`, { hidden }).then((r) => r.data),
 

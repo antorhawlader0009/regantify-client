@@ -344,6 +344,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/chat-button': 'store.design',
   '/vendor/store/product-display': 'store.design',
   '/vendor/store/trust-strip': 'store.design',
+  '/vendor/store/reputation': 'store.design',
   '/vendor/store/product-card': 'store.design',
   '/vendor/store/pages': 'store.content',
   '/vendor/store/magazine': 'store.content',
@@ -377,10 +378,12 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/finance/expenses': 'finance.view',
   '/vendor/finance/earnings': 'finance.view',
   '/vendor/finance/withdraw': 'owner',
+  '/vendor/finance/receipts': 'owner',
   '/vendor/finance/fee-summary': 'finance.view',
   '/vendor/billing': 'owner',
   '/vendor/store/backup': 'owner',
   '/vendor/staff': 'owner',
+  '/vendor/activity': 'owner',
   '/vendor/notifications': 'any',
   '/vendor/support': 'any',
   '/vendor/settings': 'any',
@@ -416,9 +419,9 @@ export function canOpenPath(viewer: StaffViewer, path: string): boolean {
  * person can't use is handled on the page itself.
  */
 const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
-  [/^\/vendor\/(dashboard|notifications|support|settings|profile|complete-profile|complete-setup)(\/|$)/, 'any'],
-  [/^\/vendor\/(staff|billing)(\/|$)/, 'owner'],
-  [/^\/vendor\/finance\/(withdraw|payment-callback)(\/|$)/, 'owner'],
+  [/^\/vendor\/(dashboard|notifications|support|settings|profile|complete-profile|complete-setup|verification)(\/|$)/, 'any'],
+  [/^\/vendor\/(staff|billing|activity)(\/|$)/, 'owner'],
+  [/^\/vendor\/finance\/(withdraw|payment-callback|receipts)(\/|$)/, 'owner'],
   [/^\/vendor\/finance\//, 'finance.view'],
   [/^\/vendor\/analytics(\/|$)/, 'analytics.view'],
   [/^\/vendor\/orders\/(add|import)$/, 'orders.create'],

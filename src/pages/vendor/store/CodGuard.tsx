@@ -10,6 +10,7 @@ import {
   type CodVerificationType,
 } from '../../../lib/storeSettingsApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { ordersApi } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
@@ -48,6 +49,7 @@ export default function CodGuard() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['cod-guard-settings'], queryFn: storeSettingsApi.getCodGuard });
   const [form, setForm] = useState<CodGuardSettings | null>(null);
+  const { data: blocked } = useQuery({ queryKey: ['blocked-checkouts'], queryFn: ordersApi.blockedCheckouts, retry: false });
   // The minimum cart for the advance, as typed ("" = every order).
   const [minOrderText, setMinOrderText] = useState('');
   // The pre-order advance percentage, as typed ("" = off).
@@ -274,6 +276,41 @@ export default function CodGuard() {
               &ldquo;Possible duplicate&rdquo; and you get a notice. With this on it also starts <b>On Hold</b>, so it can&apos;t ship
               until you check with the customer and move it on. Orders that are paid online are marked but not held.
             </p>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <p className="text-sm font-medium text-regantify-text">Fake-order bot guard</p>
+            <p className="text-xs text-regantify-text-muted mt-1.5">
+              Always on for the online store. It quietly refuses an order when a hidden box on the checkout is filled (only a script does that), when the checkout is
+              submitted in under a second and a half, or when one visitor address sends too many orders in an hour. The shopper just sees &ldquo;We cannot take this
+              order right now&rdquo;. Add Order, imports and the POS are never affected.
+            </p>
+            <label className="mt-3 flex flex-wrap items-center gap-2 text-sm text-regantify-text">
+              Most orders one phone number can place in an hour
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={form.checkoutPhoneHourLimit}
+                onChange={(e) => set('checkoutPhoneHourLimit', Math.max(0, Math.min(20, Math.floor(Number(e.target.value) || 0))))}
+                className="h-9 w-20 rounded-lg border border-line bg-white px-3 text-sm focus:border-brand focus:outline-none"
+              />
+              <span className="text-xs text-regantify-text-muted">0 = no limit. A real customer rarely needs more than 2 or 3.</span>
+            </label>
+            {blocked && (
+              <p className="mt-3 text-xs text-regantify-text-muted">
+                {blocked.total === 0
+                  ? 'Nothing was refused in the last 7 days.'
+                  : `Refused in the last 7 days: ${blocked.total} (${[
+                      blocked.byReason.PHONE_LIMIT ? `${blocked.byReason.PHONE_LIMIT} too many from one phone` : '',
+                      blocked.byReason.IP_LIMIT ? `${blocked.byReason.IP_LIMIT} too many from one address` : '',
+                      blocked.byReason.HONEYPOT ? `${blocked.byReason.HONEYPOT} by a script` : '',
+                      blocked.byReason.TOO_FAST ? `${blocked.byReason.TOO_FAST} too fast` : '',
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}).`}
+              </p>
+            )}
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5">

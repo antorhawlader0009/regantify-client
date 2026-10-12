@@ -68,6 +68,7 @@ import SiteBanner from './pages/vendor/store/design/SiteBanner';
 import ChatButton from './pages/vendor/store/design/ChatButton';
 import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
 import TrustStripPage from './pages/vendor/store/design/TrustStrip';
+import ReputationPage from './pages/vendor/store/design/Reputation';
 import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
 import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
 import CodGuard from './pages/vendor/store/CodGuard';
@@ -87,6 +88,8 @@ import HandoverSheets from './pages/vendor/order/HandoverSheets';
 import ReturnCheckIn from './pages/vendor/order/ReturnCheckIn';
 import TrackingBulk from './pages/vendor/order/TrackingBulk';
 import RiderCash from './pages/vendor/order/RiderCash';
+import Refunds from './pages/vendor/order/Refunds';
+import StandingOrders from './pages/vendor/order/StandingOrders';
 import StockCount from './pages/vendor/product/StockCount';
 import Questions from './pages/vendor/review/Questions';
 import CourierRules from './pages/vendor/courier/CourierRules';
@@ -104,6 +107,9 @@ import EditCustomer from './pages/vendor/customer/EditCustomer';
 import Reviews from './pages/vendor/review/Reviews';
 import AddReview from './pages/vendor/review/AddReview';
 import Staff from './pages/vendor/staff/Staff';
+import ActivityLog from './pages/vendor/account/ActivityLog';
+import Verification from './pages/vendor/Verification';
+import AdminVerification from './pages/admin/Verification';
 import AddStaffMember from './pages/vendor/staff/AddStaffMember';
 import Billing from './pages/vendor/Billing';
 import Notifications from './pages/vendor/Notifications';
@@ -137,6 +143,9 @@ import RedxPage from './pages/vendor/courier/redx/RedxPage';
 import PathaoLabelsPrintPage from './pages/vendor/courier/pathao/PathaoLabelsPrintPage';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
+import SystemStatus from './pages/admin/SystemStatus';
+import ReceiptDetails from './pages/admin/ReceiptDetails';
+import Receipts from './pages/vendor/finance/Receipts';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
@@ -232,6 +241,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/customers' &&
     r.path !== '/vendor/reviews' &&
     r.path !== '/vendor/staff' &&
+    r.path !== '/vendor/activity' &&
     r.path !== '/vendor/billing' &&
     r.path !== '/vendor/marketing/coupons' &&
     r.path !== '/vendor/marketing/campaigns' &&
@@ -245,6 +255,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/finance/transactions' &&
     r.path !== '/vendor/finance/withdraw' &&
     r.path !== '/vendor/finance/fee-summary' &&
+    r.path !== '/vendor/finance/receipts' &&
     r.path !== '/vendor/finance/expenses' &&
     r.path !== '/vendor/shipping/tracking' &&
     r.path !== '/vendor/courier' &&
@@ -259,6 +270,9 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
 const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
     r.path !== '/admin/ai-settings' &&
+    r.path !== '/admin/system-status' &&
+    r.path !== '/admin/verification' &&
+    r.path !== '/admin/receipt-details' &&
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/plans' &&
     r.path !== '/admin/plan-requests' &&
@@ -386,6 +400,7 @@ export default function App() {
                 <Route path="/vendor/store/chat-button" element={<ChatButton />} />
                 <Route path="/vendor/store/product-display" element={<ProductDisplay />} />
                 <Route path="/vendor/store/trust-strip" element={<TrustStripPage />} />
+                <Route path="/vendor/store/reputation" element={<ReputationPage />} />
                 <Route path="/vendor/store/product-card" element={<ProductCardDisplay />} />
                 <Route path="/vendor/store/custom-css" element={<CustomCss />} />
                 <Route path="/vendor/store/head-scripts" element={<CustomHeadScripts />} />
@@ -401,6 +416,8 @@ export default function App() {
                 <Route path="/vendor/orders/return-check-in" element={<ReturnCheckIn />} />
                 <Route path="/vendor/orders/tracking-bulk" element={<TrackingBulk />} />
                 <Route path="/vendor/orders/rider-cash" element={<RiderCash />} />
+                <Route path="/vendor/orders/refunds" element={<Refunds />} />
+                <Route path="/vendor/orders/standing" element={<StandingOrders />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />
@@ -413,6 +430,8 @@ export default function App() {
                 <Route path="/vendor/reviews/questions" element={<Questions />} />
                 <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
                 <Route path="/vendor/staff" element={<Staff />} />
+                <Route path="/vendor/activity" element={<ActivityLog />} />
+                <Route path="/vendor/verification" element={<Verification />} />
                 <Route path="/vendor/staff/add" element={<AddStaffMember />} />
                 <Route path="/vendor/staff/:id/edit" element={<AddStaffMember />} />
                 <Route path="/vendor/billing" element={<Billing />} />
@@ -437,6 +456,7 @@ export default function App() {
                 <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
+                <Route path="/vendor/finance/receipts" element={<Receipts />} />
                 <Route path="/vendor/finance/withdraw" element={<Withdraw />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
                 <Route path="/vendor/finance/expenses" element={<Expenses />} />
@@ -508,6 +528,9 @@ export default function App() {
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/ai-settings" element={<AiSettings />} />
+                <Route path="/admin/system-status" element={<SystemStatus />} />
+                <Route path="/admin/verification" element={<AdminVerification />} />
+                <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />

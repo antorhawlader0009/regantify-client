@@ -479,6 +479,17 @@ export interface PriceChangeBatch {
   undoneBy: string | null;
 }
 
+/** A deleted product waiting in the 30-day trash (TellMe idea 151). */
+export interface DeletedProduct {
+  id: string;
+  name: string;
+  sku: string;
+  photoUrl: string | null;
+  deletedBy: string | null;
+  deletedAt: string;
+  daysLeft: number;
+}
+
 export const productsApi = {
   /** All Products > Pinned products (TellMe idea 47): the products shown first on the store, in order. */
   listPinned: () =>
@@ -551,6 +562,11 @@ export const productsApi = {
     api.patch<Product>(`/v1/products/${id}`, payload).then((r) => r.data),
 
   remove: (id: string) => api.delete(`/v1/products/${id}`).then((r) => r.data),
+
+  /** The 30-day trash (TellMe idea 151). */
+  listTrash: () => api.get<DeletedProduct[]>('/v1/products/trash').then((r) => r.data),
+  restoreFromTrash: (id: string) => api.post<{ productId: string; notes: string[] }>(`/v1/products/trash/${id}/restore`).then((r) => r.data),
+  deleteFromTrash: (id: string) => api.delete<{ success: true }>(`/v1/products/trash/${id}`).then((r) => r.data),
 
   /** "Duplicate": a Draft copy named "<name> (copy)", stock 0, no barcodes. */
   duplicate: (id: string) => api.post<Product>(`/v1/products/${id}/duplicate`).then((r) => r.data),

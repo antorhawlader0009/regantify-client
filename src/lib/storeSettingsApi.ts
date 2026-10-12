@@ -69,6 +69,8 @@ export interface CodGuardSettings {
   autoConfirmMinOrders: number;
   /** Decimal string from the server, a number when sent; empty = no limit. */
   autoConfirmMaxAmount: string | number | null;
+  /** Checkout bot guard (TellMe idea 152): most online orders one phone number may place in an hour; 0 = no limit. */
+  checkoutPhoneHourLimit: number;
   // After-checkout SMS code: hours the shopper has to enter it before the order is dealt with; null = never.
   verificationExpiryHours: number | null;
   // false = the order is cancelled (stock goes back); true = it stays On Hold and the store is told to call.

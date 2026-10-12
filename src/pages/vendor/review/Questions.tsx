@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Eye, EyeOff, MessageCircleQuestion, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, MessageCircleQuestion, Sparkles, Trash2 } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, PillTabs, TableFooter, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { productQuestionsApi, type ProductQuestion, type QuestionStatus } from '../../../lib/productQuestionsApi';
@@ -29,6 +29,15 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
       void refresh();
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t save the answer.')),
+  });
+  // The AI only fills the box; the store reads and edits it, then saves (TellMe idea 137).
+  const draft = useMutation({
+    mutationFn: () => productQuestionsApi.aiDraft(q.id),
+    onSuccess: (d) => {
+      setText(d.text.slice(0, MAX_ANSWER));
+      toast.success('Draft written. Read it, change what you like, then save.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'The AI could not write a draft.')),
   });
   const hide = useMutation({
     mutationFn: (hidden: boolean) => productQuestionsApi.setHidden(q.id, hidden),
@@ -89,6 +98,16 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
                 {text.length}/{MAX_ANSWER}
               </span>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => draft.mutate()}
+                  disabled={draft.isPending || answer.isPending}
+                  title="The AI writes a short answer from the product's details for you to edit. It uses a few AI Credits."
+                  className={`${outlineBtn} inline-flex items-center gap-1.5`}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {draft.isPending ? 'Writing…' : 'AI draft'}
+                </button>
                 {q.answer !== null && (
                   <button type="button" onClick={() => { setText(q.answer ?? ''); setEditing(false); }} className={outlineBtn}>
                     Cancel

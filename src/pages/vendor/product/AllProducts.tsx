@@ -22,6 +22,7 @@ import {
   Tag,
   Download,
   Pin,
+  Undo2,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { downloadProducts } from '../../../lib/productExport';
@@ -36,6 +37,7 @@ import { SetBadgeDialog } from './SetBadgeDialog';
 import { PinnedProductsDialog } from './PinnedProductsDialog';
 import { ChangePricesDialog } from './ChangePricesDialog';
 import { PriceChangeHistoryDialog } from './PriceChangeHistoryDialog';
+import { DeletedProductsDialog } from './DeletedProductsDialog';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { CreateStockProductModal } from './CreateStockProductModal';
 import { ImportCsvModal } from './ImportCsvModal';
@@ -523,6 +525,8 @@ export default function AllProducts() {
   const [badgeOpen, setBadgeOpen] = useState(false);
   // Pinned products (TellMe idea 47): null = closed, an array = open with those ticked products to add.
   const [pinAdding, setPinAdding] = useState<Array<{ id: string; name: string; photoUrl: string | null }> | null>(null);
+  // The 30-day trash of deleted products (TellMe idea 151).
+  const [trashOpen, setTrashOpen] = useState(false);
   // Change prices (bulk selling-price change, with preview and undo) and its list of recent changes.
   const [priceOpen, setPriceOpen] = useState(false);
   const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
@@ -695,6 +699,13 @@ export default function AllProducts() {
             <Download size={14} />
             {exporting ? 'Exporting…' : selected.size > 0 ? `Export (${selected.size})` : 'Export'}
           </button>
+
+          {canDeleteProducts && (
+            <button onClick={() => setTrashOpen(true)} className={toolbarBtn} title="Products you deleted in the last 30 days, which you can bring back">
+              <Undo2 size={14} />
+              Deleted
+            </button>
+          )}
 
           {canEditProducts && (
             <button onClick={() => setPinAdding([])} className={toolbarBtn} title="Products shown first on your store">
@@ -1110,6 +1121,7 @@ export default function AllProducts() {
         />
       )}
 
+      {trashOpen && <DeletedProductsDialog open onOpenChange={(open) => !open && setTrashOpen(false)} />}
       {priceHistoryOpen && <PriceChangeHistoryDialog open onOpenChange={(open) => !open && setPriceHistoryOpen(false)} />}
 
       {stockProductModalId && stockProductSource && (

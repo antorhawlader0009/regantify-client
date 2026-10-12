@@ -93,7 +93,7 @@ export const SMS_WORDS: { word: string; hint: string }[] = [
 ];
 
 /** Who an SMS campaign goes to (SMS_AUDIENCES on the server). */
-export type SmsAudience = 'ALL' | 'RECENT' | 'INACTIVE' | 'SELECTED' | 'TAG' | 'VIP' | 'RETURNING';
+export type SmsAudience = 'ALL' | 'RECENT' | 'INACTIVE' | 'SELECTED' | 'TAG' | 'VIP' | 'RETURNING' | 'OPEN_ORDERS';
 
 export type ScheduledSmsStatus = 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED' | 'CANCELLED';
 
@@ -120,6 +120,10 @@ export interface SmsCampaignTarget {
   phones?: string[];
   /** TAG: customers carrying this tag (Customers > note and tags). */
   tag?: string;
+  /** OPEN_ORDERS (TellMe idea 148): only this delivery zone, this courier, or orders older than N days. */
+  openZone?: 'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA';
+  openCourier?: 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
+  openOlderDays?: number;
 }
 
 export interface SmsCampaignPreview {

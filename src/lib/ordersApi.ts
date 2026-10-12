@@ -202,6 +202,9 @@ export interface Order {
   paymentLink?: PaymentLinkInfo | null;
   /** The earlier order this one may be a copy of (same phone and product within 24 hours); null = not flagged. */
   possibleDuplicateOfId?: string | null;
+  /** Order risk badge (TellMe idea 143): LOW / MEDIUM / HIGH, null = not scored; the reasons are plain sentences. */
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | null;
+  riskReasons?: string[] | null;
   /** The day the shopper asked to have it delivered (an ISO date at midnight UTC = that calendar day); null when none. */
   preferredDeliveryDate?: string | null;
   /** The delivery time slot the customer preferred (TellMe idea 90), as it read then. */
@@ -343,6 +346,8 @@ export interface ListOrdersParams {
   source?: 'STOREFRONT' | 'MANUAL' | 'POS';
   /** Only orders marked as a possible duplicate of an earlier one. */
   possibleDuplicate?: boolean;
+  /** Order risk badge: HIGH = high only, MEDIUM_UP = medium and high. */
+  risk?: 'HIGH' | 'MEDIUM_UP';
   /** Only orders whose shopper asked for this delivery day (YYYY-MM-DD). */
   preferredDate?: string;
   /** Pre-orders (TellMe idea 64): a date (YYYY-MM-DD) or 'any'. */
@@ -450,6 +455,14 @@ export interface MergeCandidates {
   orders: MergeCandidate[];
 }
 
+export interface BlockedCheckoutSummary {
+  days: number;
+  total: number;
+  /** HONEYPOT | TOO_FAST | PHONE_LIMIT | IP_LIMIT -> how many were refused. */
+  byReason: Record<string, number>;
+  byDay: Array<{ day: string; count: number }>;
+}
+
 export const ordersApi = {
   list: (params: ListOrdersParams = {}) =>
     api.get<OrderListResponse>('/v1/orders', { params }).then((r) => r.data),
@@ -468,6 +481,8 @@ export const ordersApi = {
 
   /** A marker that changes when any order of the store does; polled by useOrdersAutoRefresh. */
   pulse: () => api.get<{ marker: string }>('/v1/orders/pulse').then((r) => r.data),
+  /** Checkouts the bot guard refused in the last 7 days (TellMe idea 152): counts only. */
+  blockedCheckouts: () => api.get<BlockedCheckoutSummary>('/v1/orders/blocked-checkouts').then((r) => r.data),
 
   create: (payload: CreateOrderPayload) =>
     api.post<Order>('/v1/orders', payload).then((r) => r.data),
@@ -609,6 +624,7 @@ export interface OrderViewFilters {
   courierBooking?: string;
   source?: string;
   possibleDuplicate?: boolean;
+  risk?: 'HIGH' | 'MEDIUM_UP';
   preferredDate?: string;
   lossOnly?: boolean;
   speed?: 'EXPRESS';

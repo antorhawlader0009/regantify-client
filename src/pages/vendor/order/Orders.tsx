@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
+import { AddressCheckMark, OrderRiskBadge } from '../../../components/order/OrderRiskBadge';
 import {
   ArrowLeft,
   Check,
@@ -9,7 +10,10 @@ import {
   ClipboardCheck,
   ClipboardList,
   Copy,
+  CalendarClock,
   Download,
+  HandCoins,
+  ShieldAlert,
   ExternalLink,
   FileText,
   History,
@@ -444,6 +448,8 @@ function OrderRow({
             Express
           </p>
         )}
+        <OrderRiskBadge order={order} />
+        <AddressCheckMark order={order} />
         {order.possibleDuplicateOfId && (
           <p
             className="mt-1 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900"
@@ -802,6 +808,11 @@ export default function Orders() {
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
   const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
+  // "Risky" (TellMe idea 143): medium and high risk orders; a saved view can also hold high only.
+  const [risk, setRisk] = useState<'HIGH' | 'MEDIUM_UP' | ''>(() => {
+    const q = searchParams.get('risk');
+    return q === 'HIGH' || q === 'MEDIUM_UP' ? q : '';
+  });
   // "Delivery day" (TellMe idea 50): only orders whose shopper asked for this day.
   const [preferredDate, setPreferredDate] = useState('');
   // Profit (TellMe idea 27), for people with analytics.profit: orders that lost money, and a profit line under each total.
@@ -857,7 +868,7 @@ export default function Orders() {
   // Pre-orders (TellMe idea 64): 'any' or the expected date.
   const [preOrder, setPreOrder] = useState(() => searchParams.get('preOrder') ?? '');
   const [channel, setChannel] = useState(() => searchParams.get('channel') ?? '');
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, risk, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter]);
   const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
   const [assignSettingsOpen, setAssignSettingsOpen] = useState(false);
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
@@ -936,7 +947,7 @@ export default function Orders() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter }],
+    queryKey: ['orders', { search, activeTab, page, perPage, dateFrom, dateTo, trashView, callStatus: lmsOn ? callStatus : '', courierBooking, source, duplicatesOnly, risk, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter }],
     queryFn: () =>
       ordersApi.list({
         search: search.trim() || undefined,
@@ -948,6 +959,7 @@ export default function Orders() {
         courierBooking,
         source: source || undefined,
         possibleDuplicate: duplicatesOnly || undefined,
+        risk: risk || undefined,
         preferredDate: preferredDate || undefined,
         assignee: assignee || undefined,
         preOrder: preOrder || undefined,
@@ -992,6 +1004,7 @@ export default function Orders() {
                 courierBooking,
                 source: source || undefined,
                 possibleDuplicate: duplicatesOnly || undefined,
+                risk: risk || undefined,
                 preferredDate: preferredDate || undefined,
                 lossOnly: (canProfit && lossOnly) || undefined,
                 speed: expressOnly ? 'EXPRESS' : undefined,
@@ -1081,6 +1094,7 @@ export default function Orders() {
   if (courierBooking) currentViewFilters.courierBooking = courierBooking;
   if (source) currentViewFilters.source = source;
   if (duplicatesOnly) currentViewFilters.possibleDuplicate = true;
+  if (risk) currentViewFilters.risk = risk;
   if (preferredDate) currentViewFilters.preferredDate = preferredDate;
   if (lossOnly) currentViewFilters.lossOnly = true;
   if (expressOnly) currentViewFilters.speed = 'EXPRESS';
@@ -1099,6 +1113,7 @@ export default function Orders() {
     setCourierBooking(f.courierBooking === 'NOT_BOOKED' || f.courierBooking === 'FAILED' ? f.courierBooking : undefined);
     setSource((f.source ?? '') as ListOrdersParams['source'] | '');
     setDuplicatesOnly(!!f.possibleDuplicate);
+    setRisk(f.risk ?? '');
     setPreferredDate(f.preferredDate ?? '');
     setLossOnly(!!f.lossOnly && canProfit);
     setExpressOnly(f.speed === 'EXPRESS');
@@ -1245,6 +1260,16 @@ export default function Orders() {
                 <Copy size={15} />
                 Possible duplicates
               </button>
+              <button
+                type="button"
+                aria-pressed={risk !== ''}
+                onClick={() => setRisk((v) => (v ? '' : 'MEDIUM_UP'))}
+                title="Orders marked medium or high risk (earlier returns, a poor courier record, a big first order...)"
+                className={`${toolbarBtn} ${risk ? 'border-red-300 bg-red-50 text-red-800' : ''}`}
+              >
+                <ShieldAlert size={15} />
+                Risky orders
+              </button>
               {canProfit && (
                 <>
                   <button
@@ -1322,6 +1347,20 @@ export default function Orders() {
             <button type="button" onClick={() => navigate('/vendor/orders/rider-cash')} className={toolbarBtn} title="Cash your own delivery riders collected and handed in">
               <Wallet size={15} />
               Rider cash
+            </button>
+          )}
+
+          {activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/standing')} className={toolbarBtn} title="Regular customers whose same order is made again for you every week or month">
+              <CalendarClock size={15} />
+              Standing orders
+            </button>
+          )}
+
+          {activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/refunds')} className={toolbarBtn} title="Customers who paid online for a cancelled or returned order and are still owed their money">
+              <HandCoins size={15} />
+              Refunds to pay
             </button>
           )}
 
@@ -1529,7 +1568,7 @@ export default function Orders() {
                         <p className="mt-2 text-sm font-medium text-regantify-text">
                           {trashView ? 'Trash is empty.' : 'No orders found.'}
                         </p>
-                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || preferredDate || lossOnly || expressOnly || assignee || preOrder || channel || labelFilter) && (
+                        {!trashView && (search || dateFrom || dateTo || callStatus || courierBooking || source || duplicatesOnly || risk || preferredDate || lossOnly || expressOnly || assignee || preOrder || channel || labelFilter) && (
                           <p className="mt-1 text-xs text-neutral-500">Try changing your search or filters.</p>
                         )}
                       </td>

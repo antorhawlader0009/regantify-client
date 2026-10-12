@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
-import { CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
+import { CalendarClock, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
 import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
@@ -34,8 +34,12 @@ import { CourierSetupModal } from '../../../components/courier/CourierSetupModal
 import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCard';
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
+import { OrderRefundNote } from '../../../components/order/OrderRefundNote';
+import { OrderRiskCard, orderAddressProblem } from '../../../components/order/OrderRiskBadge';
+import { ADDRESS_PROBLEM_TEXT } from '../../../lib/addressCheck';
 import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/order/EditOrderItemsDialog';
 import { MergeOrdersDialog, canMergeOrder } from '../../../components/order/MergeOrdersDialog';
+import { MakeRegularDialog, canMakeRegular } from '../../../components/order/MakeRegularDialog';
 import { SplitOrderDialog, canSplitOrder } from '../../../components/order/SplitOrderDialog';
 import { AssignCard } from '../../../components/order/OrderAssign';
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
@@ -132,6 +136,7 @@ export default function OrderDetail() {
   const [showInvoice, setShowInvoice] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [makingRegular, setMakingRegular] = useState(false);
   const [splitting, setSplitting] = useState(false);
   // "Not connected → setup popup" (COURIER-PLAN.md §5.2): the provider to
   // connect, and the booking to retry once it is. null closes the popup.
@@ -492,6 +497,22 @@ export default function OrderDetail() {
       <OrderReturnCheckCard order={order} canEdit={canEdit} />
       <OrderProfitCard orderId={order.id} />
 
+      {/* Medium or high risk (TellMe idea 143, OrderRiskService). */}
+      <OrderRefundNote orderId={order.id} status={order.status} />
+      {canCreate && canMakeRegular(order) && (
+        <div className="flex justify-end">
+          <button type="button" onClick={() => setMakingRegular(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline" title="Repeat this order for this customer every week or month">
+            <CalendarClock size={14} />
+            Make it regular
+          </button>
+        </div>
+      )}
+      <OrderRiskCard order={order} />
+      {orderAddressProblem(order) && (
+        <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+          <span className="font-medium">Address incomplete?</span> {ADDRESS_PROBLEM_TEXT[orderAddressProblem(order)!]} Call the customer and fix it with Edit contact before you book a courier.
+        </p>
+      )}
       {/* Same phone and product as an earlier open order within 24 hours (OrdersService.findPossibleDuplicate). */}
       {order.possibleDuplicateOfId && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
@@ -1082,6 +1103,7 @@ export default function OrderDetail() {
       <InvoiceModal order={showInvoice ? order : null} onOpenChange={(open) => !open && setShowInvoice(false)} />
       <EditOrderItemsDialog order={order} open={editingItems} onOpenChange={setEditingItems} />
       {merging && <MergeOrdersDialog order={order} open onOpenChange={setMerging} />}
+      {makingRegular && <MakeRegularDialog order={order} open onOpenChange={setMakingRegular} />}
       {splitting && <SplitOrderDialog order={order} open onOpenChange={setSplitting} />}
       {canContact && <OrderMessageDialog order={order} open={messageOpen} onOpenChange={setMessageOpen} canSms={canSms} />}
       {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} orderId={order.id} />}

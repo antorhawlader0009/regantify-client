@@ -25,6 +25,15 @@ export interface TrustStripSettings {
   home: boolean;
 }
 
+/** Store > Design > Store reputation (TellMe idea 147): which counted figures to show; the numbers themselves come from the server. */
+export interface ReputationSettings {
+  enabled: boolean;
+  orders: boolean;
+  rating: boolean;
+  reviews: boolean;
+  since: boolean;
+}
+
 export interface ScheduledBanner {
   id: string;
   content: string;
@@ -122,6 +131,7 @@ export interface DesignSettings {
   /** Scheduled banners (TellMe idea 110). */
   bannerSchedule: ScheduledBanner[];
   trustStrip: TrustStripSettings;
+  reputation: ReputationSettings;
   bannerContent: string | null;
   bannerStyle: SiteBannerStyle;
   bannerBackgroundColor: string | null;

@@ -36,6 +36,10 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const [recentDays, setRecentDays] = useState('30');
   const [inactiveDays, setInactiveDays] = useState('60');
   const [tag, setTag] = useState('');
+  // "Customers with an order on its way" (TellMe idea 148): optional narrowing.
+  const [openZone, setOpenZone] = useState<'' | 'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA'>('');
+  const [openCourier, setOpenCourier] = useState<'' | 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX'>('');
+  const [openOlderDays, setOpenOlderDays] = useState('');
   const [message, setMessage] = useState('');
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const [when, setWhen] = useState<'NOW' | 'LATER'>('NOW');
@@ -47,19 +51,27 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const usesPersonalCoupon = /\{personal_coupon\}/i.test(message);
   const { data: couponList } = useQuery({ queryKey: ['coupons', 'sms-template-pick'], queryFn: () => couponsApi.list({ perPage: 100 }), enabled: usesPersonalCoupon });
   const days = audience === 'INACTIVE' ? inactiveDays : recentDays;
-  const [debounced, setDebounced] = useState({ audience, days, message });
+  const [debounced, setDebounced] = useState({ audience, days, message, openZone, openCourier, openOlderDays });
   const { data: storeTags } = useQuery({ queryKey: ['customer-tags'], queryFn: customersApi.listTags });
 
   useEffect(() => {
-    const id = setTimeout(() => setDebounced({ audience, days, message }), 300);
+    const id = setTimeout(() => setDebounced({ audience, days, message, openZone, openCourier, openOlderDays }), 300);
     return () => clearTimeout(id);
-  }, [audience, days, message]);
+  }, [audience, days, message, openZone, openCourier, openOlderDays]);
+
+  // Order news goes to whoever has an open order right now, so it can only be sent now.
+  useEffect(() => {
+    if (audience === 'OPEN_ORDERS') setWhen('NOW');
+  }, [audience]);
 
   const target = {
     audience: debounced.audience,
     days: debounced.audience === 'RECENT' || debounced.audience === 'INACTIVE' ? Math.max(1, Number(debounced.days) || (debounced.audience === 'INACTIVE' ? 60 : 30)) : undefined,
     phones: debounced.audience === 'SELECTED' ? selectedPhones : undefined,
     tag: debounced.audience === 'TAG' ? tag : undefined,
+    openZone: debounced.audience === 'OPEN_ORDERS' && debounced.openZone ? debounced.openZone : undefined,
+    openCourier: debounced.audience === 'OPEN_ORDERS' && debounced.openCourier ? debounced.openCourier : undefined,
+    openOlderDays: debounced.audience === 'OPEN_ORDERS' && Number(debounced.openOlderDays) >= 1 ? Math.min(60, Math.floor(Number(debounced.openOlderDays))) : undefined,
   };
   const needsTag = debounced.audience === 'TAG' && !tag;
   const { data: preview } = useQuery({
@@ -127,6 +139,8 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
     // The automatic customer groups (Customers > Group settings decides who is VIP).
     { id: 'VIP', label: 'VIP customers' },
     { id: 'RETURNING', label: 'Returning customers' },
+    // Order news (TellMe idea 148): everyone whose order is still on its way.
+    { id: 'OPEN_ORDERS', label: 'Customers with an order on its way' },
     // Customers > note and tags: only once the store has tagged someone.
     ...((storeTags?.length ?? 0) > 0 ? [{ id: 'TAG' as const, label: 'Customers with a tag…' }] : []),
   ];
@@ -165,6 +179,40 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
         {audience === 'INACTIVE' && (
           <p className="mt-1.5 text-xs text-neutral-500">Customers who bought before, but not in the last {inactiveDays || '…'} days. A good way to bring them back.</p>
         )}
+        {audience === 'OPEN_ORDERS' && (
+          <div className="mt-2 space-y-2">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <select value={openZone} onChange={(e) => setOpenZone(e.target.value as typeof openZone)} aria-label="Delivery area" className={`${productInputClass} !w-auto !py-1.5`}>
+                <option value="">Any delivery area</option>
+                <option value="DHAKA">Inside Dhaka</option>
+                <option value="AROUND_DHAKA">Around Dhaka</option>
+                <option value="OUTSIDE_DHAKA">Outside Dhaka</option>
+              </select>
+              <select value={openCourier} onChange={(e) => setOpenCourier(e.target.value as typeof openCourier)} aria-label="Courier" className={`${productInputClass} !w-auto !py-1.5`}>
+                <option value="">Any courier</option>
+                <option value="PATHAO">Pathao</option>
+                <option value="STEADFAST">SteadFast</option>
+                <option value="REDX">RedX</option>
+                <option value="NONE">Own delivery or not booked</option>
+              </select>
+              <label className="flex items-center gap-1.5 text-neutral-600">
+                Placed more than
+                <input value={openOlderDays} onChange={(e) => setOpenOlderDays(e.target.value.replace(/\D/g, '').slice(0, 2))} inputMode="numeric" placeholder="any" className={`${productInputClass} !w-16 !py-1.5`} />
+                days ago
+              </label>
+            </div>
+            <p className="text-xs text-neutral-500">
+              Customers whose order is Pending, On Hold, Processing, Shipping or Ready for pickup. Use it for news about their own order, like a delay. It goes out now, and each order’s history gets a line saying the update was sent.
+            </p>
+            <button
+              type="button"
+              onClick={() => setMessage('{store}: Sorry, your order {order} is taking a little longer than planned. We are working to get it to you as soon as we can. Thank you for your patience.')}
+              className="text-xs text-brand underline underline-offset-2"
+            >
+              Use a ready delay message
+            </button>
+          </div>
+        )}
       </Field>
       <Field label="Message" hint="English: 160 letters = 1 SMS. Bangla: 70 letters = 1 SMS. {order} is each customer’s latest order.">
         <div className="mb-2">
@@ -195,7 +243,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
 
       <Field label="When">
         <div className="flex flex-wrap items-center gap-2">
-          {(['NOW', 'LATER'] as const).map((w) => (
+          {(['NOW', 'LATER'] as const).filter((w) => w === 'NOW' || audience !== 'OPEN_ORDERS').map((w) => (
             <label key={w} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${when === w ? 'border-brand bg-brand/5' : 'border-line'}`}>
               <input type="radio" name="sms-when" checked={when === w} onChange={() => setWhen(w)} />
               {w === 'NOW' ? 'Send now' : 'Send later'}
