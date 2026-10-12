@@ -55,6 +55,17 @@ interface ChatMessage extends AssistantMessage {
   /** The page the fills were made for (they only apply while it is open). */
   fillPath?: string;
   applied?: boolean;
+  /** When the message was sent or received (ms). Messages saved before this existed have none and show no time. */
+  at?: number;
+}
+
+/** "4:06 PM" for today, "11 Oct, 4:06 PM" for an earlier day, in Dhaka time. */
+function chatTime(at: number): string {
+  const d = new Date(at);
+  const tz = 'Asia/Dhaka';
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz });
+  const day = (x: Date) => x.toLocaleDateString('en-CA', { timeZone: tz });
+  return day(d) === day(new Date()) ? time : `${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: tz })}, ${time}`;
 }
 
 interface Chat {
@@ -206,7 +217,7 @@ function PanelBody({
 
     const id = current?.id ?? crypto.randomUUID();
     const base: Chat = current ?? { id, title: text.replace(/\s+/g, ' ').slice(0, 40), updatedAt: Date.now(), messages: [] };
-    const withQuestion: Chat = { ...base, updatedAt: Date.now(), messages: [...base.messages, { role: 'user', content: text }] };
+    const withQuestion: Chat = { ...base, updatedAt: Date.now(), messages: [...base.messages, { role: 'user', content: text, at: Date.now() }] };
     update([withQuestion, ...chats.filter((c) => c.id !== id)]);
     setCurrentId(id);
     setSending(true);
@@ -219,6 +230,7 @@ function PanelBody({
       const reply: ChatMessage = {
         role: 'assistant',
         content: answer.reply,
+        at: Date.now(),
         ...(answer.links.length ? { links: answer.links } : {}),
         ...(answer.fills.length ? { fills: answer.fills, fillPath: page.path } : {}),
       };
@@ -474,12 +486,16 @@ function PanelBody({
         )}
         {current?.messages.map((m, i) =>
           m.role === 'user' ? (
-            <div key={i} className="flex justify-end">
+            <div key={i} className="flex flex-col items-end">
               <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl bg-neutral-200/70 px-4 py-3 text-[15px] text-neutral-900">{m.content}</p>
+              {m.at && <span className="mt-1 text-[11px] text-neutral-400">{chatTime(m.at)}</span>}
             </div>
           ) : (
             <div key={i} className="py-1">
-              <p className="mb-1 text-[15px] font-medium text-orange-600">Assistant</p>
+              <p className="mb-1 text-[15px] font-medium text-orange-600">
+                Assistant
+                {m.at && <span className="ml-2 text-[11px] font-normal text-neutral-400">{chatTime(m.at)}</span>}
+              </p>
               <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-neutral-900">{renderReply(m.content)}</p>
               {extras(m, i)}
             </div>
@@ -604,12 +620,16 @@ function PanelBody({
         )}
         {current?.messages.map((m, i) =>
           m.role === 'user' ? (
-            <div key={i} className="flex justify-end">
+            <div key={i} className="flex flex-col items-end">
               <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl bg-neutral-200/70 px-4 py-3 text-[15px] text-neutral-900">{m.content}</p>
+              {m.at && <span className="mt-1 text-[11px] text-neutral-400">{chatTime(m.at)}</span>}
             </div>
           ) : (
             <div key={i} className="rounded-2xl border border-line bg-white p-4">
-              <p className="mb-1 text-[15px] font-medium text-orange-600">Assistant</p>
+              <p className="mb-1 text-[15px] font-medium text-orange-600">
+                Assistant
+                {m.at && <span className="ml-2 text-[11px] font-normal text-neutral-400">{chatTime(m.at)}</span>}
+              </p>
               <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-neutral-900">{renderReply(m.content)}</p>
               {extras(m, i)}
             </div>
