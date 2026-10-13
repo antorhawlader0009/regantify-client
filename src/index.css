@@ -80,17 +80,44 @@ body {
 .animate-pop-in { animation: pop-in 0.35s ease-out; }
 .animate-shrink { animation-name: shrink; animation-timing-function: linear; animation-fill-mode: forwards; }
 
-/* Scroll still works everywhere — the scrollbar itself is just hidden,
-   since a visible scrollbar clashes with the design. Applies to every
-   scrollable element (html/body, the dashboard's <main>, any overflow-y
-   panel), not just one spot. */
-* {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* old Edge/IE */
-}
-
+/*
+ * Scrollbars. Vertical scrollbars are hidden everywhere (the page, the dashboard <main>, panels, the admin rail): scrolling still works, there is just no bar.
+ * Horizontal ones (a wide table in its panel) get a slim bar in the panel's own colour, so it matches whichever dashboard it is in: the colour comes from
+ * --c-brand, which is indigo in the vendor panel and green in the Super Admin console.
+ * Chrome ignores the ::-webkit-scrollbar rules when scrollbar-width is set, so the standard properties are only used where those rules are not supported (Firefox).
+ */
 *::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, new Edge */
+  width: 0; /* vertical: none */
+  height: 14px; /* horizontal: slim but easy to grab with the mouse */
+  background: transparent;
+}
+*::-webkit-scrollbar-track {
+  background-color: rgb(var(--c-brand) / 0.07);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--c-brand) / 0.5);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--c-brand) / 0.8);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: none;
+  }
+  .overflow-x-auto,
+  .overflow-x-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--c-brand) / 0.4) transparent;
+  }
 }
 
 /* Dashboard "Hide numbers": blurs every money figure (marked .dash-money)
@@ -224,8 +251,3 @@ body.admin-panel select:focus, body.admin-panel input[type='date']:focus, body.a
 /* IDs, invoices, phone numbers: the one place a fixed-width face earns its keep. */
 body.admin-panel .console-id { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0; }
 
-/* The rail (AdminSidebar): thin scrollbar here only, since it can hold more links than a short screen shows. */
-.console-rail { scrollbar-width: thin; scrollbar-color: #1d4b40 transparent; -ms-overflow-style: auto; }
-.console-rail::-webkit-scrollbar { display: block; width: 6px; }
-.console-rail::-webkit-scrollbar-thumb { background: #1d4b40; border-radius: 3px; }
-.console-rail::-webkit-scrollbar-track { background: transparent; }
