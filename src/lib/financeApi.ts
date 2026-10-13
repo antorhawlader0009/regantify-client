@@ -57,6 +57,8 @@ export interface WithdrawRequest {
   receiverNumber: string | null;
   bankDetails: string | null;
   status: WithdrawRequestStatus;
+  /** The platform's withdraw fee kept from this payout (Settings > Money); you receive amount - fee. */
+  fee?: string;
   note: string | null;
   resolvedByUserId: string | null;
   resolvedAt: string | null;

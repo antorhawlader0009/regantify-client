@@ -10,6 +10,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { BD_PHONE_HINT, normalizeBdPhone, toLatinDigits } from '../../../lib/bdPhone';
 import { formatDhakaDate, formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
+import { usePlatformInfo, withdrawFee } from '../../../lib/platformApi';
 import { formatTaka } from './financeUi';
 
 const METHOD_LABEL: Record<WithdrawMethod, string> = {
@@ -18,8 +19,7 @@ const METHOD_LABEL: Record<WithdrawMethod, string> = {
   BANK: 'Bank transfer',
 };
 
-// Mirrors server WithdrawRequestsService's MINIMUM_WITHDRAW_AMOUNT. There's no withdrawal fee.
-const MINIMUM_WITHDRAW_AMOUNT = 100;
+// The minimum and the fee are Super Admin's (Settings > Money), read from /v1/platform/info inside the page; the minimum is 100 until it loads.
 
 /** Requested → Approved → Paid (or Requested → Rejected), with the dates we know. */
 function StatusSteps({ r }: { r: WithdrawRequest }) {
@@ -93,10 +93,13 @@ function RequestItem({ r }: { r: WithdrawRequest }) {
  * amount is set aside from the balance right away, and given back if the
  * request is rejected). The form shows the available balance and the
  * minimum, fills the method and number from the last request, and
- * confirms the amount before sending. There's no fee.
+ * confirms the amount before sending. A withdraw fee may apply (Super Admin's setting).
  */
 export default function Withdraw() {
   const queryClient = useQueryClient();
+  const { data: platform } = usePlatformInfo();
+  const MINIMUM_WITHDRAW_AMOUNT = platform?.withdraw.min ?? 100;
+  const feeRules = platform?.withdraw ?? { feeFlat: 0, feePercent: 0 };
 
   const { data: wallet, isLoading: walletLoading } = useQuery({ queryKey: ['finance', 'wallet'], queryFn: () => financeApi.getWallet() });
   const { data: requests = [], isLoading } = useQuery({ queryKey: ['finance', 'withdraw-requests'], queryFn: () => financeApi.getWithdrawRequests() });
@@ -154,7 +157,9 @@ export default function Withdraw() {
         ? 'Enter an amount like 500.'
         : numericAmount < MINIMUM_WITHDRAW_AMOUNT
           ? `The minimum is ${formatTaka(MINIMUM_WITHDRAW_AMOUNT)}.`
-          : numericAmount > balance
+          : withdrawFee(numericAmount, feeRules) >= numericAmount
+            ? 'The withdraw fee is more than this amount. Ask for more.'
+            : numericAmount > balance
             ? `That’s more than your balance of ${formatTaka(balance)}.`
             : null,
     receiver: method === 'BANK' ? null : !receiverNumber.trim() ? `Enter your ${METHOD_LABEL[method]} number.` : !phone ? BD_PHONE_HINT : null,
@@ -260,6 +265,11 @@ export default function Withdraw() {
                 <button type="button" onClick={() => setAmount(String(Math.floor(balance * 100) / 100))} className="mt-1.5 text-xs font-medium text-brand hover:underline">
                   Withdraw all ({formatTaka(balance)})
                 </button>
+                {numericAmount > 0 && withdrawFee(numericAmount, feeRules) > 0 && (
+                  <p className="mt-1.5 text-xs text-neutral-600">
+                    Withdraw fee {formatTaka(withdrawFee(numericAmount, feeRules))} · you receive {formatTaka(Math.max(0, numericAmount - withdrawFee(numericAmount, feeRules)))}
+                  </p>
+                )}
               </Field>
 
               <div>

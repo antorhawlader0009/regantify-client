@@ -8,6 +8,7 @@ import { StatusPill } from '../../../components/support/TicketThread';
 import { Dialog } from '../../../components/ui/Dialog';
 import { agoPhrase } from '../../../components/lms/format';
 import { toast } from '../../../lib/toast';
+import { usePlatformInfo } from '../../../lib/platformApi';
 
 type Tab = 'active' | 'closed';
 
@@ -156,14 +157,18 @@ function EmptyTickets({ closed, onNew }: { closed: boolean; onNew: () => void })
 }
 
 function ContactCard() {
+  // Super Admin's Settings > Contact wins; the placeholders in supportContent.ts only show until a real number is set.
+  const { data: platform } = usePlatformInfo();
+  const whatsapp = platform?.support.whatsapp || (/\d{5}/.test(SUPPORT_CONTACT.whatsapp) ? SUPPORT_CONTACT.whatsapp : '');
+  const phone = platform?.support.phone || (/\d{5}/.test(SUPPORT_CONTACT.phone) ? SUPPORT_CONTACT.phone : '');
   const rows = [
-    SUPPORT_CONTACT.whatsapp && {
+    whatsapp && {
       icon: <MessageCircle size={16} />,
       label: 'WhatsApp',
-      value: SUPPORT_CONTACT.whatsapp,
-      href: `https://wa.me/88${SUPPORT_CONTACT.whatsapp.replace(/\D/g, '')}`,
+      value: whatsapp,
+      href: `https://wa.me/${whatsapp.replace(/\D/g, '').replace(/^0/, '88')}`,
     },
-    SUPPORT_CONTACT.phone && { icon: <Phone size={16} />, label: 'Call', value: SUPPORT_CONTACT.phone, href: `tel:${SUPPORT_CONTACT.phone}` },
+    phone && { icon: <Phone size={16} />, label: 'Call', value: phone, href: `tel:${phone.replace(/\s/g, '')}` },
     SUPPORT_CONTACT.email && { icon: <Mail size={16} />, label: 'Email', value: SUPPORT_CONTACT.email, href: `mailto:${SUPPORT_CONTACT.email}` },
   ].filter(Boolean) as { icon: JSX.Element; label: string; value: string; href: string }[];
 

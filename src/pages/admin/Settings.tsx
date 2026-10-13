@@ -1,4 +1,7 @@
 import { AdminActivityLog } from '../../components/admin/AdminActivityLog';
+import { PlatformSwitches } from '../../components/admin/PlatformSwitches';
+import { ContactSection, KeysSection, MaintenanceSection, MoneySection, SignupSection, TermsSection } from '../../components/admin/PlatformConfig';
+import ReceiptDetails from './ReceiptDetails';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +16,14 @@ import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 // (Activity log, Platform, Receipt details...) to TABS.
 const TABS = [
   { id: 'security', label: 'Security' },
+  { id: 'company', label: 'Company' },
+  { id: 'contact', label: 'Contact' },
+  { id: 'signup', label: 'Sign-up' },
+  { id: 'money', label: 'Money' },
+  { id: 'terms', label: 'Terms' },
+  { id: 'maintenance', label: 'Maintenance' },
+  { id: 'keys', label: 'Keys' },
+  { id: 'switches', label: 'Switches' },
   { id: 'activity', label: 'Activity log' },
 ] as const;
 
@@ -20,20 +31,20 @@ export default function AdminSettings() {
   const [tab, setTab] = useState<(typeof TABS)[number]['id']>('security');
   const viewer = useAdminViewer();
   // The action log is for people whose role includes it (super-admin-plan.md Step 13).
-  const tabs = TABS.filter((t) => t.id !== 'activity' || adminCan(viewer, 'audit.view'));
+  const tabs = TABS.filter((t) => (t.id !== 'activity' || adminCan(viewer, 'audit.view')) && (t.id === 'security' || t.id === 'activity' || adminCan(viewer, 'settings.manage')));
 
   return (
     <div className={tab === 'activity' ? 'max-w-5xl' : 'max-w-3xl'}>
       <h1 className="text-2xl font-semibold text-regantify-text">Settings</h1>
       <p className="text-regantify-text-muted mt-1">Platform settings for Super Admin.</p>
 
-      <div className="mt-5 flex gap-1 border-b border-black/5">
+      <div className="mt-5 flex gap-1 overflow-x-auto border-b border-black/5">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 ${
+            className={`whitespace-nowrap px-4 py-2 text-sm font-medium -mb-px border-b-2 ${
               tab === t.id ? 'border-regantify-black text-regantify-text' : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
             }`}
           >
@@ -43,6 +54,14 @@ export default function AdminSettings() {
       </div>
 
       <div className="mt-6">{tab === 'security' && <SecurityTab />}
+        {tab === 'company' && <ReceiptDetails />}
+        {tab === 'contact' && <ContactSection />}
+        {tab === 'signup' && <SignupSection />}
+        {tab === 'money' && <MoneySection />}
+        {tab === 'terms' && <TermsSection />}
+        {tab === 'maintenance' && <MaintenanceSection />}
+        {tab === 'keys' && <KeysSection />}
+        {tab === 'switches' && <PlatformSwitches />}
         {tab === 'activity' && <AdminActivityLog />}</div>
     </div>
   );

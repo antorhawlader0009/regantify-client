@@ -17,6 +17,7 @@ import { ChangeVendorStatusModal } from './ChangeVendorStatusModal';
 import { AiCreditsAdjust } from './VendorDetailsDialog';
 import { HealthChip } from './VendorListPage';
 import { StoreFeeDeals } from '../../../components/admin/FeeDeals';
+import { StoreLimits } from '../../../components/admin/StoreLimits';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4): everything about one store, and the actions on it.
@@ -292,6 +293,11 @@ function Usage({ d }: { d: StoreDetail }) {
         <Limit label="Landing pages" {...u.landingPages} />
         <Limit label="Visits this month" {...u.visitsThisMonth} />
         <Row label="Orders per day allowed">{u.dailyOrderLimit === null ? 'No limit' : u.dailyOrderLimit}</Row>
+        {u.ownLimits && (
+          <p className="mt-2 text-xs text-regantify-text-muted">
+            This store has limits of its own{u.ownLimits.until ? ` until ${day(u.ownLimits.until)}` : ''} ({u.ownLimits.reason}). Change them under Actions.
+          </p>
+        )}
       </Card>
       <Card title="Balances">
         <Row label="Wallet">{formatTaka(d.wallet.balance)}</Row>
@@ -692,6 +698,11 @@ function Actions({ d }: { d: StoreDetail }) {
         {can('money.adjust') && (
           <Card title="Wallet and SMS credits">
             <MoneyAdjust d={d} onDone={refresh} />
+          </Card>
+        )}
+        {can('stores.edit') && (
+          <Card title="Store limits">
+            <StoreLimits vendorId={d.id} storeName={d.storeName} />
           </Card>
         )}
         {can('plans.edit') && (

@@ -12,6 +12,11 @@ function formatAmount(value: string | number) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 }
 
+/** What to actually send: the amount the store asked for less the platform's withdraw fee (Settings > Money). */
+function toPay(r: { amount: string; fee?: string }) {
+  return Math.round((Number(r.amount) - Number(r.fee ?? 0)) * 100) / 100;
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
@@ -60,7 +65,7 @@ function PaidDialog({ rows, onClose, onDone }: { rows: AdminWithdrawRequest[]; o
               <div className="w-48 shrink-0">
                 <p className="truncate text-sm font-medium text-regantify-text">{r.vendor.storeName}</p>
                 <p className="text-xs text-regantify-text-muted">
-                  {formatAmount(r.amount)} · {METHOD_LABEL[r.method]}
+                  {formatAmount(toPay(r))} · {METHOD_LABEL[r.method]}
                 </p>
               </div>
               <input value={refs[r.id] ?? ''} onChange={(e) => setRefs((s) => ({ ...s, [r.id]: e.target.value }))} maxLength={120} placeholder="Reference (optional)" className={`${field} flex-1`} />
@@ -170,7 +175,7 @@ export default function Payouts() {
       {chosen.length > 0 && (
         <div className="mb-3 flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-2.5 text-sm">
           <span className="font-medium text-blue-900">
-            {chosen.length} selected · {formatAmount(chosen.reduce((s, r) => s + Number(r.amount), 0))}
+            {chosen.length} selected · {formatAmount(chosen.reduce((s, r) => s + toPay(r), 0))}
           </span>
           <button type="button" onClick={() => setPaying(chosen)} className="rounded-lg bg-regantify-cta px-3 py-1 font-medium text-white">
             Mark selected as paid
@@ -223,7 +228,10 @@ export default function Payouts() {
                     <Link to={`/admin/vendors/${r.vendor.id}`} className="font-medium text-regantify-cta hover:underline">{r.vendor.storeName}</Link>
                     <p className="text-xs text-regantify-text-muted">{r.vendor.subdomain}</p>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-medium text-regantify-text">{formatAmount(r.amount)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-regantify-text">
+                    {formatAmount(toPay(r))}
+                    {Number(r.fee ?? 0) > 0 && <p className="text-xs font-normal text-regantify-text-muted">asked {formatAmount(r.amount)}, fee {formatAmount(r.fee ?? 0)}</p>}
+                  </td>
                   <td className="px-4 py-3 text-regantify-text">{METHOD_LABEL[r.method]}</td>
                   <td className="max-w-[220px] whitespace-pre-wrap px-4 py-3 text-regantify-text-muted">{r.method === 'BANK' ? r.bankDetails : r.receiverNumber}</td>
                   <td className="max-w-[200px] px-4 py-3 text-regantify-text-muted">{r.note ?? '—'}</td>
@@ -255,7 +263,7 @@ export default function Payouts() {
           </table>
         </div>
       </div>
-      <p className="mt-2 text-xs text-regantify-text-muted">To stop one store from withdrawing, open the store and use “Pause withdrawals”. The minimum amount and a withdraw fee come with the Settings step.</p>
+      <p className="mt-2 text-xs text-regantify-text-muted">To stop one store from withdrawing, open the store and use “Pause withdrawals”. The minimum amount and the withdraw fee are set in Settings, Money tab; the amount shown is what to pay out (the fee is already taken off).</p>
 
       {paying.length > 0 && <PaidDialog rows={paying} onClose={() => setPaying([])} onDone={refresh} />}
     </div>

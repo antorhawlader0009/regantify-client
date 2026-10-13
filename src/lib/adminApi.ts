@@ -36,6 +36,8 @@ export interface StoreDetail {
     landingPages: StoreLimit;
     visitsThisMonth: StoreLimit;
     dailyOrderLimit: number | null;
+    /** Set when Super Admin gave this store limits of its own (Step 14); the numbers above already include them. */
+    ownLimits: { until: string | null; reason: string } | null;
     orders30d: number;
     gmv30d: number;
     lastOrderAt: string | null;

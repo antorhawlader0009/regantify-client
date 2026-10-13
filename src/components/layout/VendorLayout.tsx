@@ -1,5 +1,6 @@
 import { ImpersonationBar } from '../ImpersonationBar';
 import { AnnouncementBanner } from '../AnnouncementBanner';
+import { MaintenanceBar, TermsGate } from '../PlatformNotices';
 import { KycBanner } from '../KycBanner';
 import { PlanRenewalBar } from '../PlanRenewalBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -41,6 +42,7 @@ export function VendorLayout() {
         <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
 
 
+        <MaintenanceBar />
         {!isLms && <AnnouncementBanner />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={nav} />
@@ -52,6 +54,7 @@ export function VendorLayout() {
       {/* "Ask AI": docked on the right, pushes the page instead of floating over it. */}
       <AssistantPanel />
       <WelcomeNote />
+      <TermsGate />
     </div>
   );
 }

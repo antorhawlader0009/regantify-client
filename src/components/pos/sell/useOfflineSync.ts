@@ -42,7 +42,10 @@ export function useOfflineSync(token: string, onSent?: () => void) {
             break;
           }
           // The cashier's unlock ran out: the next unlock sends the rest.
-          if ((err as { response?: { data?: { code?: string } } }).response?.data?.code === 'POS_PIN_REQUIRED') break;
+          const code = (err as { response?: { data?: { code?: string } } }).response?.data?.code;
+          if (code === 'POS_PIN_REQUIRED') break;
+          // Super Admin paused offline sync (Step 14): the sale is fine, keep it queued and try again on the next sync.
+          if (code === 'PLATFORM_PAUSED') break;
           await markQueuedFailed(q.clientSaleId, apiErrorMessage(err, 'The server refused this sale.'));
         }
       }
