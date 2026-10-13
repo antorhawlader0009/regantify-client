@@ -63,7 +63,14 @@ export function canMoveOrderStatus(from: OrderStatus, to: OrderStatus, zone?: st
   }
   const toStep = FLOW_STEP[to]!;
   if (toStep === 0) return fromStep === 0;
-  return fromStep === undefined || toStep >= fromStep;
+  // The menu offers only the next step, never a skip (Pending -> Completed).
+  // Skipping is still possible through the owner's "Correct a mistake", and the
+  // server still allows it for the API. From a pause (On Hold, Stock Out) the
+  // way back into the flow is Processing; the server refuses it if the order
+  // had gone further.
+  if (fromStep === undefined) return to === 'PROCESSING';
+  if (fromStep === 0) return to === 'PENDING' || to === 'PROCESSING';
+  return toStep === fromStep + 1;
 }
 
 // PAYMENT_INITIATED included by default (mirrors OrdersService's own
