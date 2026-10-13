@@ -4,12 +4,14 @@ const STYLES: Record<VendorStatus, string> = {
   ACTIVE: 'bg-green-100 text-green-700',
   PENDING: 'bg-amber-100 text-amber-700',
   SUSPENDED: 'bg-red-100 text-red-700',
+  CLOSED: 'bg-neutral-200 text-neutral-700',
 };
 
 const LABELS: Record<VendorStatus, string> = {
   ACTIVE: 'Active',
   PENDING: 'Pending',
   SUSPENDED: 'Suspended',
+  CLOSED: 'Closed',
 };
 
 export function StatusBadge({ status }: { status: VendorStatus }) {

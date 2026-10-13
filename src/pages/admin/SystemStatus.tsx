@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Activity, CheckCircle2, CircleAlert, Clock, Loader2 } from 'lucide-react';
 import { systemStatusApi, type JobStatus } from '../../lib/systemStatusApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
+import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
 
 const ago = (seconds: number | null) => {
   if (seconds === null) return 'never';
@@ -63,6 +64,8 @@ export default function SystemStatus() {
           {!data.database.ok ? 'The database is not answering.' : data.lateCount > 0 ? `${data.lateCount} background ${data.lateCount === 1 ? 'job looks' : 'jobs look'} stopped.` : 'Everything is running.'}
         </p>
       </div>
+
+      <SmsBalanceCard />
 
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-black/5 bg-white p-4">

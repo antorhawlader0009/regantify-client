@@ -1,64 +1,297 @@
+import { useState, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Wallet as WalletIcon, Receipt } from 'lucide-react';
+import { ArrowDownRight, ArrowRight, ArrowUpRight, CircleCheck, Loader2, Receipt } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { adminDashboardApi } from '../../lib/adminDashboardApi';
+import { adminDashboardApi, type AdminOverview, type Compared, type OverviewRange } from '../../lib/adminDashboardApi';
+import { ColumnChart, PALETTE, TrendChart } from '../../components/analytics/TrendChart';
+import { bucketLabel, changeOf, formatCompact, formatTaka, formatValue, type ValueKind } from '../../components/analytics/format';
+import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
 
-// Same `৳` formatting convention as Finance > Wallet (client's own
-// vendor-side page) — `-` prefix instead of the default `৳-95.00`
-// toLocaleString would give.
+const RANGES: Array<{ id: OverviewRange; label: string }> = [
+  { id: 'today', label: 'Today' },
+  { id: '7d', label: '7 days' },
+  { id: '30d', label: '30 days' },
+  { id: 'month', label: 'This month' },
+];
+
 function formatAmount(value: string) {
-  const n = Number(value);
-  const formatted = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2 });
-  return n < 0 ? `-৳${formatted}` : `৳${formatted}`;
+  return formatTaka(Number(value));
 }
+
+/** "+12.5%" in green (or red when a rise is bad, like plans that ended); nothing when there is nothing to compare with. */
+function Change({ value, kind = 'count', badWhenUp }: { value: Compared; kind?: ValueKind; badWhenUp?: boolean }) {
+  const c = changeOf(value, kind);
+  if (!c || c.value === 0) return null;
+  const up = c.value > 0;
+  const good = badWhenUp ? !up : up;
+  const Icon = up ? ArrowUpRight : ArrowDownRight;
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${good ? 'text-green-700' : 'text-red-700'}`}>
+      <Icon size={13} />
+      {c.label}
+    </span>
+  );
+}
+
+function Card({ title, to, children, className = '' }: { title: string; to?: string; children: ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-2xl border border-black/5 bg-white p-5 ${className}`}>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-regantify-text">{title}</h2>
+        {to && (
+          <Link to={to} className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-regantify-text">
+            Open <ArrowRight size={12} />
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Row({ label, value, change, kind, note, badWhenUp }: { label: string; value: string; change?: Compared; kind?: ValueKind; note?: string; badWhenUp?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-black/5 py-2 last:border-b-0">
+      <div>
+        <p className="text-sm text-regantify-text">{label}</p>
+        {note && <p className="text-xs text-regantify-text-muted">{note}</p>}
+      </div>
+      <div className="flex items-baseline gap-2 text-right">
+        {change && <Change value={change} kind={kind} badWhenUp={badWhenUp} />}
+        <span className="text-sm font-medium tabular-nums text-regantify-text">{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function Kpi({ label, value, change, kind, hint, to }: { label: string; value: string; change?: Compared; kind?: ValueKind; hint?: string; to: string }) {
+  return (
+    <Link to={to} className="block rounded-2xl border border-black/5 bg-white p-5 transition-colors hover:border-black/15">
+      <p className="text-xs font-medium text-regantify-text-muted">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tabular-nums text-regantify-text">{value}</p>
+      <div className="mt-1 flex items-center gap-2 text-xs text-regantify-text-muted">
+        {change && <Change value={change} kind={kind} />}
+        {hint && <span>{hint}</span>}
+      </div>
+    </Link>
+  );
+}
+
+interface ActionItem {
+  key: string;
+  text: string;
+  to: string;
+  tone: 'red' | 'amber';
+}
+
+/** Everything that waits for the platform team, only what is non-zero. Each line opens the page where it is dealt with. */
+function actionItems(d: AdminOverview['needsAction']): ActionItem[] {
+  const items: ActionItem[] = [];
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  if (d.sms.level === 'CRITICAL' || d.sms.level === 'LOW')
+    items.push({ key: 'sms', text: `Platform SMS balance is ${d.sms.balance === null ? 'low' : formatTaka(d.sms.balance)}. Top up bulksmsbd.net before OTPs stop.`, to: '/admin/system-status', tone: d.sms.level === 'CRITICAL' ? 'red' : 'amber' });
+  else if (d.sms.configured && d.sms.error)
+    items.push({ key: 'sms', text: `Could not read the platform SMS balance: ${d.sms.error}`, to: '/admin/system-status', tone: 'amber' });
+  if (d.lateJobs.length) items.push({ key: 'jobs', text: `${plural(d.lateJobs.length, 'background job looks', 'background jobs look')} stopped: ${d.lateJobs.slice(0, 2).join(', ')}${d.lateJobs.length > 2 ? '…' : ''}`, to: '/admin/system-status', tone: 'red' });
+  if (d.paidNotApplied) items.push({ key: 'paid', text: `${plural(d.paidNotApplied, 'payment', 'payments')} received but not applied to the store`, to: '/admin/system-status', tone: 'red' });
+  if (d.withdrawPending.count) items.push({ key: 'wd', text: `${plural(d.withdrawPending.count, 'withdraw request', 'withdraw requests')} waiting (${formatTaka(d.withdrawPending.amount)})`, to: '/admin/finance/payouts', tone: 'amber' });
+  if (d.withdrawToPay.count) items.push({ key: 'wdpay', text: `${plural(d.withdrawToPay.count, 'approved withdrawal', 'approved withdrawals')} to send and mark paid (${formatTaka(d.withdrawToPay.amount)})`, to: '/admin/finance/payouts', tone: 'amber' });
+  if (d.planRequests) items.push({ key: 'plan', text: `${plural(d.planRequests, 'plan request', 'plan requests')} waiting`, to: '/admin/plan-requests', tone: 'amber' });
+  if (d.kycSubmitted) items.push({ key: 'kyc', text: `${plural(d.kycSubmitted, 'verification', 'verifications')} sent in, waiting for you`, to: '/admin/verification', tone: 'amber' });
+  if (d.supportWaiting) items.push({ key: 'sup', text: `${plural(d.supportWaiting, 'support ticket', 'support tickets')} unanswered for over 24 hours`, to: '/admin/support', tone: 'red' });
+  if (d.failedWebhooks) items.push({ key: 'hook', text: `${plural(d.failedWebhooks, 'webhook delivery', 'webhook deliveries')} failed in the last 24 hours`, to: '/admin/system-status', tone: 'amber' });
+  return items.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === 'red' ? -1 : 1));
+}
+
+const SOURCE_LABEL = { STOREFRONT: 'Online store', MANUAL: 'Entered by the store', POS: 'Counter (POS)' } as const;
 
 export default function AdminDashboard() {
   const user = useAuthStore((s) => s.user);
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin', 'dashboard', 'platform-revenue'],
-    queryFn: () => adminDashboardApi.getPlatformRevenue(),
+  const [range, setRange] = useState<OverviewRange>('30d');
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ['admin', 'overview', range],
+    queryFn: () => adminDashboardApi.overview(range),
+    refetchInterval: 60_000,
+    placeholderData: (prev) => prev,
   });
+  const fees = useQuery({ queryKey: ['admin', 'dashboard', 'platform-revenue'], queryFn: () => adminDashboardApi.getPlatformRevenue() });
+
+  const items = data ? actionItems(data.needsAction) : [];
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-regantify-text">
-        Welcome, {user?.fullName ?? 'Super Admin'}
-      </h1>
-      <p className="text-regantify-text-muted mt-1">
-        Platform-wide overview — more metrics coming in a later phase.
-      </p>
-
-      {/* Platform Revenue — the platform's own cut of Store > Payment
-          Gateway's per-order "Cash On Delivery fee" / "Online Payment
-          fee" (set per plan tier in Plans > Manage Plans).
-          This is charged to the shopper as part of the order total but
-          never lands in any vendor's own Wallet balance — see
-          PlatformRevenue's schema comment on the server for why it's
-          tracked separately. */}
-      <div className="mt-6 bg-regantify-black rounded-2xl p-6 text-white max-w-xs">
-        <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
-          <WalletIcon size={16} />
-          Platform Revenue
+    <div className="max-w-6xl space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-regantify-text">Welcome, {user?.fullName ?? 'Super Admin'}</h1>
+          <p className="mt-1 text-sm text-regantify-text-muted">
+            {data ? `Compared with ${data.period.previousLabel}. Refreshes every minute.` : 'The whole platform at a glance.'}
+          </p>
         </div>
-        <p className="text-3xl font-semibold mt-3">
-          {isLoading ? '…' : formatAmount(data?.totalRevenue ?? '0')}
-        </p>
-        <p className="text-white/60 text-xs mt-1">all-time, from gateway fees</p>
+        <div className="flex items-center gap-2">
+          {isFetching && <Loader2 size={14} className="animate-spin text-neutral-400" />}
+          <div className="inline-flex rounded-full border border-black/10 bg-white p-0.5" role="tablist" aria-label="Period">
+            {RANGES.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                role="tab"
+                aria-selected={range === r.id}
+                onClick={() => setRange(r.id)}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${range === r.id ? 'bg-regantify-black text-white' : 'text-regantify-text-muted hover:text-regantify-text'}`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 bg-white rounded-2xl border border-black/5 overflow-hidden max-w-3xl">
-        <div className="p-4 border-b border-black/5 flex items-center gap-2">
+      {error && !data && <p className="py-10 text-center text-sm text-red-600">Could not load the dashboard.</p>}
+      {isLoading && !data && (
+        <div className="flex justify-center py-16">
+          <Loader2 className="animate-spin text-neutral-400" />
+        </div>
+      )}
+
+      {data && (
+        <>
+          <Card title="Needs action now">
+            {items.length === 0 ? (
+              <p className="flex items-center gap-2 text-sm text-green-700">
+                <CircleCheck size={16} /> Nothing needs you right now.
+              </p>
+            ) : (
+              <ul className="divide-y divide-black/5">
+                {items.map((i) => (
+                  <li key={i.key}>
+                    <Link to={i.to} className="flex items-center gap-3 py-2.5 text-sm text-regantify-text hover:text-black">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${i.tone === 'red' ? 'bg-red-600' : 'bg-amber-500'}`} aria-hidden />
+                      <span className="flex-1">{i.text}</span>
+                      <ArrowRight size={14} className="text-neutral-400" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi label="Platform income" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" hint="plans, packs, fees" to="/admin/finance/revenue" />
+            <Kpi label="Monthly recurring revenue" value={formatTaka(data.subscriptions.mrr)} hint={`${data.subscriptions.payingStores} paying ${data.subscriptions.payingStores === 1 ? 'store' : 'stores'}`} to="/admin/plans" />
+            <Kpi label="Active stores" value={String(data.stores.active7d)} hint={`of ${data.stores.total}, last 7 days`} to="/admin/vendors/all" />
+            <Kpi label="Orders value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" hint={`${data.gmv.orders.current} orders`} to="/admin/orders" />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Platform income" to="/admin/finance/revenue">
+              <Row label="Plans" value={formatTaka(data.income.plans.current)} change={data.income.plans} kind="money" />
+              <Row label="SMS packs" value={formatTaka(data.income.sms.current)} change={data.income.sms} kind="money" />
+              <Row label="AI credit packs" value={formatTaka(data.income.ai.current)} change={data.income.ai} kind="money" />
+              <Row label="Platform fees on orders" value={formatTaka(data.income.platformFees.current)} change={data.income.platformFees} kind="money" />
+              <Row label="Total" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" />
+              <p className="mt-3 rounded-lg bg-regantify-content px-3 py-2 text-xs text-regantify-text-muted">
+                Not income: {formatTaka(data.income.walletTopups.current)} added to store wallets (their own money, held by the platform)
+                {data.income.debtsCleared.current > 0 ? ` and ${formatTaka(data.income.debtsCleared.current)} of old store debts paid inside purchases` : ''}.
+              </p>
+            </Card>
+
+            <Card title="Subscriptions" to="/admin/plans">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-regantify-text-muted">
+                      <th className="pb-2 font-medium">Plan</th>
+                      <th className="pb-2 text-right font-medium">Stores</th>
+                      <th className="pb-2 text-right font-medium">Per month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.subscriptions.plans.map((p) => (
+                      <tr key={p.code} className="border-t border-black/5">
+                        <td className="py-2">{p.name}</td>
+                        <td className="py-2 text-right tabular-nums">{p.stores}</td>
+                        <td className="py-2 text-right tabular-nums">{formatTaka(p.mrr)}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t border-black/5 text-regantify-text-muted">
+                      <td className="py-2">Free</td>
+                      <td className="py-2 text-right tabular-nums">{data.subscriptions.freeStores}</td>
+                      <td className="py-2 text-right tabular-nums">৳0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-3">
+                <Row label="First plan payment" note="stores that paid for a plan for the first time" value={String(data.subscriptions.newPaying.current)} change={data.subscriptions.newPaying} />
+                <Row label="Plan payments again" note="a paying store paid again" value={String(data.subscriptions.renewals.current)} change={data.subscriptions.renewals} />
+                <Row label="Plans that ended" note="ran out and went back to Free" value={String(data.subscriptions.ended.current)} change={data.subscriptions.ended} badWhenUp />
+              </div>
+            </Card>
+
+            <Card title="Stores" to="/admin/vendors/all">
+              <Row label="All stores" value={String(data.stores.total)} />
+              <Row label="Active in the last 7 days" note="owner signed in or an order came" value={String(data.stores.active7d)} />
+              <Row label="New in this period" value={String(data.stores.signups.current)} change={data.stores.signups} />
+              <Row label="New today / last 7 days" value={`${data.stores.signupsToday} / ${data.stores.signups7d}`} />
+              <Row label="Suspended" value={String(data.stores.suspended)} />
+              <Row label="Waiting for approval" value={String(data.stores.pending)} />
+              <Row label="Being verified (KYC)" value={String(data.stores.underKyc)} />
+            </Card>
+
+            <Card title="Orders across all stores" to="/admin/orders">
+              <Row label="Orders" note="cancelled, unpaid and returned left out" value={String(data.gmv.orders.current)} change={data.gmv.orders} />
+              <Row label="Value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" />
+              <Row label="Average order" value={formatTaka(data.gmv.average.current)} change={data.gmv.average} kind="money" />
+              {(Object.keys(SOURCE_LABEL) as Array<keyof typeof SOURCE_LABEL>).map((s) => (
+                <Row key={s} label={SOURCE_LABEL[s]} value={`${data.gmv.bySource[s].orders} · ${formatTaka(data.gmv.bySource[s].gmv)}`} />
+              ))}
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Platform income, last 30 days">
+              <TrendChart
+                data={data.charts.income}
+                series={[{ key: 'income', label: 'Income', color: PALETTE.blue }]}
+                kind="money"
+                bucket="day"
+                ariaLabel="Platform income per day for the last 30 days"
+              />
+            </Card>
+            <Card title="New stores per day, last 30 days">
+              <ColumnChart
+                data={data.charts.signups.map((d) => ({
+                  key: d.bucket,
+                  value: d.signups,
+                  tick: bucketLabel(d.bucket, 'day'),
+                  tooltip: `${bucketLabel(d.bucket, 'day', true)}: ${formatValue(d.signups, 'count')} new ${d.signups === 1 ? 'store' : 'stores'}`,
+                }))}
+                label="New stores"
+                ariaLabel="New stores per day for the last 30 days"
+                tickEvery={7}
+              />
+            </Card>
+          </div>
+        </>
+      )}
+
+      <SmsBalanceCard />
+
+      <div className="max-w-3xl overflow-hidden rounded-2xl border border-black/5 bg-white">
+        <div className="flex items-center gap-2 border-b border-black/5 p-4">
           <Receipt size={16} className="text-regantify-text-muted" />
           <p className="text-sm font-semibold text-regantify-text">Recent platform fees</p>
+          <span className="ml-auto text-xs text-regantify-text-muted">all-time: {fees.data ? formatAmount(fees.data.totalRevenue) : '…'}</span>
         </div>
-        {isLoading ? (
+        {fees.isLoading ? (
           <div className="p-8 text-center text-sm text-regantify-text-muted">Loading…</div>
-        ) : !data?.recent.length ? (
+        ) : !fees.data?.recent.length ? (
           <div className="p-8 text-center text-sm text-regantify-text-muted">No platform fees collected yet.</div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs font-semibold text-regantify-text-muted uppercase tracking-wide bg-regantify-content border-b border-black/5">
+              <tr className="border-b border-black/5 bg-regantify-content text-left text-xs font-semibold uppercase tracking-wide text-regantify-text-muted">
                 <th className="p-4">Order</th>
                 <th className="p-4">Vendor</th>
                 <th className="p-4">Fee</th>
@@ -66,19 +299,13 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.recent.map((row) => (
+              {fees.data.recent.map((row) => (
                 <tr key={row.id} className="border-b border-black/5 last:border-b-0">
-                  <td className="p-4 text-sm text-regantify-text">
-                    {row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}
-                  </td>
+                  <td className="p-4 text-sm text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}</td>
                   <td className="p-4 text-sm text-regantify-text">{row.vendorName ?? '—'}</td>
                   <td className="p-4 text-sm font-medium text-regantify-text">{formatAmount(row.amount)}</td>
                   <td className="p-4 text-sm text-regantify-text-muted">
-                    {new Date(row.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {new Date(row.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
                 </tr>
               ))}

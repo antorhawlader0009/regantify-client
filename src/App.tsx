@@ -149,6 +149,7 @@ import ReceiptDetails from './pages/admin/ReceiptDetails';
 import AdminSettings from './pages/admin/Settings';
 import Receipts from './pages/vendor/finance/Receipts';
 import AllVendors from './pages/admin/vendors/AllVendors';
+import StoreDetailPage from './pages/admin/vendors/StoreDetail';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
 import Announcements from './pages/admin/Announcements';
@@ -538,6 +539,7 @@ export default function App() {
                 <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
+                <Route path="/admin/vendors/:vendorId" element={<StoreDetailPage />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />
                 <Route path="/admin/announcements" element={<Announcements />} />

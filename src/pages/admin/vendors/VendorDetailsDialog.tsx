@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog } from '../../../components/ui/Dialog';
 import { StatusBadge } from './StatusBadge';
@@ -32,7 +33,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
  * the store's AI Credit history with the reason, and a bell message to the
  * store. A removal stops at 0.
  */
-function AiCreditsAdjust({ vendor, onDone }: { vendor: AdminVendor; onDone: (balanceAfter: number) => void }) {
+export function AiCreditsAdjust({ vendor, onDone }: { vendor: AdminVendor; onDone: (balanceAfter: number) => void }) {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<'add' | 'remove'>('add');
   const [amount, setAmount] = useState('');
@@ -139,6 +140,9 @@ export function VendorDetailsDialog({
           <Row label="Orders" value={vendor.orderCount} />
           <Row label="Joined" value={formatDateTime(vendor.createdAt)} />
           <Row label="Last Login" value={formatDateTime(vendor.lastLoginAt)} />
+          <Link to={`/admin/vendors/${vendor.id}`} className="mt-4 block rounded-lg bg-regantify-black px-4 py-2 text-center text-sm font-medium text-white">
+            Open the full store page
+          </Link>
           <AiCreditsAdjust vendor={vendor} onDone={setAiCredits} />
         </div>
       )}

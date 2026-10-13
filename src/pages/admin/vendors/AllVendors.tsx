@@ -4,6 +4,7 @@ import { Copy, LogIn, Search } from 'lucide-react';
 import { adminApi, type AdminVendor, type VendorStatus } from '../../../lib/adminApi';
 import type { PlanCode } from '../../../lib/plansApi';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { StatusBadge } from './StatusBadge';
 import { VendorDetailsDialog } from './VendorDetailsDialog';
@@ -38,14 +39,14 @@ export default function AllVendors() {
   const [impersonateVendor, setImpersonateVendor] = useState<AdminVendor | null>(null);
 
   const statusMutation = useMutation({
-    mutationFn: ({ vendorId, status }: { vendorId: string; status: VendorStatus }) =>
-      adminApi.updateVendorStatus(vendorId, status),
+    mutationFn: ({ vendorId, status, reason }: { vendorId: string; status: VendorStatus; reason?: string }) =>
+      adminApi.updateVendorStatus(vendorId, status, reason),
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
       toast.success(`Status changed to ${status.charAt(0) + status.slice(1).toLowerCase()}.`);
       setStatusModalVendor(null);
     },
-    onError: () => toast.error('Could not change the status. Please try again.'),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not change the status. Please try again.')),
   });
 
   const planMutation = useMutation({
@@ -233,7 +234,7 @@ export default function AllVendors() {
           storeName={statusModalVendor.storeName}
           currentStatus={statusModalVendor.status}
           submitting={statusMutation.isPending}
-          onConfirm={(next) => statusMutation.mutate({ vendorId: statusModalVendor.id, status: next })}
+          onConfirm={(next, reason) => statusMutation.mutate({ vendorId: statusModalVendor.id, status: next, reason })}
         />
       )}
 

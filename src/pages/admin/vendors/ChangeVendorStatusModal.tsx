@@ -7,7 +7,8 @@ interface ChangeVendorStatusModalProps {
   onOpenChange: (open: boolean) => void;
   storeName: string;
   currentStatus: VendorStatus;
-  onConfirm: (next: VendorStatus) => void;
+  /** `reason` is given when suspending: the owner is texted it. */
+  onConfirm: (next: VendorStatus, reason?: string) => void;
   submitting?: boolean;
 }
 
@@ -20,7 +21,9 @@ export function ChangeVendorStatusModal({
   onConfirm,
   submitting,
 }: ChangeVendorStatusModalProps) {
-  const [status, setStatus] = useState<VendorStatus>(currentStatus);
+  const [status, setStatus] = useState<VendorStatus>(currentStatus === 'CLOSED' ? 'ACTIVE' : currentStatus);
+  const [reason, setReason] = useState('');
+  const needsReason = status === 'SUSPENDED' && currentStatus !== 'SUSPENDED';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} maxWidth="max-w-md">
@@ -46,13 +49,26 @@ export function ChangeVendorStatusModal({
             shoppers, immediately.
           </p>
         )}
+
+        {needsReason && (
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Reason (texted to the owner)</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={300}
+              rows={3}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-regantify-search text-regantify-text text-sm focus:outline-none"
+            />
+          </div>
+        )}
       </div>
 
       <div className="border-t border-black/5 px-6 py-4 flex justify-end">
         <button
           type="button"
-          onClick={() => onConfirm(status)}
-          disabled={submitting}
+          onClick={() => onConfirm(status, needsReason ? reason.trim() : undefined)}
+          disabled={submitting || (needsReason && reason.trim().length < 5)}
           className="px-6 py-2.5 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white font-medium
             transition-colors disabled:opacity-60"
         >
