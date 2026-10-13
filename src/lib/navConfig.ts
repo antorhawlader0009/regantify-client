@@ -12,6 +12,7 @@ import {
   Megaphone,
   BarChart3,
   Star,
+  Flag,
   Bot,
   Store as StoreIcon,
   MessageSquare,
@@ -22,6 +23,15 @@ import {
   Headphones,
   Settings,
   CreditCard,
+  Landmark,
+  Percent,
+  Tags,
+  Banknote,
+  RefreshCw,
+  UserCog,
+  BadgeCheck,
+  Inbox,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -252,53 +262,41 @@ export const vendorNav: NavSection[] = [
   { label: 'Settings', icon: Settings, bottom: true, path: '/vendor/settings' },
 ];
 
-/** Section 7 of the brief — Super Admin's own, simpler nav. */
+/**
+ * Super Admin's nav (design pass 2026-10-13). Flat links grouped by the job they do, not nested menus: the console rail (AdminSidebar) shows each group as a
+ * collapsible heading. Paths are unchanged, so permissions (adminPermissions.ts PATH_ACCESS), Ctrl K and the routes in App.tsx keep working. Receipt details
+ * lives in Settings > Company (its old page still opens by address).
+ */
 export const adminNav: NavSection[] = [
-  { label: 'Dashboard', icon: LayoutDashboard, group: 'Main Menu', path: '/admin/dashboard' },
-  { label: 'Analytics', icon: BarChart3, group: 'Main Menu', path: '/admin/analytics' },
-  { label: 'Orders', icon: ClipboardList, group: 'Main Menu', path: '/admin/orders' },
-  { label: 'Customers', icon: UsersRound, group: 'Main Menu', path: '/admin/customers' },
-  {
-    label: 'Vendors',
-    icon: Users,
-    group: 'Vendors',
-    children: [
-      { label: 'All Vendors', path: '/admin/vendors/all' },
-      { label: 'Pending Approval', path: '/admin/vendors/pending' },
-      { label: 'Suspended Vendors', path: '/admin/vendors/suspended' },
-    ],
-  },
-  {
-    label: 'Plans',
-    icon: CreditCard,
-    group: 'Vendors',
-    children: [
-      { label: 'Manage Plans', path: '/admin/plans' },
-      { label: 'Plan Requests', path: '/admin/plan-requests' },
-      { label: 'Renewals', path: '/admin/renewals' },
-      { label: 'Packs & Promos', path: '/admin/packs' },
-    ],
-  },
-  { label: 'Payment Gateway', icon: CreditCard, group: 'Vendors', path: '/admin/payment-gateway' },
-  {
-    label: 'Finance',
-    icon: Wallet,
-    group: 'Operations',
-    children: [
-      { label: 'Platform Revenue', path: '/admin/finance/revenue' },
-      { label: 'Commission Settings', path: '/admin/finance/commission' },
-      { label: 'Payouts', path: '/admin/finance/payouts' },
-    ],
-  },
-  { label: 'Announcements', icon: Megaphone, group: 'Operations', path: '/admin/announcements' },
-  { label: 'Messages', icon: Megaphone, group: 'Operations', path: '/admin/messages' },
-  { label: 'Marketing', icon: Megaphone, group: 'Operations', path: '/admin/marketing' },
-  { label: 'Reviews', icon: Star, group: 'Operations', path: '/admin/reviews' },
-  { label: 'AI Settings', icon: Bot, group: 'Operations', path: '/admin/ai-settings' },
-  { label: 'System Status', icon: Activity, group: 'Operations', path: '/admin/system-status' },
-  { label: 'Verification', icon: ShieldCheck, group: 'Operations', path: '/admin/verification' },
-  { label: 'Receipt Details', icon: ReceiptText, group: 'Operations', path: '/admin/receipt-details' },
-  { label: 'Staff', icon: UsersRound, group: 'Operations', path: '/admin/staff' },
-  { label: 'Support', icon: Headphones, bottom: true, path: '/admin/support' },
-  { label: 'Settings', icon: Settings, bottom: true, path: '/admin/settings' },
+  { label: 'Dashboard', icon: LayoutDashboard, group: 'Overview', path: '/admin/dashboard' },
+  { label: 'Analytics', icon: BarChart3, group: 'Overview', path: '/admin/analytics' },
+
+  { label: 'All stores', icon: StoreIcon, group: 'Stores', path: '/admin/vendors/all' },
+  { label: 'Pending approval', icon: BadgeCheck, group: 'Stores', path: '/admin/vendors/pending' },
+  { label: 'Suspended', icon: Users, group: 'Stores', path: '/admin/vendors/suspended' },
+  { label: 'Verification', icon: ShieldCheck, group: 'Stores', path: '/admin/verification' },
+  { label: 'Store reports', icon: Flag, group: 'Stores', path: '/admin/reports' },
+
+  { label: 'Orders', icon: ClipboardList, group: 'Commerce', path: '/admin/orders' },
+  { label: 'Customers', icon: UsersRound, group: 'Commerce', path: '/admin/customers' },
+  { label: 'Reviews', icon: Star, group: 'Commerce', path: '/admin/reviews' },
+
+  { label: 'Platform revenue', icon: Landmark, group: 'Money', path: '/admin/finance/revenue' },
+  { label: 'Payouts', icon: Banknote, group: 'Money', path: '/admin/finance/payouts' },
+  { label: 'Commission', icon: Percent, group: 'Money', path: '/admin/finance/commission' },
+  { label: 'Plans', icon: Wallet, group: 'Money', path: '/admin/plans' },
+  { label: 'Plan requests', icon: Inbox, group: 'Money', path: '/admin/plan-requests' },
+  { label: 'Renewals', icon: RefreshCw, group: 'Money', path: '/admin/renewals' },
+  { label: 'Packs and promos', icon: Tags, group: 'Money', path: '/admin/packs' },
+  { label: 'Payment gateways', icon: CreditCard, group: 'Money', path: '/admin/payment-gateway' },
+
+  { label: 'Support', icon: Headphones, group: 'Reach', path: '/admin/support' },
+  { label: 'Messages', icon: MessageSquare, group: 'Reach', path: '/admin/messages' },
+  { label: 'Announcements', icon: Megaphone, group: 'Reach', path: '/admin/announcements' },
+  { label: 'Marketing', icon: Sparkles, group: 'Reach', path: '/admin/marketing' },
+
+  { label: 'AI settings', icon: Bot, group: 'Platform', path: '/admin/ai-settings' },
+  { label: 'System status', icon: Activity, group: 'Platform', path: '/admin/system-status' },
+  { label: 'Staff', icon: UserCog, group: 'Platform', path: '/admin/staff' },
+  { label: 'Settings', icon: Settings, group: 'Platform', path: '/admin/settings' },
 ];

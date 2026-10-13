@@ -83,9 +83,9 @@ export default function PaymentGatewayManagement() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-regantify-content text-left text-regantify-text-muted">
-                  <th className="px-4 py-3 font-medium">GATEWAY</th>
-                  <th className="px-4 py-3 font-medium">DESCRIPTION</th>
-                  <th className="px-4 py-3 font-medium">STATUS</th>
+                  <th className="px-4 py-3 font-medium">Gateway</th>
+                  <th className="px-4 py-3 font-medium">Description</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 font-medium"></th>
                   <th className="px-4 py-3 font-medium"></th>
                 </tr>
@@ -160,11 +160,11 @@ export default function PaymentGatewayManagement() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-regantify-content text-left text-regantify-text-muted">
-                  <th className="px-4 py-3 font-medium">STORE</th>
-                  <th className="px-4 py-3 font-medium">GATEWAY</th>
-                  <th className="px-4 py-3 font-medium">STATUS</th>
-                  <th className="px-4 py-3 font-medium">FEE</th>
-                  <th className="px-4 py-3 font-medium">UPDATED</th>
+                  <th className="px-4 py-3 font-medium">Store</th>
+                  <th className="px-4 py-3 font-medium">Gateway</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Fee</th>
+                  <th className="px-4 py-3 font-medium">Updated</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Lock } from 'lucide-react';
-import { Topbar } from '../Topbar';
-import { Sidebar } from '../Sidebar';
+import { AdminTopbar } from '../admin/AdminTopbar';
+import { AdminSidebar } from '../admin/AdminSidebar';
+import { useConsoleDensity } from '../../lib/useConsoleDensity';
 import { adminNav } from '../../lib/navConfig';
 import { useScrollMemory } from '../../lib/useScrollMemory';
 import { ADMIN_ROLE_LABEL, canOpenAdminPath, useAdminNav, useAdminViewer } from '../../lib/adminPermissions';
@@ -33,6 +34,7 @@ export function AdminLayout() {
   const mainRef = useRef<HTMLElement>(null);
   useScrollMemory(mainRef);
   const nav = useAdminNav(adminNav);
+  const [density, setDensity] = useConsoleDensity();
   const viewer = useAdminViewer();
   const { pathname } = useLocation();
 
@@ -47,9 +49,9 @@ export function AdminLayout() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
-      <Sidebar sections={nav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
-      <div className="flex min-w-0 flex-1 flex-col bg-regantify-content lg:border-l lg:border-line">
-        <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
+      <AdminSidebar sections={nav} mobileOpen={menuOpen} onMobileClose={closeMenu} />
+      <div className="flex min-w-0 flex-1 flex-col bg-regantify-content">
+        <AdminTopbar sections={nav} onMenuClick={() => setMenuOpen(true)} density={density} onDensity={setDensity} />
         <main ref={mainRef} className="flex-1 overflow-y-auto p-3 sm:p-6">
           {canOpenAdminPath(viewer, pathname) ? <Outlet /> : <AdminNoAccess />}
         </main>

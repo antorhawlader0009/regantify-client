@@ -200,14 +200,14 @@ export default function Payouts() {
                     onChange={() => setSelected(approved.every((r) => selected.has(r.id)) ? new Set() : new Set(approved.map((r) => r.id)))}
                   />
                 </th>
-                <th className="px-4 py-3 font-medium">VENDOR</th>
-                <th className="px-4 py-3 font-medium">AMOUNT</th>
-                <th className="px-4 py-3 font-medium">METHOD</th>
-                <th className="px-4 py-3 font-medium">PAYOUT DETAILS</th>
-                <th className="px-4 py-3 font-medium">NOTE</th>
-                <th className="px-4 py-3 font-medium">REQUESTED</th>
-                <th className="px-4 py-3 font-medium">STATUS</th>
-                <th className="px-4 py-3 font-medium">ACTIONS</th>
+                <th className="px-4 py-3 font-medium">Vendor</th>
+                <th className="px-4 py-3 font-medium">Amount</th>
+                <th className="px-4 py-3 font-medium">Method</th>
+                <th className="px-4 py-3 font-medium">Payout details</th>
+                <th className="px-4 py-3 font-medium">Note</th>
+                <th className="px-4 py-3 font-medium">Requested</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>

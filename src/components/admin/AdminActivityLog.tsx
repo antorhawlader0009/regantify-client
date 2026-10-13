@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Download, History } from 'lucide-react';
 import { adminApi, type AdminAuditQuery } from '../../lib/adminApi';
+import { adminAlertsApi } from '../../lib/adminAlertsApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { toast } from '../../lib/toast';
 
@@ -19,10 +20,19 @@ export function AdminActivityLog() {
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
   const [exporting, setExporting] = useState(false);
+  // "Which store": type a name, pick one (super-admin-plan.md Step 2 asks for a store filter). Uses the same lookup as Ctrl K.
+  const [store, setStore] = useState<{ id: string; name: string } | null>(null);
+  const [storeQ, setStoreQ] = useState('');
+  const { data: storeHits = [] } = useQuery({
+    queryKey: ['admin-log-store-search', storeQ],
+    queryFn: async () => (await adminAlertsApi.search(storeQ.trim())).find((g) => g.group === 'Stores')?.hits ?? [],
+    enabled: !store && storeQ.trim().length >= 2,
+  });
 
   const query: AdminAuditQuery = {
     admin: admin || undefined,
     action: action || undefined,
+    vendorId: store?.id,
     search: search.trim() || undefined,
     from: from || undefined,
     to: to || undefined,
@@ -79,6 +89,30 @@ export function AdminActivityLog() {
             ))}
           </select>
         </label>
+        <div className="relative text-xs text-regantify-text-muted">
+          Store
+          {store ? (
+            <button type="button" onClick={() => { setStore(null); setStoreQ(''); setPage(1); }} className={`${inputClass} mt-1 flex items-center gap-2`} title="Clear">
+              <span className="max-w-[10rem] truncate">{store.name}</span>
+              <span aria-hidden>×</span>
+            </button>
+          ) : (
+            <>
+              <input value={storeQ} onChange={(e) => setStoreQ(e.target.value)} placeholder="Any store" className={`${inputClass} mt-1 block w-40`} />
+              {storeQ.trim().length >= 2 && storeHits.length > 0 && (
+                <ul className="absolute left-0 top-full z-10 mt-1 w-64 divide-y divide-black/5 rounded-lg border border-black/10 bg-white shadow-lg">
+                  {storeHits.map((h) => (
+                    <li key={h.id}>
+                      <button type="button" onClick={() => { setStore({ id: h.id, name: h.title }); setPage(1); }} className="block w-full px-3 py-2 text-left text-sm text-regantify-text hover:bg-regantify-content">
+                        {h.title} <span className="text-xs text-regantify-text-muted">{h.subtitle.split(' · ')[0]}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
         <label className="text-xs text-regantify-text-muted">
           From
           <input type="date" value={from} onChange={(e) => filter(setFrom)(e.target.value)} className={`${inputClass} mt-1 block`} />

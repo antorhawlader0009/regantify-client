@@ -64,6 +64,8 @@ export interface AdminOverview {
     newPaying: Compared;
     renewals: Compared;
     ended: Compared;
+    upgrades: Compared;
+    downgrades: Compared;
   };
   stores: {
     total: number;

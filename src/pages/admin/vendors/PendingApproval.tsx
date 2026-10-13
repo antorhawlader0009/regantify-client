@@ -52,7 +52,7 @@ export default function PendingApproval() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="mb-4 text-2xl font-semibold text-regantify-text">Pending Approval</h1>
+      <h1 className="mb-4 text-2xl font-semibold text-regantify-text">Pending approval</h1>
 
       <div className="mb-5 flex items-start justify-between gap-4 rounded-2xl border border-black/5 bg-white p-5">
         <div>

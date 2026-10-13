@@ -13,6 +13,7 @@ import { ChangeVendorStatusModal } from './ChangeVendorStatusModal';
 import { ChangeVendorPlanModal } from './ChangeVendorPlanModal';
 import { ImpersonateDialog } from '../../../components/admin/ImpersonateDialog';
 import { Dialog } from '../../../components/ui/Dialog';
+import { RowMenu } from '../../../components/admin/RowMenu';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
 
 const BAND: Record<HealthBand, { label: string; cls: string }> = {
@@ -322,14 +323,14 @@ export function VendorListPage({ title, chips, children }: { title: string; chip
             <thead>
               <tr className="bg-regantify-content text-left text-regantify-text-muted">
                 <th className="px-4 py-3"><input type="checkbox" checked={allOnPage} onChange={toggleAll} aria-label="Select all on this page" /></th>
-                <th className="px-4 py-3 font-medium">STORE</th>
-                <th className="px-4 py-3 font-medium">STATUS</th>
-                <th className="px-4 py-3 font-medium">PLAN</th>
-                <th className="px-4 py-3 font-medium">PHONE</th>
-                <th className="px-4 py-3 font-medium">HEALTH</th>
-                <th className="px-4 py-3 font-medium">ORDERS 30D</th>
-                <th className="px-4 py-3 font-medium">VALUE 30D</th>
-                <th className="px-4 py-3 font-medium">ACTIONS</th>
+                <th className="px-4 py-3 font-medium">Store</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Plan</th>
+                <th className="px-4 py-3 font-medium">Phone</th>
+                <th className="px-4 py-3 font-medium">Health</th>
+                <th className="px-4 py-3 font-medium">Orders 30d</th>
+                <th className="px-4 py-3 font-medium">Value 30d</th>
+                <th className="px-4 py-3 text-right font-medium"><span className="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -340,7 +341,7 @@ export function VendorListPage({ title, chips, children }: { title: string; chip
                 <tr><td colSpan={9} className="px-4 py-8 text-center text-regantify-text-muted">No stores match.</td></tr>
               )}
               {vendors.map((v) => (
-                <tr key={v.id} className="border-t border-black/5 align-top">
+                <tr key={v.id}>
                   <td className="px-4 py-3"><input type="checkbox" checked={selected.has(v.id)} onChange={() => toggle(v.id)} aria-label={`Select ${v.storeName}`} /></td>
                   <td className="px-4 py-3">
                     <Link to={`/admin/vendors/${v.id}`} className="text-left font-medium text-regantify-cta hover:underline">{v.storeName}</Link>
@@ -365,13 +366,15 @@ export function VendorListPage({ title, chips, children }: { title: string; chip
                   <td className="px-4 py-3"><HealthChip health={v.health} /></td>
                   <td className="px-4 py-3 tabular-nums text-regantify-text">{v.orders30d}</td>
                   <td className="px-4 py-3 tabular-nums text-regantify-text">{formatTaka(v.gmv30d)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col items-start gap-2">
-                      {can('stores.edit') && <button onClick={() => setStatusModalVendor(v)} disabled={v.status === 'CLOSED'} className="rounded-lg border border-black/10 px-3 py-1.5 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-40">Change Status</button>}
-                      {can('stores.edit') && <button onClick={() => setPlanModalVendor(v)} className="rounded-lg border border-black/10 px-3 py-1.5 text-sm text-regantify-text hover:bg-regantify-content">Change Plan</button>}
-                      {can('stores.impersonate_view') && <button onClick={() => setImpersonateVendor(v)} disabled={v.status === 'CLOSED'} className="flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-sm text-regantify-text hover:bg-regantify-content disabled:opacity-40" title="Open this vendor's dashboard for support/troubleshooting">
-                        <LogIn size={14} /> Login as Vendor
-                      </button>}
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link to={`/admin/vendors/${v.id}`} className="rounded-md px-2 py-1 text-[13px] font-medium text-regantify-cta hover:bg-regantify-accent/60">Open</Link>
+                      <RowMenu
+                        items={[
+                          ...(can('stores.impersonate_view') ? [{ label: 'Login as store', icon: <LogIn size={14} />, onSelect: () => setImpersonateVendor(v), disabled: v.status === 'CLOSED' }] : []),
+                          ...(can('stores.edit') ? [{ label: 'Change status', onSelect: () => setStatusModalVendor(v), disabled: v.status === 'CLOSED', separated: can('stores.impersonate_view') }, { label: 'Change plan', onSelect: () => setPlanModalVendor(v) }] : []),
+                        ]}
+                      />
                     </div>
                   </td>
                 </tr>

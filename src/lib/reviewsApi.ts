@@ -16,6 +16,9 @@ export interface ReviewProductRef {
 export interface Review {
   id: string;
   vendorId: string;
+  /** Hidden for the whole platform by Super Admin (super-admin-plan.md Step 17); the store can't show it again. */
+  platformHiddenAt?: string | null;
+  platformHiddenReason?: string | null;
   title: string;
   content: string | null;
   rating: number;

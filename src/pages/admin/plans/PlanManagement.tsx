@@ -73,16 +73,16 @@ export default function PlanManagement() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-regantify-content text-left text-regantify-text-muted">
-                  <th className="px-4 py-3 font-medium">PLAN</th>
-                  <th className="px-4 py-3 font-medium">PRICE/MO</th>
-                  <th className="px-4 py-3 font-medium">PRODUCTS</th>
-                  <th className="px-4 py-3 font-medium">ORDERS/DAY</th>
-                  <th className="px-4 py-3 font-medium">VISITS/MO</th>
-                  <th className="px-4 py-3 font-medium">THEMES</th>
-                  <th className="px-4 py-3 font-medium">STAFF</th>
-                  <th className="px-4 py-3 font-medium">COD FEE</th>
-                  <th className="px-4 py-3 font-medium">ONLINE FEE</th>
-                  <th className="px-4 py-3 font-medium">ADVANCE FEE</th>
+                  <th className="px-4 py-3 font-medium">Plan</th>
+                  <th className="px-4 py-3 font-medium">Price/mo</th>
+                  <th className="px-4 py-3 font-medium">Products</th>
+                  <th className="px-4 py-3 font-medium">Orders/day</th>
+                  <th className="px-4 py-3 font-medium">Visits/mo</th>
+                  <th className="px-4 py-3 font-medium">Themes</th>
+                  <th className="px-4 py-3 font-medium">Staff</th>
+                  <th className="px-4 py-3 font-medium">COD fee</th>
+                  <th className="px-4 py-3 font-medium">Online fee</th>
+                  <th className="px-4 py-3 font-medium">Advance fee</th>
                   <th className="px-4 py-3 font-medium"></th>
                 </tr>
               </thead>

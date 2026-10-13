@@ -72,12 +72,12 @@ export default function PlanRequests() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-regantify-content text-left text-regantify-text-muted">
-                <th className="px-4 py-3 font-medium">VENDOR</th>
-                <th className="px-4 py-3 font-medium">WANTS</th>
-                <th className="px-4 py-3 font-medium">NOTE</th>
-                <th className="px-4 py-3 font-medium">REQUESTED</th>
-                <th className="px-4 py-3 font-medium">STATUS</th>
-                <th className="px-4 py-3 font-medium">ACTIONS</th>
+                <th className="px-4 py-3 font-medium">Vendor</th>
+                <th className="px-4 py-3 font-medium">Wants</th>
+                <th className="px-4 py-3 font-medium">Note</th>
+                <th className="px-4 py-3 font-medium">Requested</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>

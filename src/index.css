@@ -24,34 +24,36 @@
   --nav-active-shadow: none;
 }
 
+/*
+ * Super Admin console: bottle green + brass, IBM Plex, flat panels. A different place from the vendor panel (indigo, Inter, soft cards) on purpose.
+ * Tokens here feed the same Tailwind names (regantify-*, brand, line) so every existing admin page re-colours without edits; the structural rules
+ * (tables, form controls, radii, density) are in the "Super Admin console" section at the end of this file.
+ */
 body.admin-panel {
-  --c-brand: 225 29 72; /* #E11D48 */
-  --c-brand-dark: 127 29 45; /* #7F1D2D */
-  --c-accent: 255 228 232; /* #FFE4E8 */
-  --c-line: 237 223 225; /* #EDDFE1 */
-  --c-content: 248 239 240; /* #F8EFF0 */
-  --c-sidebar: 253 250 250; /* #FDFAFA */
-  --c-search: 250 243 244; /* #FAF3F4 */
-  --c-text: 42 20 24; /* #2A1418 */
-  --c-muted: 125 106 110; /* #7D6A6E */
-  --nav-active-bg: #e14f61;
-  --nav-active-text: #ffffff;
-  --nav-active-weight: 500;
-  --nav-active-shadow: 0 4px 12px rgba(225, 79, 97, 0.28);
+  --c-brand: 15 107 83; /* #0F6B53 primary: buttons, links, selected tabs */
+  --c-brand-dark: 12 43 37; /* #0C2B25 the rail, dark cards */
+  --c-accent: 226 240 235; /* #E2F0EB soft highlight */
+  --c-line: 208 216 212; /* #D0D8D4 hairlines and panel edges */
+  --c-content: 243 245 244; /* #F3F5F4 page canvas */
+  --c-sidebar: 12 43 37; /* rail */
+  --c-search: 238 242 240; /* #EEF2F0 filled inputs */
+  --c-text: 20 32 28; /* #14201C */
+  --c-muted: 95 111 105; /* #5F6F69 */
+  --console-brass: #d6a94a;
+  --console-grid: #c3ccc8; /* table grid lines */
+  --console-rail-hover: #13392f;
+  --console-rail-line: #1d4b40;
+  --console-rail-text: #b9cfc7;
+  --cell-y: 10px;
+  --cell-x: 14px;
 }
 
-/* The sidebar's selected row (Sidebar.tsx). */
+/* The vendor panel's selected-row styles stay for the vendor sidebar. */
 .nav-active {
   background-color: var(--nav-active-bg);
   color: var(--nav-active-text);
   font-weight: var(--nav-active-weight);
   box-shadow: var(--nav-active-shadow);
-}
-/* A selected sub-menu link: red text on a faint red wash in the admin panel. */
-body.admin-panel .sub-active {
-  color: #e14f61;
-  font-weight: 600;
-  background-color: rgba(225, 79, 97, 0.08);
 }
 
 html,
@@ -107,11 +109,123 @@ body {
 body.vendor-panel .bg-white {
   background-color: #fafafd;
 }
-body.admin-panel .bg-white {
-  background-color: #fdfafa;
-}
 @media print {
   body.vendor-panel .bg-white {
     background-color: #fff;
   }
 }
+
+/* ==========================================================================
+   Super Admin console (super-admin design pass, 2026-10-13)
+   Rules below apply only under body.admin-panel (AdminLayout), so the vendor
+   panel, LMS, POS and the marketing site are untouched.
+   ========================================================================== */
+body.admin-panel {
+  font-family: 'IBM Plex Sans', 'Hind Siliguri', system-ui, sans-serif;
+  font-size: 14px;
+  background: rgb(var(--c-content));
+  -webkit-font-smoothing: antialiased;
+}
+body.admin-panel[data-density='compact'] { --cell-y: 6px; --cell-x: 12px; }
+body.admin-panel[data-density='comfortable'] { --cell-y: 13px; --cell-x: 16px; }
+
+/* Tighter corners than the vendor panel: panels 10px, controls 8px/6px; pills stay round. */
+body.admin-panel .rounded-2xl { border-radius: 10px; }
+body.admin-panel .rounded-xl { border-radius: 8px; }
+body.admin-panel .rounded-lg { border-radius: 6px; }
+body.admin-panel .shadow-xl, body.admin-panel .shadow-lg { box-shadow: 0 8px 24px rgba(12, 43, 37, 0.14), 0 0 0 1px rgba(12, 43, 37, 0.06); }
+body.admin-panel .shadow-sm { box-shadow: none; }
+
+/* Page titles: working size, not a hero. */
+body.admin-panel main h1 { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.012em; }
+body.admin-panel main h1 + p { font-size: 13.5px; }
+
+body.admin-panel :focus-visible { outline: 2px solid rgb(var(--c-brand)); outline-offset: 2px; }
+body.admin-panel input[type='checkbox'], body.admin-panel input[type='radio'] { accent-color: rgb(var(--c-brand)); }
+
+/* Panels written with a faint black border get the console hairline, so they read against the canvas. */
+body.admin-panel .border-black/5, body.admin-panel .border-black/10 { border-color: rgb(var(--c-line)); }
+body.admin-panel .divide-black/5 > :not([hidden]) ~ :not([hidden]) { border-color: #edf0ee; }
+
+/* Page width: pages were capped (max-w-2xl to max-w-6xl, about 670px to 1150px) and left a wide empty strip on a big screen. Every admin page now uses the
+   whole workspace; the workspace itself stops at 1760px so it does not stretch on an ultra-wide monitor. */
+body.admin-panel main > :is(.max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl, .max-w-2xl) { max-width: 1760px; }
+
+/* ---- Tables: a full grid like the vendor order table (a line between columns as well as rows), tabular numbers, row height from the density setting ---- */
+body.admin-panel table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+body.admin-panel thead th {
+  background: #eaefec;
+  color: rgb(var(--c-text));
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  padding: 10px var(--cell-x);
+  border-top: 1px solid var(--console-grid);
+  border-bottom: 1px solid var(--console-grid);
+  border-right: 1px solid var(--console-grid);
+}
+body.admin-panel tbody td, body.admin-panel tbody th {
+  padding: var(--cell-y) var(--cell-x);
+  border-bottom: 1px solid var(--console-grid);
+  border-right: 1px solid var(--console-grid);
+  vertical-align: middle;
+}
+/* The table is its own box: a clear outline with rounded corners, like the vendor order table. Its wrapper gets a little room so the box does not touch the panel edge. */
+body.admin-panel table {
+  border: 1px solid var(--console-grid);
+  border-radius: 8px;
+  background: #fff;
+}
+body.admin-panel thead th:first-child { border-top-left-radius: 7px; }
+body.admin-panel thead th:last-child { border-top-right-radius: 7px; }
+body.admin-panel tbody tr:last-child > :first-child { border-bottom-left-radius: 7px; }
+body.admin-panel tbody tr:last-child > :last-child { border-bottom-right-radius: 7px; }
+/* The table now draws its own edge, so the first row, last row and last column add none. */
+body.admin-panel thead th { border-top: 0; }
+body.admin-panel thead th:last-child, body.admin-panel tbody td:last-child, body.admin-panel tbody th:last-child { border-right: 0; }
+/* Only a table that sits flush against a panel's edge gets room; a table inside a padded card body already has it. */
+body.admin-panel :is(.rounded-2xl, .rounded-xl) > div:has(> table) { padding: 0 16px 16px; }
+body.admin-panel tbody tr:last-child td, body.admin-panel tbody tr:last-child th { border-bottom: 0; }
+body.admin-panel tbody tr:hover > td { background: #f6f9f8; }
+body.admin-panel tbody tr:has(input[type='checkbox']:checked) > td { background: #eaf4f0; }
+body.admin-panel td .text-xs, body.admin-panel td .text-\[11px\] { line-height: 1.35; }
+
+/* ---- Form controls: native selects and date pickers look like the rest ---- */
+body.admin-panel select {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 34px;
+  padding: 0 30px 0 10px;
+  font-size: 13px;
+  color: rgb(var(--c-text));
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f6f69' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+  border: 1px solid rgb(var(--c-line));
+  border-radius: 6px;
+}
+body.admin-panel input[type='date'], body.admin-panel input[type='datetime-local'], body.admin-panel input[type='month'] {
+  height: 34px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background-color: #fff;
+  border: 1px solid rgb(var(--c-line));
+  border-radius: 6px;
+}
+body.admin-panel select:hover, body.admin-panel input[type='date']:hover, body.admin-panel input[type='datetime-local']:hover { border-color: #c9d2cf; }
+body.admin-panel select:focus, body.admin-panel input[type='date']:focus, body.admin-panel input[type='datetime-local']:focus { outline: none; border-color: rgb(var(--c-brand)); box-shadow: 0 0 0 3px rgba(15, 107, 83, 0.14); }
+
+/* IDs, invoices, phone numbers: the one place a fixed-width face earns its keep. */
+body.admin-panel .console-id { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0; }
+
+/* The rail (AdminSidebar): thin scrollbar here only, since it can hold more links than a short screen shows. */
+.console-rail { scrollbar-width: thin; scrollbar-color: #1d4b40 transparent; -ms-overflow-style: auto; }
+.console-rail::-webkit-scrollbar { display: block; width: 6px; }
+.console-rail::-webkit-scrollbar-thumb { background: #1d4b40; border-radius: 3px; }
+.console-rail::-webkit-scrollbar-track { background: transparent; }

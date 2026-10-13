@@ -38,7 +38,7 @@ type TabId = (typeof TABS)[number]['id'];
 const when = (iso: string | null) => (iso ? formatDhakaDateTime(iso) : '—');
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-black/5 py-2.5 last:border-0">
       <span className="text-sm text-regantify-text-muted">{label}</span>
@@ -326,6 +326,23 @@ function Money({ id }: { id: string }) {
       <Card title="Platform fees paid by this store">
         <Row label="Last 30 days">{formatTaka(data.platformFees.last30d)}</Row>
         <Row label="All time">{formatTaka(data.platformFees.allTime)}</Row>
+      </Card>
+      <Card title="Shopper refunds this store still owes">
+        {!data.refundsOwed ? (
+          <p className="text-sm text-regantify-text-muted">Could not be read right now.</p>
+        ) : data.refundsOwed.count === 0 ? (
+          <p className="text-sm text-regantify-text-muted">Nothing owed. (Counted from {day(data.refundsOwed.since)}; shoppers who paid online for an order that was then cancelled or returned.)</p>
+        ) : (
+          <>
+            <Row label="Orders waiting for a refund">{data.refundsOwed.count}{data.refundsOwed.lateCount > 0 ? <span className="ml-2 text-red-700">({data.refundsOwed.lateCount} waiting over 3 days)</span> : null}</Row>
+            <Row label="Total still owed">{formatTaka(data.refundsOwed.total)}</Row>
+            {data.refundsOwed.items.map((i) => (
+              <Row key={i.orderId} label={<Link to={`/admin/orders/${i.orderId}`} className="text-regantify-cta hover:underline">{i.ref}</Link>}>
+                {formatTaka(i.remaining)} <span className="text-xs text-regantify-text-muted">· {i.waitingDays}d</span>
+              </Row>
+            ))}
+          </>
+        )}
       </Card>
       <Card title="SMS credit history (last 30)">
         {data.smsEntries.length === 0 ? (
@@ -773,7 +790,7 @@ export default function StoreDetailPage() {
   return (
     <div className="max-w-6xl">
       <Link to="/admin/vendors/all" className="inline-flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text">
-        <ArrowLeft size={14} /> All vendors
+        <ArrowLeft size={14} /> All stores
       </Link>
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold text-regantify-text">{data.storeName}</h1>

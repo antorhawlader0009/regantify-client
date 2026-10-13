@@ -1,10 +1,12 @@
 import { AdminActivityLog } from '../../components/admin/AdminActivityLog';
+import { AlertSettings } from '../../components/admin/AlertSettings';
+import { DataRequests } from '../../components/admin/DataRequests';
 import { PlatformSwitches } from '../../components/admin/PlatformSwitches';
 import { ContactSection, KeysSection, MaintenanceSection, MoneySection, SignupSection, TermsSection } from '../../components/admin/PlatformConfig';
 import ReceiptDetails from './ReceiptDetails';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, KeyRound, LogOut, MonitorSmartphone } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
@@ -16,6 +18,7 @@ import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 // (Activity log, Platform, Receipt details...) to TABS.
 const TABS = [
   { id: 'security', label: 'Security' },
+  { id: 'alerts', label: 'Alerts' },
   { id: 'company', label: 'Company' },
   { id: 'contact', label: 'Contact' },
   { id: 'signup', label: 'Sign-up' },
@@ -24,14 +27,25 @@ const TABS = [
   { id: 'maintenance', label: 'Maintenance' },
   { id: 'keys', label: 'Keys' },
   { id: 'switches', label: 'Switches' },
+  { id: 'data', label: 'Data requests' },
   { id: 'activity', label: 'Activity log' },
 ] as const;
 
 export default function AdminSettings() {
-  const [tab, setTab] = useState<(typeof TABS)[number]['id']>('security');
+  // /admin/settings?tab=money opens that tab (the bell and Ctrl K link here).
+  const [tab, setTab] = useState<(typeof TABS)[number]['id']>(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    return TABS.find((t) => t.id === wanted)?.id ?? 'security';
+  });
+  const location = useLocation();
+  useEffect(() => {
+    const wanted = new URLSearchParams(location.search).get('tab');
+    const found = TABS.find((t) => t.id === wanted);
+    if (found) setTab(found.id);
+  }, [location.search]);
   const viewer = useAdminViewer();
   // The action log is for people whose role includes it (super-admin-plan.md Step 13).
-  const tabs = TABS.filter((t) => (t.id !== 'activity' || adminCan(viewer, 'audit.view')) && (t.id === 'security' || t.id === 'activity' || adminCan(viewer, 'settings.manage')));
+  const tabs = TABS.filter((t) => (t.id !== 'activity' || adminCan(viewer, 'audit.view')) && (t.id === 'security' || t.id === 'alerts' || t.id === 'activity' || adminCan(viewer, 'settings.manage')));
 
   return (
     <div className={tab === 'activity' ? 'max-w-5xl' : 'max-w-3xl'}>
@@ -54,6 +68,7 @@ export default function AdminSettings() {
       </div>
 
       <div className="mt-6">{tab === 'security' && <SecurityTab />}
+        {tab === 'alerts' && <AlertSettings />}
         {tab === 'company' && <ReceiptDetails />}
         {tab === 'contact' && <ContactSection />}
         {tab === 'signup' && <SignupSection />}
@@ -62,6 +77,7 @@ export default function AdminSettings() {
         {tab === 'maintenance' && <MaintenanceSection />}
         {tab === 'keys' && <KeysSection />}
         {tab === 'switches' && <PlatformSwitches />}
+        {tab === 'data' && <DataRequests />}
         {tab === 'activity' && <AdminActivityLog />}</div>
     </div>
   );

@@ -18,6 +18,10 @@ export const ADMIN_ROLE_LABEL: Record<AdminRoleKey, string> = { OWNER: 'Owner', 
 /** The permission a page needs: a path prefix and what it asks for. `null` = every team member (their own settings). Longest prefix wins; an unlisted path is the Owner's alone. */
 const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/dashboard', 'dashboard.view'],
+  ['/admin/analytics', 'money.view'],
+  ['/admin/reviews', 'support.manage'],
+  ['/admin/reports', 'support.manage'],
+  ['/admin/marketing', 'settings.manage'],
   ['/admin/vendors', 'stores.view'],
   ['/admin/orders', 'orders.view'],
   ['/admin/customers', 'shoppers.view'],

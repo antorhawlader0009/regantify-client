@@ -5,7 +5,7 @@ import { adminApi, type AdminVendor, type ImpersonationMode } from '../../lib/ad
 import { toast } from '../../lib/toast';
 import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 
-/** "Login as Vendor" (super-admin-plan.md Step 2): a reason is required, and the session is view-only unless "Can make changes" is picked. */
+/** "Login as store" (super-admin-plan.md Step 2): a reason is required, and the session is view-only unless "Can make changes" is picked. */
 export function ImpersonateDialog({ vendor, onClose }: { vendor: AdminVendor | null; onClose: () => void }) {
   const [reason, setReason] = useState('');
   const [mode, setMode] = useState<ImpersonationMode>('VIEW');

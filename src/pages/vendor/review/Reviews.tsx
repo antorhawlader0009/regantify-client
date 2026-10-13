@@ -59,6 +59,14 @@ function ShowSwitch({ review }: { review: Review }) {
   const on = mutation.isPending ? !review.approved : review.approved;
   // A read-only role sees the switch's state but can't flip it (rule-plan.md Step 10).
   const canEdit = useCan('reviews.edit');
+  // Super Admin hid this review for every store page: the switch would do nothing, so say why instead.
+  if (review.platformHiddenAt) {
+    return (
+      <span className="inline-flex min-h-10 max-w-[220px] items-center text-xs font-medium text-red-700" title={review.platformHiddenReason ?? undefined}>
+        Hidden by Regantify{review.platformHiddenReason ? `: ${review.platformHiddenReason}` : ''}
+      </span>
+    );
+  }
   return (
     <label className={`inline-flex min-h-10 items-center gap-2 text-sm ${canEdit ? 'cursor-pointer' : 'cursor-default opacity-70'}`}>
       <span className="relative inline-flex shrink-0">

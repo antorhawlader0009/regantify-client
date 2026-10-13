@@ -37,16 +37,16 @@ function Change({ value, kind = 'count', badWhenUp }: { value: Compared; kind?: 
 
 function Card({ title, to, children, className = '' }: { title: string; to?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-2xl border border-black/5 bg-white p-5 ${className}`}>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-regantify-text">{title}</h2>
+    <section className={`rounded-xl border border-line bg-white ${className}`}>
+      <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
+        <h2 className="text-[13px] font-semibold text-regantify-text">{title}</h2>
         {to && (
-          <Link to={to} className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-regantify-text">
+          <Link to={to} className="inline-flex items-center gap-1 text-xs text-regantify-text-muted hover:text-regantify-cta">
             Open <ArrowRight size={12} />
           </Link>
         )}
       </div>
-      {children}
+      <div className="px-4 py-3">{children}</div>
     </section>
   );
 }
@@ -66,13 +66,20 @@ function Row({ label, value, change, kind, note, badWhenUp }: { label: string; v
   );
 }
 
+/** One cell of the ledger strip at the top: a number you read first, its label above, its change and note under. Opens the page behind it. */
 function Kpi({ label, value, change, kind, hint, to }: { label: string; value: string; change?: Compared; kind?: ValueKind; hint?: string; to: string }) {
+  const c = change ? changeOf(change, kind ?? 'count') : null;
   return (
-    <Link to={to} className="block rounded-2xl border border-black/5 bg-white p-5 transition-colors hover:border-black/15">
-      <p className="text-xs font-medium text-regantify-text-muted">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tabular-nums text-regantify-text">{value}</p>
-      <div className="mt-1 flex items-center gap-2 text-xs text-regantify-text-muted">
-        {change && <Change value={change} kind={kind} />}
+    <Link to={to} className="group block px-5 py-4 transition-colors hover:bg-white/[0.04] focus-visible:outline-offset-[-2px]">
+      <p className="text-[12px] text-[var(--console-rail-text)]">{label}</p>
+      <p className="mt-1.5 text-[28px] font-medium leading-none tabular-nums text-white">{value}</p>
+      <div className="mt-2 flex items-center gap-2 text-[12px] text-[#8fb0a4]">
+        {c && c.value !== 0 && (
+          <span className={`inline-flex items-center gap-0.5 font-medium ${c.value > 0 ? 'text-[#7ee0b0]' : 'text-[#f4a3a3]'}`}>
+            {c.value > 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+            {c.label}
+          </span>
+        )}
         {hint && <span>{hint}</span>}
       </div>
     </Link>
@@ -126,14 +133,14 @@ export default function AdminDashboard() {
     <div className="max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-regantify-text">Welcome, {user?.fullName ?? 'Super Admin'}</h1>
-          <p className="mt-1 text-sm text-regantify-text-muted">
-            {data ? `Compared with ${data.period.previousLabel}. Refreshes every minute.` : 'The whole platform at a glance.'}
+          <h1>Dashboard</h1>
+          <p className="mt-0.5 text-regantify-text-muted">
+            {data ? `Hello ${(user?.fullName ?? 'there').split(' ')[0]}. Numbers compared with ${data.period.previousLabel}, refreshed every minute.` : 'The whole platform at a glance.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
           {isFetching && <Loader2 size={14} className="animate-spin text-neutral-400" />}
-          <div className="inline-flex rounded-full border border-black/10 bg-white p-0.5" role="tablist" aria-label="Period">
+          <div className="inline-flex rounded-lg border border-line bg-white p-0.5" role="tablist" aria-label="Period">
             {RANGES.map((r) => (
               <button
                 key={r.id}
@@ -141,7 +148,7 @@ export default function AdminDashboard() {
                 role="tab"
                 aria-selected={range === r.id}
                 onClick={() => setRange(r.id)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${range === r.id ? 'bg-regantify-black text-white' : 'text-regantify-text-muted hover:text-regantify-text'}`}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${range === r.id ? 'bg-regantify-black text-white' : 'text-regantify-text-muted hover:text-regantify-text'}`}
               >
                 {r.label}
               </button>
@@ -159,7 +166,17 @@ export default function AdminDashboard() {
 
       {data && (
         <>
-          <Card title="Needs action now">
+          <div className="overflow-hidden rounded-xl bg-regantify-topbar shadow-[0_1px_0_rgba(12,43,37,0.4)]">
+            <div className="grid grid-cols-2 divide-x divide-white/10 lg:grid-cols-4 [&>*:nth-child(n+3)]:border-t [&>*:nth-child(n+3)]:border-white/10 lg:[&>*:nth-child(n+3)]:border-t-0">
+              <Kpi label="Platform income" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" hint="plans, packs, fees" to="/admin/finance/revenue" />
+              <Kpi label="Monthly recurring revenue" value={formatTaka(data.subscriptions.mrr)} hint={`${data.subscriptions.payingStores} paying ${data.subscriptions.payingStores === 1 ? 'store' : 'stores'}`} to="/admin/plans" />
+              <Kpi label="Active stores" value={String(data.stores.active7d)} hint={`of ${data.stores.total}, last 7 days`} to="/admin/vendors/all" />
+              <Kpi label="Orders value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" hint={`${data.gmv.orders.current} orders`} to="/admin/orders" />
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+          <Card title={items.length ? `Needs action now (${items.length})` : 'Needs action now'} className="lg:col-span-2">
             {items.length === 0 ? (
               <p className="flex items-center gap-2 text-sm text-green-700">
                 <CircleCheck size={16} /> Nothing needs you right now.
@@ -168,8 +185,8 @@ export default function AdminDashboard() {
               <ul className="divide-y divide-black/5">
                 {items.map((i) => (
                   <li key={i.key}>
-                    <Link to={i.to} className="flex items-center gap-3 py-2.5 text-sm text-regantify-text hover:text-black">
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${i.tone === 'red' ? 'bg-red-600' : 'bg-amber-500'}`} aria-hidden />
+                    <Link to={i.to} className="relative flex items-center gap-3 py-2.5 pl-3 text-[13.5px] text-regantify-text hover:text-black">
+                      <span className={`absolute inset-y-2 left-0 w-[3px] rounded-full ${i.tone === 'red' ? 'bg-red-600' : 'bg-amber-500'}`} aria-hidden />
                       <span className="flex-1">{i.text}</span>
                       <ArrowRight size={14} className="text-neutral-400" />
                     </Link>
@@ -178,12 +195,7 @@ export default function AdminDashboard() {
               </ul>
             )}
           </Card>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi label="Platform income" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" hint="plans, packs, fees" to="/admin/finance/revenue" />
-            <Kpi label="Monthly recurring revenue" value={formatTaka(data.subscriptions.mrr)} hint={`${data.subscriptions.payingStores} paying ${data.subscriptions.payingStores === 1 ? 'store' : 'stores'}`} to="/admin/plans" />
-            <Kpi label="Active stores" value={String(data.stores.active7d)} hint={`of ${data.stores.total}, last 7 days`} to="/admin/vendors/all" />
-            <Kpi label="Orders value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" hint={`${data.gmv.orders.current} orders`} to="/admin/orders" />
+          <SmsBalanceCard />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -228,6 +240,8 @@ export default function AdminDashboard() {
               <div className="mt-3">
                 <Row label="First plan payment" note="stores that paid for a plan for the first time" value={String(data.subscriptions.newPaying.current)} change={data.subscriptions.newPaying} />
                 <Row label="Plan payments again" note="a paying store paid again" value={String(data.subscriptions.renewals.current)} change={data.subscriptions.renewals} />
+                <Row label="Upgrades" note="moved to a dearer paid plan" value={String(data.subscriptions.upgrades.current)} change={data.subscriptions.upgrades} />
+                <Row label="Downgrades" note="moved to a cheaper paid plan" value={String(data.subscriptions.downgrades.current)} change={data.subscriptions.downgrades} badWhenUp />
                 <Row label="Plans that ended" note="ran out and went back to Free" value={String(data.subscriptions.ended.current)} change={data.subscriptions.ended} badWhenUp />
               </div>
             </Card>
@@ -279,12 +293,10 @@ export default function AdminDashboard() {
         </>
       )}
 
-      <SmsBalanceCard />
-
-      {canSeeFees && <div className="max-w-3xl overflow-hidden rounded-2xl border border-black/5 bg-white">
-        <div className="flex items-center gap-2 border-b border-black/5 p-4">
+      {canSeeFees && <div className="overflow-hidden rounded-xl border border-line bg-white">
+        <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
           <Receipt size={16} className="text-regantify-text-muted" />
-          <p className="text-sm font-semibold text-regantify-text">Recent platform fees</p>
+          <p className="text-[13px] font-semibold text-regantify-text">Recent platform fees</p>
           <span className="ml-auto text-xs text-regantify-text-muted">all-time: {fees.data ? formatAmount(fees.data.totalRevenue) : '…'}</span>
         </div>
         {fees.isLoading ? (
@@ -294,20 +306,20 @@ export default function AdminDashboard() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-black/5 bg-regantify-content text-left text-xs font-semibold uppercase tracking-wide text-regantify-text-muted">
-                <th className="p-4">Order</th>
-                <th className="p-4">Vendor</th>
-                <th className="p-4">Fee</th>
-                <th className="p-4">Date</th>
+              <tr className="text-left">
+                <th>Order</th>
+                <th>Store</th>
+                <th className="text-right">Fee</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
               {fees.data.recent.map((row) => (
-                <tr key={row.id} className="border-b border-black/5 last:border-b-0">
-                  <td className="p-4 text-sm text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}</td>
-                  <td className="p-4 text-sm text-regantify-text">{row.vendorName ?? '—'}</td>
-                  <td className="p-4 text-sm font-medium text-regantify-text">{formatAmount(row.amount)}</td>
-                  <td className="p-4 text-sm text-regantify-text-muted">
+                <tr key={row.id}>
+                  <td className="console-id text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}</td>
+                  <td className="text-regantify-text">{row.vendorName ?? '—'}</td>
+                  <td className="text-right font-medium text-regantify-text">{formatAmount(row.amount)}</td>
+                  <td className="text-regantify-text-muted">
                     {new Date(row.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                   </td>
                 </tr>

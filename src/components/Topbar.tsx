@@ -10,6 +10,8 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from './ui/Drop
 import { NotificationBell } from './NotificationBell';
 import { BalanceButton } from './BalanceButton';
 import { SearchPalette, SearchTrigger } from './search/GlobalSearch';
+import { AdminSearch } from './admin/AdminSearch';
+import { AdminBell } from './admin/AdminBell';
 
 interface TopbarProps {
   sections: NavSection[];
@@ -70,19 +72,8 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
         ))}
       </div>
 
-      {/* Vendors get the real search palette (GlobalSearch); Super Admin keeps the plain field. */}
-      {isVendor ? (
-        <SearchTrigger />
-      ) : (
-        <div className="mx-auto hidden h-9 w-full max-w-[360px] items-center gap-2 rounded-lg border border-line px-3 md:flex">
-          <Search size={16} className="shrink-0 text-neutral-600" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-neutral-500"
-          />
-        </div>
-      )}
+      {/* Vendors get the store search palette (GlobalSearch); Super Admin gets its own (AdminSearch, Ctrl K: stores, orders, IDs, pages, settings). */}
+      {isVendor ? <SearchTrigger /> : <AdminSearch />}
 
       {/* Opens the "Ask AI" side panel (AssistantPanel, docked on the right of the dashboard). */}
       {isVendor && (
@@ -118,6 +109,7 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
 
       {/* Vendor-only live digest, just left of the avatar. */}
       {isVendor && <NotificationBell />}
+      {isAdmin && <AdminBell />}
 
       {/* Account menu: Settings + Log out. */}
       <DropdownMenu

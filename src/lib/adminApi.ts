@@ -46,6 +46,8 @@ export interface StoreDetail {
   connections: { couriers: StoreConnection[]; gateways: StoreConnection[]; customDomain: string | null; telegramChats: number; pushDevices: number };
 }
 export interface StoreMoney {
+  /** Shopper refunds this store still owes (TellMe idea 145); null if it could not be read. */
+  refundsOwed: { since: string; count: number; total: number; lateCount: number; items: Array<{ orderId: string; ref: string; remaining: number; waitingDays: number }> } | null;
   smsEntries: Array<{ id: string; delta: number; balanceAfter: number; reason: string; note: string | null; createdAt: string }>;
   transactions: Array<{ id: string; type: 'CREDIT' | 'DEBIT'; amount: number; balanceAfter: number; description: string; createdAt: string }>;
   payments: Array<{ id: string; invoiceNumber: string; purpose: string; packageId: string | null; status: string; amount: number; receiptNumber: number | null; createdAt: string; fulfilledAt: string | null }>;

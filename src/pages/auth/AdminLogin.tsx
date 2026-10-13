@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
-import { AuthShell } from '../../components/AuthShell';
+import { ConsoleAuthShell as AuthShell } from '../../components/admin/ConsoleAuthShell';
 import { authApi, type AdminSessionResponse } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
 import { Mail, Lock, ShieldCheck, KeyRound, Copy } from 'lucide-react';

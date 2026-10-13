@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { useLocation, useNavigate } from 'react-router-dom';
 import SiteNav, { readStoredLang, storeLang, readStoredNight, storeNight } from '../../components/marketing/SiteNav';
 import HeroFilmstrip from '../../components/marketing/HeroFilmstrip';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/api';
+import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import TemplateShowcase from '../../components/marketing/TemplateShowcase';
 import {
   Store,
@@ -460,6 +463,13 @@ function AnimatedNumber({ value, duration = 700 }: { value: number; duration?: n
 function HomeInner() {
   const navigate = useNavigate();
   const { t, lang, toggle } = useLang();
+  // Banner line and featured stores, set by Super Admin in Marketing (super-admin-plan.md Step 17).
+  const { data: marketing } = useQuery({
+    queryKey: ['public-marketing'],
+    queryFn: () => api.get<{ banner: { text: string; link: string | null } | null; featured: Array<{ name: string; subdomain: string; logoUrl: string | null }> }>('/v1/public/marketing').then((r) => r.data),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   // Day / night for the whole page. The hero, pricing and closing sections are
@@ -758,6 +768,25 @@ function HomeInner() {
       <section className="relative overflow-hidden bg-[#F3F7EC] dark:bg-[#1A1A1A] transition-colors duration-300 min-h-screen flex flex-col justify-center pt-[92px] pb-8">
 
         <div className="relative max-w-6xl mx-auto px-6 flex flex-col items-center text-center">
+          {marketing?.banner && (
+            <div className="mb-5 max-w-full">
+              {marketing.banner.link ? (
+                marketing.banner.link.startsWith('/') ? (
+                  <a href={marketing.banner.link} onClick={(e) => { e.preventDefault(); navigate(marketing.banner!.link!); }} className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#008060] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#006e52]">
+                    <span className="truncate">{marketing.banner.text}</span>
+                    <ArrowRight size={14} className="shrink-0" />
+                  </a>
+                ) : (
+                  <a href={marketing.banner.link} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#008060] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#006e52]">
+                    <span className="truncate">{marketing.banner.text}</span>
+                    <ArrowRight size={14} className="shrink-0" />
+                  </a>
+                )
+              ) : (
+                <span className="inline-flex max-w-full items-center rounded-full bg-[#008060] px-4 py-1.5 text-sm font-medium text-white"><span className="truncate">{marketing.banner.text}</span></span>
+              )}
+            </div>
+          )}
           <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.2] text-[#1A1A1A] dark:text-white max-w-3xl">
             {t('hero_title')}
           </h1>
@@ -786,6 +815,30 @@ function HomeInner() {
           />
         </div>
       </section>
+
+      {/* Stores that run on Regantify, picked by Super Admin (Marketing). Hidden until at least one is picked. */}
+      {marketing && marketing.featured.length > 0 && (
+        <section id="stores" className="border-b border-black/10 bg-white dark:border-white/10 dark:bg-[#141414]">
+          <div className="max-w-6xl mx-auto px-6 py-14">
+            <h2 className="text-2xl font-bold mb-8">{lang === 'bn' ? 'Regantify-তে চলছে যেসব দোকান' : 'Stores running on Regantify'}</h2>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {marketing.featured.map((f) => (
+                <a key={f.subdomain} href={storefrontStoreUrl(f.subdomain)} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 rounded-2xl border border-black/10 p-4 transition-colors hover:border-[#008060] dark:border-white/10">
+                  {f.logoUrl ? (
+                    <img src={f.logoUrl} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                  ) : (
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#F3F7EC] text-lg font-bold text-[#008060] dark:bg-[#1A1A1A]">{f.name.slice(0, 1).toUpperCase()}</span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">{f.name}</span>
+                    <span className="flex items-center gap-1 text-xs text-[#008060]">{lang === 'bn' ? 'দোকান দেখুন' : 'Visit store'}<ArrowUpRight size={12} /></span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Run your business — editorial image strip */}
       <section id="run" className="max-w-6xl mx-auto px-6 py-20">
