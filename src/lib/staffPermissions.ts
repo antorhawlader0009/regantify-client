@@ -382,6 +382,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/staff': 'owner',
   '/vendor/activity': 'owner',
   '/vendor/notifications': 'any',
+  '/vendor/addons': 'owner',
   '/vendor/support': 'any',
   '/vendor/settings': 'any',
 };

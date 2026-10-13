@@ -193,6 +193,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Your profile', where: 'Profile', path: '/vendor/profile', keywords: 'my profile photo name email phone account' },
   { title: 'Plan, upgrade and invoices', where: 'Billing', path: '/vendor/billing', keywords: 'subscription upgrade renew advance starter basic free plan limits usage pay প্ল্যান' },
   { title: 'Staff and roles', where: 'Staff', path: '/vendor/staff', keywords: 'team member add staff role permission manager viewer password suspend ip স্টাফ' },
+  { title: 'Add-ons', where: 'Add-ons', path: '/vendor/addons', keywords: 'addon extension integration plugin apps bkash nagad sslcommerz shurjopay aamarpay pathao steadfast moveon sms email pwa discount role' },
   { title: 'Support tickets', where: 'Support', path: '/vendor/support', keywords: 'help contact us problem complaint ticket সাপোর্ট সাহায্য' },
   { title: 'AI chat bot credits', where: 'AI & Automation > AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot', keywords: 'ai credits tokens buy store chatbot assistant ask ai চ্যাটবট' },
 

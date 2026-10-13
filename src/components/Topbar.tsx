@@ -1,12 +1,11 @@
 import { Fragment } from 'react';
-import { ExternalLink, LogOut, Menu, Search, Settings, Sparkles, User } from 'lucide-react';
+import { ExternalLink, Menu, Sparkles } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAssistantUi } from '../store/assistantStore';
 import { isNavGroup, type NavSection } from '../lib/navConfig';
 import { storefrontStoreUrl } from '../lib/storefrontUrl';
-import { useLogout } from '../lib/useLogout';
-import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from './ui/DropdownMenu';
+import { AccountMenu } from './AccountMenu';
 import { NotificationBell } from './NotificationBell';
 import { BalanceButton } from './BalanceButton';
 import { SearchPalette, SearchTrigger } from './search/GlobalSearch';
@@ -34,6 +33,7 @@ function breadcrumb(sections: NavSection[], pathname: string): string[] {
   }
   if (best) return (best as { crumbs: string[] }).crumbs;
   // Pages reached from the avatar menu rather than the sidebar.
+  if (pathname.startsWith('/vendor/notifications')) return ['Notifications'];
   return pathname.startsWith('/vendor/profile') ? ['Profile'] : [];
 }
 
@@ -41,7 +41,6 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
-  const logout = useLogout();
   const isVendor = user?.role === 'VENDOR';
   const crumbs = breadcrumb(sections, location.pathname);
   const assistantOpen = useAssistantUi((s) => s.open);
@@ -111,54 +110,8 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
       {isVendor && <NotificationBell />}
       {isAdmin && <AdminBell />}
 
-      {/* Account menu: Settings + Log out. */}
-      <DropdownMenu
-        trigger={
-          <button
-            className="block shrink-0 rounded-full ring-2 ring-transparent transition-shadow hover:ring-brand-lime"
-            title="Account menu"
-          >
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.fullName ?? 'Profile'}
-                className="h-9 w-9 rounded-full border border-line object-cover"
-              />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-amber-200 to-amber-500">
-                <User className="text-white" size={18} />
-              </div>
-            )}
-          </button>
-        }
-      >
-        {user?.fullName && (
-          <>
-            <div className="px-4 py-2">
-              <p className="truncate text-sm font-medium text-regantify-text">{user.fullName}</p>
-            </div>
-            <DropdownMenuSeparator />
-          </>
-        )}
-        {/* The vendor's own profile (photo/name/email); store settings stay in the sidebar.
-            Super Admin has no profile page, so it keeps Settings. */}
-        {isVendor && (
-          <DropdownMenuItem onSelect={() => navigate('/vendor/profile')}>
-            <User size={16} />
-            Profile
-          </DropdownMenuItem>
-        )}
-        {isAdmin && (
-          <DropdownMenuItem onSelect={() => navigate('/admin/settings')}>
-            <Settings size={16} />
-            Settings
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onSelect={logout} danger>
-          <LogOut size={16} />
-          Log out
-        </DropdownMenuItem>
-      </DropdownMenu>
+      {/* Account menu: who is signed in, Profile / Notifications / Support / Settings, Log out. */}
+      <AccountMenu />
     </header>
     {isVendor && <SearchPalette />}
     </>

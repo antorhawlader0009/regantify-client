@@ -19,8 +19,8 @@ import {
   UsersRound,
   PhoneCall,
   ScanBarcode,
-  Bell,
   Headphones,
+  Puzzle,
   Settings,
   CreditCard,
   Landmark,
@@ -267,7 +267,7 @@ export const vendorNav: NavSection[] = [
   { label: 'Billing', icon: CreditCard, group: 'Account', path: '/vendor/billing' },
   { label: 'Staff', icon: UsersRound, group: 'Account', path: '/vendor/staff' },
   { label: 'Activity Log', icon: History, group: 'Account', path: '/vendor/activity', advanced: true },
-  { label: 'Notifications', icon: Bell, bottom: true, path: '/vendor/notifications' },
+  { label: 'Add-ons', icon: Puzzle, bottom: true, path: '/vendor/addons' },
   { label: 'Support', icon: Headphones, bottom: true, path: '/vendor/support' },
   { label: 'Settings', icon: Settings, bottom: true, path: '/vendor/settings' },
 ];

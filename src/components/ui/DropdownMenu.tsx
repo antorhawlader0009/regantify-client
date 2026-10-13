@@ -49,13 +49,15 @@ interface DropdownMenuItemProps {
   hint?: ReactNode;
   /** Native tooltip — e.g. the full text of a clamped hint. */
   title?: string;
+  /** Shown at the right edge (e.g. an unread count). */
+  badge?: ReactNode;
 }
 
 const itemClass = `flex items-center gap-2.5 px-4 py-2 text-sm cursor-pointer outline-none select-none
   hover:bg-neutral-50 focus:bg-neutral-50 data-[highlighted]:bg-neutral-50
   data-[disabled]:opacity-45 data-[disabled]:cursor-not-allowed data-[disabled]:hover:bg-transparent`;
 
-export function DropdownMenuItem({ onSelect, children, danger, disabled, icon, hint, title }: DropdownMenuItemProps) {
+export function DropdownMenuItem({ onSelect, children, danger, disabled, icon, hint, title, badge }: DropdownMenuItemProps) {
   return (
     <RadixDropdown.Item
       onSelect={onSelect}
@@ -68,6 +70,7 @@ export function DropdownMenuItem({ onSelect, children, danger, disabled, icon, h
         <span className="flex items-center gap-1.5">{children}</span>
         {hint && <span className="text-[11px] leading-tight text-regantify-text-muted mt-0.5 line-clamp-2">{hint}</span>}
       </span>
+      {badge}
     </RadixDropdown.Item>
   );
 }

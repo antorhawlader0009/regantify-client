@@ -170,6 +170,7 @@ import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
 import Announcements from './pages/admin/Announcements';
 import SupportInbox from './pages/admin/support/SupportInbox';
+import Addons from './pages/vendor/addons/Addons';
 import Support from './pages/vendor/support/Support';
 import SupportTicket from './pages/vendor/support/SupportTicket';
 import PaymentGatewayManagement from './pages/admin/payment-gateway/PaymentGatewayManagement';
@@ -214,6 +215,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/settings' &&
     r.path !== '/vendor/support' &&
     r.path !== '/vendor/notifications' &&
+    r.path !== '/vendor/addons' &&
     r.path !== '/vendor/product/all' &&
     r.path !== '/vendor/product/add' &&
     r.path !== '/vendor/product/categories' &&
@@ -379,6 +381,7 @@ export default function App() {
                 <Route path="/vendor/settings" element={<VendorSettings />} />
                 <Route path="/vendor/profile" element={<VendorProfile />} />
                 <Route path="/vendor/notifications" element={<Notifications />} />
+                <Route path="/vendor/addons" element={<Addons />} />
                 <Route path="/vendor/support" element={<Support />} />
                 <Route path="/vendor/support/:id" element={<SupportTicket />} />
                 <Route path="/vendor/product/add" element={<AddProduct />} />

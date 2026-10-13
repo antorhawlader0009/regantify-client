@@ -8,6 +8,7 @@ import { adminSupportApi, supportApi } from '../lib/supportApi';
 import { getVendorPlanUsage } from '../lib/plansApi';
 import { useAuthStore } from '../store/authStore';
 import { useLogout } from '../lib/useLogout';
+import { ConfirmDialog } from './ui/ConfirmDialog';
 
 const COLLAPSED_KEY = 'regantify.sidebarCollapsed';
 
@@ -63,6 +64,8 @@ function Badge({ children }: { children: string }) {
   );
 }
 
+const isSettingsRow = (s: NavSection) => Boolean(s.path?.endsWith('/settings'));
+
 const rowClass = (active: boolean, collapsed: boolean) =>
   `relative flex w-full items-center rounded-md py-2.5 text-[14px] ${
     collapsed ? 'justify-center px-0' : 'gap-3 px-3'
@@ -100,6 +103,7 @@ export function Sidebar({ sections, advancedMenu, mobileOpen = false, onMobileCl
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const isAdmin = user?.role === 'SUPER_ADMIN';
   const isDesktop = useIsDesktop();
   const [collapsedPref, setCollapsedState] = useState(readCollapsed);
@@ -343,13 +347,45 @@ export function Sidebar({ sections, advancedMenu, mobileOpen = false, onMobileCl
 
       {/* Always pinned to the bottom */}
       <div className="shrink-0 space-y-0.5 border-t border-dashed border-neutral-200 bg-white px-3 py-3">
-        {sections.filter((s) => s.bottom).map(renderSection)}
-        <button onClick={logout} title={collapsed ? 'Logout' : undefined} className={rowClass(false, collapsed)}>
-          <LogOut size={17} strokeWidth={1.6} className="shrink-0" />
-          {!collapsed && <span className="truncate">Logout</span>}
-        </button>
+        {sections.filter((s) => s.bottom).map((s) =>
+          // Expanded: Settings carries a small Logout icon at its right edge, so Logout needs no row of its own.
+          isSettingsRow(s) && !collapsed ? (
+            <div key={s.label} className="flex items-center gap-1">
+              <div className="min-w-0 flex-1">{renderSection(s)}</div>
+              <button
+                type="button"
+                onClick={() => setConfirmLogout(true)}
+                title="Logout"
+                aria-label="Logout"
+                className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-neutral-500 shadow-[0_1px_0_rgba(0,0,0,0.03)] transition duration-150 hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus-visible:border-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 active:scale-95"
+              >
+                <LogOut size={16} strokeWidth={1.8} className="transition-transform duration-150 group-hover:translate-x-0.5" />
+              </button>
+            </div>
+          ) : (
+            renderSection(s)
+          ),
+        )}
+        {/* Collapsed rail, or a menu with no Settings row: Logout keeps its own row. */}
+        {(collapsed || !sections.some((s) => s.bottom && isSettingsRow(s))) && (
+          <button onClick={() => setConfirmLogout(true)} title={collapsed ? 'Logout' : undefined} className={rowClass(false, collapsed)}>
+            <LogOut size={17} strokeWidth={1.6} className="shrink-0" />
+            {!collapsed && <span className="truncate">Logout</span>}
+          </button>
+        )}
       </div>
     </aside>
+    <ConfirmDialog
+      open={confirmLogout}
+      onOpenChange={setConfirmLogout}
+      title="Log out?"
+      message="You will be signed out of Regantify on this device."
+      confirmLabel="Yes, log out"
+      onConfirm={() => {
+        setConfirmLogout(false);
+        logout();
+      }}
+    />
     </>
   );
 }
