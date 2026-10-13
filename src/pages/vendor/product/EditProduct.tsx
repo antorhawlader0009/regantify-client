@@ -54,6 +54,8 @@ import { useAuthStore } from '../../../store/authStore';
 import { storefrontProductUrl } from '../../../lib/storefrontUrl';
 import { useCan } from '../../../lib/useStaffAccess';
 import { analyticsApi } from '../../../lib/analyticsApi';
+import { ProductAiChat } from '../../../components/product/ProductAiChat';
+import type { AiFormAccess } from '../../../lib/productAiApply';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -767,6 +769,33 @@ export default function EditProduct() {
   const adv = advancedPick ?? false;
   const toggleAdvanced = () => setAdvancedPick(!adv);
 
+  // AI assistant (under Status): it reads the form through these values and writes its answer back through these setters.
+  const aiAccess = (): AiFormAccess => ({
+    values: {
+      name, description, summary, price: String(price), discountPrice: String(discountPrice), cost: String(cost), stockQuantity: String(stockQuantity), sku, barcode,
+      weight: String(weight), weightUnit, brand, metaTitle, metaDescription, searchKeywords, visibility, videoUrl, badge: badge.text, minOrder: minOrderQuantity, maxOrder: maxOrderQty,
+      maxPerPhone, lowStockAlert: lowStockThreshold, preOrder: isPreOrder, note, variationOptions, variants, variationPhotos, categoryId, category, isBundle,
+      photos: photos.map((p) => ({ id: p.id, url: p.uploadedUrl ?? '', previewUrl: p.previewUrl })),
+    },
+    set: {
+      name: setName, description: setDescription, summary: setSummary, price: setPrice, discountPrice: setDiscountPrice, cost: setCost, stockQuantity: setStockQuantity, sku: setSku,
+      barcode: setBarcode, weight: setWeight, weightUnit: setWeightUnit, brand: setBrand, metaTitle: setMetaTitle, metaDescription: setMetaDescription, searchKeywords: setSearchKeywords,
+      visibility: setVisibility, videoUrl: setVideoUrl, badge: (v) => setBadge((b) => ({ ...b, text: v })), minOrder: setMinOrderQuantity, maxOrder: setMaxOrderQty,
+      maxPerPhone: setMaxPerPhone, lowStockAlert: setLowStockThreshold, preOrder: setIsPreOrder, note: setNote, variationOptions: setVariationOptions, variants: setVariants,
+      variationPhotos: setVariationPhotos,
+      category: (id, label) => {
+        setCategoryId(id);
+        setCategory(label);
+      },
+    },
+    categories: categoryOptions,
+    photos: {
+      setOrder: (ids) => setPhotos((prev) => ids.map((id) => prev.find((p) => p.id === id)).filter((p): p is (typeof prev)[number] => Boolean(p))),
+      snapshot: () => photos,
+      restore: (snapshot) => setPhotos(snapshot as typeof photos),
+    },
+  });
+
   return (
     <div className="mx-auto max-w-6xl">
       <Link to="/vendor/product/all" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
@@ -943,6 +972,8 @@ export default function EditProduct() {
         {/* Side column */}
         <div className="space-y-4">
           <StatusCard visibility={visibility} onChange={setVisibility} />
+
+          <ProductAiChat getAccess={aiAccess} photosUploading={photos.some((p) => p.uploading)} onAddPhotos={handlePhotoFiles} />
 
           <ProductSideCard title="Category">
             <div className="space-y-3">
