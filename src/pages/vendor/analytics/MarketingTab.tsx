@@ -6,6 +6,7 @@ import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import { CouponResultsCard } from './CouponResultsCard';
 import { ManualChannelsCard } from './ManualChannelsCard';
 import { HeardFromCard } from './HeardFromCard';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 const CHANNEL_LABELS: Record<string, string> = {
   facebook: 'Facebook',
@@ -129,11 +130,13 @@ export function MarketingTab({ range }: TabProps) {
               </Card>
             </div>
 
+            <AdvancedPanel id="analytics-marketing" title="More reports" what="Hand-made orders by channel, how customers heard about you, coupon results" spaced>
             <ManualChannelsCard range={range} />
 
             <HeardFromCard range={range} />
 
             <CouponResultsCard range={range} />
+            </AdvancedPanel>
         </>
       )}
     </TabState>

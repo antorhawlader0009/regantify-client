@@ -40,6 +40,11 @@ export interface NavLinkItem {
   path: string;
   /** Other pages that should keep this link highlighted (e.g. the pages a hub page opens). */
   alsoActive?: string[];
+  /**
+   * An advanced page: left out of the sidebar until the seller turns on "Advanced menu" (the toggle above the
+   * sidebar's bottom bar), or while they are on that very page. Search (Ctrl K), links and routes are unaffected.
+   */
+  advanced?: boolean;
 }
 
 /** A collapsible sub-group inside a section (e.g. Store > Design). One level deep only. */
@@ -53,6 +58,8 @@ export interface NavGroup {
   hidden?: boolean;
   /** For a hidden group: the hub page its pages show a "back" link to. */
   hubPath?: string;
+  /** A whole sub-group of advanced pages (see NavLinkItem.advanced). */
+  advanced?: boolean;
 }
 
 export type NavChild = NavLinkItem | NavGroup;
@@ -72,6 +79,8 @@ export interface NavSection {
   group?: string;
   /** Pinned to the sidebar's bottom bar, which never scrolls. */
   bottom?: boolean;
+  /** A top-level advanced page (see NavLinkItem.advanced). */
+  advanced?: boolean;
   /** Its pages (all plain links) also show as a tab bar above each page, so they can be switched without the sidebar. */
   tabs?: boolean;
 }
@@ -117,10 +126,10 @@ export const vendorNav: NavSection[] = [
       { label: 'Categories', path: '/vendor/product/categories' },
       { label: 'Collections', path: '/vendor/product/collections' },
       { label: 'Brands', path: '/vendor/product/brands' },
-      { label: 'Size Guides', path: '/vendor/product/size-guides' },
+      { label: 'Size Guides', path: '/vendor/product/size-guides', advanced: true },
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
-      { label: 'Stock Count', path: '/vendor/product/stock-count' },
-      { label: 'Stock History', path: '/vendor/product/stock-history' },
+      { label: 'Stock Count', path: '/vendor/product/stock-count', advanced: true },
+      { label: 'Stock History', path: '/vendor/product/stock-history', advanced: true },
     ],
   },
   { label: 'Reviews', icon: Star, group: 'Product', path: '/vendor/reviews' },
@@ -133,9 +142,9 @@ export const vendorNav: NavSection[] = [
       { label: 'Coupons', path: '/vendor/marketing/coupons' },
       { label: 'Campaigns', path: '/vendor/marketing/campaigns' },
       { label: 'Discounts', path: '/vendor/marketing/discounts' },
-      { label: 'Flash Sale', path: '/vendor/marketing/flash-sale' },
-      { label: 'Gift Cards', path: '/vendor/marketing/gift-cards' },
-      { label: 'Reward Points', path: '/vendor/marketing/rewards' },
+      { label: 'Flash Sale', path: '/vendor/marketing/flash-sale', advanced: true },
+      { label: 'Gift Cards', path: '/vendor/marketing/gift-cards', advanced: true },
+      { label: 'Reward Points', path: '/vendor/marketing/rewards', advanced: true },
     ],
   },
   { label: 'SMS', icon: MessageSquare, group: 'Sales Marketing', path: '/vendor/sms' },
@@ -146,7 +155,7 @@ export const vendorNav: NavSection[] = [
     tabs: true,
     children: [
       { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot' },
-      { label: 'n8n', path: '/vendor/ai-automation/n8n' },
+      { label: 'n8n', path: '/vendor/ai-automation/n8n', advanced: true },
     ],
   },
   {
@@ -178,9 +187,9 @@ export const vendorNav: NavSection[] = [
         label: 'Content',
         children: [
           { label: 'Pages', path: '/vendor/store/pages' },
-          { label: 'Magazine', path: '/vendor/store/magazine' },
+          { label: 'Magazine', path: '/vendor/store/magazine', advanced: true },
           { label: 'FAQ', path: '/vendor/store/faq' },
-          { label: 'Share & QR', path: '/vendor/store/share' },
+          { label: 'Share & QR', path: '/vendor/store/share', advanced: true },
           { label: 'Landing Page', path: '/vendor/store/landing-pages' },
           { label: 'Media', path: '/vendor/store/media' },
         ],
@@ -193,9 +202,9 @@ export const vendorNav: NavSection[] = [
           { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
           { label: 'Invoice', path: '/vendor/store/invoice' },
           { label: 'COD Guard', path: '/vendor/store/cod-guard' },
-          { label: 'Form Fields', path: '/vendor/store/checkout-form' },
+          { label: 'Form Fields', path: '/vendor/store/checkout-form', advanced: true },
           { label: 'Store Away', path: '/vendor/store/store-away' },
-          { label: 'Backup', path: '/vendor/store/backup' },
+          { label: 'Backup', path: '/vendor/store/backup', advanced: true },
           { label: 'Order Tracking', path: '/vendor/store/order-tracking' },
         ],
       },
@@ -211,11 +220,12 @@ export const vendorNav: NavSection[] = [
         children: [
           { label: 'Domain', path: '/vendor/store/domain' },
           { label: 'Social', path: '/vendor/store/social' },
-          { label: 'GDPR Prompt', path: '/vendor/store/gdpr' },
+          { label: 'GDPR Prompt', path: '/vendor/store/gdpr', advanced: true },
         ],
       },
       {
         label: 'Custom Code',
+        advanced: true,
         children: [
           { label: 'Custom CSS', path: '/vendor/store/custom-css' },
           { label: 'Custom Head Scripts', path: '/vendor/store/head-scripts' },
@@ -236,7 +246,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Steadfast', path: '/vendor/courier/steadfast' },
       { label: 'Pathao', path: '/vendor/courier/pathao' },
       { label: 'RedX', path: '/vendor/courier/redx' },
-      { label: 'Courier Rules', path: '/vendor/courier/rules' },
+      { label: 'Courier Rules', path: '/vendor/courier/rules', advanced: true },
       // The only other real standalone page in this group — see Tracking.tsx.
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
     ],
@@ -250,13 +260,13 @@ export const vendorNav: NavSection[] = [
       { label: 'Transactions', path: '/vendor/finance/transactions' },
       { label: 'Expenses', path: '/vendor/finance/expenses' },
       { label: 'Withdraw', path: '/vendor/finance/withdraw' },
-      { label: 'Fee Summary', path: '/vendor/finance/fee-summary' },
-      { label: 'Receipts', path: '/vendor/finance/receipts' },
+      { label: 'Fee Summary', path: '/vendor/finance/fee-summary', advanced: true },
+      { label: 'Receipts', path: '/vendor/finance/receipts', advanced: true },
     ],
   },
   { label: 'Billing', icon: CreditCard, group: 'Account', path: '/vendor/billing' },
   { label: 'Staff', icon: UsersRound, group: 'Account', path: '/vendor/staff' },
-  { label: 'Activity Log', icon: History, group: 'Account', path: '/vendor/activity' },
+  { label: 'Activity Log', icon: History, group: 'Account', path: '/vendor/activity', advanced: true },
   { label: 'Notifications', icon: Bell, bottom: true, path: '/vendor/notifications' },
   { label: 'Support', icon: Headphones, bottom: true, path: '/vendor/support' },
   { label: 'Settings', icon: Settings, bottom: true, path: '/vendor/settings' },
@@ -300,3 +310,68 @@ export const adminNav: NavSection[] = [
   { label: 'Staff', icon: UserCog, group: 'Platform', path: '/admin/staff' },
   { label: 'Settings', icon: Settings, group: 'Platform', path: '/admin/settings' },
 ];
+
+const isHere = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
+
+/** How many sidebar pages are marked advanced (0 = no "Advanced menu" button is needed for this person). */
+export function countAdvancedNav(sections: NavSection[]): number {
+  let n = 0;
+  for (const s of sections) {
+    if (s.advanced) n++;
+    for (const c of s.children ?? []) {
+      if (isNavGroup(c)) n += c.advanced ? c.children.length : c.children.filter((l) => l.advanced).length;
+      else if (c.advanced) n++;
+    }
+  }
+  return n;
+}
+
+/**
+ * The nav without its advanced pages, unless `show` is on. A page you are standing on always stays, so the
+ * sidebar and tab bar never lose the page you opened from search, a link or a bookmark. A section left with no
+ * pages disappears. Only the sidebar and tab bar use this; search, breadcrumbs and routes use the full list.
+ */
+export function withoutAdvanced(sections: NavSection[], show: boolean, pathname: string): NavSection[] {
+  if (show) return sections;
+  const out: NavSection[] = [];
+  for (const section of sections) {
+    if (section.advanced && !(section.path && isHere(pathname, section.path))) continue;
+    if (!section.children) {
+      out.push(section);
+      continue;
+    }
+    const children = section.children
+      .map((c): NavChild | null => {
+        if (!isNavGroup(c)) return !c.advanced || isHere(pathname, c.path) ? c : null;
+        if (c.hidden) return c;
+        const kept = c.children.filter((l) => !(c.advanced || l.advanced) || isHere(pathname, l.path));
+        return kept.length ? { ...c, children: kept } : null;
+      })
+      .filter((c): c is NavChild => c !== null);
+    if (children.length > 0) out.push({ ...section, children });
+  }
+  return out;
+}
+
+export interface AdvancedNavGroup {
+  /** The section the pages belong to (Product, Marketing, Store...). */
+  label: string;
+  links: NavLinkItem[];
+}
+
+/** Every advanced page, grouped by its section, for the sidebar's "Advanced" list under the normal menu. */
+export function advancedNavGroups(sections: NavSection[]): AdvancedNavGroup[] {
+  const out: AdvancedNavGroup[] = [];
+  for (const s of sections) {
+    const links: NavLinkItem[] = [];
+    if (s.advanced && s.path) links.push({ label: s.label, path: s.path });
+    for (const c of s.children ?? []) {
+      if (isNavGroup(c)) {
+        if (c.hidden) continue;
+        for (const l of c.children) if (c.advanced || l.advanced) links.push(l);
+      } else if (c.advanced) links.push(c);
+    }
+    if (links.length > 0) out.push({ label: s.label, links });
+  }
+  return out;
+}

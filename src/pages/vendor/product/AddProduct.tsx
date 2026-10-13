@@ -4,12 +4,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Loader2, Plus, Sparkles, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
 import {
   PhotoManager,
   PriceFields,
   ProductSideCard,
   QuickAddButton,
   SaveBar,
+  SchedulePanel,
   SearchListingCard,
   StatusCard,
   type ProductSchedule,
@@ -80,7 +82,6 @@ export default function AddProduct() {
   const [visibility, setVisibility] = useState<'PUBLIC' | 'DRAFT'>('PUBLIC');
   // Optional schedule (Status card): go live / hide by itself at a time, in Dhaka time.
   const [schedule, setSchedule] = useState<ProductSchedule>({ publishAt: null, unpublishAt: null });
-  const [showSummary, setShowSummary] = useState(false);
   const [category, setCategory] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [brand, setBrand] = useState('');
@@ -210,7 +211,6 @@ export default function AddProduct() {
       setMetaDescription(info.metaDescription);
       if (info.weight != null) setWeight(String(info.weight));
       setWeightUnit(info.weightUnit);
-      setShowSummary(true);
       toast.success('Product info filled in. Check it before saving.');
     },
     onError: () => toast.error('Could not generate product info. Please try again.'),
@@ -287,7 +287,7 @@ export default function AddProduct() {
       category: category.trim() || undefined,
       categoryId: categoryId || undefined,
       brand: brand.trim() || undefined,
-      summary: showSummary ? summary.trim() || undefined : undefined,
+      summary: summary.trim() || undefined,
       metaTitle: metaTitle.trim() || undefined,
       metaDescription: metaDescription.trim() || undefined,
       searchKeywords: searchKeywords.length > 0 ? searchKeywords : undefined,
@@ -349,6 +349,44 @@ export default function AddProduct() {
 
   const urlBase = `${typeof window !== 'undefined' ? window.location.host : ''}/store/${storeSubdomain ?? '…'}`;
 
+  // Rarely-needed options sit behind one "Advanced" button. Hidden fields keep their values and are still saved; the
+  // section opens by itself when one of them holds a value (AI Generate filling the search listing, say).
+  const advancedInUse = [
+    Boolean(summary.trim()),
+    Boolean(videoUrl.trim()),
+    searchKeywords.length > 0,
+    addons.length > 0,
+    Boolean(badge.text.trim()),
+    JSON.stringify(policy) !== JSON.stringify(EMPTY_POLICY),
+    isBundle,
+    Boolean(cost.trim()),
+    breakRows.length > 0,
+    Boolean(wholesalePrice.trim()),
+    Boolean(reorderDays.trim()),
+    Boolean(quantityStep.trim() || unitLabel.trim()),
+    Boolean(restockDate),
+    Boolean(extraDelivery.trim()),
+    paymentRule !== 'ANY',
+    infoTabs.length > 0,
+    comingSoon,
+    customRows.length > 0,
+    Boolean(barcode.trim()),
+    Boolean(weight.trim()),
+    Boolean(minOrderQuantity.trim() || maxOrderQty.trim() || maxPerPhone.trim() || lowStockThreshold.trim()),
+    isPreOrder,
+    quoteOnly,
+    Boolean(sizeGuideId),
+    Boolean(brand.trim()),
+    Boolean(schedule.publishAt || schedule.unpublishAt),
+    Boolean(note.trim()),
+    Boolean(metaTitle.trim() || metaDescription.trim() || slugTouched),
+  ].filter(Boolean).length;
+  const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  // Once opened by the data, stay open: clearing the last value must not make the field vanish under the cursor.
+  if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
+  const adv = advancedPick ?? false;
+  const toggleAdvanced = () => setAdvancedPick(!adv);
+
   return (
     <div className="mx-auto max-w-6xl">
       <Link to="/vendor/product/all" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
@@ -365,7 +403,7 @@ export default function AddProduct() {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        {/* Main column */}
+        {/* Main column: only what every product needs. Everything else is under "Advanced" at the bottom. */}
         <div className="min-w-0 space-y-4">
           <SectionCard
             title="Product details"
@@ -396,24 +434,10 @@ export default function AddProduct() {
               <Field label="Description" hint="Tip: add a name and a photo, then use AI Generate to write this for you.">
                 <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" maxLength={10000} />
               </Field>
-              {showSummary ? (
-                <Field label="Short summary" hint="Shown near the price on the product page.">
-                  <RichTextEditor value={summary} onChange={setSummary} placeholder="A short summary shown in listings" maxLength={500} />
-                </Field>
-              ) : (
-                <button type="button" onClick={() => setShowSummary(true)} className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
-                  <Plus size={14} />
-                  Add a short summary
-                </button>
-              )}
-              <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
-              <AddonProductsField value={addons} onChange={setAddons} />
-              <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
-              <PolicyField value={policy} onChange={setPolicy} />
             </div>
           </SectionCard>
 
-          <SectionCard title="Photos and video" id="photos" description="Clear photos sell better. The first photo is the one shoppers see first.">
+          <SectionCard title="Photos" id="photos" description="Clear photos sell better. The first photo is the one shoppers see first.">
             <PhotoManager
               photos={photos}
               onFiles={handlePhotoFiles}
@@ -422,31 +446,11 @@ export default function AddProduct() {
               photoSize={photoSize}
               onPhotoSizeChange={setPhotoSize}
             />
-            <div className="mt-4">
-              <Field label="Video link" hint="A YouTube link, shown with the photos.">
-                <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value.slice(0, 500))}
-                  placeholder="https://youtube.com/watch?v=…"
-                  maxLength={500}
-                  className={productInputClass}
-                />
-              </Field>
-            </div>
           </SectionCard>
-
-          <BundleCard
-            isBundle={isBundle}
-            onIsBundle={setIsBundle}
-            parts={bundleParts}
-            onParts={setBundleParts}
-            price={price}
-            discountPrice={discountPrice}
-          />
 
           <SectionCard title="Price">
             <PriceFields
+              part="main"
               price={price}
               onPrice={setPrice}
               discountPrice={discountPrice}
@@ -455,16 +459,6 @@ export default function AddProduct() {
               onCost={setCost}
               priceError={priceError}
             />
-            <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.trim() || price} cost={cost} />
-            <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.trim() || price} />
-            <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
-            <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
-            <RestockDateField value={restockDate} onChange={setRestockDate} />
-            <ExtraDeliveryField amount={extraDelivery} onAmount={setExtraDelivery} perPiece={extraPerPiece} onPerPiece={setExtraPerPiece} />
-            <PaymentRuleField value={paymentRule} onChange={setPaymentRule} />
-            <InfoTabsField tabs={infoTabs} onChange={setInfoTabs} />
-            <ComingSoonField on={comingSoon} onToggle={setComingSoon} until={comingSoonUntil} onUntil={setComingSoonUntil} />
-            {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
           </SectionCard>
 
           <SectionCard title="Stock" id="stock">
@@ -478,9 +472,6 @@ export default function AddProduct() {
                   maxLength={50}
                   className={productInputClass}
                 />
-              </Field>
-              <Field label="Barcode" tooltip="What a barcode scanner reads at your POS counter. Use the code printed on the pack, or Generate one for your own goods." hint="Optional.">
-                <BarcodeInput value={barcode} onChange={setBarcode} />
               </Field>
               {isBundle ? (
                 <Field label="Stock quantity">
@@ -504,6 +495,137 @@ export default function AddProduct() {
                   <p className="rounded-lg border border-dashed border-line px-3.5 py-2.5 text-sm text-neutral-500">Set per variation below.</p>
                 </Field>
               )}
+            </div>
+          </SectionCard>
+
+          {!isBundle && (
+            <SectionCard title="Variations" id="variations" description="Sizes, colours and so on, each with its own stock and price. Skip this if the product has only one kind.">
+              <VariationsEditor
+                productSku={sku}
+                weightUnit={weightUnit}
+                options={variationOptions}
+                onOptionsChange={setVariationOptions}
+                variants={variants}
+                onVariantsChange={setVariants}
+                variationPhotos={variationPhotos}
+                onVariationPhotosChange={setVariationPhotos}
+              />
+            </SectionCard>
+          )}
+        </div>
+
+        {/* Side column */}
+        <div className="space-y-4">
+          <StatusCard visibility={visibility} onChange={setVisibility} />
+
+          <ProductSideCard title="Category">
+            <div className="space-y-3">
+              <Field label="Main category">
+                <div className="flex items-center gap-2">
+                  <select value={mainCategoryId} onChange={(e) => handleMainCategoryChange(e.target.value)} className={productInputClass}>
+                    <option value="">No category</option>
+                    {mainCategoryOptions.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <QuickAddButton title="Add main category" onClick={() => setShowAddMainCategory(true)} />
+                </div>
+              </Field>
+              <Field label="Sub category">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={subCategoryId}
+                    onChange={(e) => handleSubCategoryChange(e.target.value)}
+                    disabled={!mainCategoryId || subCategoryOptions.length === 0}
+                    className={productInputClass}
+                  >
+                    <option value="">{!mainCategoryId ? 'Pick a main category first' : subCategoryOptions.length > 0 ? 'None' : 'No sub categories'}</option>
+                    {subCategoryOptions.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <QuickAddButton title="Add sub category" disabled={!mainCategoryId} onClick={() => setShowAddSubCategory(true)} />
+                </div>
+              </Field>
+            </div>
+          </ProductSideCard>
+        </div>
+      </div>
+
+      {/* Advanced: one button under the form; what it opens comes below it, in groups. */}
+      <div className="mt-4">
+        <AdvancedHint
+          open={adv}
+          onToggle={toggleAdvanced}
+          inUse={advancedInUse}
+          what="cost, brand, weight, barcode, bundles, quantity prices, order limits, pre-order, badge, size guide, search listing"
+        />
+      </div>
+
+      {adv && (
+        <div className="mt-4 space-y-4">
+          <SectionCard title="On the product page" description="Extra things shoppers see on the product page.">
+            <div className="space-y-4">
+              <Field label="Short summary" hint="Shown near the price on the product page.">
+                <RichTextEditor value={summary} onChange={setSummary} placeholder="A short summary shown in listings" maxLength={500} />
+              </Field>
+              <Field label="Video link" hint="A YouTube link, shown with the photos.">
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value.slice(0, 500))}
+                  placeholder="https://youtube.com/watch?v=…"
+                  maxLength={500}
+                  className={productInputClass}
+                />
+              </Field>
+              <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
+              <PolicyField value={policy} onChange={setPolicy} />
+              <InfoTabsField tabs={infoTabs} onChange={setInfoTabs} />
+              <SizeGuideField value={sizeGuideId} onChange={setSizeGuideId} />
+              <AddonProductsField value={addons} onChange={setAddons} />
+              <SearchWordsField value={searchKeywords} onChange={setSearchKeywords} />
+              {!isBundle && <CustomFieldsField rows={customRows} onChange={setCustomRows} fee={customFee} onFee={setCustomFee} />}
+            </div>
+          </SectionCard>
+
+          <BundleCard
+            isBundle={isBundle}
+            onIsBundle={setIsBundle}
+            parts={bundleParts}
+            onParts={setBundleParts}
+            price={price}
+            discountPrice={discountPrice}
+          />
+
+          <SectionCard title="Pricing extras">
+            <div className="space-y-4">
+              <PriceFields
+                part="cost"
+                price={price}
+                onPrice={setPrice}
+                discountPrice={discountPrice}
+                onDiscountPrice={setDiscountPrice}
+                cost={cost}
+                onCost={setCost}
+              />
+              <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.trim() || price} cost={cost} />
+              <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.trim() || price} />
+              <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
+              <ExtraDeliveryField amount={extraDelivery} onAmount={setExtraDelivery} perPiece={extraPerPiece} onPerPiece={setExtraPerPiece} />
+              <PaymentRuleField value={paymentRule} onChange={setPaymentRule} />
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Stock and ordering rules">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Barcode" tooltip="What a barcode scanner reads at your POS counter. Use the code printed on the pack, or Generate one for your own goods." hint="Optional.">
+                <BarcodeInput value={barcode} onChange={setBarcode} />
+              </Field>
               <Field label="Weight" hint="Used to work out the delivery charge.">
                 <div className="flex gap-2">
                   <input
@@ -578,17 +700,15 @@ export default function AddProduct() {
               </Field>
             </div>
             <div className="mt-4 space-y-4 border-t border-line pt-4">
-              <ToggleRow
-                checked={isPreOrder}
-                onChange={setIsPreOrder}
-                label="Pre-order"
-                hint="Shoppers can order it before it’s in stock."
-              />
+              <ReorderDaysField value={reorderDays} onChange={setReorderDays} />
+              <RestockDateField value={restockDate} onChange={setRestockDate} />
+              <ToggleRow checked={isPreOrder} onChange={setIsPreOrder} label="Pre-order" hint="Shoppers can order it before it’s in stock." />
               {isPreOrder && (
                 <Field label="Expected date" hint="Shown to shoppers as “about 20 Nov”. Optional. After this date the pre-order delivery estimate counts from it.">
                   <input type="date" value={preOrderDate} onChange={(e) => setPreOrderDate(e.target.value)} className={productInputClass} />
                 </Field>
               )}
+              <ComingSoonField on={comingSoon} onToggle={setComingSoon} until={comingSoonUntil} onUntil={setComingSoonUntil} />
               <ToggleRow
                 checked={quoteOnly}
                 onChange={setQuoteOnly}
@@ -598,60 +718,8 @@ export default function AddProduct() {
             </div>
           </SectionCard>
 
-          {!isBundle && (
-          <SectionCard title="Variations" id="variations" description="Sizes, colours and so on, each with its own stock and price.">
-            <SizeGuideField value={sizeGuideId} onChange={setSizeGuideId} />
-            <VariationsEditor
-              productSku={sku}
-              weightUnit={weightUnit}
-              options={variationOptions}
-              onOptionsChange={setVariationOptions}
-              variants={variants}
-              onVariantsChange={setVariants}
-              variationPhotos={variationPhotos}
-              onVariationPhotosChange={setVariationPhotos}
-            />
-          </SectionCard>
-          )}
-        </div>
-
-        {/* Side column */}
-        <div className="space-y-4">
-          <StatusCard visibility={visibility} onChange={setVisibility} schedule={schedule} onSchedule={setSchedule} />
-
-          <ProductSideCard title="Category and brand">
-            <div className="space-y-3">
-              <Field label="Main category">
-                <div className="flex items-center gap-2">
-                  <select value={mainCategoryId} onChange={(e) => handleMainCategoryChange(e.target.value)} className={productInputClass}>
-                    <option value="">No category</option>
-                    {mainCategoryOptions.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <QuickAddButton title="Add main category" onClick={() => setShowAddMainCategory(true)} />
-                </div>
-              </Field>
-              <Field label="Sub category">
-                <div className="flex items-center gap-2">
-                  <select
-                    value={subCategoryId}
-                    onChange={(e) => handleSubCategoryChange(e.target.value)}
-                    disabled={!mainCategoryId || subCategoryOptions.length === 0}
-                    className={productInputClass}
-                  >
-                    <option value="">{!mainCategoryId ? 'Pick a main category first' : subCategoryOptions.length > 0 ? 'None' : 'No sub categories'}</option>
-                    {subCategoryOptions.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                  <QuickAddButton title="Add sub category" disabled={!mainCategoryId} onClick={() => setShowAddSubCategory(true)} />
-                </div>
-              </Field>
+          <SectionCard title="Organize and schedule">
+            <div className="space-y-4">
               <Field label="Brand">
                 <div className="flex items-center gap-2">
                   <input
@@ -665,19 +733,18 @@ export default function AddProduct() {
                   <QuickAddButton title="Add brand" onClick={() => setShowAddBrand(true)} />
                 </div>
               </Field>
+              <SchedulePanel bare visibility={visibility} schedule={schedule} onSchedule={setSchedule} />
+              <Field label="Internal note" hint="Only you and your staff see this.">
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value.slice(0, 1000))}
+                  rows={3}
+                  maxLength={1000}
+                  className={`${productInputClass} resize-y`}
+                />
+              </Field>
             </div>
-          </ProductSideCard>
-
-          <ProductSideCard title="Internal note">
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value.slice(0, 1000))}
-              rows={3}
-              maxLength={1000}
-              placeholder="Only you and your staff see this."
-              className={`${productInputClass} resize-y`}
-            />
-          </ProductSideCard>
+          </SectionCard>
 
           <SearchListingCard
             storeName={storeName ?? 'My store'}
@@ -697,7 +764,7 @@ export default function AddProduct() {
             descriptionFallback={htmlToText(description)}
           />
         </div>
-      </div>
+      )}
 
       <SaveBar message={formError ? <span className="text-red-600">{formError}</span> : visibility === 'DRAFT' ? 'Saved as a draft: hidden from your store.' : undefined}>
         <button type="button" onClick={() => navigate('/vendor/product/all')} className={outlineBtn}>

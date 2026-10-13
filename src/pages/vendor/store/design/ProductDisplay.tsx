@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { ProductGalleryStyle, ProductImageShape } from '../../../../lib/designSettingsApi';
+import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 import {
   DesignLoading,
   DesignPageHeader,
@@ -48,6 +49,8 @@ export default function ProductDisplay() {
     });
   }, [settings]);
 
+  const advancedInUse = [proofDays > 0, wishAlerts, buyersOn, Boolean(messages.inStockMessage || messages.outOfStockMessage || messages.preOrderMessage)].filter(Boolean).length;
+
   return (
     <div className="max-w-3xl">
       <DesignPageHeader
@@ -86,6 +89,7 @@ export default function ProductDisplay() {
             />
           </DesignSection>
 
+          <AdvancedPanel id="design-product-display" what="Share button, N bought in the last days, wishlist alerts, someone-bought popup, stock messages" inUse={advancedInUse} spaced>
           <DesignSection title="Share, sales and wishlist (StorePal)">
             <div className="flex items-center gap-3">
               <Switch checked={share} onChange={setShare} label="Share button" />
@@ -171,6 +175,7 @@ export default function ProductDisplay() {
             <p className="text-xs text-regantify-text-muted">Leave a message empty to use the default shown in grey.</p>
             <SaveButton pending={save.isPending} onClick={() => save.mutate(messages)} />
           </DesignSection>
+          </AdvancedPanel>
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ import { DeadStockCard } from './DeadStockCard';
 import { StockValueCard } from './StockValueCard';
 import { ProfitByProductCard } from './ProfitByProductCard';
 import { ReturnRateCard } from './ReturnRateCard';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 export function ProductsTab({ range }: TabProps) {
   const query = useAnalytics('products', range);
@@ -130,6 +131,7 @@ export function ProductsTab({ range }: TabProps) {
                 )}
               </Card>
 
+              <AdvancedPanel id="analytics-products" title="More reports" what="Profit by product, return rate, stock value, products not selling, what shoppers search for" spaced>
               <ProfitByProductCard range={range} />
 
               <ReturnRateCard range={range} />
@@ -139,6 +141,7 @@ export function ProductsTab({ range }: TabProps) {
               <DeadStockCard />
 
               <SearchesSection range={range} />
+              </AdvancedPanel>
           </>
         );
       }}

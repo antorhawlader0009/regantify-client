@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../../../components/ui/ConfirmDialog';
 import { Field, productInputClass } from '../../../../components/product/ProductFormPieces';
 import { CardSkeleton, CheckRow, CourierCard, SaveRow, dangerOutlineBtn, formOutlineBtn, saveBtn } from '../../../../components/courier/CourierKit';
 import { AutoBookCard, StatusMapCard, WebhookSettingsCard, useSavedFlash } from '../../../../components/courier/CourierSettingsCards';
+import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 
 const STEADFAST_PANEL_URL = 'https://steadfast.com.bd/login';
 
@@ -234,6 +235,7 @@ export function SteadfastSettingsTab({ overview }: { overview: SteadfastOverview
             getSettings={courierApi.getSteadfastSettings}
             save={(autoBook) => courierApi.updateSteadfastSettings({ autoBook })}
           />
+          <AdvancedPanel id="courier-steadfast" what="Order status mapping and webhook setup for SteadFast">
           <StatusMapCard
             courier="SteadFast"
             settingsKey="steadfast-settings"
@@ -270,6 +272,7 @@ export function SteadfastSettingsTab({ overview }: { overview: SteadfastOverview
               </>
             }
           />
+          </AdvancedPanel>
         </>
       )}
       <DeliveryCheckCard overview={overview} />

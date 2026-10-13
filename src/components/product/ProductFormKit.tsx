@@ -312,6 +312,7 @@ export function PriceFields({
   onCost,
   priceError,
   priceLocked = false,
+  part = 'all',
 }: {
   price: string;
   onPrice: (v: string) => void;
@@ -322,6 +323,8 @@ export function PriceFields({
   priceError?: string | null;
   /** Edit Product for a staff role without products.price: prices are shown, not changeable (rule-plan.md Step 10). */
   priceLocked?: boolean;
+  /** 'main' = price and sale price only, 'cost' = the cost alone (it lives under Advanced), 'all' = the three together. */
+  part?: 'all' | 'main' | 'cost';
 }) {
   // Without products.cost the server never sends the cost and keeps the saved one on save (Step 5): no box at all.
   const canCost = useCan('products.cost');
@@ -353,8 +356,14 @@ export function PriceFields({
     );
   }
 
+  const showMain = part !== 'cost';
+  const showCost = canCost && part !== 'main';
+  if (!showMain && !showCost) return null;
+
   return (
-    <div className={`grid gap-4 ${canCost ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+    <div className={`grid gap-4 ${showMain && showCost ? 'sm:grid-cols-3' : showMain ? 'sm:grid-cols-2' : 'sm:max-w-xs'}`}>
+      {showMain && (
+      <>
       <div>
         <label className="mb-1.5 flex items-center gap-1 text-sm font-medium text-regantify-text">
           Price <span className="text-red-500" aria-hidden>*</span>
@@ -371,7 +380,9 @@ export function PriceFields({
         <MoneyInput value={discountPrice} onChange={onDiscountPrice} placeholder="Optional" ariaLabel="Sale price" disabled={priceLocked} />
         <p className="mt-1.5 text-xs text-neutral-500">{discountNote}</p>
       </div>
-      {canCost && (
+      </>
+      )}
+      {showCost && (
         <div>
           <label className="mb-1.5 block text-sm font-medium text-regantify-text">Cost</label>
           <MoneyInput value={cost} onChange={onCost} placeholder="Optional" ariaLabel="Cost" />
@@ -439,8 +450,26 @@ export function StatusCard({
         {visibility === 'PUBLIC' ? 'Shoppers can see and buy this product.' : 'Hidden from your store until you make it public.'}
       </p>
 
-      {schedule && onSchedule && (
-        <div className="mt-4 space-y-3 border-t border-line pt-3">
+      {schedule && onSchedule && <SchedulePanel visibility={visibility} schedule={schedule} onSchedule={onSchedule} />}
+    </SideCard>
+  );
+}
+
+/** The optional go-live / hide times of a product (Dhaka time). Under Advanced on Add/Edit Product. */
+export function SchedulePanel({
+  visibility,
+  schedule,
+  onSchedule,
+  bare = false,
+}: {
+  visibility: 'PUBLIC' | 'DRAFT';
+  schedule: ProductSchedule;
+  onSchedule: (next: ProductSchedule) => void;
+  /** No top margin and rule: it sits in its own card. */
+  bare?: boolean;
+}) {
+  return (
+        <div className={bare ? 'space-y-3' : 'mt-4 space-y-3 border-t border-line pt-3'}>
           <p className="flex items-center gap-1.5 text-xs font-medium text-regantify-text">
             <Clock size={13} aria-hidden />
             Schedule <span className="font-normal text-neutral-500">(Dhaka time, optional)</span>
@@ -475,8 +504,6 @@ export function StatusCard({
               : 'The product shows now, then hides by itself at that time.'}
           </p>
         </div>
-      )}
-    </SideCard>
   );
 }
 

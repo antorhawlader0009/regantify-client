@@ -14,6 +14,7 @@ import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { Field, SectionCard, productInputClass } from '../../../components/product/ProductFormPieces';
 import { MoneyInput, SaveBar, Segmented, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { ChannelPicker } from '../../../components/order/ChannelPicker';
@@ -189,6 +190,7 @@ export default function AddOrder() {
   // -- Charges / Discounts --
   const [chargeMode, setChargeMode] = useState<ChargeMode | null>(null);
   const [customCharge, setCustomCharge] = useState('');
+  const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountAmount, setDiscountAmount] = useState('');
   const [discountLabel, setDiscountLabel] = useState('');
@@ -407,6 +409,11 @@ export default function AddOrder() {
     </dl>
   );
 
+  // Seldom-needed fields stay behind "Advanced" and open by themselves when one holds a value (a returning customer, a lead).
+  const advancedInUse = [customerPhoneAlt.trim(), customerEmail.trim(), shippingZip.trim(), manualChannel, pathaoLocation.cityId].filter(Boolean).length;
+  if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
+  const adv = advancedPick ?? false;
+
   return (
     <div className="mx-auto max-w-6xl">
       <Link to="/vendor/orders" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
@@ -601,14 +608,6 @@ export default function AddOrder() {
               </div>
             )}
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label="Other phone">
-                <input value={customerPhoneAlt} onChange={(e) => setCustomerPhoneAlt(e.target.value)} placeholder="Optional" inputMode="tel" className={productInputClass} />
-              </Field>
-              <Field label="Email">
-                <input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Optional" type="email" className={productInputClass} />
-              </Field>
-            </div>
           </SectionCard>
 
           <SectionCard title="Delivery address" id="delivery">
@@ -636,26 +635,7 @@ export default function AddOrder() {
                 <Field label="City / thana">
                   <input value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} placeholder="e.g. Mirpur, Savar" className={productInputClass} />
                 </Field>
-                <Field label="ZIP code">
-                  <input value={shippingZip} onChange={(e) => setShippingZip(e.target.value)} placeholder="Optional" inputMode="numeric" className={productInputClass} />
-                </Field>
               </div>
-              {pathaoConnected && (
-                <Field label="Pathao delivery location" hint="Optional. Leave it empty and Pathao works it out from the address when you book.">
-                  <PathaoLocationSelects
-                    value={pathaoLocation}
-                    onChange={setPathaoLocation}
-                    selectClassName={productInputClass}
-                    suggestFrom={{ address: shippingAddress, city: shippingCity, district: shippingDistrict }}
-                  />
-                </Field>
-              )}
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Where did this order come from?" description="Optional. For your own records and reports: only you see it.">
-            <div className="max-w-xs">
-              <ChannelPicker value={manualChannel} onChange={setManualChannel} />
             </div>
           </SectionCard>
 
@@ -669,6 +649,44 @@ export default function AddOrder() {
               </Field>
             </div>
           </SectionCard>
+
+          <AdvancedHint
+            open={adv}
+            onToggle={() => setAdvancedPick(!adv)}
+            inUse={advancedInUse}
+            what="other phone, email, ZIP code, Pathao location, where the order came from"
+          />
+
+          {adv && (
+            <SectionCard title="More details" description="Optional. Most orders do not need any of this.">
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Other phone">
+                    <input value={customerPhoneAlt} onChange={(e) => setCustomerPhoneAlt(e.target.value)} placeholder="Optional" inputMode="tel" className={productInputClass} />
+                  </Field>
+                  <Field label="Email">
+                    <input value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="Optional" type="email" className={productInputClass} />
+                  </Field>
+                  <Field label="ZIP code">
+                    <input value={shippingZip} onChange={(e) => setShippingZip(e.target.value)} placeholder="Optional" inputMode="numeric" className={productInputClass} />
+                  </Field>
+                  <Field label="Where did this order come from?" hint="For your own records and reports: only you see it.">
+                    <ChannelPicker value={manualChannel} onChange={setManualChannel} />
+                  </Field>
+                </div>
+                {pathaoConnected && (
+                  <Field label="Pathao delivery location" hint="Optional. Leave it empty and Pathao works it out from the address when you book.">
+                    <PathaoLocationSelects
+                      value={pathaoLocation}
+                      onChange={setPathaoLocation}
+                      selectClassName={productInputClass}
+                      suggestFrom={{ address: shippingAddress, city: shippingCity, district: shippingDistrict }}
+                    />
+                  </Field>
+                )}
+              </div>
+            </SectionCard>
+          )}
         </div>
 
         {/* Side: charges and the total, kept in view while the form scrolls. */}

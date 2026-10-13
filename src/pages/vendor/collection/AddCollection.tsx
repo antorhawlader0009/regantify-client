@@ -9,6 +9,7 @@ import { categoriesApi } from '../../../lib/categoriesApi';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
+import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
 
 interface CoverPhotoState {
   previewUrl: string;
@@ -73,6 +74,7 @@ export default function AddCollection() {
   const [productQuery, setProductQuery] = useState('');
   const [productFocused, setProductFocused] = useState(false);
 
+  const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const populatedRef = useRef(false);
 
@@ -220,6 +222,11 @@ export default function AddCollection() {
     createMutation.mutate();
   };
 
+  // Page layout, rules, categories and SKU entry stay behind "Advanced"; they open by themselves when in use.
+  const advancedInUse = [hideHeader, hideFooter, hideSidebar, hideBreadcrumb, smart, categoryNames.length > 0].filter(Boolean).length;
+  if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
+  const adv = advancedPick ?? false;
+
   return (
     <div className="max-w-3xl">
       <button
@@ -295,6 +302,63 @@ export default function AddCollection() {
           <RichTextEditor value={content} onChange={setContent} placeholder="Enter text here…" maxLength={10000} />
         </SectionCard>
 
+
+        <SectionCard title="Product List">
+          <p className="text-sm font-medium text-regantify-text mb-2">Products</p>
+          <div className="space-y-2 mb-3">
+            {selectedProducts.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-neutral-50">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img src={p.photoUrls[0] ?? ''} alt="" className="w-8 h-8 rounded-lg object-cover bg-white shrink-0" />
+                  <span className="text-sm text-regantify-text truncate">{p.name}</span>
+                  <span className="text-xs text-regantify-text-muted shrink-0">{p.sku}</span>
+                </div>
+                <button type="button" onClick={() => removeProduct(p.id)} className="text-regantify-text-muted hover:text-red-600 shrink-0">
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
+            <input
+              type="text"
+              value={productQuery}
+              onChange={(e) => setProductQuery(e.target.value.slice(0, 200))}
+              onFocus={() => setProductFocused(true)}
+              onBlur={() => setTimeout(() => setProductFocused(false), 150)}
+              placeholder="Search products to add"
+              maxLength={200}
+              className={`${inputClass} pl-10`}
+            />
+            {productFocused && productMatches.length > 0 && (
+              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-lg shadow-lg border border-line max-h-56 overflow-y-auto py-1">
+                {productMatches.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onMouseDown={() => addProduct(p)}
+                    className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-neutral-50 flex items-center gap-2.5"
+                  >
+                    <img src={p.photoUrls[0] ?? ''} alt="" className="w-6 h-6 rounded object-cover bg-neutral-50" />
+                    <span className="truncate">{p.name}</span>
+                    <span className="text-xs text-regantify-text-muted ml-auto shrink-0">{p.sku}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </SectionCard>
+
+        <AdvancedHint
+          open={adv}
+          onToggle={() => setAdvancedPick(!adv)}
+          inUse={advancedInUse}
+          what="page layout options, fill by rules, add from a category, add products by SKU"
+        />
+
+        {adv && (
+          <>
         <SectionCard title="Layout Options">
           <div className="space-y-2.5">
             <label className="flex items-center gap-2.5 text-sm text-regantify-text cursor-pointer">
@@ -443,53 +507,8 @@ export default function AddCollection() {
             </button>
           </div>
         </SectionCard>
-
-        <SectionCard title="Product List">
-          <p className="text-sm font-medium text-regantify-text mb-2">Products</p>
-          <div className="space-y-2 mb-3">
-            {selectedProducts.map((p) => (
-              <div key={p.id} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-neutral-50">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <img src={p.photoUrls[0] ?? ''} alt="" className="w-8 h-8 rounded-lg object-cover bg-white shrink-0" />
-                  <span className="text-sm text-regantify-text truncate">{p.name}</span>
-                  <span className="text-xs text-regantify-text-muted shrink-0">{p.sku}</span>
-                </div>
-                <button type="button" onClick={() => removeProduct(p.id)} className="text-regantify-text-muted hover:text-red-600 shrink-0">
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
-            <input
-              type="text"
-              value={productQuery}
-              onChange={(e) => setProductQuery(e.target.value.slice(0, 200))}
-              onFocus={() => setProductFocused(true)}
-              onBlur={() => setTimeout(() => setProductFocused(false), 150)}
-              placeholder="Search products to add"
-              maxLength={200}
-              className={`${inputClass} pl-10`}
-            />
-            {productFocused && productMatches.length > 0 && (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-10 bg-white rounded-lg shadow-lg border border-line max-h-56 overflow-y-auto py-1">
-                {productMatches.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onMouseDown={() => addProduct(p)}
-                    className="w-full text-left px-3.5 py-2 text-sm text-regantify-text hover:bg-neutral-50 flex items-center gap-2.5"
-                  >
-                    <img src={p.photoUrls[0] ?? ''} alt="" className="w-6 h-6 rounded object-cover bg-neutral-50" />
-                    <span className="truncate">{p.name}</span>
-                    <span className="text-xs text-regantify-text-muted ml-auto shrink-0">{p.sku}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </SectionCard>
+          </>
+        )}
 
         {formError && <p className="text-red-500 text-sm">{formError}</p>}
 

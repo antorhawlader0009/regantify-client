@@ -8,6 +8,7 @@ import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 const inputClass =
   'w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors';
@@ -174,6 +175,8 @@ export default function Seo() {
   const shownDescription = form.description.trim();
   const dirty = JSON.stringify(form) !== JSON.stringify(fromServer(data));
 
+  const advancedInUse = [form.googleVerification.trim() !== '', form.bingVerification.trim() !== '', !form.appendStoreName].filter(Boolean).length;
+
   return (
     <div className="max-w-3xl space-y-6">
       <div>
@@ -266,6 +269,7 @@ export default function Seo() {
         </div>
       </section>
 
+      <AdvancedPanel id="seo" what="How page titles are named, Google and Bing verification, which address search engines list" inUse={advancedInUse} spaced>
       <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">
         <h2 className="text-base font-semibold text-regantify-text m-0">How your pages are named</h2>
         <Checkbox
@@ -370,6 +374,7 @@ export default function Seo() {
           </div>
         </section>
       )}
+      </AdvancedPanel>
 
       <section className="rounded-2xl bg-neutral-50 border border-black/5 p-5 text-sm text-regantify-text space-y-2">
         <p className="m-0 font-medium">Good to know</p>

@@ -13,6 +13,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { ordersApi } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 const TYPES: { value: CodVerificationType; label: string; disabled?: boolean }[] = [
   { value: 'NONE', label: 'None' },
@@ -148,6 +149,11 @@ export default function CodGuard() {
     </div>
   ) : null;
 
+  // Advanced settings that are switched on (the panel then starts open).
+  const advancedInUse = form
+    ? [Boolean(form.preOrderAdvancePercent), form.duplicateOrderHold, form.autoConfirmTrusted, !form.customerCancelEnabled, !form.customerEditEnabled].filter(Boolean).length
+    : 0;
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
@@ -229,6 +235,135 @@ export default function CodGuard() {
             )}
           </section>
 
+          <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">
+            <h2 className="text-base font-medium text-regantify-text">Order Verification</h2>
+
+            <div>
+              <p className="text-sm font-medium text-regantify-text mb-2">Verification Type</p>
+              <div className="flex flex-wrap items-center gap-5">
+                {TYPES.map((t) => (
+                  <Radio
+                    key={t.value}
+                    name="verificationType"
+                    label={t.label}
+                    checked={form.verificationType === t.value}
+                    disabled={t.disabled}
+                    onChange={() => set('verificationType', t.value)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className={isSms ? '' : 'opacity-60 pointer-events-none'} aria-disabled={!isSms}>
+              <label className="block text-sm font-medium text-regantify-text mb-1.5">Trigger Condition</label>
+              <select
+                value={form.verificationCondition ?? ''}
+                disabled={!isSms}
+                onChange={(e) => set('verificationCondition', (e.target.value || null) as CodVerificationCondition | null)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
+                  focus:outline-none focus:border-regantify-cta transition-colors"
+              >
+                <option value="" disabled>
+                  Select…
+                </option>
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-regantify-text-muted mt-1.5">Which orders should trigger verification.</p>
+            </div>
+
+            <div className={isSms ? '' : 'opacity-60 pointer-events-none'} aria-disabled={!isSms}>
+              <p className="text-sm font-medium text-regantify-text mb-2">Verification Trigger</p>
+              <div className="flex flex-wrap items-center gap-5">
+                {TRIGGERS.map((t) => (
+                  <Radio
+                    key={t.value}
+                    name="verificationTrigger"
+                    label={t.label}
+                    checked={form.verificationTrigger === t.value}
+                    disabled={!isSms}
+                    onChange={() => set('verificationTrigger', t.value)}
+                  />
+                ))}
+              </div>
+              {form.verificationTrigger && (
+                <p className="text-xs text-regantify-text-muted mt-1.5">
+                  {TRIGGERS.find((t) => t.value === form.verificationTrigger)?.hint}
+                </p>
+              )}
+            </div>
+
+            {isSms && form.verificationTrigger === 'AFTER_CHECKOUT' && (
+              <div className="rounded-xl border border-black/10 p-4">
+                <p className="text-sm font-medium text-regantify-text mb-2">If the shopper never enters the code</p>
+                <select
+                  value={form.verificationExpiryHours === null ? 'never' : String(form.verificationExpiryHours)}
+                  onChange={(e) => set('verificationExpiryHours', e.target.value === 'never' ? null : Number(e.target.value))}
+                  aria-label="Time allowed to enter the code"
+                  className="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
+                    focus:outline-none focus:border-regantify-cta transition-colors"
+                >
+                  {EXPIRY_CHOICES.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                {form.verificationExpiryHours !== null && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <Radio
+                      name="verificationExpiryHold"
+                      label="Cancel the order (stock goes back)"
+                      checked={!form.verificationExpiryHold}
+                      onChange={() => set('verificationExpiryHold', false)}
+                    />
+                    <Radio
+                      name="verificationExpiryHold"
+                      label="Keep it On Hold and tell me, so I can call the customer"
+                      checked={form.verificationExpiryHold}
+                      onChange={() => set('verificationExpiryHold', true)}
+                    />
+                  </div>
+                )}
+                <p className="text-xs text-regantify-text-muted mt-2">
+                  Without this, an order whose code is never entered stays On Hold forever with its stock taken. Only orders from the
+                  last 7 days are looked at, and a code entered after the time is refused with an explanation.
+                </p>
+              </div>
+            )}
+
+            {isSms && (
+              <p className="text-xs text-regantify-text-muted">
+                Each verification code is one SMS from your{' '}
+                <Link to="/vendor/sms" className="text-regantify-cta hover:underline">
+                  SMS balance
+                </Link>
+                . If your balance runs out, verification is skipped so shoppers can still order. SMS verification
+                only runs on the StorePal theme.
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <p className="text-sm text-amber-900">You need to set up Autocall to use call verification.</p>
+              <button
+                type="button"
+                disabled
+                title="Autocall is coming soon"
+                className="px-3 py-1.5 rounded-lg bg-amber-400 text-amber-950 text-xs font-medium opacity-70 cursor-not-allowed"
+              >
+                Autocall Settings (coming soon)
+              </button>
+            </div>
+          </section>
+
+          <AdvancedPanel
+            id="cod-guard"
+            what="Pre-order advance, duplicate order hold, fake-order bot guard, auto-confirm trusted customers, customer cancel and address fix"
+            inUse={advancedInUse}
+          >
           <section className="bg-white rounded-2xl border border-black/5 p-5">
             <h2 className="text-base font-medium text-regantify-text">Advance for pre-order products</h2>
             <p className="text-xs text-regantify-text-muted mt-1.5">
@@ -376,130 +511,7 @@ export default function CodGuard() {
               keeps the old and the new address. Fewer parcels come back for a wrong address.
             </p>
           </section>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-5">
-            <h2 className="text-base font-medium text-regantify-text">Order Verification</h2>
-
-            <div>
-              <p className="text-sm font-medium text-regantify-text mb-2">Verification Type</p>
-              <div className="flex flex-wrap items-center gap-5">
-                {TYPES.map((t) => (
-                  <Radio
-                    key={t.value}
-                    name="verificationType"
-                    label={t.label}
-                    checked={form.verificationType === t.value}
-                    disabled={t.disabled}
-                    onChange={() => set('verificationType', t.value)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className={isSms ? '' : 'opacity-60 pointer-events-none'} aria-disabled={!isSms}>
-              <label className="block text-sm font-medium text-regantify-text mb-1.5">Trigger Condition</label>
-              <select
-                value={form.verificationCondition ?? ''}
-                disabled={!isSms}
-                onChange={(e) => set('verificationCondition', (e.target.value || null) as CodVerificationCondition | null)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
-                  focus:outline-none focus:border-regantify-cta transition-colors"
-              >
-                <option value="" disabled>
-                  Select…
-                </option>
-                {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-regantify-text-muted mt-1.5">Which orders should trigger verification.</p>
-            </div>
-
-            <div className={isSms ? '' : 'opacity-60 pointer-events-none'} aria-disabled={!isSms}>
-              <p className="text-sm font-medium text-regantify-text mb-2">Verification Trigger</p>
-              <div className="flex flex-wrap items-center gap-5">
-                {TRIGGERS.map((t) => (
-                  <Radio
-                    key={t.value}
-                    name="verificationTrigger"
-                    label={t.label}
-                    checked={form.verificationTrigger === t.value}
-                    disabled={!isSms}
-                    onChange={() => set('verificationTrigger', t.value)}
-                  />
-                ))}
-              </div>
-              {form.verificationTrigger && (
-                <p className="text-xs text-regantify-text-muted mt-1.5">
-                  {TRIGGERS.find((t) => t.value === form.verificationTrigger)?.hint}
-                </p>
-              )}
-            </div>
-
-            {isSms && form.verificationTrigger === 'AFTER_CHECKOUT' && (
-              <div className="rounded-xl border border-black/10 p-4">
-                <p className="text-sm font-medium text-regantify-text mb-2">If the shopper never enters the code</p>
-                <select
-                  value={form.verificationExpiryHours === null ? 'never' : String(form.verificationExpiryHours)}
-                  onChange={(e) => set('verificationExpiryHours', e.target.value === 'never' ? null : Number(e.target.value))}
-                  aria-label="Time allowed to enter the code"
-                  className="w-full sm:w-72 px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text bg-white
-                    focus:outline-none focus:border-regantify-cta transition-colors"
-                >
-                  {EXPIRY_CHOICES.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                {form.verificationExpiryHours !== null && (
-                  <div className="mt-3 flex flex-col gap-2">
-                    <Radio
-                      name="verificationExpiryHold"
-                      label="Cancel the order (stock goes back)"
-                      checked={!form.verificationExpiryHold}
-                      onChange={() => set('verificationExpiryHold', false)}
-                    />
-                    <Radio
-                      name="verificationExpiryHold"
-                      label="Keep it On Hold and tell me, so I can call the customer"
-                      checked={form.verificationExpiryHold}
-                      onChange={() => set('verificationExpiryHold', true)}
-                    />
-                  </div>
-                )}
-                <p className="text-xs text-regantify-text-muted mt-2">
-                  Without this, an order whose code is never entered stays On Hold forever with its stock taken. Only orders from the
-                  last 7 days are looked at, and a code entered after the time is refused with an explanation.
-                </p>
-              </div>
-            )}
-
-            {isSms && (
-              <p className="text-xs text-regantify-text-muted">
-                Each verification code is one SMS from your{' '}
-                <Link to="/vendor/sms" className="text-regantify-cta hover:underline">
-                  SMS balance
-                </Link>
-                . If your balance runs out, verification is skipped so shoppers can still order. SMS verification
-                only runs on the StorePal theme.
-              </p>
-            )}
-
-            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-              <p className="text-sm text-amber-900">You need to set up Autocall to use call verification.</p>
-              <button
-                type="button"
-                disabled
-                title="Autocall is coming soon"
-                className="px-3 py-1.5 rounded-lg bg-amber-400 text-amber-950 text-xs font-medium opacity-70 cursor-not-allowed"
-              >
-                Autocall Settings (coming soon)
-              </button>
-            </div>
-          </section>
+          </AdvancedPanel>
 
           <div className="flex flex-wrap items-center gap-3">
             <button

@@ -11,6 +11,7 @@ import { Field, productInputClass } from '../../../../components/product/Product
 import { CardSkeleton, CheckRow, CourierCard, PlanLockedCard, SaveRow, dangerOutlineBtn, formOutlineBtn, saveBtn } from '../../../../components/courier/CourierKit';
 import { AutoBookCard, StatusMapCard, WebhookSettingsCard, useSavedFlash } from '../../../../components/courier/CourierSettingsCards';
 import { CreatePathaoStoreDialog } from './CreatePathaoStoreDialog';
+import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 
 type ConnectedOverview = Extract<PathaoOverview, { connected: true }>;
 
@@ -387,6 +388,7 @@ export function PathaoSettingsTab({ overview }: { overview: PathaoOverview }) {
                 },
               ]}
             />
+            <AdvancedPanel id="courier-pathao" what="Order status mapping and webhook setup for Pathao">
             <StatusMapCard
               courier="Pathao"
               settingsKey="pathao-settings"
@@ -426,6 +428,7 @@ export function PathaoSettingsTab({ overview }: { overview: PathaoOverview }) {
                 </>
               }
             />
+            </AdvancedPanel>
           </>
         )
       )}

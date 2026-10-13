@@ -48,6 +48,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { storefrontProductUrl } from '../../../lib/storefrontUrl';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/PageKit';
+import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'DRAFT';
@@ -398,6 +399,7 @@ export default function AllProducts() {
 
   // Table look & feel (from the design reference): filter panel toggle,
   // row density, visible columns and a per-page sort.
+  const [adv, setAdv] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [density, setDensity] = useState<Density>(() => loadPrefs().density);
   const [columns, setColumns] = useState<Record<ColumnKey, boolean>>(() => loadPrefs().columns);
@@ -673,20 +675,6 @@ export default function AllProducts() {
             )}
           </div>
 
-          <button
-            onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
-            className={toolbarBtn}
-            title={compact ? 'Compact rows (click for comfortable)' : 'Comfortable rows (click for compact)'}
-          >
-            <Table2 size={15} />
-            {compact ? 'Compact' : 'Comfortable'}
-          </button>
-
-          <ColumnsMenu
-            columns={columns}
-            onToggle={(key) => setColumns((prev) => ({ ...prev, [key]: !prev[key] }))}
-            onReset={() => setColumns(DEFAULT_COLUMNS)}
-          />
 
           <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
 
@@ -700,26 +688,8 @@ export default function AllProducts() {
             {exporting ? 'Exporting…' : selected.size > 0 ? `Export (${selected.size})` : 'Export'}
           </button>
 
-          {canDeleteProducts && (
-            <button onClick={() => setTrashOpen(true)} className={toolbarBtn} title="Products you deleted in the last 30 days, which you can bring back">
-              <Undo2 size={14} />
-              Deleted
-            </button>
-          )}
 
-          {canEditProducts && (
-            <button onClick={() => setPinAdding([])} className={toolbarBtn} title="Products shown first on your store">
-              <Pin size={14} />
-              Pinned
-            </button>
-          )}
-
-          {canEditPrice && (
-            <button onClick={() => setPriceOpen(true)} className={toolbarBtn} title="Raise or lower prices of many products at once">
-              <Tag size={14} />
-              Change prices
-            </button>
-          )}
+          <AdvancedToggle open={adv} onToggle={() => setAdv((v) => !v)} label="More tools" />
 
           <button
             onClick={() => setShowFilters((v) => !v)}
@@ -764,6 +734,45 @@ export default function AllProducts() {
           </>
           )}
         </div>
+
+        {adv && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-line bg-neutral-50/60 p-2.5">
+          <button
+            onClick={() => setDensity((d) => (d === 'compact' ? 'comfortable' : 'compact'))}
+            className={toolbarBtn}
+            title={compact ? 'Compact rows (click for comfortable)' : 'Comfortable rows (click for compact)'}
+          >
+            <Table2 size={15} />
+            {compact ? 'Compact' : 'Comfortable'}
+          </button>
+
+          <ColumnsMenu
+            columns={columns}
+            onToggle={(key) => setColumns((prev) => ({ ...prev, [key]: !prev[key] }))}
+            onReset={() => setColumns(DEFAULT_COLUMNS)}
+          />
+          {canDeleteProducts && (
+            <button onClick={() => setTrashOpen(true)} className={toolbarBtn} title="Products you deleted in the last 30 days, which you can bring back">
+              <Undo2 size={14} />
+              Deleted
+            </button>
+          )}
+
+          {canEditProducts && (
+            <button onClick={() => setPinAdding([])} className={toolbarBtn} title="Products shown first on your store">
+              <Pin size={14} />
+              Pinned
+            </button>
+          )}
+
+          {canEditPrice && (
+            <button onClick={() => setPriceOpen(true)} className={toolbarBtn} title="Raise or lower prices of many products at once">
+              <Tag size={14} />
+              Change prices
+            </button>
+          )}
+          </div>
+        )}
 
         {/* Filter panel */}
         {showFilters && (
@@ -829,6 +838,7 @@ export default function AllProducts() {
                 <X size={13} />
                 Clear
               </button>
+              {adv && (
               <button
                 onClick={() => setLabelProductIds(Array.from(selected))}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50"
@@ -836,6 +846,7 @@ export default function AllProducts() {
                 <Printer size={13} aria-hidden />
                 Print labels
               </button>
+              )}
               {canEditProducts && (
                 <>
                   <button
@@ -852,6 +863,7 @@ export default function AllProducts() {
                   >
                     Make Draft
                   </button>
+                  {adv && (<>
                   <button
                     onClick={() => setScheduleOpen(true)}
                     disabled={bulkVisibility}
@@ -887,6 +899,7 @@ export default function AllProducts() {
                       Change prices
                     </button>
                   )}
+                  </>)}
                 </>
               )}
               {canDeleteProducts && (

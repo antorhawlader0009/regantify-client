@@ -59,6 +59,7 @@ import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownM
 import { LockedBadge, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { OrderComments } from '../../../components/order/OrderComments';
+import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 
 function formatPrice(value: string) {
@@ -135,6 +136,8 @@ export default function OrderDetail() {
   const [showRedxHistory, setShowRedxHistory] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
+  // Rarely-used actions (merge, split, repeat order, team comments) stay behind "More tools".
+  const [moreTools, setMoreTools] = useState(false);
   const [merging, setMerging] = useState(false);
   const [makingRegular, setMakingRegular] = useState(false);
   const [splitting, setSplitting] = useState(false);
@@ -451,6 +454,7 @@ export default function OrderDetail() {
             Serial #{order.invoiceNumber} · placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : order.source === 'POS' ? 'sold at the counter' : 'added by hand'}
           </p>
         </div>
+        <AdvancedToggle open={moreTools} onToggle={() => setMoreTools((v) => !v)} label="More tools" />
         {trackingLink && (
           <button type="button" onClick={copyTrackingLink} className={outlineBtn}>
             <Link2 size={15} />
@@ -492,6 +496,15 @@ export default function OrderDetail() {
         ))}
       </div>
 
+      {moreTools && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-line bg-neutral-50/60 px-4 py-3">
+          <span className="mr-2 text-sm text-neutral-500">More tools:</span>
+          {canCreate && canMakeRegular(order) && (<button type="button" onClick={() => setMakingRegular(true)} className={outlineBtn} title="Repeat this order for this customer every week or month"> <CalendarClock size={14} /> Make it regular </button>)}
+          {canEdit && canEditOrderItems(order) && canCancelRefund && canMergeOrder(order) && (<button type="button" onClick={() => setMerging(true)} className={outlineBtn} title="Fold this customer's other open order into this one"> Merge order </button>)}
+          {canEdit && canEditOrderItems(order) && canSplitOrder(order) && (<button type="button" onClick={() => setSplitting(true)} className={outlineBtn} title="Send what is in stock first: move some items into a new order"> Split order </button>)}
+        </div>
+      )}
+
       {/* Why a cancelled / returned / failed order ended (Analytics > Orders groups by it). */}
       <OrderCloseReasonCard order={order} canEdit={canEdit} onChanged={invalidateOrder} />
       <OrderReturnCheckCard order={order} canEdit={canEdit} />
@@ -499,14 +512,6 @@ export default function OrderDetail() {
 
       {/* Medium or high risk (TellMe idea 143, OrderRiskService). */}
       <OrderRefundNote orderId={order.id} status={order.status} />
-      {canCreate && canMakeRegular(order) && (
-        <div className="flex justify-end">
-          <button type="button" onClick={() => setMakingRegular(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline" title="Repeat this order for this customer every week or month">
-            <CalendarClock size={14} />
-            Make it regular
-          </button>
-        </div>
-      )}
       <OrderRiskCard order={order} />
       {orderAddressProblem(order) && (
         <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
@@ -584,16 +589,6 @@ export default function OrderDetail() {
             action={
               canEdit && canEditOrderItems(order) ? (
                 <span className="flex items-center gap-3">
-                  {canCancelRefund && canMergeOrder(order) && (
-                    <button type="button" onClick={() => setMerging(true)} className="text-sm font-medium text-brand hover:underline" title="Fold this customer's other open order into this one">
-                      Merge order
-                    </button>
-                  )}
-                  {canSplitOrder(order) && (
-                    <button type="button" onClick={() => setSplitting(true)} className="text-sm font-medium text-brand hover:underline" title="Send what is in stock first: move some items into a new order">
-                      Split order
-                    </button>
-                  )}
                   <button type="button" onClick={() => setEditingItems(true)} className="text-sm font-medium text-brand hover:underline">
                     Edit items
                   </button>
@@ -709,13 +704,16 @@ export default function OrderDetail() {
             </Card>
           )}
 
-          <Card title="Comments">
-            <OrderComments orderId={order.id} />
-          </Card>
 
           <Card title="Timeline">
             <OrderTimeline orderId={order.id} history={history} hasCourier={provider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED'} />
           </Card>
+
+          {moreTools && (
+            <Card title="Comments">
+              <OrderComments orderId={order.id} />
+            </Card>
+          )}
         </div>
 
         {/* Side column */}

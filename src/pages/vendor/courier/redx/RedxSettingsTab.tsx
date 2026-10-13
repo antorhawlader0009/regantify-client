@@ -12,6 +12,7 @@ import { Field, productInputClass } from '../../../../components/product/Product
 import { CardSkeleton, CheckRow, CourierCard, PlanLockedCard, SaveRow, dangerOutlineBtn, formOutlineBtn, saveBtn } from '../../../../components/courier/CourierKit';
 import { AutoBookCard, StatusMapCard, WebhookSettingsCard, useSavedFlash } from '../../../../components/courier/CourierSettingsCards';
 import { CreateRedxStoreDialog } from './CreateRedxStoreDialog';
+import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 
 const REDX_PANEL_URL = 'https://redx.com.bd/developer-api/';
 
@@ -271,6 +272,7 @@ export function RedxSettingsTab({ overview }: { overview: RedxOverview }) {
                 },
               ]}
             />
+            <AdvancedPanel id="courier-redx" what="Order status mapping and webhook setup for RedX">
             <StatusMapCard
               courier="RedX"
               settingsKey="redx-settings"
@@ -308,6 +310,7 @@ export function RedxSettingsTab({ overview }: { overview: RedxOverview }) {
                 </>
               }
             />
+            </AdvancedPanel>
           </>
         )
       )}

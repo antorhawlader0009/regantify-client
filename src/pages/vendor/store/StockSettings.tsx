@@ -6,6 +6,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { Checkbox } from '../../../components/ui/Checkbox';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 import { PolicyField, policyFromProduct, policyToPayload } from '../../../components/product/PolicyField';
 
 // Shown as the editor/input placeholders, and what StorePal falls back to
@@ -43,6 +44,11 @@ export default function StockSettings() {
 
   const set = <K extends keyof StockSettingsValue>(key: K, value: StockSettingsValue[K]) =>
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+
+  // Advanced settings that differ from the defaults (the panel then starts open).
+  const advancedInUse = form
+    ? [!form.reduceStockOnCodCheckout, form.returnStockAfterCheckIn, form.soldOutDisplay !== 'KEEP', form.reorderSmsEnabled, form.lowStockMessageEnabled, form.hideStockCount, Boolean(form.defaultWarrantyKind) || form.defaultReturnDays != null].filter(Boolean).length
+    : 0;
 
   return (
     <div className="max-w-3xl">
@@ -110,6 +116,33 @@ export default function StockSettings() {
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <h2 className="text-sm font-medium text-regantify-text mb-1">Low Stock Alert</h2>
+            <p className="text-xs text-regantify-text-muted mb-3">
+              A product with fewer than this many left shows on the Low Stock page, and your notification bell tells you once
+              a day. A product can have its own number (Edit Product &gt; Low stock alert). Turn on a text for it in
+              Notifications &gt; Alert settings.
+            </p>
+            <label className="flex items-center gap-2 text-sm text-regantify-text">
+              Alert when stock is under
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={1000000}
+                value={form.lowStockThreshold}
+                onChange={(e) => set('lowStockThreshold', Number(e.target.value.replace(/\D/g, '') || 0))}
+                className={`${inputClass.replace('w-full ', '')} w-28`}
+              />
+            </label>
+            <p className="text-xs text-regantify-text-muted mt-2">0 turns the alert off for products without their own number.</p>
+          </section>
+
+          <AdvancedPanel
+            id="stock-settings"
+            what="Stock on COD orders, returned parcels, sold-out order, reorder SMS, wholesale tag, low stock message, warranty and returns"
+            inUse={advancedInUse}
+          >
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
             <h2 className="text-sm font-medium text-regantify-text mb-2">Reduce Stock on COD Orders</h2>
             <Checkbox
               checked={form.reduceStockOnCodCheckout}
@@ -134,28 +167,6 @@ export default function StockSettings() {
                 'the parcel in, and only the products you find in good shape are added back.'
               }
             />
-          </section>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-5">
-            <h2 className="text-sm font-medium text-regantify-text mb-1">Low Stock Alert</h2>
-            <p className="text-xs text-regantify-text-muted mb-3">
-              A product with fewer than this many left shows on the Low Stock page, and your notification bell tells you once
-              a day. A product can have its own number (Edit Product &gt; Low stock alert). Turn on a text for it in
-              Notifications &gt; Alert settings.
-            </p>
-            <label className="flex items-center gap-2 text-sm text-regantify-text">
-              Alert when stock is under
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={1000000}
-                value={form.lowStockThreshold}
-                onChange={(e) => set('lowStockThreshold', Number(e.target.value.replace(/\D/g, '') || 0))}
-                className={`${inputClass.replace('w-full ', '')} w-28`}
-              />
-            </label>
-            <p className="text-xs text-regantify-text-muted mt-2">0 turns the alert off for products without their own number.</p>
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5">
@@ -283,6 +294,7 @@ export default function StockSettings() {
               }}
             />
           </section>
+          </AdvancedPanel>
 
           <button
             onClick={() => save.mutate(form)}

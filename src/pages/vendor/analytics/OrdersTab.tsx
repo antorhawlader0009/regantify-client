@@ -9,6 +9,7 @@ import { StaffIncentives } from '../../../components/analytics/StaffIncentives';
 import { TrackingStats } from '../../../components/analytics/TrackingStats';
 import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import type { DeliveryRatings } from '../../../lib/analyticsApi';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 const COURIERS: Record<DeliveryCourier, { label: string; path: string }> = {
   PATHAO: { label: 'Pathao', path: '/vendor/courier/pathao' },
@@ -177,6 +178,7 @@ export function OrdersTab({ range }: TabProps) {
 
       <TabState query={delivery}>{(data) => <DeliverySection data={data} compareLabel={compareLabel} />}</TabState>
 
+      <AdvancedPanel id="analytics-orders" title="More reports" what="Delivery ratings, why orders failed, team work, staff incentives, tracking page views" spaced>
       <TabState query={ratings}>{(data) => <DeliveryRatingsSection data={data} />}</TabState>
 
       <TabState query={failed}>{(data) => <FailedOrdersSection data={data} compareLabel={compareLabel} />}</TabState>
@@ -186,6 +188,7 @@ export function OrdersTab({ range }: TabProps) {
       <StaffIncentives />
 
       <TrackingStats />
+      </AdvancedPanel>
     </div>
   );
 }

@@ -56,6 +56,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub } from '../../../components/ui/DropdownMenu';
 import { Dialog } from '../../../components/ui/Dialog';
+import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { CourierTimeline } from '../../../components/courier/CourierTimeline';
 import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
@@ -807,6 +808,7 @@ export default function Orders() {
   const [source, setSource] = useState<ListOrdersParams['source'] | ''>('');
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
+  const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
   const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
   // "Risky" (TellMe idea 143): medium and high risk orders; a saved view can also hold high only.
   const [risk, setRisk] = useState<'HIGH' | 'MEDIUM_UP' | ''>(() => {
@@ -1124,6 +1126,12 @@ export default function Orders() {
     setTrashView(false);
   }
 
+  // The less-used filters and tools sit behind "More filters and tools"; it opens by itself while one of them is in use.
+  const advancedInUse = [preOrder !== '', labelFilter !== '', channel !== '', preferredDate !== '', expressOnly, duplicatesOnly, risk !== '', lossOnly, showProfit].filter(Boolean).length;
+  if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
+  const adv = advancedPick ?? false;
+  const toggleAdvanced = () => setAdvancedPick(!adv);
+
   return (
     <div>
       {!trashView && activeTab !== 'ABANDONED' && <NeedsAttention />}
@@ -1177,6 +1185,76 @@ export default function Orders() {
                   ))}
                 </select>
               )}
+              {lmsOn && (
+                <div className="relative">
+                  <select
+                    aria-label="Call status"
+                    value={callStatus}
+                    onChange={(e) => setCallStatus(e.target.value as ListOrdersParams['callStatus'] | '')}
+                    className={`${toolbarBtn} appearance-none pr-8`}
+                  >
+                    <option value="">Any call status</option>
+                    <option value="WAITING">Call: waiting</option>
+                    <option value="CONFIRMED">Call: confirmed</option>
+                    <option value="CANCELLED">Call: cancelled</option>
+                    <option value="NONE">No call in the LMS</option>
+                  </select>
+                  <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
+                </div>
+              )}
+              {canTrash && (
+                <button
+                  onClick={() => setTrashView((v) => !v)}
+                  className={`${toolbarBtn} ${trashView ? 'border-neutral-300 bg-neutral-50' : ''}`}
+                >
+                  {trashView ? <ArrowLeft size={15} /> : <Trash2 size={15} />}
+                  {trashView ? 'Back to Orders' : 'Trash'}
+                </button>
+              )}
+            </>
+          )}
+
+          {activeTab !== 'ABANDONED' && !trashView && (<AdvancedToggle open={adv} onToggle={toggleAdvanced} inUse={advancedInUse} label="More filters and tools" />)}
+
+          {activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={handleExport} disabled={exporting} className={toolbarBtn} title="Download as a CSV file (opens in Excel)">
+              <Download size={15} />
+              {exporting ? 'Exporting…' : selectedIds.size > 0 ? `Export ${selectedIds.size}` : 'Export'}
+            </button>
+          )}
+
+          {canCreate && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/import')} className={toolbarBtn} title="Bring orders in from an Excel or CSV file">
+              <Upload size={15} />
+              Import
+            </button>
+          )}
+
+          {canCourier && activeTab !== 'ABANDONED' && !trashView && (
+            <button type="button" onClick={() => navigate('/vendor/orders/handover')} className={toolbarBtn} title="Hand parcels to a courier with a signed sheet">
+              <Truck size={15} />
+              Courier handover
+            </button>
+          )}
+
+
+          {canCreate && (
+          <button
+            onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
+            disabled={atOrderLimit}
+            title={atOrderLimit ? 'Upgrade your plan to add more orders today.' : undefined}
+            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
+              atOrderLimit ? 'cursor-not-allowed bg-neutral-100 text-regantify-text-muted' : 'bg-brand text-white hover:bg-brand-dark'
+            }`}
+          >
+            {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
+            Add Order
+          </button>
+          )}
+        </div>
+
+        {adv && activeTab !== 'ABANDONED' && !trashView && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-line bg-neutral-50/60 p-2.5">
               <label className="flex items-center gap-1.5 text-xs text-neutral-500" title="Orders with a pre-order item, by the date it was expected">
                 Pre-order
                 <select
@@ -1293,105 +1371,42 @@ export default function Orders() {
                   </button>
                 </>
               )}
-              {lmsOn && (
-                <div className="relative">
-                  <select
-                    aria-label="Call status"
-                    value={callStatus}
-                    onChange={(e) => setCallStatus(e.target.value as ListOrdersParams['callStatus'] | '')}
-                    className={`${toolbarBtn} appearance-none pr-8`}
-                  >
-                    <option value="">Any call status</option>
-                    <option value="WAITING">Call: waiting</option>
-                    <option value="CONFIRMED">Call: confirmed</option>
-                    <option value="CANCELLED">Call: cancelled</option>
-                    <option value="NONE">No call in the LMS</option>
-                  </select>
-                  <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
-                </div>
-              )}
-              {canTrash && (
-                <button
-                  onClick={() => setTrashView((v) => !v)}
-                  className={`${toolbarBtn} ${trashView ? 'border-neutral-300 bg-neutral-50' : ''}`}
-                >
-                  {trashView ? <ArrowLeft size={15} /> : <Trash2 size={15} />}
-                  {trashView ? 'Back to Orders' : 'Trash'}
-                </button>
-              )}
-            </>
-          )}
-
-          {activeTab !== 'ABANDONED' && !trashView && (
-            <button type="button" onClick={handleExport} disabled={exporting} className={toolbarBtn} title="Download as a CSV file (opens in Excel)">
-              <Download size={15} />
-              {exporting ? 'Exporting…' : selectedIds.size > 0 ? `Export ${selectedIds.size}` : 'Export'}
-            </button>
-          )}
-
-          {canCreate && activeTab !== 'ABANDONED' && !trashView && (
-            <button type="button" onClick={() => navigate('/vendor/orders/import')} className={toolbarBtn} title="Bring orders in from an Excel or CSV file">
-              <Upload size={15} />
-              Import
-            </button>
-          )}
-
-          {canCourier && activeTab !== 'ABANDONED' && !trashView && (
-            <button type="button" onClick={() => navigate('/vendor/orders/handover')} className={toolbarBtn} title="Hand parcels to a courier with a signed sheet">
-              <Truck size={15} />
-              Courier handover
-            </button>
-          )}
-
-          {canCourier && activeTab !== 'ABANDONED' && !trashView && (
+          {canCourier && (
             <button type="button" onClick={() => navigate('/vendor/orders/rider-cash')} className={toolbarBtn} title="Cash your own delivery riders collected and handed in">
               <Wallet size={15} />
               Rider cash
             </button>
           )}
 
-          {activeTab !== 'ABANDONED' && !trashView && (
+          {(
             <button type="button" onClick={() => navigate('/vendor/orders/standing')} className={toolbarBtn} title="Regular customers whose same order is made again for you every week or month">
               <CalendarClock size={15} />
               Standing orders
             </button>
           )}
 
-          {activeTab !== 'ABANDONED' && !trashView && (
+          {(
             <button type="button" onClick={() => navigate('/vendor/orders/refunds')} className={toolbarBtn} title="Customers who paid online for a cancelled or returned order and are still owed their money">
               <HandCoins size={15} />
               Refunds to pay
             </button>
           )}
 
-          {canEdit && activeTab !== 'ABANDONED' && !trashView && (
+          {canEdit && (
             <button type="button" onClick={() => navigate('/vendor/orders/return-check-in')} className={toolbarBtn} title="Count returned parcels back in and sort the stock">
               <ClipboardCheck size={15} />
               Return check-in
             </button>
           )}
 
-          {canEdit && activeTab !== 'ABANDONED' && !trashView && (
+          {canEdit && (
             <button type="button" onClick={() => navigate('/vendor/orders/tracking-bulk')} className={toolbarBtn} title="Paste your courier’s list of tracking IDs and mark them delivered or returned">
               <ListChecks size={15} />
               Bulk by tracking ID
             </button>
           )}
-
-          {canCreate && (
-          <button
-            onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
-            disabled={atOrderLimit}
-            title={atOrderLimit ? 'Upgrade your plan to add more orders today.' : undefined}
-            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
-              atOrderLimit ? 'cursor-not-allowed bg-neutral-100 text-regantify-text-muted' : 'bg-brand text-white hover:bg-brand-dark'
-            }`}
-          >
-            {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
-            Add Order
-          </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Status tabs */}
         {!trashView && (
@@ -1465,6 +1480,12 @@ export default function Orders() {
                   <Printer size={13} />
                   Print invoices
                 </button>
+                <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
+                  <Printer size={13} />
+                  Print Pathao labels
+                </button>
+                {adv && (
+                  <>
                 {(assignment.data?.staff.length ?? 0) > 0 && (
                   <button type="button" onClick={() => setAssigningIds([...selectedIds])} className={bulkBtn} title="Who handles these orders">
                     Assign
@@ -1482,16 +1503,17 @@ export default function Orders() {
                   <Printer size={13} />
                   Parcel stickers
                 </button>
-                <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
-                  <Printer size={13} />
-                  Print Pathao labels
-                </button>
                 {canCourier && (
                   <button type="button" onClick={() => navigate('/vendor/orders/handover', { state: { orderIds: [...selectedIds] } })} className={bulkBtn}>
                     <Truck size={13} />
                     Handover sheet
                   </button>
                 )}
+                  </>
+                )}
+                <button type="button" onClick={toggleAdvanced} className={bulkBtn}>
+                  {adv ? 'Fewer options' : 'More options'}
+                </button>
                 <button
                   type="button"
                   onClick={() => setSelectedIds(new Set())}

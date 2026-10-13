@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { getBlockedAreas, getVendorDeliveryCharges, updateVendorDeliveryCharges, type DeliveryCharges } from '../../../lib/vendorApi';
 import { BD_DISTRICTS } from '../../../lib/bdDistricts';
 import { apiErrorMessage } from '../../../lib/api';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 const deliveryChargeSchema = z.object({
   insideDhakaCharge: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
@@ -70,6 +71,21 @@ export default function DeliveryCharge() {
 
   const errors = form.formState.errors;
 
+  // Settings in the "Advanced" panel that are switched on right now (the panel then starts open).
+  const advancedInUse = charges
+    ? [
+        charges.expressEnabled,
+        charges.pickupEnabled,
+        charges.preferredDeliveryEnabled,
+        charges.deliveryAreaMode !== 'OFF',
+        Number(charges.minOrderAmount) > 0,
+        charges.giftOptionEnabled,
+        charges.weightChargeEnabled,
+        Boolean(charges.dailyOrderLimit),
+        charges.orderCutoffMinutes != null,
+      ].filter(Boolean).length
+    : 0;
+
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
@@ -122,41 +138,47 @@ export default function DeliveryCharge() {
         onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
       />
 
-      <ExpressSection
-        charges={charges}
-        disabled={isLoading}
-        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
-      />
-
-      <PickupSection
-        charges={charges}
-        disabled={isLoading}
-        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
-      />
-
-      <PreferredDaySection
-        charges={charges}
-        disabled={isLoading}
-        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
-      />
-
-      <DeliveryAreaSection
-        charges={charges}
-        disabled={isLoading}
-        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
-      />
-
-      <CheckoutRulesSection
-        charges={charges}
-        disabled={isLoading}
-        onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
-      />
-
       <DeliveryTimeSection
         charges={charges}
         disabled={isLoading}
         onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
       />
+
+      <AdvancedPanel
+        id="delivery-charge"
+        what="Express delivery, pick up from the shop, customer picks the day, where we deliver, minimum order, weight charge, gift wrap, daily order limit"
+        inUse={advancedInUse}
+      >
+        <ExpressSection
+          charges={charges}
+          disabled={isLoading}
+          onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+        />
+
+        <PickupSection
+          charges={charges}
+          disabled={isLoading}
+          onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+        />
+
+        <PreferredDaySection
+          charges={charges}
+          disabled={isLoading}
+          onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+        />
+
+        <DeliveryAreaSection
+          charges={charges}
+          disabled={isLoading}
+          onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+        />
+
+        <CheckoutRulesSection
+          charges={charges}
+          disabled={isLoading}
+          onSaved={(updated) => queryClient.setQueryData(['vendor-delivery-charges'], updated)}
+        />
+      </AdvancedPanel>
     </div>
   );
 }

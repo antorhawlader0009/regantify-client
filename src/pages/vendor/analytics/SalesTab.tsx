@@ -11,6 +11,7 @@ import { TabState, useAnalytics, type TabProps } from './useAnalytics';
 import { ChannelSplitCard } from '../../../components/analytics/ChannelSplit';
 import { paymentMethodLabel } from '../../../lib/ordersApi';
 import { useCan } from '../../../lib/useStaffAccess';
+import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 
 const PAYMENT_LABELS: Record<string, string> = {
   COD: 'Cash on delivery',
@@ -124,7 +125,7 @@ export function SalesTab({ range }: TabProps) {
               </div>
             </div>
 
-            {canProfit && <VatReportCard />}
+            {canProfit && (<AdvancedPanel id="analytics-sales" title="More reports" what="VAT report for a month" spaced><VatReportCard /></AdvancedPanel>)}
           </>
         );
       }}

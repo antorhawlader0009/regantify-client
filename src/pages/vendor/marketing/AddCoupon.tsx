@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, Shuffle } from 'lucide-react';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
+import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
 import { SaveBar, ToggleRow, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
 import { outlineBtn } from '../../../components/ui/PageKit';
 import { couponsApi, type DiscountType } from '../../../lib/couponsApi';
@@ -70,6 +71,7 @@ export default function AddCoupon() {
   const [products, setProducts] = useState<PickedItem[]>([]);
   const [categories, setCategories] = useState<PickedItem[]>([]);
 
+  const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
   const [usageLimit, setUsageLimit] = useState('');
   const [perCustomer, setPerCustomer] = useState('');
 
@@ -193,6 +195,20 @@ export default function AddCoupon() {
     );
   }
 
+  // The less-used options sit behind "Advanced"; they open by themselves when one is in use (editing an older coupon).
+  const advancedInUse = [
+    hasCustomLink,
+    applyOnListPrice,
+    !resetOtherDiscounts,
+    newCustomerOnly,
+    limitCustomers,
+    limitProducts,
+    limitCategories,
+    perCustomer.trim() !== '',
+  ].filter(Boolean).length;
+  if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
+  const adv = advancedPick ?? false;
+
   return (
     <form
       className="mx-auto max-w-3xl"
@@ -231,26 +247,6 @@ export default function AddCoupon() {
               </div>
             </Field>
 
-            <ToggleRow
-              checked={hasCustomLink}
-              onChange={setHasCustomLink}
-              label="Share link"
-              hint="A link that opens your store with this coupon already applied, for Facebook posts and messages."
-            />
-            {hasCustomLink && (
-              <Field label="Link name" required error={shown('customLink')}>
-                <input type="text" value={customLink} onChange={(e) => setCustomLink(e.target.value.replace(/\s/g, '-'))} placeholder="e.g. eid-sale" className={productInputClass} />
-                {shareUrl && (
-                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-line bg-neutral-50 py-1 pl-3 pr-1">
-                    <span className="min-w-0 flex-1 truncate text-xs text-neutral-600">{shareUrl}</span>
-                    <button type="button" onClick={() => copyText(shareUrl, 'Link')} className={`${outlineBtn} h-8 shrink-0`}>
-                      <Copy size={13} aria-hidden />
-                      Copy
-                    </button>
-                  </div>
-                )}
-              </Field>
-            )}
           </div>
         </SectionCard>
 
@@ -277,6 +273,56 @@ export default function AddCoupon() {
                 )}
               </div>
             )}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Who can use it" description="Leave everything off and anyone can use it on any order.">
+          <div className="space-y-2">
+            <Field label="Minimum order amount" hint="The cart must be at least this much.">
+              <UnitInput unit="৳" value={minCartAmount} onChange={setMinCartAmount} placeholder="No minimum" />
+            </Field>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="When and how often">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DateField label="Last day" value={validTill} onChange={setValidTill} role="end" kind="date" optional hint="Works until the end of this day." />
+            <Field label="How many times in total" hint={existing ? `Used ${existing.usageCount} so far. Empty means no limit.` : 'Empty means no limit.'}>
+              <UnitInput unit={null} integer value={usageLimit} onChange={setUsageLimit} placeholder="No limit" />
+            </Field>
+          </div>
+        </SectionCard>
+
+        <AdvancedHint
+          open={adv}
+          onToggle={() => setAdvancedPick(!adv)}
+          inUse={advancedInUse}
+          what="share link, count from regular price, first-time customers, limit to customers, products or categories, times per customer"
+        />
+
+        {adv && (
+          <SectionCard title="More coupon options" description="Optional. Most coupons do not need any of this.">
+            <div className="space-y-4">
+                <ToggleRow
+                  checked={hasCustomLink}
+                  onChange={setHasCustomLink}
+                  label="Share link"
+                  hint="A link that opens your store with this coupon already applied, for Facebook posts and messages."
+                />
+                {hasCustomLink && (
+                  <Field label="Link name" required error={shown('customLink')}>
+                    <input type="text" value={customLink} onChange={(e) => setCustomLink(e.target.value.replace(/\s/g, '-'))} placeholder="e.g. eid-sale" className={productInputClass} />
+                    {shareUrl && (
+                      <div className="mt-2 flex items-center gap-2 rounded-lg border border-line bg-neutral-50 py-1 pl-3 pr-1">
+                        <span className="min-w-0 flex-1 truncate text-xs text-neutral-600">{shareUrl}</span>
+                        <button type="button" onClick={() => copyText(shareUrl, 'Link')} className={`${outlineBtn} h-8 shrink-0`}>
+                          <Copy size={13} aria-hidden />
+                          Copy
+                        </button>
+                      </div>
+                    )}
+                  </Field>
+                )}
             {discountType !== 'FREE_SHIPPING' && (
               <div className="space-y-3 border-t border-line pt-4">
                 <ToggleRow
@@ -293,64 +339,48 @@ export default function AddCoupon() {
                 />
               </div>
             )}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Who can use it" description="Leave everything off and anyone can use it on any order.">
-          <div className="space-y-2">
-            <Field label="Minimum order amount" hint="The cart must be at least this much.">
-              <UnitInput unit="৳" value={minCartAmount} onChange={setMinCartAmount} placeholder="No minimum" />
-            </Field>
-            <div className="pt-2">
-              <LimitOption checked={newCustomerOnly} onChange={setNewCustomerOnly} label="First-time customers only" hint="Phones that never ordered from your store before." />
-              <LimitOption
-                checked={limitCustomers}
-                onChange={(v) => {
-                  setLimitCustomers(v);
-                  if (!v) setCustomers([]);
-                }}
-                label="Only these customers"
+              <div className="pt-2">
+                <LimitOption checked={newCustomerOnly} onChange={setNewCustomerOnly} label="First-time customers only" hint="Phones that never ordered from your store before." />
+                <LimitOption
+                  checked={limitCustomers}
+                  onChange={(v) => {
+                    setLimitCustomers(v);
+                    if (!v) setCustomers([]);
+                  }}
+                  label="Only these customers"
+                >
+                  <CustomerPicker selected={customers} onChange={setCustomers} error={shown('customers')} />
+                </LimitOption>
+                <LimitOption
+                  checked={limitProducts}
+                  onChange={(v) => {
+                    setLimitProducts(v);
+                    if (!v) setProducts([]);
+                  }}
+                  label="Only on these products"
+                >
+                  <ProductPicker selected={products} onChange={setProducts} error={shown('products')} />
+                </LimitOption>
+                <LimitOption
+                  checked={limitCategories}
+                  onChange={(v) => {
+                    setLimitCategories(v);
+                    if (!v) setCategories([]);
+                  }}
+                  label="Only on these categories"
+                >
+                  <CategoryPicker selected={categories} onChange={setCategories} error={shown('categories')} />
+                </LimitOption>
+              </div>
+              <Field
+                label="Times per customer"
+                hint="Put 1 so each customer can use it once. A customer is known by phone number. Cancelled, returned and unpaid orders don’t count. Empty means no limit."
               >
-                <CustomerPicker selected={customers} onChange={setCustomers} error={shown('customers')} />
-              </LimitOption>
-              <LimitOption
-                checked={limitProducts}
-                onChange={(v) => {
-                  setLimitProducts(v);
-                  if (!v) setProducts([]);
-                }}
-                label="Only on these products"
-              >
-                <ProductPicker selected={products} onChange={setProducts} error={shown('products')} />
-              </LimitOption>
-              <LimitOption
-                checked={limitCategories}
-                onChange={(v) => {
-                  setLimitCategories(v);
-                  if (!v) setCategories([]);
-                }}
-                label="Only on these categories"
-              >
-                <CategoryPicker selected={categories} onChange={setCategories} error={shown('categories')} />
-              </LimitOption>
+                <UnitInput unit={null} integer value={perCustomer} onChange={setPerCustomer} placeholder="No limit" />
+              </Field>
             </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="When and how often">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DateField label="Last day" value={validTill} onChange={setValidTill} role="end" kind="date" optional hint="Works until the end of this day." />
-            <Field label="How many times in total" hint={existing ? `Used ${existing.usageCount} so far. Empty means no limit.` : 'Empty means no limit.'}>
-              <UnitInput unit={null} integer value={usageLimit} onChange={setUsageLimit} placeholder="No limit" />
-            </Field>
-            <Field
-              label="Times per customer"
-              hint="Put 1 so each customer can use it once. A customer is known by phone number. Cancelled, returned and unpaid orders don’t count. Empty means no limit."
-            >
-              <UnitInput unit={null} integer value={perCustomer} onChange={setPerCustomer} placeholder="No limit" />
-            </Field>
-          </div>
-        </SectionCard>
+          </SectionCard>
+        )}
       </div>
 
       <SaveBar
