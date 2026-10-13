@@ -145,6 +145,7 @@ import PathaoLabelsPrintPage from './pages/vendor/courier/pathao/PathaoLabelsPri
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
 import SystemStatus from './pages/admin/SystemStatus';
+import FeatureFlags from './pages/admin/FeatureFlags';
 import ReceiptDetails from './pages/admin/ReceiptDetails';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminReviews from './pages/admin/Reviews';
@@ -293,6 +294,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
   (r) =>
     r.path !== '/admin/ai-settings' &&
     r.path !== '/admin/system-status' &&
+    r.path !== '/admin/feature-flags' &&
     r.path !== '/admin/verification' &&
     r.path !== '/admin/receipt-details' &&
     r.path !== '/admin/dashboard' &&
@@ -569,6 +571,7 @@ export default function App() {
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/ai-settings" element={<AiSettings />} />
                 <Route path="/admin/system-status" element={<SystemStatus />} />
+                <Route path="/admin/feature-flags" element={<FeatureFlags />} />
                 <Route path="/admin/verification" element={<AdminVerification />} />
                 <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />

@@ -9,7 +9,7 @@ import { isNavGroup, navLinks, type NavSection } from './navConfig';
 export type AdminPermission =
   | 'dashboard.view' | 'stores.view' | 'stores.edit' | 'stores.danger' | 'stores.impersonate_view' | 'stores.impersonate_edit' | 'money.view' | 'money.adjust' | 'payouts.manage'
   | 'plans.view' | 'plans.edit' | 'orders.view' | 'orders.edit' | 'shoppers.view' | 'shoppers.manage' | 'support.manage' | 'kyc.manage' | 'messages.send' | 'announcements.manage'
-  | 'ai.manage' | 'gateways.manage' | 'receipts.manage' | 'system.view' | 'audit.view' | 'settings.manage' | 'team.manage';
+  | 'ai.manage' | 'gateways.manage' | 'receipts.manage' | 'system.view' | 'audit.view' | 'settings.manage' | 'team.manage' | 'flags.manage';
 
 export type AdminRoleKey = 'OWNER' | 'MANAGER' | 'FINANCE' | 'SUPPORT';
 
@@ -37,6 +37,7 @@ const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/messages', 'messages.send'],
   ['/admin/ai-settings', 'ai.manage'],
   ['/admin/system-status', 'system.view'],
+  ['/admin/feature-flags', 'flags.manage'],
   ['/admin/verification', 'kyc.manage'],
   ['/admin/receipt-details', 'receipts.manage'],
   ['/admin/staff', 'team.manage'],

@@ -30,6 +30,7 @@ import {
 import { authApi } from '../../lib/authApi';
 import { getVendorSettings, updateVendorSettings } from '../../lib/vendorApi';
 import { useViewer } from '../../lib/useStaffAccess';
+import { useSetBeta, useVendorFeatures } from '../../lib/features';
 import { canAccess, canOpenPath } from '../../lib/staffPermissions';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
@@ -135,6 +136,7 @@ export default function VendorSettings() {
 
 function GeneralTab() {
   const user = useAuthStore((s) => s.user);
+  const isOwner = useViewer().isOwner;
   const accessToken = useAuthStore((s) => s.accessToken);
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -248,7 +250,37 @@ function GeneralTab() {
           </SaveButton>
         </form>
       </Section>
+
+      {isOwner && <BetaProgramSection />}
     </>
+  );
+}
+
+/** Settings > Beta program (super-admin-new.md Step 1): the owner can ask for new features before every store gets them. */
+function BetaProgramSection() {
+  const { data } = useVendorFeatures();
+  const setBeta = useSetBeta();
+  const optedIn = data?.beta.optedIn ?? false;
+
+  return (
+    <Section title="Beta program" description="Get new features before every other store, and help us finish them.">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-xl text-sm text-neutral-600">
+          {optedIn
+            ? 'You are in. New features may show up in your dashboard early; they work, but can still change. You can leave any time.'
+            : 'Beta features work, but they are new and can still change. Leave any time and your store goes back to what everyone has.'}
+        </p>
+        <button
+          type="button"
+          disabled={!data || setBeta.isPending}
+          onClick={() => setBeta.mutate(!optedIn)}
+          className={`rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60 ${optedIn ? 'border border-line text-neutral-700 hover:bg-neutral-50' : 'bg-brand-lime text-regantify-text'}`}
+        >
+          {setBeta.isPending ? 'Saving…' : optedIn ? 'Leave the beta' : 'Join the beta'}
+        </button>
+      </div>
+      {setBeta.isError && <p className="mt-2 text-sm text-red-600">Could not save that. Please try again.</p>}
+    </Section>
   );
 }
 

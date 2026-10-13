@@ -3,12 +3,13 @@ import { AnnouncementBanner } from '../AnnouncementBanner';
 import { MaintenanceBar, TermsGate } from '../PlatformNotices';
 import { KycBanner } from '../KycBanner';
 import { PlanRenewalBar } from '../PlanRenewalBar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
 import { useVendorNav } from '../../lib/useStaffAccess';
-import { advancedNavGroups, countAdvancedNav, withoutAdvanced } from '../../lib/navConfig';
+import { advancedNavGroups, countAdvancedNav, withoutAdvanced, withoutFlagged } from '../../lib/navConfig';
+import { useVendorFeatures } from '../../lib/features';
 import { useAdvancedMenu } from '../../store/advancedStore';
 import { VendorPageGate } from '../staff/VendorPageGate';
 import { WelcomeNote } from '../staff/WelcomeNote';
@@ -28,7 +29,10 @@ export function VendorLayout() {
   const mainRef = useRef<HTMLElement>(null);
   useScrollMemory(mainRef);
   // Only the pages this person's role can open (rule-plan.md Step 7); the owner gets the whole nav.
-  const nav = useVendorNav();
+  // ...and without pages behind a feature flag that is off for this store (super-admin-new.md Step 1).
+  const flagsOn = useVendorFeatures().data?.on;
+  const roleNav = useVendorNav();
+  const nav = useMemo(() => withoutFlagged(roleNav, flagsOn ?? []), [roleNav, flagsOn]);
   // Advanced pages stay out of the sidebar and tab bar until the seller turns on "Advanced menu".
   const { showAdvancedMenu, setShowAdvancedMenu } = useAdvancedMenu();
   // The sidebar lists advanced pages apart, under the normal menu, once "Advanced pages" is on (the page you are on stays in place while it is off).

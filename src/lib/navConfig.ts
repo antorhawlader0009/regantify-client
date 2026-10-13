@@ -32,6 +32,7 @@ import {
   BadgeCheck,
   Inbox,
   Sparkles,
+  ToggleRight,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -45,6 +46,8 @@ export interface NavLinkItem {
    * sidebar's bottom bar), or while they are on that very page. Search (Ctrl K), links and routes are unaffected.
    */
   advanced?: boolean;
+  /** A page behind a feature flag (super-admin-new.md Step 1): left out of the sidebar for stores the flag is off for. Guard its route with <FeatureGate> too. */
+  flag?: string;
 }
 
 /** A collapsible sub-group inside a section (e.g. Store > Design). One level deep only. */
@@ -307,6 +310,7 @@ export const adminNav: NavSection[] = [
 
   { label: 'AI settings', icon: Bot, group: 'Platform', path: '/admin/ai-settings' },
   { label: 'System status', icon: Activity, group: 'Platform', path: '/admin/system-status' },
+  { label: 'Feature flags', icon: ToggleRight, group: 'Platform', path: '/admin/feature-flags' },
   { label: 'Staff', icon: UserCog, group: 'Platform', path: '/admin/staff' },
   { label: 'Settings', icon: Settings, group: 'Platform', path: '/admin/settings' },
 ];
@@ -351,6 +355,24 @@ export function withoutAdvanced(sections: NavSection[], show: boolean, pathname:
     if (children.length > 0) out.push({ ...section, children });
   }
   return out;
+}
+
+/** The nav without links whose feature flag is off for this store (`on` = the store's on-flags). A section or group left empty disappears. */
+export function withoutFlagged(sections: NavSection[], on: string[]): NavSection[] {
+  const keep = (l: NavLinkItem) => !l.flag || on.includes(l.flag);
+  return sections
+    .map((section): NavSection | null => {
+      if (!section.children) return section;
+      const children = section.children
+        .map((c): NavChild | null => {
+          if (!isNavGroup(c)) return keep(c) ? c : null;
+          const kept = c.children.filter(keep);
+          return kept.length ? { ...c, children: kept } : null;
+        })
+        .filter((c): c is NavChild => c !== null);
+      return children.length || section.path ? { ...section, children } : null;
+    })
+    .filter((s): s is NavSection => s !== null);
 }
 
 export interface AdvancedNavGroup {
