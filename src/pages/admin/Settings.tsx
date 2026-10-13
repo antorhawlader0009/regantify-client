@@ -6,6 +6,8 @@ import { ShieldCheck, KeyRound, LogOut, MonitorSmartphone } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
 import { RecoveryCodes } from '../../components/admin/RecoveryCodes';
+import { ChangePasswordCard } from '../../components/admin/ChangePasswordCard';
+import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 
 // Admin > Settings (super-admin-plan.md). Step 1 creates the page with its Security tab; later steps add their own tabs
 // (Activity log, Platform, Receipt details...) to TABS.
@@ -16,6 +18,9 @@ const TABS = [
 
 export default function AdminSettings() {
   const [tab, setTab] = useState<(typeof TABS)[number]['id']>('security');
+  const viewer = useAdminViewer();
+  // The action log is for people whose role includes it (super-admin-plan.md Step 13).
+  const tabs = TABS.filter((t) => t.id !== 'activity' || adminCan(viewer, 'audit.view'));
 
   return (
     <div className={tab === 'activity' ? 'max-w-5xl' : 'max-w-3xl'}>
@@ -23,7 +28,7 @@ export default function AdminSettings() {
       <p className="text-regantify-text-muted mt-1">Platform settings for Super Admin.</p>
 
       <div className="mt-5 flex gap-1 border-b border-black/5">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
@@ -215,6 +220,8 @@ function SecurityTab() {
           </div>
         </div>
       </section>
+
+      <ChangePasswordCard />
     </div>
   );
 }

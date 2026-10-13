@@ -12,6 +12,8 @@ import type { Plan, PlanUpgradeRequest, PlanUpgradeRequestStatus, PaymentFeePaye
  * field alone".
  */
 export interface UpdatePlanPayload {
+  mostPopular?: boolean;
+  hiddenFromSignup?: boolean;
   name?: string;
   priceMonthly?: number;
   productLimit?: number | null;

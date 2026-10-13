@@ -150,6 +150,18 @@ import AdminSettings from './pages/admin/Settings';
 import Receipts from './pages/vendor/finance/Receipts';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import StoreDetailPage from './pages/admin/vendors/StoreDetail';
+import PendingApproval from './pages/admin/vendors/PendingApproval';
+import SuspendedVendors from './pages/admin/vendors/SuspendedVendors';
+import PlatformRevenue from './pages/admin/finance/PlatformRevenue';
+import AdminOrders from './pages/admin/orders/AdminOrders';
+import AdminOrderDetail from './pages/admin/orders/AdminOrderDetail';
+import AdminCustomers from './pages/admin/customers/AdminCustomers';
+import AdminShopperDetail from './pages/admin/customers/AdminShopperDetail';
+import Renewals from './pages/admin/plans/Renewals';
+import PacksAndPromos from './pages/admin/plans/PacksAndPromos';
+import Messages from './pages/admin/Messages';
+import Team from './pages/admin/Team';
+import CommissionSettings from './pages/admin/finance/CommissionSettings';
 import PlanManagement from './pages/admin/plans/PlanManagement';
 import PlanRequests from './pages/admin/plans/PlanRequests';
 import Announcements from './pages/admin/Announcements';
@@ -279,6 +291,15 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/receipt-details' &&
     r.path !== '/admin/settings' &&
     r.path !== '/admin/vendors/all' &&
+    r.path !== '/admin/customers' &&
+    r.path !== '/admin/packs' &&
+    r.path !== '/admin/messages' &&
+    r.path !== '/admin/staff' &&
+    r.path !== '/admin/finance/commission' &&
+    r.path !== '/admin/orders' &&
+    r.path !== '/admin/finance/revenue' &&
+    r.path !== '/admin/vendors/pending' &&
+    r.path !== '/admin/vendors/suspended' &&
     r.path !== '/admin/plans' &&
     r.path !== '/admin/plan-requests' &&
     r.path !== '/admin/announcements' &&
@@ -539,6 +560,18 @@ export default function App() {
                 <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
+                <Route path="/admin/renewals" element={<Renewals />} />
+                <Route path="/admin/packs" element={<PacksAndPromos />} />
+                <Route path="/admin/messages" element={<Messages />} />
+                <Route path="/admin/staff" element={<Team />} />
+                <Route path="/admin/finance/commission" element={<CommissionSettings />} />
+                <Route path="/admin/customers" element={<AdminCustomers />} />
+                <Route path="/admin/customers/:phone" element={<AdminShopperDetail />} />
+                <Route path="/admin/orders" element={<AdminOrders />} />
+                <Route path="/admin/orders/:orderId" element={<AdminOrderDetail />} />
+                <Route path="/admin/finance/revenue" element={<PlatformRevenue />} />
+                <Route path="/admin/vendors/pending" element={<PendingApproval />} />
+                <Route path="/admin/vendors/suspended" element={<SuspendedVendors />} />
                 <Route path="/admin/vendors/:vendorId" element={<StoreDetailPage />} />
                 <Route path="/admin/plans" element={<PlanManagement />} />
                 <Route path="/admin/plan-requests" element={<PlanRequests />} />

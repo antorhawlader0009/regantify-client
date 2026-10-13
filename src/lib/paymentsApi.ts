@@ -13,6 +13,15 @@ export interface InitiatePaymentPayload {
   purpose: PaymentPurpose;
   packageId?: string;
   amount?: number;
+  /** A plan promo code (PLAN_UPGRADE only). */
+  promoCode?: string;
+}
+
+export interface PromoQuote {
+  code: string;
+  discount: number;
+  price: number;
+  finalPrice: number;
 }
 
 export interface InitiatePaymentResult {
@@ -44,6 +53,9 @@ export interface PaymentTransaction {
 }
 
 export const paymentsApi = {
+  // What a plan costs with a promo code (nothing is saved or counted until the payment goes through).
+  promoCheck: (planCode: string, code: string) => api.post<PromoQuote>('/v1/payments/promo-check', { planCode, code }).then((r) => r.data),
+
   // Starts a PayStation checkout session — redirect the browser to the
   // returned paymentUrl (see Wallet.tsx / BuySmsDialog / BuyChatBotDialog).
   initiate: (payload: InitiatePaymentPayload) =>

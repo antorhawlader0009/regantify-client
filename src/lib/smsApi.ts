@@ -10,9 +10,13 @@ export interface SmsLog {
 }
 
 export interface SmsPackage {
-  id: 'STARTER' | 'STANDARD' | 'BULK';
+  /** A pack id from Super Admin's Packs & promos (the first three are STARTER, STANDARD and BULK). */
+  id: string;
+  name?: string;
   smsCount: number;
   price: number;
+  /** A short label such as "Best value". */
+  badge?: string | null;
 }
 
 export interface BirthdaySmsSettings {

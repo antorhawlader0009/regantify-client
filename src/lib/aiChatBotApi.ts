@@ -8,9 +8,12 @@ import { api } from './api';
 // platform-wide, admin-only model picker for the storefront's
 // shopper-facing AI chat widget.
 export interface ChatBotPackage {
-  id: 'CREDITS_1K' | 'CREDITS_2500' | 'CREDITS_5K' | 'CREDITS_25K' | 'CREDITS_75K';
+  /** A pack id from Super Admin's Packs & promos (the first five are CREDITS_1K … CREDITS_75K). */
+  id: string;
+  name?: string;
   creditCount: number;
   price: number;
+  badge?: string | null;
 }
 
 export interface AiCreditSummary {

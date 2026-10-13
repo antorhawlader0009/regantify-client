@@ -1,6 +1,7 @@
 import { ImpersonationBar } from '../ImpersonationBar';
 import { AnnouncementBanner } from '../AnnouncementBanner';
 import { KycBanner } from '../KycBanner';
+import { PlanRenewalBar } from '../PlanRenewalBar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
@@ -38,7 +39,8 @@ export function VendorLayout() {
       <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
         <ImpersonationBar />
         <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
-        {!isLms && <KycBanner />}
+
+
         {!isLms && <AnnouncementBanner />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={nav} />

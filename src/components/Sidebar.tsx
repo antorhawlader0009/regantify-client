@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { adminCan, useAdminViewer } from '../lib/adminPermissions';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -28,11 +29,13 @@ function writeCollapsed(value: boolean) {
 
 /** Tickets with a reply the viewer hasn't opened: support replies for a store, new store messages for Super Admin. */
 function SupportUnreadBadge({ admin, collapsed }: { admin: boolean; collapsed: boolean }) {
+  const viewer = useAdminViewer();
   const { data: count = 0 } = useQuery({
     queryKey: ['support-unread', admin ? 'admin' : 'vendor'],
     queryFn: admin ? adminSupportApi.unreadCount : supportApi.unreadCount,
     refetchInterval: 60_000,
     retry: false,
+    enabled: !admin || adminCan(viewer, 'support.manage'),
   });
   if (!count) return null;
   if (collapsed) {

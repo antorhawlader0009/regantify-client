@@ -275,6 +275,8 @@ export const adminNav: NavSection[] = [
     children: [
       { label: 'Manage Plans', path: '/admin/plans' },
       { label: 'Plan Requests', path: '/admin/plan-requests' },
+      { label: 'Renewals', path: '/admin/renewals' },
+      { label: 'Packs & Promos', path: '/admin/packs' },
     ],
   },
   { label: 'Payment Gateway', icon: CreditCard, group: 'Vendors', path: '/admin/payment-gateway' },
@@ -289,6 +291,7 @@ export const adminNav: NavSection[] = [
     ],
   },
   { label: 'Announcements', icon: Megaphone, group: 'Operations', path: '/admin/announcements' },
+  { label: 'Messages', icon: Megaphone, group: 'Operations', path: '/admin/messages' },
   { label: 'Marketing', icon: Megaphone, group: 'Operations', path: '/admin/marketing' },
   { label: 'Reviews', icon: Star, group: 'Operations', path: '/admin/reviews' },
   { label: 'AI Settings', icon: Bot, group: 'Operations', path: '/admin/ai-settings' },

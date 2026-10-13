@@ -7,6 +7,8 @@ export type KycKind = 'NID_FRONT' | 'NID_BACK' | 'SELFIE' | 'TRADE_LICENSE';
 
 /** What the store's dashboard needs (GET /v1/kyc/me). */
 export interface MyKyc {
+  /** PENDING = a new store waiting for Super Admin's approval (when that is switched on). */
+  storeStatus?: string;
   state: KycState;
   /** Past the deadline with documents still owed: no new orders and no new products. */
   restricted: boolean;

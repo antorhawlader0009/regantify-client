@@ -21,6 +21,8 @@ export interface VendorPaymentGateway {
   platformChargeBdt: string;
   platformChargePercent: string;
   platformChargePayer: PaymentFeePayer;
+  /** A negotiated cash-on-delivery rate from the Regantify team, with the day it ends (null = until further notice). */
+  specialRate?: { until: string | null } | null;
   isConnected: boolean;
   createdAt: string;
   updatedAt: string;

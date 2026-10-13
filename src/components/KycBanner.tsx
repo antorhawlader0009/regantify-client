@@ -9,6 +9,14 @@ import { kycApi } from '../lib/kycApi';
  */
 export function KycBanner() {
   const { data } = useQuery({ queryKey: ['kyc-me'], queryFn: kycApi.mine, refetchInterval: 5 * 60_000, staleTime: 60_000, retry: false });
+  if (data?.storeStatus === 'PENDING') {
+    return (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+        <ShieldAlert size={16} className="shrink-0" aria-hidden />
+        <p className="min-w-0 flex-1">Your store is being reviewed by the Regantify team. You can set it up now. Your store page and new orders open as soon as it is approved.</p>
+      </div>
+    );
+  }
   if (!data || data.state === 'NONE' || data.state === 'APPROVED') return null;
 
   const late = data.restricted;

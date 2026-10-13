@@ -111,7 +111,7 @@ export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
               const best = cheapest?.id === pkg.id;
               return (
                 <li key={pkg.id} className={`flex flex-col rounded-xl border p-4 ${best ? 'border-brand bg-brand-lime/20' : 'border-line bg-white'}`}>
-                  {best && <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Best value</span>}
+                  {(pkg.badge || best) && <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">{pkg.badge || 'Best value'}</span>}
                   <p className="text-xl font-semibold tabular-nums text-regantify-text">{pkg.smsCount.toLocaleString()} SMS</p>
                   <p className="text-sm text-neutral-600">৳{pkg.price.toLocaleString()}</p>
                   <p className="mt-0.5 text-xs text-neutral-500">{perSms(pkg)} per SMS</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2, Star } from 'lucide-react';
 import { supportApi, type SupportTicket as Ticket } from '../../../lib/supportApi';
 import { CATEGORY_LABEL } from '../../../lib/supportContent';
 import { ReplyBox, StatusPill, TicketThread } from '../../../components/support/TicketThread';
@@ -40,6 +40,14 @@ export default function SupportTicket() {
     mutationFn: (body: string) => supportApi.reply(id, body),
     onSuccess: store,
     onError: () => toast.error('Your reply was not sent. Try again.'),
+  });
+  const rate = useMutation({
+    mutationFn: (n: number) => supportApi.rate(id, n),
+    onSuccess: (t) => {
+      store(t);
+      toast.success('Thank you for rating.');
+    },
+    onError: () => toast.error('Your rating was not saved. Try again.'),
   });
   const close = useMutation({
     mutationFn: () => supportApi.close(id),
@@ -98,6 +106,26 @@ export default function SupportTicket() {
           <CheckCircle2 size={16} className="text-emerald-600" />
           Closed {ticket.closedAt ? formatDateTime(ticket.closedAt) : ''}
         </p>
+      )}
+
+      {/* A quick rating of how the ticket was handled (super-admin-plan.md Step 11): once, after it is closed. */}
+      {closed && (
+        <div className="mt-3 rounded-xl border border-black/10 bg-white p-4">
+          {ticket.ratedAt ? (
+            <p className="text-sm text-regantify-text">You rated this {ticket.rating} out of 5. Thank you.</p>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-regantify-text">How did we do?</p>
+              <div className="mt-2 flex gap-1" role="group" aria-label="Rate this ticket">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button key={n} type="button" disabled={rate.isPending} onClick={() => rate.mutate(n)} aria-label={`${n} out of 5`} className="rounded-lg p-1 hover:bg-black/5 disabled:opacity-50">
+                    <Star size={22} className="text-amber-400 hover:fill-amber-400" />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       <div ref={bottomRef} className="mt-8 pb-4">

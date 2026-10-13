@@ -7,6 +7,7 @@ import { adminDashboardApi, type AdminOverview, type Compared, type OverviewRang
 import { ColumnChart, PALETTE, TrendChart } from '../../components/analytics/TrendChart';
 import { bucketLabel, changeOf, formatCompact, formatTaka, formatValue, type ValueKind } from '../../components/analytics/format';
 import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
+import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 
 const RANGES: Array<{ id: OverviewRange; label: string }> = [
   { id: 'today', label: 'Today' },
@@ -115,7 +116,9 @@ export default function AdminDashboard() {
     refetchInterval: 60_000,
     placeholderData: (prev) => prev,
   });
-  const fees = useQuery({ queryKey: ['admin', 'dashboard', 'platform-revenue'], queryFn: () => adminDashboardApi.getPlatformRevenue() });
+  const viewer = useAdminViewer();
+  const canSeeFees = adminCan(viewer, 'money.view');
+  const fees = useQuery({ queryKey: ['admin', 'dashboard', 'platform-revenue'], queryFn: () => adminDashboardApi.getPlatformRevenue(), enabled: canSeeFees });
 
   const items = data ? actionItems(data.needsAction) : [];
 
@@ -278,7 +281,7 @@ export default function AdminDashboard() {
 
       <SmsBalanceCard />
 
-      <div className="max-w-3xl overflow-hidden rounded-2xl border border-black/5 bg-white">
+      {canSeeFees && <div className="max-w-3xl overflow-hidden rounded-2xl border border-black/5 bg-white">
         <div className="flex items-center gap-2 border-b border-black/5 p-4">
           <Receipt size={16} className="text-regantify-text-muted" />
           <p className="text-sm font-semibold text-regantify-text">Recent platform fees</p>
@@ -312,7 +315,7 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

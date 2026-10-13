@@ -149,6 +149,11 @@ function BuiltinGatewayCard({
           {!hideFee && (
             <p className="text-sm text-regantify-text-muted mt-0.5">
               Fee: {formatCharge(gateway)}
+              {gateway.specialRate && (
+                <span className="ml-2 rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">
+                  Special rate{gateway.specialRate.until ? ` until ${new Date(gateway.specialRate.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                </span>
+              )}
             </p>
           )}
           {/* Fee From: Vendor (Plan.codGatewayFeePayer) — the fee above is

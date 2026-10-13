@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, Inbox, Loader2, Search } from 'lucide-react';
+import { Inbox, Loader2, Search, Star, X } from 'lucide-react';
 import { adminSupportApi, type AdminSupportTicket, type SupportStatus } from '../../../lib/supportApi';
 import { CATEGORY_LABEL } from '../../../lib/supportContent';
 import { ReplyBox, StatusPill, TicketThread } from '../../../components/support/TicketThread';
 import { agoPhrase, formatDateTime } from '../../../components/lms/format';
-import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { toast } from '../../../lib/toast';
+import { apiErrorMessage } from '../../../lib/api';
+import { SavedRepliesDialog } from './SavedRepliesDialog';
 
-const TABS: { value: SupportStatus | 'ALL'; label: string }[] = [
+type Tab = SupportStatus | 'ALL' | 'WAITING';
+const TABS: { value: Tab; label: string }[] = [
   { value: 'OPEN', label: 'Needs reply' },
+  { value: 'WAITING', label: 'Waiting over 24h' },
   { value: 'ANSWERED', label: 'Waiting on vendor' },
   { value: 'CLOSED', label: 'Closed' },
   { value: 'ALL', label: 'All' },
@@ -25,7 +28,10 @@ const TABS: { value: SupportStatus | 'ALL'; label: string }[] = [
 export default function SupportInbox() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<SupportStatus | 'ALL'>('OPEN');
+  const [tab, setTab] = useState<Tab>('OPEN');
+  const [assignee, setAssignee] = useState('');
+  const [tag, setTag] = useState('');
+  const [managing, setManaging] = useState(false);
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
 
@@ -35,8 +41,15 @@ export default function SupportInbox() {
   }, [search]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-support', tab, query],
-    queryFn: () => adminSupportApi.list({ status: tab === 'ALL' ? undefined : tab, search: query || undefined }),
+    queryKey: ['admin-support', tab, query, assignee, tag],
+    queryFn: () =>
+      adminSupportApi.list({
+        status: tab === 'ALL' || tab === 'WAITING' ? undefined : tab,
+        waiting: tab === 'WAITING' || undefined,
+        search: query || undefined,
+        assignee: assignee || undefined,
+        tag: tag || undefined,
+      }),
     refetchInterval: 30_000,
   });
   const tickets = data?.tickets ?? [];
@@ -47,6 +60,16 @@ export default function SupportInbox() {
         <div>
           <h1 className="text-2xl font-semibold text-regantify-text">Support</h1>
           <p className="mt-1 text-sm text-regantify-text-muted">Reply to stores' tickets. Unread tickets stay on top.</p>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-regantify-text-muted">
+          {data?.ratings.average != null && (
+            <span className="inline-flex items-center gap-1">
+              <Star size={13} className="fill-amber-400 text-amber-400" /> {data.ratings.average} from {data.ratings.count} {data.ratings.count === 1 ? 'rating' : 'ratings'}
+            </span>
+          )}
+          <button type="button" onClick={() => setManaging(true)} className="rounded-lg border border-black/10 px-3 py-1.5 font-medium text-regantify-text hover:bg-black/5">
+            Saved replies
+          </button>
         </div>
       </header>
 
@@ -67,7 +90,7 @@ export default function SupportInbox() {
             </div>
             <div className="flex flex-wrap gap-1" role="tablist" aria-label="Ticket status">
               {TABS.map((t) => {
-                const count = t.value === 'ALL' ? undefined : data?.counts[t.value];
+                const count = t.value === 'ALL' ? undefined : t.value === 'WAITING' ? data?.waitingCount : data?.counts[t.value];
                 return (
                   <button
                     key={t.value}
@@ -75,7 +98,7 @@ export default function SupportInbox() {
                     aria-selected={tab === t.value}
                     onClick={() => setTab(t.value)}
                     className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-regantify-black ${
-                      tab === t.value ? 'bg-regantify-black text-white' : 'text-regantify-text-muted hover:bg-black/5 hover:text-regantify-text'
+                      tab === t.value ? 'bg-regantify-black text-white' : t.value === 'WAITING' && (data?.waitingCount ?? 0) > 0 ? 'text-red-600 hover:bg-red-50' : 'text-regantify-text-muted hover:bg-black/5 hover:text-regantify-text'
                     }`}
                   >
                     {t.label}
@@ -83,6 +106,19 @@ export default function SupportInbox() {
                   </button>
                 );
               })}
+            </div>
+            <div className="flex gap-2">
+              <select value={assignee} onChange={(e) => setAssignee(e.target.value)} aria-label="Assigned to" className="min-w-0 flex-1 rounded-lg bg-regantify-content px-2 py-1.5 text-xs focus:outline-none">
+                <option value="">Anyone</option>
+                <option value="me">Mine ({data?.mine ?? 0})</option>
+                <option value="none">Not assigned</option>
+              </select>
+              <select value={tag} onChange={(e) => setTag(e.target.value)} aria-label="Tag" className="min-w-0 flex-1 rounded-lg bg-regantify-content px-2 py-1.5 text-xs focus:outline-none">
+                <option value="">Any tag</option>
+                {(data?.tags ?? []).map((x) => (
+                  <option key={x} value={x}>{x}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -121,6 +157,9 @@ export default function SupportInbox() {
                         <span className="mt-1 flex items-center gap-2 text-[11px] text-regantify-text-muted">
                           #{t.number}
                           {t.priority === 'URGENT' && <span className="rounded-full bg-red-50 px-1.5 py-px font-medium text-red-600">Urgent</span>}
+                          {t.waitingOver24h && <span className="rounded-full bg-red-600 px-1.5 py-px font-medium text-white">Waiting over 24h</span>}
+                          {t.assignedToName && <span className="truncate">· {t.assignedToName}</span>}
+                          {t.rating != null && <span className="inline-flex items-center gap-0.5"><Star size={10} className="fill-amber-400 text-amber-400" />{t.rating}</span>}
                           {tab === 'ALL' && <StatusPill status={t.status} viewer="ADMIN" />}
                         </span>
                       </span>
@@ -144,6 +183,7 @@ export default function SupportInbox() {
           )}
         </section>
       </div>
+      <SavedRepliesDialog open={managing} onClose={() => setManaging(false)} />
     </div>
   );
 }
@@ -192,6 +232,21 @@ function TicketPane({ id }: { id: string }) {
     onError: () => toast.error('The status could not be changed. Try again.'),
   });
 
+  const admins = useQuery({ queryKey: ['admin-support-admins'], queryFn: adminSupportApi.admins, staleTime: 5 * 60_000 });
+  const saved = useQuery({ queryKey: ['admin-support-saved'], queryFn: adminSupportApi.savedReplies, staleTime: 60_000 });
+  const assign = useMutation({ mutationFn: (adminId: string | null) => adminSupportApi.assign(id, adminId), onSuccess: store, onError: (err) => toast.error(apiErrorMessage(err, 'Could not assign it.')) });
+  const tagsM = useMutation({ mutationFn: (tags: string[]) => adminSupportApi.setTags(id, tags), onSuccess: store, onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the tags.')) });
+  const noteM = useMutation({
+    mutationFn: (body: string) => adminSupportApi.addNote(id, body),
+    onSuccess: (t) => {
+      store(t);
+      setNote('');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the note.')),
+  });
+  const [note, setNote] = useState('');
+  const [tagInput, setTagInput] = useState('');
+
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -236,15 +291,9 @@ function TicketPane({ id }: { id: string }) {
           <div className="flex gap-1.5">
             <dt className="text-regantify-text-muted">Store</dt>
             <dd className="font-medium text-regantify-text">
-              <a
-                href={storefrontStoreUrl(ticket.vendor.subdomain)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 hover:underline"
-              >
+              <Link to={`/admin/vendors/${ticket.vendor.id}`} className="hover:underline">
                 {ticket.vendor.storeName}
-                <ExternalLink size={11} />
-              </a>
+              </Link>
             </dd>
           </div>
           <div className="flex gap-1.5">
@@ -268,10 +317,70 @@ function TicketPane({ id }: { id: string }) {
             </div>
           )}
         </dl>
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+          <label className="flex items-center gap-1.5 text-regantify-text-muted">
+            Assigned to
+            <select value={ticket.assignedToId ?? ''} onChange={(e) => assign.mutate(e.target.value || null)} disabled={assign.isPending} className="rounded-lg bg-regantify-content px-2 py-1 text-xs text-regantify-text focus:outline-none">
+              <option value="">Nobody</option>
+              {(admins.data ?? []).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="flex flex-wrap items-center gap-1.5">
+            {ticket.tags.map((t) => (
+              <span key={t} className="inline-flex items-center gap-1 rounded bg-black/5 px-1.5 py-0.5">
+                {t}
+                <button type="button" aria-label={`Remove ${t}`} onClick={() => tagsM.mutate(ticket.tags.filter((x) => x !== t))}>
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tagInput.trim()) {
+                  e.preventDefault();
+                  tagsM.mutate([...ticket.tags, tagInput.trim()]);
+                  setTagInput('');
+                }
+              }}
+              placeholder="Add a tag"
+              maxLength={24}
+              className="w-24 rounded-lg bg-regantify-content px-2 py-1 focus:outline-none"
+            />
+          </span>
+          {ticket.rating != null && (
+            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-amber-900">
+              <Star size={12} className="fill-amber-400 text-amber-400" /> Store rated {ticket.rating}/5
+              {ticket.ratingNote ? `: ${ticket.ratingNote}` : ''}
+            </span>
+          )}
+        </div>
       </header>
 
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
         <TicketThread messages={ticket.messages} viewer="ADMIN" />
+        <section className="mt-6 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 p-4">
+          <h3 className="text-xs font-semibold text-amber-900">Private notes (only the Regantify team sees these)</h3>
+          {ticket.notes.map((n) => (
+            <div key={n.id} className="mt-2 border-t border-amber-200 pt-2">
+              <p className="whitespace-pre-wrap text-sm text-regantify-text">{n.body}</p>
+              <p className="text-[11px] text-regantify-text-muted">
+                {n.authorName} · {formatDateTime(n.createdAt)}
+              </p>
+            </div>
+          ))}
+          <div className="mt-3 flex gap-2">
+            <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder="Write a private note" className="min-w-0 flex-1 rounded-lg bg-white px-3 py-2 text-sm focus:outline-none" />
+            <button type="button" disabled={!note.trim() || noteM.isPending} onClick={() => noteM.mutate(note.trim())} className="rounded-lg bg-regantify-black px-3 py-2 text-xs font-medium text-white disabled:opacity-40">
+              Save note
+            </button>
+          </div>
+        </section>
       </div>
 
       <div className="border-t border-black/10 p-4">
@@ -279,6 +388,11 @@ function TicketPane({ id }: { id: string }) {
           sending={reply.isPending}
           onSend={(body) => reply.mutateAsync(body)}
           placeholder={`Reply to ${ticket.vendor.storeName}…`}
+          savedReplies={(saved.data ?? []).map((r) => ({
+            id: r.id,
+            title: r.title,
+            body: r.body.replace(/\{store\}/gi, ticket.vendor.storeName).replace(/\{name\}/gi, owner.fullName?.split(' ')[0] ?? 'there'),
+          }))}
           note={closed ? 'This ticket is closed. Replying reopens it for the store.' : undefined}
         />
       </div>

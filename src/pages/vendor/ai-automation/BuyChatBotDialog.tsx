@@ -119,8 +119,8 @@ export function BuyChatBotDialog({ open, onOpenChange, creditsPerReply }: BuyCha
                 const n = replies(pkg.creditCount);
                 return (
                   <li key={pkg.id} className={`flex flex-col rounded-xl border p-4 ${isBest ? 'border-brand bg-brand-lime/20' : 'border-line bg-white'}`}>
-                    {isBest && (
-                      <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Best value</span>
+                    {(pkg.badge || isBest) && (
+                      <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">{pkg.badge || 'Best value'}</span>
                     )}
                     <p className="text-xl font-semibold tabular-nums text-regantify-text">{pkg.creditCount.toLocaleString('en-US')} credits</p>
                     <p className="text-sm text-neutral-600">{formatTaka(pkg.price)}</p>

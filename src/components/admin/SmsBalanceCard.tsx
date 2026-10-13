@@ -5,6 +5,7 @@ import { toast } from '../../lib/toast';
 import { apiErrorMessage } from '../../lib/api';
 import { adminDashboardApi, type SmsBalanceLevel } from '../../lib/adminDashboardApi';
 import { formatTaka } from '../analytics/format';
+import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 
 const LEVEL: Record<SmsBalanceLevel, { label: string; cls: string; Icon: typeof CircleCheck }> = {
@@ -22,6 +23,7 @@ export const SMS_BALANCE_QUERY = ['admin', 'sms-balance'];
  */
 export function SmsBalanceCard() {
   const qc = useQueryClient();
+  const viewer = useAdminViewer();
   const { data, isFetching } = useQuery({ queryKey: SMS_BALANCE_QUERY, queryFn: adminDashboardApi.smsBalance, refetchInterval: 5 * 60_000 });
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
@@ -99,7 +101,7 @@ export function SmsBalanceCard() {
                 <span>
                   Texts you under {formatTaka(data.threshold)} (and every hour under ৳100).
                 </span>
-                <button
+                {adminCan(viewer, 'settings.manage') && <button
                   type="button"
                   onClick={() => {
                     setValue(String(data.threshold));
@@ -108,7 +110,7 @@ export function SmsBalanceCard() {
                   className="inline-flex items-center gap-1 underline hover:text-regantify-text"
                 >
                   <Pencil size={12} /> Change
-                </button>
+                </button>}
               </>
             )}
           </div>

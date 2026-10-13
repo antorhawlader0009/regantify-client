@@ -59,6 +59,10 @@ export interface Plan {
   /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
   codFeeHidden: boolean;
   onlinePaymentFeeHidden: boolean;
+  /** Billing marks this plan "Most popular" (Super Admin > Plans). */
+  mostPopular?: boolean;
+  /** Not offered to stores that are not on it already. */
+  hiddenFromSignup?: boolean;
 }
 
 interface UsageStat {
@@ -70,6 +74,8 @@ export interface VendorPlanUsage {
   plan: Plan;
   /** ISO date the paid plan ends and the store goes back to Free; null on Free. */
   planExpiresAt: string | null;
+  /** After the end date a paid plan keeps working until graceEndsAt; the "renew now" bar shows meanwhile (Step 9). */
+  planGrace?: { inGrace: boolean; graceEndsAt: string | null };
   usage: {
     products: UsageStat;
     staff: UsageStat;

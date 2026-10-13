@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ExternalLink, Loader2, LogIn, Search } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2, LogIn, Pin, Search, X } from 'lucide-react';
 import { adminApi, type AdminVendor, type StoreDetail } from '../../../lib/adminApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
@@ -15,6 +15,9 @@ import { StatusBadge } from './StatusBadge';
 import { ChangeVendorPlanModal } from './ChangeVendorPlanModal';
 import { ChangeVendorStatusModal } from './ChangeVendorStatusModal';
 import { AiCreditsAdjust } from './VendorDetailsDialog';
+import { HealthChip } from './VendorListPage';
+import { StoreFeeDeals } from '../../../components/admin/FeeDeals';
+import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4): everything about one store, and the actions on it.
 const TABS = [
@@ -26,6 +29,7 @@ const TABS = [
   { id: 'customers', label: 'Customers' },
   { id: 'connections', label: 'Connections' },
   { id: 'history', label: 'Admin history' },
+  { id: 'notes', label: 'Notes' },
   { id: 'actions', label: 'Actions' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
@@ -146,9 +150,105 @@ function ListTab<T>({ id, kind, fetcher, placeholder, columns }: { id: string; k
   );
 }
 
+/** Health score with what is missing, and the store's private tags (never shown to the store). */
+function HealthAndTags({ id }: { id: string }) {
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ['admin-store', id, 'health'], queryFn: () => adminApi.storeHealth(id) });
+  const [input, setInput] = useState('');
+  const save = useMutation({
+    mutationFn: (tags: string[]) => adminApi.setStoreTags(id, tags),
+    onSuccess: (r) => {
+      qc.setQueryData(['admin-store', id, 'health'], (old: typeof data) => (old ? { ...old, tags: r.tags } : old));
+      qc.invalidateQueries({ queryKey: ['admin-vendors'] });
+      setInput('');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the tags.')),
+  });
+  if (!data) return null;
+  return (
+    <Card title="Health and tags" className="lg:col-span-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <HealthChip health={data.health} />
+        <p className="text-sm text-regantify-text-muted">{data.health.gaps.length ? `Missing: ${data.health.gaps.join(', ')}.` : 'Nothing missing.'}</p>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        {data.tags.map((t) => (
+          <span key={t} className="inline-flex items-center gap-1 rounded bg-black/5 px-2 py-1 text-xs text-regantify-text">
+            {t}
+            <button type="button" aria-label={`Remove ${t}`} onClick={() => save.mutate(data.tags.filter((x) => x !== t))}>
+              <X size={11} />
+            </button>
+          </span>
+        ))}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (input.trim()) save.mutate([...data.tags, input.trim()]);
+          }}
+        >
+          <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={24} placeholder="Add a tag" className="rounded-lg bg-regantify-search px-2.5 py-1 text-xs focus:outline-none" />
+        </form>
+      </div>
+      <p className="mt-2 text-xs text-regantify-text-muted">Tags and notes are only for the Regantify team. The store never sees them.</p>
+    </Card>
+  );
+}
+
+function Notes({ id }: { id: string }) {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({ queryKey: ['admin-store', id, 'notes'], queryFn: () => adminApi.storeNotes(id) });
+  const [text, setText] = useState('');
+  const [pinned, setPinned] = useState(false);
+  const refresh = () => qc.invalidateQueries({ queryKey: ['admin-store', id, 'notes'] });
+  const add = useMutation({
+    mutationFn: () => adminApi.addStoreNote(id, text.trim(), pinned),
+    onSuccess: () => {
+      setText('');
+      setPinned(false);
+      refresh();
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the note.')),
+  });
+  const pin = useMutation({ mutationFn: (v: { noteId: string; pinned: boolean }) => adminApi.pinStoreNote(id, v.noteId, v.pinned), onSuccess: refresh });
+  return (
+    <div className="max-w-3xl space-y-4">
+      <Card title="Write a note">
+        <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} rows={3} placeholder="For example: owner asked for a call on Friday" className={field} />
+        <div className="mt-2 flex items-center justify-between">
+          <label className="flex items-center gap-2 text-sm text-regantify-text">
+            <input type="checkbox" checked={pinned} onChange={(e) => setPinned(e.target.checked)} /> Pin to the top
+          </label>
+          <button type="button" disabled={text.trim().length < 2 || add.isPending} onClick={() => add.mutate()} className="rounded-lg bg-regantify-cta px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+            Save note
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-regantify-text-muted">Notes can’t be edited or deleted, so the record stays true. Only the Regantify team sees them.</p>
+      </Card>
+      {isLoading ? (
+        <Loader2 className="mx-auto animate-spin text-neutral-400" />
+      ) : (
+        (data ?? []).map((n) => (
+          <Card key={n.id} className={n.pinned ? 'border-amber-300' : ''}>
+            <p className="whitespace-pre-wrap text-sm text-regantify-text">{n.text}</p>
+            <div className="mt-2 flex items-center justify-between text-xs text-regantify-text-muted">
+              <span>
+                {n.authorName} · {when(n.createdAt)}
+              </span>
+              <button type="button" onClick={() => pin.mutate({ noteId: n.id, pinned: !n.pinned })} className="inline-flex items-center gap-1 underline">
+                <Pin size={11} /> {n.pinned ? 'Unpin' : 'Pin'}
+              </button>
+            </div>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+}
+
 function Overview({ d }: { d: StoreDetail }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <HealthAndTags id={d.id} />
       <Card title="Owner">
         <Row label="Name">{d.owner.name ?? '—'}</Row>
         <Row label="Phone">{d.owner.phone ?? '—'}</Row>
@@ -221,6 +321,17 @@ function Money({ id }: { id: string }) {
         <Row label="Last 30 days">{formatTaka(data.platformFees.last30d)}</Row>
         <Row label="All time">{formatTaka(data.platformFees.allTime)}</Row>
       </Card>
+      <Card title="SMS credit history (last 30)">
+        {data.smsEntries.length === 0 ? (
+          <p className="text-sm text-regantify-text-muted">No entries.</p>
+        ) : (
+          data.smsEntries.map((e) => (
+            <Row key={e.id} label={`${when(e.createdAt)} · ${e.reason.toLowerCase()}${e.note ? ` · ${e.note}` : ''}`}>
+              <span className={e.delta >= 0 ? 'text-green-700' : 'text-red-700'}>{e.delta >= 0 ? '+' : '−'}{Math.abs(e.delta).toLocaleString('en-US')}</span> → {e.balanceAfter.toLocaleString('en-US')}
+            </Row>
+          ))
+        )}
+      </Card>
       <Card title="Wallet history (last 50)">
         {data.transactions.length === 0 ? (
           <p className="text-sm text-regantify-text-muted">No wallet entries.</p>
@@ -288,7 +399,7 @@ function Money({ id }: { id: string }) {
         ) : (
           data.withdrawals.map((w) => (
             <Row key={w.id} label={`${when(w.createdAt)} · ${w.method.toLowerCase()}`}>
-              {formatTaka(w.amount)} · {w.status.toLowerCase()}
+              {formatTaka(w.amount)} · {w.status.toLowerCase()}{w.payoutReference ? ` · ref ${w.payoutReference}` : ''}
             </Row>
           ))
         )}
@@ -404,6 +515,44 @@ function ReasonAction({ title, description, button, extra, run, danger }: { titl
   );
 }
 
+/** Add or take money from the wallet, or SMS credits, with a reason. The store reads the reason in its wallet history and bell (super-admin-plan.md Step 6). */
+function MoneyAdjust({ d, onDone }: { d: StoreDetail; onDone: () => void }) {
+  const [kind, setKind] = useState<'wallet' | 'sms'>('wallet');
+  const [dir, setDir] = useState<'add' | 'remove'>('add');
+  const [amount, setAmount] = useState('');
+  const [reason, setReason] = useState('');
+  const n = Number(amount);
+  const valid = Number.isFinite(n) && n > 0 && (kind === 'wallet' || Number.isInteger(n)) && reason.trim().length >= 5;
+  const m = useMutation({
+    mutationFn: (): Promise<unknown> => (kind === 'wallet' ? adminApi.walletAdjust(d.id, dir === 'add' ? 'CREDIT' : 'DEBIT', n, reason.trim()) : adminApi.smsCreditsAdjust(d.id, dir === 'add' ? n : -n, reason.trim())),
+    onSuccess: () => {
+      toast.success(kind === 'wallet' ? 'Wallet updated.' : 'SMS credits updated.');
+      setAmount('');
+      setReason('');
+      onDone();
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'That did not work.')),
+  });
+  const chip = (active: boolean) => `rounded-lg px-3 py-1.5 text-sm ${active ? 'bg-regantify-cta text-white' : 'bg-regantify-search text-regantify-text'}`;
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setKind('wallet')} className={chip(kind === 'wallet')}>Wallet ({formatTaka(d.wallet.balance)})</button>
+        <button type="button" onClick={() => setKind('sms')} className={chip(kind === 'sms')}>SMS credits ({d.wallet.smsCredits.toLocaleString('en-US')})</button>
+        <span className="mx-1 w-px bg-black/10" />
+        <button type="button" onClick={() => setDir('add')} className={chip(dir === 'add')}>Add</button>
+        <button type="button" onClick={() => setDir('remove')} className={chip(dir === 'remove')}>Take</button>
+      </div>
+      <input type="number" min={kind === 'wallet' ? 0.01 : 1} step={kind === 'wallet' ? 0.01 : 1} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={kind === 'wallet' ? 'Amount in taka' : 'Number of SMS credits'} className={field} />
+      <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="Reason (the store sees this)" className={field} />
+      <button type="button" disabled={!valid || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
+        {m.isPending ? 'Saving…' : `${dir === 'add' ? 'Add' : 'Take'} ${kind === 'wallet' ? 'money' : 'SMS credits'}`}
+      </button>
+      <p className="text-xs text-regantify-text-muted">Every change is one row in the store’s history and in the admin log. Taking can’t go below zero.</p>
+    </div>
+  );
+}
+
 /** Close the store / move it to a new owner: reason + the store's name typed out + a fresh authenticator code. */
 function DangerDialog({ d, mode, onClose }: { d: StoreDetail; mode: 'close' | 'transfer' | null; onClose: () => void }) {
   const qc = useQueryClient();
@@ -494,20 +643,27 @@ function Actions({ d }: { d: StoreDetail }) {
   });
   const closed = d.status === 'CLOSED';
   const asVendor = { id: d.id, storeName: d.storeName } as AdminVendor;
+  // What this team member's role allows (super-admin-plan.md Step 13); the server refuses the rest anyway.
+  const viewer = useAdminViewer();
+  const can = (p: AdminPermission) => adminCan(viewer, p);
 
-  const btn = 'shrink-0 rounded-lg border border-black/10 px-3 py-1.5 text-sm font-medium text-regantify-text';
+  const btn ='shrink-0 rounded-lg border border-black/10 px-3 py-1.5 text-sm font-medium text-regantify-text';
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card title="Everyday">
-        <div className="flex items-center justify-between gap-4 border-b border-black/5 py-3">
-          <div>
-            <p className="text-sm font-medium text-regantify-text">Login as this store</p>
-            <p className="text-xs text-regantify-text-muted">Opens its dashboard in a new tab. A reason is asked, view only by default.</p>
+        {can('stores.impersonate_view') && (
+          <div className="flex items-center justify-between gap-4 border-b border-black/5 py-3">
+            <div>
+              <p className="text-sm font-medium text-regantify-text">Login as this store</p>
+              <p className="text-xs text-regantify-text-muted">Opens its dashboard in a new tab. A reason is asked, view only by default.</p>
+            </div>
+            <button type="button" disabled={closed} onClick={() => setImpersonate(true)} className={`${btn} inline-flex items-center gap-1 disabled:opacity-40`}>
+              <LogIn size={14} /> Login
+            </button>
           </div>
-          <button type="button" disabled={closed} onClick={() => setImpersonate(true)} className={`${btn} inline-flex items-center gap-1 disabled:opacity-40`}>
-            <LogIn size={14} /> Login
-          </button>
-        </div>
+        )}
+        {can('stores.edit') && (
+          <>
         <div className="flex items-center justify-between gap-4 border-b border-black/5 py-3">
           <div>
             <p className="text-sm font-medium text-regantify-text">Status</p>
@@ -527,14 +683,35 @@ function Actions({ d }: { d: StoreDetail }) {
         <ReasonAction title="Extend the plan for free" description="Adds days after the current end date. Not for the Free plan." button="Extend" extra={{ label: 'Days to add', min: 1, max: 365, initial: 7, unit: 'days' }} run={async (reason, n) => { await adminApi.extendPlan(d.id, n, reason); refresh(); return `Plan extended by ${n} days.`; }} />
         <ReasonAction title="Send a new password by SMS" description="A temporary password is texted to the owner. You never see it." button="Send" run={async (reason) => { const r = await adminApi.sendPasswordSms(d.id, reason); return `Password sent to ${r.sentTo}.`; }} />
         <ReasonAction title="Sign out every device" description="Owner and staff must sign in again (an open page can last up to 15 minutes)." button="Sign out" run={async (reason) => { const r = await adminApi.signOutStore(d.id, reason); return `${r.accounts} accounts signed out.`; }} />
-        <Link to="/admin/verification" className="block py-3 text-sm text-regantify-cta hover:underline">Ask this store for verification (KYC) →</Link>
+          </>
+        )}
+        {can('kyc.manage') && <Link to="/admin/verification" className="block py-3 text-sm text-regantify-cta hover:underline">Ask this store for verification (KYC) →</Link>}
       </Card>
 
       <div className="space-y-4">
-        <Card title="AI credits">
-          <AiCreditsAdjust vendor={asVendor} onDone={refresh} />
-        </Card>
-        <Card title="Dangerous" className="border-red-200">
+        {can('money.adjust') && (
+          <Card title="Wallet and SMS credits">
+            <MoneyAdjust d={d} onDone={refresh} />
+          </Card>
+        )}
+        {can('plans.edit') && (
+          <Card title="Special fees">
+            <StoreFeeDeals vendorId={d.id} storeName={d.storeName} />
+          </Card>
+        )}
+        {can('money.adjust') && <Card title="Withdrawals">
+          {d.withdrawPause ? (
+            <ReasonAction title="Withdrawals are paused" description={`Since ${when(d.withdrawPause.since)}${d.withdrawPause.reason ? `: ${d.withdrawPause.reason}` : ''}`} button="Resume" run={async (reason) => { await adminApi.resumeWithdrawals(d.id, reason); refresh(); return 'Withdrawals resumed.'; }} />
+          ) : (
+            <ReasonAction title="Pause withdrawals" description="The store can’t cash out until you resume. Its other work goes on." button="Pause" danger run={async (reason) => { await adminApi.pauseWithdrawals(d.id, reason); refresh(); return 'Withdrawals paused.'; }} />
+          )}
+        </Card>}
+        {can('stores.edit') && (
+          <Card title="AI credits">
+            <AiCreditsAdjust vendor={asVendor} onDone={refresh} />
+          </Card>
+        )}
+        {can('stores.danger') && <Card title="Dangerous" className="border-red-200">
           {closed ? (
             <ReasonAction title="Reopen the store" description="Brings the storefront and sign-ins back. The owner is texted." button="Reopen" run={async (reason) => { await adminApi.reopenStore(d.id, reason); refresh(); return 'Store reopened.'; }} />
           ) : (
@@ -553,8 +730,12 @@ function Actions({ d }: { d: StoreDetail }) {
             </div>
             <button type="button" onClick={() => setDanger('transfer')} className="shrink-0 rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700">Move</button>
           </div>
-        </Card>
-        <p className="text-xs text-regantify-text-muted">Wallet and SMS-credit changes, and messages to the owner, come with the Money and Messages steps.</p>
+        </Card>}
+        {can('messages.send') && (
+          <Link to="/admin/messages" state={{ vendorIds: [d.id], label: `Only ${d.storeName}` }} className="block text-sm text-regantify-cta hover:underline">
+            Send this store a message (bell and SMS) →
+          </Link>
+        )}
       </div>
 
       <ImpersonateDialog vendor={impersonate ? asVendor : null} onClose={() => setImpersonate(false)} />
@@ -572,6 +753,7 @@ function Actions({ d }: { d: StoreDetail }) {
 export default function StoreDetailPage() {
   const { vendorId = '' } = useParams();
   const [tab, setTab] = useState<TabId>('overview');
+  const viewer = useAdminViewer();
   const { data, isLoading, error } = useQuery({ queryKey: ['admin-store', vendorId, 'detail'], queryFn: () => adminApi.storeDetail(vendorId) });
 
   if (isLoading) return <Loader2 className="mx-auto mt-16 animate-spin text-neutral-400" />;
@@ -590,7 +772,7 @@ export default function StoreDetailPage() {
       <p className="mt-1 font-mono text-xs text-regantify-text-muted">{data.id}</p>
 
       <div className="mt-5 flex gap-1 overflow-x-auto border-b border-black/5">
-        {TABS.map((t) => (
+        {TABS.filter((t) => t.id !== 'money' || adminCan(viewer, 'money.view')).map((t) => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`whitespace-nowrap px-4 py-2 text-sm font-medium ${tab === t.id ? 'border-b-2 border-regantify-cta text-regantify-text' : 'text-regantify-text-muted hover:text-regantify-text'}`}>
             {t.label}
           </button>
@@ -603,7 +785,7 @@ export default function StoreDetailPage() {
         {tab === 'money' && <Money id={vendorId} />}
         {tab === 'orders' && (
           <ListTab id={vendorId} kind="orders" fetcher={(p) => adminApi.storeOrders(vendorId, p)} placeholder="Order number, name or phone" columns={[
-            { head: 'Order', cell: (o) => o.publicCode ?? `ORDER-${o.invoiceNumber}` },
+            { head: 'Order', cell: (o) => <Link to={`/admin/orders/${o.id}`} className="text-regantify-cta hover:underline">{o.publicCode ?? `ORDER-${o.invoiceNumber}`}</Link> },
             { head: 'Date', cell: (o) => when(o.createdAt) },
             { head: 'Customer', cell: (o) => `${o.customerName} · ${o.customerPhone}` },
             { head: 'Status', cell: (o) => o.status.replace(/_/g, ' ').toLowerCase() },
@@ -631,6 +813,7 @@ export default function StoreDetailPage() {
         )}
         {tab === 'connections' && <Connections d={data} />}
         {tab === 'history' && <History id={vendorId} />}
+        {tab === 'notes' && <Notes id={vendorId} />}
         {tab === 'actions' && <Actions d={data} />}
       </div>
     </div>

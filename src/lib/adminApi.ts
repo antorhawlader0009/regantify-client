@@ -27,6 +27,8 @@ export interface StoreDetail {
   plan: { code: PlanCode; name: string; priceMonthly: number; startedAt: string | null; expiresAt: string | null; status: string };
   kyc: { status: string; dueAt: string } | null;
   openTickets: number;
+  /** Super Admin paused this store's withdrawals (Step 6). */
+  withdrawPause: { since: string; reason: string | null } | null;
   wallet: { balance: number; smsCredits: number; aiCredits: number };
   usage: {
     products: StoreLimit;
@@ -42,9 +44,10 @@ export interface StoreDetail {
   connections: { couriers: StoreConnection[]; gateways: StoreConnection[]; customDomain: string | null; telegramChats: number; pushDevices: number };
 }
 export interface StoreMoney {
+  smsEntries: Array<{ id: string; delta: number; balanceAfter: number; reason: string; note: string | null; createdAt: string }>;
   transactions: Array<{ id: string; type: 'CREDIT' | 'DEBIT'; amount: number; balanceAfter: number; description: string; createdAt: string }>;
   payments: Array<{ id: string; invoiceNumber: string; purpose: string; packageId: string | null; status: string; amount: number; receiptNumber: number | null; createdAt: string; fulfilledAt: string | null }>;
-  withdrawals: Array<{ id: string; amount: number; method: string; status: string; createdAt: string; resolvedAt: string | null }>;
+  withdrawals: Array<{ id: string; amount: number; method: string; status: string; createdAt: string; resolvedAt: string | null; payoutReference: string | null }>;
   platformFees: { allTime: number; last30d: number };
 }
 export interface Paged<T> {
@@ -109,6 +112,23 @@ export interface AdminVendor {
   // PLAN.md Step 15 — 'FREE' for a vendor with no VendorSubscription row, same fallback the server applies for enforcement.
   planCode: PlanCode;
   planName: string;
+  // Step 5 (super-admin-plan.md)
+  theme: string;
+  customDomain: string | null;
+  tags: string[];
+  planEndsAt: string | null;
+  orders30d: number;
+  gmv30d: number;
+  kycState: 'none' | 'open' | 'approved';
+  health: StoreHealth;
+}
+
+export type HealthBand = 'HEALTHY' | 'NEEDS_HELP' | 'AT_RISK';
+export interface StoreHealth {
+  score: number;
+  band: HealthBand;
+  /** What is missing, biggest first. */
+  gaps: string[];
 }
 
 export interface AdminVendorListResponse {
@@ -116,15 +136,63 @@ export interface AdminVendorListResponse {
   total: number;
   page: number;
   perPage: number;
+  /** Per status, following every other filter. */
+  counts: Record<'ALL' | VendorStatus, number>;
+  tags: string[];
 }
+
+export type VendorSort = 'createdAt' | 'storeName' | 'balance' | 'lastLoginAt' | 'orders30d' | 'gmv30d' | 'health';
 
 export interface ListVendorsParams {
   search?: string;
   page?: number;
   perPage?: number;
-  sortBy?: 'createdAt' | 'storeName' | 'balance' | 'lastLoginAt';
+  sortBy?: VendorSort;
   sortOrder?: 'asc' | 'desc';
+  status?: VendorStatus;
+  plan?: PlanCode;
+  endingInDays?: number;
+  signupFrom?: string;
+  signupTo?: string;
+  inactiveDays?: number;
+  hasDomain?: 'yes' | 'no';
+  kyc?: 'none' | 'open' | 'approved';
+  theme?: string;
+  tag?: string;
+  health?: HealthBand;
+  noOrders?: boolean;
 }
+
+export interface PendingStore {
+  id: string;
+  storeName: string;
+  subdomain: string;
+  createdAt: string;
+  ownerName: string | null;
+  phone: string | null;
+  email: string | null;
+  warnings: string[];
+}
+
+export interface AdminNote {
+  id: string;
+  text: string;
+  authorName: string;
+  pinned: boolean;
+  createdAt: string;
+}
+
+export interface BulkResult {
+  requested: number;
+  done: number;
+  texted: number;
+  failed: Array<{ id: string; storeName: string; error: string }>;
+}
+
+export type BulkBody =
+  | { action: 'STATUS'; status: 'ACTIVE' | 'PENDING' | 'SUSPENDED'; vendorIds: string[]; reason: string }
+  | { action: 'EXTEND'; days: number; vendorIds: string[]; reason: string }
+  | { action: 'TAG_ADD' | 'TAG_REMOVE'; tag: string; vendorIds: string[]; reason: string };
 
 export type ImpersonationMode = 'VIEW' | 'EDIT';
 
@@ -185,6 +253,19 @@ export const adminApi = {
       .patch<{ id: string; status: VendorStatus; texted: boolean }>(`/v1/admin/vendors/${vendorId}/status`, { status, reason })
       .then((r) => r.data),
 
+  listVendorsCsv: (params: ListVendorsParams) => api.get<string>('/v1/admin/vendors/export', { params, responseType: 'text' }).then((r) => r.data),
+  pendingQueue: () => api.get<PendingStore[]>('/v1/admin/vendors/pending-queue').then((r) => r.data),
+  approvalSetting: () => api.get<{ enabled: boolean }>('/v1/admin/vendors/approval-setting').then((r) => r.data),
+  setApprovalSetting: (enabled: boolean) => api.put<{ enabled: boolean }>('/v1/admin/vendors/approval-setting', { enabled }).then((r) => r.data),
+  approveStore: (id: string) => api.post<{ texted: boolean }>(`/v1/admin/vendors/${id}/approve`, {}).then((r) => r.data),
+  rejectStore: (id: string, reason: string) => api.post<{ texted: boolean }>(`/v1/admin/vendors/${id}/reject`, { reason }).then((r) => r.data),
+  bulk: (body: BulkBody) => api.post<BulkResult>('/v1/admin/vendors/bulk', body).then((r) => r.data),
+  storeHealth: (id: string) => api.get<{ health: StoreHealth; tags: string[] }>(`/v1/admin/vendors/${id}/health`).then((r) => r.data),
+  setStoreTags: (id: string, tags: string[]) => api.put<{ tags: string[] }>(`/v1/admin/vendors/${id}/tags`, { tags }).then((r) => r.data),
+  storeNotes: (id: string) => api.get<AdminNote[]>(`/v1/admin/vendors/${id}/notes`).then((r) => r.data),
+  addStoreNote: (id: string, text: string, pinned: boolean) => api.post<AdminNote>(`/v1/admin/vendors/${id}/notes`, { text, pinned }).then((r) => r.data),
+  pinStoreNote: (id: string, noteId: string, pinned: boolean) => api.patch(`/v1/admin/vendors/${id}/notes/${noteId}`, { pinned }).then((r) => r.data),
+
   // A store's own page.
   storeDetail: (id: string) => api.get<StoreDetail>(`/v1/admin/vendors/${id}/detail`).then((r) => r.data),
   storeMoney: (id: string) => api.get<StoreMoney>(`/v1/admin/vendors/${id}/money`).then((r) => r.data),
@@ -192,6 +273,10 @@ export const adminApi = {
   storeProducts: (id: string, params: { search?: string; page?: number }) => api.get<Paged<StoreProductRow>>(`/v1/admin/vendors/${id}/products`, { params }).then((r) => r.data),
   storeCustomers: (id: string, params: { search?: string; page?: number }) => api.get<Paged<StoreCustomerRow>>(`/v1/admin/vendors/${id}/customers`, { params }).then((r) => r.data),
   storeHistory: (id: string) => api.get<StoreHistory>(`/v1/admin/vendors/${id}/history`).then((r) => r.data),
+  walletAdjust: (id: string, type: 'CREDIT' | 'DEBIT', amount: number, reason: string) => api.post<{ balance: number }>(`/v1/admin/vendors/${id}/wallet-adjust`, { type, amount, reason }).then((r) => r.data),
+  smsCreditsAdjust: (id: string, amount: number, reason: string) => api.post<{ smsCredits: number }>(`/v1/admin/vendors/${id}/sms-credits`, { amount, reason }).then((r) => r.data),
+  pauseWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/pause-withdrawals`, { reason }).then((r) => r.data),
+  resumeWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/resume-withdrawals`, { reason }).then((r) => r.data),
   extendPlan: (id: string, days: number, reason: string) => api.post<{ expiresAt: string }>(`/v1/admin/vendors/${id}/extend-plan`, { days, reason }).then((r) => r.data),
   sendPasswordSms: (id: string, reason: string) => api.post<{ sentTo: string }>(`/v1/admin/vendors/${id}/password-sms`, { reason }).then((r) => r.data),
   signOutStore: (id: string, reason: string) => api.post<{ accounts: number }>(`/v1/admin/vendors/${id}/sign-out-all`, { reason }).then((r) => r.data),

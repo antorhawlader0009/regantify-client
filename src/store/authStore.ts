@@ -26,6 +26,9 @@ export interface AuthUser {
   staffRole?: string | null;
   staffRoleName?: string | null;
   permissions?: string[];
+  // A Super Admin's team role and what it allows (super-admin-plan.md Step 13). Missing on a session saved before roles existed.
+  adminRole?: string;
+  adminPermissions?: string[];
   // The owner's note for a staff member, until they've seen it once (Step 7).
   welcomeMessage?: string | null;
   // Note: Vendor.address is intentionally NOT included here — it's not

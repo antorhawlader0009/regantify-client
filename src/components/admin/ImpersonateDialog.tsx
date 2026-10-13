@@ -3,11 +3,13 @@ import { useMutation } from '@tanstack/react-query';
 import { Dialog } from '../ui/Dialog';
 import { adminApi, type AdminVendor, type ImpersonationMode } from '../../lib/adminApi';
 import { toast } from '../../lib/toast';
+import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 
 /** "Login as Vendor" (super-admin-plan.md Step 2): a reason is required, and the session is view-only unless "Can make changes" is picked. */
 export function ImpersonateDialog({ vendor, onClose }: { vendor: AdminVendor | null; onClose: () => void }) {
   const [reason, setReason] = useState('');
   const [mode, setMode] = useState<ImpersonationMode>('VIEW');
+  const viewer = useAdminViewer();
 
   const start = useMutation({
     mutationFn: () => adminApi.impersonateVendor(vendor!.id, reason.trim(), mode),
@@ -43,7 +45,10 @@ export function ImpersonateDialog({ vendor, onClose }: { vendor: AdminVendor | n
               ['VIEW', 'View only', 'You can look around. Every change is refused.'],
               ['EDIT', 'Can make changes', 'Changes are saved as “your name (Super Admin)”, never as the owner.'],
             ] as const
-          ).map(([value, label, hint]) => (
+          )
+            // A role that may only look (Support) is not offered the "make changes" mode (super-admin-plan.md Step 13).
+            .filter(([value]) => value === 'VIEW' || adminCan(viewer, 'stores.impersonate_edit'))
+            .map(([value, label, hint]) => (
             <label key={value} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${mode === value ? 'border-regantify-black' : 'border-black/10'}`}>
               <input type="radio" name="imp-mode" checked={mode === value} onChange={() => setMode(value)} className="mt-1" />
               <span>

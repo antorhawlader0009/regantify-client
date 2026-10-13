@@ -99,10 +99,12 @@ interface ReplyBoxProps {
   note?: ReactNode;
   /** Extra buttons next to Send (Close ticket etc.). */
   actions?: ReactNode;
+  /** Replies the team reuses (Super Admin only): a picker drops the chosen text into the box. */
+  savedReplies?: Array<{ id: string; title: string; body: string }>;
 }
 
 /** Reply composer. Ctrl/Cmd+Enter sends. Clears only after the send succeeds. */
-export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', note, actions }: ReplyBoxProps) {
+export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', note, actions, savedReplies }: ReplyBoxProps) {
   const [body, setBody] = useState('');
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -149,6 +151,24 @@ export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', no
       />
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-3">
         <span className="hidden text-[11px] text-regantify-text-muted sm:inline">Ctrl + Enter to send</span>
+        {savedReplies && savedReplies.length > 0 && (
+          <select
+            aria-label="Insert a saved reply"
+            value=""
+            onChange={(e) => {
+              const r = savedReplies.find((x) => x.id === e.target.value);
+              if (r) setBody((b) => (b.trim() ? `${b.trimEnd()}\n\n${r.body}` : r.body));
+            }}
+            className="max-w-[12rem] rounded-lg bg-regantify-content px-2 py-1.5 text-xs text-regantify-text focus:outline-none"
+          >
+            <option value="">Saved reply…</option>
+            {savedReplies.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.title}
+              </option>
+            ))}
+          </select>
+        )}
         <div className="ml-auto flex items-center gap-2">
           {actions}
           <button

@@ -11,7 +11,7 @@ import {
   type PlanCode,
   type PaymentFeePayer,
 } from '../../lib/plansApi';
-import { paymentsApi } from '../../lib/paymentsApi';
+import { paymentsApi, type PromoQuote } from '../../lib/paymentsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { AiCreditsLine, UsageBar } from '../../components/dashboard/SideCards';
@@ -92,10 +92,39 @@ export default function Billing() {
     onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t send the request. Try again in a minute.')),
   });
 
+  // A promo code (super-admin-plan.md Step 10): "Apply" asks the server what each paid plan would cost with it; paying sends the same code.
+  const [promoInput, setPromoInput] = useState('');
+  const [promo, setPromo] = useState<{ code: string; quotes: Partial<Record<PlanCode, PromoQuote>> } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const applyPromo = useMutation({
+    mutationFn: async () => {
+      const code = promoInput.trim();
+      const paid = plans.filter((p) => Number(p.priceMonthly) > 0);
+      const results = await Promise.allSettled(paid.map((p) => paymentsApi.promoCheck(p.code, code)));
+      const quotes: Partial<Record<PlanCode, PromoQuote>> = {};
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') quotes[paid[i].code] = r.value;
+      });
+      if (Object.keys(quotes).length === 0) {
+        const failed = results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined;
+        throw failed?.reason ?? new Error('This promo code isn’t valid.');
+      }
+      return { code, quotes };
+    },
+    onSuccess: (r) => {
+      setPromo(r);
+      setPromoError(null);
+    },
+    onError: (err) => {
+      setPromo(null);
+      setPromoError(apiErrorMessage(err, 'This promo code isn’t valid.'));
+    },
+  });
+
   const payMutation = useMutation({
     mutationFn: (planCode: PlanCode) => {
       setPayingPlan(planCode);
-      return paymentsApi.initiate({ purpose: 'PLAN_UPGRADE', packageId: planCode });
+      return paymentsApi.initiate({ purpose: 'PLAN_UPGRADE', packageId: planCode, ...(promo?.quotes[planCode] ? { promoCode: promo.code } : {}) });
     },
     onSuccess: (data) => {
       window.location.href = data.paymentUrl;
@@ -106,8 +135,12 @@ export default function Billing() {
     },
   });
 
+  const payPrice = (plan: Plan) => (promo?.quotes[plan.code] ? `৳${promo.quotes[plan.code]!.finalPrice.toLocaleString('en-US')}` : priceText(plan));
   const loading = usageLoading || plansLoading;
-  const sortedPlans = [...plans].sort((a, b) => TIER_ORDER.indexOf(a.code) - TIER_ORDER.indexOf(b.code));
+  // A plan Super Admin hid from sign-up shows only to the store that is on it.
+  const sortedPlans = [...plans]
+    .filter((p) => !p.hiddenFromSignup || p.code === usage?.plan.code)
+    .sort((a, b) => TIER_ORDER.indexOf(a.code) - TIER_ORDER.indexOf(b.code));
   const currentIndex = usage ? TIER_ORDER.indexOf(usage.plan.code) : -1;
   const planEnd = usage?.planExpiresAt ? describePlanEnd(usage.planExpiresAt) : null;
 
@@ -170,6 +203,24 @@ export default function Billing() {
 
       <section>
         <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">Compare plans</h2>
+        {isOwner && (
+          <div className="mb-3">
+            <form
+              className="flex flex-wrap items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (promoInput.trim().length >= 3) applyPromo.mutate();
+              }}
+            >
+              <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code" maxLength={24} className="h-9 w-44 rounded-lg border border-line bg-white px-3 text-sm uppercase placeholder:normal-case focus:outline-none" />
+              <button type="submit" disabled={applyPromo.isPending || promoInput.trim().length < 3} className="h-9 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60">
+                {applyPromo.isPending ? 'Checking…' : 'Apply'}
+              </button>
+              {promo && <span className="text-xs text-green-700">Code {promo.code.toUpperCase()} applied. The prices below include it.</span>}
+              {promoError && <span className="text-xs text-red-600">{promoError}</span>}
+            </form>
+          </div>
+        )}
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {sortedPlans.map((plan) => {
             const isCurrent = usage?.plan.code === plan.code;
@@ -180,10 +231,11 @@ export default function Billing() {
               <li key={plan.id} className={`flex flex-col rounded-xl border bg-white p-4 ${isCurrent ? 'border-brand ring-1 ring-brand' : 'border-line'}`}>
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-[15px] font-semibold text-regantify-text">{plan.name}</h3>
-                  {isCurrent && <span className="rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Your plan</span>}
+                  {isCurrent ? <span className="rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Your plan</span> : plan.mostPopular ? <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">Most popular</span> : null}
                 </div>
                 <p className="mt-1 text-xl font-semibold tabular-nums text-regantify-text">
-                  {priceText(plan)}
+                  {promo?.quotes[plan.code] && <s className="mr-1.5 text-sm font-normal text-neutral-400">{priceText(plan)}</s>}
+                  {payPrice(plan)}
                   {!isFree && <span className="text-xs font-normal text-neutral-500"> /month</span>}
                 </p>
 
@@ -211,7 +263,7 @@ export default function Billing() {
                     onClick={() => payMutation.mutate(plan.code)}
                     className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
                   >
-                    {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${priceText(plan)}`}
+                    {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${payPrice(plan)}`}
                   </button>
                 ) : isCurrent ? (
                   <p className="flex h-10 items-center justify-center rounded-lg bg-neutral-50 text-sm text-neutral-500">You’re on this plan</p>
@@ -226,7 +278,7 @@ export default function Billing() {
                           higher ? 'bg-brand text-white hover:bg-brand-dark' : 'border border-line bg-white text-regantify-text hover:bg-neutral-50'
                         }`}
                       >
-                        {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `${higher ? 'Upgrade' : 'Switch'} and pay ${priceText(plan)}`}
+                        {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `${higher ? 'Upgrade' : 'Switch'} and pay ${payPrice(plan)}`}
                       </button>
                     )}
                     <button

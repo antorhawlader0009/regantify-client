@@ -175,6 +175,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   );
   const [lmsEnabled, setLmsEnabled] = useState(plan?.lmsEnabled ?? false);
   const [posEnabled, setPosEnabled] = useState(plan?.posEnabled ?? false);
+  const [mostPopular, setMostPopular] = useState(plan?.mostPopular ?? false);
+  const [hiddenFromSignup, setHiddenFromSignup] = useState(plan?.hiddenFromSignup ?? false);
   const [codGatewayFeeBdt, setCodGatewayFeeBdt] = useState(plan ? Number(plan.codGatewayFeeBdt) : 0);
   const [codGatewayFeePercent, setCodGatewayFeePercent] = useState(plan ? Number(plan.codGatewayFeePercent) : 0);
   const [codGatewayFeePayer, setCodGatewayFeePayer] = useState<PaymentFeePayer>(plan?.codGatewayFeePayer ?? 'CUSTOMER');
@@ -209,6 +211,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       customPaymentGatewayAllowed,
       lmsEnabled,
       posEnabled,
+      mostPopular,
+      hiddenFromSignup,
       codGatewayFeeBdt,
       codGatewayFeePercent,
       codGatewayFeePayer,
@@ -348,6 +352,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             />
             <ToggleField label="LMS enabled" checked={lmsEnabled} onChange={setLmsEnabled} />
             <ToggleField label="POS System enabled" checked={posEnabled} onChange={setPosEnabled} />
+            <ToggleField label="Mark as Most popular on Billing" checked={mostPopular} onChange={setMostPopular} />
+            <ToggleField label="Hide from stores not on this plan" checked={hiddenFromSignup} onChange={setHiddenFromSignup} />
           </div>
         </div>
       )}
