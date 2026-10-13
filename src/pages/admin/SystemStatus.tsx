@@ -3,6 +3,7 @@ import { Activity, CheckCircle2, CircleAlert, Clock, Loader2 } from 'lucide-reac
 import { systemStatusApi, type JobStatus } from '../../lib/systemStatusApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
+import { ErrorLogSection, IntegrationsSection } from '../../components/admin/IntegrationHealth';
 
 const ago = (seconds: number | null) => {
   if (seconds === null) return 'never';
@@ -98,6 +99,10 @@ export default function SystemStatus() {
           <Count label="Paid but not applied" value={data.last24h.paymentsPaidButNotApplied} hint="Money arrived, the order or credit was not updated. Check these first." bad />
         </div>
       </section>
+
+      <IntegrationsSection />
+
+      <ErrorLogSection />
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-regantify-text">Background jobs</h2>

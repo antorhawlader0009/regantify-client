@@ -33,6 +33,8 @@ import {
   Inbox,
   Sparkles,
   ToggleRight,
+  ShieldAlert,
+  Workflow,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -289,6 +291,7 @@ export const adminNav: NavSection[] = [
   { label: 'Suspended', icon: Users, group: 'Stores', path: '/admin/vendors/suspended' },
   { label: 'Verification', icon: ShieldCheck, group: 'Stores', path: '/admin/verification' },
   { label: 'Store reports', icon: Flag, group: 'Stores', path: '/admin/reports' },
+  { label: 'Trust and safety', icon: ShieldAlert, group: 'Stores', path: '/admin/trust-safety' },
 
   { label: 'Orders', icon: ClipboardList, group: 'Commerce', path: '/admin/orders' },
   { label: 'Customers', icon: UsersRound, group: 'Commerce', path: '/admin/customers' },
@@ -305,6 +308,7 @@ export const adminNav: NavSection[] = [
 
   { label: 'Support', icon: Headphones, group: 'Reach', path: '/admin/support' },
   { label: 'Messages', icon: MessageSquare, group: 'Reach', path: '/admin/messages' },
+  { label: 'Automations', icon: Workflow, group: 'Reach', path: '/admin/automations' },
   { label: 'Announcements', icon: Megaphone, group: 'Reach', path: '/admin/announcements' },
   { label: 'Marketing', icon: Sparkles, group: 'Reach', path: '/admin/marketing' },
 

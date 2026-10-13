@@ -50,7 +50,7 @@ export default function FeatureFlags() {
           <div>
             <h1 className="text-lg font-semibold text-regantify-text">Feature flags</h1>
             <p className="max-w-2xl text-sm text-regantify-text-muted">
-              Give a new feature to a few stores first, then a share of stores, then everyone. A flag that doesn’t exist, or is off, means nobody has the feature. A
+              Give a new feature to a few stores first, then a share of stores, then everyone. A flag that doesn't exist, or is off, means nobody has the feature. A
               change reaches every server within a minute.
             </p>
           </div>
@@ -154,7 +154,7 @@ function CreateFlagDialog({ open, onClose, onCreated }: { open: boolean; onClose
             placeholder="NEW_CHECKOUT"
             className={`${field} font-mono`}
           />
-          <p className="mt-1 text-xs text-regantify-text-muted">Exactly what the code checks. It can’t be changed later.</p>
+          <p className="mt-1 text-xs text-regantify-text-muted">Exactly what the code checks. It can't be changed later.</p>
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-regantify-text">Name</label>
@@ -170,7 +170,7 @@ function CreateFlagDialog({ open, onClose, onCreated }: { open: boolean; onClose
           onClick={() => m.mutate()}
           className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          {m.isPending ? 'Creating…' : 'Create (off)'}
+          {m.isPending ? 'Creating...' : 'Create (off)'}
         </button>
       </div>
     </Dialog>
@@ -322,7 +322,7 @@ function FlagDialog({ flagKey, onClose }: { flagKey: string | null; onClose: () 
             onClick={() => save.mutate()}
             className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50"
           >
-            {save.isPending ? 'Saving…' : 'Save'}
+            {save.isPending ? 'Saving...' : 'Save'}
           </button>
 
           <StoreList flag={flag} onChange={fresh} />
@@ -330,7 +330,7 @@ function FlagDialog({ flagKey, onClose }: { flagKey: string | null; onClose: () 
           <div className="rounded-xl border border-red-200 p-4">
             <p className="text-sm font-medium text-red-700">Delete this flag</p>
             <p className="mt-0.5 text-xs text-regantify-text-muted">
-              The feature turns off for every store, because a flag that doesn’t exist is off. Do this only after the check is gone from the code. Type{' '}
+              The feature turns off for every store, because a flag that doesn't exist is off. Do this only after the check is gone from the code. Type{' '}
               <span className="font-mono">{flag.key}</span> to confirm.
             </p>
             <div className="mt-2 flex gap-2">
@@ -391,7 +391,7 @@ function StoreList({ flag, onChange }: { flag: FeatureFlagDetail; onChange: (f: 
         {term.length >= 2 && (
           <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-black/10 bg-white shadow-lg">
             {isFetching && !found ? (
-              <p className="px-3 py-2 text-xs text-regantify-text-muted">Searching…</p>
+              <p className="px-3 py-2 text-xs text-regantify-text-muted">Searching...</p>
             ) : !found || found.vendors.length === 0 ? (
               <p className="px-3 py-2 text-xs text-regantify-text-muted">No store found.</p>
             ) : (
@@ -437,7 +437,7 @@ function BetaStoresDialog({ open, onClose }: { open: boolean; onClose: () => voi
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()} title="Stores in the beta program" maxWidth="max-w-md">
       <div className="p-6 pt-3">
-        <p className="mb-3 text-xs text-regantify-text-muted">The owners asked to get new features early. A flag with “Also every store in the beta program” is on for them.</p>
+        <p className="mb-3 text-xs text-regantify-text-muted">The owners asked to get new features early. A flag with "Also every store in the beta program" is on for them.</p>
         {isLoading ? (
           <Loader2 className="mx-auto animate-spin text-neutral-400" />
         ) : !data || data.length === 0 ? (

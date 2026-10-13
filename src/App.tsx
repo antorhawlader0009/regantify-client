@@ -146,6 +146,8 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
 import SystemStatus from './pages/admin/SystemStatus';
 import FeatureFlags from './pages/admin/FeatureFlags';
+import TrustSafety from './pages/admin/TrustSafety';
+import Automations from './pages/admin/Automations';
 import ReceiptDetails from './pages/admin/ReceiptDetails';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminReviews from './pages/admin/Reviews';
@@ -295,6 +297,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/ai-settings' &&
     r.path !== '/admin/system-status' &&
     r.path !== '/admin/feature-flags' &&
+    r.path !== '/admin/trust-safety' &&
     r.path !== '/admin/verification' &&
     r.path !== '/admin/receipt-details' &&
     r.path !== '/admin/dashboard' &&
@@ -308,6 +311,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/customers' &&
     r.path !== '/admin/packs' &&
     r.path !== '/admin/messages' &&
+    r.path !== '/admin/automations' &&
     r.path !== '/admin/staff' &&
     r.path !== '/admin/finance/commission' &&
     r.path !== '/admin/orders' &&
@@ -572,6 +576,7 @@ export default function App() {
                 <Route path="/admin/ai-settings" element={<AiSettings />} />
                 <Route path="/admin/system-status" element={<SystemStatus />} />
                 <Route path="/admin/feature-flags" element={<FeatureFlags />} />
+                <Route path="/admin/trust-safety" element={<TrustSafety />} />
                 <Route path="/admin/verification" element={<AdminVerification />} />
                 <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
@@ -583,6 +588,7 @@ export default function App() {
                 <Route path="/admin/renewals" element={<Renewals />} />
                 <Route path="/admin/packs" element={<PacksAndPromos />} />
                 <Route path="/admin/messages" element={<Messages />} />
+                <Route path="/admin/automations" element={<Automations />} />
                 <Route path="/admin/staff" element={<Team />} />
                 <Route path="/admin/finance/commission" element={<CommissionSettings />} />
                 <Route path="/admin/customers" element={<AdminCustomers />} />

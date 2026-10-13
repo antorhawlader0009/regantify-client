@@ -276,7 +276,7 @@ function BetaProgramSection() {
           onClick={() => setBeta.mutate(!optedIn)}
           className={`rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60 ${optedIn ? 'border border-line text-neutral-700 hover:bg-neutral-50' : 'bg-brand-lime text-regantify-text'}`}
         >
-          {setBeta.isPending ? 'Saving…' : optedIn ? 'Leave the beta' : 'Join the beta'}
+          {setBeta.isPending ? 'Saving...' : optedIn ? 'Leave the beta' : 'Join the beta'}
         </button>
       </div>
       {setBeta.isError && <p className="mt-2 text-sm text-red-600">Could not save that. Please try again.</p>}
