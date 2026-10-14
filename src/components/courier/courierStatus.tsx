@@ -1,4 +1,5 @@
 import type { CourierProvider } from '../../lib/ordersApi';
+import { carrybeeStatusKey } from '../../lib/carrybeeApi';
 
 type Tone = 'neutral' | 'progress' | 'success' | 'warning' | 'danger';
 
@@ -137,6 +138,21 @@ export function normalizeRedxStatus(raw: string | null | undefined): string {
   return REDX_ALIASES[key] ?? key;
 }
 
+// Client mirror of server/src/courier/providers/carrybee-status.ts's CARRYBEE_STATUSES (keys from carrybeeStatusKey).
+const CARRYBEE_STATUSES: Record<string, StatusInfo> = {
+  pending: { label: 'Booked', tone: 'neutral' },
+  picked: { label: 'Picked up', tone: 'progress' },
+  'at-the-sorting-hub': { label: 'At the sorting hub', tone: 'progress' },
+  'in-transit': { label: 'In transit', tone: 'progress' },
+  'received-at-last-mile-hub': { label: 'At the last-mile hub', tone: 'progress' },
+  'assigned-for-delivery': { label: 'Out for delivery', tone: 'progress' },
+  delivered: { label: 'Delivered', tone: 'success' },
+  'delivery-failed': { label: 'Delivery attempt failed', tone: 'warning' },
+  'returned-to-merchant': { label: 'Returned to you', tone: 'warning' },
+  paid: { label: 'COD paid out', tone: 'success' },
+  cancelled: { label: 'Cancelled', tone: 'danger' },
+};
+
 /** "in_transit" → "In transit" for statuses we don't have a label for. */
 function humanize(key: string): string {
   const words = key.replace(/_/g, ' ');
@@ -151,6 +167,10 @@ export function courierStatusInfo(provider: CourierProvider, raw: string | null 
   if (provider === 'REDX') {
     const redxKey = normalizeRedxStatus(raw);
     return REDX_STATUSES[redxKey] ?? { label: humanize(redxKey) || 'Unknown', tone: 'neutral' };
+  }
+  if (provider === 'CARRYBEE') {
+    const cbKey = carrybeeStatusKey(raw);
+    return CARRYBEE_STATUSES[cbKey] ?? { label: humanize(cbKey.replace(/-/g, '_')) || 'Unknown', tone: 'neutral' };
   }
   const key = normalizeCourierStatus(raw);
   if (provider === 'PATHAO' && PATHAO_STATUSES[key]) return PATHAO_STATUSES[key];

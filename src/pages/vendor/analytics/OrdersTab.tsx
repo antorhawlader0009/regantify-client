@@ -15,6 +15,7 @@ const COURIERS: Record<DeliveryCourier, { label: string; path: string }> = {
   PATHAO: { label: 'Pathao', path: '/vendor/courier/pathao' },
   STEADFAST: { label: 'Steadfast', path: '/vendor/courier/steadfast' },
   REDX: { label: 'RedX', path: '/vendor/courier/redx' },
+  CARRYBEE: { label: 'CarryBee', path: '/vendor/courier/carrybee' },
 };
 
 function hourLabel(hour: number) {

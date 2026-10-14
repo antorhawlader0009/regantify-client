@@ -94,6 +94,7 @@ export default function AdminOrders() {
               <option value="PATHAO">Pathao</option>
               <option value="STEADFAST">SteadFast</option>
               <option value="REDX">RedX</option>
+              <option value="CARRYBEE">CarryBee</option>
               <option value="NONE">None / own</option>
             </select>
             <select value={form.risk ?? ''} onChange={(e) => set('risk', e.target.value)} className={field}>

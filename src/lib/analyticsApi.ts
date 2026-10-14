@@ -97,7 +97,7 @@ export interface OrdersAnalytics {
   byHour: { hour: number; orders: number }[];
 }
 
-export type DeliveryCourier = 'PATHAO' | 'STEADFAST' | 'REDX';
+export type DeliveryCourier = 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
 
 /** Delivered / returned courier parcels for one key (an area, COD vs prepaid). */
 export interface DeliveryOutcome {

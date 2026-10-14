@@ -70,7 +70,7 @@ export default function CourierRules() {
                 className="h-9 rounded-lg border border-line bg-white px-3 text-sm focus:border-brand focus:outline-none"
               >
                 <option value="">Choose by hand</option>
-                {(['PATHAO', 'STEADFAST', 'REDX'] as const).map((p) => (
+                {(['PATHAO', 'STEADFAST', 'REDX', 'CARRYBEE'] as const).map((p) => (
                   <option key={p} value={p} disabled={!connected.has(p) && form[z.key] !== p}>
                     {NAMES[p]}
                     {connected.has(p) ? '' : ' (not connected)'}
@@ -85,7 +85,8 @@ export default function CourierRules() {
           How it works: when an order moves to Processing and has no courier yet, the courier for its zone is chosen. You can still change it from the order’s
           Actions menu. If a courier’s auto-booking is on, only the courier named for the order’s zone books it. A rule that names a courier that isn’t connected is
           skipped and you get a notice. Connect couriers on their own pages: <Link to="/vendor/courier/pathao" className="text-brand hover:underline">Pathao</Link>,{' '}
-          <Link to="/vendor/courier/steadfast" className="text-brand hover:underline">SteadFast</Link>, <Link to="/vendor/courier/redx" className="text-brand hover:underline">RedX</Link>.
+          <Link to="/vendor/courier/steadfast" className="text-brand hover:underline">SteadFast</Link>, <Link to="/vendor/courier/redx" className="text-brand hover:underline">RedX</Link>,{' '}
+          <Link to="/vendor/courier/carrybee" className="text-brand hover:underline">CarryBee</Link>.
         </p>
 
         <button type="button" onClick={() => save.mutate()} disabled={!dirty || save.isPending} className={primaryBtn}>

@@ -356,7 +356,7 @@ function LeadsList({
 }
 
 /** The Logistics column's second line: where the parcel is with the courier. */
-const COURIER_NAMES: Record<string, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX' };
+const COURIER_NAMES: Record<string, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX', CARRYBEE: 'CarryBee' };
 
 function courierWords(order: NonNullable<LmsLeadRow['order']>): string {
   const courier = (order.courierProvider && COURIER_NAMES[order.courierProvider]) || 'the courier';

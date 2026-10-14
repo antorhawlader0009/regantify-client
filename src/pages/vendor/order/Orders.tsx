@@ -60,6 +60,9 @@ import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { CourierTimeline } from '../../../components/courier/CourierTimeline';
 import { SteadfastReturnDialog, steadfastReturnable } from '../../../components/courier/SteadfastReturnDialog';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
+import { CarrybeeCancelDialog } from '../../../components/courier/CarrybeeCancelDialog';
+import { CarrybeePlaceDialog } from '../../../components/courier/CarrybeePlaceDialog';
+import { CARRYBEE_PLACE_NOT_FOUND, carrybeeCancellable } from '../../../lib/carrybeeApi';
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
 import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
 import { PathaoBulkBookDialog } from '../../../components/courier/PathaoBulkBookDialog';
@@ -230,6 +233,9 @@ interface OrderRowProps {
   onShowTimeline: (order: Order) => void;
   onRequestReturn: (order: Order) => void;
   onCancelRedx: (order: Order) => void;
+  // CarryBee: cancel a parcel, and pick the city/zone when CarryBee can't find them in the address.
+  onCancelCarrybee: (order: Order) => void;
+  onPickCarrybeePlace: (order: Order) => void;
   // Row checkbox for bulk "Send to Pathao" (pathao-plan.md Step 11).
   // Undefined in the trash view, which has no bulk actions.
   selected?: boolean;
@@ -252,6 +258,8 @@ function OrderRow({
   onShowTimeline,
   onRequestReturn,
   onCancelRedx,
+  onCancelCarrybee,
+  onPickCarrybeePlace,
   selected,
   onToggleSelect,
   deliveryStats,
@@ -333,6 +341,11 @@ function OrderRow({
         return;
       }
       invalidate(); // refresh so the row picks up courierBookingStatus: FAILED + courierBookingError
+      // CarryBee couldn't place the address: let the vendor pick the city and zone instead of a dead-end error.
+      if (provider === 'CARRYBEE' && apiErrorMessage(err, '').startsWith(CARRYBEE_PLACE_NOT_FOUND)) {
+        onPickCarrybeePlace(order);
+        return;
+      }
       toast.error(apiErrorMessage(err, 'Could not book this order with the courier. Please try again.'));
     },
   });
@@ -702,6 +715,11 @@ function OrderRow({
                       Cancel parcel
                     </DropdownMenuItem>
                   )}
+                  {canCourier && order.courierProvider === 'CARRYBEE' && carrybeeCancellable(order.courierStatus) && (
+                    <DropdownMenuItem icon={<XCircle />} hint="CarryBee may refuse once it’s on the way" onSelect={() => onCancelCarrybee(order)}>
+                      Cancel parcel
+                    </DropdownMenuItem>
+                  )}
                 </>
               ) : bookingNow ? (
                 <DropdownMenuItem icon={<Truck />} disabled onSelect={() => undefined}>
@@ -865,6 +883,8 @@ export default function Orders() {
   const [timelineOrder, setTimelineOrder] = useState<Order | null>(null);
   const [returnOrder, setReturnOrder] = useState<Order | null>(null);
   const [cancelRedxOrder, setCancelRedxOrder] = useState<Order | null>(null);
+  const [cancelCarrybeeOrder, setCancelCarrybeeOrder] = useState<Order | null>(null);
+  const [carrybeePlaceOrder, setCarrybeePlaceOrder] = useState<Order | null>(null);
   // COURIER-PLAN.md §5.2 — the "not connected → setup popup" flow.
   // setupPending holds the action (courier selection or booking) that
   // triggered the popup, so it can run automatically once the vendor
@@ -1088,6 +1108,19 @@ export default function Orders() {
       return;
     }
     setBulkBooking({ provider: 'REDX', ids });
+  }
+
+  function sendSelectedToCarrybee() {
+    if (!otherCouriersAllowed) {
+      upgradeToast('use CarryBee Courier');
+      return;
+    }
+    const ids = [...selectedIds];
+    if (!connectedProviders?.has('CARRYBEE')) {
+      setSetupPending({ provider: 'CARRYBEE', retry: () => setBulkBooking({ provider: 'CARRYBEE', ids }) });
+      return;
+    }
+    setBulkBooking({ provider: 'CARRYBEE', ids });
   }
 
   // SteadFast is free on every plan, so no upgrade check here.
@@ -1508,6 +1541,10 @@ export default function Orders() {
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
                   Send to RedX
                 </button>
+                <button type="button" onClick={sendSelectedToCarrybee} className={bulkBtn}>
+                  {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
+                  Send to CarryBee
+                </button>
                 <button type="button" onClick={() => setPrintingInvoices([...selectedIds])} className={bulkBtn}>
                   <Printer size={13} />
                   Print invoices
@@ -1644,6 +1681,8 @@ export default function Orders() {
                         onShowTimeline={setTimelineOrder}
                         onRequestReturn={setReturnOrder}
                         onCancelRedx={setCancelRedxOrder}
+                        onCancelCarrybee={setCancelCarrybeeOrder}
+                        onPickCarrybeePlace={setCarrybeePlaceOrder}
                         selected={selectedIds.has(order.id)}
                         deliveryStats={deliveryStats?.byPhone[order.customerPhone]}
                         onToggleSelect={trashView || !canCourier ? undefined : toggleSelected}
@@ -1692,6 +1731,8 @@ export default function Orders() {
       </Dialog>
       <SteadfastReturnDialog order={returnOrder} onClose={() => setReturnOrder(null)} />
       <RedxCancelDialog order={cancelRedxOrder} onClose={() => setCancelRedxOrder(null)} />
+      <CarrybeeCancelDialog order={cancelCarrybeeOrder} onClose={() => setCancelCarrybeeOrder(null)} />
+      <CarrybeePlaceDialog order={carrybeePlaceOrder} onClose={() => setCarrybeePlaceOrder(null)} />
       <PathaoBookingModal orderId={pathaoBookingOrderId} onOpenChange={(open) => !open && setPathaoBookingOrderId(null)} />
       <PathaoBulkBookDialog
         provider={bulkBooking?.provider}

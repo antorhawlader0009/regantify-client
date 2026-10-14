@@ -309,15 +309,15 @@ export interface PathaoStats {
 }
 
 /** Couriers with a bulk "Send to …" on the Orders list. */
-export type BulkCourierProvider = 'PATHAO' | 'STEADFAST' | 'REDX';
+export type BulkCourierProvider = 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
 
 /** POST /v1/courier/{pathao|steadfast|redx}/book-bulk — the dry run (confirm dialog) or the real run (pathao-plan.md Step 11). */
 export type PathaoBulkResult =
   | {
       dryRun: true;
       provider: BulkCourierProvider;
-      /** Pathao and RedX — SteadFast picks up from the merchant's registered address. */
-      pickupStore: { id: number; name: string | null } | null;
+      /** Pathao, RedX and CarryBee (CarryBee's id is text); SteadFast picks up from the merchant's registered address. */
+      pickupStore: { id: number | string; name: string | null } | null;
       eligible: Array<{ orderId: string; invoiceNumber: number; customerName: string; codAmount: number }>;
       skipped: Array<{ orderId: string; invoiceNumber: number | null; customerName: string | null; reason: string }>;
       totalCod: number;

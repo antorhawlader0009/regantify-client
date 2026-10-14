@@ -4,18 +4,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Dialog } from '../ui/Dialog';
 import { courierApi, type BulkCourierProvider, type PathaoBulkResult } from '../../lib/courierApi';
+import { carrybeeApi } from '../../lib/carrybeeApi';
 import { apiErrorMessage } from '../../lib/api';
 
 function formatTaka(value: number) {
   return `৳${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 }
 
-const NAMES: Record<BulkCourierProvider, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX' };
+const NAMES: Record<BulkCourierProvider, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX', CARRYBEE: 'CarryBee' };
 
 const BOOK: Record<BulkCourierProvider, typeof courierApi.bookPathaoBulk> = {
   PATHAO: courierApi.bookPathaoBulk,
   STEADFAST: courierApi.bookSteadfastBulk,
   REDX: courierApi.bookRedxBulk,
+  CARRYBEE: (orderIds, dryRun) => carrybeeApi.bookBulk(orderIds, dryRun),
 };
 
 interface PathaoBulkBookDialogProps {

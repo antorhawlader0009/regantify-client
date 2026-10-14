@@ -147,7 +147,7 @@ export interface SmsCampaignTarget {
   tag?: string;
   /** OPEN_ORDERS (TellMe idea 148): only this delivery zone, this courier, or orders older than N days. */
   openZone?: 'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA';
-  openCourier?: 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
+  openCourier?: 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
   openOlderDays?: number;
 }
 

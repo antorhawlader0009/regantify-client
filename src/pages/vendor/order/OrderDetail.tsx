@@ -52,6 +52,9 @@ import { OrderCloseReasonCard } from '../../../components/order/OrderCloseReason
 import { OrderReturnCheckCard } from '../../../components/order/OrderReturnCheckCard';
 import { OrderProfitCard } from '../../../components/order/OrderProfitCard';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
+import { CarrybeeCancelDialog } from '../../../components/courier/CarrybeeCancelDialog';
+import { CarrybeePlaceDialog } from '../../../components/courier/CarrybeePlaceDialog';
+import { CARRYBEE_PLACE_NOT_FOUND, carrybeeCancellable } from '../../../lib/carrybeeApi';
 import { RedxTrackingHistory } from '../../../components/courier/RedxTrackingHistory';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
 import { PosReceiptButton, PosSaleReturns } from '../../../components/pos/receipt/PosReceiptButton';
@@ -134,6 +137,8 @@ export default function OrderDetail() {
   const [bookingPathao, setBookingPathao] = useState(false);
   const [requestingReturn, setRequestingReturn] = useState(false);
   const [cancellingRedx, setCancellingRedx] = useState(false);
+  const [cancellingCarrybee, setCancellingCarrybee] = useState(false);
+  const [pickingCarrybeePlace, setPickingCarrybeePlace] = useState(false);
   const [showRedxHistory, setShowRedxHistory] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
@@ -276,6 +281,10 @@ export default function OrderDetail() {
       // Refresh so the FAILED state + its reason show under the button.
       queryClient.invalidateQueries({ queryKey: ['order', id] });
       queryClient.invalidateQueries({ queryKey: ['courier-events', id] });
+      if (order?.courierProvider === 'CARRYBEE' && apiErrorMessage(err, '').startsWith(CARRYBEE_PLACE_NOT_FOUND)) {
+        setPickingCarrybeePlace(true);
+        return;
+      }
       toast.error(apiErrorMessage(err, 'Could not book this order with the courier. Please try again.'));
     },
   });
@@ -301,6 +310,10 @@ export default function OrderDetail() {
         return;
       }
       invalidateOrder();
+      if (provider === 'CARRYBEE' && apiErrorMessage(err, '').startsWith(CARRYBEE_PLACE_NOT_FOUND)) {
+        setPickingCarrybeePlace(true);
+        return;
+      }
       toast.error(apiErrorMessage(err, 'Could not send this order to the courier. Please try again.'));
     },
   });
@@ -1051,6 +1064,70 @@ export default function OrderDetail() {
                 )}
               </div>
             )}
+
+            {/* CarryBee: one click with the page's defaults; when it can't place the address, the city/zone picker. */}
+            {provider === 'CARRYBEE' && !booked && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+                <button
+                  type="button"
+                  onClick={() => bookOneClickMutation.mutate()}
+                  disabled={bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'}
+                  className={primaryBtn}
+                >
+                  {bookOneClickMutation.isPending || order.courierBookingStatus === 'BOOKING'
+                    ? 'Booking…'
+                    : order.courierBookingStatus === 'CANCELLED'
+                      ? 'Book with CarryBee again'
+                      : 'Book with CarryBee'}
+                </button>
+                <button type="button" onClick={() => setPickingCarrybeePlace(true)} className={linkBtn()}>
+                  Pick city and zone
+                </button>
+                {order.courierBookingStatus === 'FAILED' && order.courierBookingError && (
+                  <p className="w-full text-xs text-red-600">Last attempt failed: {order.courierBookingError}</p>
+                )}
+                {order.courierBookingStatus === 'CANCELLED' && (
+                  <p className="w-full text-xs text-red-600">{order.courierBookingError ?? 'The CarryBee parcel was cancelled. You can book this order again.'}</p>
+                )}
+              </div>
+            )}
+
+            {provider === 'CARRYBEE' && booked && (
+              <div className="mt-4 space-y-1.5 border-t border-line pt-4">
+                <p className="text-sm text-regantify-text">
+                  Booked with CarryBee
+                  {order.courierConsignmentId && <span className="text-neutral-500"> · Consignment {order.courierConsignmentId}</span>}
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  {order.courierStatus && <CourierStatusBadge provider="CARRYBEE" status={order.courierStatus} prefix="CarryBee" />}
+                  <button type="button" onClick={() => refreshCourierMutation.mutate()} disabled={refreshCourierMutation.isPending} className={linkBtn()}>
+                    {refreshCourierMutation.isPending ? 'Refreshing…' : 'Refresh status'}
+                  </button>
+                  {order.courierConsignmentId && (
+                    <button type="button" onClick={() => copyTracking(order.courierConsignmentId!)} className={linkBtn()}>
+                      Copy consignment ID
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-neutral-500">
+                  {order.courierCodAmount != null && <>COD {formatPrice(order.courierCodAmount)}</>}
+                  {order.courierDeliveryFee != null && <> · Delivery fee {formatPrice(order.courierDeliveryFee)}</>}
+                  {order.courierCollectedAmount != null && <> · Collected {formatPrice(order.courierCollectedAmount)}</>}
+                  {order.courierPaidAt && <> · COD paid out</>}
+                </p>
+                {carrybeeCancellable(order.courierStatus) && (
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setCancellingCarrybee(true)}
+                      className="inline-flex h-8 items-center rounded-lg border border-red-200 bg-white px-3 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Cancel parcel
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
           )}
 
@@ -1109,6 +1186,8 @@ export default function OrderDetail() {
       {canSms && <SendSmsDialog phone={order.customerPhone} open={smsOpen} onOpenChange={setSmsOpen} orderId={order.id} />}
       <SteadfastReturnDialog order={requestingReturn ? order : null} onClose={() => setRequestingReturn(false)} />
       <RedxCancelDialog order={cancellingRedx ? order : null} onClose={() => setCancellingRedx(false)} />
+      <CarrybeeCancelDialog order={cancellingCarrybee ? order : null} onClose={() => setCancellingCarrybee(false)} />
+      <CarrybeePlaceDialog order={pickingCarrybeePlace ? order : null} onClose={() => setPickingCarrybeePlace(false)} />
       <Dialog open={showRedxHistory} onOpenChange={setShowRedxHistory} title={`RedX history · ${orderRef(order)}`} maxWidth="max-w-md">
         <div className="p-6 pt-4">{showRedxHistory && <RedxTrackingHistory orderId={order.id} />}</div>
       </Dialog>

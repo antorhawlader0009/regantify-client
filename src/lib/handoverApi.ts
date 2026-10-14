@@ -41,7 +41,7 @@ export interface HandoverSheet extends HandoverSheetSummary {
 }
 
 /** PATHAO / STEADFAST / REDX = that connected courier, MANUAL = a hand-run one (Own rider, Paperfly...), undefined = all. */
-export type HandoverCourierFilter = 'PATHAO' | 'STEADFAST' | 'REDX' | 'MANUAL';
+export type HandoverCourierFilter = 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE' | 'MANUAL';
 
 export const handoverApi = {
   candidates: (courier?: HandoverCourierFilter, days?: number) =>

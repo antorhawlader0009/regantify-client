@@ -38,7 +38,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
   const [tag, setTag] = useState('');
   // "Customers with an order on its way" (TellMe idea 148): optional narrowing.
   const [openZone, setOpenZone] = useState<'' | 'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA'>('');
-  const [openCourier, setOpenCourier] = useState<'' | 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX'>('');
+  const [openCourier, setOpenCourier] = useState<'' | 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE'>('');
   const [openOlderDays, setOpenOlderDays] = useState('');
   const [message, setMessage] = useState('');
   const messageRef = useRef<HTMLTextAreaElement>(null);
@@ -193,6 +193,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
                 <option value="PATHAO">Pathao</option>
                 <option value="STEADFAST">SteadFast</option>
                 <option value="REDX">RedX</option>
+                <option value="CARRYBEE">CarryBee</option>
                 <option value="NONE">Own delivery or not booked</option>
               </select>
               <label className="flex items-center gap-1.5 text-neutral-600">

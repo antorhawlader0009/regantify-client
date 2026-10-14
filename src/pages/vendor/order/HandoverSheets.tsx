@@ -139,6 +139,7 @@ export default function HandoverSheets() {
             <option value="PATHAO">Pathao</option>
             <option value="STEADFAST">SteadFast</option>
             <option value="REDX">RedX</option>
+            <option value="CARRYBEE">CarryBee</option>
             <option value="MANUAL">Own courier (Paperfly, rider...)</option>
           </select>
           <select value={days} onChange={(e) => setDays(Number(e.target.value))} className={fieldClass} aria-label="How far back">
