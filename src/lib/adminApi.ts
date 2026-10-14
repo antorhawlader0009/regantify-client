@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { PendingApproval } from './approvalsApi';
 import type { PlanCode } from './plansApi';
 
 // Mirrors server/src/admin — Super Admin > All Vendors.
@@ -277,16 +278,16 @@ export const adminApi = {
   storeProducts: (id: string, params: { search?: string; page?: number }) => api.get<Paged<StoreProductRow>>(`/v1/admin/vendors/${id}/products`, { params }).then((r) => r.data),
   storeCustomers: (id: string, params: { search?: string; page?: number }) => api.get<Paged<StoreCustomerRow>>(`/v1/admin/vendors/${id}/customers`, { params }).then((r) => r.data),
   storeHistory: (id: string) => api.get<StoreHistory>(`/v1/admin/vendors/${id}/history`).then((r) => r.data),
-  walletAdjust: (id: string, type: 'CREDIT' | 'DEBIT', amount: number, reason: string) => api.post<{ balance: number }>(`/v1/admin/vendors/${id}/wallet-adjust`, { type, amount, reason }).then((r) => r.data),
+  walletAdjust: (id: string, type: 'CREDIT' | 'DEBIT', amount: number, reason: string) => api.post<{ balance: number } | PendingApproval>(`/v1/admin/vendors/${id}/wallet-adjust`, { type, amount, reason }).then((r) => r.data),
   smsCreditsAdjust: (id: string, amount: number, reason: string) => api.post<{ smsCredits: number }>(`/v1/admin/vendors/${id}/sms-credits`, { amount, reason }).then((r) => r.data),
   pauseWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/pause-withdrawals`, { reason }).then((r) => r.data),
   resumeWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/resume-withdrawals`, { reason }).then((r) => r.data),
   extendPlan: (id: string, days: number, reason: string) => api.post<{ expiresAt: string }>(`/v1/admin/vendors/${id}/extend-plan`, { days, reason }).then((r) => r.data),
   sendPasswordSms: (id: string, reason: string) => api.post<{ sentTo: string }>(`/v1/admin/vendors/${id}/password-sms`, { reason }).then((r) => r.data),
   signOutStore: (id: string, reason: string) => api.post<{ accounts: number }>(`/v1/admin/vendors/${id}/sign-out-all`, { reason }).then((r) => r.data),
-  closeStore: (id: string, body: { reason: string; storeName: string; code: string }) => api.post<{ status: 'CLOSED'; texted: boolean }>(`/v1/admin/vendors/${id}/close`, body).then((r) => r.data),
+  closeStore: (id: string, body: { reason: string; storeName: string; code: string }) => api.post<{ status: 'CLOSED'; texted: boolean } | PendingApproval>(`/v1/admin/vendors/${id}/close`, body).then((r) => r.data),
   reopenStore: (id: string, reason: string) => api.post<{ status: 'ACTIVE'; texted: boolean }>(`/v1/admin/vendors/${id}/reopen`, { reason }).then((r) => r.data),
-  transferStart: (id: string, body: { reason: string; storeName: string; code: string; newPhone: string }) => api.post<{ sentTo: string }>(`/v1/admin/vendors/${id}/transfer/start`, body).then((r) => r.data),
+  transferStart: (id: string, body: { reason: string; storeName: string; code: string; newPhone: string }) => api.post<{ sentTo: string } | PendingApproval>(`/v1/admin/vendors/${id}/transfer/start`, body).then((r) => r.data),
   transferConfirm: (id: string, body: { reason: string; newPhone: string; otp: string }) => api.post<{ owner: string }>(`/v1/admin/vendors/${id}/transfer/confirm`, body).then((r) => r.data),
 
   // All Vendors > Change Plan (PLAN.md Step 15) — direct manual

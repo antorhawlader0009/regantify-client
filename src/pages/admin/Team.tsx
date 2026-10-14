@@ -8,6 +8,7 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { Dialog } from '../../components/ui/Dialog';
+import { approvalsApi } from '../../lib/approvalsApi';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const label = 'mb-1.5 block text-sm font-medium text-regantify-text';
@@ -30,6 +31,8 @@ function PasswordShown({ who, password, onClose }: { who: string; password: stri
 
 /** Super Admin > Staff (super-admin-plan.md Step 13): the Regantify team and what each role may do. Owner only. */
 export default function Team() {
+  // A member's last 20 sign-ins (super-admin-new.md Step 7).
+  const [signInsOf, setSignInsOf] = useState<{ id: string; name: string } | null>(null);
   const qc = useQueryClient();
   const me = useAuthStore((s) => s.user?.id);
   const { data, isLoading } = useQuery({ queryKey: ['admin-team'], queryFn: adminTeamApi.list });
@@ -133,7 +136,15 @@ export default function Team() {
                     )}
                   </td>
                   <td className="px-4 py-3">{m.twoFactorOn ? 'On' : <span className="text-amber-700">Not set up yet</span>}</td>
-                  <td className="whitespace-nowrap px-4 py-3">{m.lastLoginAt ? formatDhakaDateTime(m.lastLoginAt) : 'Never'}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {m.lastLoginAt ? (
+                      <button type="button" onClick={() => setSignInsOf({ id: m.userId, name: m.name })} className="underline decoration-dotted underline-offset-2 hover:text-regantify-text" title="See the last 20 sign-ins">
+                        {formatDhakaDateTime(m.lastLoginAt)}
+                      </button>
+                    ) : (
+                      'Never'
+                    )}
+                  </td>
                   <td className="px-4 py-3">{m.status === 'ACTIVE' ? 'Active' : 'Suspended'}</td>
                   <td className="px-4 py-3">
                     {!owner && !self && (
@@ -153,6 +164,8 @@ export default function Team() {
         </table>
       </div>
       <p className="text-xs text-regantify-text-muted">The owner can’t be demoted, suspended or removed. A suspended person is signed out at once. Nobody is deleted, so the admin log always makes sense. Up to {data.max} people.</p>
+
+      <SignInsDialog who={signInsOf} onClose={() => setSignInsOf(null)} />
 
       <Dialog open={inviting} onOpenChange={(o) => !o && setInviting(false)} maxWidth="max-w-md">
         <div className="space-y-4 p-6">
@@ -197,5 +210,39 @@ export default function Team() {
 
       <PasswordShown who={shown?.who ?? ''} password={shown?.password ?? null} onClose={() => setShown(null)} />
     </div>
+  );
+}
+
+const VIA = { OTP: 'SMS code', PASSWORD: 'Password', STAFF: 'Staff login' } as Record<string, string>;
+
+/** Where a team member signed in lately (super-admin-new.md Step 7). From LoginEvent, the same record the person sees on their own Settings page. */
+function SignInsDialog({ who, onClose }: { who: { id: string; name: string } | null; onClose: () => void }) {
+  const { data, isLoading } = useQuery({ queryKey: ['admin-team-signins', who?.id], queryFn: () => approvalsApi.teamSignIns(who!.id), enabled: who !== null });
+  return (
+    <Dialog open={who !== null} onOpenChange={(o) => !o && onClose()} title={who ? `Sign-ins: ${who.name}` : 'Sign-ins'} maxWidth="max-w-md">
+      <div className="p-6 pt-3">
+        {isLoading || !data ? (
+          <p className="text-sm text-regantify-text-muted">Loading...</p>
+        ) : data.length === 0 ? (
+          <p className="text-sm text-regantify-text-muted">Nothing recorded yet.</p>
+        ) : (
+          <ul className="divide-y divide-black/5 text-sm">
+            {data.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0">
+                  <span className="font-medium text-regantify-text">{r.browser}</span>
+                  {r.isNewDevice && <span className="ml-2 rounded bg-amber-50 px-1.5 py-0.5 text-[11px] text-amber-800">New device</span>}
+                  <span className="block text-xs text-regantify-text-muted">
+                    {VIA[r.via] ?? r.via}
+                    {r.ipMasked ? ` - ${r.ipMasked}` : ''}
+                  </span>
+                </span>
+                <span className="shrink-0 text-xs text-regantify-text-muted">{formatDhakaDateTime(r.at)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </Dialog>
   );
 }

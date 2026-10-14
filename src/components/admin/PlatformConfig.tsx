@@ -124,11 +124,11 @@ export function SignupSection() {
 
 export function MoneySection() {
   const { data } = usePlatformConfig();
-  const [f, setF] = useState({ minWithdraw: '100', fee: '0', feePct: '0', grace: '3', smsLow: '500', trialPlan: '', trialDays: '14' });
+  const [f, setF] = useState({ minWithdraw: '100', fee: '0', feePct: '0', grace: '3', smsLow: '500', trialPlan: '', trialDays: '14', walletPurchases: false });
   useEffect(() => {
     if (!data) return;
     const m = data.money;
-    setF({ minWithdraw: String(m.minWithdraw), fee: String(m.withdrawFeeFlat), feePct: String(m.withdrawFeePercent), grace: String(m.planGraceDays), smsLow: String(m.smsLowBalance), trialPlan: m.trialPlanCode, trialDays: String(m.trialDays) });
+    setF({ minWithdraw: String(m.minWithdraw), fee: String(m.withdrawFeeFlat), feePct: String(m.withdrawFeePercent), grace: String(m.planGraceDays), smsLow: String(m.smsLowBalance), trialPlan: m.trialPlanCode, trialDays: String(m.trialDays), walletPurchases: m.walletPurchases });
   }, [data]);
   if (!data) return <p className="text-sm text-regantify-text-muted">Loading…</p>;
   const n = (v: string) => Number(v);
@@ -139,7 +139,7 @@ export function MoneySection() {
       hint="Changes apply to the next request, renewal or sign-up; nothing already done is touched."
       section="money"
       valid={valid}
-      body={() => ({ minWithdraw: n(f.minWithdraw), withdrawFeeFlat: n(f.fee), withdrawFeePercent: n(f.feePct), planGraceDays: n(f.grace), smsLowBalance: n(f.smsLow), trialPlanCode: f.trialPlan, ...(f.trialPlan && { trialDays: n(f.trialDays) }) })}
+      body={() => ({ minWithdraw: n(f.minWithdraw), withdrawFeeFlat: n(f.fee), withdrawFeePercent: n(f.feePct), planGraceDays: n(f.grace), smsLowBalance: n(f.smsLow), trialPlanCode: f.trialPlan, ...(f.trialPlan && { trialDays: n(f.trialDays) }), walletPurchases: f.walletPurchases })}
     >
       <div className="grid gap-4 sm:grid-cols-3">
         <Label text="Smallest withdrawal (৳)">
@@ -178,6 +178,13 @@ export function MoneySection() {
           </Label>
         )}
       </div>
+      <label className="flex items-start gap-2 text-sm text-regantify-text">
+        <input type="checkbox" checked={f.walletPurchases} onChange={(e) => setF({ ...f, walletPurchases: e.target.checked })} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
+        <span>
+          Stores may pay from their wallet balance
+          <span className="block text-xs text-regantify-text-muted">For plans, SMS packs and AI Credit packs, next to the online payment. Same price and promo codes; the money leaves the wallet at once. Off by default.</span>
+        </span>
+      </label>
     </Section>
   );
 }

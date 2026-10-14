@@ -37,6 +37,7 @@ import {
   Workflow,
   TrendingDown,
   Gift,
+  Globe,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -295,6 +296,7 @@ export const adminNav: NavSection[] = [
   { label: 'Verification', icon: ShieldCheck, group: 'Stores', path: '/admin/verification' },
   { label: 'Store reports', icon: Flag, group: 'Stores', path: '/admin/reports' },
   { label: 'Trust and safety', icon: ShieldAlert, group: 'Stores', path: '/admin/trust-safety' },
+  { label: 'Domains', icon: Globe, group: 'Stores', path: '/admin/domains' },
 
   { label: 'Orders', icon: ClipboardList, group: 'Commerce', path: '/admin/orders' },
   { label: 'Customers', icon: UsersRound, group: 'Commerce', path: '/admin/customers' },
@@ -320,6 +322,7 @@ export const adminNav: NavSection[] = [
   { label: 'AI settings', icon: Bot, group: 'Platform', path: '/admin/ai-settings' },
   { label: 'System status', icon: Activity, group: 'Platform', path: '/admin/system-status' },
   { label: 'Feature flags', icon: ToggleRight, group: 'Platform', path: '/admin/feature-flags' },
+  { label: 'Approvals', icon: ShieldCheck, group: 'Platform', path: '/admin/approvals' },
   { label: 'Staff', icon: UserCog, group: 'Platform', path: '/admin/staff' },
   { label: 'Settings', icon: Settings, group: 'Platform', path: '/admin/settings' },
 ];

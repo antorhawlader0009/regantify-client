@@ -8,6 +8,7 @@ import { aiChatBotApi, type ChatBotPackage } from '../../../lib/aiChatBotApi';
 import { paymentsApi } from '../../../lib/paymentsApi';
 import { financeApi } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { PayFromWalletButton } from '../../../components/PayFromWalletButton';
 
 interface BuyChatBotDialogProps {
   open: boolean;
@@ -104,6 +105,7 @@ export function BuyChatBotDialog({ open, onOpenChange, creditsPerReply }: BuyCha
             >
               {buyMutation.isPending ? 'Opening PayStation…' : `Pay ${formatTaka(selected.price + deficit)}`}
             </button>
+            <PayFromWalletButton purpose="CHATBOT_PACKAGE" packageId={String(selected.id)} price={selected.price} onPaid={() => handleOpenChange(false)} className="mt-3" />
           </>
         ) : isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3" aria-busy>

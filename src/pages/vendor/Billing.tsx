@@ -16,6 +16,7 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { AiCreditsLine, UsageBar } from '../../components/dashboard/SideCards';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { PayFromWalletButton } from '../../components/PayFromWalletButton';
 import { PageHeader } from '../../components/ui/PageKit';
 import { useAuthStore } from '../../store/authStore';
 
@@ -258,14 +259,17 @@ export default function Billing() {
                 </ul>
 
                 {isCurrent && !isFree && planEnd ? (
-                  <button
-                    type="button"
-                    disabled={payMutation.isPending}
-                    onClick={() => payMutation.mutate(plan.code)}
-                    className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
-                  >
-                    {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${payPrice(plan)}`}
-                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      disabled={payMutation.isPending}
+                      onClick={() => payMutation.mutate(plan.code)}
+                      className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+                    >
+                      {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation...' : `Renew for 30 days, pay ${payPrice(plan)}`}
+                    </button>
+                    <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} className="mt-2" />
+                  </div>
                 ) : isCurrent ? (
                   <p className="flex h-10 items-center justify-center rounded-lg bg-neutral-50 text-sm text-neutral-500">You’re on this plan</p>
                 ) : (
@@ -281,6 +285,9 @@ export default function Billing() {
                       >
                         {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `${higher ? 'Upgrade' : 'Switch'} and pay ${payPrice(plan)}`}
                       </button>
+                    )}
+                    {!isFree && (
+                      <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} />
                     )}
                     <button
                       type="button"

@@ -5,6 +5,7 @@ import { Download, Search } from 'lucide-react';
 import { adminFinanceApi, downloadText, type AdminWithdrawRequest, type WithdrawFilters } from '../../../lib/adminFinanceApi';
 import type { WithdrawMethod, WithdrawRequestStatus } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { isPendingApproval, toastPendingApproval } from '../../../lib/approvalsApi';
 import { toast } from '../../../lib/toast';
 import { Dialog } from '../../../components/ui/Dialog';
 
@@ -106,8 +107,9 @@ export default function Payouts() {
 
   const resolveMutation = useMutation({
     mutationFn: ({ id, decision }: { id: string; decision: 'APPROVED' | 'REJECTED' }) => adminFinanceApi.resolveWithdrawRequest(id, decision),
-    onSuccess: (_, { decision }) => {
+    onSuccess: (r, { decision }) => {
       refresh();
+      if (isPendingApproval(r)) return toastPendingApproval();
       toast.success(decision === 'APPROVED' ? 'Request approved.' : 'Request rejected — balance restored.');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not resolve this request. Please try again.')),

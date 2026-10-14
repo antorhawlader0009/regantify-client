@@ -7,6 +7,7 @@ import { smsApi, type SmsPackage } from '../../../lib/smsApi';
 import { paymentsApi } from '../../../lib/paymentsApi';
 import { financeApi } from '../../../lib/financeApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { PayFromWalletButton } from '../../../components/PayFromWalletButton';
 
 interface BuySmsDialogProps {
   open: boolean;
@@ -98,6 +99,7 @@ export function BuySmsDialog({ open, onOpenChange }: BuySmsDialogProps) {
             >
               {buyMutation.isPending ? 'Opening PayStation…' : `Pay ৳${(selected.price + deficit).toLocaleString()}`}
             </button>
+            <PayFromWalletButton purpose="SMS_PACKAGE" packageId={String(selected.id)} price={selected.price} onPaid={() => handleOpenChange(false)} className="mt-3" />
           </>
         ) : isLoading ? (
           <div className="grid gap-3 sm:grid-cols-3" aria-busy>

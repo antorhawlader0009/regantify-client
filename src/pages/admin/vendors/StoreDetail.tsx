@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ExternalLink, Loader2, LogIn, Pin, Search, X } from 'lucide-react';
 import { adminApi, type AdminVendor, type StoreDetail } from '../../../lib/adminApi';
 import { apiErrorMessage } from '../../../lib/api';
+import { isPendingApproval, toastPendingApproval } from '../../../lib/approvalsApi';
 import { toast } from '../../../lib/toast';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
@@ -548,8 +549,9 @@ function MoneyAdjust({ d, onDone }: { d: StoreDetail; onDone: () => void }) {
   const valid = Number.isFinite(n) && n > 0 && (kind === 'wallet' || Number.isInteger(n)) && reason.trim().length >= 5;
   const m = useMutation({
     mutationFn: (): Promise<unknown> => (kind === 'wallet' ? adminApi.walletAdjust(d.id, dir === 'add' ? 'CREDIT' : 'DEBIT', n, reason.trim()) : adminApi.smsCreditsAdjust(d.id, dir === 'add' ? n : -n, reason.trim())),
-    onSuccess: () => {
-      toast.success(kind === 'wallet' ? 'Wallet updated.' : 'SMS credits updated.');
+    onSuccess: (r) => {
+      if (isPendingApproval(r)) toastPendingApproval();
+      else toast.success(kind === 'wallet' ? 'Wallet updated.' : 'SMS credits updated.');
       setAmount('');
       setReason('');
       onDone();
@@ -601,8 +603,8 @@ function DangerDialog({ d, mode, onClose }: { d: StoreDetail; mode: 'close' | 't
     reset();
   };
   const fail = (err: unknown) => toast.error(apiErrorMessage(err, 'That did not work. Please try again.'));
-  const close = useMutation({ mutationFn: () => adminApi.closeStore(d.id, { reason: reason.trim(), storeName: name, code }), onSuccess: (r) => done(r.texted ? 'Store closed. The owner was texted.' : 'Store closed. The owner could not be texted.'), onError: fail });
-  const start = useMutation({ mutationFn: () => adminApi.transferStart(d.id, { reason: reason.trim(), storeName: name, code, newPhone: phone }), onSuccess: (r) => { setSentTo(r.sentTo); setCode(''); }, onError: fail });
+  const close = useMutation({ mutationFn: () => adminApi.closeStore(d.id, { reason: reason.trim(), storeName: name, code }), onSuccess: (r) => (isPendingApproval(r) ? (toastPendingApproval(), done('Waiting for a second approval.')) : done(r.texted ? 'Store closed. The owner was texted.' : 'Store closed. The owner could not be texted.')), onError: fail });
+  const start = useMutation({ mutationFn: () => adminApi.transferStart(d.id, { reason: reason.trim(), storeName: name, code, newPhone: phone }), onSuccess: (r) => { if (isPendingApproval(r)) { toastPendingApproval(); done('Waiting for a second approval. After it, start the move again to send the code.'); return; } setSentTo(r.sentTo); setCode(''); }, onError: fail });
   const confirm = useMutation({ mutationFn: () => adminApi.transferConfirm(d.id, { reason: reason.trim(), newPhone: phone, otp }), onSuccess: (r) => done(`Ownership moved to ${r.owner}. A temporary password was texted there.`), onError: fail });
 
   const base = reason.trim().length >= 5 && name.trim().length > 0 && /^\d{6}$/.test(code);

@@ -150,6 +150,8 @@ import TrustSafety from './pages/admin/TrustSafety';
 import Automations from './pages/admin/Automations';
 import Churn from './pages/admin/Churn';
 import AdminReferrals from './pages/admin/Referrals';
+import Approvals from './pages/admin/Approvals';
+import AdminDomains from './pages/admin/Domains';
 import VendorReferrals from './pages/vendor/finance/Referrals';
 import ReceiptDetails from './pages/admin/ReceiptDetails';
 import AdminAnalytics from './pages/admin/Analytics';
@@ -318,6 +320,8 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/automations' &&
     r.path !== '/admin/churn' &&
     r.path !== '/admin/referrals' &&
+    r.path !== '/admin/approvals' &&
+    r.path !== '/admin/domains' &&
     r.path !== '/admin/staff' &&
     r.path !== '/admin/finance/commission' &&
     r.path !== '/admin/orders' &&
@@ -598,6 +602,8 @@ export default function App() {
                 <Route path="/admin/automations" element={<Automations />} />
                 <Route path="/admin/churn" element={<Churn />} />
                 <Route path="/admin/referrals" element={<AdminReferrals />} />
+                <Route path="/admin/approvals" element={<Approvals />} />
+                <Route path="/admin/domains" element={<AdminDomains />} />
                 <Route path="/admin/staff" element={<Team />} />
                 <Route path="/admin/finance/commission" element={<CommissionSettings />} />
                 <Route path="/admin/customers" element={<AdminCustomers />} />

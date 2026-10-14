@@ -15,6 +15,8 @@ export interface PlatformConfig {
     smsLowBalance: number;
     trialPlanCode: string;
     trialDays: number;
+    /** Stores may pay for plans, SMS and AI Credit packs from their wallet. */
+    walletPurchases: boolean;
     plans: Array<{ code: string; name: string }>;
   };
   terms: { version: number; termsText: string; privacyText: string; updatedAt: string | null; owners: number; acceptedCurrent: number };

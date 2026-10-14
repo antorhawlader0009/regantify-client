@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminStep17Api, type ErasePreview, type MarketingStore } from '../../lib/adminStep17Api';
 import { apiErrorMessage } from '../../lib/api';
+import { isPendingApproval, toastPendingApproval, type PendingApproval } from '../../lib/approvalsApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { toast } from '../../lib/toast';
 
@@ -125,8 +126,9 @@ function ShopperErase({ onDone }: { onDone: () => void }) {
   });
   const erase = useMutation({
     mutationFn: () => adminStep17Api.eraseShopper({ phone: phone.trim(), confirmPhone: confirm.trim(), reason: reason.trim(), code }),
-    onSuccess: (r: { orders: number; account: number }) => {
-      toast.success(`Erased: ${r.orders} orders anonymised${r.account ? ', account deleted' : ''}.`);
+    onSuccess: (r: { orders: number; account: number } | PendingApproval) => {
+      if (isPendingApproval(r)) toastPendingApproval();
+      else toast.success(`Erased: ${r.orders} orders anonymised${r.account ? ', account deleted' : ''}.`);
       setPhone('');
       setConfirm('');
       setReason('');

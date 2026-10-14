@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { PendingApproval } from './approvalsApi';
 import type { WithdrawMethod, WithdrawRequest, WithdrawRequestStatus } from './financeApi';
 
 // Mirrors server/src/admin/admin-withdraw-requests.controller.ts and admin-money.controller.ts — Super
@@ -49,7 +50,7 @@ export const adminFinanceApi = {
     api.get<AdminWithdrawRequest[]>('/v1/admin/withdraw-requests', { params: filters }).then((r) => r.data),
 
   resolveWithdrawRequest: (id: string, decision: 'APPROVED' | 'REJECTED') =>
-    api.patch<AdminWithdrawRequest>(`/v1/admin/withdraw-requests/${id}`, { decision }).then((r) => r.data),
+    api.patch<AdminWithdrawRequest | PendingApproval>(`/v1/admin/withdraw-requests/${id}`, { decision }).then((r) => r.data),
 
   markWithdrawRequestPaid: (id: string, reference?: string) =>
     api.patch<AdminWithdrawRequest>(`/v1/admin/withdraw-requests/${id}/mark-paid`, { reference }).then((r) => r.data),

@@ -61,6 +61,11 @@ export const paymentsApi = {
   initiate: (payload: InitiatePaymentPayload) =>
     api.post<InitiatePaymentResult>('/v1/payments/initiate', payload).then((r) => r.data),
 
+  // Pay from the wallet balance instead of PayStation (off unless Super Admin turns it on).
+  walletPayInfo: () => api.get<{ enabled: boolean; balance: number }>('/v1/payments/wallet-pay').then((r) => r.data),
+  walletPay: (payload: { purpose: 'SMS_PACKAGE' | 'CHATBOT_PACKAGE' | 'PLAN_UPGRADE'; packageId: string; promoCode?: string }) =>
+    api.post<{ invoiceNumber: string; amount: number; balance: number }>('/v1/payments/wallet-pay', payload).then((r) => r.data),
+
   // Payment-callback page's own re-verification — never trust the
   // redirect's own query params, always ask the server to confirm with
   // PayStation itself.

@@ -4,6 +4,9 @@ import { getVendorDomain, connectVendorDomain, removeVendorDomain } from '../../
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { domainsApi } from '../../../lib/domainsApi';
+import { DomainStatusCard } from '../../../components/DomainStatusCard';
 
 // Same IP shown to every vendor, regardless of domain — resolution for a
 // connected domain isn't per-vendor, it's the storefront app's own
@@ -16,6 +19,8 @@ const PLATFORM_IP = import.meta.env.VITE_PLATFORM_IP ?? 'YOUR_SERVER_IP';
 const domainRegex = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
 
 export default function Domain() {
+  // The address the server checks the record against (PLATFORM_PUBLIC_IPS), when it is set.
+  const serverIps = useQuery({ queryKey: ['vendor-domain-ips'], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data?.aRecords;
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   // null while loading = "don't know yet" — never used to mean "not
   // allowed" so the page doesn't flash an upgrade prompt before the
@@ -197,6 +202,8 @@ export default function Domain() {
             </button>
           </div>
 
+          <DomainStatusCard domain={customDomain} />
+
           <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6">
             <h2 className="text-lg font-medium text-regantify-text mb-4">Update DNS Record</h2>
             <p className="text-sm text-regantify-text-muted mb-1">
@@ -209,7 +216,7 @@ export default function Domain() {
               <div className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono flex items-center justify-between gap-3">
                 <span>Type: A</span>
                 <span>Host: @ (and www)</span>
-                <span>Value: {PLATFORM_IP}</span>
+                <span>Value: {serverIps?.join(', ') || PLATFORM_IP}</span>
               </div>
             </div>
             <p className="text-xs text-amber-600 mt-4">
