@@ -63,6 +63,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Store language (Bangla / English)', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla bengali english language translate store labels বাংলা ভাষা' },
   { title: 'Homepage sections and layout', where: 'Store > Design > Customize', path: '/vendor/store/customize', keywords: 'home page sections banner slider categories featured products reorder হোম পেজ' },
   { title: 'Menu and header', where: 'Store > Design > Header Editor', path: '/vendor/store/header-editor', keywords: 'navigation menu links header announcement top bar মেনু হেডার' },
+  { title: 'Logo size and cart total in the header', where: 'Store > Design > Header Editor', path: '/vendor/store/header-editor', keywords: 'logo size bigger smaller header cart total price bag phone number call top links লোগো' },
   { title: 'Footer', where: 'Store > Design > Footer', path: '/vendor/store/footer', keywords: 'footer links contact address about payment icons social ফুটার' },
   { title: 'Announcement bar / site banner', where: 'Store > Design > Site Banner', path: '/vendor/store/site-banner', keywords: 'banner announcement top strip offer message ব্যানার' },
   { title: 'WhatsApp / Messenger chat button', where: 'Store > Design > Chat Button', path: '/vendor/store/chat-button', keywords: 'chat bubble whatsapp messenger floating button contact হোয়াটসঅ্যাপ মেসেঞ্জার' },

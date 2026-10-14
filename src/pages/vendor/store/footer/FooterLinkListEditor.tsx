@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   DndContext,
   KeyboardSensor,
@@ -19,6 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import type { FooterLink } from '../../../../lib/footerApi';
+import { pagesApi } from '../../../../lib/pagesApi';
 
 interface FooterLinkListEditorProps {
   links: FooterLink[];
@@ -67,6 +69,24 @@ export function FooterLinkListEditor({ links, onChange }: FooterLinkListEditorPr
     rowIds.splice(index, 1);
   };
 
+  // Ready links, so a seller picks a page instead of typing "/page/about-us" and getting a letter wrong.
+  const { data: pages } = useQuery({ queryKey: ['pages', 'footer-picker'], queryFn: () => pagesApi.list() });
+  const choices: FooterLink[] = [
+    { label: 'Track order', url: '/orders' },
+    { label: 'FAQ', url: '/faq' },
+    { label: 'Magazine', url: '/blog' },
+    { label: 'Gift cards', url: '/gift-card' },
+    { label: 'Wishlist', url: '/wishlist' },
+    ...(pages ?? []).filter((p) => p.status === 'PUBLISHED').map((p) => ({ label: p.title, url: `/page/${p.slug}` })),
+  ].filter((c) => !links.some((l) => l.url === c.url));
+
+  const addChoice = (index: number) => {
+    const choice = choices[index];
+    if (!choice) return;
+    rowIds.push(crypto.randomUUID());
+    onChange([...links, choice]);
+  };
+
   const addRow = () => {
     rowIds.push(crypto.randomUUID());
     onChange([...links, { label: '', url: '' }]);
@@ -103,6 +123,22 @@ export function FooterLinkListEditor({ links, onChange }: FooterLinkListEditorPr
         <Plus size={14} />
         Add Link
       </button>
+      {choices.length > 0 && (
+        <select
+          value=""
+          onChange={(e) => addChoice(Number(e.target.value))}
+          className="block w-full px-2.5 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text-muted focus:outline-none focus:border-regantify-cta"
+        >
+          <option value="" disabled>
+            Or pick a ready link…
+          </option>
+          {choices.map((c, i) => (
+            <option key={c.url} value={i}>
+              {c.label} ({c.url})
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }

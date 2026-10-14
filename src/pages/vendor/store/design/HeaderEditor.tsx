@@ -11,8 +11,8 @@ type MenuKey = keyof Pick<DesignSettings, 'headerLeftMenu' | 'headerRightMenu' |
 type Menus = Pick<DesignSettings, MenuKey>;
 
 const MENU_INFO: Record<MenuKey, { title: string; hint: string }> = {
-  headerLeftMenu: { title: 'Top Left Menu', hint: 'Small links shown above your logo, on the left.' },
-  headerRightMenu: { title: 'Top Right Menu', hint: 'Small links shown above your logo, on the right.' },
+  headerLeftMenu: { title: 'Top links', hint: 'Small links shown above your logo on larger screens, like Track order or Contact.' },
+  headerRightMenu: { title: 'Top links (right side)', hint: 'Small links shown above your logo, on the right.' },
   siteMenu: {
     title: 'Site Menu',
     hint: 'The main menu under the search bar on larger screens. Empty = your categories. Also editable in Layout Settings.',
@@ -36,6 +36,8 @@ export default function HeaderEditor() {
   const [phoneOn, setPhoneOn] = useState(false);
   const [phoneLabel, setPhoneLabel] = useState('');
   const [phone, setPhone] = useState('');
+  const [logoSize, setLogoSize] = useState<'SMALL' | 'MEDIUM' | 'LARGE'>('MEDIUM');
+  const [cartTotalOn, setCartTotalOn] = useState(false);
   const { data: vendor } = useQuery({ queryKey: ['vendor-settings'], queryFn: getVendorSettings });
 
   useEffect(() => {
@@ -49,6 +51,8 @@ export default function HeaderEditor() {
     setPhoneOn(settings.headerPhoneEnabled ?? false);
     setPhoneLabel(settings.headerPhoneLabel ?? '');
     setPhone(settings.headerPhone ?? '');
+    setLogoSize(settings.headerLogoSize ?? 'MEDIUM');
+    setCartTotalOn(settings.headerShowCartTotal ?? false);
   }, [settings]);
 
   const handleSave = () => {
@@ -65,7 +69,7 @@ export default function HeaderEditor() {
       toast.error('Add the phone number to show, or turn the phone off.');
       return;
     }
-    save.mutate({ ...menus, headerPhoneEnabled: phoneOn, headerPhoneLabel: phoneLabel.trim(), headerPhone: phone.trim() });
+    save.mutate({ ...menus, headerPhoneEnabled: phoneOn, headerPhoneLabel: phoneLabel.trim(), headerPhone: phone.trim(), headerLogoSize: logoSize, headerShowCartTotal: cartTotalOn });
   };
 
   return (
@@ -86,9 +90,12 @@ export default function HeaderEditor() {
                 <Zone active={editing === 'headerLeftMenu'} onClick={() => setEditing('headerLeftMenu')}>
                   <MenuPreview items={menus.headerLeftMenu} />
                 </Zone>
-                <Zone active={editing === 'headerRightMenu'} onClick={() => setEditing('headerRightMenu')}>
-                  <MenuPreview items={menus.headerRightMenu} />
-                </Zone>
+                {/* One "Top links" list is enough for most stores; the right-hand list only shows if it already has links. */}
+                {menus.headerRightMenu.length > 0 && (
+                  <Zone active={editing === 'headerRightMenu'} onClick={() => setEditing('headerRightMenu')}>
+                    <MenuPreview items={menus.headerRightMenu} />
+                  </Zone>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-extrabold text-xl text-regantify-text shrink-0">Your Logo</span>
@@ -168,6 +175,32 @@ export default function HeaderEditor() {
                 </div>
               </div>
             )}
+          </div>
+          <div className="bg-white rounded-2xl border border-black/5 p-5 space-y-4">
+            <div>
+              <h2 className="text-base font-medium text-regantify-text">Logo size</h2>
+              <p className="text-xs text-regantify-text-muted mt-0.5 mb-2">How big your logo (or store name) is in the header.</p>
+              <div className="flex gap-2">
+                {(['SMALL', 'MEDIUM', 'LARGE'] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setLogoSize(size)}
+                    className={`px-4 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                      logoSize === size
+                        ? 'border-regantify-cta bg-regantify-cta/10 text-regantify-cta'
+                        : 'border-black/10 text-regantify-text-muted hover:border-black/20'
+                    }`}
+                  >
+                    {size === 'SMALL' ? 'Small' : size === 'MEDIUM' ? 'Medium' : 'Large'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-regantify-text">Show the cart total beside the bag icon</span>
+              <input type="checkbox" checked={cartTotalOn} onChange={(e) => setCartTotalOn(e.target.checked)} className="w-4 h-4" />
+            </label>
           </div>
           <SaveButton pending={save.isPending} onClick={handleSave} />
         </div>

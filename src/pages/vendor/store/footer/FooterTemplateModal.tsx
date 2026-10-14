@@ -62,9 +62,6 @@ export function FooterTemplateModal({ currentTemplate, onSelect, onClose }: Foot
                           <div className="h-2 w-3/4 rounded bg-black/15" />
                           <div className="h-1.5 w-full rounded bg-black/10" />
                           <div className="h-1.5 w-5/6 rounded bg-black/10" />
-                          {col === 'about' && def.supportsSubscribe && (
-                            <div className="h-2 w-2/3 rounded bg-regantify-cta/30 mt-1.5" />
-                          )}
                         </div>
                       ))}
                     </div>

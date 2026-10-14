@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { RichTextEditor } from '../../../../components/editor/RichTextEditor';
 import { FooterLinkListEditor } from './FooterLinkListEditor';
 import type { FooterConfig } from '../../../../lib/footerApi';
-import { FOOTER_TEMPLATES, PAYMENT_ICON_KEYS, PAYMENT_ICON_LABELS } from '../../../../lib/footerTemplates';
+import { FOOTER_TEMPLATES } from '../../../../lib/footerTemplates';
 
 interface FooterItemSettingsProps {
   block: 'logo' | 'menu' | 'info' | 'about';
@@ -48,41 +48,6 @@ export function FooterItemSettings({ block, config, onChange, onClose, hasSocial
             </label>
             {!hasSocialLinks && (
               <p className="text-xs text-amber-600 -mt-3">Add at least one link on Store &gt; Social to enable this.</p>
-            )}
-            {def.supportsSubscribe && (
-              <>
-                <label className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-regantify-text">Show subscribe block</span>
-                  <input
-                    type="checkbox"
-                    checked={config.showSubscribeBlock}
-                    onChange={(e) => onChange({ showSubscribeBlock: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                </label>
-                {config.showSubscribeBlock && (
-                  <>
-                    <div>
-                      <label className="block text-xs font-medium text-regantify-text-muted mb-1">Heading</label>
-                      <input
-                        type="text"
-                        value={config.subscribeHeading}
-                        onChange={(e) => onChange({ subscribeHeading: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-regantify-text-muted mb-1">Subheading</label>
-                      <input
-                        type="text"
-                        value={config.subscribeSubheading}
-                        onChange={(e) => onChange({ subscribeSubheading: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta"
-                      />
-                    </div>
-                  </>
-                )}
-              </>
             )}
             {def.logoCarriesAbout && (
               <div>
@@ -147,7 +112,7 @@ export function FooterItemSettings({ block, config, onChange, onClose, hasSocial
               />
             </div>
             <label className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-regantify-text">Show payment/courier icons</span>
+              <span className="text-sm font-medium text-regantify-text">Show “We accept” payment methods</span>
               <input
                 type="checkbox"
                 checked={config.showPaymentIcons}
@@ -155,33 +120,10 @@ export function FooterItemSettings({ block, config, onChange, onClose, hasSocial
                 className="w-4 h-4"
               />
             </label>
-            {config.showPaymentIcons && (
-              <div className="flex flex-wrap gap-2">
-                {PAYMENT_ICON_KEYS.map((key) => {
-                  const active = config.paymentIcons.includes(key);
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() =>
-                        onChange({
-                          paymentIcons: active
-                            ? config.paymentIcons.filter((k) => k !== key)
-                            : [...config.paymentIcons, key],
-                        })
-                      }
-                      className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
-                        active
-                          ? 'border-regantify-cta bg-regantify-cta/10 text-regantify-cta'
-                          : 'border-black/10 text-regantify-text-muted hover:border-black/20'
-                      }`}
-                    >
-                      {PAYMENT_ICON_LABELS[key]}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <p className="text-xs text-regantify-text-muted -mt-2">
+              Filled in for you from the payment methods your checkout really offers (Store &gt; Payment Gateway), so it
+              is always true. It sits in its own row above the bottom bar.
+            </p>
           </>
         )}
       </div>

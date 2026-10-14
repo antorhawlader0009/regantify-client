@@ -1,6 +1,6 @@
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Store } from 'lucide-react';
 import type { FooterConfig } from '../../../../lib/footerApi';
-import { FOOTER_TEMPLATES, PAYMENT_ICON_LABELS } from '../../../../lib/footerTemplates';
+import { FOOTER_TEMPLATES } from '../../../../lib/footerTemplates';
 import type { SocialLinks } from '../../../../lib/vendorApi';
 
 interface FooterPreviewProps {
@@ -50,14 +50,6 @@ export function FooterPreview({
           <div className="flex items-center gap-2 mb-3 text-regantify-text">
             <Store size={18} />
             <span className="font-semibold text-sm">{storeName}</span>
-          </div>
-        )}
-        {config.showSubscribeBlock && def.supportsSubscribe && (
-          <div className="flex mb-3 max-w-[220px]">
-            <div className="flex-1 h-8 rounded-l-md border border-black/10 bg-white" />
-            <div className="h-8 px-3 rounded-r-md bg-regantify-cta flex items-center text-white text-[10px] font-bold">
-              JOIN
-            </div>
           </div>
         )}
         {config.showSocialIcons && (
@@ -116,15 +108,6 @@ export function FooterPreview({
         <p className="text-xs text-regantify-text-muted line-clamp-3 mb-3">
           {config.aboutBlurb ? config.aboutBlurb.replace(/<[^>]+>/g, '') : `${storeName} — welcome to our store.`}
         </p>
-        {config.showPaymentIcons && config.paymentIcons.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {config.paymentIcons.map((key) => (
-              <span key={key} className="px-1.5 py-0.5 rounded border border-black/10 text-[9px] font-semibold text-regantify-text-muted">
-                {PAYMENT_ICON_LABELS[key]}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
     ),
   };
