@@ -9,6 +9,7 @@ import { formatTaka } from '../../../components/analytics/format';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { Dialog } from '../../../components/ui/Dialog';
 import { BlockDialog } from './AdminCustomers';
+import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 function Card({ title, children, className = '' }: { title: string; children: ReactNode; className?: string }) {
   return (
@@ -181,6 +182,7 @@ export default function AdminShopperDetail() {
         <div className="space-y-4 p-6">
           <h2 className="font-semibold text-regantify-text">{act?.title}</h2>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason (saved in the admin log)" className="w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm focus:outline-none" />
+          <ReasonNeed value={reason} />
           <button type="button" disabled={reason.trim().length < 5 || run.isPending} onClick={() => run.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">{run.isPending ? 'Working…' : act?.button}</button>
         </div>
       </Dialog>

@@ -5,6 +5,7 @@ import { adminFeesApi, type FeeDeal, type FeeDealType, type FeePayer } from '../
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../ui/Dialog';
+import { ReasonNeed } from './/ReasonNeed';
 
 export const DEAL_LABEL: Record<FeeDealType, string> = { COD: 'Cash on delivery fee', ONLINE_PAYMENT: 'Online payment fee', ADVANCE: 'Advance and payment-link fee' };
 export const rateText = (flat: number, percent: number) => `৳${flat} + ${percent}%`;
@@ -93,6 +94,7 @@ export function NewDealDialog({ store, open, onClose, onDone }: { store?: { id: 
           <input type="number" min={1} max={1095} value={days} onChange={(e) => setDays(e.target.value)} className={field} />
         </div>
         <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason, e.g. agreed on a call (saved in the admin log)" className={field} />
+        <ReasonNeed value={reason} />
         <p className="text-xs text-regantify-text-muted">The store keeps this rate even when the plan’s fee changes. A cash-on-delivery rate is shown to the store as “special rate”; the other two stay hidden from stores.</p>
         <button type="button" disabled={!ok || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
           {m.isPending ? 'Saving…' : 'Start the special fee'}
@@ -119,6 +121,7 @@ export function EndDealDialog({ deal, onClose, onDone }: { deal: FeeDeal | null;
       <div className="space-y-4 p-6">
         <h2 className="font-semibold text-regantify-text">End the special fee of {deal?.storeName}</h2>
         <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason (saved in the admin log)" className={field} />
+        <ReasonNeed value={reason} />
         <button type="button" disabled={reason.trim().length < 5 || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
           End it
         </button>

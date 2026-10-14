@@ -4,6 +4,7 @@ import { adminSwitchesApi, LIMIT_FIELDS, LIMIT_LABEL, type LimitField } from '..
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../ui/Dialog';
+import { ReasonNeed } from './/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'until ended');
@@ -114,6 +115,7 @@ export function StoreLimits({ vendorId, storeName }: { vendorId: string; storeNa
           <div>
             <label className="mb-1 block text-sm font-medium text-regantify-text">Reason</label>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} className={field} placeholder="Saved in the admin log; the store is told its limits changed" />
+            <ReasonNeed value={reason} />
           </div>
           <button type="button" disabled={picked.length === 0 || !validNumbers || reason.trim().length < 5 || save.isPending} onClick={() => save.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
             {save.isPending ? 'Saving…' : 'Save limits'}
@@ -126,6 +128,7 @@ export function StoreLimits({ vendorId, storeName }: { vendorId: string; storeNa
           <h2 className="font-semibold text-regantify-text">End the own limits of {storeName}</h2>
           <p className="text-sm text-regantify-text-muted">The store goes back to its plan’s limits at once. Nothing it already made is removed.</p>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} className={field} placeholder="Reason" />
+          <ReasonNeed value={reason} />
           <button type="button" disabled={reason.trim().length < 5 || end.isPending} onClick={() => end.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
             {end.isPending ? 'Working…' : 'End'}
           </button>

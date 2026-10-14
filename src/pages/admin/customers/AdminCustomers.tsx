@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { Dialog } from '../../../components/ui/Dialog';
+import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 const field = 'rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-regantify-text focus:outline-none';
 
@@ -33,6 +34,7 @@ export function BlockDialog({ phone: initial, open, onClose, onDone }: { phone?:
         <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">For proven fraud only. Every store’s checkout refuses this number, with the same plain message a shopper gets for any refusal. The number’s existing orders are not touched.</p>
         <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone, e.g. 017XXXXXXXX" className={area} disabled={!!initial} />
         <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason (saved in the admin log)" className={area} />
+        <ReasonNeed value={reason} />
         <input type="number" min={1} max={3650} value={days} onChange={(e) => setDays(e.target.value)} placeholder="For how many days? Leave empty for until removed" className={area} />
         <button type="button" disabled={phone.trim().length < 10 || reason.trim().length < 5 || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-50">
           {m.isPending ? 'Blocking…' : 'Block this number'}
@@ -168,6 +170,7 @@ function Blocklist() {
         <div className="space-y-4 p-6">
           <h2 className="font-semibold text-regantify-text">Take {removing} off the blacklist</h2>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason (saved in the admin log)" className="w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm focus:outline-none" />
+          <ReasonNeed value={reason} />
           <button type="button" disabled={reason.trim().length < 5 || unblock.isPending} onClick={() => unblock.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">Remove from the blacklist</button>
         </div>
       </Dialog>

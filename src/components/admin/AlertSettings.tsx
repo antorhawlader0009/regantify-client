@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminAlertsApi } from '../../lib/adminAlertsApi';
 import { apiErrorMessage } from '../../lib/api';
@@ -40,19 +40,35 @@ export function AlertSettings() {
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'That did not work. Please try again.')),
   });
+  // The tab is opened right on the click (a browser only lets that happen straight from a click) and sent to
+  // Telegram once the link is made; opening it after the request was blocked as a pop-up.
+  const tab = useRef<Window | null>(null);
   const connect = useMutation({
     mutationFn: adminAlertsApi.telegramLink,
     onSuccess: (r) => {
-      window.open(r.url, '_blank', 'noopener');
+      if (tab.current && !tab.current.closed) tab.current.location.href = r.url;
+      else window.open(r.url, '_blank');
+      tab.current = null;
       setWaiting(true);
     },
-    onError: (err) => toast.error(apiErrorMessage(err, 'Could not make the link.')),
+    onError: (err) => {
+      tab.current?.close();
+      tab.current = null;
+      toast.error(apiErrorMessage(err, 'Could not make the link.'));
+    },
   });
+  const startConnect = () => {
+    const w = window.open('', '_blank');
+    if (w) w.opener = null;
+    tab.current = w;
+    connect.mutate();
+  };
   const test = useMutation({
     mutationFn: adminAlertsApi.telegramTest,
     onSuccess: (r) => (r.sent > 0 ? toast.success('Sent. Check Telegram.') : toast.error('Nothing was sent. Connect Telegram first.')),
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not send the test message.')),
   });
-  const remove = useMutation({ mutationFn: adminAlertsApi.telegramRemove, onSuccess: refresh });
+  const remove = useMutation({ mutationFn: adminAlertsApi.telegramRemove, onSuccess: refresh, onError: (err) => toast.error(apiErrorMessage(err, 'Could not disconnect it.')) });
 
   if (isLoading || !data) return <p className="text-sm text-regantify-text-muted">Loading…</p>;
   const allowed = data.topics.filter((t) => t.allowed);
@@ -105,7 +121,7 @@ export function AlertSettings() {
               </ul>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" disabled={connect.isPending} onClick={() => connect.mutate()} className="rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-regantify-text disabled:opacity-50">
+              <button type="button" disabled={connect.isPending} onClick={startConnect} className="rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-regantify-text disabled:opacity-50">
                 {data.telegram.chats.length ? 'Connect another chat' : 'Connect Telegram'}
               </button>
               {data.telegram.chats.length > 0 && (

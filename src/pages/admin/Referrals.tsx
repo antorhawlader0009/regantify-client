@@ -9,6 +9,7 @@ import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { referralsApi, type AdminReferrals } from '../../lib/referralsApi';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
+import { ReasonNeed } from '../../components/admin/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const tk = (n: number) => `Tk ${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
@@ -364,6 +365,7 @@ function ReverseDialog({ earning, onClose }: { earning: AdminReferrals['earnings
             {tk(earning.amount)} is taken back from {earning.referrerName}'s wallet, and the referral of {earning.referredName} earns nothing more. The wallet must still hold the money.
           </p>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={300} placeholder="Why (kept in the admin log and the store's transactions)" className={field} />
+          <ReasonNeed value={reason} />
           <button type="button" disabled={reason.trim().length < 5 || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-50">
             {m.isPending ? 'Reversing...' : 'Reverse'}
           </button>

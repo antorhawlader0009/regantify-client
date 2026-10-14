@@ -8,6 +8,7 @@ import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
 import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
+import { ReasonNeed } from '../../components/admin/ReasonNeed';
 
 const field = 'rounded-xl bg-regantify-search px-3 py-2 text-sm text-regantify-text focus:outline-none';
 
@@ -111,6 +112,7 @@ export default function AdminReviews() {
             <h2 className="font-semibold text-regantify-text">{acting.hide ? 'Hide this review on every store page' : 'Show this review again'}</h2>
             <p className="text-sm text-regantify-text-muted">{acting.hide ? 'It stops showing and counting on the storefront whatever the store does with it. The store gets a notice with your reason.' : 'It follows the store’s own moderation again.'}</p>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={300} placeholder="Reason (kept in the admin log)" className={`${field} w-full`} />
+            <ReasonNeed value={reason} />
             <button type="button" disabled={reason.trim().length < 5 || act.isPending} onClick={() => act.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
               {act.isPending ? 'Working…' : acting.hide ? 'Hide review' : 'Show review'}
             </button>

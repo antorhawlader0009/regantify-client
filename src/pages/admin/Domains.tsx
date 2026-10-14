@@ -8,6 +8,7 @@ import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { DOMAIN_STATUS, domainsApi, type AdminDomainRow, type DomainStatus } from '../../lib/domainsApi';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
+import { ReasonNeed } from '../../components/admin/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 
@@ -152,6 +153,7 @@ function RemoveDialog({ row, onClose }: { row: AdminDomainRow | null; onClose: (
             certificate is made for the domain.
           </p>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={300} placeholder="Reason the store will read" className={field} />
+          <ReasonNeed value={reason} />
           <button type="button" disabled={reason.trim().length < 5 || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-50">
             {m.isPending ? 'Removing...' : 'Remove domain'}
           </button>

@@ -23,7 +23,7 @@ export function SavedRepliesDialog({ open, onClose }: { open: boolean; onClose: 
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save it.')),
   });
-  const del = useMutation({ mutationFn: (rid: string) => adminSupportApi.deleteReply(rid), onSuccess: refresh });
+  const del = useMutation({ mutationFn: (rid: string) => adminSupportApi.deleteReply(rid), onSuccess: refresh, onError: (err) => toast.error(apiErrorMessage(err, 'Could not delete it.')) });
   const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm focus:outline-none';
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()} maxWidth="max-w-lg">

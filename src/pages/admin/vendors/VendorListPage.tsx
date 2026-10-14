@@ -15,6 +15,7 @@ import { ImpersonateDialog } from '../../../components/admin/ImpersonateDialog';
 import { Dialog } from '../../../components/ui/Dialog';
 import { RowMenu } from '../../../components/admin/RowMenu';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
+import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 const BAND: Record<HealthBand, { label: string; cls: string }> = {
   HEALTHY: { label: 'Healthy', cls: 'bg-green-100 text-green-700' },
@@ -88,6 +89,7 @@ function BulkDialog({ kind, ids, onClose, onDone }: { kind: BulkKind | null; ids
         {kind === 'EXTEND' && <input type="number" min={1} max={365} value={days} onChange={(e) => setDays(Number(e.target.value))} className={field} placeholder="Days to add" />}
         {(kind === 'TAG_ADD' || kind === 'TAG_REMOVE') && <input value={tag} onChange={(e) => setTag(e.target.value)} maxLength={24} className={field} placeholder="Tag, e.g. vip" />}
         <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} className={field} placeholder="Reason (saved in the admin log)" />
+        <ReasonNeed value={reason} />
         <button type="button" disabled={!ok || m.isPending} onClick={() => m.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
           {m.isPending ? 'Working…' : 'Apply'}
         </button>

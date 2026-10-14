@@ -9,6 +9,7 @@ import { storefrontProductUrl } from '../../lib/storefrontUrl';
 import { toast } from '../../lib/toast';
 import { CATEGORY_LABEL, PROHIBITED_CATEGORIES, trustSafetyApi, type AdminProductRow, type ProductFlagRow } from '../../lib/trustSafetyApi';
 import { Dialog } from '../../components/ui/Dialog';
+import { ReasonNeed } from '../../components/admin/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const TABS = [
@@ -253,6 +254,7 @@ function HideDialog({
           <div>
             <label className="mb-1.5 block text-sm font-medium text-regantify-text">Reason the store will read</label>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={300} className={field} />
+            <ReasonNeed value={reason} />
           </div>
           <label className="flex items-start gap-2 text-sm text-regantify-text">
             <input type="checkbox" checked={warn} onChange={(e) => setWarn(e.target.checked)} className="mt-0.5 h-4 w-4 accent-red-600" />

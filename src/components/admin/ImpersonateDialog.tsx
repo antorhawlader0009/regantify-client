@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Dialog } from '../ui/Dialog';
 import { adminApi, type AdminVendor, type ImpersonationMode } from '../../lib/adminApi';
@@ -11,18 +11,36 @@ export function ImpersonateDialog({ vendor, onClose }: { vendor: AdminVendor | n
   const [mode, setMode] = useState<ImpersonationMode>('VIEW');
   const viewer = useAdminViewer();
 
+  // The new tab is opened right on the click (a browser only allows that straight from a click) and pointed at the
+  // store once the token is back; opening it after the request finished was blocked as a pop-up.
+  const tab = useRef<Window | null>(null);
+
   const start = useMutation({
     mutationFn: () => adminApi.impersonateVendor(vendor!.id, reason.trim(), mode),
     onSuccess: ({ token }) => {
-      window.open(`/vendor-impersonate?token=${encodeURIComponent(token)}`, '_blank', 'noopener');
+      const url = `/vendor-impersonate?token=${encodeURIComponent(token)}`;
+      if (tab.current && !tab.current.closed) tab.current.location.href = url;
+      else window.open(url, '_blank');
+      tab.current = null;
       setReason('');
       setMode('VIEW');
       onClose();
     },
-    onError: () => toast.error('Could not start a vendor session. Please try again.'),
+    onError: (err: any) => {
+      tab.current?.close();
+      tab.current = null;
+      toast.error(err?.response?.data?.message ?? 'Could not start a vendor session. Please try again.');
+    },
   });
 
-  const ok = reason.trim().length >= 5;
+  const MIN_REASON = 5;
+  const ok = reason.trim().length >= MIN_REASON;
+  const openStore = () => {
+    const w = window.open('', '_blank');
+    if (w) w.opener = null;
+    tab.current = w;
+    start.mutate();
+  };
   return (
     <Dialog open={!!vendor} onOpenChange={(o) => !o && onClose()} maxWidth="max-w-md">
       <div className="space-y-4 p-6">
@@ -38,6 +56,9 @@ export function ImpersonateDialog({ vendor, onClose }: { vendor: AdminVendor | n
             className="w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none"
           />
           <p className="mt-1 text-xs text-regantify-text-muted">The reason is saved in the admin log, and the store owner sees it in their Activity log.</p>
+          {reason.trim().length > 0 && !ok && (
+            <p className="mt-1 text-xs text-red-600">Write at least {MIN_REASON} letters ({MIN_REASON - reason.trim().length} more) to open the store.</p>
+          )}
         </div>
         <div className="space-y-2">
           {(
@@ -65,7 +86,7 @@ export function ImpersonateDialog({ vendor, onClose }: { vendor: AdminVendor | n
         </button>
         <button
           type="button"
-          onClick={() => start.mutate()}
+          onClick={openStore}
           disabled={!ok || start.isPending}
           className="rounded-xl bg-regantify-cta px-6 py-2.5 font-medium text-white transition-colors hover:bg-regantify-cta-dark disabled:opacity-60"
         >

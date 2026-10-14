@@ -9,6 +9,7 @@ import { toast } from '../../../lib/toast';
 import { formatTaka } from '../../../components/analytics/format';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { Dialog } from '../../../components/ui/Dialog';
+import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
@@ -49,6 +50,7 @@ function ActionDialog({ pick, onClose, onDone }: { pick: Pick | null; onClose: (
           </div>
         )}
         <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason (saved in the admin log)" className={field} />
+        <ReasonNeed value={reason} />
         <button type="button" disabled={reason.trim().length < 5 || m.isPending || (pick?.kind === 'extend' && (days < 1 || days > 365))} onClick={() => m.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
           {m.isPending ? 'Working…' : pick?.kind === 'remind' ? 'Send the reminder' : 'Extend'}
         </button>

@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { Dialog } from '../../../components/ui/Dialog';
+import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 /**
  * Super Admin > Pending Approval (super-admin-plan.md Step 5). Off by default: with "new stores need approval" on, a new sign-up waits here (storefront
@@ -118,6 +119,7 @@ export default function PendingApproval() {
           <h2 className="font-semibold text-regantify-text">Reject {rejecting?.storeName}</h2>
           <p className="text-xs text-regantify-text-muted">The store is suspended and the owner is texted this reason.</p>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={3} placeholder="Reason" className="w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm focus:outline-none" />
+          <ReasonNeed value={reason} />
           <button type="button" disabled={reason.trim().length < 5 || reject.isPending} onClick={() => reject.mutate()} className="w-full rounded-xl bg-red-600 py-2.5 text-sm font-medium text-white disabled:opacity-50">
             {reject.isPending ? 'Rejecting…' : 'Reject the store'}
           </button>

@@ -20,6 +20,7 @@ import { HealthChip } from './VendorListPage';
 import { StoreFeeDeals } from '../../../components/admin/FeeDeals';
 import { StoreLimits } from '../../../components/admin/StoreLimits';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
+import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4): everything about one store, and the actions on it.
 const TABS = [
@@ -211,7 +212,7 @@ function Notes({ id }: { id: string }) {
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the note.')),
   });
-  const pin = useMutation({ mutationFn: (v: { noteId: string; pinned: boolean }) => adminApi.pinStoreNote(id, v.noteId, v.pinned), onSuccess: refresh });
+  const pin = useMutation({ mutationFn: (v: { noteId: string; pinned: boolean }) => adminApi.pinStoreNote(id, v.noteId, v.pinned), onSuccess: refresh, onError: (err) => toast.error(apiErrorMessage(err, 'Could not pin the note.')) });
   return (
     <div className="max-w-3xl space-y-4">
       <Card title="Write a note">
@@ -529,6 +530,7 @@ function ReasonAction({ title, description, button, extra, run, danger }: { titl
           <div>
             <label className="mb-1.5 block text-sm font-medium text-regantify-text">Reason</label>
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={3} className={field} placeholder="Saved in the admin log" />
+            <ReasonNeed value={reason} />
           </div>
           <button type="button" disabled={reason.trim().length < 5 || m.isPending || (!!extra && (!Number.isInteger(n) || n < extra.min || n > extra.max))} onClick={() => m.mutate()} className="w-full rounded-xl bg-regantify-cta py-2.5 text-sm font-medium text-white disabled:opacity-50">
             {m.isPending ? 'Working…' : button}
@@ -629,6 +631,7 @@ function DangerDialog({ d, mode, onClose }: { d: StoreDetail; mode: 'close' | 't
           <>
             {mode === 'transfer' && <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="New owner’s phone, e.g. 017XXXXXXXX" className={field} />}
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} rows={2} placeholder="Reason (saved in the admin log)" className={field} />
+            <ReasonNeed value={reason} />
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder={`Type the store name: ${d.storeName}`} className={field} />
             <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="Your authenticator code (6 digits)" className={field} />
             <button

@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../../lib/api';
 import { isPendingApproval, toastPendingApproval, type PendingApproval } from '../../lib/approvalsApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { toast } from '../../lib/toast';
+import { ReasonNeed } from './/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const KIND_LABEL = { STORE_EXPORT: 'Store export', SHOPPER_EXPORT: 'Shopper export', SHOPPER_ERASE: 'Shopper erased' } as const;
@@ -73,6 +74,7 @@ function StoreExport({ onDone }: { onDone: () => void }) {
         </div>
       )}
       <textarea className={field} rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason for this request (kept in the log)" />
+      <ReasonNeed value={reason} />
       {!jobId ? (
         <button type="button" disabled={!store || reason.trim().length < 5 || start.isPending} onClick={() => start.mutate()} className="rounded-xl bg-regantify-cta px-5 py-2 text-sm font-medium text-white disabled:opacity-50">
           {start.isPending ? 'Starting…' : 'Make the export'}
@@ -105,6 +107,7 @@ function ShopperExport({ onDone }: { onDone: () => void }) {
     <Card title="Shopper data export" hint="Everything held about one phone number: account, saved addresses, orders on every store, reviews, abandoned checkouts and waitlists, as one JSON file.">
       <input className={field} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Shopper's phone, e.g. 017XXXXXXXX" inputMode="tel" />
       <textarea className={field} rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason for this request (kept in the log)" />
+      <ReasonNeed value={reason} />
       <button type="button" disabled={phone.trim().length < 10 || reason.trim().length < 5 || dl.isPending} onClick={() => dl.mutate()} className="rounded-xl bg-regantify-cta px-5 py-2 text-sm font-medium text-white disabled:opacity-50">
         {dl.isPending ? 'Working…' : 'Download the shopper’s data'}
       </button>
@@ -149,6 +152,7 @@ function ShopperErase({ onDone }: { onDone: () => void }) {
           </p>
           <input className={field} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Type the phone again to confirm" inputMode="tel" />
           <textarea className={field} rows={2} maxLength={300} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason / who asked, and how (kept in the log)" />
+          <ReasonNeed value={reason} />
           <input className={field} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Authenticator code" inputMode="numeric" />
           <button type="button" disabled={confirm.trim().length < 10 || reason.trim().length < 5 || code.length !== 6 || erase.isPending} onClick={() => erase.mutate()} className="rounded-xl bg-red-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-50">
             {erase.isPending ? 'Erasing…' : 'Erase this shopper'}
