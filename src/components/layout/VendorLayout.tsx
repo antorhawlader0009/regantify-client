@@ -3,6 +3,7 @@ import { AnnouncementBanner } from '../AnnouncementBanner';
 import { MaintenanceBar, TermsGate } from '../PlatformNotices';
 import { KycBanner } from '../KycBanner';
 import { PlanRenewalBar } from '../PlanRenewalBar';
+import { ChurnSurvey } from '../ChurnSurvey';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
@@ -73,6 +74,7 @@ export function VendorLayout() {
       <AssistantPanel />
       <WelcomeNote />
       <TermsGate />
+      <ChurnSurvey />
     </div>
   );
 }

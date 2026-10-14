@@ -29,6 +29,8 @@ const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/plans', 'plans.view'],
   ['/admin/plan-requests', 'plans.view'],
   ['/admin/renewals', 'plans.view'],
+  ['/admin/churn', 'money.view'],
+  ['/admin/referrals', 'money.view'],
   ['/admin/packs', 'plans.view'],
   ['/admin/payment-gateway', 'gateways.manage'],
   ['/admin/finance/revenue', 'money.view'],

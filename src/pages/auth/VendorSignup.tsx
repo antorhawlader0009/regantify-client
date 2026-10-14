@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { captureReferralFromUrl } from '../../lib/referralCapture';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../lib/authApi';
@@ -597,6 +598,8 @@ function VendorSignupInner() {
 }
 
 export default function VendorSignup() {
+  // A /vendor/signup?ref=CODE link: keep the code for the OTP step (super-admin-new.md Step 6).
+  useEffect(() => captureReferralFromUrl(), []);
   return (
     <LangProvider>
       <VendorSignupInner />

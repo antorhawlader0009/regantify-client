@@ -148,6 +148,9 @@ import SystemStatus from './pages/admin/SystemStatus';
 import FeatureFlags from './pages/admin/FeatureFlags';
 import TrustSafety from './pages/admin/TrustSafety';
 import Automations from './pages/admin/Automations';
+import Churn from './pages/admin/Churn';
+import AdminReferrals from './pages/admin/Referrals';
+import VendorReferrals from './pages/vendor/finance/Referrals';
 import ReceiptDetails from './pages/admin/ReceiptDetails';
 import AdminAnalytics from './pages/admin/Analytics';
 import AdminReviews from './pages/admin/Reviews';
@@ -278,6 +281,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/ai-automation/ai-chat-bot' &&
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/transactions' &&
+    r.path !== '/vendor/finance/referrals' &&
     r.path !== '/vendor/finance/withdraw' &&
     r.path !== '/vendor/finance/fee-summary' &&
     r.path !== '/vendor/finance/receipts' &&
@@ -312,6 +316,8 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/packs' &&
     r.path !== '/admin/messages' &&
     r.path !== '/admin/automations' &&
+    r.path !== '/admin/churn' &&
+    r.path !== '/admin/referrals' &&
     r.path !== '/admin/staff' &&
     r.path !== '/admin/finance/commission' &&
     r.path !== '/admin/orders' &&
@@ -502,6 +508,7 @@ export default function App() {
                 <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
+                <Route path="/vendor/finance/referrals" element={<VendorReferrals />} />
                 <Route path="/vendor/finance/receipts" element={<Receipts />} />
                 <Route path="/vendor/finance/withdraw" element={<Withdraw />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
@@ -589,6 +596,8 @@ export default function App() {
                 <Route path="/admin/packs" element={<PacksAndPromos />} />
                 <Route path="/admin/messages" element={<Messages />} />
                 <Route path="/admin/automations" element={<Automations />} />
+                <Route path="/admin/churn" element={<Churn />} />
+                <Route path="/admin/referrals" element={<AdminReferrals />} />
                 <Route path="/admin/staff" element={<Team />} />
                 <Route path="/admin/finance/commission" element={<CommissionSettings />} />
                 <Route path="/admin/customers" element={<AdminCustomers />} />

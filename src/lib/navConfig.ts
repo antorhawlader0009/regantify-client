@@ -35,6 +35,8 @@ import {
   ToggleRight,
   ShieldAlert,
   Workflow,
+  TrendingDown,
+  Gift,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -265,6 +267,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Transactions', path: '/vendor/finance/transactions' },
       { label: 'Expenses', path: '/vendor/finance/expenses' },
       { label: 'Withdraw', path: '/vendor/finance/withdraw' },
+      { label: 'Refer and earn', path: '/vendor/finance/referrals' },
       { label: 'Fee Summary', path: '/vendor/finance/fee-summary', advanced: true },
       { label: 'Receipts', path: '/vendor/finance/receipts', advanced: true },
     ],
@@ -303,6 +306,8 @@ export const adminNav: NavSection[] = [
   { label: 'Plans', icon: Wallet, group: 'Money', path: '/admin/plans' },
   { label: 'Plan requests', icon: Inbox, group: 'Money', path: '/admin/plan-requests' },
   { label: 'Renewals', icon: RefreshCw, group: 'Money', path: '/admin/renewals' },
+  { label: 'Churn', icon: TrendingDown, group: 'Money', path: '/admin/churn' },
+  { label: 'Referrals', icon: Gift, group: 'Money', path: '/admin/referrals' },
   { label: 'Packs and promos', icon: Tags, group: 'Money', path: '/admin/packs' },
   { label: 'Payment gateways', icon: CreditCard, group: 'Money', path: '/admin/payment-gateway' },
 

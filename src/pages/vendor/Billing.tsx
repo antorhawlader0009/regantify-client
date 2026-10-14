@@ -93,7 +93,8 @@ export default function Billing() {
   });
 
   // A promo code (super-admin-plan.md Step 10): "Apply" asks the server what each paid plan would cost with it; paying sends the same code.
-  const [promoInput, setPromoInput] = useState('');
+  // ?promo=CODE (a churn offer, super-admin-new.md Step 5) fills the box; the owner still presses Apply.
+  const [promoInput, setPromoInput] = useState(() => new URLSearchParams(window.location.search).get('promo')?.toUpperCase().slice(0, 24) ?? '');
   const [promo, setPromo] = useState<{ code: string; quotes: Partial<Record<PlanCode, PromoQuote>> } | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
   const applyPromo = useMutation({
