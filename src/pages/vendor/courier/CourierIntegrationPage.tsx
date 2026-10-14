@@ -45,6 +45,14 @@ const COURIERS: CourierInfo[] = [
     pitch: 'Book parcels and follow them, with delivery charge quotes before you send.',
     storeName: (a) => a.redxStoreName,
   },
+  {
+    provider: 'CARRYBEE',
+    name: 'CarryBee',
+    path: '/vendor/courier/carrybee',
+    plan: 'Paid plans',
+    pitch: 'Book parcels and get status updates; city and zone are found from the address.',
+    storeName: (a) => a.carrybeeStoreName ?? null,
+  },
 ];
 
 function CourierCard({

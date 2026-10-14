@@ -1,5 +1,18 @@
 import { api } from './api';
 
+export type SmsGatewayProvider = 'ISMSPLUS' | 'MIM_SMS';
+
+export interface OwnSmsGatewayInfo {
+  provider: SmsGatewayProvider;
+  senderId: string;
+  userName: string | null;
+  /** False while Regantify has the add-on turned off (texts then use credits). */
+  active: boolean;
+  lastError: string | null;
+  lastErrorAt: string | null;
+  connectedAt: string;
+}
+
 export interface SmsLog {
   id: string;
   vendorId: string;
@@ -34,7 +47,15 @@ export const smsApi = {
   updateBirthday: (payload: Partial<Pick<BirthdaySmsSettings, 'enabled' | 'birthdayMessage' | 'specialMessage' | 'couponCode'>>) =>
     api.patch<BirthdaySmsSettings>('/v1/sms/birthday', payload).then((r) => r.data),
 
-  getCredits: () => api.get<{ smsCredits: number }>('/v1/sms/credits').then((r) => r.data),
+  /** `ownGateway`: the store's own SMS gateway sends its texts (Add-ons), so credits aren't used. */
+  getCredits: () => api.get<{ smsCredits: number; ownGateway: SmsGatewayProvider | null }>('/v1/sms/credits').then((r) => r.data),
+
+  /** Add-ons > iSMSplus / MIM SMS: the store's own gateway (never its keys). */
+  getGateway: () => api.get<{ gateway: OwnSmsGatewayInfo | null }>('/v1/sms/gateway').then((r) => r.data),
+  /** Owner only. A test text goes to testPhone through it first; saved only if that works. */
+  connectGateway: (body: { provider: SmsGatewayProvider; senderId: string; testPhone: string; apiToken?: string; userName?: string; apiKey?: string }) =>
+    api.post<{ gateway: OwnSmsGatewayInfo | null }>('/v1/sms/gateway', body).then((r) => r.data),
+  disconnectGateway: () => api.delete<{ gateway: null }>('/v1/sms/gateway').then((r) => r.data),
 
   getLogs: () => api.get<SmsLog[]>('/v1/sms/logs').then((r) => r.data),
 

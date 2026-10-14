@@ -1,89 +1,167 @@
 import type { ComponentType } from 'react';
-import { HandCoins, Mail, MessageSquare, MessagesSquare, Percent, ShieldCheck, Smartphone, MessageSquareText, Truck, Wallet, type LucideProps } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { addonsApi } from '../../../lib/addonsApi';
+import {
+  ChevronRight,
+  HandCoins,
+  Mail,
+  MessageSquare,
+  MessagesSquare,
+  Package,
+  Percent,
+  ShieldCheck,
+  Smartphone,
+  MessageSquareText,
+  Truck,
+  Wallet,
+  type LucideProps,
+} from 'lucide-react';
 
 /**
- * Add-ons: the extra tools a store can connect. For now this is the catalogue only; the cards do nothing
- * and each add-on gets its own setup later. Logos live in /public/addons; an add-on with no logo shows an icon.
+ * Add-ons: the extra tools a store can connect. Each card is one of three states:
+ * - `path`: ready. The card opens the page where it is set up (a gateway's connect form, a courier's page, ...).
+ * - `soon`: we have the provider's documentation and it is being built, one at a time.
+ * - neither: waiting for the provider's documentation. Greyed out and not clickable; the list of missing documents is
+ *   kept in z-others/documentations/missing-documentation.txt.
+ * Super Admin can turn any add-on off for every store (Super Admin > Add-ons): it then shows greyed out as turned off.
+ * Logos live in /public/addons; an add-on with no logo shows an icon.
  */
 interface Addon {
+  /** Same key as server/src/addons/addons.ts: Super Admin can turn it off for every store. */
+  key: string;
   name: string;
   about: string;
   /** File in /public/addons. */
   logo?: string;
   icon?: ComponentType<LucideProps>;
+  /** Ready: the dashboard page that sets it up. */
+  path?: string;
+  /** Documentation in hand, being built. */
+  soon?: boolean;
 }
 
 const GROUPS: { title: string; items: Addon[] }[] = [
   {
     title: 'Payments',
     items: [
-      { name: 'SSLCommerz Payment Gateway', about: 'Cards, mobile wallets and net banking at checkout', logo: 'sslcommerz.svg' },
-      { name: 'bKash Payments', about: 'Take bKash payments straight at checkout', logo: 'bkash.png' },
-      { name: 'bKash', about: 'Let customers pay to your own bKash number', logo: 'bkash.png' },
-      { name: 'bKash (URL Checkout)', about: 'Send customers to the bKash page to pay', logo: 'bkash.png' },
-      { name: 'PortWallet Payment Gateway', about: 'Accept digital payments through PortWallet', logo: 'portwallet.png' },
-      { name: 'Manual Mobile Payment', about: 'Take payments to personal bKash, Nagad and other accounts', icon: HandCoins },
-      { name: 'Partial Payment', about: 'Take part of the payment up front on cash on delivery orders', icon: Wallet },
-      { name: 'Nagad', about: 'Take Nagad payments at checkout', logo: 'nagad.png' },
-      { name: 'Shurjopay', about: 'Cards and mobile wallets through Shurjopay', logo: 'shurjopay.png' },
-      { name: 'Aamarpay', about: 'Cards and mobile wallets through Aamarpay', logo: 'aamarpay.png' },
+      { key: 'SSLCOMMERZ', name: 'SSLCommerz Payment Gateway', about: 'Cards, mobile wallets and net banking at checkout', logo: 'sslcommerz.svg', path: '/vendor/store/payment-gateway?connect=sslcommerz' },
+      { key: 'SHURJOPAY', name: 'shurjoPay', about: 'Cards and mobile wallets through your own shurjoPay store', logo: 'shurjopay.png', path: '/vendor/store/payment-gateway?connect=shurjopay' },
+      { key: 'PARTIAL_PAYMENT', name: 'Partial Payment', about: 'Take an advance on cash on delivery orders before they ship', icon: Wallet, path: '/vendor/store/cod-guard' },
+      { key: 'MANUAL_MOBILE_PAYMENT', name: 'Manual Mobile Payment', about: 'Take payments to personal bKash, Nagad and other accounts', icon: HandCoins, path: '/vendor/store/payment-gateway?connect=manual-mobile' },
+      { key: 'AAMARPAY', name: 'aamarPay', about: 'Cards and mobile wallets through Aamarpay', logo: 'aamarpay.png' },
+      { key: 'BKASH_PAYMENTS', name: 'bKash Payments', about: 'Take bKash payments straight at checkout', logo: 'bkash.png' },
+      { key: 'BKASH', name: 'bKash', about: 'Let customers pay with bKash through your merchant account', logo: 'bkash.png' },
+      { key: 'BKASH_URL', name: 'bKash (URL Checkout)', about: 'Send customers to the bKash page to pay', logo: 'bkash.png' },
+      { key: 'NAGAD', name: 'Nagad', about: 'Take Nagad payments at checkout', logo: 'nagad.png' },
+      { key: 'PORTWALLET', name: 'PortWallet Payment Gateway', about: 'Accept digital payments through PortWallet', logo: 'portwallet.png' },
+      { key: 'PAYSTATION', name: 'PayStation', about: 'Take payments through your own PayStation merchant account', icon: Wallet },
     ],
   },
   {
     title: 'Couriers',
     items: [
-      { name: 'Pathao Courier', about: 'Book parcels and follow delivery with Pathao', logo: 'pathao.png' },
-      { name: 'SteadFast Courier', about: 'Book parcels and follow delivery with SteadFast', logo: 'steadfast.png' },
-      { name: 'REDX Courier', about: 'Book parcels and follow delivery with REDX', logo: 'redx.svg' },
-      { name: 'MoveOn Drop', about: 'Send parcels with MoveOn Drop', icon: Truck },
+      { key: 'PATHAO', name: 'Pathao Courier', about: 'Book parcels and follow delivery with Pathao', logo: 'pathao.png', path: '/vendor/courier/pathao' },
+      { key: 'STEADFAST', name: 'SteadFast Courier', about: 'Book parcels and follow delivery with SteadFast', logo: 'steadfast.png', path: '/vendor/courier/steadfast' },
+      { key: 'REDX', name: 'REDX Courier', about: 'Book parcels and follow delivery with REDX', logo: 'redx.svg', path: '/vendor/courier/redx' },
+      { key: 'PAPERFLY', name: 'Paperfly Courier', about: 'Book parcels and follow delivery with Paperfly', icon: Truck },
+      { key: 'CARRYBEE', name: 'CarryBee Courier', about: 'Book parcels and follow delivery with CarryBee', icon: Truck, path: '/vendor/courier/carrybee' },
+      { key: 'MOVEON_DROP', name: 'MoveOn Drop', about: 'Sell MoveOn products and have MoveOn ship them', icon: Package },
+      { key: 'MOVEDROP', name: 'MoveDrop', about: 'Dropship from 1688 and Taobao with MoveDrop', icon: Package },
     ],
   },
   {
     title: 'Messages',
     items: [
-      { name: 'Custom SMS', about: 'Send texts through your own SMS provider', icon: MessageSquareText },
-      { name: 'JhoroTek Infobuzzer', about: 'Send texts through the JhoroTek Infobuzzer gateway', icon: MessagesSquare },
-      { name: 'SSL Wireless iSMSplus', about: 'Send texts through the SSL Wireless SMS gateway', logo: 'sslwireless.png' },
-      { name: 'Regantify Email', about: 'Ready-to-use email sending for your store', icon: Mail },
-      { name: 'Regantify SMS', about: 'Ready-to-use SMS sending for your store, no setup needed', icon: MessageSquare },
+      { key: 'REGANTIFY_SMS', name: 'Regantify SMS', about: 'Ready-to-use SMS sending for your store, no setup needed', icon: MessageSquare, path: '/vendor/sms' },
+      { key: 'CUSTOM_SMS', name: 'Custom SMS', about: 'Your own text for each order status sent to customers', icon: MessageSquareText, path: '/vendor/store/order-tracking' },
+      { key: 'ISMSPLUS', name: 'SSL Wireless iSMSplus', about: 'Send texts through the SSL Wireless SMS gateway', logo: 'sslwireless.png', path: '/vendor/sms?tab=gateway&provider=ISMSPLUS' },
+      { key: 'MIM_SMS', name: 'MIM SMS', about: 'Send texts through your own MIM SMS account', icon: MessagesSquare, path: '/vendor/sms?tab=gateway&provider=MIM_SMS' },
+      { key: 'SMSGEN', name: 'SMSGen', about: 'Send texts through your own SMSGen account', icon: MessagesSquare },
+      { key: 'GENNET_SMS', name: 'Gennet SMS', about: 'Send texts through your own Gennet SMS account', icon: MessagesSquare },
+      { key: 'JHOROTEK', name: 'JhoroTek Infobuzzer', about: 'Send texts through the JhoroTek Infobuzzer gateway', icon: MessagesSquare },
+      { key: 'REGANTIFY_EMAIL', name: 'Regantify Email', about: 'Ready-to-use email sending for your store', icon: Mail, soon: true },
     ],
   },
   {
     title: 'Store tools',
     items: [
-      { name: 'Conditional Discounts', about: 'Discounts that apply only when your rules match', icon: Percent },
-      { name: 'Custom Role Editor', about: 'Choose exactly what each team member can do', icon: ShieldCheck },
-      { name: 'PWA (Mobile App)', about: 'Let customers add your store to their phone', icon: Smartphone },
+      { key: 'CONDITIONAL_DISCOUNTS', name: 'Conditional Discounts', about: 'Discounts that apply only when your rules match', icon: Percent, path: '/vendor/marketing/discounts' },
+      { key: 'CUSTOM_ROLES', name: 'Custom Role Editor', about: 'Choose exactly what each team member can do', icon: ShieldCheck, path: '/vendor/staff' },
+      { key: 'PWA', name: 'PWA (Mobile App)', about: 'Let customers add your store to their phone', icon: Smartphone, soon: true },
     ],
   },
 ];
 
-function AddonCard({ addon }: { addon: Addon }) {
+function AddonCard({ addon, turnedOff }: { addon: Addon; turnedOff: boolean }) {
   const Icon = addon.icon;
-  return (
-    <li className="flex items-center gap-4 rounded-xl border border-line bg-white p-4">
+  const waiting = turnedOff || (!addon.path && !addon.soon);
+  const path = turnedOff ? undefined : addon.path;
+  const body = (
+    <>
       <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line bg-white">
         {addon.logo ? (
-          <img src={`/addons/${addon.logo}`} alt="" className="h-full w-full object-contain p-1.5" loading="lazy" />
+          <img
+            src={`/addons/${addon.logo}`}
+            alt=""
+            className={`h-full w-full object-contain p-1.5 ${waiting ? 'grayscale' : ''}`}
+            loading="lazy"
+          />
         ) : (
           Icon && <Icon size={24} strokeWidth={1.6} className="text-neutral-500" aria-hidden />
         )}
       </span>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-[15px] font-medium leading-snug text-regantify-text">{addon.name}</p>
         <p className="mt-0.5 text-[13px] leading-snug text-regantify-text-muted">{addon.about}</p>
+        {!path && (
+          <span
+            className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              !turnedOff && addon.soon ? 'bg-amber-50 text-amber-700' : 'bg-neutral-100 text-neutral-500'
+            }`}
+          >
+            {turnedOff ? 'Turned off by Regantify' : addon.soon ? 'Coming soon' : 'Not available yet'}
+          </span>
+        )}
       </div>
+      {path && <ChevronRight size={18} className="shrink-0 text-regantify-text-muted" aria-hidden />}
+    </>
+  );
+
+  if (path) {
+    return (
+      <li>
+        <Link
+          to={path}
+          className="flex h-full items-center gap-4 rounded-xl border border-line bg-white p-4 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
+        >
+          {body}
+        </Link>
+      </li>
+    );
+  }
+  return (
+    <li
+      aria-disabled="true"
+      className={`flex items-center gap-4 rounded-xl border border-line p-4 cursor-not-allowed select-none ${
+        waiting ? 'bg-neutral-50 opacity-60' : 'bg-white'
+      }`}
+    >
+      {body}
     </li>
   );
 }
 
 export default function Addons() {
+  // Add-ons Super Admin turned off for every store; while this loads, every card shows as usual.
+  const { data: off = [] } = useQuery({ queryKey: ['addons-off'], queryFn: addonsApi.off });
   return (
     <div className="max-w-6xl">
       <header className="mb-8">
         <h1 className="text-2xl font-semibold text-regantify-text">Add-ons</h1>
         <p className="mt-1 max-w-xl text-sm text-regantify-text-muted">
-          Extra tools you can connect to your store. We are setting these up one by one, so they can’t be turned on yet.
+          Extra tools you can connect to your store. Open one to set it up. Those marked “Coming soon” are being added one by
+          one.
         </p>
       </header>
 
@@ -93,7 +171,7 @@ export default function Addons() {
             <h2 className="mb-3 text-base font-semibold text-regantify-text">{g.title}</h2>
             <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {g.items.map((a) => (
-                <AddonCard key={a.name} addon={a} />
+                <AddonCard key={a.key} addon={a} turnedOff={off.includes(a.key)} />
               ))}
             </ul>
           </section>

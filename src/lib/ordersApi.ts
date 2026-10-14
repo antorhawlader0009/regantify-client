@@ -63,7 +63,7 @@ export interface AssignmentOverview {
   myStaffId: string | null;
 }
 
-export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX';
+export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
 
 // Real-booking lifecycle for courierProvider — see COURIER-PLAN.md
 // §2.4/§3.4. Distinct from OrderStatus: courierProvider/
@@ -216,6 +216,13 @@ export interface Order {
   labels?: string[];
   /** Where a hand-made order came from (TellMe idea 121); vendor only. */
   manualChannel?: string | null;
+  /** Manual Mobile Payment (Add-ons): the wallet, sender number and TrxID the shopper typed, and what the store found. */
+  manualPaymentWallet?: string | null;
+  manualPaymentSender?: string | null;
+  manualPaymentTrxId?: string | null;
+  manualPaymentStatus?: 'PENDING_CHECK' | 'RECEIVED' | 'NOT_RECEIVED' | null;
+  manualPaymentCheckedAt?: string | null;
+  manualPaymentCheckedBy?: string | null;
   /** Gift (TellMe idea 57): wrapped, with a message, optionally with the prices hidden on the invoice. giftWrapCharge is part of total. */
   isGift?: boolean;
   giftMessage?: string | null;
@@ -346,6 +353,8 @@ export interface ListOrdersParams {
   source?: 'STOREFRONT' | 'MANUAL' | 'POS';
   /** Only orders marked as a possible duplicate of an earlier one. */
   possibleDuplicate?: boolean;
+  /** Manual Mobile Payment: orders whose TrxID the store hasn't checked yet, or found not received. */
+  manualPayment?: 'PENDING_CHECK' | 'NOT_RECEIVED';
   /** Order risk badge: HIGH = high only, MEDIUM_UP = medium and high. */
   risk?: 'HIGH' | 'MEDIUM_UP';
   /** Only orders whose shopper asked for this delivery day (YYYY-MM-DD). */
@@ -522,6 +531,12 @@ export const ordersApi = {
 
   /** Take an unpaid payment link back. */
   cancelPaymentLink: (id: string) => api.delete<{ cancelled: boolean }>(`/v1/orders/${id}/payment-link`).then((r) => r.data),
+
+  /** Manual Mobile Payment: the store checked its wallet. With NOT_RECEIVED, `switchToCod` makes it cash on delivery. */
+  checkManualPayment: (id: string, result: 'RECEIVED' | 'NOT_RECEIVED', switchToCod = false) =>
+    api
+      .post<{ id: string; manualPaymentStatus: string; paymentMethod: string }>(`/v1/orders/${id}/manual-payment`, { result, switchToCod })
+      .then((r) => r.data),
 
   /** Order detail's "Not a duplicate": clears the possible-duplicate mark. */
   dismissDuplicate: (id: string) =>

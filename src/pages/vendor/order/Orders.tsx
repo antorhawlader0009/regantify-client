@@ -152,23 +152,26 @@ const COURIER_LABELS: Record<CourierProvider, string> = {
   PATHAO: 'Pathao Courier',
   STEADFAST: 'SteadFast Courier',
   REDX: 'RedX Courier',
+  CARRYBEE: 'CarryBee Courier',
 };
 
 type BookableCourier = Exclude<CourierProvider, 'NONE'>;
 
 // Order in the "Send to courier" menu: the free one first.
-const BOOKABLE_COURIERS: BookableCourier[] = ['STEADFAST', 'PATHAO', 'REDX'];
+const BOOKABLE_COURIERS: BookableCourier[] = ['STEADFAST', 'PATHAO', 'REDX', 'CARRYBEE'];
 
 const COURIER_SHORT: Record<BookableCourier, string> = {
   PATHAO: 'Pathao',
   STEADFAST: 'SteadFast',
   REDX: 'RedX',
+  CARRYBEE: 'CarryBee',
 };
 
 const COURIER_SEND_HINT: Record<BookableCourier, string> = {
   STEADFAST: 'One click, with your SteadFast defaults',
   PATHAO: 'Opens the booking window',
   REDX: 'One click, with your RedX defaults',
+  CARRYBEE: 'One click, with your CarryBee defaults',
 };
 
 async function copyTrackingId(id: string) {
@@ -451,6 +454,21 @@ function OrderRow({
         )}
         <OrderRiskBadge order={order} />
         <AddressCheckMark order={order} />
+        {order.manualPaymentStatus === 'PENDING_CHECK' && (
+          <p
+            className="mt-1 inline-flex items-center gap-1 rounded border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-900"
+            title={`${order.manualPaymentWallet ?? 'Mobile'} payment from ${order.manualPaymentSender ?? ''}, TrxID ${order.manualPaymentTrxId ?? ''}. Check your wallet, then mark it on the order.`}
+          >
+            <Wallet size={10} aria-hidden />
+            Check {order.manualPaymentWallet ?? 'mobile'} payment
+          </p>
+        )}
+        {order.manualPaymentStatus === 'NOT_RECEIVED' && order.paymentMethod !== 'COD' && (
+          <p className="mt-1 inline-flex items-center gap-1 rounded border border-red-300 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-800">
+            <Wallet size={10} aria-hidden />
+            Payment not received
+          </p>
+        )}
         {order.possibleDuplicateOfId && (
           <p
             className="mt-1 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900"
@@ -810,6 +828,8 @@ export default function Orders() {
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
   const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
+  // Manual Mobile Payment (Add-ons): orders whose TrxID nobody has checked yet. Also ?manualPayment=PENDING_CHECK.
+  const [mobileToCheck, setMobileToCheck] = useState(() => searchParams.get('manualPayment') === 'PENDING_CHECK');
   // "Risky" (TellMe idea 143): medium and high risk orders; a saved view can also hold high only.
   const [risk, setRisk] = useState<'HIGH' | 'MEDIUM_UP' | ''>(() => {
     const q = searchParams.get('risk');
@@ -870,7 +890,7 @@ export default function Orders() {
   // Pre-orders (TellMe idea 64): 'any' or the expected date.
   const [preOrder, setPreOrder] = useState(() => searchParams.get('preOrder') ?? '');
   const [channel, setChannel] = useState(() => searchParams.get('channel') ?? '');
-  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, risk, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter]);
+  useEffect(() => setPage(1), [search, activeTab, perPage, dateFrom, dateTo, trashView, callStatus, courierBooking, source, duplicatesOnly, mobileToCheck, risk, preferredDate, lossOnly, expressOnly, assignee, preOrder, channel, labelFilter]);
   const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
   const [assignSettingsOpen, setAssignSettingsOpen] = useState(false);
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
@@ -961,6 +981,7 @@ export default function Orders() {
         courierBooking,
         source: source || undefined,
         possibleDuplicate: duplicatesOnly || undefined,
+        manualPayment: mobileToCheck ? 'PENDING_CHECK' : undefined,
         risk: risk || undefined,
         preferredDate: preferredDate || undefined,
         assignee: assignee || undefined,
@@ -1006,6 +1027,7 @@ export default function Orders() {
                 courierBooking,
                 source: source || undefined,
                 possibleDuplicate: duplicatesOnly || undefined,
+                manualPayment: mobileToCheck ? 'PENDING_CHECK' : undefined,
                 risk: risk || undefined,
                 preferredDate: preferredDate || undefined,
                 lossOnly: (canProfit && lossOnly) || undefined,
@@ -1127,7 +1149,7 @@ export default function Orders() {
   }
 
   // The less-used filters and tools sit behind "More filters and tools"; it opens by itself while one of them is in use.
-  const advancedInUse = [preOrder !== '', labelFilter !== '', channel !== '', preferredDate !== '', expressOnly, duplicatesOnly, risk !== '', lossOnly, showProfit].filter(Boolean).length;
+  const advancedInUse = [preOrder !== '', labelFilter !== '', channel !== '', preferredDate !== '', expressOnly, duplicatesOnly, mobileToCheck, risk !== '', lossOnly, showProfit].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
   const adv = advancedPick ?? false;
   const toggleAdvanced = () => setAdvancedPick(!adv);
@@ -1337,6 +1359,16 @@ export default function Orders() {
               >
                 <Copy size={15} />
                 Possible duplicates
+              </button>
+              <button
+                type="button"
+                aria-pressed={mobileToCheck}
+                onClick={() => setMobileToCheck((v) => !v)}
+                title="Orders paid by bKash / Nagad to your own number whose transaction ID you haven't checked yet"
+                className={`${toolbarBtn} ${mobileToCheck ? 'border-sky-300 bg-sky-50 text-sky-900' : ''}`}
+              >
+                <Wallet size={15} />
+                Mobile payments to check
               </button>
               <button
                 type="button"

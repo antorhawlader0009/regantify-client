@@ -9,11 +9,13 @@ import { Field, productInputClass } from '../../../components/product/ProductFor
 import { EmptyState, PageHeader, PillTabs, StackedList, TableFrame, TableSkeleton, primaryBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
 import { BuySmsDialog, perSms } from './BuySmsDialog';
 import { useCan } from '../../../lib/useStaffAccess';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import type { SmsGatewayProvider } from '../../../lib/smsApi';
 import { SendToCustomers } from '../../../components/sms/SendToCustomers';
 import { BirthdayWishes } from '../../../components/sms/BirthdayWishes';
+import { OwnSmsGateway } from '../../../components/sms/OwnSmsGateway';
 
-type Tab = 'send' | 'logs' | 'test' | 'birthday';
+type Tab = 'send' | 'logs' | 'test' | 'birthday' | 'gateway';
 
 /**
  * Sent messages, newest first (the last 30). The gateway (bulksmsbd.net)
@@ -159,14 +161,18 @@ export default function Sms() {
   const canTest = useCan('sms.manage');
   // Customers page "Send SMS" opens here with the picked customers' phones.
   const pickedPhones = (useLocation().state as { smsPhones?: string[] } | null)?.smsPhones;
-  const [tab, setTab] = useState<Tab>(pickedPhones?.length ? 'send' : 'logs');
+  // Add-ons opens ?tab=gateway&provider=ISMSPLUS|MIM_SMS.
+  const [searchParams] = useSearchParams();
+  const gatewayProvider = (searchParams.get('provider') as SmsGatewayProvider | null) ?? undefined;
+  const [tab, setTab] = useState<Tab>(pickedPhones?.length ? 'send' : searchParams.get('tab') === 'gateway' ? 'gateway' : 'logs');
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
 
   const { data: creditsData, isLoading } = useQuery({ queryKey: ['sms-credits'], queryFn: () => smsApi.getCredits() });
   const { data: packages } = useQuery({ queryKey: ['sms-packages'], queryFn: () => smsApi.getPackages() });
   const credits = creditsData?.smsCredits ?? 0;
+  const ownGateway = creditsData?.ownGateway ?? null;
   const cheapest = packages?.reduce<(typeof packages)[number] | null>((b, p) => (!b || p.price / p.smsCount < b.price / b.smsCount ? p : b), null);
-  const low = !isLoading && credits < 50;
+  const low = !isLoading && !ownGateway && credits < 50;
 
   return (
     <div className="space-y-4">
@@ -181,6 +187,7 @@ export default function Sms() {
             <p className="text-3xl font-semibold tabular-nums text-regantify-text">{credits.toLocaleString()}</p>
           )}
           <p className="mt-0.5 text-xs text-neutral-500">
+            {ownGateway ? `Your texts go through your own ${ownGateway === 'ISMSPLUS' ? 'iSMSplus' : 'MIM SMS'} account, so these credits are not used. ` : ''}
             {low ? 'Running low: messages stop when this reaches 0. ' : ''}
             {cheapest ? `From ${perSms(cheapest)} per SMS. A long message can use 2 or more.` : 'A long message can use 2 or more.'}
           </p>
@@ -196,17 +203,18 @@ export default function Sms() {
 
       <section className="rounded-xl border border-line bg-white p-3.5">
         <PillTabs<Tab>
-          value={canTest ? tab : 'logs'}
+          value={canTest || tab === 'gateway' ? tab : 'logs'}
           onChange={setTab}
           tabs={[
             ...(canTest ? [{ id: 'send' as const, label: 'Send to customers' }] : []),
             { id: 'logs', label: 'Sent messages' },
             ...(canTest ? [{ id: 'birthday' as const, label: 'Birthday wishes' }] : []),
             ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : []),
+            { id: 'gateway' as const, label: 'Your own gateway' },
           ]}
         />
         <div className="px-0.5">
-          {tab === 'birthday' && canTest ? <BirthdayWishes /> : tab === 'test' && canTest ? <TestSms /> : tab === 'send' && canTest ? <SendToCustomers selectedPhones={pickedPhones} /> : <SentLogs />}
+          {tab === 'gateway' ? <OwnSmsGateway initialProvider={gatewayProvider} isOwner={isOwner} /> : tab === 'birthday' && canTest ? <BirthdayWishes /> : tab === 'test' && canTest ? <TestSms /> : tab === 'send' && canTest ? <SendToCustomers selectedPhones={pickedPhones} /> : <SentLogs />}
         </div>
       </section>
 

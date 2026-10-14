@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { OrderStatus } from './ordersApi';
 
-export type CourierAccountProvider = 'PATHAO' | 'STEADFAST' | 'REDX';
+export type CourierAccountProvider = 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
 
 export interface CourierAccount {
   id: string;
@@ -11,6 +11,8 @@ export interface CourierAccount {
   pathaoStoreName: string | null;
   redxStoreId: number | null;
   redxStoreName: string | null;
+  carrybeeStoreId?: string | null;
+  carrybeeStoreName?: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,20 @@
 import { api } from './api';
 
-export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION';
+export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'SHURJOPAY' | 'AAMARPAY' | 'MANUAL_MOBILE';
+
+// Manual Mobile Payment (Add-ons): mirrors server/src/payment-gateways/manual-mobile.ts.
+export type ManualMobileWallet = 'BKASH' | 'NAGAD' | 'ROCKET' | 'UPAY' | 'OTHER';
+export interface ManualMobileAccount {
+  wallet: ManualMobileWallet;
+  label: string | null;
+  number: string;
+  kind: 'PERSONAL' | 'AGENT' | 'MERCHANT';
+}
+export interface ManualMobileConfig {
+  accounts: ManualMobileAccount[];
+  instructions: string;
+  markReceived: boolean;
+}
 export type PaymentGatewayStatus = 'ACTIVE' | 'DISABLED' | 'COMING_SOON';
 // Who pays platformChargeBdt — CUSTOMER (default, added to the order
 // total) or VENDOR (never charged to the shopper, comes out of this
@@ -68,6 +82,24 @@ export const paymentGatewaysApi = {
         platformChargeBdt,
       })
       .then((r) => r.data),
+
+  /** Add-ons > Manual Mobile Payment: the saved numbers (null when never set up). */
+  getManualMobile: () => api.get<{ config: ManualMobileConfig | null }>('/v1/payment-gateways/manual-mobile').then((r) => r.data.config),
+  /** Saving turns it on at checkout. */
+  saveManualMobile: (body: ManualMobileConfig & { displayLabel?: string; platformChargeBdt?: number }) =>
+    api.put<{ id: string; type: PaymentGatewayType; status: PaymentGatewayStatus }>('/v1/payment-gateways/manual-mobile', body).then((r) => r.data),
+
+  /** Add-ons > shurjoPay. The server tries the login with shurjoPay before saving it. */
+  connectShurjopay: (payload: { username: string; password: string; prefix: string; sandbox: boolean; displayLabel?: string; platformChargeBdt?: number }) =>
+    api
+      .post<{ id: string; type: PaymentGatewayType; status: PaymentGatewayStatus }>('/v1/payment-gateways/shurjopay', payload)
+      .then((r) => r.data),
+
+  /** The non-secret settings of a connected shurjoPay (sandbox or live, username, prefix). */
+  getShurjopayConnection: () =>
+    api
+      .get<{ connection: { sandbox: boolean; username?: string; prefix?: string } | null }>('/v1/payment-gateways/SHURJOPAY/connection')
+      .then((r) => r.data.connection),
 
   // Both always reject with a "coming soon" 400 today (see
   // PaymentGatewaysService.connectBkashMerchant/connectVendorPaystation)

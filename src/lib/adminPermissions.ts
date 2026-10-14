@@ -50,6 +50,7 @@ const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/ai-settings', 'ai.manage'],
   ['/admin/system-status', 'system.view'],
   ['/admin/feature-flags', 'flags.manage'],
+  ['/admin/addons', 'settings.manage'],
   ['/admin/approvals', null],
   ['/admin/verification', 'kyc.manage'],
   ['/admin/receipt-details', 'receipts.manage'],

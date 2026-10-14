@@ -142,6 +142,7 @@ import CourierIntegrationPage from './pages/vendor/courier/CourierIntegrationPag
 import PathaoPage from './pages/vendor/courier/pathao/PathaoPage';
 import SteadfastPage from './pages/vendor/courier/steadfast/SteadfastPage';
 import RedxPage from './pages/vendor/courier/redx/RedxPage';
+import CarrybeePage from './pages/vendor/courier/carrybee/CarrybeePage';
 import PathaoLabelsPrintPage from './pages/vendor/courier/pathao/PathaoLabelsPrintPage';
 import AdminDashboard from './pages/admin/Dashboard';
 import AiSettings from './pages/admin/ai/AiSettings';
@@ -167,6 +168,7 @@ import AdminReviews from './pages/admin/Reviews';
 import AdminReports from './pages/admin/Reports';
 import AdminMarketing from './pages/admin/Marketing';
 import AdminSettings from './pages/admin/Settings';
+import AdminAddons from './pages/admin/Addons';
 import Receipts from './pages/vendor/finance/Receipts';
 import AllVendors from './pages/admin/vendors/AllVendors';
 import StoreDetailPage from './pages/admin/vendors/StoreDetail';
@@ -302,6 +304,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/pathao' &&
     r.path !== '/vendor/courier/steadfast' &&
     r.path !== '/vendor/courier/redx' &&
+    r.path !== '/vendor/courier/carrybee' &&
     r.path !== '/vendor/courier/rules' &&
     r.path !== '/vendor/analytics' &&
     !r.path.startsWith('/vendor/lms') &&
@@ -322,6 +325,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/reports' &&
     r.path !== '/admin/marketing' &&
     r.path !== '/admin/settings' &&
+    r.path !== '/admin/addons' &&
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/customers' &&
     r.path !== '/admin/packs' &&
@@ -543,6 +547,7 @@ export default function App() {
                 <Route path="/vendor/courier/pathao" element={<PathaoPage />} />
                 <Route path="/vendor/courier/steadfast" element={<SteadfastPage />} />
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
+                <Route path="/vendor/courier/carrybee" element={<CarrybeePage />} />
                 <Route path="/vendor/courier/rules" element={<CourierRules />} />
                 <Route path="/vendor/analytics" element={<AnalyticsPage />} />
                 <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
@@ -615,6 +620,7 @@ export default function App() {
                 <Route path="/admin/reports" element={<AdminReports />} />
                 <Route path="/admin/marketing" element={<AdminMarketing />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/addons" element={<AdminAddons />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/renewals" element={<Renewals />} />
                 <Route path="/admin/packs" element={<PacksAndPromos />} />

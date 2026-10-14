@@ -3,11 +3,13 @@ import { SteadfastConnectForm } from './SteadfastConnectForm';
 import { PathaoConnectForm } from './PathaoConnectForm';
 import { RedxConnectForm } from './RedxConnectForm';
 import type { CourierAccountProvider } from '../../lib/courierApi';
+import { CarrybeeConnectForm } from './CarrybeeConnectForm';
 
 const PROVIDER_LABELS: Record<CourierAccountProvider, string> = {
   PATHAO: 'Pathao Courier',
   STEADFAST: 'SteadFast Courier',
   REDX: 'RedX Courier',
+  CARRYBEE: 'CarryBee Courier',
 };
 
 // Copy shown above each provider's connect form — Pathao and RedX both
@@ -19,6 +21,7 @@ const PROVIDER_INTRO: Record<CourierAccountProvider, string> = {
   PATHAO:
     'Connect your Pathao merchant account. After connecting, finish setup on Courier Integration > Pathao by selecting a pickup store.',
   REDX: 'Connect your RedX merchant account. If you have more than one RedX pickup store, choose which one to use on Courier Integration > RedX.',
+  CARRYBEE: 'Connect your CarryBee merchant account. If you have more than one approved pickup store, choose which one to use on Courier Integration > CarryBee.',
 };
 
 interface CourierSetupModalProps {
@@ -78,6 +81,7 @@ export function CourierSetupModal({ provider, onOpenChange, onConnected }: Couri
         {provider === 'STEADFAST' && <SteadfastConnectForm onConnected={onConnected} footer={footer} />}
         {provider === 'PATHAO' && <PathaoConnectForm onConnected={onConnected} footer={footer} />}
         {provider === 'REDX' && <RedxConnectForm onConnected={onConnected} footer={footer} />}
+        {provider === 'CARRYBEE' && <CarrybeeConnectForm onConnected={onConnected} footer={footer} />}
       </div>
     </Dialog>
   );

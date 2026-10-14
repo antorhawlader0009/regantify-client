@@ -13,7 +13,7 @@ interface Rules {
   outsideDhaka: CourierAccountProvider | null;
 }
 
-const NAMES: Record<CourierAccountProvider, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX' };
+const NAMES: Record<CourierAccountProvider, string> = { PATHAO: 'Pathao', STEADFAST: 'SteadFast', REDX: 'RedX', CARRYBEE: 'CarryBee' };
 const ZONES: { key: keyof Rules; label: string; hint: string }[] = [
   { key: 'insideDhaka', label: 'Inside Dhaka', hint: 'Orders delivered inside Dhaka city.' },
   { key: 'aroundDhaka', label: 'Around Dhaka', hint: 'Savar, Gazipur, Narayanganj and so on. Only used if you offer this zone (Store > Delivery Charge).' },

@@ -369,6 +369,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/courier/steadfast': 'courier.manage',
   '/vendor/courier/pathao': 'courier.manage',
   '/vendor/courier/redx': 'courier.manage',
+  '/vendor/courier/carrybee': 'courier.manage',
   '/vendor/courier/rules': 'courier.manage',
   '/vendor/shipping/tracking': 'orders.view',
   '/vendor/finance/wallet': 'finance.view',

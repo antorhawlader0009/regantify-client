@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Loader2, Lock, Trash2 } from 'lucide-react';
-import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType } from '../../../lib/paymentGatewaysApi';
+import { CreditCard, Loader2, Lock, Smartphone, Trash2 } from 'lucide-react';
+import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType, type ManualMobileAccount, type ManualMobileWallet } from '../../../lib/paymentGatewaysApi';
 import { getVendorPlanUsage, formatFeeParts } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
@@ -13,6 +14,9 @@ const DEFAULT_LABELS: Record<PaymentGatewayType, string> = {
   SSLCOMMERZ: 'SSLCommerz',
   BKASH_MERCHANT: 'bKash Merchant (PGW)',
   VENDOR_PAYSTATION: "Vendor's own PayStation",
+  SHURJOPAY: 'shurjoPay',
+  AAMARPAY: 'aamarPay',
+  MANUAL_MOBILE: 'Manual Mobile Payment',
 };
 
 /**
@@ -26,6 +30,9 @@ const DEFAULT_LABELS: Record<PaymentGatewayType, string> = {
  */
 export default function PaymentGateway() {
   const queryClient = useQueryClient();
+  // Add-ons opens this page with ?connect=<gateway> so that gateway's form is already open.
+  const [searchParams] = useSearchParams();
+  const connectParam = searchParams.get('connect');
 
   const { data: gateways = [], isLoading: gatewaysLoading } = useQuery({
     queryKey: ['payment-gateways'],
@@ -48,6 +55,8 @@ export default function PaymentGateway() {
   const cod = gateways.find((g) => g.type === 'COD');
   const onlinePayment = gateways.find((g) => g.type === 'ONLINE_PAYMENT');
   const sslcommerz = gateways.find((g) => g.type === 'SSLCOMMERZ');
+  const shurjopay = gateways.find((g) => g.type === 'SHURJOPAY');
+  const manualMobile = gateways.find((g) => g.type === 'MANUAL_MOBILE');
   const catalogFor = (type: PaymentGatewayType) => catalog.find((c) => c.type === type);
 
   if (gatewaysLoading) {
@@ -97,9 +106,12 @@ export default function PaymentGateway() {
         />
       ) : (
         <div className="space-y-4">
-          <SslcommerzCard gateway={sslcommerz} onSaved={invalidate} />
+          <SslcommerzCard gateway={sslcommerz} onSaved={invalidate} autoOpen={connectParam === 'sslcommerz'} />
+          <ShurjopayCard gateway={shurjopay} onSaved={invalidate} autoOpen={connectParam === 'shurjopay'} />
+          <ManualMobileCard gateway={manualMobile} onSaved={invalidate} autoOpen={connectParam === 'manual-mobile'} />
           <ComingSoonCard type="BKASH_MERCHANT" />
           <ComingSoonCard type="VENDOR_PAYSTATION" />
+          <ComingSoonCard type="AAMARPAY" />
         </div>
       )}
     </div>
@@ -188,8 +200,9 @@ function BuiltinGatewayCard({
 }
 
 /** SSLCommerz card — connect form when not connected, edit/disconnect controls once connected. */
-function SslcommerzCard({ gateway, onSaved }: { gateway: VendorPaymentGateway | undefined; onSaved: () => void }) {
-  const [showForm, setShowForm] = useState(false);
+function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway | undefined; onSaved: () => void; autoOpen?: boolean }) {
+  const [showForm, setShowForm] = useState(!!autoOpen);
+  const cardRef = useScrollIntoView(autoOpen);
   const [storeId, setStoreId] = useState('');
   const [storePassword, setStorePassword] = useState('');
   const [displayLabel, setDisplayLabel] = useState('SSLCommerz');
@@ -221,7 +234,7 @@ function SslcommerzCard({ gateway, onSaved }: { gateway: VendorPaymentGateway | 
   const isConnected = gateway?.status === 'ACTIVE' && gateway.isConnected;
 
   return (
-    <div className="bg-white rounded-2xl border border-black/5 p-5">
+    <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
       <div className="flex items-start gap-3">
         <CreditCard size={18} className="text-regantify-text-muted mt-0.5 shrink-0" />
         <div className="flex-1">
@@ -329,7 +342,7 @@ function SslcommerzCard({ gateway, onSaved }: { gateway: VendorPaymentGateway | 
 }
 
 /** bKash Merchant / Vendor's own PayStation — recognized types, not implemented yet (see PaymentGatewayTypeCatalog.isImplemented). */
-function ComingSoonCard({ type }: { type: 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' }) {
+function ComingSoonCard({ type }: { type: 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'AAMARPAY' }) {
   return (
     <div className="rounded-2xl border border-dashed border-black/10 p-5 flex items-center gap-3 opacity-70">
       <Lock size={18} className="text-regantify-text-muted shrink-0" />
@@ -337,6 +350,420 @@ function ComingSoonCard({ type }: { type: 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION'
         <p className="text-sm font-medium text-regantify-text">{DEFAULT_LABELS[type]}</p>
         <p className="text-sm text-regantify-text-muted mt-0.5">Coming soon.</p>
       </div>
+    </div>
+  );
+}
+
+/** Scrolls a card into view once, when Add-ons sent the vendor here to connect it. */
+function useScrollIntoView(active: boolean | undefined) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (active) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [active]);
+  return ref;
+}
+
+/**
+ * shurjoPay card (Add-ons > shurjoPay): the store's own shurjoPay login, its order prefix and a sandbox switch. The
+ * server tries the login with shurjoPay before saving it. Once connected it shows live or sandbox and lets the vendor
+ * change the login (the same form again) or disconnect.
+ */
+function ShurjopayCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway | undefined; onSaved: () => void; autoOpen?: boolean }) {
+  const isConnected = gateway?.status === 'ACTIVE' && gateway.isConnected;
+  const [showForm, setShowForm] = useState(!!autoOpen && !isConnected);
+  const cardRef = useScrollIntoView(autoOpen);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [prefix, setPrefix] = useState('');
+  const [sandbox, setSandbox] = useState(false);
+  const [displayLabel, setDisplayLabel] = useState(gateway?.displayLabel ?? 'shurjoPay');
+  const [charge, setCharge] = useState(gateway ? String(Number(gateway.platformChargeBdt)) : '0');
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: connection } = useQuery({
+    queryKey: ['payment-gateway-connection', 'SHURJOPAY'],
+    queryFn: paymentGatewaysApi.getShurjopayConnection,
+    enabled: !!isConnected,
+  });
+
+  const openForm = () => {
+    setUsername(connection?.username ?? '');
+    setPrefix(connection?.prefix ?? '');
+    setSandbox(connection?.sandbox ?? false);
+    setPassword('');
+    setError(null);
+    setShowForm(true);
+  };
+
+  const connectMutation = useMutation({
+    mutationFn: () =>
+      paymentGatewaysApi.connectShurjopay({
+        username: username.trim(),
+        password,
+        prefix: prefix.trim(),
+        sandbox,
+        displayLabel: displayLabel.trim() || undefined,
+        platformChargeBdt: Number(charge) || 0,
+      }),
+    onSuccess: () => {
+      toast.success(sandbox ? 'shurjoPay connected in sandbox mode.' : 'shurjoPay connected.');
+      setPassword('');
+      setShowForm(false);
+      setError(null);
+      onSaved();
+    },
+    onError: (err) => setError(apiErrorMessage(err, 'Could not connect shurjoPay. Please check your login and try again.')),
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: () => paymentGatewaysApi.disconnect(gateway!.id),
+    onSuccess: () => {
+      toast.success('shurjoPay disconnected.');
+      onSaved();
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not disconnect shurjoPay.')),
+  });
+
+  const inputClass = 'w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none';
+
+  return (
+    <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
+      <div className="flex items-start gap-3">
+        <img src="/addons/shurjopay.png" alt="" className="h-6 w-6 mt-0.5 shrink-0 object-contain" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-regantify-text flex items-center gap-2">
+            {gateway?.displayLabel ?? 'shurjoPay'}
+            {isConnected && connection && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
+              >
+                {connection.sandbox ? 'Sandbox' : 'Live'}
+              </span>
+            )}
+          </p>
+          <p className="text-sm text-regantify-text-muted mt-0.5">
+            {isConnected
+              ? `Connected — platform charge ${formatCharge(gateway!)}.`
+              : 'Cards, bKash, Nagad and other wallets through your own shurjoPay store.'}
+          </p>
+        </div>
+        {isConnected ? (
+          <div className="flex shrink-0 gap-2">
+            {!showForm && (
+              <button
+                type="button"
+                onClick={openForm}
+                className="px-3 py-1.5 rounded-xl border border-black/10 text-sm font-medium text-regantify-text hover:bg-black/5"
+              >
+                Change login
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={disconnectMutation.isPending}
+              onClick={() => disconnectMutation.mutate()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+            >
+              <Trash2 size={14} />
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          !showForm && (
+            <button
+              type="button"
+              onClick={openForm}
+              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium shrink-0"
+            >
+              Connect
+            </button>
+          )
+        )}
+      </div>
+
+      {showForm && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!username.trim() || !password || !prefix.trim()) {
+              setError('Username, password and order prefix are all required.');
+              return;
+            }
+            connectMutation.mutate();
+          }}
+          className="mt-4 pt-4 border-t border-black/5 space-y-3"
+        >
+          <label className="flex items-start gap-3 rounded-lg border border-black/10 p-3 cursor-pointer">
+            <input type="checkbox" checked={sandbox} onChange={(e) => setSandbox(e.target.checked)} className="mt-0.5" />
+            <span>
+              <span className="block text-sm font-medium text-regantify-text">Sandbox mode</span>
+              <span className="block text-xs text-regantify-text-muted">
+                For testing with shurjoPay&apos;s sandbox login. No real money moves. Turn it off with your live login before selling.
+              </span>
+            </span>
+          </label>
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">Username</label>
+            <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="off" placeholder="Store username from shurjoPay" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              placeholder={isConnected ? 'Type the password again to save a change' : 'Store password from shurjoPay'}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">Order prefix</label>
+            <input value={prefix} onChange={(e) => setPrefix(e.target.value)} maxLength={10} placeholder="e.g. sp" className={inputClass} />
+            <p className="text-xs text-regantify-text-muted mt-1">The short prefix shurjoPay gave your store with the login.</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Name at checkout</label>
+              <input value={displayLabel} onChange={(e) => setDisplayLabel(e.target.value)} maxLength={100} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Platform charge (৳)</label>
+              <input type="number" min={0} value={charge} onChange={(e) => setCharge(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={connectMutation.isPending}
+              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+            >
+              {connectMutation.isPending ? 'Checking with shurjoPay…' : isConnected ? 'Save' : 'Connect'}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+const WALLET_OPTIONS: { id: ManualMobileWallet; name: string }[] = [
+  { id: 'BKASH', name: 'bKash' },
+  { id: 'NAGAD', name: 'Nagad' },
+  { id: 'ROCKET', name: 'Rocket' },
+  { id: 'UPAY', name: 'Upay' },
+  { id: 'OTHER', name: 'Other' },
+];
+const KIND_OPTIONS: { id: ManualMobileAccount['kind']; name: string }[] = [
+  { id: 'PERSONAL', name: 'Personal (Send Money)' },
+  { id: 'AGENT', name: 'Agent (Cash Out)' },
+  { id: 'MERCHANT', name: 'Merchant (Payment)' },
+];
+const blankAccount = (): ManualMobileAccount => ({ wallet: 'BKASH', label: null, number: '', kind: 'PERSONAL' });
+
+/**
+ * Manual Mobile Payment card (Add-ons > Manual Mobile Payment): the store's own bKash / Nagad / ... numbers and what
+ * the shopper is told. The shopper sends the total, then types the number they sent from and the TrxID; the store
+ * checks it on the order (or, with "trust every TrxID", it is recorded as received at once). StorePal checkout only.
+ */
+function ManualMobileCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway | undefined; onSaved: () => void; autoOpen?: boolean }) {
+  const isOn = gateway?.status === 'ACTIVE' && gateway.isConnected;
+  const cardRef = useScrollIntoView(autoOpen);
+  const [showForm, setShowForm] = useState(!!autoOpen && !isOn);
+  const [accounts, setAccounts] = useState<ManualMobileAccount[]>([blankAccount()]);
+  const [instructions, setInstructions] = useState('');
+  const [markReceived, setMarkReceived] = useState(false);
+  const [displayLabel, setDisplayLabel] = useState(gateway?.displayLabel ?? 'Mobile payment (bKash, Nagad)');
+  const [charge, setCharge] = useState(gateway ? String(Number(gateway.platformChargeBdt)) : '0');
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: saved } = useQuery({ queryKey: ['manual-mobile'], queryFn: paymentGatewaysApi.getManualMobile });
+
+  const openForm = () => {
+    setAccounts(saved?.accounts?.length ? saved.accounts.map((a) => ({ ...a })) : [blankAccount()]);
+    setInstructions(saved?.instructions ?? '');
+    setMarkReceived(saved?.markReceived ?? false);
+    setDisplayLabel(gateway?.displayLabel ?? 'Mobile payment (bKash, Nagad)');
+    setError(null);
+    setShowForm(true);
+  };
+  // Opened from Add-ons with saved settings: fill the form once they arrive.
+  const [filled, setFilled] = useState(false);
+  if (showForm && !filled && saved) {
+    setFilled(true);
+    setAccounts(saved.accounts.map((a) => ({ ...a })));
+    setInstructions(saved.instructions);
+    setMarkReceived(saved.markReceived);
+  }
+
+  const save = useMutation({
+    mutationFn: () =>
+      paymentGatewaysApi.saveManualMobile({
+        accounts: accounts.map((a) => ({ ...a, number: a.number.replace(/[\s-]/g, ''), label: a.wallet === 'OTHER' ? a.label?.trim() || null : null })),
+        instructions: instructions.trim(),
+        markReceived,
+        displayLabel: displayLabel.trim() || undefined,
+        platformChargeBdt: Number(charge) || 0,
+      }),
+    onSuccess: () => {
+      toast.success('Saved. Shoppers can now pay to these numbers at checkout.');
+      setShowForm(false);
+      setError(null);
+      onSaved();
+    },
+    onError: (err) => setError(apiErrorMessage(err, 'Could not save. Please check the numbers and try again.')),
+  });
+
+  const disconnect = useMutation({
+    mutationFn: () => paymentGatewaysApi.disconnect(gateway!.id),
+    onSuccess: () => {
+      toast.success('Manual Mobile Payment is off at checkout.');
+      onSaved();
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not turn it off.')),
+  });
+
+  const setAccount = (i: number, patch: Partial<ManualMobileAccount>) => setAccounts((list) => list.map((a, j) => (j === i ? { ...a, ...patch } : a)));
+  const inputClass = 'w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none';
+
+  return (
+    <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
+      <div className="flex items-start gap-3">
+        <Smartphone size={18} className="text-regantify-text-muted mt-0.5 shrink-0" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-regantify-text">{gateway?.displayLabel ?? 'Manual Mobile Payment'}</p>
+          <p className="text-sm text-regantify-text-muted mt-0.5">
+            {isOn
+              ? `On at checkout: ${saved?.accounts.map((a) => (a.wallet === 'OTHER' ? a.label : WALLET_OPTIONS.find((w) => w.id === a.wallet)?.name)).join(', ') ?? ''}. ${saved?.markReceived ? 'Every TrxID is recorded as received.' : 'You check each TrxID on the order.'}`
+              : 'Shoppers send money to your own bKash, Nagad or other number and type the transaction ID. You check it on the order.'}
+          </p>
+        </div>
+        {isOn ? (
+          <div className="flex shrink-0 gap-2">
+            {!showForm && (
+              <button type="button" onClick={openForm} className="px-3 py-1.5 rounded-xl border border-black/10 text-sm font-medium text-regantify-text hover:bg-black/5">
+                Edit
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={disconnect.isPending}
+              onClick={() => disconnect.mutate()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+            >
+              <Trash2 size={14} />
+              Turn off
+            </button>
+          </div>
+        ) : (
+          !showForm && (
+            <button type="button" onClick={openForm} className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium shrink-0">
+              Set up
+            </button>
+          )
+        )}
+      </div>
+
+      {showForm && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (accounts.some((a) => !/^01[3-9]\d{8}$/.test(a.number.replace(/[\s-]/g, '')))) {
+              setError('Each number must be an 11-digit mobile number starting with 01.');
+              return;
+            }
+            save.mutate();
+          }}
+          className="mt-4 pt-4 border-t border-black/5 space-y-3"
+        >
+          <p className="text-xs font-medium text-regantify-text-muted">Numbers that receive payments</p>
+          {accounts.map((a, i) => (
+            <div key={i} className="grid gap-2 sm:grid-cols-[8rem_1fr_11rem_auto] items-center">
+              <select value={a.wallet} onChange={(e) => setAccount(i, { wallet: e.target.value as ManualMobileWallet })} className={inputClass}>
+                {WALLET_OPTIONS.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                {a.wallet === 'OTHER' && (
+                  <input value={a.label ?? ''} onChange={(e) => setAccount(i, { label: e.target.value })} maxLength={30} placeholder="Wallet name" className={`${inputClass} max-w-[9rem]`} />
+                )}
+                <input value={a.number} onChange={(e) => setAccount(i, { number: e.target.value })} inputMode="tel" placeholder="01XXXXXXXXX" className={inputClass} />
+              </div>
+              <select value={a.kind} onChange={(e) => setAccount(i, { kind: e.target.value as ManualMobileAccount['kind'] })} className={inputClass}>
+                {KIND_OPTIONS.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={accounts.length === 1}
+                onClick={() => setAccounts((list) => list.filter((_, j) => j !== i))}
+                className="text-sm text-red-600 disabled:opacity-40"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          {accounts.length < 6 && (
+            <button type="button" onClick={() => setAccounts((list) => [...list, blankAccount()])} className="text-sm font-medium text-regantify-cta">
+              + Add another number
+            </button>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-regantify-text-muted mb-1">Instructions for the shopper (optional)</label>
+            <textarea
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="For example: Use Send Money, not Cash Out. Write your phone number in the reference."
+              className={inputClass}
+            />
+          </div>
+          <label className="flex items-start gap-3 rounded-lg border border-black/10 p-3 cursor-pointer">
+            <input type="checkbox" checked={markReceived} onChange={(e) => setMarkReceived(e.target.checked)} className="mt-0.5" />
+            <span>
+              <span className="block text-sm font-medium text-regantify-text">Trust every transaction ID</span>
+              <span className="block text-xs text-regantify-text-muted">
+                Records the payment as received at once. Leave it off to check each TrxID in your wallet first (safer: anyone can type a made-up ID).
+              </span>
+            </span>
+          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Name at checkout</label>
+              <input value={displayLabel} onChange={(e) => setDisplayLabel(e.target.value)} maxLength={100} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Platform charge (৳)</label>
+              <input type="number" min={0} value={charge} onChange={(e) => setCharge(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <p className="text-xs text-regantify-text-muted">Shown on the StorePal checkout only.</p>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10">
+              Cancel
+            </button>
+            <button type="submit" disabled={save.isPending} className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60">
+              {save.isPending ? 'Saving…' : isOn ? 'Save' : 'Save and turn on'}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

@@ -35,6 +35,7 @@ import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCa
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
 import { OrderRefundNote } from '../../../components/order/OrderRefundNote';
+import { ManualPaymentCard } from '../../../components/order/ManualPaymentCard';
 import { OrderRiskCard, orderAddressProblem } from '../../../components/order/OrderRiskBadge';
 import { ADDRESS_PROBLEM_TEXT } from '../../../lib/addressCheck';
 import { EditOrderItemsDialog, canEditOrderItems } from '../../../components/order/EditOrderItemsDialog';
@@ -70,8 +71,8 @@ function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dhaka' });
 }
 
-const COURIER_NAMES: Record<Exclude<CourierProvider, 'NONE'>, string> = { STEADFAST: 'SteadFast', PATHAO: 'Pathao', REDX: 'RedX' };
-const BOOKABLE: Exclude<CourierProvider, 'NONE'>[] = ['STEADFAST', 'PATHAO', 'REDX'];
+const COURIER_NAMES: Record<Exclude<CourierProvider, 'NONE'>, string> = { STEADFAST: 'SteadFast', PATHAO: 'Pathao', REDX: 'RedX', CARRYBEE: 'CarryBee' };
+const BOOKABLE: Exclude<CourierProvider, 'NONE'>[] = ['STEADFAST', 'PATHAO', 'REDX', 'CARRYBEE'];
 
 /** A white card with a 15px title (the page's sections). */
 function Card({ title, id, action, children }: { title: string; id?: string; action?: React.ReactNode; children: React.ReactNode }) {
@@ -264,7 +265,7 @@ export default function OrderDetail() {
       invalidateOrder();
       queryClient.invalidateQueries({ queryKey: ['steadfast-parcels'] });
       queryClient.invalidateQueries({ queryKey: ['redx-parcels'] });
-      toast.success(order?.courierProvider === 'REDX' ? 'Booked with RedX.' : 'Booked with SteadFast.');
+      toast.success(`Booked with ${COURIER_NAMES[(order?.courierProvider ?? 'STEADFAST') as Exclude<CourierProvider, 'NONE'>] ?? 'the courier'}.`);
     },
     onError: (err) => {
       const provider = notConnectedProvider(err);
@@ -512,6 +513,7 @@ export default function OrderDetail() {
 
       {/* Medium or high risk (TellMe idea 143, OrderRiskService). */}
       <OrderRefundNote orderId={order.id} status={order.status} />
+      <ManualPaymentCard order={order} canEdit={canEdit} />
       <OrderRiskCard order={order} />
       {orderAddressProblem(order) && (
         <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">

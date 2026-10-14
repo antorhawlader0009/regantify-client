@@ -259,6 +259,7 @@ export const vendorNav: NavSection[] = [
       { label: 'Steadfast', path: '/vendor/courier/steadfast' },
       { label: 'Pathao', path: '/vendor/courier/pathao' },
       { label: 'RedX', path: '/vendor/courier/redx' },
+      { label: 'CarryBee', path: '/vendor/courier/carrybee' },
       { label: 'Courier Rules', path: '/vendor/courier/rules', advanced: true },
       // The only other real standalone page in this group — see Tracking.tsx.
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
@@ -334,6 +335,7 @@ export const adminNav: NavSection[] = [
   { label: 'System status', icon: Activity, group: 'Platform', path: '/admin/system-status' },
   { label: 'Email', icon: Mail, group: 'Platform', path: '/admin/email' },
   { label: 'Feature flags', icon: ToggleRight, group: 'Platform', path: '/admin/feature-flags' },
+  { label: 'Add-ons', icon: Puzzle, group: 'Platform', path: '/admin/addons' },
   { label: 'Approvals', icon: ShieldCheck, group: 'Platform', path: '/admin/approvals' },
   { label: 'Staff', icon: UserCog, group: 'Platform', path: '/admin/staff' },
   { label: 'Settings', icon: Settings, group: 'Platform', path: '/admin/settings' },

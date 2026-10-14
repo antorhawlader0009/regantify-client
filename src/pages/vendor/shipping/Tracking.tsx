@@ -31,6 +31,7 @@ const PROVIDER_LABELS: Record<CourierAccountProvider, string> = {
   PATHAO: 'Pathao',
   STEADFAST: 'SteadFast',
   REDX: 'RedX',
+  CARRYBEE: 'CarryBee',
 };
 
 const BOOKING_STATUS: Record<CourierTrackingRow['courierBookingStatus'], { label: string; className: string }> = {
@@ -154,7 +155,7 @@ export default function Tracking() {
   const [page, setPage] = useState(1);
 
   const counts = useMemo(() => {
-    const c: Record<CourierFilter, number> = { ALL: rows?.length ?? 0, STEADFAST: 0, PATHAO: 0, REDX: 0 };
+    const c: Record<CourierFilter, number> = { ALL: rows?.length ?? 0, STEADFAST: 0, PATHAO: 0, REDX: 0, CARRYBEE: 0 };
     rows?.forEach((r) => (c[r.courierProvider] += 1));
     return c;
   }, [rows]);
