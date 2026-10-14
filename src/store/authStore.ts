@@ -7,6 +7,8 @@ export interface AuthUser {
   role: Role;
   phone?: string | null;
   email?: string | null;
+  /** When the email was verified with a code (Profile > Verify); null = not verified, or changed since. */
+  emailVerifiedAt?: string | null;
   fullName?: string | null;
   avatarUrl?: string | null;
   // True until a Vendor either sets their own password or skips the

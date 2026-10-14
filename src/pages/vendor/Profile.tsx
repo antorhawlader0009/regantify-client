@@ -6,6 +6,7 @@ import { Camera, Mail, User } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
 import { Field, IconInput, SaveButton, SavedNote, Section, flashFor } from '../../components/ui/FormKit';
+import { EmailVerifyBox } from '../../components/profile/EmailVerifyBox';
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Enter your full name'),
@@ -172,7 +173,7 @@ export default function Profile() {
         </div>
       </Section>
 
-      <Section title="Personal information" description="Email is optional and doesn't need to be verified.">
+      <Section title="Personal information" description="Email is optional. Verify it so Regantify's receipts and messages reach you.">
         <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
           <Field label="Full name" error={errors.fullName?.message}>
             <IconInput icon={User} type="text" placeholder="Your name" {...profileForm.register('fullName')} />
@@ -184,6 +185,7 @@ export default function Profile() {
             hint="Once added, you can use it to log in with your password instead of your phone number."
           >
             <IconInput icon={Mail} type="email" placeholder="you@example.com" {...profileForm.register('email')} />
+            <EmailVerifyBox dirty={(profileForm.watch('email') ?? '').trim().toLowerCase() !== (user?.email ?? '').trim().toLowerCase()} />
           </Field>
           <SaveButton busy={profileSubmitting} disabled={!isDirty} saved={profileSaved} error={profileError}>
             Save profile

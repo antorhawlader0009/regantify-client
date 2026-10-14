@@ -9,7 +9,7 @@ import { toast } from '../../lib/toast';
 
 const field = 'rounded-lg border border-line bg-white px-3 py-2 text-sm text-regantify-text focus:outline-none';
 const STATUS_CLASS = { SENT: 'text-emerald-700', FAILED: 'text-red-700', SKIPPED: 'text-regantify-text-muted' } as const;
-const KIND_LABEL: Record<string, string> = { RECEIPT: 'Receipt', NUDGE: 'Automation', TEST: 'Test' };
+const KIND_LABEL: Record<string, string> = { RECEIPT: 'Receipt', NUDGE: 'Automation', TEST: 'Test', VERIFY_EMAIL: 'Email verification' };
 
 /**
  * Super Admin > Platform > Email (super-admin-new.md Step 13): which email service is set up, a test send, and every email Regantify sent to stores
