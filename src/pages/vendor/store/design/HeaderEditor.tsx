@@ -38,6 +38,8 @@ export default function HeaderEditor() {
   const [phone, setPhone] = useState('');
   const [logoSize, setLogoSize] = useState<'SMALL' | 'MEDIUM' | 'LARGE'>('MEDIUM');
   const [cartTotalOn, setCartTotalOn] = useState(false);
+  const [showLogo, setShowLogo] = useState(true);
+  const [showName, setShowName] = useState(true);
   const { data: vendor } = useQuery({ queryKey: ['vendor-settings'], queryFn: getVendorSettings });
 
   useEffect(() => {
@@ -53,6 +55,8 @@ export default function HeaderEditor() {
     setPhone(settings.headerPhone ?? '');
     setLogoSize(settings.headerLogoSize ?? 'MEDIUM');
     setCartTotalOn(settings.headerShowCartTotal ?? false);
+    setShowLogo(settings.headerShowLogo ?? true);
+    setShowName(settings.headerShowStoreName ?? true);
   }, [settings]);
 
   const handleSave = () => {
@@ -69,7 +73,7 @@ export default function HeaderEditor() {
       toast.error('Add the phone number to show, or turn the phone off.');
       return;
     }
-    save.mutate({ ...menus, headerPhoneEnabled: phoneOn, headerPhoneLabel: phoneLabel.trim(), headerPhone: phone.trim(), headerLogoSize: logoSize, headerShowCartTotal: cartTotalOn });
+    save.mutate({ ...menus, headerPhoneEnabled: phoneOn, headerPhoneLabel: phoneLabel.trim(), headerPhone: phone.trim(), headerLogoSize: logoSize, headerShowCartTotal: cartTotalOn, headerShowLogo: showLogo, headerShowStoreName: showName });
   };
 
   return (
@@ -98,7 +102,10 @@ export default function HeaderEditor() {
                 )}
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-extrabold text-xl text-regantify-text shrink-0">Your Logo</span>
+                <span className="font-extrabold text-xl text-regantify-text shrink-0">
+                  {showLogo && <span className="mr-2 inline-block rounded bg-black/10 px-2 py-0.5 text-xs align-middle">Logo</span>}
+                  {showName || !showLogo ? 'Your Store' : ''}
+                </span>
                 <div className="flex-1 max-w-md flex items-center rounded-lg border border-black/15 px-3 py-2 text-sm text-regantify-text-muted">
                   <span className="flex-1">Search</span>
                   <Search size={15} />
@@ -177,6 +184,20 @@ export default function HeaderEditor() {
             )}
           </div>
           <div className="bg-white rounded-2xl border border-black/5 p-5 space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-base font-medium text-regantify-text">Logo and store name</h2>
+              <p className="text-xs text-regantify-text-muted">
+                Shown together by default, in the header and the footer. Turn one off to show only the other. If there is no logo yet, the store name always shows.
+              </p>
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-sm text-regantify-text">Show my logo</span>
+                <input type="checkbox" checked={showLogo} onChange={(e) => setShowLogo(e.target.checked)} className="w-4 h-4" />
+              </label>
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-sm text-regantify-text">Show my store name</span>
+                <input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="w-4 h-4" />
+              </label>
+            </div>
             <div>
               <h2 className="text-base font-medium text-regantify-text">Logo size</h2>
               <p className="text-xs text-regantify-text-muted mt-0.5 mb-2">How big your logo (or store name) is in the header.</p>

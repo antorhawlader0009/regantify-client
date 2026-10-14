@@ -6,6 +6,9 @@ import {
   uploadVendorLogo,
   uploadVendorFavicon,
   uploadVendorBrandCover,
+  uploadVendorSiteCover,
+  removeVendorSiteCover,
+  setVendorSiteCoverOnly,
   type Branding as BrandingState,
 } from '../../../lib/vendorApi';
 import { toast } from 'sonner';
@@ -26,6 +29,8 @@ const EMPTY_BRANDING: BrandingState = {
   brandHeadingFont: null,
   brandBodyFont: null,
   brandCoverImageUrl: null,
+  brandSiteCoverUrl: null,
+  brandSiteCoverOnly: false,
   brandMetaTitle: null,
   brandMetaDescription: null,
 };
@@ -70,6 +75,49 @@ export default function Branding() {
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  // The website's own cover (first slide of the home page hero), separate from the link-preview cover above.
+  const [siteCoverPreview, setSiteCoverPreview] = useState<string | null>(null);
+  const [siteCoverUploading, setSiteCoverUploading] = useState(false);
+  const [siteCoverError, setSiteCoverError] = useState<string | null>(null);
+  const siteCoverInputRef = useRef<HTMLInputElement>(null);
+  const [coverSizeTip, setCoverSizeTip] = useState<string | null>(null);
+  const [coverShareTip, setCoverShareTip] = useState<string | null>(null);
+
+  /** A gentle size tip after picking a picture (never blocks the upload). */
+  const sizeTip = (file: File, minW: number, minH: number): Promise<string | null> =>
+    new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const img = new window.Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img.width < minW || img.height < minH ? `This picture is ${img.width}×${img.height}. For a sharp result use at least ${minW}×${minH}.` : null);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    });
+
+  const handleRemoveSiteCover = async () => {
+    try {
+      await removeVendorSiteCover();
+      setBranding((prev) => ({ ...prev, brandSiteCoverUrl: null, brandSiteCoverOnly: false }));
+      toast.success('Website cover photo removed.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Could not remove it. Please try again.');
+    }
+  };
+
+  const handleSiteCoverOnly = async (only: boolean) => {
+    setBranding((prev) => ({ ...prev, brandSiteCoverOnly: only }));
+    try {
+      await setVendorSiteCoverOnly(only);
+    } catch (err: any) {
+      setBranding((prev) => ({ ...prev, brandSiteCoverOnly: !only }));
+      toast.error(err?.response?.data?.message ?? 'Could not save that. Please try again.');
+    }
+  };
 
   useEffect(() => {
     getVendorBranding()
@@ -387,8 +435,93 @@ export default function Branding() {
         </div>
       </div>
 
+      <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-3 mt-6">
+        <h2 className="text-sm font-semibold text-regantify-text">Website cover photo</h2>
+        <p className="text-xs text-regantify-text-muted">
+          A wide picture shown at the top of your store&apos;s home page, as the first slide of the banner. It is separate from the
+          link-preview picture below, so each can be different. Use a wide picture, at least 1920×820.
+        </p>
+        <div className="relative w-full max-w-xl aspect-[21/9] rounded-xl overflow-hidden bg-regantify-search border border-black/5">
+          {siteCoverPreview || branding.brandSiteCoverUrl ? (
+            <img src={siteCoverPreview ?? branding.brandSiteCoverUrl!} alt="Website cover" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-regantify-text-muted">
+              <ImageIcon size={28} />
+            </div>
+          )}
+          {siteCoverUploading && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+              <Loader2 size={20} className="animate-spin" />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => siteCoverInputRef.current?.click()}
+            disabled={siteCoverUploading}
+            className="rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-regantify-text hover:bg-regantify-search disabled:opacity-60"
+          >
+            {branding.brandSiteCoverUrl ? 'Change picture' : 'Upload picture'}
+          </button>
+          {branding.brandSiteCoverUrl && (
+            <button
+              type="button"
+              onClick={handleRemoveSiteCover}
+              className="rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <input
+          ref={siteCoverInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (!file) return;
+            void sizeTip(file, 1920, 820).then(setCoverSizeTip);
+            void handleImageUpload(
+              file,
+              setSiteCoverPreview,
+              setSiteCoverUploading,
+              setSiteCoverError,
+              uploadVendorSiteCover,
+              (url) => handleField('brandSiteCoverUrl', url),
+              'Website cover photo updated. Your storefront will reflect this shortly.',
+            );
+          }}
+        />
+        {coverSizeTip && <p className="text-xs text-amber-600">{coverSizeTip}</p>}
+        {siteCoverError && <p className="text-red-500 text-sm">{siteCoverError}</p>}
+        {branding.brandSiteCoverUrl && (
+          <label className="flex items-start gap-2 text-sm text-regantify-text">
+            <input
+              type="checkbox"
+              checked={branding.brandSiteCoverOnly}
+              onChange={(e) => void handleSiteCoverOnly(e.target.checked)}
+              className="mt-0.5 w-4 h-4"
+            />
+            <span>
+              Show only this picture
+              <span className="block text-xs text-regantify-text-muted">
+                Off: your category cover photos follow it as more slides. On: the banner shows this picture alone.
+              </span>
+            </span>
+          </label>
+        )}
+        <p className="text-xs text-regantify-text-muted">The banner is part of the StorePal theme and can be switched on or off in Design &gt; Customize.</p>
+      </div>
+
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-4 mt-6">
-        <h2 className="text-sm font-semibold text-regantify-text">Cover Photo &amp; Meta</h2>
+        <h2 className="text-sm font-semibold text-regantify-text">Link preview cover &amp; text</h2>
+        <p className="text-xs text-regantify-text-muted -mt-2">
+          What people see when your store link is shared on WhatsApp, Messenger, Instagram, TikTok, Telegram, Facebook, X or found on Google.
+          All of them read the same picture, title and description.
+        </p>
 
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-8">
           <div className="flex items-start gap-4">
@@ -424,6 +557,7 @@ export default function Branding() {
                 const file = e.target.files?.[0];
                 e.target.value = '';
                 if (!file) return;
+                void sizeTip(file, 1200, 630).then(setCoverShareTip);
                 void handleImageUpload(
                   file,
                   setCoverPreview,
@@ -438,7 +572,11 @@ export default function Branding() {
           </div>
           <div>
             <p className="text-sm font-medium text-regantify-text mb-1">Cover Photo</p>
-            <p className="text-xs text-regantify-text-muted">Cover photo size should be at least 1200x633. This photo will be shown on Facebook.</p>
+            <p className="text-xs text-regantify-text-muted">
+              Shown when your link is shared on WhatsApp, Messenger, Instagram, TikTok, Telegram, Facebook and Google. Use a wide picture,
+              1200×630 or bigger. We shrink it automatically so it loads in every app.
+            </p>
+            {coverShareTip && <p className="text-xs text-amber-600 mt-1">{coverShareTip}</p>}
             {coverError && <p className="text-red-500 text-sm mt-1.5">{coverError}</p>}
           </div>
         </div>
@@ -454,7 +592,7 @@ export default function Branding() {
             className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text
               placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors"
           />
-          <p className="text-xs text-regantify-text-muted mt-1.5">Title for homepage that will be shown on Facebook and Google.</p>
+          <p className="text-xs text-regantify-text-muted mt-1.5">Title shown in link previews (WhatsApp, Messenger, Instagram, TikTok, Facebook) and on Google. Keep it under about 60 letters.</p>
         </div>
 
         <div>
@@ -468,7 +606,7 @@ export default function Branding() {
             className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text
               placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors resize-y"
           />
-          <p className="text-xs text-regantify-text-muted mt-1.5">Short description that will be visible on Facebook and Google.</p>
+          <p className="text-xs text-regantify-text-muted mt-1.5">Short line shown under the title in link previews and on Google. About 80 to 160 letters works best.</p>
         </div>
       </div>
 

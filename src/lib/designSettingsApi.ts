@@ -148,6 +148,8 @@ export interface DesignSettings {
   headerPhone: string | null;
   headerLogoSize: 'SMALL' | 'MEDIUM' | 'LARGE';
   headerShowCartTotal: boolean;
+  headerShowLogo: boolean;
+  headerShowStoreName: boolean;
 
   // Empty = StorePal's own order with everything on / its three built-in highlights.
   homeSections: HomeSection[];

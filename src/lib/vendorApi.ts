@@ -228,6 +228,9 @@ export interface Branding {
   brandHeadingFont: string | null;
   brandBodyFont: string | null;
   brandCoverImageUrl: string | null;
+  /** The website's own cover picture (first slide of the home page hero), separate from the link-preview cover above. */
+  brandSiteCoverUrl: string | null;
+  brandSiteCoverOnly: boolean;
   brandMetaTitle: string | null;
   brandMetaDescription: string | null;
 }
@@ -242,7 +245,7 @@ export async function getVendorBranding(): Promise<Branding> {
 // shape (they're read-only here, saved via their own upload actions
 // below), same split Store > Logo already has.
 export async function updateVendorBranding(
-  branding: Partial<Omit<Branding, 'logoUrl' | 'faviconUrl' | 'brandCoverImageUrl'>>,
+  branding: Partial<Omit<Branding, 'logoUrl' | 'faviconUrl' | 'brandCoverImageUrl' | 'brandSiteCoverUrl' | 'brandSiteCoverOnly'>>,
 ): Promise<Branding> {
   const { data } = await api.patch<Branding>('/v1/vendor/branding', branding);
   return data;
@@ -331,4 +334,23 @@ export async function getWatermarkSettings(): Promise<WatermarkSettings> {
 export async function updateWatermarkSettings(body: Partial<Pick<WatermarkSettings, 'mode' | 'position' | 'opacity'>>): Promise<WatermarkSettings> {
   const { data } = await api.patch<WatermarkSettings>('/v1/vendor/watermark', body);
   return data;
+}
+
+// Store > Branding's "Website cover photo" (the home page hero's first slide), separate from the link-preview cover above.
+export async function uploadVendorSiteCover(file: File): Promise<string | null> {
+  const formData = new FormData();
+  formData.append('cover', file);
+  const { data } = await api.post<{ brandSiteCoverUrl: string | null }>('/v1/vendor/branding/site-cover', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data.brandSiteCoverUrl;
+}
+
+export async function removeVendorSiteCover(): Promise<void> {
+  await api.delete('/v1/vendor/branding/site-cover');
+}
+
+/** "Show only this cover": the hero shows the website cover alone, without the category covers after it. */
+export async function setVendorSiteCoverOnly(only: boolean): Promise<void> {
+  await api.patch('/v1/vendor/branding/site-cover', { only });
 }
