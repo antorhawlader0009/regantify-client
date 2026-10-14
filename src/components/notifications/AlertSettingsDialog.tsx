@@ -87,7 +87,7 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
 
   // The end-of-day summary: saved the moment it is changed (owner only).
   const saveSummary = useMutation({
-    mutationFn: (patch: { dailySummary?: boolean; dailySummaryHour?: number; weeklySummary?: boolean }) => notificationsApi.updateSettings(patch),
+    mutationFn: (patch: { dailySummary?: boolean; dailySummaryHour?: number; weeklySummary?: boolean; emailTips?: boolean }) => notificationsApi.updateSettings(patch),
     onMutate: (patch) => {
       queryClient.setQueryData<NotificationSettings>(SETTINGS_KEY, (old) => (old ? { ...old, ...patch } : old));
     },
@@ -148,6 +148,16 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
                 onChange={(on) => saveSummary.mutate({ weeklySummary: on })}
                 label="Send me a weekly report"
                 hint="Every Sunday at 9 AM (Dhaka): last week's orders and sales against the week before, best sellers, new buyers, cancelled or returned orders and low stock. It shows in the bell; tick “Weekly summary” for a phone or Telegram chat above to get it there. Never sent by SMS."
+              />
+              <ToggleRow
+                checked={settings.emailTips}
+                onChange={(on) => saveSummary.mutate({ emailTips: on })}
+                label="Email me tips from Regantify"
+                hint={
+                  settings.ownerEmail
+                    ? `Sent to ${settings.ownerEmail}. Payment receipts are always emailed.`
+                    : 'Add an email address in your Profile to get receipts and tips by email.'
+                }
               />
               {!isOwner && <p className="text-xs text-neutral-500">Only the store owner can change the daily summary.</p>}
             </fieldset>

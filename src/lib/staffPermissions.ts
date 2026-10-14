@@ -418,7 +418,7 @@ export function canOpenPath(viewer: StaffViewer, path: string): boolean {
  * person can't use is handled on the page itself.
  */
 const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
-  [/^\/vendor\/(dashboard|notifications|support|settings|profile|complete-profile|complete-setup|verification)(\/|$)/, 'any'],
+  [/^\/vendor\/(dashboard|notifications|support|help|settings|profile|complete-profile|complete-setup|verification)(\/|$)/, 'any'],
   [/^\/vendor\/(staff|billing|activity)(\/|$)/, 'owner'],
   [/^\/vendor\/finance\/(withdraw|payment-callback|receipts)(\/|$)/, 'owner'],
   [/^\/vendor\/finance\//, 'finance.view'],

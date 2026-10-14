@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, Loader2, MessageSquareText, Plus, Workflow } from 'lucide-react';
+import { Bell, Loader2, Mail, MessageSquareText, Plus, Workflow } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { LIFECYCLE_TRIGGERS, lifecycleApi, TRIGGER_LABEL, type LifecycleRule, type RuleInput } from '../../lib/lifecycleApi';
@@ -85,6 +85,11 @@ export default function Automations() {
                       <MessageSquareText size={12} /> also a text
                     </span>
                   )}
+                  {r.sendEmail && (
+                    <span className="flex items-center gap-1">
+                      <Mail size={12} /> also an email
+                    </span>
+                  )}
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-3 border-t border-black/5 pt-3 text-sm sm:max-w-md">
                   <Stat label="Sent" value={r.sent ?? 0} hint={`${r.sent30d ?? 0} in 30 days`} />
@@ -113,7 +118,7 @@ function Stat({ label, value, hint }: { label: string; value: number | string; h
   );
 }
 
-const EMPTY: RuleInput = { name: '', trigger: 'NO_PRODUCT', delayDays: 2, title: '', body: '', smsText: '', link: '' };
+const EMPTY: RuleInput = { name: '', trigger: 'NO_PRODUCT', delayDays: 2, title: '', body: '', smsText: '', sendEmail: false, link: '' };
 
 function RuleDialog({ rule, onClose }: { rule: LifecycleRule | 'new' | null; onClose: () => void }) {
   const qc = useQueryClient();
@@ -126,7 +131,7 @@ function RuleDialog({ rule, onClose }: { rule: LifecycleRule | 'new' | null; onC
       setForm(EMPTY);
       setWithSms(false);
     } else {
-      setForm({ name: rule.name, trigger: rule.trigger, delayDays: rule.delayDays, title: rule.title, body: rule.body, smsText: rule.smsText ?? '', link: rule.link ?? '' });
+      setForm({ name: rule.name, trigger: rule.trigger, delayDays: rule.delayDays, title: rule.title, body: rule.body, smsText: rule.smsText ?? '', sendEmail: rule.sendEmail, link: rule.link ?? '' });
       setWithSms(Boolean(rule.smsText));
     }
   }, [rule]);
@@ -212,6 +217,16 @@ function RuleDialog({ rule, onClose }: { rule: LifecycleRule | 'new' | null; onC
               </p>
             </>
           )}
+        </div>
+        <div className="rounded-xl border border-black/5 p-3">
+          <label className="flex items-center gap-2 text-sm text-regantify-text">
+            <input type="checkbox" checked={form.sendEmail ?? false} onChange={(e) => set('sendEmail', e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+            Also email the owner
+          </label>
+          <p className="mt-1 text-xs text-regantify-text-muted">
+            The title is the subject and the message is the email, with a button to "Opens". Only owners with an email on their account get it, and not those who turned tip
+            emails off.
+          </p>
         </div>
 
         {existing && preview && (

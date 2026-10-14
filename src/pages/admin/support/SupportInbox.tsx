@@ -9,6 +9,7 @@ import { agoPhrase, formatDateTime } from '../../../components/lms/format';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { SavedRepliesDialog } from './SavedRepliesDialog';
+import { adminHelpApi } from '../../../lib/helpApi';
 
 type Tab = SupportStatus | 'ALL' | 'WAITING';
 const TABS: { value: Tab; label: string }[] = [
@@ -234,6 +235,7 @@ function TicketPane({ id }: { id: string }) {
 
   const admins = useQuery({ queryKey: ['admin-support-admins'], queryFn: adminSupportApi.admins, staleTime: 5 * 60_000 });
   const saved = useQuery({ queryKey: ['admin-support-saved'], queryFn: adminSupportApi.savedReplies, staleTime: 60_000 });
+  const helpArticles = useQuery({ queryKey: ['admin-help-picker'], queryFn: adminHelpApi.picker, staleTime: 5 * 60_000 });
   const assign = useMutation({ mutationFn: (adminId: string | null) => adminSupportApi.assign(id, adminId), onSuccess: store, onError: (err) => toast.error(apiErrorMessage(err, 'Could not assign it.')) });
   const tagsM = useMutation({ mutationFn: (tags: string[]) => adminSupportApi.setTags(id, tags), onSuccess: store, onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the tags.')) });
   const noteM = useMutation({
@@ -393,6 +395,7 @@ function TicketPane({ id }: { id: string }) {
             title: r.title,
             body: r.body.replace(/\{store\}/gi, ticket.vendor.storeName).replace(/\{name\}/gi, owner.fullName?.split(' ')[0] ?? 'there'),
           }))}
+          helpArticles={helpArticles.data}
           note={closed ? 'This ticket is closed. Replying reopens it for the store.' : undefined}
         />
       </div>

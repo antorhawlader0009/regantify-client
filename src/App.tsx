@@ -11,6 +11,7 @@ import { PlaceholderPage } from './components/PlaceholderPage';
 import { vendorNav, adminNav, navLinks } from './lib/navConfig';
 
 import Home from './pages/marketing/Home';
+import Blog, { BlogPostPage } from './pages/marketing/Blog';
 
 import VendorPhoneEntry from './pages/auth/VendorPhoneEntry';
 import VendorSignup from './pages/auth/VendorSignup';
@@ -149,6 +150,13 @@ import FeatureFlags from './pages/admin/FeatureFlags';
 import TrustSafety from './pages/admin/TrustSafety';
 import Automations from './pages/admin/Automations';
 import Churn from './pages/admin/Churn';
+import Economics from './pages/admin/Economics';
+import AdminEmail from './pages/admin/Email';
+import ProductInsights from './pages/admin/ProductInsights';
+import DeliveryTimes from './pages/admin/DeliveryTimes';
+import HelpArticles from './pages/admin/HelpArticles';
+import Changelog from './pages/admin/Changelog';
+import FeatureRequests from './pages/admin/FeatureRequests';
 import AdminReferrals from './pages/admin/Referrals';
 import Approvals from './pages/admin/Approvals';
 import AdminDomains from './pages/admin/Domains';
@@ -181,6 +189,7 @@ import SupportInbox from './pages/admin/support/SupportInbox';
 import Addons from './pages/vendor/addons/Addons';
 import Support from './pages/vendor/support/Support';
 import SupportTicket from './pages/vendor/support/SupportTicket';
+import HelpCenter from './pages/vendor/help/HelpCenter';
 import PaymentGatewayManagement from './pages/admin/payment-gateway/PaymentGatewayManagement';
 import Payouts from './pages/admin/finance/Payouts';
 import LeadsPage from './pages/vendor/lms/LeadsPage';
@@ -319,6 +328,13 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/messages' &&
     r.path !== '/admin/automations' &&
     r.path !== '/admin/churn' &&
+    r.path !== '/admin/economics' &&
+    r.path !== '/admin/email' &&
+    r.path !== '/admin/product-insights' &&
+    r.path !== '/admin/delivery-times' &&
+    r.path !== '/admin/help' &&
+    r.path !== '/admin/changelog' &&
+    r.path !== '/admin/feature-requests' &&
     r.path !== '/admin/referrals' &&
     r.path !== '/admin/approvals' &&
     r.path !== '/admin/domains' &&
@@ -358,6 +374,8 @@ export default function App() {
           <Routes>
             {/* Root → marketing landing page */}
             <Route path="/" element={<Home />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
 
             {/* Public storefront now lives in its own app — see storefront/
                 (Next.js, server-rendered for SEO/speed). "Visit site" and
@@ -400,6 +418,8 @@ export default function App() {
                 <Route path="/vendor/addons" element={<Addons />} />
                 <Route path="/vendor/support" element={<Support />} />
                 <Route path="/vendor/support/:id" element={<SupportTicket />} />
+                <Route path="/vendor/help" element={<HelpCenter />} />
+                <Route path="/vendor/help/:slug" element={<HelpCenter />} />
                 <Route path="/vendor/product/add" element={<AddProduct />} />
                 <Route path="/vendor/product/edit/:id" element={<EditProduct />} />
                 <Route path="/vendor/product/all" element={<AllProducts />} />
@@ -601,6 +621,13 @@ export default function App() {
                 <Route path="/admin/messages" element={<Messages />} />
                 <Route path="/admin/automations" element={<Automations />} />
                 <Route path="/admin/churn" element={<Churn />} />
+                <Route path="/admin/economics" element={<Economics />} />
+                <Route path="/admin/email" element={<AdminEmail />} />
+                <Route path="/admin/product-insights" element={<ProductInsights />} />
+                <Route path="/admin/delivery-times" element={<DeliveryTimes />} />
+                <Route path="/admin/help" element={<HelpArticles />} />
+                <Route path="/admin/changelog" element={<Changelog />} />
+                <Route path="/admin/feature-requests" element={<FeatureRequests />} />
                 <Route path="/admin/referrals" element={<AdminReferrals />} />
                 <Route path="/admin/approvals" element={<Approvals />} />
                 <Route path="/admin/domains" element={<AdminDomains />} />

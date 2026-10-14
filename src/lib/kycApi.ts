@@ -20,9 +20,22 @@ export interface MyKyc {
   /** Super Admin's message for the store. */
   note?: string | null;
   requireTradeLicense?: boolean;
+  /** The DBID (Digital Business ID) must be given (super-admin-new.md Step 12). */
+  requireDbid?: boolean;
   rejectReason?: string | null;
   submittedAt?: string | null;
   requestedAt?: string;
+  /** Set while the store has the "Verified seller" badge. */
+  verifiedSeller?: { since: string; dbid: string | null } | null;
+}
+
+export interface DbidMissingStore {
+  vendorId: string;
+  storeName: string;
+  subdomain: string;
+  verified: boolean;
+  gateways: string[];
+  openRequest: { id: string; status: string; dueAt: string; requireDbid: boolean } | null;
 }
 
 export interface KycListItem {
@@ -51,6 +64,10 @@ export interface KycDetail {
   requestedBy: string;
   note: string | null;
   requireTradeLicense: boolean;
+  requireDbid: boolean;
+  dbidNumber: string | null;
+  tinNumber: string | null;
+  binNumber: string | null;
   requestedAt: string;
   dueAt: string;
   restricted: boolean;
@@ -75,7 +92,11 @@ export const kycApi = {
 
 export const adminKycApi = {
   list: (params: { status?: string; search?: string; page?: number }) => api.get<KycList>('/v1/admin/kyc', { params }).then((r) => r.data),
-  request: (input: { vendorId: string; days: number; note?: string; requireTradeLicense?: boolean }) =>
+  complianceSettings: () => api.get<{ dbidRequiredForOnline: boolean }>('/v1/admin/kyc/compliance/settings').then((r) => r.data),
+  setComplianceSettings: (dbidRequiredForOnline: boolean) => api.patch<{ dbidRequiredForOnline: boolean }>('/v1/admin/kyc/compliance/settings', { dbidRequiredForOnline }).then((r) => r.data),
+  dbidMissing: () => api.get<DbidMissingStore[]>('/v1/admin/kyc/compliance/dbid-missing').then((r) => r.data),
+  unverify: (vendorId: string) => api.post(`/v1/admin/kyc/vendor/${vendorId}/unverify`).then((r) => r.data),
+  request: (input: { vendorId: string; days: number; note?: string; requireTradeLicense?: boolean; requireDbid?: boolean }) =>
     api.post<{ id: string; dueAt: string }>('/v1/admin/kyc/request', input).then((r) => r.data),
   detail: (id: string) => api.get<KycDetail>(`/v1/admin/kyc/${id}`).then((r) => r.data),
   /** The picture as a blob (the server needs the signed-in session, so it cannot be a plain image link). */

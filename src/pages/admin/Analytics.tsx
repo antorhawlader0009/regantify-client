@@ -6,6 +6,7 @@ import { adminAnalyticsApi, type Adoption } from '../../lib/adminAnalyticsApi';
 import { ColumnChart } from '../../components/analytics/TrendChart';
 import { bucketLabel, formatTaka } from '../../components/analytics/format';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
+import { adminHelpApi } from '../../lib/helpApi';
 
 // Super Admin > Analytics (super-admin-plan.md Step 16). One endpoint, cached 10 minutes on the server; the definitions are printed at the top.
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { id: 'growth', label: 'Growth' },
   { id: 'retention', label: 'Retention' },
   { id: 'usage', label: 'Usage' },
+  { id: 'feedback', label: 'Seller rating' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -275,7 +277,90 @@ export default function AdminAnalytics() {
             </div>
           </>
         )}
+        {tab === 'feedback' && <NpsTab />}
       </div>
     </div>
+  );
+}
+
+/**
+ * Seller rating (super-admin-new.md Step 11): the owners' answers to "How likely are you to recommend Regantify?" (0-10, asked once every 90 days).
+ * NPS = % who gave 9-10 minus % who gave 0-6, so it runs from -100 to 100.
+ */
+function NpsTab() {
+  const { data, isLoading } = useQuery({ queryKey: ['admin-nps'], queryFn: adminHelpApi.nps, staleTime: 5 * 60_000 });
+  if (isLoading || !data) return <Loader2 className="mx-auto mt-10 animate-spin text-neutral-400" />;
+  const l = data.last90;
+  const td = 'px-3 py-2';
+  return (
+    <>
+      <Card title="Last 90 days" hint="Owners are asked once every 90 days, from their store's 15th day. NPS = share of 9-10 answers minus share of 0-6 answers.">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <Stat label="NPS" value={l.nps === null ? '-' : String(l.nps)} sub={`${l.responses} answers`} />
+          <Stat label="Would recommend (9-10)" value={String(l.promoters)} sub={l.responses ? `${Math.round((l.promoters / l.responses) * 100)}%` : '-'} />
+          <Stat label="Neutral (7-8)" value={String(l.passives)} />
+          <Stat label="Unhappy (0-6)" value={String(l.detractors)} sub={l.responses ? `${Math.round((l.detractors / l.responses) * 100)}%` : '-'} />
+          <Stat label="Skipped" value={String(l.skipped)} />
+        </div>
+      </Card>
+      <Card title="By month">
+        {data.byMonth.length === 0 ? (
+          <p className="text-sm text-regantify-text-muted">No answers yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
+              <thead>
+                <tr className="text-left text-xs text-regantify-text-muted">
+                  <th className={`${td} font-normal`}>Month</th>
+                  <th className={`${td} text-right font-normal`}>NPS</th>
+                  <th className={`${td} text-right font-normal`}>Answers</th>
+                  <th className={`${td} text-right font-normal`}>9-10</th>
+                  <th className={`${td} text-right font-normal`}>7-8</th>
+                  <th className={`${td} text-right font-normal`}>0-6</th>
+                  <th className={`${td} text-right font-normal`}>Skipped</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...data.byMonth].reverse().map((m) => (
+                  <tr key={m.month} className="border-t border-black/5">
+                    <td className={td}>{monthLong(m.month)}</td>
+                    <td className={`${td} text-right font-medium tabular-nums`}>{m.nps === null ? '-' : m.nps}</td>
+                    <td className={`${td} text-right tabular-nums`}>{m.responses}</td>
+                    <td className={`${td} text-right tabular-nums`}>{m.promoters}</td>
+                    <td className={`${td} text-right tabular-nums`}>{m.passives}</td>
+                    <td className={`${td} text-right tabular-nums`}>{m.detractors}</td>
+                    <td className={`${td} text-right tabular-nums`}>{m.skipped}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+      <Card title="What owners wrote" hint="The latest 20 answers that came with a comment.">
+        {data.comments.length === 0 ? (
+          <p className="text-sm text-regantify-text-muted">No comments yet.</p>
+        ) : (
+          <ul className="divide-y divide-black/5">
+            {data.comments.map((c) => (
+              <li key={c.id} className="flex gap-3 py-2.5 text-sm">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${c.score >= 9 ? 'bg-emerald-50 text-emerald-800' : c.score >= 7 ? 'bg-neutral-100 text-neutral-700' : 'bg-red-50 text-red-700'}`}>
+                  {c.score}
+                </span>
+                <div className="min-w-0">
+                  <p className="whitespace-pre-wrap break-words text-regantify-text">{c.reason}</p>
+                  <p className="text-xs text-regantify-text-muted">
+                    <Link to={`/admin/vendors/${c.vendorId}`} className="hover:underline">
+                      {c.storeName}
+                    </Link>
+                    {c.planCode ? ` · ${c.planCode}` : ''} · {formatDhakaDateTime(c.createdAt)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </>
   );
 }

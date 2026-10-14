@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Moon, Store, Sun } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { publicSiteApi } from '../../lib/marketingCmsApi';
 
 // ---------------------------------------------------------------------------
 // The one top bar shared by the marketing home and the vendor login / sign up
@@ -204,6 +206,8 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
   const c = light ? TONES.light : TONES.dark;
   const dockRef = useDockHover<HTMLElement>();
   const hero = variant === 'hero';
+  const { data: blogPosts } = useQuery({ queryKey: ['public-blog'], queryFn: publicSiteApi.blog, staleTime: 10 * 60_000, retry: false });
+  const hasBlog = (blogPosts?.length ?? 0) > 0;
 
   // Over a hero the bar starts fully transparent; elsewhere it is always glass.
   const [scrolled, setScrolled] = useState(false);
@@ -254,6 +258,12 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
           {sectionLink('features', t.features)}
           {sectionLink('pricing', t.pricing)}
           {sectionLink('faq', t.faq)}
+          {/* The platform blog (super-admin-new.md Step 14), once one post is live. */}
+          {hasBlog && (
+            <Link to="/blog" data-dock-item className={`${LINK_CLASS} ${c.ink}`}>
+              {lang === 'bn' ? 'ব্লগ' : 'Blog'}
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-1.5">

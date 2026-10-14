@@ -195,6 +195,9 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Staff and roles', where: 'Staff', path: '/vendor/staff', keywords: 'team member add staff role permission manager viewer password suspend ip স্টাফ' },
   { title: 'Add-ons', where: 'Add-ons', path: '/vendor/addons', keywords: 'addon extension integration plugin apps bkash nagad sslcommerz shurjopay aamarpay pathao steadfast moveon sms email pwa discount role' },
   { title: 'Support tickets', where: 'Support', path: '/vendor/support', keywords: 'help contact us problem complaint ticket সাপোর্ট সাহায্য' },
+  { title: 'Help center', where: 'Help', path: '/vendor/help', keywords: 'help guide how to tutorial article video faq kivabe সাহায্য গাইড কিভাবে' },
+  { title: "What's new", where: 'Help', path: '/vendor/help?tab=new', keywords: 'new features updates changelog release notes notun ki নতুন আপডেট' },
+  { title: 'Suggest a feature', where: 'Help > Ideas', path: '/vendor/help?tab=ideas', keywords: 'idea feature request vote wish suggestion feedback ichha আইডিয়া ফিচার অনুরোধ' },
   { title: 'AI chat bot credits', where: 'AI & Automation > AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot', keywords: 'ai credits tokens buy store chatbot assistant ask ai চ্যাটবট' },
 
   // ------------------------------------------------------------------ LMS (lead management)

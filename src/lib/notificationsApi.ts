@@ -122,5 +122,9 @@ export interface NotificationSettings {
   dailySummaryHour: number;
   /** The Sunday 9 AM weekly report. */
   weeklySummary: boolean;
+  /** Emails with tips from Regantify (super-admin-new.md Step 13); receipts are always emailed. */
+  emailTips: boolean;
+  /** Where Regantify's emails go; null = the owner has no email, so nothing is emailed. */
+  ownerEmail: string | null;
   ownerPhone: string | null;
 }

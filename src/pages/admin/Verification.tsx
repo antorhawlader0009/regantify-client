@@ -78,6 +78,7 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const extend = useMutation({ mutationFn: () => adminKycApi.extend(id, Number(extendDays)), onSuccess: () => { toast.success('Deadline moved.'); done(); }, onError: fail('Could not move the deadline.') });
   const cancel = useMutation({ mutationFn: () => adminKycApi.cancel(id), onSuccess: () => { toast.success('Request cancelled. The store is free again.'); done(); }, onError: fail('Could not cancel.') });
   const wipe = useMutation({ mutationFn: () => adminKycApi.deleteDocuments(id), onSuccess: () => { toast.success('Pictures deleted.'); done(); }, onError: fail('Could not delete.') });
+  const unverify = useMutation({ mutationFn: () => adminKycApi.unverify(data!.vendor.id), onSuccess: () => { toast.success('The badge is gone from the store.'); done(); }, onError: fail('Could not remove the badge.') });
 
   const d: KycDetail | undefined = data;
   return (
@@ -109,7 +110,19 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 {d.dateOfBirth && <div><dt className="text-xs text-neutral-500">Date of birth</dt><dd>{d.dateOfBirth}</dd></div>}
                 {d.address && <div><dt className="text-xs text-neutral-500">Address</dt><dd>{d.address}</dd></div>}
                 {d.vendorNote && <div className="sm:col-span-2"><dt className="text-xs text-neutral-500">Note from the store</dt><dd>{d.vendorNote}</dd></div>}
+                <div><dt className="text-xs text-neutral-500">DBID{d.requireDbid ? ' (required)' : ''}</dt><dd className="font-medium">{d.dbidNumber ?? '-'}</dd></div>
+                {(d.tinNumber || d.binNumber) && (
+                  <div><dt className="text-xs text-neutral-500">e-TIN / BIN</dt><dd className="tabular-nums">{d.tinNumber ?? '-'} / {d.binNumber ?? '-'}</dd></div>
+                )}
               </dl>
+            )}
+            {d.status === 'APPROVED' && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded bg-green-50 px-3 py-2 text-green-900">
+                <span>The store shows a "Verified seller" badge on its StorePal store{d.dbidNumber ? ` with DBID ${d.dbidNumber}` : ''}.</span>
+                <button type="button" className={btn} disabled={unverify.isPending} onClick={() => unverify.mutate()}>
+                  Remove the badge
+                </button>
+              </div>
             )}
 
             {d.documents.length > 0 ? (
@@ -197,21 +210,22 @@ function ReviewDialog({ id, onClose }: { id: string; onClose: () => void }) {
   );
 }
 
-function AskDialog({ onClose }: { onClose: () => void }) {
+function AskDialog({ onClose, preset }: { onClose: () => void; preset?: { id: string; storeName: string; requireDbid: boolean } }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [picked, setPicked] = useState<{ id: string; storeName: string } | null>(null);
+  const [picked, setPicked] = useState<{ id: string; storeName: string } | null>(preset ? { id: preset.id, storeName: preset.storeName } : null);
   const [days, setDays] = useState('7');
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState(preset?.requireDbid ? 'Online businesses need a DBID (Digital Business ID). Please add yours.' : '');
   const [trade, setTrade] = useState(false);
+  const [dbid, setDbid] = useState(preset?.requireDbid ?? false);
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
     return () => clearTimeout(t);
   }, [search]);
   const { data: found } = useQuery({ queryKey: ['admin-kyc-vendors', debounced], queryFn: () => adminApi.listVendors({ search: debounced, perPage: 8 }), enabled: debounced.length >= 2 && !picked });
   const ask = useMutation({
-    mutationFn: () => adminKycApi.request({ vendorId: picked!.id, days: Number(days), note: note.trim() || undefined, requireTradeLicense: trade }),
+    mutationFn: () => adminKycApi.request({ vendorId: picked!.id, days: Number(days), note: note.trim() || undefined, requireTradeLicense: trade, requireDbid: dbid }),
     onSuccess: () => {
       toast.success('Asked. The store sees it on its dashboard and was told by SMS.');
       void queryClient.invalidateQueries({ queryKey: ['admin-kyc'] });
@@ -264,6 +278,11 @@ function AskDialog({ onClose }: { onClose: () => void }) {
           <input type="checkbox" checked={trade} onChange={(e) => setTrade(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
           Also require a trade licence picture
         </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={dbid} onChange={(e) => setDbid(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          Require the DBID (Digital Business ID)
+        </label>
+        <p className="-mt-1 text-xs text-neutral-500">When "DBID for online-payment stores" is on, a store with online payments is always asked for its DBID.</p>
         <div className="flex justify-end gap-2">
           <button type="button" className={btn} onClick={onClose}>
             Cancel
@@ -274,6 +293,95 @@ function AskDialog({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </Dialog>
+  );
+}
+
+/**
+ * Bangladesh compliance (super-admin-new.md Step 12): the rule "a store with online payments must give its DBID", and the online-payment stores that have
+ * no verified DBID yet, each with a one-click request that asks for it.
+ */
+function DbidCompliance() {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState<{ id: string; storeName: string } | null>(null);
+  const { data: settings } = useQuery({ queryKey: ['admin-kyc-compliance'], queryFn: adminKycApi.complianceSettings });
+  const { data: stores, isLoading } = useQuery({ queryKey: ['admin-kyc-dbid-missing'], queryFn: adminKycApi.dbidMissing, enabled: open });
+  const toggle = useMutation({
+    mutationFn: (on: boolean) => adminKycApi.setComplianceSettings(on),
+    onSuccess: (s) => {
+      queryClient.setQueryData(['admin-kyc-compliance'], s);
+      toast.success(s.dbidRequiredForOnline ? 'From now on, requests to online-payment stores ask for the DBID.' : 'The DBID is asked only when you tick it.');
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save it.')),
+  });
+  return (
+    <section className="space-y-3 rounded-xl border border-black/5 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-regantify-text">DBID for online-payment stores</h2>
+          <p className="max-w-2xl text-xs text-neutral-500">
+            The Ministry of Commerce asks every online business to hold a DBID (Digital Business ID, through RJSC). When this is on, every verification request to a store that takes
+            online payments asks for its DBID. Nothing is switched off by itself: stores are only asked when you ask them.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={settings?.dbidRequiredForOnline ?? false} disabled={!settings || toggle.isPending} onChange={(e) => toggle.mutate(e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
+          Require DBID
+        </label>
+      </div>
+      <button type="button" className="text-sm font-medium text-regantify-cta hover:underline" onClick={() => setOpen(!open)}>
+        {open ? 'Hide' : 'Show'} online-payment stores without a verified DBID
+      </button>
+      {open &&
+        (isLoading ? (
+          <Loader2 className="mx-auto animate-spin text-neutral-400" />
+        ) : !stores || stores.length === 0 ? (
+          <p className="text-sm text-neutral-500">Every store with online payments has a verified DBID.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="border-b border-black/5 text-left text-xs text-neutral-500">
+                  <th className="px-3 py-2 font-normal">Store</th>
+                  <th className="px-3 py-2 font-normal">Online payments</th>
+                  <th className="px-3 py-2 font-normal">Now</th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {stores.map((s) => (
+                  <tr key={s.vendorId} className="border-b border-black/5 last:border-0">
+                    <td className="px-3 py-2">
+                      <p className="font-medium">{s.storeName}</p>
+                      <p className="text-xs text-neutral-500">{s.subdomain}</p>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-neutral-600">{s.gateways.map((g) => (g === 'ONLINE_PAYMENT' ? 'Online Payment' : g === 'SSLCOMMERZ' ? 'SSLCommerz' : g)).join(', ')}</td>
+                    <td className="px-3 py-2 text-xs text-neutral-600">
+                      {s.openRequest ? `Asked, ${STATUS[s.openRequest.status as KycListItem['status']]?.label ?? s.openRequest.status}` : s.verified ? 'Verified, no DBID' : 'Not verified'}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {!s.openRequest && (
+                        <button type="button" className="text-sm font-medium text-regantify-cta hover:underline" onClick={() => setAsking({ id: s.vendorId, storeName: s.storeName })}>
+                          Ask for DBID
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      {asking && (
+        <AskDialog
+          preset={{ ...asking, requireDbid: true }}
+          onClose={() => {
+            setAsking(null);
+            void queryClient.invalidateQueries({ queryKey: ['admin-kyc-dbid-missing'] });
+          }}
+        />
+      )}
+    </section>
   );
 }
 
@@ -375,6 +483,7 @@ export default function Verification() {
           </button>
         </div>
       )}
+      <DbidCompliance />
       {asking && <AskDialog onClose={() => setAsking(false)} />}
       {openId && <ReviewDialog id={openId} onClose={() => setOpenId(null)} />}
     </div>

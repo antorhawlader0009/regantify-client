@@ -8,6 +8,7 @@ import { storefrontStoreUrl } from '../lib/storefrontUrl';
 import { AccountMenu } from './AccountMenu';
 import { NotificationBell } from './NotificationBell';
 import { BalanceButton } from './BalanceButton';
+import { HelpButton } from './help/HelpButton';
 import { SearchPalette, SearchTrigger } from './search/GlobalSearch';
 import { AdminSearch } from './admin/AdminSearch';
 import { AdminBell } from './admin/AdminBell';
@@ -103,6 +104,9 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           <ExternalLink size={13} className="text-neutral-400" />
         </a>
       )}
+
+      {/* Help, What's new and Ideas (super-admin-new.md Step 11); a red dot when What's new has unseen entries. */}
+      {isVendor && <HelpButton />}
 
       {isVendor && <BalanceButton />}
 

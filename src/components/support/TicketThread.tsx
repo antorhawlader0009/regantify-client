@@ -2,6 +2,36 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Loader2, SendHorizontal } from 'lucide-react';
 import type { SupportMessage, SupportStatus } from '../../lib/supportApi';
 import { formatDateTime } from '../lms/format';
+import { Link } from 'react-router-dom';
+
+const LINK_RE = /(https:\/\/[^\s<>"]+|\/vendor\/help(?:\/[a-z0-9-]+)?)/g;
+
+/** A message's text with https links and help-article addresses (/vendor/help/slug, inserted by support) made clickable; everything else stays text. */
+function MessageText({ text, viewer }: { text: string; viewer: Viewer }) {
+  return (
+    <>
+      {text.split(LINK_RE).map((part, i) => {
+        if (i % 2 === 0) return part;
+        if (part.startsWith('/vendor/help')) {
+          return viewer === 'VENDOR' ? (
+            <Link key={i} to={part} className="font-medium underline underline-offset-2">
+              {part}
+            </Link>
+          ) : (
+            <span key={i} className="font-medium">
+              {part}
+            </span>
+          );
+        }
+        return (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="font-medium underline underline-offset-2">
+            {part}
+          </a>
+        );
+      })}
+    </>
+  );
+}
 
 type Viewer = 'VENDOR' | 'ADMIN';
 
@@ -81,7 +111,7 @@ export function TicketThread({ messages, viewer }: TicketThreadProps) {
                     : `border border-black/10 bg-white ${mine ? 'rounded-tr-md' : 'rounded-tl-md'}`
                 }`}
               >
-                {m.body}
+                <MessageText text={m.body} viewer={viewer} />
               </div>
             </div>
           </li>
@@ -101,10 +131,12 @@ interface ReplyBoxProps {
   actions?: ReactNode;
   /** Replies the team reuses (Super Admin only): a picker drops the chosen text into the box. */
   savedReplies?: Array<{ id: string; title: string; body: string }>;
+  /** Published help articles (Super Admin only): the picker adds "Title: /vendor/help/slug", which the seller sees as a link. */
+  helpArticles?: Array<{ slug: string; title: string }>;
 }
 
 /** Reply composer. Ctrl/Cmd+Enter sends. Clears only after the send succeeds. */
-export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', note, actions, savedReplies }: ReplyBoxProps) {
+export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', note, actions, savedReplies, helpArticles }: ReplyBoxProps) {
   const [body, setBody] = useState('');
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -165,6 +197,26 @@ export function ReplyBox({ onSend, sending, placeholder = 'Write a reply…', no
             {savedReplies.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.title}
+              </option>
+            ))}
+          </select>
+        )}
+        {helpArticles && helpArticles.length > 0 && (
+          <select
+            aria-label="Insert a help article link"
+            value=""
+            onChange={(e) => {
+              const a = helpArticles.find((x) => x.slug === e.target.value);
+              if (!a) return;
+              const line = `${a.title}: /vendor/help/${a.slug}`;
+              setBody((b) => (b.trim() ? `${b.trimEnd()}\n\n${line}` : line));
+            }}
+            className="max-w-[12rem] rounded-lg bg-regantify-content px-2 py-1.5 text-xs text-regantify-text focus:outline-none"
+          >
+            <option value="">Help article…</option>
+            {helpArticles.map((a) => (
+              <option key={a.slug} value={a.slug}>
+                {a.title}
               </option>
             ))}
           </select>

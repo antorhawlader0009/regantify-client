@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import SiteNav, { readStoredLang, storeLang, readStoredNight, storeNight } from '../../components/marketing/SiteNav';
 import HeroFilmstrip from '../../components/marketing/HeroFilmstrip';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../lib/api';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import TemplateShowcase from '../../components/marketing/TemplateShowcase';
 import {
@@ -18,7 +17,10 @@ import {
   CheckCircle2,
   Zap,
   ArrowRight,
+  Star,
 } from 'lucide-react';
+import { pick, publicSiteApi } from '../../lib/marketingCmsApi';
+import { usePageMeta } from '../../lib/pageMeta';
 
 // ---------------------------------------------------------------------------
 // i18n — dictionary + provider, inlined here so this page is a single file
@@ -466,10 +468,13 @@ function HomeInner() {
   // Banner line and featured stores, set by Super Admin in Marketing (super-admin-plan.md Step 17).
   const { data: marketing } = useQuery({
     queryKey: ['public-marketing'],
-    queryFn: () => api.get<{ banner: { text: string; link: string | null } | null; featured: Array<{ name: string; subdomain: string; logoUrl: string | null }> }>('/v1/public/marketing').then((r) => r.data),
-    staleTime: 5 * 60_000,
+    queryFn: publicSiteApi.marketing,
+    staleTime: 60_000,
     retry: false,
   });
+  // Text and pictures Super Admin set in Marketing > Homepage content (super-admin-new.md Step 14); an empty part keeps the built-in text below.
+  const cms = marketing?.content;
+  usePageMeta(cms?.seo.title || undefined, cms?.seo.description || undefined, cms?.seo.imageUrl ?? undefined);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   // Day / night for the whole page. The hero, pricing and closing sections are
@@ -509,12 +514,16 @@ function HomeInner() {
   ];
 
   // The four pictures of the hero rail, in the order they should be met.
-  const heroSlides = [
+  const builtInSlides = [
     { image: '/hero/slide-1.jpg', alt: 'A seller showing the Regantify dashboard on two phones, with courier and payment logos around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
     { image: '/hero/slide-2.jpg', alt: 'A delivery rider with parcels and the Pathao, Steadfast and RedX logos', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
     { image: '/hero/slide-3.jpg', alt: 'A shopkeeper holding a phone with bKash, Nagad, Rocket and Upay payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
     { image: '/hero/slide-4.jpg', alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
   ];
+
+  const heroSlides = cms?.hero.slides.length
+    ? cms.hero.slides.map((s) => ({ image: s.imageUrl, alt: pick(s.title, lang) || 'Regantify', title: pick(s.title, lang), detail: pick(s.detail, lang) }))
+    : builtInSlides;
 
   const runYourBusiness = [
     {
@@ -665,7 +674,8 @@ function HomeInner() {
     { label: t('feat_row_aichat'), idx: 6 },
   ];
 
-  const faqs = [
+  // Super Admin's questions replace the built-in five once at least one is switched on (super-admin-new.md Step 14).
+  const faqs = cms?.faq.length ? cms.faq.map((f) => ({ q: pick(f.q, lang), a: pick(f.a, lang) })) : [
     { q: t('faq1_q'), a: t('faq1_a') },
     { q: t('faq2_q'), a: t('faq2_a') },
     { q: t('faq3_q'), a: t('faq3_a') },
@@ -788,10 +798,10 @@ function HomeInner() {
             </div>
           )}
           <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.2] text-[#1A1A1A] dark:text-white max-w-3xl">
-            {t('hero_title')}
+            {pick(cms?.hero.title, lang) || t('hero_title')}
           </h1>
           <p className="mt-4 text-lg sm:text-xl text-[#008060] dark:text-[#95BF47] font-medium">
-            {t('hero_sub')}
+            {pick(cms?.hero.sub, lang) || t('hero_sub')}
           </p>
         </div>
 
@@ -820,7 +830,7 @@ function HomeInner() {
       {marketing && marketing.featured.length > 0 && (
         <section id="stores" className="border-b border-black/10 bg-white dark:border-white/10 dark:bg-[#141414]">
           <div className="max-w-6xl mx-auto px-6 py-14">
-            <h2 className="text-2xl font-bold mb-8">{lang === 'bn' ? 'Regantify-তে চলছে যেসব দোকান' : 'Stores running on Regantify'}</h2>
+            <h2 className="text-2xl font-bold mb-8">{pick(cms?.showcaseTitle, lang) || (lang === 'bn' ? 'Regantify-তে চলছে যেসব দোকান' : 'Stores running on Regantify')}</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {marketing.featured.map((f) => (
                 <a key={f.subdomain} href={storefrontStoreUrl(f.subdomain)} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 rounded-2xl border border-black/10 p-4 transition-colors hover:border-[#008060] dark:border-white/10">
@@ -834,6 +844,40 @@ function HomeInner() {
                     <span className="flex items-center gap-1 text-xs text-[#008060]">{lang === 'bn' ? 'দোকান দেখুন' : 'Visit store'}<ArrowUpRight size={12} /></span>
                   </span>
                 </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* What sellers say: testimonials from Admin > Marketing (super-admin-new.md Step 14). Hidden until one is switched on. */}
+      {cms && cms.testimonials.items.length > 0 && (
+        <section id="testimonials" className="border-b border-black/10 bg-[#F3F7EC] dark:border-white/10 dark:bg-[#0F130D]">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <h2 className="text-2xl font-bold mb-8">{pick(cms.testimonials.title, lang) || (lang === 'bn' ? 'বিক্রেতারা যা বলছেন' : 'What sellers say')}</h2>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {cms.testimonials.items.map((item) => (
+                <figure key={item.id} className="flex flex-col rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-[#1A1A1A]">
+                  {item.rating && (
+                    <div className="mb-3 flex gap-0.5" aria-label={`${item.rating} of 5`}>
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star key={i} size={15} className={i < item.rating! ? 'fill-[#F5A623] text-[#F5A623]' : 'text-black/15 dark:text-white/20'} />
+                      ))}
+                    </div>
+                  )}
+                  <blockquote className="flex-1 whitespace-pre-line text-[15px] leading-relaxed text-[#1A1A1A]/80 dark:text-white/80">{pick(item.quote, lang)}</blockquote>
+                  <figcaption className="mt-4 flex items-center gap-3">
+                    {item.photoUrl ? (
+                      <img src={item.photoUrl} alt="" loading="lazy" className="h-10 w-10 rounded-full object-cover" />
+                    ) : (
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-[#F3F7EC] text-sm font-bold text-[#008060] dark:bg-white/10">{item.name.slice(0, 1).toUpperCase()}</span>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{item.name}</span>
+                      {pick(item.role, lang) && <span className="block truncate text-xs text-[#1A1A1A]/50 dark:text-white/50">{pick(item.role, lang)}</span>}
+                    </span>
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </div>
@@ -925,6 +969,7 @@ function HomeInner() {
           <div className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}>
             <h2 className="text-3xl sm:text-4xl font-bold text-white">{t('pricing_title')}</h2>
             <p className="mt-3 text-white/60 max-w-lg">{t('pricing_sub')}</p>
+            {pick(cms?.pricingNote, lang) && <p className="mt-2 max-w-2xl whitespace-pre-line text-sm text-white/80">{pick(cms?.pricingNote, lang)}</p>}
           </div>
 
           {/* Sliding billing toggle */}

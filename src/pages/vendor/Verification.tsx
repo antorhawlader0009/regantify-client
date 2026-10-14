@@ -80,6 +80,9 @@ export default function Verification() {
   const [dob, setDob] = useState('');
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
+  const [dbid, setDbid] = useState('');
+  const [tin, setTin] = useState('');
+  const [bin, setBin] = useState('');
   const [files, setFiles] = useState<Partial<Record<KycKind, File | null>>>({});
 
   const send = useMutation({
@@ -90,6 +93,9 @@ export default function Verification() {
       if (dob) form.set('dateOfBirth', dob);
       if (address) form.set('address', address);
       if (note) form.set('note', note);
+      if (dbid.trim()) form.set('dbidNumber', dbid.trim());
+      if (tin.trim()) form.set('tinNumber', tin.trim());
+      if (bin.trim()) form.set('binNumber', bin.trim());
       (['NID_FRONT', 'NID_BACK', 'SELFIE', 'TRADE_LICENSE'] as KycKind[]).forEach((k) => {
         const f = files[k];
         if (f) form.set(k, f);
@@ -106,7 +112,7 @@ export default function Verification() {
   if (isLoading || !data) return <p className="py-10 text-center text-sm text-neutral-500">Loading…</p>;
 
   const needsForm = data.state === 'REQUESTED' || data.state === 'REJECTED';
-  const ready = fullName.trim().length >= 3 && nid.replace(/\s/g, '').length >= 6 && files.NID_FRONT && files.NID_BACK && files.SELFIE && (!data.requireTradeLicense || files.TRADE_LICENSE);
+  const ready = fullName.trim().length >= 3 && nid.replace(/\s/g, '').length >= 6 && files.NID_FRONT && files.NID_BACK && files.SELFIE && (!data.requireTradeLicense || files.TRADE_LICENSE) && (!data.requireDbid || dbid.trim().length >= 4);
   return (
     <PageSection>
       <PageHeader title="Verification" description="Sometimes we ask a store to prove who is behind it, to keep sellers and customers safe." />
@@ -121,6 +127,11 @@ export default function Verification() {
         <div className="rounded-xl border border-green-200 bg-green-50 p-5 text-sm text-green-900">
           <CheckCircle2 className="mb-2" size={22} />
           Your store is verified. Nothing else is needed.
+          {data.verifiedSeller && (
+            <p className="mt-1">
+              Your store shows a "Verified seller" badge to customers{data.verifiedSeller.dbid ? `, with your DBID ${data.verifiedSeller.dbid}` : ''}.
+            </p>
+          )}
         </div>
       )}
       {data.state === 'SUBMITTED' && (
@@ -167,6 +178,24 @@ export default function Verification() {
                   <input className={`${inputClass} mt-1`} value={address} onChange={(e) => setAddress(e.target.value)} maxLength={300} />
                 </label>
               </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="text-sm text-neutral-600">
+                  DBID (Digital Business ID) {data.requireDbid ? <span className="text-red-600">*</span> : '(optional)'}
+                  <input className={`${inputClass} mt-1`} value={dbid} onChange={(e) => setDbid(e.target.value)} maxLength={60} />
+                </label>
+                <label className="text-sm text-neutral-600">
+                  e-TIN (optional)
+                  <input className={`${inputClass} mt-1`} value={tin} onChange={(e) => setTin(e.target.value)} maxLength={30} inputMode="numeric" />
+                </label>
+                <label className="text-sm text-neutral-600">
+                  BIN / VAT number (optional)
+                  <input className={`${inputClass} mt-1`} value={bin} onChange={(e) => setBin(e.target.value)} maxLength={30} inputMode="numeric" />
+                </label>
+              </div>
+              <p className="-mt-2 text-xs text-neutral-500">
+                The government (Ministry of Commerce) asks every online business to have a DBID. It is issued through RJSC, and your NID is enough to apply. With a DBID, customers see it on your
+                "Verified seller" badge.
+              </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <PicturePicker label="ID card, front" hint="All four corners and the writing must be clear." file={files.NID_FRONT ?? null} onPick={(f) => setFiles((s) => ({ ...s, NID_FRONT: f }))} required />
                 <PicturePicker label="ID card, back" hint="The same, from the back." file={files.NID_BACK ?? null} onPick={(f) => setFiles((s) => ({ ...s, NID_BACK: f }))} required />

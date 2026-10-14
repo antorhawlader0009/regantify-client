@@ -19,6 +19,8 @@ export interface LifecycleRule {
   title: string;
   body: string;
   smsText: string | null;
+  /** Also emailed to the owner (super-admin-new.md Step 13). */
+  sendEmail: boolean;
   link: string | null;
   enabled: boolean;
   enabledAt: string | null;
@@ -32,7 +34,7 @@ export interface LifecycleRule {
   converted?: number | null;
 }
 
-export type RuleInput = Pick<LifecycleRule, 'name' | 'trigger' | 'delayDays' | 'title' | 'body'> & { smsText?: string; link?: string };
+export type RuleInput = Pick<LifecycleRule, 'name' | 'trigger' | 'delayDays' | 'title' | 'body'> & { smsText?: string; sendEmail?: boolean; link?: string };
 
 export const lifecycleApi = {
   list: () => api.get<{ paused: boolean; rules: LifecycleRule[] }>('/v1/admin/lifecycle').then((r) => r.data),

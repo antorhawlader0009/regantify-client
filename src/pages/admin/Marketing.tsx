@@ -4,11 +4,51 @@ import { ArrowDown, ArrowUp, X } from 'lucide-react';
 import { adminStep17Api, type MarketingStore } from '../../lib/adminStep17Api';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
+import { MarketingContentEditor } from './marketing/MarketingContentEditor';
+import { PlatformBlog } from './marketing/PlatformBlog';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 
-/** Super Admin > Marketing (super-admin-plan.md Step 17): the banner line and the featured stores of the public marketing homepage. */
+type MarketingTab = 'banner' | 'content' | 'blog';
+const TABS: Array<{ id: MarketingTab; label: string }> = [
+  { id: 'content', label: 'Homepage content' },
+  { id: 'banner', label: 'Banner and stores' },
+  { id: 'blog', label: 'Blog' },
+];
+
+/**
+ * Super Admin > Reach > Marketing: everything the public marketing site says, with no deploy. Homepage content and Blog are super-admin-new.md Step 14;
+ * the banner and featured stores are super-admin-plan.md Step 17.
+ */
 export default function AdminMarketing() {
+  const [tab, setTab] = useState<MarketingTab>('content');
+  return (
+    <div className="max-w-5xl space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold text-regantify-text">Marketing</h1>
+        <p className="mt-1 text-sm text-regantify-text-muted">What the public site (the pages before sign-in) says. Saved changes show on the next page load.</p>
+      </div>
+      <div className="flex gap-1 overflow-x-auto border-b border-line">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${tab === t.id ? 'border-regantify-black text-regantify-text' : 'border-transparent text-regantify-text-muted hover:text-regantify-text'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === 'banner' && <BannerAndStores />}
+      {tab === 'content' && <MarketingContentEditor />}
+      {tab === 'blog' && <PlatformBlog />}
+    </div>
+  );
+}
+
+/** The banner line and the featured stores of the public marketing homepage (super-admin-plan.md Step 17). */
+function BannerAndStores() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['admin-marketing'], queryFn: adminStep17Api.marketing });
   const [text, setText] = useState('');
@@ -43,10 +83,7 @@ export default function AdminMarketing() {
   const linkOk = !link.trim() || /^(https?:\/\/|\/)/.test(link.trim());
   return (
     <div className="max-w-3xl space-y-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-regantify-text">Marketing</h1>
-        <p className="mt-1 text-sm text-regantify-text-muted">What the public homepage (the page before sign-in) says: a banner line at the top and a row of featured stores.</p>
-      </div>
+      <p className="text-sm text-regantify-text-muted">A banner line at the top of the homepage and a row of featured stores.</p>
 
       <section className="space-y-3 rounded-2xl border border-black/5 bg-white p-5">
         <h2 className="text-sm font-semibold text-regantify-text">Banner</h2>
