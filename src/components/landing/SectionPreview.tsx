@@ -26,6 +26,7 @@ import type {
   TwoColumnSide,
 } from '../../lib/landingSections';
 import { sectionLabel } from '../../lib/landingSections';
+import { cleanHtml } from '../../lib/cleanHtml';
 
 /**
  * Renders one section as it will look on the published page, inside the
@@ -133,7 +134,7 @@ function TextPreview({ props }: { props: TextProps }) {
   return (
     <div
       className={`prose prose-sm max-w-none px-6 py-4 text-regantify-text ${alignClass(props.align)}`}
-      dangerouslySetInnerHTML={{ __html: props.html || '<p class="opacity-40">Write something...</p>' }}
+      dangerouslySetInnerHTML={{ __html: cleanHtml(props.html) || '<p class="opacity-40">Write something...</p>' }}
     />
   );
 }
@@ -247,7 +248,7 @@ function SidePreview({ side }: { side: TwoColumnSide }) {
   return (
     <div
       className="prose prose-sm max-w-none text-regantify-text"
-      dangerouslySetInnerHTML={{ __html: side.html || '<p class="opacity-40">Text here</p>' }}
+      dangerouslySetInnerHTML={{ __html: cleanHtml(side.html) || '<p class="opacity-40">Text here</p>' }}
     />
   );
 }
