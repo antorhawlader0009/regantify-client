@@ -12,7 +12,7 @@ const taka = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDig
 /**
  * Order detail: a cancelled, returned or payment-failed order that took online money shows how much is still to pay back, with a link to
  * Orders > Refunds to pay (TellMe idea 145). Silent for every other order and once everything is settled. When the order was paid through
- * the store's own bKash or PortWallet (the two gateways whose documentation has a refund call), "Refund to customer" sends the money back
+ * the store's own bKash, PortWallet or SSLCommerz (the gateways whose documentation has a refund call), "Refund to customer" sends the money back
  * through that gateway and records it; everything else is still paid back by hand and recorded on Refunds to pay.
  */
 export function OrderRefundNote({ orderId, status }: { orderId: string; status: string }) {
@@ -87,7 +87,7 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
         >
           <p className="text-xs text-amber-900">
             The money goes back to the customer's {via.gateway === 'BKASH_MERCHANT' ? 'bKash account' : 'card or wallet'} through your own {via.label}{' '}
-            account. {via.gateway === 'BKASH_MERCHANT' ? 'bKash allows refunds within 60 days of the payment.' : 'PortWallet accepts the refund now and pays it out afterwards.'}{' '}
+            account. {via.gateway === 'BKASH_MERCHANT' ? 'bKash allows refunds within 60 days of the payment.' : `${via.label} accepts the refund now and pays it out afterwards.`}{' '}
             This cannot be undone.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">

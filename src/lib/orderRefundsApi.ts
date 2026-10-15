@@ -43,8 +43,8 @@ export interface RefundItem {
   closedAt: string | null;
   waitingDays: number;
   refunds: RefundEntry[];
-  /** Order detail only: the money can go back through the gateway it was paid with (bKash, PortWallet), up to `max`. */
-  gatewayRefund?: { gateway: 'BKASH_MERCHANT' | 'PORTWALLET'; label: string; max: number } | null;
+  /** Order detail only: the money can go back through the gateway it was paid with (bKash, PortWallet, SSLCommerz), up to `max`. */
+  gatewayRefund?: { gateway: 'BKASH_MERCHANT' | 'PORTWALLET' | 'SSLCOMMERZ'; label: string; max: number } | null;
 }
 
 export interface RefundList {
