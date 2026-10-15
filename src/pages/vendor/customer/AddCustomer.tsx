@@ -11,7 +11,6 @@ import { toast } from '../../../lib/toast';
 import {
   CustomerFields,
   CustomerFormHeader,
-  MoreOptions,
   customerPayload,
   emptyCustomer,
   useShownErrors,
@@ -44,11 +43,10 @@ export default function AddCustomer() {
   const queryClient = useQueryClient();
 
   const [values, setValues] = useState<CustomerFormValues>(emptyCustomer);
-  const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const errors = validateCustomer(values, password, true);
+  const errors = validateCustomer(values, true);
   const { touch, shown, submit } = useShownErrors(errors);
   const onChange = (field: keyof CustomerFormValues, value: string) => setValues((prev) => ({ ...prev, [field]: value }));
 
@@ -67,7 +65,7 @@ export default function AddCustomer() {
   const alreadyCustomer = existing && phone === debouncedPhone ? existing : null;
 
   const createMutation = useMutation({
-    mutationFn: () => customersApi.create({ ...customerPayload(values), phone: phone!, password: password.trim() || undefined }),
+    mutationFn: () => customersApi.create({ ...customerPayload(values), phone: phone! }),
     onSuccess: (customer) => {
       setSaved(true);
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -126,24 +124,6 @@ export default function AddCustomer() {
             )
           }
         />
-
-        <MoreOptions>
-          <Field
-            label="Storefront password"
-            error={shown('password')}
-            hint="Only if they want to log in to your store now. They can also set one later with their phone number."
-          >
-            <input
-              type="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onBlur={() => touch('password')}
-              placeholder="At least 6 characters"
-              autoComplete="new-password"
-              className={productInputClass}
-            />
-          </Field>
-        </MoreOptions>
       </div>
 
       <SaveBar message={formError ? <span className="text-red-600">{formError}</span> : 'Name and phone are required.'}>

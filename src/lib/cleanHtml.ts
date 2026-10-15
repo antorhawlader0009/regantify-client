@@ -8,10 +8,13 @@ export function cleanHtml(input: string | null | undefined): string {
   if (!input) return '';
   let html = String(input).slice(0, 200_000);
   html = html.replace(/<(script|style|iframe|object|embed|form|link|meta|base)\b[\s\S]*?(<\/\1\s*>|$)/gi, '');
-  html = html.replace(/<\/?(script|style|iframe|object|embed|form|link|meta|base|input|button|textarea|select)\b[^>]*>/gi, '');
-  html = html.replace(/[\s/]+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, ' ');
-  html = html.replace(/([\s/])(href|src|xlink:href|formaction|action|poster|background)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, (whole, sep: string, name: string, raw: string) =>
-    unsafeUrl(raw.replace(/^["']|["']$/g, '')) ? `${sep}${name}="#"` : whole,
+  // SVG animation can set an href to javascript: through values/to/from, so those elements go entirely.
+  html = html.replace(/<\/?(script|style|iframe|frame|frameset|object|embed|form|link|meta|base|input|button|textarea|select|animate|animatemotion|animatetransform|set)\b[^>]*>/gi, '');
+  // Same rules as the server's cleanBlogHtml: a quote that closes the previous value is a separator too
+  // (`<img src="x"onerror=...>` runs in browsers; security-findings F-44).
+  html = html.replace(/([\s/"'])on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, (_whole, sep: string) => (sep === '"' || sep === "'" ? `${sep} ` : ' '));
+  html = html.replace(/([\s/"'])(href|src|xlink:href|formaction|action|poster|background)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, (whole, sep: string, name: string, raw: string) =>
+    unsafeUrl(raw.replace(/^["']|["']$/g, '')) ? `${sep}${sep === '"' || sep === "'" ? ' ' : ''}${name}="#"` : whole,
   );
   return html;
 }

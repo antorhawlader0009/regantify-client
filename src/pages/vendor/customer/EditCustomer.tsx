@@ -3,14 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserX } from 'lucide-react';
 import { Field, productInputClass } from '../../../components/product/ProductFormPieces';
-import { SaveBar, ToggleRow, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
+import { SaveBar, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
 import { EmptyState, outlineBtn } from '../../../components/ui/PageKit';
 import { customersApi, type VendorCustomerDetail } from '../../../lib/customersApi';
 import { toast } from '../../../lib/toast';
 import {
   CustomerFields,
   CustomerFormHeader,
-  MoreOptions,
   customerPayload,
   emptyCustomer,
   useShownErrors,
@@ -35,9 +34,9 @@ function valuesOf(customer: VendorCustomerDetail): CustomerFormValues {
  * minus a couple of things that don't make sense once a customer
  * already exists: phone is shown read-only (it's the lookup key
  * everywhere — the URL, the vendor's note, the Customer account's own
- * unique key — so changing it isn't a simple field edit), and password
- * is a "Set a new password" switch under More options, so an existing
- * password is never blanked out by accident just from opening this form.
+ * unique key — so changing it isn't a simple field edit). There is no password here:
+ * the shopper's login is shared by every store, so only the shopper sets it,
+ * with an OTP on the store (security-findings F-20).
  */
 export default function EditCustomer() {
   const { phone } = useParams<{ phone: string }>();
@@ -53,8 +52,6 @@ export default function EditCustomer() {
   });
 
   const [values, setValues] = useState<CustomerFormValues>(emptyCustomer);
-  const [settingPassword, setSettingPassword] = useState(false);
-  const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -68,21 +65,20 @@ export default function EditCustomer() {
     setFilled(true);
   }, [customer, filled]);
 
-  const errors = validateCustomer(values, settingPassword ? password : null, false);
-  if (settingPassword && !password.trim()) errors.password = 'Type the new password, or turn this off.';
+  const errors = validateCustomer(values, false);
   const { touch, shown, submit } = useShownErrors(errors);
   const onChange = (field: keyof CustomerFormValues, value: string) => setValues((prev) => ({ ...prev, [field]: value }));
 
   const dirty = useMemo(() => {
     if (!customer || !filled || saved) return false;
     const start = valuesOf(customer);
-    return (Object.keys(start) as (keyof CustomerFormValues)[]).some((k) => start[k].trim() !== values[k].trim()) || Boolean(password.trim());
-  }, [customer, filled, saved, values, password]);
+    return (Object.keys(start) as (keyof CustomerFormValues)[]).some((k) => start[k].trim() !== values[k].trim());
+  }, [customer, filled, saved, values]);
   useUnsavedChangesWarning(dirty);
 
   const updateMutation = useMutation({
     mutationFn: () =>
-      customersApi.update(phone!, { ...customerPayload(values), password: settingPassword && password.trim() ? password.trim() : undefined }),
+      customersApi.update(phone!, customerPayload(values)),
     onSuccess: () => {
       setSaved(true);
       queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -154,34 +150,6 @@ export default function EditCustomer() {
             </Field>
           }
         />
-
-        <MoreOptions defaultOpen={settingPassword}>
-          <ToggleRow
-            checked={settingPassword}
-            onChange={(on) => {
-              setSettingPassword(on);
-              if (!on) setPassword('');
-            }}
-            label="Set a new storefront password"
-            hint="For when the customer can’t log in to your store. Tell them the new one."
-          />
-          {settingPassword && (
-            <div className="mt-4">
-              <Field label="New password" error={shown('password')}>
-                <input
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onBlur={() => touch('password')}
-                  placeholder="At least 6 characters"
-                  autoComplete="new-password"
-                  autoFocus
-                  className={productInputClass}
-                />
-              </Field>
-            </div>
-          )}
-        </MoreOptions>
       </div>
 
       <SaveBar message={formError ? <span className="text-red-600">{formError}</span> : dirty ? 'You have unsaved changes.' : undefined}>

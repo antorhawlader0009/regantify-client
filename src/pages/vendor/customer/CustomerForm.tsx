@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Field, SectionCard, productInputClass } from '../../../components/product/ProductFormPieces';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { BD_DISTRICTS } from '../../../lib/bdDistricts';
@@ -21,7 +21,7 @@ export interface CustomerFormValues {
   zip: string;
 }
 
-export type CustomerField = keyof CustomerFormValues | 'password';
+export type CustomerField = keyof CustomerFormValues;
 export type CustomerErrors = Partial<Record<CustomerField, string>>;
 
 export const emptyCustomer: CustomerFormValues = { name: '', phone: '', email: '', address: '', city: '', district: '', zip: '' };
@@ -29,7 +29,7 @@ export const emptyCustomer: CustomerFormValues = { name: '', phone: '', email: '
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** What's wrong with the form, per field. `checkPhone` is off on Edit, where the phone can't change. */
-export function validateCustomer(values: CustomerFormValues, password: string | null, checkPhone: boolean): CustomerErrors {
+export function validateCustomer(values: CustomerFormValues, checkPhone: boolean): CustomerErrors {
   const errors: CustomerErrors = {};
   if (!values.name.trim()) errors.name = 'Enter the customer’s name.';
   if (checkPhone) {
@@ -37,7 +37,6 @@ export function validateCustomer(values: CustomerFormValues, password: string | 
     else if (!normalizeBdPhone(values.phone)) errors.phone = BD_PHONE_HINT;
   }
   if (values.email.trim() && !EMAIL_RE.test(values.email.trim())) errors.email = 'This email doesn’t look right. Check the @ and the dot.';
-  if (password != null && password.trim() && password.trim().length < 6) errors.password = 'Use at least 6 characters.';
   return errors;
 }
 
@@ -186,24 +185,3 @@ export function CustomerFields({
   );
 }
 
-/** A folded section for the rarely used fields. */
-export function MoreOptions({ children, defaultOpen = false }: { children: ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <section className="rounded-xl border border-line bg-white">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-2 px-4 py-3.5 text-left sm:px-5"
-      >
-        <span>
-          <span className="block text-[15px] font-semibold text-regantify-text">More options</span>
-          <span className="block text-sm text-neutral-500">Storefront password</span>
-        </span>
-        <ChevronDown size={16} className={`shrink-0 text-neutral-500 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
-      </button>
-      {open && <div className="border-t border-line px-4 py-4 sm:px-5">{children}</div>}
-    </section>
-  );
-}

@@ -98,18 +98,16 @@ export interface CreateCustomerPayload {
   name: string;
   phone: string;
   email?: string;
-  password?: string;
   address?: string;
   city?: string;
   district?: string;
   zip?: string;
 }
 
-/** "Edit Customer" page — same shape minus phone (not editable, see UpdateCustomerDto) plus an optional new password. */
+/** "Edit Customer" page — same shape minus phone (not editable, see UpdateCustomerDto). No password: only the shopper sets that (F-20). */
 export interface UpdateCustomerPayload {
   name: string;
   email?: string;
-  password?: string;
   address?: string;
   city?: string;
   district?: string;
