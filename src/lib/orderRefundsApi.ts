@@ -2,7 +2,8 @@ import { api } from './api';
 
 // Orders > Refunds to pay (TellMe idea 145) — mirrors the server's OrderRefundsService (server/src/orders/order-refunds.service.ts).
 
-export type RefundMethod = 'BKASH' | 'NAGAD' | 'ROCKET' | 'BANK' | 'CASH' | 'OTHER' | 'WAIVED';
+/** GATEWAY: sent back through the store's own payment gateway (Order detail > "Refund to customer"), never picked by hand. */
+export type RefundMethod = 'BKASH' | 'NAGAD' | 'ROCKET' | 'BANK' | 'CASH' | 'OTHER' | 'WAIVED' | 'GATEWAY';
 
 export const REFUND_METHOD_LABEL: Record<RefundMethod, string> = {
   BKASH: 'bKash',
@@ -12,6 +13,7 @@ export const REFUND_METHOD_LABEL: Record<RefundMethod, string> = {
   CASH: 'Cash',
   OTHER: 'Other',
   WAIVED: 'Kept (no refund)',
+  GATEWAY: 'the payment gateway',
 };
 
 export interface RefundEntry {
@@ -41,6 +43,8 @@ export interface RefundItem {
   closedAt: string | null;
   waitingDays: number;
   refunds: RefundEntry[];
+  /** Order detail only: the money can go back through the gateway it was paid with (bKash, PortWallet), up to `max`. */
+  gatewayRefund?: { gateway: 'BKASH_MERCHANT' | 'PORTWALLET'; label: string; max: number } | null;
 }
 
 export interface RefundList {
@@ -68,5 +72,10 @@ export const orderRefundsApi = {
   forOrder: (orderId: string) => api.get<RefundItem | null>(`/v1/order-refunds/order/${orderId}`).then((r) => r.data),
   record: (orderId: string, input: RecordRefundInput) =>
     api.post<{ id: string; remaining: number; smsSent: boolean }>(`/v1/order-refunds/order/${orderId}`, input).then((r) => r.data),
+  /** Sends the money back through the bKash or PortWallet payment, then records it. `pending`: the gateway pays it out later. */
+  refundThroughGateway: (orderId: string, input: { amount: number; reason?: string; sms?: boolean }) =>
+    api
+      .post<{ id: string; remaining: number; reference: string; pending: boolean; smsSent: boolean }>(`/v1/order-refunds/order/${orderId}/gateway`, input)
+      .then((r) => r.data),
   remove: (id: string) => api.delete<{ success: true }>(`/v1/order-refunds/entry/${id}`).then((r) => r.data),
 };

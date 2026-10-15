@@ -1,6 +1,20 @@
 import { api } from './api';
 
-export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'SHURJOPAY' | 'EPS' | 'AAMARPAY' | 'MANUAL_MOBILE';
+export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'SHURJOPAY' | 'EPS' | 'AAMARPAY' | 'MANUAL_MOBILE' | 'PORTWALLET';
+
+/** The connect route of each store gateway built on StoreGatewayCard. */
+export type StoreGatewaySlug = 'aamarpay' | 'bkash-merchant' | 'vendor-paystation' | 'portwallet';
+
+/** What GET :type/connection may carry back (only the non-secret values). */
+export interface GatewayConnection {
+  sandbox: boolean;
+  username?: string;
+  prefix?: string;
+  merchantId?: string;
+  storeId?: string;
+  appKey?: string;
+  liveBaseUrl?: string;
+}
 
 // Manual Mobile Payment (Add-ons): mirrors server/src/payment-gateways/manual-mobile.ts.
 export type ManualMobileWallet = 'BKASH' | 'NAGAD' | 'ROCKET' | 'UPAY' | 'OTHER';
@@ -122,13 +136,19 @@ export const paymentGatewaysApi = {
       .get<{ connection: { sandbox: boolean; username?: string; merchantId?: string; storeId?: string } | null }>('/v1/payment-gateways/EPS/connection')
       .then((r) => r.data.connection),
 
-  // Both always reject with a "coming soon" 400 today (see
-  // PaymentGatewaysService.connectBkashMerchant/connectVendorPaystation)
-  // — kept as real calls (not stubbed client-side) so the server's exact
-  // message surfaces as the toast, and so connecting either becomes a
-  // one-line change once a real provider client ships.
-  connectBkashMerchant: () => api.post('/v1/payment-gateways/bkash-merchant'),
-  connectVendorPaystation: () => api.post('/v1/payment-gateways/vendor-paystation'),
+  /**
+   * Add-ons > aamarPay / bKash / PayStation (the store's own) / PortWallet: one connect call per gateway, the body is
+   * that gateway's own keys plus sandbox, label and charge (see StoreGatewayCard). bKash is checked with bKash before
+   * it is saved; the other three have no login call, so their first payment shows a wrong key.
+   */
+  connectStoreGateway: (slug: StoreGatewaySlug, payload: Record<string, string | number | boolean | undefined>) =>
+    api
+      .post<{ id: string; type: PaymentGatewayType; status: PaymentGatewayStatus }>(`/v1/payment-gateways/${slug}`, payload)
+      .then((r) => r.data),
+
+  /** The non-secret part of a connected gateway's saved keys (never a password, key or secret). */
+  getConnection: (type: PaymentGatewayType) =>
+    api.get<{ connection: GatewayConnection | null }>(`/v1/payment-gateways/${type}/connection`).then((r) => r.data.connection),
 
   /** Any already-connected gateway's charge/label (built-in or custom) — no plan gate. */
   updateCharge: (id: string, payload: UpdateGatewayPayload) =>

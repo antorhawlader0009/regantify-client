@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Loader2, Lock, Smartphone, Trash2 } from 'lucide-react';
-import { paymentGatewaysApi, type VendorPaymentGateway, type PaymentGatewayType, type ManualMobileAccount, type ManualMobileWallet } from '../../../lib/paymentGatewaysApi';
+import {
+  paymentGatewaysApi,
+  type VendorPaymentGateway,
+  type PaymentGatewayType,
+  type ManualMobileAccount,
+  type ManualMobileWallet,
+  type GatewayConnection,
+  type StoreGatewaySlug,
+} from '../../../lib/paymentGatewaysApi';
 import { getVendorPlanUsage, formatFeeParts } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
@@ -12,12 +20,13 @@ const DEFAULT_LABELS: Record<PaymentGatewayType, string> = {
   COD: 'Cash On Delivery',
   ONLINE_PAYMENT: 'Online Payment',
   SSLCOMMERZ: 'SSLCommerz',
-  BKASH_MERCHANT: 'bKash Merchant (PGW)',
+  BKASH_MERCHANT: 'bKash',
   VENDOR_PAYSTATION: "Vendor's own PayStation",
   SHURJOPAY: 'shurjoPay',
   EPS: 'EPS (Easy Payment System)',
   AAMARPAY: 'aamarPay',
   MANUAL_MOBILE: 'Manual Mobile Payment',
+  PORTWALLET: 'PortWallet (PortPos)',
 };
 
 /**
@@ -112,9 +121,15 @@ export default function PaymentGateway() {
           <ShurjopayCard gateway={shurjopay} onSaved={invalidate} autoOpen={connectParam === 'shurjopay'} />
           <EpsCard gateway={eps} onSaved={invalidate} autoOpen={connectParam === 'eps'} />
           <ManualMobileCard gateway={manualMobile} onSaved={invalidate} autoOpen={connectParam === 'manual-mobile'} />
-          <ComingSoonCard type="BKASH_MERCHANT" />
-          <ComingSoonCard type="VENDOR_PAYSTATION" />
-          <ComingSoonCard type="AAMARPAY" />
+          {STORE_GATEWAYS.map((def) => (
+            <StoreGatewayCard
+              key={def.type}
+              def={def}
+              gateway={gateways.find((g) => g.type === def.type)}
+              onSaved={invalidate}
+              autoOpen={connectParam === def.slug}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -344,15 +359,302 @@ function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPayment
   );
 }
 
-/** bKash Merchant / Vendor's own PayStation — recognized types, not implemented yet (see PaymentGatewayTypeCatalog.isImplemented). */
-function ComingSoonCard({ type }: { type: 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'AAMARPAY' }) {
+/** One key a store gateway needs, as its connect form shows it. */
+interface GatewayField {
+  /** The connect route's body key. */
+  key: string;
+  label: string;
+  placeholder?: string;
+  help?: string;
+  /** Never sent back by the server: typed again to save a change. */
+  secret?: boolean;
+  /** Read back into the form from the saved, non-secret part (GET :type/connection). */
+  fromConnection?: keyof GatewayConnection;
+  /** Only asked for live (bKash's live API address). */
+  liveOnly?: boolean;
+}
+
+interface StoreGatewayDef {
+  type: PaymentGatewayType;
+  slug: StoreGatewaySlug;
+  name: string;
+  logo?: string;
+  about: string;
+  defaultLabel: string;
+  sandboxHelp: string;
+  fields: GatewayField[];
+  /** Said under the form: when the keys are really checked. */
+  checkNote: string;
+}
+
+/**
+ * Add-ons > aamarPay / bKash / PayStation (the store's own) / PortWallet: each one's keys, taken from that gateway's own
+ * documentation (z-others/documentations/adds on docs). The connect route on the server is named by `slug`.
+ */
+const STORE_GATEWAYS: StoreGatewayDef[] = [
+  {
+    type: 'BKASH_MERCHANT',
+    slug: 'bkash-merchant',
+    name: 'bKash',
+    logo: 'bkash.png',
+    about: 'Customers pay from their bKash wallet through your own bKash merchant account.',
+    defaultLabel: 'bKash',
+    sandboxHelp: "For testing with bKash's sandbox keys. No real money moves. Turn it off with your live keys before selling.",
+    fields: [
+      { key: 'username', label: 'Username', placeholder: 'Merchant username from bKash', fromConnection: 'username' },
+      { key: 'password', label: 'Password', secret: true, placeholder: 'Merchant password from bKash' },
+      { key: 'appKey', label: 'App key', secret: true, placeholder: 'App key from bKash' },
+      { key: 'appSecret', label: 'App secret', secret: true, placeholder: 'App secret from bKash' },
+      {
+        key: 'liveBaseUrl',
+        label: 'Live API address',
+        placeholder: 'https://… .bka.sh/…',
+        help: 'The API address bKash gave you with your live keys (it ends in bka.sh).',
+        fromConnection: 'liveBaseUrl',
+        liveOnly: true,
+      },
+    ],
+    checkNote: 'Your keys are checked with bKash before they are saved.',
+  },
+  {
+    type: 'AAMARPAY',
+    slug: 'aamarpay',
+    name: 'aamarPay',
+    logo: 'aamarpay.png',
+    about: 'Cards, bKash, Nagad and more through your own aamarPay store.',
+    defaultLabel: 'aamarPay (cards, bKash, Nagad)',
+    sandboxHelp: "For testing with aamarPay's sandbox store (aamarpaytest). No real money moves. Turn it off with your live keys before selling.",
+    fields: [
+      { key: 'storeId', label: 'Store ID', placeholder: 'Store ID from aamarPay', fromConnection: 'storeId' },
+      { key: 'signatureKey', label: 'Signature key', secret: true, placeholder: 'Signature key from aamarPay' },
+    ],
+    checkNote: 'aamarPay has no way to test keys on their own, so a wrong key shows when the first payment starts. Try one small payment after connecting.',
+  },
+  {
+    type: 'VENDOR_PAYSTATION',
+    slug: 'vendor-paystation',
+    name: 'PayStation',
+    about: 'Cards, bKash, Nagad, Rocket and banks through your own PayStation merchant account.',
+    defaultLabel: 'PayStation (cards, bKash, Nagad)',
+    sandboxHelp: "For testing with PayStation's sandbox merchant. No real money moves. Turn it off with your live keys before selling.",
+    fields: [
+      { key: 'merchantId', label: 'Merchant ID', placeholder: 'e.g. 104-1653730183', fromConnection: 'merchantId' },
+      { key: 'password', label: 'Password', secret: true, placeholder: 'Password from PayStation' },
+    ],
+    checkNote: 'PayStation has no way to test keys on their own, so a wrong key shows when the first payment starts. Try one small payment after connecting.',
+  },
+  {
+    type: 'PORTWALLET',
+    slug: 'portwallet',
+    name: 'PortWallet (PortPos)',
+    logo: 'portwallet.png',
+    about: 'Cards, mobile wallets and banks through your own PortWallet (PortPos) account.',
+    defaultLabel: 'PortWallet (cards, wallets)',
+    sandboxHelp: "For testing with keys from PortPos's sandbox panel. No real money moves. Turn it off with your live keys before selling.",
+    fields: [
+      { key: 'appKey', label: 'App key', placeholder: 'App key from the PortPos panel', fromConnection: 'appKey' },
+      { key: 'secretKey', label: 'Secret key', secret: true, placeholder: 'Secret key from the PortPos panel' },
+    ],
+    checkNote: 'PortPos has no way to test keys on their own, so a wrong key shows when the first payment starts. Try one small payment after connecting.',
+  },
+];
+
+/**
+ * A store gateway connected with the store's own keys (the four in STORE_GATEWAYS): the keys, a sandbox switch, the
+ * name at checkout and the platform charge. Once connected it shows live or sandbox and lets the vendor change the
+ * keys (the same form again; secret ones are typed again) or disconnect.
+ */
+function StoreGatewayCard({
+  def,
+  gateway,
+  onSaved,
+  autoOpen,
+}: {
+  def: StoreGatewayDef;
+  gateway: VendorPaymentGateway | undefined;
+  onSaved: () => void;
+  autoOpen?: boolean;
+}) {
+  const isConnected = gateway?.status === 'ACTIVE' && gateway.isConnected;
+  const [showForm, setShowForm] = useState(!!autoOpen && !isConnected);
+  const cardRef = useScrollIntoView(autoOpen);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [sandbox, setSandbox] = useState(false);
+  const [displayLabel, setDisplayLabel] = useState(gateway?.displayLabel ?? def.defaultLabel);
+  const [charge, setCharge] = useState(gateway ? String(Number(gateway.platformChargeBdt)) : '0');
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: connection } = useQuery({
+    queryKey: ['payment-gateway-connection', def.type],
+    queryFn: () => paymentGatewaysApi.getConnection(def.type),
+    enabled: !!isConnected,
+  });
+
+  const visibleFields = def.fields.filter((f) => !f.liveOnly || !sandbox);
+
+  const openForm = () => {
+    const next: Record<string, string> = {};
+    for (const f of def.fields) next[f.key] = f.fromConnection ? String(connection?.[f.fromConnection] ?? '') : '';
+    setValues(next);
+    setSandbox(connection?.sandbox ?? false);
+    setError(null);
+    setShowForm(true);
+  };
+
+  const connectMutation = useMutation({
+    mutationFn: () => {
+      const payload: Record<string, string | number | boolean | undefined> = {
+        sandbox,
+        displayLabel: displayLabel.trim() || undefined,
+        platformChargeBdt: Number(charge) || 0,
+      };
+      for (const f of visibleFields) payload[f.key] = f.secret ? values[f.key] : values[f.key]?.trim();
+      return paymentGatewaysApi.connectStoreGateway(def.slug, payload);
+    },
+    onSuccess: () => {
+      toast.success(sandbox ? `${def.name} connected in sandbox mode.` : `${def.name} connected.`);
+      setValues({});
+      setShowForm(false);
+      setError(null);
+      onSaved();
+    },
+    onError: (err) => setError(apiErrorMessage(err, `Could not connect ${def.name}. Please check your keys and try again.`)),
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: () => paymentGatewaysApi.disconnect(gateway!.id),
+    onSuccess: () => {
+      toast.success(`${def.name} disconnected.`);
+      onSaved();
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, `Could not disconnect ${def.name}.`)),
+  });
+
+  const inputClass = 'w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none';
+
   return (
-    <div className="rounded-2xl border border-dashed border-black/10 p-5 flex items-center gap-3 opacity-70">
-      <Lock size={18} className="text-regantify-text-muted shrink-0" />
-      <div className="flex-1">
-        <p className="text-sm font-medium text-regantify-text">{DEFAULT_LABELS[type]}</p>
-        <p className="text-sm text-regantify-text-muted mt-0.5">Coming soon.</p>
+    <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
+      <div className="flex items-start gap-3">
+        {def.logo ? (
+          <img src={`/addons/${def.logo}`} alt="" className="h-6 w-6 mt-0.5 shrink-0 object-contain" />
+        ) : (
+          <CreditCard size={20} className="mt-0.5 shrink-0 text-regantify-text-muted" />
+        )}
+        <div className="flex-1">
+          <p className="text-sm font-medium text-regantify-text flex items-center gap-2">
+            {gateway?.displayLabel ?? def.name}
+            {isConnected && connection && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
+              >
+                {connection.sandbox ? 'Sandbox' : 'Live'}
+              </span>
+            )}
+          </p>
+          <p className="text-sm text-regantify-text-muted mt-0.5">
+            {isConnected ? `Connected — platform charge ${formatCharge(gateway!)}.` : def.about}
+          </p>
+        </div>
+        {isConnected ? (
+          <div className="flex shrink-0 gap-2">
+            {!showForm && (
+              <button
+                type="button"
+                onClick={openForm}
+                className="px-3 py-1.5 rounded-xl border border-black/10 text-sm font-medium text-regantify-text hover:bg-black/5"
+              >
+                Change keys
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={disconnectMutation.isPending}
+              onClick={() => disconnectMutation.mutate()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-60"
+            >
+              <Trash2 size={14} />
+              Disconnect
+            </button>
+          </div>
+        ) : (
+          !showForm && (
+            <button
+              type="button"
+              onClick={openForm}
+              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium shrink-0"
+            >
+              Connect
+            </button>
+          )
+        )}
       </div>
+
+      {showForm && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const missing = visibleFields.find((f) => !(f.secret ? values[f.key] : values[f.key]?.trim()));
+            if (missing) {
+              setError(`${missing.label} is required.`);
+              return;
+            }
+            connectMutation.mutate();
+          }}
+          className="mt-4 pt-4 border-t border-black/5 space-y-3"
+        >
+          <label className="flex items-start gap-3 rounded-lg border border-black/10 p-3 cursor-pointer">
+            <input type="checkbox" checked={sandbox} onChange={(e) => setSandbox(e.target.checked)} className="mt-0.5" />
+            <span>
+              <span className="block text-sm font-medium text-regantify-text">Sandbox mode</span>
+              <span className="block text-xs text-regantify-text-muted">{def.sandboxHelp}</span>
+            </span>
+          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {visibleFields.map((f) => (
+              <div key={f.key} className={f.liveOnly ? 'sm:col-span-2' : undefined}>
+                <label className="block text-xs font-medium text-regantify-text-muted mb-1">{f.label}</label>
+                <input
+                  type={f.secret ? 'password' : 'text'}
+                  value={values[f.key] ?? ''}
+                  onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                  autoComplete={f.secret ? 'new-password' : 'off'}
+                  placeholder={f.secret && isConnected ? 'Type it again to save a change' : f.placeholder}
+                  className={inputClass}
+                />
+                {f.help && <p className="text-xs text-regantify-text-muted mt-1">{f.help}</p>}
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Name at checkout</label>
+              <input value={displayLabel} onChange={(e) => setDisplayLabel(e.target.value)} maxLength={100} className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-regantify-text-muted mb-1">Platform charge (৳)</label>
+              <input type="number" min={0} value={charge} onChange={(e) => setCharge(e.target.value)} className={inputClass} />
+            </div>
+          </div>
+          <p className="text-xs text-regantify-text-muted">{def.checkNote}</p>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="px-4 py-2 rounded-xl bg-regantify-content text-regantify-text text-sm font-medium hover:bg-black/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={connectMutation.isPending}
+              className="px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark text-white text-sm font-medium disabled:opacity-60"
+            >
+              {connectMutation.isPending ? 'Saving…' : isConnected ? 'Save' : 'Connect'}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
