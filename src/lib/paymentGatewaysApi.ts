@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'SHURJOPAY' | 'AAMARPAY' | 'MANUAL_MOBILE';
+export type PaymentGatewayType = 'COD' | 'ONLINE_PAYMENT' | 'SSLCOMMERZ' | 'BKASH_MERCHANT' | 'VENDOR_PAYSTATION' | 'SHURJOPAY' | 'EPS' | 'AAMARPAY' | 'MANUAL_MOBILE';
 
 // Manual Mobile Payment (Add-ons): mirrors server/src/payment-gateways/manual-mobile.ts.
 export type ManualMobileWallet = 'BKASH' | 'NAGAD' | 'ROCKET' | 'UPAY' | 'OTHER';
@@ -99,6 +99,27 @@ export const paymentGatewaysApi = {
   getShurjopayConnection: () =>
     api
       .get<{ connection: { sandbox: boolean; username?: string; prefix?: string } | null }>('/v1/payment-gateways/SHURJOPAY/connection')
+      .then((r) => r.data.connection),
+
+  /** Add-ons > EPS (Easy Payment System). The server tries the login and hash key with EPS before saving them. */
+  connectEps: (payload: {
+    username: string;
+    password: string;
+    hashKey: string;
+    merchantId: string;
+    storeId: string;
+    sandbox: boolean;
+    displayLabel?: string;
+    platformChargeBdt?: number;
+  }) =>
+    api
+      .post<{ id: string; type: PaymentGatewayType; status: PaymentGatewayStatus }>('/v1/payment-gateways/eps', payload)
+      .then((r) => r.data),
+
+  /** The non-secret settings of a connected EPS (sandbox or live, username, merchant and store IDs). */
+  getEpsConnection: () =>
+    api
+      .get<{ connection: { sandbox: boolean; username?: string; merchantId?: string; storeId?: string } | null }>('/v1/payment-gateways/EPS/connection')
       .then((r) => r.data.connection),
 
   // Both always reject with a "coming soon" 400 today (see

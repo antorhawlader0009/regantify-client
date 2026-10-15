@@ -47,6 +47,7 @@ const GROUPS: { title: string; items: Addon[] }[] = [
     items: [
       { key: 'SSLCOMMERZ', name: 'SSLCommerz Payment Gateway', about: 'Cards, mobile wallets and net banking at checkout', logo: 'sslcommerz.svg', path: '/vendor/store/payment-gateway?connect=sslcommerz' },
       { key: 'SHURJOPAY', name: 'shurjoPay', about: 'Cards and mobile wallets through your own shurjoPay store', logo: 'shurjopay.png', path: '/vendor/store/payment-gateway?connect=shurjopay' },
+      { key: 'EPS', name: 'EPS - Easy Payment System', about: 'Cards, bKash, Nagad and more through your own EPS merchant account', logo: 'eps.png', path: '/vendor/store/payment-gateway?connect=eps' },
       { key: 'PARTIAL_PAYMENT', name: 'Partial Payment', about: 'Take an advance on cash on delivery orders before they ship', icon: Wallet, path: '/vendor/store/cod-guard' },
       { key: 'MANUAL_MOBILE_PAYMENT', name: 'Manual Mobile Payment', about: 'Take payments to personal bKash, Nagad and other accounts', icon: HandCoins, path: '/vendor/store/payment-gateway?connect=manual-mobile' },
       { key: 'AAMARPAY', name: 'aamarPay', about: 'Cards and mobile wallets through Aamarpay', logo: 'aamarpay.png' },
