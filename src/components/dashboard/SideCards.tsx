@@ -238,7 +238,7 @@ export function AiCreditsLine({ credits, showBuy }: { credits: AiCreditSummary; 
         {showBuy && (
           <>
             {' '}
-            <Link to="/vendor/ai-automation/ai-chat-bot" className="font-medium text-brand hover:underline">
+            <Link to={low ? '/vendor/billing?tab=ai' : '/vendor/ai-automation/ai-chat-bot'} className="font-medium text-brand hover:underline">
               {low ? 'Buy AI Credits' : 'Details'}
             </Link>
           </>

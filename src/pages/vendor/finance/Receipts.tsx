@@ -102,12 +102,13 @@ function ReceiptDialog({ id, onClose }: { id: string; onClose: () => void }) {
  * Finance > Receipts (TellMe idea 157): a numbered receipt for everything the store paid the platform for (a plan, SMS, AI credits, a wallet top-up),
  * to print for the store's books. Owner only, like billing. Shoppers' order payments are not here.
  */
-export default function Receipts() {
+/** `embedded`: shown as Billing's "Receipts" tab, so without its own page header. */
+export default function Receipts({ embedded = false }: { embedded?: boolean } = {}) {
   const { data, isLoading } = useQuery({ queryKey: ['payment-receipts'], queryFn: paymentReceiptsApi.list });
   const [openId, setOpenId] = useState<string | null>(null);
   return (
     <PageSection>
-      <PageHeader title="Receipts" description="A receipt for every plan, SMS package, AI credit pack and wallet top-up you paid for. Open one to print it." />
+      {!embedded && <PageHeader title="Receipts" description="A receipt for every plan, SMS package, AI credit pack and wallet top-up you paid for. Open one to print it." />}
       {isLoading ? (
         <p className="py-8 text-center text-sm text-neutral-500">Loading…</p>
       ) : !data || data.length === 0 ? (

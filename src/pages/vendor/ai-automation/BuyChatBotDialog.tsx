@@ -23,30 +23,20 @@ function perThousand(pkg: Pick<ChatBotPackage, 'price' | 'creditCount'>) {
 }
 
 /**
- * "Buy AI Credits": pick a pack (each shows its price per 1,000 credits
- * and about how many replies it pays for at this store's size), then
- * confirm. The confirm step starts a real PayStation checkout and
- * redirects there; the credits land in the store's wallet once PayStation
- * confirms the payment (PaymentsService.fulfill), not on click
- * (ai-token-plan.md Step 8).
+ * Pick an AI Credit pack (each shows its price per 1,000 credits and about how many replies it pays for at this
+ * store's size), then confirm. The confirm step starts a real PayStation checkout and redirects there; the credits
+ * land once PayStation confirms the payment (PaymentsService.fulfill), not on click. Used inline on Billing > AI
+ * Credits and inside the "Buy AI Credits" dialog on the AI Chat Bot page. `onDone` runs after a wallet payment.
  */
-export function BuyChatBotDialog({ open, onOpenChange, creditsPerReply }: BuyChatBotDialogProps) {
+export function AiCreditPackBuyer({ creditsPerReply, onDone }: { creditsPerReply?: number; onDone?: () => void }) {
   const [selected, setSelected] = useState<ChatBotPackage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: packages, isLoading } = useQuery({
-    queryKey: ['chatbot-packages'],
-    queryFn: () => aiChatBotApi.getPackages(),
-    enabled: open,
-  });
+  const { data: packages, isLoading } = useQuery({ queryKey: ['chatbot-packages'], queryFn: () => aiChatBotApi.getPackages() });
 
   // Only fetched to show the deficit-clearing note before charging; the
   // server resolves the real deficit itself at initiate time.
-  const { data: wallet } = useQuery({
-    queryKey: ['finance', 'wallet'],
-    queryFn: () => financeApi.getWallet(),
-    enabled: open,
-  });
+  const { data: wallet } = useQuery({ queryKey: ['finance', 'wallet'], queryFn: () => financeApi.getWallet() });
   const deficit = Math.max(0, -Number(wallet?.balance ?? '0'));
 
   const buyMutation = useMutation({
@@ -57,95 +47,114 @@ export function BuyChatBotDialog({ open, onOpenChange, creditsPerReply }: BuyCha
     onError: (err) => setError(apiErrorMessage(err, 'Couldn’t open PayStation. Check your connection and try again.')),
   });
 
-  const handleOpenChange = (next: boolean) => {
-    if (!next) {
-      setSelected(null);
-      setError(null);
-    }
-    onOpenChange(next);
-  };
-
   const best = packages?.reduce<ChatBotPackage | null>((b, p) => (!b || perThousand(p) < perThousand(b) ? p : b), null);
   const replies = (credits: number) => (creditsPerReply ? Math.floor(credits / creditsPerReply) : null);
 
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange} title={selected ? 'Confirm purchase' : 'Buy AI Credits'} maxWidth="max-w-3xl">
-      <div className="p-6 pt-3">
-        {selected ? (
-          <>
-            <button type="button" onClick={() => setSelected(null)} className="mb-4 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-              <ArrowLeft size={15} aria-hidden />
-              Other packs
-            </button>
-            <dl className="space-y-1.5 rounded-lg border border-line bg-neutral-50 p-4 text-sm">
-              <div className="flex justify-between gap-3">
-                <dt className="text-neutral-600">{selected.creditCount.toLocaleString()} AI Credits</dt>
-                <dd className="tabular-nums">{formatTaka(selected.price)}</dd>
-              </div>
-              {deficit > 0 && (
-                <div className="flex justify-between gap-3 text-amber-800">
-                  <dt>Clears your negative wallet balance</dt>
-                  <dd className="tabular-nums">{formatTaka(deficit)}</dd>
-                </div>
-              )}
-              <div className="flex justify-between gap-3 border-t border-line pt-2 text-base font-semibold text-regantify-text">
-                <dt>You pay</dt>
-                <dd className="tabular-nums">{formatTaka(selected.price + deficit)}</dd>
-              </div>
-            </dl>
-            <p className="mt-3 text-xs text-neutral-500">
-              Pay with bKash, Nagad or a card on PayStation. The credits are added as soon as the payment is confirmed, and they never expire.
-            </p>
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-            <button
-              type="button"
-              onClick={() => buyMutation.mutate(selected.id)}
-              disabled={buyMutation.isPending}
-              className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
-            >
-              {buyMutation.isPending ? 'Opening PayStation…' : `Pay ${formatTaka(selected.price + deficit)}`}
-            </button>
-            <PayFromWalletButton purpose="CHATBOT_PACKAGE" packageId={String(selected.id)} price={selected.price} onPaid={() => handleOpenChange(false)} className="mt-3" />
-          </>
-        ) : isLoading ? (
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3" aria-busy>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-40 animate-pulse rounded-xl bg-neutral-100" />
-            ))}
+  if (selected) {
+    return (
+      <div className="max-w-md">
+        <button
+          type="button"
+          onClick={() => {
+            setSelected(null);
+            setError(null);
+          }}
+          className="mb-4 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text"
+        >
+          <ArrowLeft size={15} aria-hidden />
+          Other packs
+        </button>
+        <dl className="space-y-1.5 rounded-lg border border-line bg-neutral-50 p-4 text-sm">
+          <div className="flex justify-between gap-3">
+            <dt className="text-neutral-600">{selected.creditCount.toLocaleString()} AI Credits</dt>
+            <dd className="tabular-nums">{formatTaka(selected.price)}</dd>
           </div>
-        ) : (
-          <>
-            <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-              {(packages ?? []).map((pkg) => {
-                const isBest = best?.id === pkg.id;
-                const n = replies(pkg.creditCount);
-                return (
-                  <li key={pkg.id} className={`flex flex-col rounded-xl border p-4 ${isBest ? 'border-brand bg-brand-lime/20' : 'border-line bg-white'}`}>
-                    {(pkg.badge || isBest) && (
-                      <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">{pkg.badge || 'Best value'}</span>
-                    )}
-                    <p className="text-xl font-semibold tabular-nums text-regantify-text">{pkg.creditCount.toLocaleString('en-US')} credits</p>
-                    <p className="text-sm text-neutral-600">{formatTaka(pkg.price)}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      {formatTaka(perThousand(pkg))} per 1,000 credits
-                      {n != null && ` · about ${n.toLocaleString()} replies`}
-                    </p>
-                    <button type="button" onClick={() => setSelected(pkg)} className={`${outlineBtn} mt-4 h-10`}>
-                      Choose
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            {creditsPerReply != null && (
-              <p className="mt-4 text-xs text-neutral-500">
-                Replies are worked out for your store today (about {creditsPerReply.toLocaleString()} credits a reply). Adding products makes each reply use a
-                little more.
-              </p>
-            )}
-          </>
-        )}
+          {deficit > 0 && (
+            <div className="flex justify-between gap-3 text-amber-800">
+              <dt>Clears your negative wallet balance</dt>
+              <dd className="tabular-nums">{formatTaka(deficit)}</dd>
+            </div>
+          )}
+          <div className="flex justify-between gap-3 border-t border-line pt-2 text-base font-semibold text-regantify-text">
+            <dt>You pay</dt>
+            <dd className="tabular-nums">{formatTaka(selected.price + deficit)}</dd>
+          </div>
+        </dl>
+        <p className="mt-3 text-xs text-neutral-500">
+          Pay with bKash, Nagad or a card on PayStation. The credits are added as soon as the payment is confirmed, and they never expire.
+        </p>
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        <button
+          type="button"
+          onClick={() => buyMutation.mutate(selected.id)}
+          disabled={buyMutation.isPending}
+          className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
+        >
+          {buyMutation.isPending ? 'Opening PayStation…' : `Pay ${formatTaka(selected.price + deficit)}`}
+        </button>
+        <PayFromWalletButton
+          purpose="CHATBOT_PACKAGE"
+          packageId={String(selected.id)}
+          price={selected.price}
+          onPaid={() => {
+            setSelected(null);
+            onDone?.();
+          }}
+          className="mt-3"
+        />
       </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3" aria-busy>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-40 animate-pulse rounded-xl bg-neutral-100" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+        {(packages ?? []).map((pkg) => {
+          const isBest = best?.id === pkg.id;
+          const n = replies(pkg.creditCount);
+          return (
+            <li key={pkg.id} className={`flex flex-col rounded-xl border p-4 ${isBest ? 'border-brand bg-brand-lime/20' : 'border-line bg-white'}`}>
+              {(pkg.badge || isBest) && (
+                <span className="mb-2 w-fit rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">{pkg.badge || 'Best value'}</span>
+              )}
+              <p className="text-xl font-semibold tabular-nums text-regantify-text">{pkg.creditCount.toLocaleString('en-US')} credits</p>
+              <p className="text-sm text-neutral-600">{formatTaka(pkg.price)}</p>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                {formatTaka(perThousand(pkg))} per 1,000 credits
+                {n != null && `, about ${n.toLocaleString()} replies`}
+              </p>
+              <button type="button" onClick={() => setSelected(pkg)} className={`${outlineBtn} mt-4 h-10`}>
+                Choose
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {creditsPerReply != null && (
+        <p className="mt-4 text-xs text-neutral-500">
+          Replies are worked out for your store today (about {creditsPerReply.toLocaleString()} credits a reply). Adding products makes each reply use a
+          little more.
+        </p>
+      )}
+    </>
+  );
+}
+
+/** "Buy AI Credits" on the AI Chat Bot page: the same pack picker as Billing > AI Credits, in a dialog. */
+export function BuyChatBotDialog({ open, onOpenChange, creditsPerReply }: BuyChatBotDialogProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title="Buy AI Credits" maxWidth="max-w-3xl">
+      <div className="p-6 pt-3">{open && <AiCreditPackBuyer creditsPerReply={creditsPerReply} onDone={() => onOpenChange(false)} />}</div>
     </Dialog>
   );
 }

@@ -167,7 +167,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Popups and messages on the store', where: 'Marketing > Campaigns > Popups', path: '/vendor/marketing/campaigns', keywords: 'popup dialog toast announcement offer pop up modal পপআপ' },
 
   // ------------------------------------------------------------------ SMS
-  { title: 'Buy SMS credits', where: 'SMS', path: '/vendor/sms', keywords: 'sms balance recharge top up package credits এসএমএস কিনুন' },
+  { title: 'Buy SMS credits', where: 'Billing > SMS', path: '/vendor/billing?tab=sms', keywords: 'sms balance recharge top up package credits এসএমএস কিনুন' },
   { title: 'Send an SMS to customers', where: 'SMS > Send to customers', path: '/vendor/sms', keywords: 'bulk sms offer marketing everyone vip returning win back schedule later audience tag' },
   { title: 'Saved SMS messages (templates)', where: 'SMS > Send to customers', path: '/vendor/sms', keywords: 'sms template saved message reuse canned name order store placeholder fill in সেভ করা মেসেজ টেমপ্লেট' },
   { title: 'Sent SMS logs', where: 'SMS > Sent logs', path: '/vendor/sms', keywords: 'sms history delivered failed log' },
@@ -202,7 +202,8 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Store name, URL and address', where: 'Settings', path: '/vendor/settings', keywords: 'store details subdomain rename shop name address দোকানের নাম' },
   { title: 'Change password', where: 'Settings', path: '/vendor/settings', keywords: 'password reset change login security পাসওয়ার্ড' },
   { title: 'Your profile', where: 'Profile', path: '/vendor/profile', keywords: 'my profile photo name email phone account' },
-  { title: 'Plan, upgrade and invoices', where: 'Billing', path: '/vendor/billing', keywords: 'subscription upgrade renew advance starter basic free plan limits usage pay প্ল্যান' },
+  { title: 'Plan, upgrade and invoices', where: 'Billing', path: '/vendor/billing', keywords: 'subscription upgrade renew advance starter basic free plan limits usage pay buy everything sms ai credits wallet receipts প্ল্যান কিনুন' },
+  { title: 'Buy AI Credits', where: 'Billing > AI Credits', path: '/vendor/billing?tab=ai', keywords: 'ai credits tokens buy recharge chatbot ask ai এআই ক্রেডিট কিনুন' },
   { title: 'Staff and roles', where: 'Staff', path: '/vendor/staff', keywords: 'team member add staff role permission manager viewer password suspend ip স্টাফ' },
   { title: 'Add-ons', where: 'Add-ons', path: '/vendor/addons', keywords: 'addon extension integration plugin apps bkash nagad sslcommerz shurjopay eps aamarpay portwallet paystation pathao steadfast moveon sms email pwa discount role' },
   { title: 'Support tickets', where: 'Support', path: '/vendor/support', keywords: 'help contact us problem complaint ticket সাপোর্ট সাহায্য' },

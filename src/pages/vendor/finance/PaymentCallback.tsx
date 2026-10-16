@@ -8,15 +8,15 @@ import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 const PURPOSE_LABEL: Record<string, string> = {
   WALLET_TOPUP: 'Your wallet top-up',
   SMS_PACKAGE: 'Your SMS package',
-  CHATBOT_PACKAGE: 'Your AI chat bot package',
+  CHATBOT_PACKAGE: 'Your AI Credits',
   PLAN_UPGRADE: 'Your plan upgrade',
 };
 
 // Where to go next after each kind of payment.
 const PURPOSE_NEXT: Record<string, { to: string; label: string }> = {
   WALLET_TOPUP: { to: '/vendor/finance/wallet', label: 'Go to wallet' },
-  SMS_PACKAGE: { to: '/vendor/sms', label: 'Go to SMS' },
-  CHATBOT_PACKAGE: { to: '/vendor/ai-automation/ai-chat-bot', label: 'Go to AI chat bot' },
+  SMS_PACKAGE: { to: '/vendor/billing?tab=sms', label: 'Back to billing' },
+  CHATBOT_PACKAGE: { to: '/vendor/billing?tab=ai', label: 'Back to billing' },
   PLAN_UPGRADE: { to: '/vendor/billing', label: 'Go to billing' },
 };
 
@@ -24,8 +24,8 @@ const PURPOSE_NEXT: Record<string, { to: string; label: string }> = {
 // there shows the freshly-credited balance/plan without a manual refresh.
 const INVALIDATE_KEYS: Record<string, string[][]> = {
   WALLET_TOPUP: [['finance', 'wallet'], ['finance', 'transactions']],
-  SMS_PACKAGE: [['sms-credits']],
-  CHATBOT_PACKAGE: [['chatbot-credits']],
+  SMS_PACKAGE: [['sms-credits'], ['finance', 'wallet']],
+  CHATBOT_PACKAGE: [['chatbot-credits'], ['vendor-plan-usage'], ['finance', 'wallet']],
   PLAN_UPGRADE: [['vendor-plan-usage'], ['own-plan-requests']],
 };
 
