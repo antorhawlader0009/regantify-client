@@ -30,7 +30,8 @@ export function storefrontStoreUrl(subdomain: string): string {
 
 /** Link to one product's public storefront page — used by the small "view on storefront" icon wherever a product name is shown in the vendor dashboard. */
 export function storefrontProductUrl(subdomain: string, slug: string): string {
-  return `${storefrontOrigin(subdomain)}/product/${slug}`;
+  // The short public address (2026-10-16): /p/<slug>; the storefront still opens /product/<slug> and redirects it.
+  return `${storefrontOrigin(subdomain)}/p/${slug}`;
 }
 
 /**
