@@ -30,6 +30,8 @@ export interface StoreDetail {
   openTickets: number;
   /** Super Admin paused this store's withdrawals (Step 6). */
   withdrawPause: { since: string; reason: string | null } | null;
+  /** Pay from the wallet: this store's own setting (DEFAULT = follow the platform rule), the rule, and whether it can pay now. */
+  walletPurchase: { setting: 'DEFAULT' | 'ON' | 'OFF'; platformMode: 'OFF' | 'VERIFIED' | 'ALL'; verified: boolean; allowed: boolean };
   wallet: { balance: number; smsCredits: number; aiCredits: number };
   usage: {
     products: StoreLimit;
@@ -281,6 +283,8 @@ export const adminApi = {
   walletAdjust: (id: string, type: 'CREDIT' | 'DEBIT', amount: number, reason: string) => api.post<{ balance: number } | PendingApproval>(`/v1/admin/vendors/${id}/wallet-adjust`, { type, amount, reason }).then((r) => r.data),
   smsCreditsAdjust: (id: string, amount: number, reason: string) => api.post<{ smsCredits: number }>(`/v1/admin/vendors/${id}/sms-credits`, { amount, reason }).then((r) => r.data),
   pauseWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/pause-withdrawals`, { reason }).then((r) => r.data),
+  setWalletPurchases: (id: string, setting: 'DEFAULT' | 'ON' | 'OFF', reason: string) =>
+    api.post<{ setting: string; allowed: boolean }>(`/v1/admin/vendors/${id}/wallet-purchases`, { setting, reason }).then((r) => r.data),
   resumeWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/resume-withdrawals`, { reason }).then((r) => r.data),
   extendPlan: (id: string, days: number, reason: string) => api.post<{ expiresAt: string }>(`/v1/admin/vendors/${id}/extend-plan`, { days, reason }).then((r) => r.data),
   sendPasswordSms: (id: string, reason: string) => api.post<{ sentTo: string }>(`/v1/admin/vendors/${id}/password-sms`, { reason }).then((r) => r.data),

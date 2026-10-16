@@ -125,11 +125,11 @@ export function SignupSection() {
 
 export function MoneySection() {
   const { data } = usePlatformConfig();
-  const [f, setF] = useState({ minWithdraw: '100', fee: '0', feePct: '0', grace: '3', smsLow: '500', trialPlan: '', trialDays: '14', walletPurchases: false });
+  const [f, setF] = useState({ minWithdraw: '100', fee: '0', feePct: '0', grace: '3', smsLow: '500', trialPlan: '', trialDays: '14', walletPurchaseMode: 'OFF' as 'OFF' | 'VERIFIED' | 'ALL' });
   useEffect(() => {
     if (!data) return;
     const m = data.money;
-    setF({ minWithdraw: String(m.minWithdraw), fee: String(m.withdrawFeeFlat), feePct: String(m.withdrawFeePercent), grace: String(m.planGraceDays), smsLow: String(m.smsLowBalance), trialPlan: m.trialPlanCode, trialDays: String(m.trialDays), walletPurchases: m.walletPurchases });
+    setF({ minWithdraw: String(m.minWithdraw), fee: String(m.withdrawFeeFlat), feePct: String(m.withdrawFeePercent), grace: String(m.planGraceDays), smsLow: String(m.smsLowBalance), trialPlan: m.trialPlanCode, trialDays: String(m.trialDays), walletPurchaseMode: m.walletPurchaseMode });
   }, [data]);
   if (!data) return <p className="text-sm text-regantify-text-muted">Loading…</p>;
   const n = (v: string) => Number(v);
@@ -140,7 +140,7 @@ export function MoneySection() {
       hint="Changes apply to the next request, renewal or sign-up; nothing already done is touched."
       section="money"
       valid={valid}
-      body={() => ({ minWithdraw: n(f.minWithdraw), withdrawFeeFlat: n(f.fee), withdrawFeePercent: n(f.feePct), planGraceDays: n(f.grace), smsLowBalance: n(f.smsLow), trialPlanCode: f.trialPlan, ...(f.trialPlan && { trialDays: n(f.trialDays) }), walletPurchases: f.walletPurchases })}
+      body={() => ({ minWithdraw: n(f.minWithdraw), withdrawFeeFlat: n(f.fee), withdrawFeePercent: n(f.feePct), planGraceDays: n(f.grace), smsLowBalance: n(f.smsLow), trialPlanCode: f.trialPlan, ...(f.trialPlan && { trialDays: n(f.trialDays) }), walletPurchaseMode: f.walletPurchaseMode })}
     >
       <div className="grid gap-4 sm:grid-cols-3">
         <Label text="Smallest withdrawal (৳)">
@@ -179,13 +179,30 @@ export function MoneySection() {
           </Label>
         )}
       </div>
-      <label className="flex items-start gap-2 text-sm text-regantify-text">
-        <input type="checkbox" checked={f.walletPurchases} onChange={(e) => setF({ ...f, walletPurchases: e.target.checked })} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
-        <span>
-          Stores may pay from their wallet balance
-          <span className="block text-xs text-regantify-text-muted">For plans, SMS packs and AI Credit packs, next to the online payment. Same price and promo codes; the money leaves the wallet at once. Off by default.</span>
-        </span>
-      </label>
+      <fieldset className="space-y-2 text-sm text-regantify-text">
+        <legend className="font-medium">Paying from the wallet balance</legend>
+        <p className="text-xs text-regantify-text-muted">For plans, SMS packs and AI Credit packs, next to the online payment. Same price and promo codes; the money leaves the wallet at once.</p>
+        {(
+          [
+            ['OFF', 'Off for every store', 'The default. Nobody sees the wallet button.'],
+            ['VERIFIED', 'Only verified stores', 'Stores that finished Verification (KYC).'],
+            ['ALL', 'Every store', 'Any store with enough money in its wallet.'],
+          ] as const
+        ).map(([value, label, hint]) => (
+          <label key={value} className="flex items-start gap-2">
+            <input type="radio" name="walletPurchaseMode" checked={f.walletPurchaseMode === value} onChange={() => setF({ ...f, walletPurchaseMode: value })} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
+            <span>
+              {label}
+              <span className="block text-xs text-regantify-text-muted">{hint}</span>
+            </span>
+          </label>
+        ))}
+        <p className="text-xs text-regantify-text-muted">
+          One store can be set apart on its own page (Stores &gt; the store &gt; Pay from the wallet), and that beats this rule.
+          {data.money.walletPurchaseOverrides.on + data.money.walletPurchaseOverrides.off > 0 &&
+            ` Set apart now: ${data.money.walletPurchaseOverrides.on} always on, ${data.money.walletPurchaseOverrides.off} always off.`}
+        </p>
+      </fieldset>
     </Section>
   );
 }

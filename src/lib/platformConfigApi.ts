@@ -15,8 +15,10 @@ export interface PlatformConfig {
     smsLowBalance: number;
     trialPlanCode: string;
     trialDays: number;
-    /** Stores may pay for plans, SMS and AI Credit packs from their wallet. */
-    walletPurchases: boolean;
+    /** Who may pay for plans, SMS and AI Credit packs from the wallet: nobody, verified stores, every store. A store's own setting beats it. */
+    walletPurchaseMode: 'OFF' | 'VERIFIED' | 'ALL';
+    /** Stores Super Admin set apart on their own page. */
+    walletPurchaseOverrides: { on: number; off: number };
     plans: Array<{ code: string; name: string }>;
   };
   /** Reseller system (RESELLER-plan.md Step 1). `flags` = the mode of the RESALE_SUPPLY / RESALE_SELL feature flags, MISSING when not created (= off). */

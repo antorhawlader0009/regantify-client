@@ -741,6 +741,48 @@ function Actions({ d }: { d: StoreDetail }) {
             <ReasonAction title="Pause withdrawals" description="The store can’t cash out until you resume. Its other work goes on." button="Pause" danger run={async (reason) => { await adminApi.pauseWithdrawals(d.id, reason); refresh(); return 'Withdrawals paused.'; }} />
           )}
         </Card>}
+        {can('money.adjust') && (
+          <Card title="Pay from the wallet">
+            {(() => {
+              const w = d.walletPurchase;
+              const rule = { OFF: 'off for every store', VERIFIED: 'only verified stores', ALL: 'every store' }[w.platformMode];
+              const now =
+                w.setting === 'DEFAULT'
+                  ? `Follows the platform rule (${rule}${w.platformMode === 'VERIFIED' ? `; this store is ${w.verified ? '' : 'not '}verified` : ''}).`
+                  : w.setting === 'ON'
+                    ? 'Always on for this store, whatever the platform rule says.'
+                    : 'Always off for this store, whatever the platform rule says.';
+              const options = (
+                [
+                  ['ON', 'Always on', 'This store may pay for plans, SMS and AI Credits from its wallet.'],
+                  ['OFF', 'Always off', 'This store never sees the wallet button.'],
+                  ['DEFAULT', 'Follow the platform rule', `Settings > Money decides (now: ${rule}).`],
+                ] as const
+              ).filter(([s]) => s !== w.setting);
+              return (
+                <>
+                  <p className="border-b border-black/5 pb-3 text-sm text-regantify-text">
+                    <span className={`mr-2 rounded-full px-2 py-0.5 text-xs font-medium ${w.allowed ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-600'}`}>{w.allowed ? 'Can pay from wallet' : 'Cannot pay from wallet'}</span>
+                    {now}
+                  </p>
+                  {options.map(([s, title, description]) => (
+                    <ReasonAction
+                      key={s}
+                      title={title}
+                      description={description}
+                      button={s === 'DEFAULT' ? 'Use rule' : s === 'ON' ? 'Turn on' : 'Turn off'}
+                      run={async (reason) => {
+                        const r = await adminApi.setWalletPurchases(d.id, s, reason);
+                        refresh();
+                        return r.allowed ? 'This store can now pay from its wallet.' : 'This store cannot pay from its wallet now.';
+                      }}
+                    />
+                  ))}
+                </>
+              );
+            })()}
+          </Card>
+        )}
         {can('stores.edit') && (
           <Card title="AI credits">
             <AiCreditsAdjust vendor={asVendor} onDone={refresh} />
