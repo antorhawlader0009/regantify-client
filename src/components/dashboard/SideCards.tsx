@@ -261,7 +261,7 @@ export function PlanCard({ usage, isOwner }: { usage: VendorPlanUsage; isOwner: 
     <SideCard
       title="Plan"
       action={
-        <span className="rounded-full bg-gradient-to-r from-brand to-emerald-600 px-2 py-0.5 text-xs font-medium text-white">{usage.plan.name}</span>
+        <span className="rounded-md bg-brand px-2 py-0.5 text-xs font-medium text-white">{usage.plan.name}</span>
       }
     >
       <div className="space-y-3">

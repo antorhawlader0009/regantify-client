@@ -1,7 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
-import { Check, ChevronDown, Lock, Sparkles, type LucideIcon } from 'lucide-react';
+import { Check, ChevronDown, Lock, ArrowUpCircle, type LucideIcon } from 'lucide-react';
 import { STAFF_ROLE_KEYS, STAFF_ROLE_MIN_TIER, STAFF_ROLES, roleAllowedOnTier, type StaffRoleKey } from '../../lib/staffPermissions';
 
 /** The plan each role tier starts at (Plan.staffRoleTier; seed-plans.ts). */
@@ -110,7 +110,7 @@ export function RolePicker({ value, onChange, roleTier }: { value: StaffRoleKey;
               to="/vendor/billing"
               className="mt-1.5 flex items-center gap-2 rounded-lg bg-brand-lime/60 px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand-lime"
             >
-              <Sparkles size={15} aria-hidden />
+              <ArrowUpCircle size={15} aria-hidden />
               Upgrade to {TIER_PLAN[nextTier]} to give {listOf(nextNames)}
             </Link>
           )}

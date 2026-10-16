@@ -19,7 +19,7 @@ export function VendorPageGate({ children }: { children?: ReactNode }) {
   const { pathname } = useLocation();
   const viewer = useViewer();
   if (canAccess(viewer, accessForPath(pathname))) return <>{children ?? <Outlet />}</>;
-  return children ? <NoAccess /> : <div className="flex min-h-screen items-center justify-center bg-[#efeff6] p-4"><NoAccess /></div>;
+  return children ? <NoAccess /> : <div className="flex min-h-screen items-center justify-center bg-regantify-content p-4"><NoAccess /></div>;
 }
 
 function NoAccess() {

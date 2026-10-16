@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ChevronUp, ExternalLink, Headphones, Lightbulb, Loader2, Search, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, ChevronUp, ExternalLink, Headphones, Lightbulb, Loader2, Search, Megaphone, BookOpen } from 'lucide-react';
 import {
   articleForPath,
   CHANGELOG_KIND_LABEL,
@@ -20,7 +20,7 @@ export type HelpTab = 'help' | 'new' | 'ideas';
 
 const TABS: Array<{ key: HelpTab; label: string; icon: typeof BookOpen }> = [
   { key: 'help', label: 'Help', icon: BookOpen },
-  { key: 'new', label: "What's new", icon: Sparkles },
+  { key: 'new', label: "What's new", icon: Megaphone },
   { key: 'ideas', label: 'Ideas', icon: Lightbulb },
 ];
 

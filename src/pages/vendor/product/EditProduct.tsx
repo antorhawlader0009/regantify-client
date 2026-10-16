@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, ChevronLeft, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
+import { X, ChevronLeft, Trash2, PenLine, Loader2, PackageX, ExternalLink } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { StockHistoryDialog } from '../../../components/product/StockHistoryDialog';
@@ -852,7 +852,7 @@ export default function EditProduct() {
                 title={canAiGenerate ? 'Fill in description, category, brand and search listing from the name and first photo' : 'Add a name and one photo first'}
                 className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-brand-lime bg-brand-lime/40 px-3 text-sm font-medium text-brand transition-colors hover:bg-brand-lime/70 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <PenLine size={15} />}
                 {aiGenerateMutation.isPending ? 'Generating…' : 'AI Generate'}
               </button>
             }

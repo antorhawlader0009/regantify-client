@@ -8,7 +8,7 @@
 
 const bar = 'rounded-[2px] bg-slate-400/35';
 const block = 'rounded-[3px] bg-slate-400/25';
-const accent = 'rounded-[2px] bg-violet-400/60';
+const accent = 'rounded-[2px] bg-blue-400/60';
 
 function Frame({ children }: { children: React.ReactNode }) {
   return <div className="flex h-full w-full flex-col items-center justify-center gap-1.5">{children}</div>;
@@ -61,7 +61,7 @@ export function SectionThumbnail({ type }: { type: string }) {
             <div className={`h-3 w-12 ${accent}`} />
           </div>
           <div className="flex gap-1">
-            <div className="h-1 w-1 rounded-full bg-violet-400/70" />
+            <div className="h-1 w-1 rounded-full bg-blue-400/70" />
             <div className="h-1 w-1 rounded-full bg-slate-400/40" />
             <div className="h-1 w-1 rounded-full bg-slate-400/40" />
           </div>
@@ -72,7 +72,7 @@ export function SectionThumbnail({ type }: { type: string }) {
       return (
         <Frame>
           <div className={`flex h-14 w-4/5 items-center justify-center ${block}`}>
-            <div className="ml-0.5 h-0 w-0 border-y-[7px] border-l-[11px] border-y-transparent border-l-violet-400/70" />
+            <div className="ml-0.5 h-0 w-0 border-y-[7px] border-l-[11px] border-y-transparent border-l-blue-400/70" />
           </div>
         </Frame>
       );

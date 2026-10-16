@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Sparkles } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { courierApi } from '../../lib/courierApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
@@ -70,7 +70,7 @@ export function RedxLocationPicker({
       <p className="text-xs font-medium text-neutral-500">RedX delivery area</p>
       {currentAreaId == null && suggestion && (
         <p className="flex items-start gap-1.5 text-xs text-neutral-500">
-          <Sparkles size={13} className="mt-0.5 shrink-0 text-brand" />
+          <MapPin size={13} className="mt-0.5 shrink-0 text-brand" />
           <span>
             From the address: <span className="text-regantify-text">{suggestion.areaName}</span>
             {suggestion.autoApply ? ' (pre-selected — save to keep it).' : ' — not sure, please check.'}

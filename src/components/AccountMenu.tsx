@@ -32,8 +32,8 @@ function Avatar({ url, name, size }: { url?: string | null; name?: string | null
   return url ? (
     <img src={url} alt={name ?? 'Profile'} style={box} className="rounded-full border border-line object-cover" />
   ) : (
-    <div style={box} className="flex items-center justify-center rounded-full bg-gradient-to-br from-amber-200 to-amber-500">
-      <User className="text-white" size={Math.round(size / 2)} />
+    <div style={box} className="flex items-center justify-center rounded-full bg-brand-lime">
+      <User className="text-brand" size={Math.round(size / 2)} />
     </div>
   );
 }

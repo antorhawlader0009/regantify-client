@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Sparkles } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { courierApi, PATHAO_SUGGESTION_AUTO_APPLY, type PathaoLocationSuggestion } from '../../lib/courierApi';
 import { SearchableSelect } from '../ui/SearchableSelect';
 
@@ -177,12 +177,12 @@ export function PathaoLocationSelects({ value, onChange, disabled, selectClassNa
 
       {suggestFrom && followingSuggestion && !manual && (
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-neutral-500">
-          <Sparkles size={12} /> Suggested from the address — please check it.
+          <MapPin size={12} /> Suggested from the address — please check it.
         </p>
       )}
       {suggestFrom && isEmpty && !manual && suggestion && suggestion.confidence < PATHAO_SUGGESTION_AUTO_APPLY && (
         <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-neutral-500">
-          <Sparkles size={12} /> From the address: {describe(suggestion)}
+          <MapPin size={12} /> From the address: {describe(suggestion)}
           <button type="button" onClick={() => pick(toValue(suggestion))} className="underline text-regantify-text hover:text-brand">
             Use it
           </button>

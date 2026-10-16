@@ -14,7 +14,7 @@ import {
   Plus,
   Settings2,
   Smartphone,
-  Sparkles,
+  PenLine,
   Type as TypeIcon,
 } from 'lucide-react';
 import {
@@ -330,10 +330,10 @@ export default function LandingPageBuilder() {
 
         <button
           onClick={() => setAiGenerateOpen(true)}
-          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-violet-400/30 bg-violet-500/10
-            px-3 py-2 text-[12px] font-medium text-violet-300 transition-colors hover:bg-violet-500/20"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-400/30 bg-blue-500/10
+            px-3 py-2 text-[12px] font-medium text-blue-300 transition-colors hover:bg-blue-500/20"
         >
-          <Sparkles size={14} />
+          <PenLine size={14} />
           AI Generate
         </button>
 
@@ -386,7 +386,7 @@ export default function LandingPageBuilder() {
           className={`shrink-0 rounded-xl px-3.5 py-2 text-[12px] font-medium transition-colors disabled:opacity-60 ${
             isPublished
               ? 'bg-white/10 text-slate-100 hover:bg-white/15'
-              : 'bg-violet-600 text-white hover:bg-violet-500'
+              : 'bg-blue-600 text-white hover:bg-blue-500'
           }`}
         >
           {publishMutation.isPending ? '…' : isPublished ? 'Unpublish' : 'Publish'}
@@ -447,7 +447,7 @@ export default function LandingPageBuilder() {
                   onClick={() => setAddOpen(true)}
                   className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed
                     border-white/15 py-2 text-[12px] font-medium text-slate-400 transition-colors
-                    hover:border-violet-400/50 hover:text-violet-300"
+                    hover:border-blue-400/50 hover:text-blue-300"
                 >
                   <Plus size={14} />
                   Add Section
@@ -503,7 +503,7 @@ export default function LandingPageBuilder() {
           >
             {sections.length === 0 ? (
               <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 px-8 text-center">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
                   <LayoutTemplate size={26} strokeWidth={1.5} />
                 </span>
                 <h2 className="text-base font-semibold text-regantify-text">Your page starts here</h2>
@@ -530,7 +530,7 @@ export default function LandingPageBuilder() {
                       key={section.id}
                       onClick={() => setSelectedSectionId(section.id)}
                       className={`relative cursor-pointer transition-all ${
-                        isSelected ? 'ring-2 ring-inset ring-violet-500' : 'hover:ring-1 hover:ring-inset hover:ring-violet-300'
+                        isSelected ? 'ring-2 ring-inset ring-blue-500' : 'hover:ring-1 hover:ring-inset hover:ring-blue-300'
                       } ${hiddenHere ? 'opacity-40' : ''}`}
                     >
                       {hiddenHere && (

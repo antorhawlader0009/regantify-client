@@ -141,7 +141,7 @@ export function Toggle({
         aria-label={label}
         onClick={() => onChange(!checked)}
         className={`mt-0.5 h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors ${
-          checked ? 'bg-violet-600' : 'bg-white/15'
+          checked ? 'bg-blue-600' : 'bg-white/15'
         }`}
       >
         <span

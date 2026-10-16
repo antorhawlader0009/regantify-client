@@ -123,7 +123,7 @@ function SortableSectionRow({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`group relative flex items-center gap-1 rounded-lg border px-1.5 py-2 transition-colors ${
         selected
-          ? 'border-violet-400/50 bg-violet-500/10'
+          ? 'border-blue-400/50 bg-blue-500/10'
           : 'border-white/10 bg-white/[0.04] hover:border-white/20'
       } ${isDragging ? 'z-10 opacity-80 shadow-lg shadow-black/40' : ''}`}
     >

@@ -61,20 +61,19 @@ export function BalanceButton() {
       disabled={wallet.isPending}
       aria-label={visible ? 'Open wallet' : 'Show balance'}
       title={visible ? 'Open wallet' : undefined}
-      className={`relative flex h-10 w-[148px] shrink-0 sm:w-[160px] items-center gap-2.5 overflow-hidden rounded-full border pl-1.5 pr-4 text-sm transition-all duration-500 active:scale-95 disabled:cursor-wait ${
+      className={`relative flex h-10 w-[148px] shrink-0 sm:w-[160px] items-center gap-2.5 overflow-hidden rounded-lg border pl-1.5 pr-4 text-sm transition-all duration-500 active:scale-95 disabled:cursor-wait ${
         visible
           ? negative
             ? 'border-rose-300 bg-rose-50 text-rose-700'
             : 'border-neutral-300 bg-white text-neutral-800'
-          : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:shadow-sm'
+          : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50'
       }`}
     >
-      {/* Wallet icon, with a soft pulse ring while idle */}
+      {/* Wallet icon */}
       <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
-        {!visible && <span className="absolute inset-0 animate-ping rounded-full bg-neutral-300/70" />}
         <span
-          className={`relative flex h-7 w-7 items-center justify-center rounded-full ${negative ? 'bg-rose-100 text-rose-600' : 'bg-neutral-200 text-neutral-700'} transition-transform duration-500 ${
-            visible ? 'rotate-[360deg] scale-110' : ''
+          className={`relative flex h-7 w-7 items-center justify-center rounded-md ${negative ? 'bg-rose-100 text-rose-600' : 'bg-neutral-200 text-neutral-700'} transition-transform duration-500 ${
+            ''
           }`}
         >
           <Wallet size={15} />

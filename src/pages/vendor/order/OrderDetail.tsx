@@ -630,7 +630,7 @@ export default function OrderDetail() {
                     <p className="flex items-center gap-1.5 text-sm text-regantify-text">
                       <span className="truncate">{item.productName}</span>
                       {item.isGift && <span className="ml-1.5 shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">Free gift</span>}
-                      {item.wholesale && <span className="ml-1.5 shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-700">Wholesale price</span>}
+                      {item.wholesale && <span className="ml-1.5 shrink-0 rounded bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-800">Wholesale price</span>}
                       {item.product?.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={item.product.slug} />}
                     </p>
                     <p className="truncate text-xs text-neutral-500">
