@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { idlePoll } from '../../lib/idlePolling';
 import { Trash2 } from 'lucide-react';
 import { ordersApi } from '../../lib/ordersApi';
 import { apiErrorMessage } from '../../lib/api';
@@ -16,7 +17,7 @@ export function OrderComments({ orderId }: { orderId: string }) {
   const queryClient = useQueryClient();
   const [text, setText] = useState('');
   const key = ['order-comments', orderId];
-  const { data } = useQuery({ queryKey: key, queryFn: () => ordersApi.listComments(orderId), refetchInterval: 60_000 });
+  const { data } = useQuery({ queryKey: key, queryFn: () => ordersApi.listComments(orderId), refetchInterval: idlePoll(60_000) });
   const post = useMutation({
     mutationFn: () => ordersApi.addComment(orderId, text.trim()),
     onSuccess: () => {

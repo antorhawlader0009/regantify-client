@@ -1,4 +1,6 @@
+import { PageLoading } from '../PageLoading';
 import {
+  Suspense,
   forwardRef,
   useEffect,
   useRef,
@@ -66,7 +68,11 @@ export function LmsLayout() {
   } else if (!me) {
     body = <TurnOnLms me={meQuery.data} />;
   } else {
-    body = <Outlet context={me} />;
+    body = (
+      <Suspense fallback={<PageLoading />}>
+        <Outlet context={me} />
+      </Suspense>
+    );
   }
 
   return (

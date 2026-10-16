@@ -19,6 +19,7 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { ChannelPicker } from '../../../components/order/ChannelPicker';
 import { lmsApi } from '../../../lib/lmsApi';
+import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
 
 interface CartLine extends OrderItemInput {
   key: string; // productId + variantId, for React keys / dedupe within this form only
@@ -472,7 +473,7 @@ export default function AddOrder() {
                         className={`flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left ${i === activeResult ? 'bg-neutral-100' : ''}`}
                       >
                         {product.photoUrls[0] ? (
-                          <img src={product.photoUrls[0]} alt="" className="h-9 w-9 shrink-0 rounded-md border border-line object-cover" />
+                          <img src={cloudinaryThumb(product.photoUrls[0], 72)} alt="" loading="lazy" className="h-9 w-9 shrink-0 rounded-md border border-line object-cover" />
                         ) : (
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-400">
                             <Package size={14} aria-hidden />

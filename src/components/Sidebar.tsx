@@ -3,6 +3,7 @@ import { adminCan, useAdminViewer } from '../lib/adminPermissions';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, SlidersHorizontal, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { idlePoll } from '../lib/idlePolling';
 import { isNavGroup, navLinks, type AdvancedNavGroup, type NavGroup, type NavLinkItem, type NavSection } from '../lib/navConfig';
 import { adminSupportApi, supportApi } from '../lib/supportApi';
 import { getVendorPlanUsage } from '../lib/plansApi';
@@ -34,7 +35,7 @@ function SupportUnreadBadge({ admin, collapsed }: { admin: boolean; collapsed: b
   const { data: count = 0 } = useQuery({
     queryKey: ['support-unread', admin ? 'admin' : 'vendor'],
     queryFn: admin ? adminSupportApi.unreadCount : supportApi.unreadCount,
-    refetchInterval: 60_000,
+    refetchInterval: idlePoll(60_000, 5),
     retry: false,
     enabled: !admin || adminCan(viewer, 'support.manage'),
   });

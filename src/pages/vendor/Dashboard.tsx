@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { idlePoll } from '../../lib/idlePolling';
 import { AlertCircle, Check, Copy, Eye, EyeOff, Moon, Plus, RefreshCw, Sun, Sunrise, type LucideIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useAuthStore } from '../../store/authStore';
@@ -102,7 +103,7 @@ export default function VendorDashboard() {
   const dashboard = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.summary,
-    refetchInterval: 60_000,
+    refetchInterval: idlePoll(60_000, 5),
     refetchOnWindowFocus: true,
   });
 

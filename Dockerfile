@@ -1,5 +1,5 @@
 # --- builder ---------------------------------------------------------------
-FROM node:20-bookworm-slim AS builder
+FROM node:24-bookworm-slim AS builder
 WORKDIR /app
 
 COPY package*.json ./

@@ -4,6 +4,7 @@ import { systemStatusApi, type JobStatus } from '../../lib/systemStatusApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
 import { ErrorLogSection, IntegrationsSection } from '../../components/admin/IntegrationHealth';
+import { ApiTimingsSection, WebVitalsSection } from '../../components/admin/PerfSections';
 
 const ago = (seconds: number | null) => {
   if (seconds === null) return 'never';
@@ -28,6 +29,24 @@ function Count({ label, value, hint, bad }: { label: string; value: number; hint
       <p className={`text-2xl font-semibold tabular-nums ${value > 0 && bad ? 'text-red-700' : 'text-regantify-text'}`}>{value}</p>
       <p className="mt-0.5 text-sm font-medium text-regantify-text">{label}</p>
       <p className="mt-0.5 text-xs text-regantify-text-muted">{hint}</p>
+    </div>
+  );
+}
+
+/**
+ * How long a request waits before this server process can start it (PERFORMANCE-PLAN.md Step 18): low milliseconds is
+ * healthy; hundreds means something heavy is running and every request is slow. p99 of the last minute.
+ */
+function EventLoopCard({ loop }: { loop?: { lastMinute: { p99Ms: number; maxMs: number } | null; worstP99LastHourMs: number | null } }) {
+  const p99 = loop?.lastMinute?.p99Ms ?? null;
+  const tone = p99 === null ? 'text-regantify-text' : p99 > 500 ? 'text-red-700' : p99 > 100 ? 'text-amber-700' : 'text-green-700';
+  return (
+    <div className="rounded-xl border border-black/5 bg-white p-4">
+      <p className="text-xs text-regantify-text-muted">Wait before a request starts</p>
+      <p className={`text-lg font-semibold ${tone}`}>{p99 === null ? 'Measuring' : `${p99} ms`}</p>
+      <p className="text-xs text-regantify-text-muted">
+        {p99 === null ? 'First reading after a minute' : `Worst in the last hour: ${loop?.worstP99LastHourMs ?? p99} ms`}
+      </p>
     </div>
   );
 }
@@ -68,7 +87,7 @@ export default function SystemStatus() {
 
       <SmsBalanceCard />
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <div className="rounded-xl border border-black/5 bg-white p-4">
           <p className="text-xs text-regantify-text-muted">Database</p>
           <p className={`text-lg font-semibold ${data.database.ok ? 'text-green-700' : 'text-red-700'}`}>{data.database.ok ? 'Up' : 'Down'}</p>
@@ -82,7 +101,13 @@ export default function SystemStatus() {
         <div className="rounded-xl border border-black/5 bg-white p-4">
           <p className="text-xs text-regantify-text-muted">Memory in use</p>
           <p className="text-lg font-semibold text-regantify-text">{data.server.memoryMb} MB</p>
+          {data.server.heapUsedMb !== undefined && (
+            <p className="text-xs text-regantify-text-muted">
+              JavaScript {data.server.heapUsedMb} of {data.server.heapTotalMb} MB
+            </p>
+          )}
         </div>
+        <EventLoopCard loop={data.server.eventLoop} />
         <div className="rounded-xl border border-black/5 bg-white p-4">
           <p className="text-xs text-regantify-text-muted">Text when a job stops</p>
           <p className={`text-lg font-semibold ${data.alertPhoneSet ? 'text-green-700' : 'text-amber-700'}`}>{data.alertPhoneSet ? 'On' : 'Off'}</p>
@@ -103,6 +128,10 @@ export default function SystemStatus() {
       <IntegrationsSection />
 
       <ErrorLogSection />
+
+      <WebVitalsSection />
+
+      <ApiTimingsSection />
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-regantify-text">Background jobs</h2>

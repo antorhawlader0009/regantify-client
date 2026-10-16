@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { idlePoll } from '../../lib/idlePolling';
 import { ChevronDown, LogOut, X } from 'lucide-react';
 import type { NavSection } from '../../lib/navConfig';
 import { adminSupportApi } from '../../lib/supportApi';
@@ -27,7 +28,7 @@ function isActive(path: string, pathname: string): boolean {
 
 function SupportDot() {
   const viewer = useAdminViewer();
-  const { data: count = 0 } = useQuery({ queryKey: ['support-unread', 'admin'], queryFn: adminSupportApi.unreadCount, refetchInterval: 60_000, retry: false, enabled: adminCan(viewer, 'support.manage') });
+  const { data: count = 0 } = useQuery({ queryKey: ['support-unread', 'admin'], queryFn: adminSupportApi.unreadCount, refetchInterval: idlePoll(60_000, 5), retry: false, enabled: adminCan(viewer, 'support.manage') });
   if (!count) return null;
   return <span className="ml-auto min-w-[18px] rounded-full bg-[var(--console-brass)] px-1.5 text-center text-[10.5px] font-semibold leading-[18px] text-[#0c2b25]">{count > 99 ? '99+' : count}</span>;
 }

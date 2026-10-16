@@ -1,4 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
+import { PageLoading } from '../PageLoading';
 import { Link, NavLink, Outlet, useOutletContext } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MonitorSmartphone } from 'lucide-react';
@@ -55,7 +56,11 @@ export function PosLayout() {
   } else if (!me) {
     body = <TurnOnPos me={meQuery.data} />;
   } else {
-    body = <Outlet context={me} />;
+    body = (
+      <Suspense fallback={<PageLoading />}>
+        <Outlet context={me} />
+      </Suspense>
+    );
   }
 
   return (

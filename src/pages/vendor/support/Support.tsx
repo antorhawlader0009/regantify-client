@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { idlePoll } from '../../../lib/idlePolling';
 import { ChevronDown, Clock, Loader2, Mail, MessageCircle, Phone, Plus, LifeBuoy } from 'lucide-react';
 import { supportApi, type SupportCategory, type SupportPriority, type SupportTicketSummary } from '../../../lib/supportApi';
 import { CATEGORY_LABEL, HELP_TOPICS, SUPPORT_CONTACT } from '../../../lib/supportContent';
@@ -25,7 +26,7 @@ export default function Support() {
   const { data: tickets = [], isLoading, isError } = useQuery({
     queryKey: ['support-tickets'],
     queryFn: supportApi.list,
-    refetchInterval: 30_000,
+    refetchInterval: idlePoll(30_000),
   });
 
   const active = useMemo(() => tickets.filter((t) => t.status !== 'CLOSED'), [tickets]);

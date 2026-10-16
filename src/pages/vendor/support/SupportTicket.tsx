@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { idlePoll } from '../../../lib/idlePolling';
 import { ArrowLeft, CheckCircle2, Loader2, Star } from 'lucide-react';
 import { supportApi, type SupportTicket as Ticket } from '../../../lib/supportApi';
 import { CATEGORY_LABEL } from '../../../lib/supportContent';
@@ -17,7 +18,7 @@ export default function SupportTicket() {
   const { data: ticket, isLoading, isError } = useQuery({
     queryKey: ['support-ticket', id],
     queryFn: () => supportApi.get(id),
-    refetchInterval: 20_000,
+    refetchInterval: idlePoll(20_000),
   });
 
   const store = (t: Ticket) => {

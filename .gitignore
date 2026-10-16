@@ -41,3 +41,6 @@ coverage/
 
 repomix-output.xml
 .serena/
+
+# Bundle report from npm run build:analyze (PERFORMANCE-PLAN.md Step 1)
+bundle-stats.html

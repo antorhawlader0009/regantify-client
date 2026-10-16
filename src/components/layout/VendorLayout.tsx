@@ -5,7 +5,8 @@ import { KycBanner } from '../KycBanner';
 import { PlanRenewalBar } from '../PlanRenewalBar';
 import { ChurnSurvey } from '../ChurnSurvey';
 import { NpsSurvey } from '../NpsSurvey';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PageLoading } from '../PageLoading';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
@@ -67,7 +68,9 @@ export function VendorLayout() {
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={shownNav} />
           <VendorPageGate>
-            <Outlet />
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
           </VendorPageGate>
         </main>
       </div>

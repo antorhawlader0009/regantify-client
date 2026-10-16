@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from './ordersApi';
+import { isIdle } from './idlePolling';
 
 const POLL_MS = 8_000;
 
@@ -18,7 +19,8 @@ export function useOrdersAutoRefresh() {
   const pulse = useQuery({
     queryKey: ['orders-pulse'],
     queryFn: ordersApi.pulse,
-    refetchInterval: (query) => (query.state.status === 'error' ? false : interval.current),
+    // Every 30 s or so once nobody has used the tab for 5 minutes (lib/idlePolling.ts, Step 6).
+    refetchInterval: (query) => (query.state.status === 'error' ? false : isIdle() ? interval.current * 4 : interval.current),
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     staleTime: 3_000,

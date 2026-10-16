@@ -19,7 +19,16 @@ export interface JobStatus {
 
 export interface SystemStatus {
   checkedAt: string;
-  server: { uptimeSeconds: number; version: string; node: string; memoryMb: number };
+  server: {
+    uptimeSeconds: number;
+    version: string;
+    node: string;
+    memoryMb: number;
+    // PERFORMANCE-PLAN.md Step 18 (missing on an older server).
+    heapUsedMb?: number;
+    heapTotalMb?: number;
+    eventLoop?: { lastMinute: { at: number; p50Ms: number; p99Ms: number; maxMs: number } | null; worstP99LastHourMs: number | null };
+  };
   database: { ok: boolean; latencyMs: number | null };
   jobs: JobStatus[];
   lateCount: number;
@@ -65,6 +74,49 @@ export interface AppErrorRow {
   resolvedAt: string | null;
   resolvedBy: string | null;
 }
+
+// Speed (PERFORMANCE-PLAN.md Step 1) — mirrors server/src/perf/perf-context.ts and system-health/web-vitals.service.ts.
+
+export interface RouteTiming {
+  route: string;
+  count: number;
+  avgMs: number;
+  p50Ms: number;
+  p95Ms: number;
+  maxMs: number;
+  slow: number;
+  /** Only counted while the server runs with PERF_LOG=true. */
+  avgQueries: number | null;
+  avgQueryMs: number | null;
+}
+export interface ApiTimings {
+  since: string;
+  perfLog: boolean;
+  slowMs: number;
+  pid: number;
+  routes: RouteTiming[];
+}
+export interface VitalSummary {
+  metric: 'LCP' | 'INP' | 'CLS' | 'FCP' | 'TTFB';
+  device: 'MOBILE' | 'DESKTOP';
+  samples: number;
+  /** ms, or the CLS score. */
+  average: number;
+  goodPercent: number;
+  poorPercent: number;
+  /** At least 75% of samples were good (Google's p75 rule). */
+  pass: boolean;
+}
+export interface WebVitalsView {
+  days: number;
+  platform: VitalSummary[];
+  slowStores: Array<{ vendorId: string; storeName: string | null; subdomain: string | null; samples: number; goodPercent: number; averageMs: number }>;
+}
+
+export const perfApi = {
+  timings: () => api.get<ApiTimings>('/v1/admin/system-status/perf').then((r) => r.data),
+  webVitals: (days: number) => api.get<WebVitalsView>('/v1/admin/system-status/web-vitals', { params: { days } }).then((r) => r.data),
+};
 
 export const integrationHealthApi = {
   integrations: () => api.get<IntegrationsView>('/v1/admin/system-status/integrations').then((r) => r.data),

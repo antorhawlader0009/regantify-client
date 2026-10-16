@@ -50,6 +50,7 @@ import { ViewProductOnStorefront } from '../../../components/product/ViewProduct
 import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/PageKit';
 import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
+import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'DRAFT';
 type StockFilter = 'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'UNLIMITED';
@@ -1002,8 +1003,9 @@ export default function AllProducts() {
                     <div className="flex items-center gap-3">
                       {p.photoUrls[0] ? (
                         <img
-                          src={p.photoUrls[0]}
+                          src={cloudinaryThumb(p.photoUrls[0])}
                           alt=""
+                          loading="lazy"
                           className={`${thumb} shrink-0 rounded border border-line bg-neutral-100 object-cover`}
                         />
                       ) : (

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
@@ -10,8 +11,6 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { PlaceholderPage } from './components/PlaceholderPage';
 import { vendorNav, adminNav, navLinks } from './lib/navConfig';
 
-import Home from './pages/marketing/Home';
-import Blog, { BlogPostPage } from './pages/marketing/Blog';
 
 import VendorPhoneEntry from './pages/auth/VendorPhoneEntry';
 import VendorSignup from './pages/auth/VendorSignup';
@@ -23,197 +22,250 @@ import VendorImpersonateEntry from './pages/auth/VendorImpersonateEntry';
 import VendorForgotPassword from './pages/auth/VendorForgotPassword';
 import VendorForgotPasswordVerify from './pages/auth/VendorForgotPasswordVerify';
 import VendorForgotPasswordReset from './pages/auth/VendorForgotPasswordReset';
-import AdminLogin from './pages/auth/AdminLogin';
-import Unauthorized from './pages/Unauthorized';
+// Super Admin's sign-in (with the QR code library for 2FA set-up) is opened by few people, so it loads on first open too.
+const AdminLogin = lazy(() => import('./pages/auth/AdminLogin'));
 
 import VendorDashboard from './pages/vendor/Dashboard';
-import VendorSettings from './pages/vendor/Settings';
-import VendorProfile from './pages/vendor/Profile';
-import AddProduct from './pages/vendor/product/AddProduct';
-import EditProduct from './pages/vendor/product/EditProduct';
-import AllProducts from './pages/vendor/product/AllProducts';
-import LowStock from './pages/vendor/product/LowStock';
-import Categories from './pages/vendor/product/Categories';
-import Brands from './pages/vendor/product/Brands';
-import SizeGuides from './pages/vendor/product/SizeGuides';
-import Collections from './pages/vendor/collection/Collections';
-import AddCollection from './pages/vendor/collection/AddCollection';
-import Themes from './pages/vendor/store/Themes';
-import Pages from './pages/vendor/store/Pages';
-import AddPage from './pages/vendor/store/AddPage';
-import Magazine from './pages/vendor/store/Magazine';
-import Faq from './pages/vendor/store/Faq';
-import ShareQr from './pages/vendor/store/ShareQr';
-import CheckoutFormFields from './pages/vendor/store/design/CheckoutFormFields';
-import AddPost from './pages/vendor/store/AddPost';
-import LandingPages from './pages/vendor/store/landing-pages/LandingPages';
-import LandingPageBuilder from './pages/vendor/store/landing-pages/LandingPageBuilder';
-import Footer from './pages/vendor/store/footer/Footer';
-import Social from './pages/vendor/store/Social';
-import Branding from './pages/vendor/store/Branding';
-import Media from './pages/vendor/store/Media';
-import Domain from './pages/vendor/store/Domain';
-import PaymentGateway from './pages/vendor/store/PaymentGateway';
-import StockSettings from './pages/vendor/store/StockSettings';
-import InvoiceSettings from './pages/vendor/store/InvoiceSettings';
-import OrderTracking from './pages/vendor/store/OrderTracking';
-import DesignHub from './pages/vendor/store/DesignHub';
-import DeliveryCharge from './pages/vendor/store/DeliveryCharge';
-import GdprPrompt from './pages/vendor/store/GdprPrompt';
-import { CustomCss, CustomHeadScripts } from './pages/vendor/store/design/CustomCodePage';
-import JavaScriptCode from './pages/vendor/store/design/JavaScriptCode';
-import HeaderEditor from './pages/vendor/store/design/HeaderEditor';
-import LayoutSettings from './pages/vendor/store/design/LayoutSettings';
-import Customize from './pages/vendor/store/design/Customize';
-import SiteBanner from './pages/vendor/store/design/SiteBanner';
-import ChatButton from './pages/vendor/store/design/ChatButton';
-import ProductDisplay from './pages/vendor/store/design/ProductDisplay';
-import TrustStripPage from './pages/vendor/store/design/TrustStrip';
-import ReputationPage from './pages/vendor/store/design/Reputation';
-import ProductCardDisplay from './pages/vendor/store/design/ProductCardDisplay';
-import EditJavaScript from './pages/vendor/store/design/EditJavaScript';
-import CodGuard from './pages/vendor/store/CodGuard';
-import StoreBackup from './pages/vendor/store/StoreBackup';
-import StoreAway from './pages/vendor/store/StoreAway';
-import Seo from './pages/vendor/store/Seo';
-import Integrations from './pages/vendor/store/integrations/Integrations';
-import FacebookPixel from './pages/vendor/store/integrations/FacebookPixel';
-import MetaConversionsApi from './pages/vendor/store/integrations/MetaConversionsApi';
-import GoogleAnalytics from './pages/vendor/store/integrations/GoogleAnalytics';
-import AnalyticsPage, { AnalyticsLegacyRedirect } from './pages/vendor/analytics/AnalyticsPage';
-import GoogleTagManager from './pages/vendor/store/integrations/GoogleTagManager';
-import TiktokPixel from './pages/vendor/store/integrations/TiktokPixel';
-import Webhooks from './pages/vendor/store/integrations/Webhooks';
-import ExternalApi from './pages/vendor/store/integrations/ExternalApi';
-import Orders from './pages/vendor/order/Orders';
-import HandoverSheets from './pages/vendor/order/HandoverSheets';
-import ReturnCheckIn from './pages/vendor/order/ReturnCheckIn';
-import TrackingBulk from './pages/vendor/order/TrackingBulk';
-import RiderCash from './pages/vendor/order/RiderCash';
-import Refunds from './pages/vendor/order/Refunds';
-import StandingOrders from './pages/vendor/order/StandingOrders';
-import StockCount from './pages/vendor/product/StockCount';
-import Questions from './pages/vendor/review/Questions';
-import CourierRules from './pages/vendor/courier/CourierRules';
-import StockHistory from './pages/vendor/product/StockHistory';
-import ImportOrders from './pages/vendor/order/ImportOrders';
-import HandoverSheetPrintPage from './pages/vendor/order/HandoverSheetPrintPage';
-import AddOrder from './pages/vendor/order/AddOrder';
-import OrderDetail from './pages/vendor/order/OrderDetail';
-import Customers from './pages/vendor/customer/Customers';
-import CustomerDetails from './pages/vendor/customer/CustomerDetails';
-import AddCustomer from './pages/vendor/customer/AddCustomer';
-import BulkUploadCustomers from './pages/vendor/customer/BulkUploadCustomers';
-import CustomerDetail from './pages/vendor/customer/CustomerDetail';
-import EditCustomer from './pages/vendor/customer/EditCustomer';
-import Reviews from './pages/vendor/review/Reviews';
-import AddReview from './pages/vendor/review/AddReview';
-import Staff from './pages/vendor/staff/Staff';
-import ActivityLog from './pages/vendor/account/ActivityLog';
-import Verification from './pages/vendor/Verification';
-import AdminVerification from './pages/admin/Verification';
-import AddStaffMember from './pages/vendor/staff/AddStaffMember';
-import Billing from './pages/vendor/Billing';
-import Notifications from './pages/vendor/Notifications';
-import Coupons from './pages/vendor/marketing/Coupons';
-import AddCoupon from './pages/vendor/marketing/AddCoupon';
-import Campaigns from './pages/vendor/marketing/Campaigns';
-import AddCampaign from './pages/vendor/marketing/AddCampaign';
-import PopupCampaignBuilder from './pages/vendor/marketing/PopupCampaignBuilder';
-import Discounts from './pages/vendor/marketing/Discounts';
-import GiftOffers from './pages/vendor/marketing/GiftOffers';
-import RewardPoints from './pages/vendor/marketing/RewardPoints';
-import AddDiscount from './pages/vendor/marketing/AddDiscount';
-import FlashSales from './pages/vendor/marketing/FlashSales';
-import AddFlashSale from './pages/vendor/marketing/AddFlashSale';
-import GiftCards from './pages/vendor/marketing/GiftCards';
-import AddGiftCard from './pages/vendor/marketing/AddGiftCard';
-import GiftCardDetail from './pages/vendor/marketing/GiftCardDetail';
-import Sms from './pages/vendor/sms/Sms';
-import AiChatBot from './pages/vendor/ai-automation/AiChatBot';
-import Wallet from './pages/vendor/finance/Wallet';
-import Transactions from './pages/vendor/finance/Transactions';
-import Withdraw from './pages/vendor/finance/Withdraw';
-import FeeSummary from './pages/vendor/finance/FeeSummary';
-import Expenses from './pages/vendor/finance/Expenses';
-import PaymentCallback from './pages/vendor/finance/PaymentCallback';
-import Tracking from './pages/vendor/shipping/Tracking';
-import CourierIntegrationPage from './pages/vendor/courier/CourierIntegrationPage';
-import PathaoPage from './pages/vendor/courier/pathao/PathaoPage';
-import SteadfastPage from './pages/vendor/courier/steadfast/SteadfastPage';
-import RedxPage from './pages/vendor/courier/redx/RedxPage';
-import CarrybeePage from './pages/vendor/courier/carrybee/CarrybeePage';
-import PathaoLabelsPrintPage from './pages/vendor/courier/pathao/PathaoLabelsPrintPage';
 import AdminDashboard from './pages/admin/Dashboard';
-import AiSettings from './pages/admin/ai/AiSettings';
-import SystemStatus from './pages/admin/SystemStatus';
-import FeatureFlags from './pages/admin/FeatureFlags';
-import TrustSafety from './pages/admin/TrustSafety';
-import Automations from './pages/admin/Automations';
-import Churn from './pages/admin/Churn';
-import Economics from './pages/admin/Economics';
-import AdminEmail from './pages/admin/Email';
-import ProductInsights from './pages/admin/ProductInsights';
-import DeliveryTimes from './pages/admin/DeliveryTimes';
-import HelpArticles from './pages/admin/HelpArticles';
-import Changelog from './pages/admin/Changelog';
-import FeatureRequests from './pages/admin/FeatureRequests';
-import AdminReferrals from './pages/admin/Referrals';
-import Approvals from './pages/admin/Approvals';
-import AdminDomains from './pages/admin/Domains';
-import VendorReferrals from './pages/vendor/finance/Referrals';
-import ReceiptDetails from './pages/admin/ReceiptDetails';
-import AdminAnalytics from './pages/admin/Analytics';
-import AdminReviews from './pages/admin/Reviews';
-import AdminReports from './pages/admin/Reports';
-import AdminMarketing from './pages/admin/Marketing';
-import AdminSettings from './pages/admin/Settings';
-import AdminAddons from './pages/admin/Addons';
-import Receipts from './pages/vendor/finance/Receipts';
-import AllVendors from './pages/admin/vendors/AllVendors';
-import StoreDetailPage from './pages/admin/vendors/StoreDetail';
-import PendingApproval from './pages/admin/vendors/PendingApproval';
-import SuspendedVendors from './pages/admin/vendors/SuspendedVendors';
-import PlatformRevenue from './pages/admin/finance/PlatformRevenue';
-import AdminOrders from './pages/admin/orders/AdminOrders';
-import AdminOrderDetail from './pages/admin/orders/AdminOrderDetail';
-import AdminCustomers from './pages/admin/customers/AdminCustomers';
-import AdminShopperDetail from './pages/admin/customers/AdminShopperDetail';
-import Renewals from './pages/admin/plans/Renewals';
-import PacksAndPromos from './pages/admin/plans/PacksAndPromos';
-import Messages from './pages/admin/Messages';
-import Team from './pages/admin/Team';
-import CommissionSettings from './pages/admin/finance/CommissionSettings';
-import PlanManagement from './pages/admin/plans/PlanManagement';
-import PlanRequests from './pages/admin/plans/PlanRequests';
-import Announcements from './pages/admin/Announcements';
-import SupportInbox from './pages/admin/support/SupportInbox';
-import Addons from './pages/vendor/addons/Addons';
-import Support from './pages/vendor/support/Support';
-import SupportTicket from './pages/vendor/support/SupportTicket';
-import HelpCenter from './pages/vendor/help/HelpCenter';
-import PaymentGatewayManagement from './pages/admin/payment-gateway/PaymentGatewayManagement';
-import Payouts from './pages/admin/finance/Payouts';
-import LeadsPage from './pages/vendor/lms/LeadsPage';
-import CallDeskPage from './pages/vendor/lms/CallDeskPage';
-import TasksPage from './pages/vendor/lms/TasksPage';
-import ReportsPage from './pages/vendor/lms/ReportsPage';
-import LmsSettingsPage from './pages/vendor/lms/LmsSettingsPage';
-import ImportLeadsPage from './pages/vendor/lms/ImportLeadsPage';
 import { LmsLayout } from './components/lms/LmsLayout';
 import { PosLayout } from './components/pos/PosLayout';
-import PosSettingsPage from './pages/vendor/pos/PosSettingsPage';
-import PosRegistersPage from './pages/vendor/pos/PosRegistersPage';
-import PosStaffPage from './pages/vendor/pos/PosStaffPage';
-import PosSessionsPage from './pages/vendor/pos/PosSessionsPage';
-import PosSalesPage from './pages/vendor/pos/PosSalesPage';
-import PosReportsPage from './pages/vendor/pos/PosReportsPage';
-import PosHardwarePage from './pages/vendor/pos/PosHardwarePage';
-import PosSellPage from './pages/vendor/pos/PosSellPage';
-import PosDisplayPage from './pages/vendor/pos/PosDisplayPage';
 import { POS_HOME } from './lib/posApi';
+import { startIdleWatch } from './lib/idlePolling';
+import { PageLoading } from './components/PageLoading';
 
-const queryClient = new QueryClient();
+// PERFORMANCE-PLAN.md Step 7: every page is its own file, downloaded the first time it is opened (the sign-in screens
+// and the two dashboard home pages stay in the first file). Each layout shows a small loader in its content area
+// while a page arrives, so the sidebar and top bar stay put.
+const Home = lazy(() => import('./pages/marketing/Home'));
+const Blog = lazy(() => import('./pages/marketing/Blog'));
+const BlogPostPage = lazy(() => import('./pages/marketing/Blog').then((m) => ({ default: m.BlogPostPage })));
+const Unauthorized = lazy(() => import('./pages/Unauthorized'));
+const VendorSettings = lazy(() => import('./pages/vendor/Settings'));
+const VendorProfile = lazy(() => import('./pages/vendor/Profile'));
+const AddProduct = lazy(() => import('./pages/vendor/product/AddProduct'));
+const EditProduct = lazy(() => import('./pages/vendor/product/EditProduct'));
+const AllProducts = lazy(() => import('./pages/vendor/product/AllProducts'));
+const LowStock = lazy(() => import('./pages/vendor/product/LowStock'));
+const Categories = lazy(() => import('./pages/vendor/product/Categories'));
+const Brands = lazy(() => import('./pages/vendor/product/Brands'));
+const SizeGuides = lazy(() => import('./pages/vendor/product/SizeGuides'));
+const Collections = lazy(() => import('./pages/vendor/collection/Collections'));
+const AddCollection = lazy(() => import('./pages/vendor/collection/AddCollection'));
+const Themes = lazy(() => import('./pages/vendor/store/Themes'));
+const Pages = lazy(() => import('./pages/vendor/store/Pages'));
+const AddPage = lazy(() => import('./pages/vendor/store/AddPage'));
+const Magazine = lazy(() => import('./pages/vendor/store/Magazine'));
+const Faq = lazy(() => import('./pages/vendor/store/Faq'));
+const ShareQr = lazy(() => import('./pages/vendor/store/ShareQr'));
+const CheckoutFormFields = lazy(() => import('./pages/vendor/store/design/CheckoutFormFields'));
+const AddPost = lazy(() => import('./pages/vendor/store/AddPost'));
+const LandingPages = lazy(() => import('./pages/vendor/store/landing-pages/LandingPages'));
+const LandingPageBuilder = lazy(() => import('./pages/vendor/store/landing-pages/LandingPageBuilder'));
+const Footer = lazy(() => import('./pages/vendor/store/footer/Footer'));
+const Social = lazy(() => import('./pages/vendor/store/Social'));
+const Branding = lazy(() => import('./pages/vendor/store/Branding'));
+const Media = lazy(() => import('./pages/vendor/store/Media'));
+const Domain = lazy(() => import('./pages/vendor/store/Domain'));
+const PaymentGateway = lazy(() => import('./pages/vendor/store/PaymentGateway'));
+const StockSettings = lazy(() => import('./pages/vendor/store/StockSettings'));
+const InvoiceSettings = lazy(() => import('./pages/vendor/store/InvoiceSettings'));
+const OrderTracking = lazy(() => import('./pages/vendor/store/OrderTracking'));
+const DesignHub = lazy(() => import('./pages/vendor/store/DesignHub'));
+const DeliveryCharge = lazy(() => import('./pages/vendor/store/DeliveryCharge'));
+const GdprPrompt = lazy(() => import('./pages/vendor/store/GdprPrompt'));
+const CustomCss = lazy(() => import('./pages/vendor/store/design/CustomCodePage').then((m) => ({ default: m.CustomCss })));
+const CustomHeadScripts = lazy(() => import('./pages/vendor/store/design/CustomCodePage').then((m) => ({ default: m.CustomHeadScripts })));
+const JavaScriptCode = lazy(() => import('./pages/vendor/store/design/JavaScriptCode'));
+const HeaderEditor = lazy(() => import('./pages/vendor/store/design/HeaderEditor'));
+const LayoutSettings = lazy(() => import('./pages/vendor/store/design/LayoutSettings'));
+const Customize = lazy(() => import('./pages/vendor/store/design/Customize'));
+const SiteBanner = lazy(() => import('./pages/vendor/store/design/SiteBanner'));
+const ChatButton = lazy(() => import('./pages/vendor/store/design/ChatButton'));
+const ProductDisplay = lazy(() => import('./pages/vendor/store/design/ProductDisplay'));
+const TrustStripPage = lazy(() => import('./pages/vendor/store/design/TrustStrip'));
+const ReputationPage = lazy(() => import('./pages/vendor/store/design/Reputation'));
+const ProductCardDisplay = lazy(() => import('./pages/vendor/store/design/ProductCardDisplay'));
+const EditJavaScript = lazy(() => import('./pages/vendor/store/design/EditJavaScript'));
+const CodGuard = lazy(() => import('./pages/vendor/store/CodGuard'));
+const StoreBackup = lazy(() => import('./pages/vendor/store/StoreBackup'));
+const StoreAway = lazy(() => import('./pages/vendor/store/StoreAway'));
+const Seo = lazy(() => import('./pages/vendor/store/Seo'));
+const Integrations = lazy(() => import('./pages/vendor/store/integrations/Integrations'));
+const FacebookPixel = lazy(() => import('./pages/vendor/store/integrations/FacebookPixel'));
+const MetaConversionsApi = lazy(() => import('./pages/vendor/store/integrations/MetaConversionsApi'));
+const GoogleAnalytics = lazy(() => import('./pages/vendor/store/integrations/GoogleAnalytics'));
+const AnalyticsPage = lazy(() => import('./pages/vendor/analytics/AnalyticsPage'));
+const AnalyticsLegacyRedirect = lazy(() => import('./pages/vendor/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsLegacyRedirect })));
+const GoogleTagManager = lazy(() => import('./pages/vendor/store/integrations/GoogleTagManager'));
+const TiktokPixel = lazy(() => import('./pages/vendor/store/integrations/TiktokPixel'));
+const Webhooks = lazy(() => import('./pages/vendor/store/integrations/Webhooks'));
+const ExternalApi = lazy(() => import('./pages/vendor/store/integrations/ExternalApi'));
+const Orders = lazy(() => import('./pages/vendor/order/Orders'));
+const HandoverSheets = lazy(() => import('./pages/vendor/order/HandoverSheets'));
+const ReturnCheckIn = lazy(() => import('./pages/vendor/order/ReturnCheckIn'));
+const TrackingBulk = lazy(() => import('./pages/vendor/order/TrackingBulk'));
+const RiderCash = lazy(() => import('./pages/vendor/order/RiderCash'));
+const Refunds = lazy(() => import('./pages/vendor/order/Refunds'));
+const StandingOrders = lazy(() => import('./pages/vendor/order/StandingOrders'));
+const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
+const Questions = lazy(() => import('./pages/vendor/review/Questions'));
+const CourierRules = lazy(() => import('./pages/vendor/courier/CourierRules'));
+const StockHistory = lazy(() => import('./pages/vendor/product/StockHistory'));
+const ImportOrders = lazy(() => import('./pages/vendor/order/ImportOrders'));
+const HandoverSheetPrintPage = lazy(() => import('./pages/vendor/order/HandoverSheetPrintPage'));
+const AddOrder = lazy(() => import('./pages/vendor/order/AddOrder'));
+const OrderDetail = lazy(() => import('./pages/vendor/order/OrderDetail'));
+const Customers = lazy(() => import('./pages/vendor/customer/Customers'));
+const CustomerDetails = lazy(() => import('./pages/vendor/customer/CustomerDetails'));
+const AddCustomer = lazy(() => import('./pages/vendor/customer/AddCustomer'));
+const BulkUploadCustomers = lazy(() => import('./pages/vendor/customer/BulkUploadCustomers'));
+const CustomerDetail = lazy(() => import('./pages/vendor/customer/CustomerDetail'));
+const EditCustomer = lazy(() => import('./pages/vendor/customer/EditCustomer'));
+const Reviews = lazy(() => import('./pages/vendor/review/Reviews'));
+const AddReview = lazy(() => import('./pages/vendor/review/AddReview'));
+const Staff = lazy(() => import('./pages/vendor/staff/Staff'));
+const ActivityLog = lazy(() => import('./pages/vendor/account/ActivityLog'));
+const Verification = lazy(() => import('./pages/vendor/Verification'));
+const AdminVerification = lazy(() => import('./pages/admin/Verification'));
+const AddStaffMember = lazy(() => import('./pages/vendor/staff/AddStaffMember'));
+const Billing = lazy(() => import('./pages/vendor/Billing'));
+const Notifications = lazy(() => import('./pages/vendor/Notifications'));
+const Coupons = lazy(() => import('./pages/vendor/marketing/Coupons'));
+const AddCoupon = lazy(() => import('./pages/vendor/marketing/AddCoupon'));
+const Campaigns = lazy(() => import('./pages/vendor/marketing/Campaigns'));
+const AddCampaign = lazy(() => import('./pages/vendor/marketing/AddCampaign'));
+const PopupCampaignBuilder = lazy(() => import('./pages/vendor/marketing/PopupCampaignBuilder'));
+const Discounts = lazy(() => import('./pages/vendor/marketing/Discounts'));
+const GiftOffers = lazy(() => import('./pages/vendor/marketing/GiftOffers'));
+const RewardPoints = lazy(() => import('./pages/vendor/marketing/RewardPoints'));
+const AddDiscount = lazy(() => import('./pages/vendor/marketing/AddDiscount'));
+const FlashSales = lazy(() => import('./pages/vendor/marketing/FlashSales'));
+const AddFlashSale = lazy(() => import('./pages/vendor/marketing/AddFlashSale'));
+const GiftCards = lazy(() => import('./pages/vendor/marketing/GiftCards'));
+const AddGiftCard = lazy(() => import('./pages/vendor/marketing/AddGiftCard'));
+const GiftCardDetail = lazy(() => import('./pages/vendor/marketing/GiftCardDetail'));
+const Sms = lazy(() => import('./pages/vendor/sms/Sms'));
+const AiChatBot = lazy(() => import('./pages/vendor/ai-automation/AiChatBot'));
+const Wallet = lazy(() => import('./pages/vendor/finance/Wallet'));
+const Transactions = lazy(() => import('./pages/vendor/finance/Transactions'));
+const Withdraw = lazy(() => import('./pages/vendor/finance/Withdraw'));
+const FeeSummary = lazy(() => import('./pages/vendor/finance/FeeSummary'));
+const Expenses = lazy(() => import('./pages/vendor/finance/Expenses'));
+const PaymentCallback = lazy(() => import('./pages/vendor/finance/PaymentCallback'));
+const Tracking = lazy(() => import('./pages/vendor/shipping/Tracking'));
+const CourierIntegrationPage = lazy(() => import('./pages/vendor/courier/CourierIntegrationPage'));
+const PathaoPage = lazy(() => import('./pages/vendor/courier/pathao/PathaoPage'));
+const SteadfastPage = lazy(() => import('./pages/vendor/courier/steadfast/SteadfastPage'));
+const RedxPage = lazy(() => import('./pages/vendor/courier/redx/RedxPage'));
+const CarrybeePage = lazy(() => import('./pages/vendor/courier/carrybee/CarrybeePage'));
+const PathaoLabelsPrintPage = lazy(() => import('./pages/vendor/courier/pathao/PathaoLabelsPrintPage'));
+const AiSettings = lazy(() => import('./pages/admin/ai/AiSettings'));
+const SystemStatus = lazy(() => import('./pages/admin/SystemStatus'));
+const FeatureFlags = lazy(() => import('./pages/admin/FeatureFlags'));
+const TrustSafety = lazy(() => import('./pages/admin/TrustSafety'));
+const Automations = lazy(() => import('./pages/admin/Automations'));
+const Churn = lazy(() => import('./pages/admin/Churn'));
+const Economics = lazy(() => import('./pages/admin/Economics'));
+const AdminEmail = lazy(() => import('./pages/admin/Email'));
+const ProductInsights = lazy(() => import('./pages/admin/ProductInsights'));
+const DeliveryTimes = lazy(() => import('./pages/admin/DeliveryTimes'));
+const HelpArticles = lazy(() => import('./pages/admin/HelpArticles'));
+const Changelog = lazy(() => import('./pages/admin/Changelog'));
+const FeatureRequests = lazy(() => import('./pages/admin/FeatureRequests'));
+const AdminReferrals = lazy(() => import('./pages/admin/Referrals'));
+const Approvals = lazy(() => import('./pages/admin/Approvals'));
+const AdminDomains = lazy(() => import('./pages/admin/Domains'));
+const VendorReferrals = lazy(() => import('./pages/vendor/finance/Referrals'));
+const ReceiptDetails = lazy(() => import('./pages/admin/ReceiptDetails'));
+const AdminAnalytics = lazy(() => import('./pages/admin/Analytics'));
+const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
+const AdminReports = lazy(() => import('./pages/admin/Reports'));
+const AdminMarketing = lazy(() => import('./pages/admin/Marketing'));
+const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+const AdminAddons = lazy(() => import('./pages/admin/Addons'));
+const Receipts = lazy(() => import('./pages/vendor/finance/Receipts'));
+const AllVendors = lazy(() => import('./pages/admin/vendors/AllVendors'));
+const StoreDetailPage = lazy(() => import('./pages/admin/vendors/StoreDetail'));
+const PendingApproval = lazy(() => import('./pages/admin/vendors/PendingApproval'));
+const SuspendedVendors = lazy(() => import('./pages/admin/vendors/SuspendedVendors'));
+const PlatformRevenue = lazy(() => import('./pages/admin/finance/PlatformRevenue'));
+const AdminOrders = lazy(() => import('./pages/admin/orders/AdminOrders'));
+const AdminOrderDetail = lazy(() => import('./pages/admin/orders/AdminOrderDetail'));
+const AdminCustomers = lazy(() => import('./pages/admin/customers/AdminCustomers'));
+const AdminShopperDetail = lazy(() => import('./pages/admin/customers/AdminShopperDetail'));
+const Renewals = lazy(() => import('./pages/admin/plans/Renewals'));
+const PacksAndPromos = lazy(() => import('./pages/admin/plans/PacksAndPromos'));
+const Messages = lazy(() => import('./pages/admin/Messages'));
+const Team = lazy(() => import('./pages/admin/Team'));
+const CommissionSettings = lazy(() => import('./pages/admin/finance/CommissionSettings'));
+const PlanManagement = lazy(() => import('./pages/admin/plans/PlanManagement'));
+const PlanRequests = lazy(() => import('./pages/admin/plans/PlanRequests'));
+const Announcements = lazy(() => import('./pages/admin/Announcements'));
+const SupportInbox = lazy(() => import('./pages/admin/support/SupportInbox'));
+const Addons = lazy(() => import('./pages/vendor/addons/Addons'));
+const Support = lazy(() => import('./pages/vendor/support/Support'));
+const SupportTicket = lazy(() => import('./pages/vendor/support/SupportTicket'));
+const HelpCenter = lazy(() => import('./pages/vendor/help/HelpCenter'));
+const PaymentGatewayManagement = lazy(() => import('./pages/admin/payment-gateway/PaymentGatewayManagement'));
+const Payouts = lazy(() => import('./pages/admin/finance/Payouts'));
+const LeadsPage = lazy(() => import('./pages/vendor/lms/LeadsPage'));
+const CallDeskPage = lazy(() => import('./pages/vendor/lms/CallDeskPage'));
+const TasksPage = lazy(() => import('./pages/vendor/lms/TasksPage'));
+const ReportsPage = lazy(() => import('./pages/vendor/lms/ReportsPage'));
+const LmsSettingsPage = lazy(() => import('./pages/vendor/lms/LmsSettingsPage'));
+const ImportLeadsPage = lazy(() => import('./pages/vendor/lms/ImportLeadsPage'));
+const PosSettingsPage = lazy(() => import('./pages/vendor/pos/PosSettingsPage'));
+const PosRegistersPage = lazy(() => import('./pages/vendor/pos/PosRegistersPage'));
+const PosStaffPage = lazy(() => import('./pages/vendor/pos/PosStaffPage'));
+const PosSessionsPage = lazy(() => import('./pages/vendor/pos/PosSessionsPage'));
+const PosSalesPage = lazy(() => import('./pages/vendor/pos/PosSalesPage'));
+const PosReportsPage = lazy(() => import('./pages/vendor/pos/PosReportsPage'));
+const PosHardwarePage = lazy(() => import('./pages/vendor/pos/PosHardwarePage'));
+const PosSellPage = lazy(() => import('./pages/vendor/pos/PosSellPage'));
+const PosDisplayPage = lazy(() => import('./pages/vendor/pos/PosDisplayPage'));
+
+// PERFORMANCE-PLAN.md Step 6: an answer counts as fresh for 30 s (opening a page again within that time uses it), coming
+// back to the tab refetches only the queries that ask for it (the bell, the orders pulse, the dashboard), and a failed
+// request is retried once. Mutations still invalidate what they change, so an edit shows at once.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 },
+  },
+});
+startIdleWatch(queryClient);
+
+// Step 7: pages are separate files named by their content, so after a new deploy a tab opened before it may ask for a
+// file that no longer exists. Vite reports that here; the page reloads once to pick up the new build (once per 30 s, so a
+// real outage can't loop).
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', (event) => {
+    let last = 0;
+    try {
+      last = Number(sessionStorage.getItem('regantify-chunk-reload') ?? 0);
+    } catch {
+      // storage blocked: reload anyway
+    }
+    if (Date.now() - last < 30_000) return;
+    try {
+      sessionStorage.setItem('regantify-chunk-reload', String(Date.now()));
+    } catch {
+      // storage blocked
+    }
+    event.preventDefault();
+    window.location.reload();
+  });
+}
+
+// Step 7: the two pages a seller opens most are fetched quietly a few seconds after the dashboard has loaded, so the
+// first click on them doesn't wait for their file. A failed prefetch is harmless (the page loads when opened).
+if (typeof window !== 'undefined' && window.location.pathname.startsWith('/vendor') && !window.location.pathname.startsWith('/vendor/pos/')) {
+  window.addEventListener('load', () => {
+    window.setTimeout(() => {
+      void import('./pages/vendor/order/Orders').catch(() => undefined);
+      void import('./pages/vendor/product/AllProducts').catch(() => undefined);
+    }, 3_000);
+  });
+}
 
 /** Flattens navConfig into { path, label } pairs, skipping Dashboard (has its own real page). */
 function flattenRoutes(sections: typeof vendorNav) {
@@ -375,6 +427,7 @@ export default function App() {
       {/* Auth restoration bootstrap */}
       <AuthBootstrap>
         <BrowserRouter>
+          <Suspense fallback={<PageLoading />}>
           <Routes>
             {/* Root → marketing landing page */}
             <Route path="/" element={<Home />} />
@@ -663,6 +716,7 @@ export default function App() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/vendor/login" replace />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthBootstrap>
     </QueryClientProvider>
