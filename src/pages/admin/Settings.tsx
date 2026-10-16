@@ -2,7 +2,7 @@ import { AdminActivityLog } from '../../components/admin/AdminActivityLog';
 import { AlertSettings } from '../../components/admin/AlertSettings';
 import { DataRequests } from '../../components/admin/DataRequests';
 import { PlatformSwitches } from '../../components/admin/PlatformSwitches';
-import { ContactSection, KeysSection, MaintenanceSection, MoneySection, SignupSection, TermsSection } from '../../components/admin/PlatformConfig';
+import { ContactSection, KeysSection, MaintenanceSection, MoneySection, ResaleSection, SignupSection, TermsSection } from '../../components/admin/PlatformConfig';
 import ReceiptDetails from './ReceiptDetails';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ const TABS = [
   { id: 'contact', label: 'Contact' },
   { id: 'signup', label: 'Sign-up' },
   { id: 'money', label: 'Money' },
+  { id: 'resale', label: 'Reseller system' },
   { id: 'terms', label: 'Terms' },
   { id: 'maintenance', label: 'Maintenance' },
   { id: 'keys', label: 'Keys' },
@@ -73,6 +74,7 @@ export default function AdminSettings() {
         {tab === 'contact' && <ContactSection />}
         {tab === 'signup' && <SignupSection />}
         {tab === 'money' && <MoneySection />}
+        {tab === 'resale' && <ResaleSection />}
         {tab === 'terms' && <TermsSection />}
         {tab === 'maintenance' && <MaintenanceSection />}
         {tab === 'keys' && <KeysSection />}

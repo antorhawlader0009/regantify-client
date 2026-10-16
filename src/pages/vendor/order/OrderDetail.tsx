@@ -24,6 +24,7 @@ import { ALL_ORDER_STATUSES, OrderStatusBadge, canMoveOrderStatus, orderStatusLa
 import { useStatusChangeDialogs, type StatusChangeRequest } from './StatusChangeDialogs';
 import { CheckHistoryModal } from './CheckHistoryModal';
 import { InvoiceModal } from './InvoiceModal';
+import { ResaleCard, ResaleOrderView } from './ResaleOrderView';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { PathaoLocationPicker } from '../../../components/courier/PathaoLocationPicker';
 import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
@@ -378,6 +379,9 @@ export default function OrderDetail() {
     );
   }
 
+  // Reseller system (RESELLER-plan.md Step 11): this store's order of a product it resells is read only (the supplier ships it).
+  if (order.resaleSupplierVendorId) return <ResaleOrderView order={order} history={history} />;
+
   const provider = order.courierProvider;
   const booked = order.courierBookingStatus === 'BOOKED';
   const canSendToCourier = order.status === 'PROCESSING' && !booked && order.courierBookingStatus !== 'BOOKING';
@@ -466,8 +470,27 @@ export default function OrderDetail() {
             )}
           </div>
           <p className="mt-0.5 text-sm text-neutral-500">
-            Serial #{order.invoiceNumber} · placed {formatDateTime(order.createdAt)} · {order.source === 'STOREFRONT' ? 'from your store' : order.source === 'POS' ? 'sold at the counter' : 'added by hand'}
+            Serial #{order.invoiceNumber} · placed {formatDateTime(order.createdAt)} ·{' '}
+            {order.resaleSupplierVendorId
+              ? 'a product you resell'
+              : order.source === 'RESELLER'
+                ? 'sold by a reseller'
+                : order.source === 'STOREFRONT'
+                  ? 'from your store'
+                  : order.source === 'POS'
+                    ? 'sold at the counter'
+                    : 'added by hand'}
           </p>
+          {order.resaleSupplierVendorId && (
+            <p className="mt-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800">
+              The supplier ships this order with their courier, and its status follows their order. You can’t change it here; the shopper can still cancel or fix the address from their tracking page while it hasn’t left.
+            </p>
+          )}
+          {order.source === 'RESELLER' && (
+            <p className="mt-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm text-violet-800">
+              A reseller sold this. Book it with your connected courier: Delivered and Returned then come from the courier by themselves. A cancel needs a reason, and the reseller is told.
+            </p>
+          )}
         </div>
         <AdvancedToggle open={moreTools} onToggle={() => setMoreTools((v) => !v)} label="More tools" />
         {trackingLink && (
@@ -519,6 +542,9 @@ export default function OrderDetail() {
           {canEdit && canEditOrderItems(order) && canSplitOrder(order) && (<button type="button" onClick={() => setSplitting(true)} className={outlineBtn} title="Send what is in stock first: move some items into a new order"> Split order </button>)}
         </div>
       )}
+
+      {/* Reseller system (Step 10): the reseller that sold this, its earning and how it was settled. */}
+      {order.resale && <div className="mb-4"><ResaleCard info={order.resale} /></div>}
 
       {/* Why a cancelled / returned / failed order ended (Analytics > Orders groups by it). */}
       <OrderCloseReasonCard order={order} canEdit={canEdit} onChanged={invalidateOrder} />

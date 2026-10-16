@@ -729,6 +729,23 @@ export default function EditProduct() {
     );
   }
 
+  // A supplier's product resold here (reseller system): its options, stock and price follow the supplier, so it isn't edited in this form.
+  if (product.resaleListingId) {
+    return (
+      <div className="mx-auto max-w-6xl rounded-xl border border-line bg-white">
+        <div className="flex flex-col items-center px-4 py-16 text-center">
+          <p className="text-sm font-medium text-regantify-text">“{product.name}” is a product you resell for a supplier</p>
+          <p className="mt-1 max-w-md text-xs text-neutral-500">
+            Its options, stock and price follow the supplier. You can change its name, description, photos, category and (when the supplier allows) its price in My listings.
+          </p>
+          <Link to="/vendor/product/resell?tab=listings" className={`${primaryBtn} mt-4`}>
+            Open My listings
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const urlBase = `${typeof window !== 'undefined' ? window.location.host : ''}/store/${storeSubdomain ?? '…'}`;
 
   // Rarely-needed options sit behind one "Advanced" button. Hidden fields keep their values and are still saved.

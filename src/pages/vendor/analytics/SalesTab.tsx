@@ -146,6 +146,7 @@ function MoneyLedger({ breakdown: b, missingCost }: { breakdown: SalesAnalytics[
     { label: 'Courier fees', amount: b.courierFees, always: true },
     { label: 'Platform charges', amount: b.platformCharges },
     { label: 'VAT', amount: b.vat },
+    { label: 'Resellers’ earnings', amount: b.resellerEarnings ?? 0, note: 'What resellers earned on the orders they sold for you' },
     { label: 'Lost on returns', amount: b.returnLoss, note: 'Courier fees for parcels that came back' },
   ].filter((d) => d.always || d.amount > 0);
   const loss = b.profit < 0;
@@ -166,6 +167,9 @@ function MoneyLedger({ breakdown: b, missingCost }: { breakdown: SalesAnalytics[
       </div>
       {/* Finance > Expenses (ads, rent, salaries...) for the same days. */}
       <dl className="mt-2 text-sm">
+        {(b.resellingEarnings ?? 0) > 0 && (
+          <LedgerRow label="Earnings from reselling" title="What you earned selling other stores’ products, after Regantify’s share" amount={`+ ${formatTaka(b.resellingEarnings ?? 0)}`} />
+        )}
         <LedgerRow label="Expenses" title="Ads, packaging, rent and other costs from Finance > Expenses" amount={`− ${formatTaka(b.expenses)}`} />
       </dl>
       <div className="mt-1 flex items-baseline justify-between gap-3 border-t border-line pt-2">

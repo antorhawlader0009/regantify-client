@@ -43,6 +43,8 @@ export const STAFF_PERMISSIONS = [
   'ai.manage',
   'lms.access',
   'pos.access',
+  'resale.supply',
+  'resale.sell',
   'store.design',
   'store.content',
   'store.checkout',
@@ -81,6 +83,8 @@ export const PERMISSION_IMPLIES: Partial<Record<StaffPermission, readonly StaffP
   'sms.manage': ['sms.view'],
   'ai.manage': ['ai.use'],
   'lms.access': ['customers.contact'],
+  'resale.supply': ['products.view'],
+  'resale.sell': ['products.view'],
 };
 
 /** Drops unknown keys, adds what each one implies, and returns them in catalog order. */
@@ -128,6 +132,8 @@ export const PERMISSION_LABELS: Record<StaffPermission, string> = {
   'ai.manage': 'Set up chatbot and automation',
   'lms.access': 'Open LMS',
   'pos.access': 'Open POS',
+  'resale.supply': 'Offer products to resellers',
+  'resale.sell': 'Resell products of other stores',
   'store.design': 'Change store design',
   'store.content': 'Edit pages and media',
   'store.checkout': 'Change checkout settings',
@@ -175,6 +181,7 @@ export const STAFF_PERMISSION_AREAS: readonly StaffPermissionArea[] = [
   },
   { key: 'lms', label: 'LMS', view: 'lms.access' },
   { key: 'pos', label: 'POS', view: 'pos.access' },
+  { key: 'resale', label: 'Reseller system', extras: ['resale.supply', 'resale.sell'] },
   {
     key: 'products',
     label: 'Products',
@@ -320,6 +327,8 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/product/low-stock': 'products.view',
   '/vendor/product/stock-count': 'products.edit',
   '/vendor/product/stock-history': 'products.view',
+  '/vendor/product/resellers': 'resale.supply',
+  '/vendor/product/resell': 'resale.sell',
   '/vendor/reviews': 'reviews.view',
   '/vendor/marketing/coupons': 'marketing.view',
   '/vendor/marketing/campaigns': 'marketing.view',
@@ -373,6 +382,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/courier/rules': 'courier.manage',
   '/vendor/shipping/tracking': 'orders.view',
   '/vendor/finance/wallet': 'finance.view',
+  '/vendor/finance/reseller-earnings': 'finance.view',
   '/vendor/finance/transactions': 'finance.view',
   '/vendor/finance/expenses': 'finance.view',
   '/vendor/finance/withdraw': 'owner',

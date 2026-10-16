@@ -2,6 +2,7 @@ import { ImpersonationBar } from '../ImpersonationBar';
 import { AnnouncementBanner } from '../AnnouncementBanner';
 import { MaintenanceBar, TermsGate } from '../PlatformNotices';
 import { KycBanner } from '../KycBanner';
+import { ResaleMoneyBanner } from '../ResaleMoneyBanner';
 import { PlanRenewalBar } from '../PlanRenewalBar';
 import { ChurnSurvey } from '../ChurnSurvey';
 import { NpsSurvey } from '../NpsSurvey';
@@ -65,6 +66,7 @@ export function VendorLayout() {
 
         <MaintenanceBar />
         {!isLms && <AnnouncementBanner />}
+        {!isLms && <ResaleMoneyBanner />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={shownNav} />
           <VendorPageGate>

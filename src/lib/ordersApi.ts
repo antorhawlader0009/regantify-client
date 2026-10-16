@@ -90,14 +90,38 @@ export interface PaymentLinkInfo {
   url: string | null;
 }
 
+/** Reseller system (RESELLER-plan.md Steps 10-11): an order's resale card. */
+export interface ResaleOrderInfo {
+  /** SUPPLIER = you ship this for a reseller; RESELLER = your shopper's order, shipped by the supplier. */
+  role: 'SUPPLIER' | 'RESELLER';
+  partner: { storeName: string; subdomain: string | null } | null;
+  /** On a supplier's order: what the invoice and parcel sticker print instead of your store (the reseller's name). */
+  whiteLabel: { storeName: string; phone: string | null; logoUrl: string | null } | null;
+  /** The reseller's earning on this order (before Regantify's share). */
+  earning: number;
+  /** On a reseller's order: what reaches the wallet when it is delivered. */
+  expectedNet?: number;
+  settlement: { status: 'AWAITING_SUPPLIER' | 'HELD' | 'PAID' | 'REVERSED'; earning: number; fee: number; net: number; paidAt: string | null; releaseAt: string | null; reversedAt: string | null } | null;
+  /** On a supplier's order the shopper paid online (Step 18): the amount the platform holds, and when it reached your wallet. */
+  onlineHeld?: { amount: number; releasedAt: string | null } | null;
+}
+
 export interface Order {
   id: string;
   vendorId: string;
   invoiceNumber: number;
   /** Public order number ("FAS-261003-7K3M9QD"): what shoppers and couriers see. invoiceNumber is the store's own serial. Null on an order the backfill has not reached. */
   publicCode?: string | null;
-  /** POS = sold over the counter (POS-system-plan.md). */
-  source: 'STOREFRONT' | 'MANUAL' | 'POS';
+  /** POS = sold over the counter (POS-system-plan.md). RESELLER = a supplier's order for a shopper's order in a reseller's store (RESELLER-plan.md Step 6). */
+  source: 'STOREFRONT' | 'MANUAL' | 'POS' | 'RESELLER';
+  /** Reseller system: set on this store's order of a product it resells; the supplier ships it and its status follows theirs (read-only here). */
+  resaleSupplierVendorId?: string | null;
+  /** Reseller system: on a supplier's order (source RESELLER), the reseller's order it is for. */
+  resaleParentId?: string | null;
+  /** Reseller system (list rows): the other store, the reseller that sold it or the supplier that ships it. */
+  resalePartner?: string | null;
+  /** Reseller system (Order detail only): the resale card and, on a supplier's order, the reseller's name to print. */
+  resale?: ResaleOrderInfo | null;
   /** POS sales only: who rang it up (snapshot). */
   posCashierName?: string | null;
   status: OrderStatus;
@@ -351,6 +375,8 @@ export interface ListOrdersParams {
   courierBooking?: 'NOT_BOOKED' | 'FAILED';
   /** Where it came from: the online store, added by hand, or sold at the counter (POS). */
   source?: 'STOREFRONT' | 'MANUAL' | 'POS';
+  /** Reseller system: supplied = orders resellers sold for you; resold = your orders of products you resell. */
+  resale?: 'supplied' | 'resold';
   /** Only orders marked as a possible duplicate of an earlier one. */
   possibleDuplicate?: boolean;
   /** Manual Mobile Payment: orders whose TrxID the store hasn't checked yet, or found not received. */

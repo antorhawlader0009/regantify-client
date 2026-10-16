@@ -21,6 +21,7 @@ import { StoreFeeDeals } from '../../../components/admin/FeeDeals';
 import { StoreLimits } from '../../../components/admin/StoreLimits';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
 import { ReasonNeed } from '../../../components/admin/ReasonNeed';
+import { StoreResaleCard } from '../../../components/admin/StoreResaleCard';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4): everything about one store, and the actions on it.
 const TABS = [
@@ -281,6 +282,7 @@ function Overview({ d }: { d: StoreDetail }) {
         <Row label="Last order">{when(d.usage.lastOrderAt)}</Row>
         <Row label="Orders, last 30 days">{d.usage.orders30d}</Row>
       </Card>
+      <StoreResaleCard vendorId={d.id} />
     </div>
   );
 }

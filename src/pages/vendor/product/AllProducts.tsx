@@ -23,6 +23,7 @@ import {
   Download,
   Pin,
   Undo2,
+  Handshake,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { downloadProducts } from '../../../lib/productExport';
@@ -51,6 +52,8 @@ import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/P
 import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { useFeature } from '../../../lib/features';
+import { BulkResaleOfferDialog } from '../../../components/product/ResaleOfferDialogs';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'DRAFT';
 type StockFilter = 'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'UNLIMITED';
@@ -381,6 +384,10 @@ export default function AllProducts() {
   // Quick price edit also needs the price permission (the server checks it too).
   const canChangePrices = useCan('products.price');
   const canEditPrice = canEditProducts && canChangePrices;
+  // Reseller system (RESELLER-plan.md Step 2): "Allow resellers" on the selected products; the server checks the store may supply.
+  const canResaleSupply = useCan('resale.supply');
+  const resaleSupplyOn = useFeature('RESALE_SUPPLY');
+  const canOfferToResellers = canResaleSupply && resaleSupplyOn;
 
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -526,6 +533,7 @@ export default function AllProducts() {
   // Bulk bar "Schedule": go live / hide the selected products by themselves at a time.
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [badgeOpen, setBadgeOpen] = useState(false);
+  const [resaleOpen, setResaleOpen] = useState(false);
   // Pinned products (TellMe idea 47): null = closed, an array = open with those ticked products to add.
   const [pinAdding, setPinAdding] = useState<Array<{ id: string; name: string; photoUrl: string | null }> | null>(null);
   // The 30-day trash of deleted products (TellMe idea 151).
@@ -864,6 +872,17 @@ export default function AllProducts() {
                   >
                     Make Draft
                   </button>
+                  {canOfferToResellers && (
+                    <button
+                      onClick={() => setResaleOpen(true)}
+                      disabled={bulkVisibility}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
+                      title="Let other stores sell the selected products for a commission"
+                    >
+                      <Handshake size={13} aria-hidden />
+                      Allow resellers
+                    </button>
+                  )}
                   {adv && (<>
                   <button
                     onClick={() => setScheduleOpen(true)}
@@ -1020,6 +1039,11 @@ export default function AllProducts() {
                       >
                         {p.name}
                       </button>
+                      {p.resaleListingId && (
+                        <span className="shrink-0 rounded bg-sky-50 px-1.5 py-0.5 text-[11px] text-sky-700" title="A supplier's product you resell. Its options, stock and price follow the supplier.">
+                          Resold
+                        </span>
+                      )}
                       {p.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={p.slug} />}
                     </div>
                   </td>
@@ -1105,6 +1129,7 @@ export default function AllProducts() {
       )}
 
       {pinAdding && <PinnedProductsDialog adding={pinAdding} onOpenChange={(open) => !open && setPinAdding(null)} onDone={() => setSelected(new Set())} />}
+      {resaleOpen && <BulkResaleOfferDialog productIds={Array.from(selected)} onClose={() => setResaleOpen(false)} />}
       {badgeOpen && <SetBadgeDialog ids={Array.from(selected)} onOpenChange={(open) => !open && setBadgeOpen(false)} onDone={() => setSelected(new Set())} />}
 
       {scheduleOpen && (

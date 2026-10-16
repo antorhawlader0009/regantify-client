@@ -71,6 +71,8 @@ export interface SalesAnalytics {
     courierFees: number;
     platformCharges: number;
     vat: number;
+    /** Reseller system: what resellers earned on this store's resale orders (a cost of those sales). */
+    resellerEarnings?: number;
     /** Courier fees paid on parcels that came back. */
     returnLoss: number;
     profit: number;
@@ -78,8 +80,12 @@ export interface SalesAnalytics {
     costCoverage: number;
     /** Finance > Expenses recorded for the same days (ads, rent...). */
     expenses: number;
+    /** Reseller system: what this store earned reselling other stores' products (after Regantify's share). Included in profitAfterExpenses. */
+    resellingEarnings?: number;
     profitAfterExpenses: number;
   };
+  /** Reseller system: this store's earnings from reselling in the period (a reseller's income; resold orders are never its sales). */
+  reselling?: { earned: number; platformFee: number; waiting: number; orders: number };
   trend: { bucket: string; sales: number; profit: number }[];
   /** Best sellers with gross profit (sales − product cost); cost/profit null when a cost is missing. */
   products: { productId: string | null; name: string; image: string | null; units: number; sales: number; cost: number | null; profit: number | null; margin: number | null }[];

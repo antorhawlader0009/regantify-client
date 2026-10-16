@@ -1,3 +1,4 @@
+import { useFeature } from '../../../lib/features';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -428,6 +429,16 @@ function OrderRow({
             POS
           </span>
         )}
+        {order.resaleSupplierVendorId && (
+          <span className="ml-1.5 rounded border border-sky-200 bg-sky-50 px-1 py-0.5 align-middle text-[10px] font-semibold text-sky-700" title="A product you resell: the supplier ships it and its status follows theirs">
+            Sold for {order.resalePartner ?? 'a supplier'}
+          </span>
+        )}
+        {order.source === 'RESELLER' && (
+          <span className="ml-1.5 rounded border border-violet-200 bg-violet-50 px-1 py-0.5 align-middle text-[10px] font-semibold text-violet-700" title="Sold by a reseller: ship it with your connected courier, under their name">
+            Reseller: {order.resalePartner ?? 'a store'}
+          </span>
+        )}
         <p className="mt-0.5 text-xs text-neutral-500">
           #{order.invoiceNumber} · {formatDateTime(order.createdAt)}
         </p>
@@ -807,6 +818,13 @@ function OrderRow({
   );
 }
 
+/** The list filter's source choice as query params: the reseller choices go as `resale`, the rest as `source`. */
+function sourceParams(source: string | undefined): Pick<ListOrdersParams, 'source' | 'resale'> {
+  if (source === 'RESALE_SUPPLIED') return { resale: 'supplied' };
+  if (source === 'RESALE_RESOLD') return { resale: 'resold' };
+  return { source: (source || undefined) as ListOrdersParams['source'] };
+}
+
 export default function Orders() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -842,7 +860,10 @@ export default function Orders() {
   // LMS "Call status" filter (LMS-plan.md Step 14), only offered when the store uses the LMS.
   const [callStatus, setCallStatus] = useState<ListOrdersParams['callStatus'] | ''>('');
   // POS-system-plan.md D9: online / added by hand / sold at the counter.
-  const [source, setSource] = useState<ListOrdersParams['source'] | ''>('');
+  const resaleSupplyOn = useFeature('RESALE_SUPPLY');
+  const resaleSellOn = useFeature('RESALE_SELL');
+  // Also the reseller filters (RESELLER-plan.md Steps 10-11): RESALE_SUPPLIED / RESALE_RESOLD are sent as `resale`, not `source`.
+  const [source, setSource] = useState<ListOrdersParams['source'] | 'RESALE_SUPPLIED' | 'RESALE_RESOLD' | ''>('');
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
@@ -1000,7 +1021,7 @@ export default function Orders() {
         trashOnly: trashView,
         callStatus: (lmsOn && callStatus) || undefined,
         courierBooking,
-        source: source || undefined,
+        ...sourceParams(source),
         possibleDuplicate: duplicatesOnly || undefined,
         manualPayment: mobileToCheck ? 'PENDING_CHECK' : undefined,
         risk: risk || undefined,
@@ -1046,7 +1067,7 @@ export default function Orders() {
                 dateTo: dateTo || undefined,
                 callStatus: (lmsOn && callStatus) || undefined,
                 courierBooking,
-                source: source || undefined,
+                ...sourceParams(source),
                 possibleDuplicate: duplicatesOnly || undefined,
                 manualPayment: mobileToCheck ? 'PENDING_CHECK' : undefined,
                 risk: risk || undefined,
@@ -1169,7 +1190,7 @@ export default function Orders() {
     setDateTo(range[1]);
     setCallStatus((f.callStatus ?? '') as ListOrdersParams['callStatus'] | '');
     setCourierBooking(f.courierBooking === 'NOT_BOOKED' || f.courierBooking === 'FAILED' ? f.courierBooking : undefined);
-    setSource((f.source ?? '') as ListOrdersParams['source'] | '');
+    setSource((f.source ?? '') as ListOrdersParams['source'] | ''); // saved views keep the plain sources only
     setDuplicatesOnly(!!f.possibleDuplicate);
     setRisk(f.risk ?? '');
     setPreferredDate(f.preferredDate ?? '');
@@ -1219,13 +1240,15 @@ export default function Orders() {
                 <select
                   aria-label="Source"
                   value={source}
-                  onChange={(e) => setSource(e.target.value as ListOrdersParams['source'] | '')}
+                  onChange={(e) => setSource(e.target.value as typeof source)}
                   className={`${toolbarBtn} appearance-none pr-8`}
                 >
                   <option value="">All sources</option>
                   <option value="STOREFRONT">Online store</option>
                   <option value="MANUAL">Added by hand</option>
                   <option value="POS">POS (counter)</option>
+                  {resaleSupplyOn && <option value="RESALE_SUPPLIED">Reseller orders (you ship)</option>}
+                  {resaleSellOn && <option value="RESALE_RESOLD">Resold (the supplier ships)</option>}
                 </select>
                 <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
               </div>

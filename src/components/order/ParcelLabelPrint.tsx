@@ -172,14 +172,14 @@ export function ParcelLabelPrint({ ids, open, onOpenChange }: { ids: string[]; o
             {size === 'LABEL' ? (
               sorted.map((o) => (
                 <div key={o.id} style={{ width: '100mm', height: '150mm', breakAfter: 'page', overflow: 'hidden' }}>
-                  <Sticker order={o} store={storeName} />
+                  <Sticker order={o} store={o.resale?.role === 'SUPPLIER' && o.resale.whiteLabel ? o.resale.whiteLabel.storeName : storeName} />
                 </div>
               ))
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridAutoRows: '94mm', gap: '0' }}>
                 {sorted.map((o) => (
                   <div key={o.id} style={{ border: '1px dashed #777', overflow: 'hidden', breakInside: 'avoid' }}>
-                    <Sticker order={o} store={storeName} />
+                    <Sticker order={o} store={o.resale?.role === 'SUPPLIER' && o.resale.whiteLabel ? o.resale.whiteLabel.storeName : storeName} />
                   </div>
                 ))}
               </div>

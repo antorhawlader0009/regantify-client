@@ -19,12 +19,24 @@ export interface PlatformConfig {
     walletPurchases: boolean;
     plans: Array<{ code: string; name: string }>;
   };
+  /** Reseller system (RESELLER-plan.md Step 1). `flags` = the mode of the RESALE_SUPPLY / RESALE_SELL feature flags, MISSING when not created (= off). */
+  resale: {
+    verifiedSuppliers: boolean;
+    verifiedResellers: boolean;
+    feePercent: number;
+    holdDays: number;
+    maxListings: number;
+    autoCancelDays: number;
+    returnPauseRate: number;
+    onlinePayment: boolean;
+    flags: { supply: string; sell: string };
+  };
   terms: { version: number; termsText: string; privacyText: string; updatedAt: string | null; owners: number; acceptedCurrent: number };
   maintenance: { text: string; from: string | null; until: string | null; showingNow: boolean };
   keys: Array<{ label: string; set: boolean; note: string }>;
 }
 
-export type ConfigSection = 'contact' | 'signup' | 'money' | 'terms' | 'maintenance';
+export type ConfigSection = 'contact' | 'signup' | 'money' | 'resale' | 'terms' | 'maintenance';
 
 export const platformConfigApi = {
   get: () => api.get<PlatformConfig>('/v1/admin/platform-config').then((r) => r.data),

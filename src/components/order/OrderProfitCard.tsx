@@ -52,6 +52,7 @@ export function OrderProfitCard({ orderId }: { orderId: string }) {
           {row('Courier fee', p.courierFee, true)}
           {row('Platform charge', p.platformCharge, true)}
           {row('VAT', p.vat, true)}
+          {(p.resellerEarning ?? 0) > 0 && row('Reseller’s earning', p.resellerEarning ?? 0, true)}
         </div>
       )}
 

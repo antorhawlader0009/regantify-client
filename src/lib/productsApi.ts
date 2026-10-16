@@ -47,6 +47,8 @@ export interface GeneratedProductInfo {
 export interface Product {
   id: string;
   vendorId: string;
+  /** Reseller system (RESELLER-plan.md Step 4): set on a supplier's product listed in this store. It is changed from Find products to sell > My listings, not here. */
+  resaleListingId?: string | null;
   name: string;
   slug: string;
   description?: string | null;

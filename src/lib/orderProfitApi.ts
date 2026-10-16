@@ -11,6 +11,8 @@ export interface OrderProfit {
   courierFee: number;
   platformCharge: number;
   vat: number;
+  /** Reseller system: on a supplier's resale order, the reseller's earning (a cost of the sale); 0 otherwise. */
+  resellerEarning?: number;
   profit: number;
   margin: number | null;
   /** False when a product line has no cost, so the profit is higher than the truth. */

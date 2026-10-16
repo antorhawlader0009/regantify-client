@@ -60,9 +60,14 @@ export function InvoiceSheet({
   invoice?: InvoicePrintData;
 }) {
   const label = 'text-[11px] font-medium uppercase tracking-wider text-neutral-500';
-  const s = invoice?.settings ?? DEFAULT_INVOICE_SETTINGS;
+  // Reseller system (RESELLER-plan.md decision 11): a reseller's order goes out under the reseller's name, so its invoice shows their
+  // store, logo and phone, and none of this store's own address, tax number, payment details, terms or signature.
+  const whiteLabel = order.resale?.role === 'SUPPLIER' ? order.resale.whiteLabel : null;
+  const own = invoice?.settings ?? DEFAULT_INVOICE_SETTINGS;
+  const s = whiteLabel ? { ...own, addressOverride: null, taxNumber: null, paymentInfo: null, terms: null, signatureUrl: null, showLogo: Boolean(whiteLabel.logoUrl) } : own;
   const receipt = s.paperSize === 'RECEIPT80';
-  const header = invoice?.store ?? store;
+  const header = whiteLabel ? { storeName: whiteLabel.storeName, address: whiteLabel.phone ? `Phone: ${whiteLabel.phone}` : null } : (invoice?.store ?? store);
+  const logoUrl = whiteLabel ? whiteLabel.logoUrl : invoice?.store.logoUrl;
   const address = s.addressOverride || header?.address;
   const discount = Number(order.discountAmount);
   // A gift (TellMe idea 57) can be printed without prices: just the items and how many.
@@ -75,8 +80,8 @@ export function InvoiceSheet({
     <div style={receipt ? { width: '72mm', fontSize: '12px' } : undefined}>
       <div className={`mb-8 flex items-start justify-between gap-6 ${receipt ? 'flex-col !gap-3' : ''}`}>
         <div className="min-w-0">
-          {s.showLogo && invoice?.store.logoUrl && (
-            <img src={invoice.store.logoUrl} alt="" className="mb-2 h-12 max-w-[160px] object-contain" />
+          {s.showLogo && logoUrl && (
+            <img src={logoUrl} alt="" className="mb-2 h-12 max-w-[160px] object-contain" />
           )}
           {header?.storeName && <p className="text-lg font-semibold text-regantify-text">{header.storeName}</p>}
           {address && <p className="mt-0.5 max-w-xs whitespace-pre-line text-sm text-neutral-600">{address}</p>}
