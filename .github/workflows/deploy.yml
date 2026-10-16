@@ -15,6 +15,9 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          # A full Docker build (npm ci + build) takes longer than the action's 10-minute default; 2026-10-16 the first
+          # Node 24 build was cut off at 10 minutes and the old container kept running.
+          command_timeout: 30m
           script: |
             set -e
             cd ~/regantify/client
