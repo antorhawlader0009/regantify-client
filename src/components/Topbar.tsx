@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { ExternalLink, Menu, MessageSquare } from 'lucide-react';
+import { ExternalLink, Menu, Sparkles } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAssistantUi } from '../store/assistantStore';
@@ -63,10 +63,10 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
       {/* Pushes the right-hand buttons over while breadcrumb and search are hidden (below md). */}
       <div className="flex-1 md:hidden" aria-hidden />
 
-      <div className="hidden min-w-0 shrink truncate text-[14px] text-neutral-500 md:block">
+      <div className="hidden min-w-0 shrink truncate text-[15px] text-neutral-500 md:block">
         {crumbs.map((c, i) => (
           <Fragment key={i}>
-            {i > 0 && <span className="mx-2 text-neutral-300" aria-hidden>/</span>}
+            {i > 0 && <span className="mx-1.5 text-neutral-400">&gt;</span>}
             <span className={i === crumbs.length - 1 ? 'text-neutral-900' : undefined}>{c}</span>
           </Fragment>
         ))}
@@ -82,11 +82,11 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           onClick={toggleAssistant}
           aria-label="Ask AI"
           aria-pressed={assistantOpen}
-          className={`flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-lg border text-sm transition active:scale-95 sm:w-auto sm:px-4 ${
-            assistantOpen ? 'border-neutral-300 bg-neutral-100 text-neutral-900' : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50'
+          className={`flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border text-sm transition active:scale-95 sm:w-auto sm:px-4 ${
+            assistantOpen ? 'border-neutral-300 bg-neutral-100 text-neutral-900' : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:shadow-sm'
           }`}
         >
-          <MessageSquare size={15} className="text-neutral-600" />
+          <Sparkles size={15} className="text-neutral-600" />
           <span className="hidden sm:inline">Ask AI</span>
         </button>
       )}
@@ -98,7 +98,7 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Visit Shop"
-          className="flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-line bg-white text-sm text-neutral-700 transition hover:border-neutral-300 hover:bg-neutral-50 active:scale-95 sm:w-auto sm:px-4"
+          className="flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border border-line bg-white text-sm text-neutral-700 transition hover:border-neutral-300 hover:shadow-sm active:scale-95 sm:w-auto sm:px-4"
         >
           <span className="hidden sm:inline">Visit Shop</span>
           <ExternalLink size={13} className="text-neutral-400" />

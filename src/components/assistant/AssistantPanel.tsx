@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { ArrowUp, Check, ChevronDown, ExternalLink, Maximize2, Minimize2, PanelLeft, Plus, Search, MessageSquare, Trash2, X } from 'lucide-react';
+import { ArrowUp, Check, ChevronDown, ExternalLink, Maximize2, Minimize2, PanelLeft, Plus, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { assistantApi, type AssistantFill, type AssistantMessage, type AssistantRoute } from '../../lib/assistantApi';
@@ -420,7 +420,7 @@ function PanelBody({
           <div className="flex h-full w-[340px] flex-col bg-[#fcfcfc]">
             <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-line px-5">
               <span className="flex items-center gap-2 text-[15px] font-medium text-neutral-900">
-                <MessageSquare size={18} className="text-brand" /> Chat
+                <Sparkles size={18} className="text-orange-500" /> Chat
               </span>
               <button type="button" onClick={() => setSidebarOpen(false)} aria-label="Hide chat list" className={iconBtn}>
                 <PanelLeft size={18} />

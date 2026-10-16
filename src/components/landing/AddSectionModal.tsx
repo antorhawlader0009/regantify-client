@@ -74,7 +74,7 @@ export function AddSectionModal({ onPick, onClose }: AddSectionModalProps) {
               key={s.type}
               onClick={() => onPick(s.type)}
               className="group overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] text-left
-                transition-colors hover:border-blue-400/50 hover:bg-white/[0.06]"
+                transition-colors hover:border-violet-400/50 hover:bg-white/[0.06]"
             >
               <div className="flex h-28 items-center justify-center overflow-hidden bg-white/[0.02] p-3">
                 <SectionThumbnail type={s.type} />

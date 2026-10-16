@@ -10,7 +10,7 @@ import {
   Trash2,
   Eye,
   LayoutTemplate,
-  PenLine,
+  Sparkles,
 } from 'lucide-react';
 import { landingPagesApi, type LandingPage } from '../../../../lib/landingPagesApi';
 import { toast } from '../../../../lib/toast';
@@ -98,12 +98,12 @@ function LandingPageCard({ page, subdomain }: CardProps) {
       {/* Cover / preview */}
       <button
         onClick={() => navigate(`/vendor/store/landing-pages/${page.id}/builder`)}
-        className="relative block h-40 w-full overflow-hidden bg-regantify-content"
+        className="relative block h-40 w-full overflow-hidden bg-gradient-to-br from-violet-100 via-fuchsia-50 to-sky-100"
       >
         {page.coverImageUrl ? (
           <img src={page.coverImageUrl} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="absolute inset-0 flex items-center justify-center text-blue-400">
+          <span className="absolute inset-0 flex items-center justify-center text-violet-400">
             <LayoutTemplate size={32} strokeWidth={1.5} />
           </span>
         )}
@@ -119,10 +119,10 @@ function LandingPageCard({ page, subdomain }: CardProps) {
         {page.aiGenerated && (
           <span
             className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1
-              text-[11px] font-semibold text-blue-600"
+              text-[11px] font-semibold text-violet-600"
             title="Drafted with AI"
           >
-            <PenLine size={11} />
+            <Sparkles size={11} />
             AI
           </span>
         )}
@@ -290,7 +290,7 @@ export default function LandingPages() {
 
       {!isLoading && pages.length === 0 && (
         <div className="rounded-2xl border border-dashed border-black/10 bg-white/60 px-6 py-16 text-center">
-          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-500">
             <LayoutTemplate size={26} strokeWidth={1.5} />
           </span>
           <h2 className="text-base font-semibold text-regantify-text">

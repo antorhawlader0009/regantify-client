@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Lock, Pencil, Plus, ArrowUpCircle, Trash2 } from 'lucide-react';
+import { Copy, Lock, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Dialog } from '../../../components/ui/Dialog';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
@@ -100,7 +100,7 @@ export function StaffRolesTab() {
             </button>
           ) : (
             <Link to="/vendor/billing" className={`${outlineBtn} text-brand`}>
-              <ArrowUpCircle size={14} aria-hidden />
+              <Sparkles size={14} aria-hidden />
               Upgrade to {TIER_PLAN[STAFF_ROLE_MIN_TIER.CUSTOM]} for custom roles
             </Link>
           )}

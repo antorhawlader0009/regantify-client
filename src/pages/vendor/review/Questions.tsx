@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Eye, EyeOff, MessageCircleQuestion, PenLine, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, MessageCircleQuestion, Sparkles, Trash2 } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, PillTabs, TableFooter, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { productQuestionsApi, type ProductQuestion, type QuestionStatus } from '../../../lib/productQuestionsApi';
@@ -105,7 +105,7 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
                   title="The AI writes a short answer from the product's details for you to edit. It uses a few AI Credits."
                   className={`${outlineBtn} inline-flex items-center gap-1.5`}
                 >
-                  <PenLine className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4" />
                   {draft.isPending ? 'Writing…' : 'AI draft'}
                 </button>
                 {q.answer !== null && (

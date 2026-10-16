@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PenLine, X, Package } from 'lucide-react';
+import { Sparkles, X, Package } from 'lucide-react';
 import { productsApi } from '../../lib/productsApi';
 import { landingPagesApi, type GenerateLandingPagePayload, type LandingPageSection } from '../../lib/landingPagesApi';
 import { Field, TextArea, TextInput } from './fields';
@@ -75,7 +75,7 @@ export function AiGenerateModal({
       >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
           <h3 className="flex items-center gap-2 text-[14px] font-semibold text-slate-100">
-            <PenLine size={16} className="text-blue-400" />
+            <Sparkles size={16} className="text-violet-400" />
             AI Generate
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-100" aria-label="Close">
@@ -141,7 +141,7 @@ export function AiGenerateModal({
                   onClick={() => setGoal(g.value)}
                   className={`rounded-lg border p-2.5 text-left transition-colors ${
                     goal === g.value
-                      ? 'border-blue-400/50 bg-blue-500/10'
+                      ? 'border-violet-400/50 bg-violet-500/10'
                       : 'border-white/10 bg-white/[0.02] hover:border-white/20'
                   }`}
                 >
@@ -167,10 +167,10 @@ export function AiGenerateModal({
           <button
             onClick={handleGenerate}
             disabled={!canGenerate || generating}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-[12.5px] font-medium
-              text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-[12.5px] font-medium
+              text-white transition-colors hover:bg-violet-500 disabled:opacity-50"
           >
-            <PenLine size={14} />
+            <Sparkles size={14} />
             {generating ? 'Generating…' : 'Generate'}
           </button>
         </div>

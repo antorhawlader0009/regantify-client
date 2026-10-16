@@ -105,11 +105,11 @@ export default function Profile() {
 
       {/* Summary card */}
       <section className="flex items-center gap-4 overflow-hidden rounded-xl border border-line bg-white p-5">
-        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-brand-lime">
+        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-amber-200 to-amber-500">
           {avatarSrc ? (
             <img src={avatarSrc} alt="Profile" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-brand">
+            <div className="flex h-full w-full items-center justify-center text-white">
               <User size={26} />
             </div>
           )}
@@ -135,12 +135,12 @@ export default function Profile() {
             onClick={handleAvatarPick}
             disabled={avatarUploading}
             title="Change profile picture"
-            className="group relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full bg-brand-lime disabled:opacity-60"
+            className="group relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-amber-200 to-amber-500 disabled:opacity-60"
           >
             {avatarSrc ? (
               <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
             ) : (
-              <span className="flex h-full w-full items-center justify-center text-brand">
+              <span className="flex h-full w-full items-center justify-center text-white">
                 <User size={26} />
               </span>
             )}

@@ -128,7 +128,7 @@ function MediaLibraryPicker({ onClose, onPick }: { onClose: () => void; onPick: 
               <button
                 key={asset.id}
                 onClick={() => onPick(asset.url)}
-                className="overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-blue-400"
+                className="overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-violet-400"
               >
                 <img src={asset.url} alt="" className="aspect-square w-full object-cover" />
               </button>

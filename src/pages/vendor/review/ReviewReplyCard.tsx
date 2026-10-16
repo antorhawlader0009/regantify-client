@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { PenLine } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { SectionCard } from '../../../components/product/ProductFormPieces';
 import { reviewsApi, type Review } from '../../../lib/reviewsApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
@@ -76,7 +76,7 @@ export function ReviewReplyCard({ review }: { review: Review }) {
             title="The AI writes a short reply for you to edit. It uses a few AI Credits."
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60"
           >
-            <PenLine className="h-4 w-4" />
+            <Sparkles className="h-4 w-4" />
             {draft.isPending ? 'Writing…' : 'AI draft'}
           </button>
           {saved && (

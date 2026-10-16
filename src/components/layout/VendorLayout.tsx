@@ -42,8 +42,8 @@ export function VendorLayout() {
   const shownNav = withoutAdvanced(nav, showAdvancedMenu, pathname);
   const advancedCount = countAdvancedNav(nav);
 
-  // Marks <body> while the vendor dashboard is open so index.css can apply the
-  // vendor-panel look (fonts, radii, hairlines). On <body> (not this div) so dropdowns and
+  // Marks <body> while the vendor dashboard is open so index.css can swap its
+  // white surfaces for #FAFAFD. On <body> (not this div) so dropdowns and
   // dialogs rendered into a portal get it too.
   useEffect(() => {
     document.body.classList.add('vendor-panel');
@@ -57,7 +57,7 @@ export function VendorLayout() {
         onMobileClose={closeMenu}
         advancedMenu={advancedCount > 0 ? { on: showAdvancedMenu, count: advancedCount, groups: advancedNavGroups(nav), onToggle: () => setShowAdvancedMenu(!showAdvancedMenu) } : undefined}
       />
-      <div className="flex min-w-0 flex-1 flex-col bg-regantify-content lg:border-l lg:border-line">
+      <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
         <ImpersonationBar />
         <Topbar sections={nav} onMenuClick={() => setMenuOpen(true)} />
 

@@ -58,7 +58,7 @@ function PlanBadge() {
 
 function Badge({ children }: { children: string }) {
   return (
-    <span className="animate-pop-in inline-flex translate-y-[3px] items-center rounded-full border border-brand-lime bg-brand-lime px-1.5 py-px text-[10px] font-semibold leading-tight text-brand-dark">
+    <span className="animate-pop-in inline-flex translate-y-[3px] items-center rounded-full border border-brand-lime bg-brand-lime px-1.5 py-px text-[8.5px] font-semibold uppercase leading-tight tracking-wider text-brand-dark">
       {children}
     </span>
   );
@@ -333,7 +333,7 @@ export function Sidebar({ sections, advancedMenu, mobileOpen = false, onMobileCl
           <div className="mb-3 space-y-2 border-t border-dashed border-neutral-200 pt-3">
             {advancedMenu.groups.map((g) => (
               <div key={g.label}>
-                <p className="mb-1 px-3 text-[12px] text-neutral-500">{g.label}</p>
+                <p className="mb-1 px-3 text-[11px] uppercase tracking-wide text-neutral-400">{g.label}</p>
                 {g.links.map((l) => (
                   <NavLink key={l.path} to={l.path} className={subLinkClass}>
                     {l.label}

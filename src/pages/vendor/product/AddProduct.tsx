@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Loader2, Plus, PenLine, UploadCloud } from 'lucide-react';
+import { ChevronLeft, Loader2, Plus, Sparkles, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
@@ -444,7 +444,7 @@ export default function AddProduct() {
                 title={canAiGenerate ? 'Fill in description, category, brand and search listing from the name and first photo' : 'Add a name and one photo first'}
                 className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-brand-lime bg-brand-lime/40 px-3 text-sm font-medium text-brand transition-colors hover:bg-brand-lime/70 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <PenLine size={15} />}
+                {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
                 {aiGenerateMutation.isPending ? 'Generating…' : 'AI Generate'}
               </button>
             }

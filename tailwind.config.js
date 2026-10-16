@@ -8,9 +8,9 @@ export default {
     extend: {
       colors: {
         // Dashboard palette. The values live in index.css as RGB channels
-        // (--c-*): ledger-ink blue by default (the vendor panel, 2026-10-16
-        // redesign) and green under body.admin-panel (the Super Admin
-        // console), so the two dashboards read as different
+        // (--c-*): indigo by default (the vendor panel, from the
+        // regantify-admin theme zip) and red under body.admin-panel (from
+        // regantify-admin2), so the two dashboards read as different
         // places. Tailwind needs the channel form to keep /opacity working.
         brand: {
           DEFAULT: 'rgb(var(--c-brand) / <alpha-value>)',

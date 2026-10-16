@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, ImagePlus, Loader2, RotateCcw, MessageSquare, Undo2 } from 'lucide-react';
+import { ArrowUp, ImagePlus, Loader2, RotateCcw, Sparkles, Undo2 } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
 import { productAiChatApi, type ProductChatMessage } from '../../lib/productAiChatApi';
 import { applyProductAiOps, buildAiForm, photoRefs, type AiFormAccess } from '../../lib/productAiApply';
@@ -169,7 +169,7 @@ export function ProductAiChat({
     <section className="rounded-xl border border-line bg-white p-4" aria-label="AI assistant">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-1.5 text-[15px] font-semibold text-regantify-text">
-          <MessageSquare size={15} className="text-brand" aria-hidden />
+          <Sparkles size={15} className="text-orange-500" aria-hidden />
           AI assistant
         </h2>
         {lines.length > 0 && (

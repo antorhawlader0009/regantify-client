@@ -251,7 +251,7 @@ export function ImageCropDialog({
                       width: handleSize,
                       height: handleSize,
                       borderRadius: 999,
-                      background: '#1F4E79',
+                      background: '#4F46E5',
                       border: '2px solid #fff',
                       cursor: h.hx !== 0 && h.hy !== 0 ? (h.hx === h.hy ? 'nwse-resize' : 'nesw-resize') : h.hx !== 0 ? 'ew-resize' : 'ns-resize',
                       boxSizing: 'border-box',
