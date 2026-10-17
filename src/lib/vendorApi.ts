@@ -319,7 +319,7 @@ export interface WatermarkSettings {
   mode: 'OFF' | 'LOGO' | 'TEXT';
   position: 'TOP_LEFT' | 'TOP_RIGHT' | 'BOTTOM_LEFT' | 'BOTTOM_RIGHT' | 'CENTER';
   opacity: number;
-  /** The logo is a Cloudinary upload, which the LOGO mark needs. */
+  /** The logo is an uploaded picture, which the LOGO mark needs. */
   hasLogo: boolean;
   logoUrl: string | null;
   storeName: string;

@@ -66,7 +66,7 @@ import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { OrderComments } from '../../../components/order/OrderComments';
 import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
-import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { imageThumb } from '../../../lib/imageThumb';
 import { BackLink } from '../../../components/ui/BackLink';
 
 function formatPrice(value: string) {
@@ -645,7 +645,7 @@ export default function OrderDetail() {
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-center gap-3 py-3 first:pt-0">
                   {item.productImage ? (
-                    <img src={cloudinaryThumb(item.productImage, 96)} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-line bg-neutral-100 object-cover" />
+                    <img src={imageThumb(item.productImage, 96)} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-line bg-neutral-100 object-cover" />
                   ) : (
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-400">
                       <Package size={16} aria-hidden />

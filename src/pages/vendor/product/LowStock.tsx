@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, ChevronRight, Package } from 'lucide-react';
 import { productsApi } from '../../../lib/productsApi';
 import { PageHeader, PageSection, StackedList, TableFrame, TableSkeleton, outlineBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
-import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { imageThumb } from '../../../lib/imageThumb';
 
 function StockBadge({ stock }: { stock: number }) {
   return stock <= 0 ? (
@@ -16,7 +16,7 @@ function StockBadge({ stock }: { stock: number }) {
 
 function Thumb({ src }: { src?: string }) {
   return src ? (
-    <img src={cloudinaryThumb(src, 72)} alt="" className="h-9 w-9 shrink-0 rounded border border-line bg-neutral-100 object-cover" loading="lazy" />
+    <img src={imageThumb(src, 72)} alt="" className="h-9 w-9 shrink-0 rounded border border-line bg-neutral-100 object-cover" loading="lazy" />
   ) : (
     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-neutral-100 text-neutral-400">
       <Package size={15} aria-hidden />

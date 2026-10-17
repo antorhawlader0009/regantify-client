@@ -11,7 +11,7 @@ import { dhakaDate } from '../../../components/product/ResaleOfferDialogs';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { FeatureGate } from '../../../lib/features';
-import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { imageThumb } from '../../../lib/imageThumb';
 import { commissionLabel } from '../../../lib/resaleSupplyApi';
 import {
   PARTNERSHIP_LABEL,
@@ -171,7 +171,7 @@ function CatalogCard({ item, onSupplier, onAdd }: { item: CatalogItem; onSupplie
   return (
     <div className="flex flex-col overflow-hidden rounded-lg border border-line">
       {item.photoUrl ? (
-        <img src={cloudinaryThumb(item.photoUrl, 400)} alt="" className="aspect-square w-full bg-neutral-50 object-cover" loading="lazy" />
+        <img src={imageThumb(item.photoUrl, 400)} alt="" className="aspect-square w-full bg-neutral-50 object-cover" loading="lazy" />
       ) : (
         <div className="aspect-square w-full bg-neutral-50" />
       )}

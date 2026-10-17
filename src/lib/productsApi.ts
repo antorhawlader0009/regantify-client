@@ -541,7 +541,7 @@ export const productsApi = {
   categoriesInUse: () => api.get<string[]>('/v1/products/categories-in-use').then((r) => r.data),
 
   // Add/Edit Product's "AI Generate" button — see AiService.generateProductInfo
-  // on the server. photoUrl must already be an uploaded (Cloudinary) URL,
+  // on the server. photoUrl must already be an uploaded picture URL,
   // not a local file — the form always uploads a photo before this is
   // ever callable (see the button's disabled condition).
   aiGenerate: (name: string, photoUrl: string) =>
@@ -586,7 +586,7 @@ export const productsApi = {
     payload: { sku?: string; variantStocks: { optionValues: Record<string, string>; stock?: number }[] },
   ) => api.post<Product>(`/v1/products/${id}/stock-product`, payload).then((r) => r.data),
 
-  // Uploads one product photo and returns its Cloudinary URL. Called once
+  // Uploads one product photo and returns its picture URL. Called once
   // per selected file — the Add/Edit Product form collects the resulting
   // URLs and sends them together as photoUrls in the create()/update() call.
   uploadPhoto: (file: File) => {

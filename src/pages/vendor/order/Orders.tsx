@@ -92,7 +92,7 @@ import { orderProfitApi, type OrderProfit } from '../../../lib/orderProfitApi';
 import { downloadCsv, toCsv } from '../../../lib/csv';
 import { CartLinkDialog } from '../../../components/order/CartLinkDialog';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
-import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { imageThumb } from '../../../lib/imageThumb';
 
 // Table + toolbar pieces come from PageKit; the bulk bar's smaller buttons are Orders' own.
 const toolbarBtn = outlineBtn;
@@ -589,7 +589,7 @@ function OrderRow({
       <td className={`${td} min-w-[200px]`}>
         <div className="flex items-center gap-3">
           {firstItem?.productImage ? (
-            <img src={cloudinaryThumb(firstItem.productImage, 80)} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded border border-line bg-neutral-100 object-cover" />
+            <img src={imageThumb(firstItem.productImage, 80)} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded border border-line bg-neutral-100 object-cover" />
           ) : (
             <div className="h-10 w-10 shrink-0 rounded bg-neutral-100" />
           )}

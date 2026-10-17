@@ -86,7 +86,7 @@ export const campaignsApi = {
 
   remove: (id: string) => api.delete(`/v1/campaigns/${id}`).then((r) => r.data),
 
-  // Uploads the campaign cover photo and returns its Cloudinary URL —
+  // Uploads the campaign cover photo and returns its picture URL —
   // called before Create/Update Campaign is submitted.
   uploadCoverPhoto: (file: File) => {
     const formData = new FormData();

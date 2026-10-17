@@ -26,7 +26,7 @@ export const brandsApi = {
 
   remove: (id: string) => api.delete(`/v1/brands/${id}`).then((r) => r.data),
 
-  // Uploads the brand logo and returns its Cloudinary URL — called before
+  // Uploads the brand logo and returns its picture URL — called before
   // Create Brand is submitted, same pattern as product/category photos.
   uploadLogo: (file: File) => {
     const formData = new FormData();

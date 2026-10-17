@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownM
 import { toast } from '../../../lib/toast';
 
 // CONTEXT values the app's own upload endpoints record (see
-// CloudinaryService's uploadXPhoto methods) — used only to label rows,
+// ImageStorageService's uploadXPhoto methods) — used only to label rows,
 // not to validate incoming data (a context is free-form server-side,
 // see MediaAsset.context's schema comment). Every "logo"/identity
 // upload (store logo, brand logo, profile picture) is deliberately

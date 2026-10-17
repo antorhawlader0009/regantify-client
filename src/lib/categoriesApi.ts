@@ -46,7 +46,7 @@ export const categoriesApi = {
   // drag-and-drop reorder — `ids` is the complete new order.
   reorder: (ids: string[]) => api.patch('/v1/categories/reorder', { ids }).then((r) => r.data),
 
-  // Uploads one cover or square photo and returns its Cloudinary URL —
+  // Uploads one cover or square photo and returns its picture URL —
   // called before Create Category is submitted, same pattern as product
   // photo uploads.
   uploadPhoto: (file: File, kind: 'cover' | 'square') => {

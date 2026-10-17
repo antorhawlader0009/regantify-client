@@ -7,20 +7,21 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { EmptyState, outlineBtn, primaryBtn } from '../ui/PageKit';
 import { RichTextEditor } from '../editor/RichTextEditor';
 import { dhakaDate } from './ResaleOfferDialogs';
-import { apiErrorMessage } from '../../lib/api';
+import { api, apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useAuthStore } from '../../store/authStore';
 import { storefrontProductUrl } from '../../lib/storefrontUrl';
-import { cloudinaryThumb } from '../../lib/cloudinaryThumb';
+import { imageThumb } from '../../lib/imageThumb';
 import { commissionLabel } from '../../lib/resaleSupplyApi';
 import { RESALE_SELL_KEY, resaleSellApi, type ResaleListing, type UpdateListingInput } from '../../lib/resaleSellApi';
 
 const money = (n: number) => `৳${n.toLocaleString()}`;
 const fieldClass = 'mt-1 block h-10 w-full rounded-lg border border-line bg-white px-3 text-sm text-regantify-text focus:border-brand focus:outline-none';
 
-/** A download link for a Cloudinary photo (fl_attachment makes the browser save it instead of opening it). */
+/** A download link for an uploaded photo: the server sends it as a file, so the browser saves it instead of opening it. */
 function downloadUrl(url: string): string {
-  return url.includes('/upload/') ? url.replace('/upload/', '/upload/fl_attachment/') : url;
+  const key = /(Regantify\/[^/?#]+)(?:[?#].*)?$/.exec(url)?.[1];
+  return key ? `${api.defaults.baseURL ?? ''}/v1/image/download?k=${encodeURIComponent(key)}` : url;
 }
 
 /**
@@ -59,7 +60,7 @@ export function ResaleListingsPanel() {
         {items.map((l) => (
           <li key={l.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
             {l.photoUrl ? (
-              <img src={cloudinaryThumb(l.photoUrl, 120)} alt="" className="h-12 w-12 shrink-0 rounded-md border border-line object-cover" loading="lazy" />
+              <img src={imageThumb(l.photoUrl, 120)} alt="" className="h-12 w-12 shrink-0 rounded-md border border-line object-cover" loading="lazy" />
             ) : (
               <div className="h-12 w-12 shrink-0 rounded-md border border-line bg-neutral-50" />
             )}
@@ -197,7 +198,7 @@ function EditListingDialog({ listing, onClose }: { listing: ResaleListing; onClo
               return (
                 <div key={url} className={`relative overflow-hidden rounded-md border ${on ? 'border-brand' : 'border-line opacity-60'}`}>
                   <button type="button" onClick={() => togglePhoto(url)} disabled={reset.photos} className="block w-full" aria-pressed={on} aria-label={on ? 'Hide this photo' : 'Show this photo'}>
-                    <img src={cloudinaryThumb(url, 160)} alt="" className="aspect-square w-full object-cover" />
+                    <img src={imageThumb(url, 160)} alt="" className="aspect-square w-full object-cover" />
                   </button>
                   {on && (
                     <button type="button" onClick={() => makeCover(url)} disabled={reset.photos} className="absolute left-1 top-1 rounded bg-white/90 p-0.5" aria-label="Make it the first photo">

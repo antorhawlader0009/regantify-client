@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { WatermarkSection } from '../../../components/store/WatermarkSection';
 
 // Same upload guard as the old standalone Logo page (see git history) —
-// the server resizes/recompresses regardless (see CloudinaryService's
+// the server resizes/recompresses regardless (see ImageStorageService's
 // uploadStoreLogo/uploadStoreFavicon/uploadStoreBrandCover), so this is
 // just an early rejection of an obviously-wrong file.
 const ACCEPTED_TYPES = /^image\/(jpe?g|png|webp|gif)$/;

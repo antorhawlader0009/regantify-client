@@ -24,7 +24,7 @@ const SETTINGS: Array<{ tab: string; label: string; words: string; perm: AdminPe
   { tab: 'money', label: 'Money settings', words: 'withdraw fee minimum withdrawal grace days trial free trial sms low balance level', perm: 'settings.manage' },
   { tab: 'terms', label: 'Terms and privacy', words: 'terms privacy policy accept version legal', perm: 'settings.manage' },
   { tab: 'maintenance', label: 'Maintenance banner', words: 'maintenance downtime notice banner message', perm: 'settings.manage' },
-  { tab: 'keys', label: 'Platform keys', words: 'api keys paystation bulksmsbd cloudflare tavily vapid telegram cloudinary env', perm: 'settings.manage' },
+  { tab: 'keys', label: 'Platform keys', words: 'api keys paystation bulksmsbd cloudflare tavily vapid telegram r2 env', perm: 'settings.manage' },
   { tab: 'switches', label: 'Switches', words: 'kill switch pause ai chat sms telegram push signups pos offline sync outage', perm: 'settings.manage' },
   { tab: 'data', label: 'Data requests', words: 'data export erase delete shopper gdpr privacy request', perm: 'settings.manage' },
   { tab: 'activity', label: 'Activity log', words: 'audit log admin actions history who did', perm: 'audit.view' },
