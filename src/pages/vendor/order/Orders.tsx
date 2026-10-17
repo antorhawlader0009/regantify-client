@@ -496,7 +496,7 @@ function OrderRow({
         )}
         {order.possibleDuplicateOfId && (
           <p
-            className="mt-1 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900"
+            className="mt-1 inline-flex items-center gap-1 rounded border border-red-300 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-800"
             title="Same phone and product as an earlier open order within 24 hours. Open the order to check."
           >
             <Copy size={10} aria-hidden />
@@ -1412,7 +1412,7 @@ export default function Orders() {
                 aria-pressed={duplicatesOnly}
                 onClick={() => setDuplicatesOnly((v) => !v)}
                 title="Orders that look like a second copy of an open one (same phone and product within 24 hours)"
-                className={`${toolbarBtn} ${duplicatesOnly ? 'border-amber-300 bg-amber-50 text-amber-900' : ''}`}
+                className={`${toolbarBtn} ${duplicatesOnly ? 'border-red-300 bg-red-50 text-red-800' : ''}`}
               >
                 <Copy size={15} />
                 Possible duplicates

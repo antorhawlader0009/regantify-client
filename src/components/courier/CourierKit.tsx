@@ -367,7 +367,7 @@ export function AttentionCard({ attention, onOpenParcels }: { attention: PathaoS
           {attention.items.map((item) => (
             <li key={item.id}>
               <Link to={`/vendor/orders/${item.id}`} className="flex items-start gap-3 px-3 py-2.5 hover:bg-neutral-50">
-                <AlertTriangle size={15} className="mt-0.5 shrink-0 text-amber-600" aria-hidden />
+                <AlertTriangle size={15} className="mt-0.5 shrink-0 text-red-600" aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-regantify-text">{item.reason}</p>
                   {item.detail && <p className="mt-0.5 text-xs text-red-600">{item.detail}</p>}

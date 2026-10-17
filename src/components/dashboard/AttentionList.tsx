@@ -36,7 +36,8 @@ interface Row {
 
 const TONE: Record<Tone, string> = {
   neutral: 'bg-neutral-100 text-neutral-600',
-  warning: 'bg-amber-50 text-amber-700',
+  // Attention notices are red (the user's choice, 2026-10-17), not amber.
+  warning: 'bg-red-50 text-red-700',
   danger: 'bg-red-50 text-red-700',
 };
 
