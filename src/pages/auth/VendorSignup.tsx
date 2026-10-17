@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
+import { GoogleButton } from '../../components/auth/GoogleButton';
+import { TWO_STEP_PATH } from '../../lib/twoStepApi';
 import SiteNav, { readStoredLang, storeLang } from '../../components/marketing/SiteNav';
 import {
   Phone,
@@ -354,6 +356,10 @@ function VendorSignupInner() {
         navigate('/vendor/complete-setup', { replace: true, state: { setupToken: res.setupToken } });
         return;
       }
+      if ('twoFactorRequired' in res) {
+        navigate(TWO_STEP_PATH, { replace: true, state: { challengeToken: res.challengeToken } });
+        return;
+      }
       if (res.accessToken && res.user) {
         setAuth(res.accessToken, res.user);
         navigate('/vendor/dashboard', { replace: true });
@@ -574,6 +580,8 @@ function VendorSignupInner() {
                       </>
                     )}
                   </button>
+
+                  <GoogleButton lang={lang} orAbove />
 
                   <p className={`text-xs text-center ${th.muted}`}>{t('otp_note')}</p>
 

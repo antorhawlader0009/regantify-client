@@ -713,6 +713,15 @@ function Actions({ d }: { d: StoreDetail }) {
         </div>
         <ReasonAction title="Extend the plan for free" description="Adds days after the current end date. Not for the Free plan." button="Extend" extra={{ label: 'Days to add', min: 1, max: 365, initial: 7, unit: 'days' }} run={async (reason, n) => { await adminApi.extendPlan(d.id, n, reason); refresh(); return `Plan extended by ${n} days.`; }} />
         <ReasonAction title="Send a new password by SMS" description="A temporary password is texted to the owner. You never see it." button="Send" run={async (reason) => { const r = await adminApi.sendPasswordSms(d.id, reason); return `Password sent to ${r.sentTo}.`; }} />
+        <ReasonAction
+          title="Turn off two-step sign-in"
+          description="For an owner who lost the authenticator app and the recovery codes. They can turn it on again in Settings."
+          button="Turn off"
+          run={async (reason) => {
+            await adminApi.resetOwnerTwoStep(d.id, reason);
+            return 'Two-step sign-in is off for the owner.';
+          }}
+        />
         <ReasonAction title="Sign out every device" description="Owner and staff must sign in again (an open page can last up to 15 minutes)." button="Sign out" run={async (reason) => { const r = await adminApi.signOutStore(d.id, reason); return `${r.accounts} accounts signed out.`; }} />
           </>
         )}

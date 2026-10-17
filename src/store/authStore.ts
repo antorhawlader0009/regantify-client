@@ -9,6 +9,9 @@ export interface AuthUser {
   email?: string | null;
   /** When the email was verified with a code (Profile > Verify); null = not verified, or changed since. */
   emailVerifiedAt?: string | null;
+  /** The Google account that can sign in to this account ("Continue with Google"), and when it was linked. */
+  googleEmail?: string | null;
+  googleLinkedAt?: string | null;
   fullName?: string | null;
   avatarUrl?: string | null;
   // True until a Vendor either sets their own password or skips the

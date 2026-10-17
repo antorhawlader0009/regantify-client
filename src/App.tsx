@@ -182,6 +182,8 @@ const Approvals = lazy(() => import('./pages/admin/Approvals'));
 const AdminDomains = lazy(() => import('./pages/admin/Domains'));
 const VendorReferrals = lazy(() => import('./pages/vendor/finance/Referrals'));
 const ReceiptDetails = lazy(() => import('./pages/admin/ReceiptDetails'));
+const VendorTwoStep = lazy(() => import('./pages/auth/VendorTwoStep'));
+const GoogleCallback = lazy(() => import('./pages/auth/GoogleCallback'));
 const AdminAnalytics = lazy(() => import('./pages/admin/Analytics'));
 const AdminReviews = lazy(() => import('./pages/admin/Reviews'));
 const AdminReports = lazy(() => import('./pages/admin/Reports'));
@@ -458,6 +460,10 @@ export default function App() {
             <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
             <Route path="/vendor/forgot-password/verify" element={<VendorForgotPasswordVerify />} />
             <Route path="/vendor/forgot-password/reset" element={<VendorForgotPasswordReset />} />
+            {/* The authenticator code after the first sign-in step (two-step sign-in, Settings > Security). */}
+            <Route path="/vendor/two-step" element={<VendorTwoStep />} />
+            {/* GOOGLE_CALLBACK_URL: Google sends the browser back here ("Continue with Google", Settings > Connect Google). */}
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
             {/* Super Admin auth flow */}
             <Route path="/admin/login" element={<AdminLogin />} />

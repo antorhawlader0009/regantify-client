@@ -64,7 +64,7 @@ export default function VendorVerifyOtp() {
         // works for vendor/login in the meantime) before continuing; this
         // step can't be skipped.
         navigate('/vendor/complete-setup', {
-          state: { setupToken: res.setupToken, reason: 'otp-relogin' },
+          state: { setupToken: res.setupToken, reason: 'otp-relogin', twoFactorOn: res.twoFactorOn },
           replace: true,
         });
         return;

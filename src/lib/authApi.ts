@@ -22,6 +22,8 @@ export interface VerifyOtpResponse {
   mustSetPassword?: boolean;
   setupToken?: string;
   expiresInSeconds?: number;
+  /** An existing account with two-step sign-in on: the new-password page also asks for the authenticator code. */
+  twoFactorOn?: boolean;
   phone?: string;
   user?: AuthUser;
   accessToken?: string;
@@ -77,6 +79,12 @@ export type VendorLoginResponse =
       setupToken: string;
       expiresInSeconds: number;
       user: AuthUser;
+    }
+  | {
+      // Two-step sign-in is on (Settings > Security): the password only opened the code step (/vendor/two-step).
+      mustSetPassword: false;
+      twoFactorRequired: true;
+      challengeToken: string;
     }
   | {
       // One phone can be on several staff accounts (and one owner account). When the
@@ -174,9 +182,10 @@ export const authApi = {
   // Mandatory completion step after a temporary-password login. Uses the
   // setupToken from vendorLogin instead of a bearer token, and returns a
   // real session (tokens) on success.
-  completeSetup: (setupToken: string, password: string) =>
+  // `code`: the authenticator code, when the account has two-step sign-in on (checked before the password changes).
+  completeSetup: (setupToken: string, password: string, code?: string) =>
     api
-      .post<AuthTokensResponse>('/v1/auth/vendor/complete-setup', { setupToken, password })
+      .post<AuthTokensResponse>('/v1/auth/vendor/complete-setup', { setupToken, password, ...(code && { code }) })
       .then((r) => r.data),
 
   forgotPasswordSendOtp: (phone: string) =>
@@ -229,7 +238,7 @@ export const authApi = {
 
   /** The caller's recent sign-ins (TellMe idea 92). */
   loginHistory: () =>
-    api.get<Array<{ id: string; at: string; via: 'OTP' | 'PASSWORD' | 'STAFF'; browser: string; ip: string | null; newDevice: boolean }>>('/v1/auth/vendor/login-history').then((r) => r.data),
+    api.get<Array<{ id: string; at: string; via: 'OTP' | 'PASSWORD' | 'STAFF' | 'GOOGLE'; browser: string; ip: string | null; newDevice: boolean }>>('/v1/auth/vendor/login-history').then((r) => r.data),
 
   /** Signs this account out everywhere: the refresh token is dropped, so no device can renew its session (an open one lasts at most 15 minutes). */
   signOutEverywhere: () => api.post('/v1/auth/vendor/sign-out-all'),

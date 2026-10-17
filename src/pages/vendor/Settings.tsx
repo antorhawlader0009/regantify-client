@@ -35,6 +35,7 @@ import { canAccess, canOpenPath } from '../../lib/staffPermissions';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore } from '../../store/authStore';
 import { Field, IconInput, IconTextarea, SaveButton, Section, flashFor } from '../../components/ui/FormKit';
+import { GoogleSignInSection, TwoStepSection } from '../../components/settings/SignInSecurity';
 
 const subdomainRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -284,7 +285,7 @@ function BetaProgramSection() {
   );
 }
 
-const VIA_LABEL = { OTP: 'SMS code', PASSWORD: 'Password', STAFF: 'Staff login' } as const;
+const VIA_LABEL = { OTP: 'SMS code', PASSWORD: 'Password', STAFF: 'Staff login', GOOGLE: 'Google' } as const;
 
 /** Settings > Security > "Recent sign-ins" (TellMe idea 92): the last 20 sign-ins, a mark on a new device, and sign-out everywhere. */
 function LoginHistorySection() {
@@ -367,7 +368,14 @@ function SecurityTab() {
         </Field>
       </Section>
 
-      <Section title="Change password" description="You'll need your current password to set a new one.">
+      <Section
+        title="Change password"
+        description={
+          user?.googleEmail
+            ? "You'll need your current password to set a new one. Signed up with Google and never set one? Use “Forgot password” on the sign-in page."
+            : "You'll need your current password to set a new one."
+        }
+      >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <Field label="Current password" error={errors.currentPassword?.message}>
             <IconInput icon={Lock} type="password" placeholder="••••••••" autoComplete="current-password" {...form.register('currentPassword')} />
@@ -385,6 +393,9 @@ function SecurityTab() {
           </SaveButton>
         </form>
       </Section>
+
+      <GoogleSignInSection />
+      <TwoStepSection />
 
       <LoginHistorySection />
     </>

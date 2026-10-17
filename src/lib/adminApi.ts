@@ -304,6 +304,7 @@ export const adminApi = {
   resumeWithdrawals: (id: string, reason: string) => api.post<{ paused: boolean }>(`/v1/admin/vendors/${id}/resume-withdrawals`, { reason }).then((r) => r.data),
   extendPlan: (id: string, days: number, reason: string) => api.post<{ expiresAt: string }>(`/v1/admin/vendors/${id}/extend-plan`, { days, reason }).then((r) => r.data),
   sendPasswordSms: (id: string, reason: string) => api.post<{ sentTo: string }>(`/v1/admin/vendors/${id}/password-sms`, { reason }).then((r) => r.data),
+  resetOwnerTwoStep: (id: string, reason: string) => api.post<{ totpEnabled: false }>(`/v1/admin/vendors/${id}/two-step/reset`, { reason }).then((r) => r.data),
   signOutStore: (id: string, reason: string) => api.post<{ accounts: number }>(`/v1/admin/vendors/${id}/sign-out-all`, { reason }).then((r) => r.data),
   closeStore: (id: string, body: { reason: string; storeName: string; code: string }) => api.post<{ status: 'CLOSED'; texted: boolean } | PendingApproval>(`/v1/admin/vendors/${id}/close`, body).then((r) => r.data),
   reopenStore: (id: string, reason: string) => api.post<{ status: 'ACTIVE'; texted: boolean }>(`/v1/admin/vendors/${id}/reopen`, { reason }).then((r) => r.data),

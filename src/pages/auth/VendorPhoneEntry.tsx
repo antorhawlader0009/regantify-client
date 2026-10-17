@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { captureReferralFromUrl } from '../../lib/referralCapture';
+import { GoogleButton } from '../../components/auth/GoogleButton';
+import { TWO_STEP_PATH } from '../../lib/twoStepApi';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { authApi, type LoginAccountChoice } from '../../lib/authApi';
@@ -325,6 +327,12 @@ function VendorPhoneEntryInner() {
         return;
       }
 
+      if ('twoFactorRequired' in res) {
+        // Two-step sign-in on: the password only opened the code step.
+        navigate(TWO_STEP_PATH, { replace: true, state: { challengeToken: res.challengeToken } });
+        return;
+      }
+
       setAuth(res.accessToken, res.user);
       navigate('/vendor/dashboard', { replace: true });
     } catch (err: any) {
@@ -523,6 +531,8 @@ function VendorPhoneEntryInner() {
                   </>
                 )}
               </button>
+
+              <GoogleButton lang={lang} orAbove />
 
               <button
                 type="button"

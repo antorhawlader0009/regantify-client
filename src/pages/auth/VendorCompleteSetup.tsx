@@ -25,6 +25,8 @@ interface LocationState {
   // Which flow sent the vendor here, so the copy below matches. Defaults
   // to 'temp-password' when omitted (the original caller, vendorLogin).
   reason?: 'temp-password' | 'otp-relogin';
+  /** Two-step sign-in is on for this account: the authenticator code is asked here too, before the password changes. */
+  twoFactorOn?: boolean;
 }
 
 /**
@@ -46,6 +48,8 @@ export default function VendorCompleteSetup() {
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [askCode, setAskCode] = useState(Boolean(state?.twoFactorOn));
+  const [code, setCode] = useState('');
 
   useEffect(() => {
     if (!state?.setupToken) navigate('/vendor/login', { replace: true });
@@ -69,10 +73,12 @@ export default function VendorCompleteSetup() {
     setServerError(null);
     setSubmitting(true);
     try {
-      const res = await authApi.completeSetup(state.setupToken, values.password);
+      const res = await authApi.completeSetup(state.setupToken, values.password, askCode ? code.trim() : undefined);
       setAuth(res.accessToken, res.user);
       navigate('/vendor/dashboard', { replace: true });
     } catch (err: any) {
+      // The account has two-step sign-in on: show the code box.
+      if (err?.response?.data?.code === 'TWO_FACTOR_REQUIRED') setAskCode(true);
       setServerError(
         err?.response?.data?.message ??
           'Could not set your password. Please log in again and retry.',
@@ -128,6 +134,23 @@ export default function VendorCompleteSetup() {
             <p className="text-red-500 text-sm mt-1.5">{errors.confirmPassword.message}</p>
           )}
         </div>
+
+        {askCode && (
+          <div>
+            <label className="block text-sm font-medium text-regantify-text mb-1.5">Code from your authenticator app</label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="123456"
+              maxLength={20}
+              className="w-full px-4 py-3 rounded-xl bg-regantify-search text-regantify-text tracking-widest
+                placeholder:text-regantify-text-muted/70 focus:outline-none focus:ring-2 focus:ring-regantify-black"
+            />
+            <p className="mt-1.5 text-xs text-regantify-text-muted">Two-step sign-in is on for this account. A recovery code works too.</p>
+          </div>
+        )}
 
         {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
 
