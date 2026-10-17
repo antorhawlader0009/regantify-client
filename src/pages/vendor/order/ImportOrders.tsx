@@ -134,11 +134,7 @@ export default function ImportOrders() {
         <PageHeader
           title="Import orders"
           description="Bring orders in from an Excel or CSV file. Every row is checked first and nothing is saved until you press Import."
-          actions={
-            <Link to="/vendor/orders" className={outlineBtn}>
-              Back to orders
-            </Link>
-          }
+          back={{ to: '/vendor/orders', label: 'All orders' }}
         />
       </PageSection>
 

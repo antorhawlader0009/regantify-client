@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
+import { BackLink } from '../../../../components/ui/BackLink';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, Save, Send } from 'lucide-react';
+import { Loader2, Save, Send } from 'lucide-react';
 import type { DeferredPurchaseStatus } from '../../../../lib/metaPixelApi';
 import { tiktokPixelApi, type TiktokPixelSettings } from '../../../../lib/tiktokPixelApi';
 import { apiErrorMessage } from '../../../../lib/api';
@@ -112,13 +113,7 @@ export default function TiktokPixel() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link
-          to="/vendor/store/integrations"
-          className="inline-flex items-center gap-1.5 text-xs text-regantify-cta hover:underline mb-1"
-        >
-          <ArrowLeft size={14} />
-          Integrations
-        </Link>
+        <BackLink to="/vendor/store/integrations" label="Integrations" />
         <h1 className="text-2xl font-semibold text-regantify-text">TikTok Pixel</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
           Measure TikTok ad results, optimize for purchases and build audiences from your store visitors.

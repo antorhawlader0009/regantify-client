@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
 import { pagesApi, type PageStatus } from '../../../lib/pagesApi';
@@ -9,6 +8,7 @@ import { toast } from '../../../lib/toast';
 import { getBusinessHours, getVendorDeliveryCharges, getVendorSettings } from '../../../lib/vendorApi';
 import { storeSettingsApi } from '../../../lib/storeSettingsApi';
 import { POLICY_KINDS, policyHtml, policyTitle, type PolicyFacts, type PolicyKind, type PolicyLang } from '../../../lib/policyTemplates';
+import { BackLink } from '../../../components/ui/BackLink';
 
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -117,13 +117,7 @@ export default function AddPage() {
 
   return (
     <div className="max-w-3xl">
-      <button
-        onClick={() => navigate('/vendor/store/pages')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
-        <ChevronLeft size={16} />
-        Pages
-      </button>
+      <BackLink to="/vendor/store/pages" label="Pages" className="mb-3" />
 
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">{isEdit ? 'Edit Page' : 'Add Page'}</h1>

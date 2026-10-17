@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Check, CheckCircle2, ChevronDown, ChevronLeft, Download, FileSpreadsheet, Upload, XCircle } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, ChevronDown, Download, FileSpreadsheet, Upload, XCircle } from 'lucide-react';
 import { parseCsvToObjects, toCsv, downloadCsv } from '../../../lib/csv';
 import {
   IMPORT_FIELDS,
@@ -15,6 +15,7 @@ import { customersApi } from '../../../lib/customersApi';
 import { toast } from '../../../lib/toast';
 import { useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
 import { PillTabs, TableFrame, outlineBtn, primaryBtn, td, th, theadRow, trClass } from '../../../components/ui/PageKit';
+import { BackLink } from '../../../components/ui/BackLink';
 
 interface RowResult {
   rowNumber: number;
@@ -215,10 +216,7 @@ export default function BulkUploadCustomers() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-4">
-        <Link to="/vendor/customers" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-          <ChevronLeft size={16} aria-hidden />
-          Customers
-        </Link>
+        <BackLink to="/vendor/customers" label="Customers" />
         <h1 className="text-[15px] font-semibold text-regantify-text">Import customers</h1>
         <p className="mt-0.5 text-sm text-neutral-500">Add many customers at once from a spreadsheet saved as CSV.</p>
       </div>

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, ExternalLink, Loader2, LogIn, Pin, Search, X } from 'lucide-react';
+import { ExternalLink, Loader2, LogIn, Pin, Search, X } from 'lucide-react';
 import { adminApi, type AdminVendor, type StoreDetail } from '../../../lib/adminApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { isPendingApproval, toastPendingApproval } from '../../../lib/approvalsApi';
@@ -22,6 +22,7 @@ import { StoreLimits } from '../../../components/admin/StoreLimits';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
 import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 import { StoreResaleCard } from '../../../components/admin/StoreResaleCard';
+import { BackLink } from '../../../components/ui/BackLink';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4): everything about one store, and the actions on it.
 const TABS = [
@@ -838,9 +839,7 @@ export default function StoreDetailPage() {
 
   return (
     <div className="max-w-6xl">
-      <Link to="/admin/vendors/all" className="inline-flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text">
-        <ArrowLeft size={14} /> All stores
-      </Link>
+      <BackLink to="/admin/vendors/all" label="All stores" className="" />
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold text-regantify-text">{data.storeName}</h1>
         <StatusBadge status={data.status} />

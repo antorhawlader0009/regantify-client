@@ -1,9 +1,10 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Printer } from 'lucide-react';
 import { handoverApi } from '../../../lib/handoverApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { apiErrorMessage } from '../../../lib/api';
+import { BackLink } from '../../../components/ui/BackLink';
 
 const taka = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
@@ -26,6 +27,7 @@ export default function HandoverSheetPrintPage() {
         @media print { body { background: #fff; } .handover-paper { box-shadow: none !important; margin: 0 !important; width: auto !important; padding: 0 !important; } }`}</style>
 
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 print:hidden">
+        <BackLink to="/vendor/orders/handover" label="Courier Handover" className="" />
         <h1 className="text-[15px] font-semibold text-regantify-text">Handover sheet{sheet ? ` ${sheet.number}` : ''}</h1>
         <button
           type="button"
@@ -36,9 +38,6 @@ export default function HandoverSheetPrintPage() {
           <Printer size={14} />
           Print
         </button>
-        <Link to="/vendor/orders/handover" className="text-sm text-neutral-600 underline-offset-2 hover:underline">
-          Back to Courier Handover
-        </Link>
       </div>
 
       {isLoading && <p className="p-8 text-center text-sm text-neutral-500">Loading…</p>}

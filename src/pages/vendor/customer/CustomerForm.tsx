@@ -1,6 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { BackLink } from '../../../components/ui/BackLink';
 import { Field, SectionCard, productInputClass } from '../../../components/product/ProductFormPieces';
 import { SearchableSelect } from '../../../components/ui/SearchableSelect';
 import { BD_DISTRICTS } from '../../../lib/bdDistricts';
@@ -68,10 +67,7 @@ export function useShownErrors(errors: CustomerErrors) {
 export function CustomerFormHeader({ backTo, backLabel, title, description }: { backTo: string; backLabel: string; title: string; description: ReactNode }) {
   return (
     <div className="mb-4">
-      <Link to={backTo} className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} aria-hidden />
-        {backLabel}
-      </Link>
+      <BackLink to={backTo} label={backLabel} />
       <h1 className="text-[15px] font-semibold text-regantify-text">{title}</h1>
       <p className="mt-0.5 text-sm text-neutral-500">{description}</p>
     </div>

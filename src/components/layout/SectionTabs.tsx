@@ -1,6 +1,6 @@
-import { Link, NavLink, useLocation } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { isNavGroup, navLinks, type NavLinkItem, type NavSection } from '../../lib/navConfig';
+import { BackLink } from '../ui/BackLink';
 
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
@@ -23,12 +23,7 @@ export function SectionTabs({ sections }: { sections: NavSection[] }) {
 
   if (group?.hidden) {
     if (!group.hubPath) return null;
-    return (
-      <Link to={group.hubPath} className="mb-4 -mt-1 inline-flex items-center gap-1 text-[13px] text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={14} />
-        {group.label}
-      </Link>
-    );
+    return <BackLink to={group.hubPath} label={group.label} className="mb-4 -mt-1" />;
   }
 
   return (

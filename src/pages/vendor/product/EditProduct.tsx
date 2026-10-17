@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, ChevronLeft, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
+import { X, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { StockHistoryDialog } from '../../../components/product/StockHistoryDialog';
@@ -56,6 +56,7 @@ import { useCan } from '../../../lib/useStaffAccess';
 import { analyticsApi } from '../../../lib/analyticsApi';
 import { ProductAiChat } from '../../../components/product/ProductAiChat';
 import type { AiFormAccess } from '../../../lib/productAiApply';
+import { BackLink } from '../../../components/ui/BackLink';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -815,10 +816,7 @@ export default function EditProduct() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Link to="/vendor/product/all" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} />
-        All products
-      </Link>
+      <BackLink to="/vendor/product/all" label="All products" />
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <h1 className="mr-auto min-w-0 truncate text-xl font-semibold text-regantify-text">{product.name}</h1>

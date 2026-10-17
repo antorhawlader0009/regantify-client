@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, HandCoins, Trash2 } from 'lucide-react';
+import { HandCoins, Trash2 } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, PillTabs, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { orderRefundsApi, REFUND_METHOD_LABEL, type RefundItem, type RefundMethod } from '../../../lib/orderRefundsApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
@@ -172,12 +172,7 @@ export default function Refunds() {
       <PageHeader
         title="Refunds to pay"
         description="Customers who paid online for an order that was cancelled or returned. Pay them back (bKash, bank...) and record it here so none is forgotten."
-        actions={
-          <Link to="/vendor/orders" className={`${outlineBtn} inline-flex items-center gap-1.5`}>
-            <ArrowLeft size={15} />
-            Orders
-          </Link>
-        }
+        back={{ to: '/vendor/orders', label: 'All orders' }}
       />
       {data && data.pendingCount > 0 && (
         <p className={`mb-3 rounded-lg border px-3 py-2 text-sm ${data.lateCount > 0 ? 'border-red-300 bg-red-50 text-red-800' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>

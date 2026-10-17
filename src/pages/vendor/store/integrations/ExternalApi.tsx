@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BackLink } from '../../../../components/ui/BackLink';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Copy, ExternalLink, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Loader2, Plus, Trash2 } from 'lucide-react';
 import { apiBaseUrl, apiKeysApi, type ApiKeyAccess, type ApiKeyInfo } from '../../../../lib/apiKeysApi';
 import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
@@ -91,13 +92,7 @@ export default function ExternalApi() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link
-          to="/vendor/store/integrations"
-          className="inline-flex items-center gap-1.5 text-xs text-regantify-cta hover:underline mb-1"
-        >
-          <ArrowLeft size={14} />
-          Integrations
-        </Link>
+        <BackLink to="/vendor/store/integrations" label="Integrations" />
         <h1 className="text-2xl font-semibold text-regantify-text">External API</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
           Let your own systems (CRM, Google Sheets, Messenger bots, warehouse or POS software) read your orders and products,

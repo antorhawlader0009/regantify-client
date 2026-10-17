@@ -1,7 +1,8 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, MoreVertical, Plus, Search, Sparkles, X, type LucideIcon } from 'lucide-react';
+import { MoreVertical, Plus, Search, Sparkles, X, type LucideIcon } from 'lucide-react';
+import { BackLink } from '../../../components/ui/BackLink';
 import { Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { Segmented } from '../../../components/product/ProductFormKit';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
@@ -387,10 +388,7 @@ export function PromoListPage<T extends { id: string }>({
 export function FormHeader({ backTo, backLabel, title, description }: { backTo: string; backLabel: string; title: string; description: ReactNode }) {
   return (
     <div className="mb-4">
-      <Link to={backTo} className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} aria-hidden />
-        {backLabel}
-      </Link>
+      <BackLink to={backTo} label={backLabel} />
       <h1 className="text-[15px] font-semibold text-regantify-text">{title}</h1>
       <p className="mt-0.5 text-sm text-neutral-500">{description}</p>
     </div>

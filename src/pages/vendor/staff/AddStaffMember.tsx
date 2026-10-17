@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, ChevronLeft, Copy, MessageSquare, Shuffle } from 'lucide-react';
+import { CheckCircle2, Copy, MessageSquare, Shuffle } from 'lucide-react';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { SaveBar, useUnsavedChangesWarning } from '../../../components/product/ProductFormKit';
 import { outlineBtn } from '../../../components/ui/PageKit';
@@ -13,6 +13,7 @@ import { permissionsFor, roleAllowedOnTier, type StaffPermission, type StaffRole
 import { BD_PHONE_HINT, normalizeBdPhone, toLatinDigits } from '../../../lib/bdPhone';
 import { toast } from '../../../lib/toast';
 import { isPlanLocked } from '../../../lib/api';
+import { BackLink } from '../../../components/ui/BackLink';
 
 /** The custom-role select's "make a new one" choice. */
 const NEW_ROLE = '__new__';
@@ -218,10 +219,7 @@ export default function AddStaffMember() {
       }}
     >
       <div className="mb-4">
-        <Link to="/vendor/staff" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-          <ChevronLeft size={16} aria-hidden />
-          Staff
-        </Link>
+        <BackLink to="/vendor/staff" label="Staff" />
         <h1 className="text-[15px] font-semibold text-regantify-text">{isEdit ? `Edit ${member?.name ?? 'staff'}` : 'Add staff'}</h1>
         <p className="mt-0.5 text-sm text-neutral-500">
           {isEdit ? 'Changes apply the next time they click anything.' : 'They get their own sign-in to your store’s dashboard.'}

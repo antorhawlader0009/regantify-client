@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Ban, Loader2 } from 'lucide-react';
+import { Ban, Loader2 } from 'lucide-react';
 import { adminShoppersApi } from '../../../lib/adminShoppersApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
@@ -10,6 +10,7 @@ import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { Dialog } from '../../../components/ui/Dialog';
 import { BlockDialog } from './AdminCustomers';
 import { ReasonNeed } from '../../../components/admin/ReasonNeed';
+import { BackLink } from '../../../components/ui/BackLink';
 
 function Card({ title, children, className = '' }: { title: string; children: ReactNode; className?: string }) {
   return (
@@ -58,9 +59,7 @@ export default function AdminShopperDetail() {
   const s = p.summary;
   return (
     <div className="max-w-6xl">
-      <Link to="/admin/customers" className="inline-flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text">
-        <ArrowLeft size={14} /> Customers
-      </Link>
+      <BackLink to="/admin/customers" label="Customers" className="" />
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold text-regantify-text">{s.name || p.phone}</h1>
         <span className="text-sm text-regantify-text-muted">{p.phone}</span>

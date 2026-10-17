@@ -1,13 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { adminOrdersApi } from '../../../lib/adminOrdersApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { formatTaka } from '../../../components/analytics/format';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { niceStatus } from './AdminOrders';
+import { BackLink } from '../../../components/ui/BackLink';
 
 function Card({ title, children, className = '' }: { title: string; children: ReactNode; className?: string }) {
   return (
@@ -60,9 +61,7 @@ export default function AdminOrderDetail() {
   const th = 'px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-regantify-text-muted';
   return (
     <div className="max-w-6xl">
-      <Link to="/admin/orders" className="inline-flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text">
-        <ArrowLeft size={14} /> Orders
-      </Link>
+      <BackLink to="/admin/orders" label="Orders" className="" />
       <div className="mt-2 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold text-regantify-text">{o.publicCode ?? `ORDER-${o.number}`}</h1>
         <span className="rounded-md bg-black/5 px-2 py-1 text-xs font-medium">{niceStatus(o.status)}</span>

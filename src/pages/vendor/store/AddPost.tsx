@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
 import { blogApi, type BlogStatus } from '../../../lib/blogApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
+import { BackLink } from '../../../components/ui/BackLink';
 
 /** `datetime-local` wants local time without a zone. */
 const toLocalInput = (iso: string) => {
@@ -97,10 +97,7 @@ export default function AddPost() {
 
   return (
     <div className="max-w-3xl">
-      <button onClick={() => navigate('/vendor/store/magazine')} className="mb-3 flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text">
-        <ChevronLeft size={16} />
-        Magazine
-      </button>
+      <BackLink to="/vendor/store/magazine" label="Magazine" className="mb-3" />
       <div className="mb-6 flex items-center gap-3">
         <h1 className="text-2xl font-semibold text-regantify-text">{isEdit ? 'Edit Post' : 'Add Post'}</h1>
         <select value={status} onChange={(e) => setStatus(e.target.value as BlogStatus)} className="rounded-lg border border-black/10 bg-white px-3 py-1.5 text-sm text-regantify-text">

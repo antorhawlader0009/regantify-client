@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BackLink } from '../../../../components/ui/BackLink';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import type { GaConsentMode } from '../../../../lib/googleAnalyticsApi';
 import { googleTagManagerApi, type GoogleTagManagerSettings } from '../../../../lib/googleTagManagerApi';
 import { apiErrorMessage } from '../../../../lib/api';
@@ -82,13 +83,7 @@ export default function GoogleTagManager() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link
-          to="/vendor/store/integrations"
-          className="inline-flex items-center gap-1.5 text-xs text-regantify-cta hover:underline mb-1"
-        >
-          <ArrowLeft size={14} />
-          Integrations
-        </Link>
+        <BackLink to="/vendor/store/integrations" label="Integrations" />
         <h1 className="text-2xl font-semibold text-regantify-text">Google Tag Manager</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
           Manage all your tracking tags (Google Analytics, Google Ads, Meta, TikTok...) from one Tag Manager container.

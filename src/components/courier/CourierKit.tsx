@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   Check,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   Copy,
   Eye,
@@ -41,6 +40,7 @@ import { BookingsTrendChart } from './BookingsTrendChart';
 import { CourierStatusBadge } from './courierStatus';
 import { DateRangeFilter } from '../../pages/vendor/order/DateRangeFilter';
 import { OrderStatusBadge } from '../../pages/vendor/order/orderStatus';
+import { BackLink } from '../ui/BackLink';
 
 // The one shape every courier page uses (theme-update-plan.md Step 5):
 // a connection card on top, then Dashboard / Parcels / Settings as lime
@@ -126,10 +126,7 @@ export function CourierPageShell({
 }) {
   return (
     <div>
-      <Link to="/vendor/courier" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} aria-hidden />
-        Courier integration
-      </Link>
+      <BackLink to="/vendor/courier" label="Courier integration" />
       <div className="mb-4">
         <h1 className="flex flex-wrap items-center gap-2 text-[15px] font-semibold text-regantify-text">
           {name}

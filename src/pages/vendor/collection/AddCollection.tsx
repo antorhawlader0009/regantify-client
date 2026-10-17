@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, X, ImagePlus, Search } from 'lucide-react';
+import { X, ImagePlus, Search } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
 import { collectionsApi, type CollectionRules } from '../../../lib/collectionsApi';
@@ -10,6 +10,7 @@ import { productsApi, type Product } from '../../../lib/productsApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
+import { BackLink } from '../../../components/ui/BackLink';
 
 interface CoverPhotoState {
   previewUrl: string;
@@ -229,13 +230,7 @@ export default function AddCollection() {
 
   return (
     <div className="max-w-3xl">
-      <button
-        onClick={() => navigate('/vendor/product/collections')}
-        className="flex items-center gap-1 text-sm text-regantify-text-muted hover:text-regantify-text mb-3"
-      >
-        <ChevronLeft size={16} />
-        Collection
-      </button>
+      <BackLink to="/vendor/product/collections" label="Collections" className="mb-3" />
 
       <h1 className="text-xl font-semibold text-regantify-text mb-6">{isEdit ? 'Edit Collection' : 'Add Collection'}</h1>
 

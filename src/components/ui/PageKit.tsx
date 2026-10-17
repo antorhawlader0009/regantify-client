@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown, Search, type LucideIcon } from 'lucide-react';
+import { BackLink, type BackTarget } from './BackLink';
 
 // Page building blocks of the dashboard theme (theme-update-plan.md
 // Step 1): the patterns All Products / Orders / Customers settled on,
@@ -50,20 +51,26 @@ export function PageHeader({
   title,
   description,
   actions,
+  back,
   className = 'mb-3',
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
+  /** A page opened from inside another one: "‹ <label>" above the title, back to that page (components/ui/BackLink.tsx). */
+  back?: BackTarget;
   className?: string;
 }) {
   return (
-    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <div className="mr-auto min-w-0">
-        <h1 className="text-[15px] font-semibold text-regantify-text">{title}</h1>
-        {description && <div className="mt-0.5 text-xs text-neutral-500">{description}</div>}
+    <div className={className}>
+      {back && <BackLink to={back.to} label={back.label} className="mb-1.5" />}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="mr-auto min-w-0">
+          <h1 className="text-[15px] font-semibold text-regantify-text">{title}</h1>
+          {description && <div className="mt-0.5 text-xs text-neutral-500">{description}</div>}
+        </div>
+        {actions}
       </div>
-      {actions}
     </div>
   );
 }

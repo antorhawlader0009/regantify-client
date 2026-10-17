@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { BackLink } from '../../../../components/ui/BackLink';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronRight,
   Copy,
@@ -124,13 +123,7 @@ export default function Webhooks() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link
-          to="/vendor/store/integrations"
-          className="inline-flex items-center gap-1.5 text-xs text-regantify-cta hover:underline mb-1"
-        >
-          <ArrowLeft size={14} />
-          Integrations
-        </Link>
+        <BackLink to="/vendor/store/integrations" label="Integrations" />
         <h1 className="text-2xl font-semibold text-regantify-text">Webhooks</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
           Send new orders, status changes, product changes and leads to your own apps as they happen: Google Sheets,

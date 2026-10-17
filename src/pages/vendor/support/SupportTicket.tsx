@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { idlePoll } from '../../../lib/idlePolling';
-import { ArrowLeft, CheckCircle2, Loader2, Star } from 'lucide-react';
+import { CheckCircle2, Loader2, Star } from 'lucide-react';
 import { supportApi, type SupportTicket as Ticket } from '../../../lib/supportApi';
 import { CATEGORY_LABEL } from '../../../lib/supportContent';
 import { ReplyBox, StatusPill, TicketThread } from '../../../components/support/TicketThread';
 import { formatDateTime } from '../../../components/lms/format';
 import { toast } from '../../../lib/toast';
+import { BackLink } from '../../../components/ui/BackLink';
 
 /** Vendor > Support > one ticket: the conversation and the reply box. */
 export default function SupportTicket() {
@@ -81,13 +82,7 @@ export default function SupportTicket() {
 
   return (
     <div className="max-w-3xl">
-      <Link
-        to="/vendor/support"
-        className="mb-5 inline-flex items-center gap-1.5 text-sm text-regantify-text-muted hover:text-regantify-text"
-      >
-        <ArrowLeft size={16} />
-        Support
-      </Link>
+      <BackLink to="/vendor/support" label="Support" className="mb-4" />
 
       <header className="mb-6 border-b border-black/10 pb-5">
         <div className="flex flex-wrap items-start justify-between gap-3">

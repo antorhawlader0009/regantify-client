@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { customCodeApi, type StoreScriptInput, type StoreScriptPosition } from '../../../../lib/customCodeApi';
 import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { CodeEditor } from '../../../../components/editor/CodeEditor';
+import { BackLink } from '../../../../components/ui/BackLink';
 
 const EMPTY: StoreScriptInput = { name: '', position: 'HEAD', code: '' };
 
@@ -53,13 +54,7 @@ export default function EditJavaScript() {
   return (
     <div>
       <div className="mb-6">
-        <Link
-          to="/vendor/store/javascript"
-          className="inline-flex items-center gap-1.5 text-xs text-regantify-cta hover:underline mb-1"
-        >
-          <ArrowLeft size={14} />
-          JavaScript Code
-        </Link>
+        <BackLink to="/vendor/store/javascript" label="JavaScript code" />
         <h1 className="text-2xl font-semibold text-regantify-text">{isEdit ? 'Edit JavaScript' : 'Add JavaScript'}</h1>
       </div>
 

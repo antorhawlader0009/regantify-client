@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Printer, ScanLine, Truck } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
@@ -113,11 +113,7 @@ export default function HandoverSheets() {
         <PageHeader
           title="Courier Handover"
           description="Tick the parcels you are giving to a courier’s pickup person, or scan their tracking IDs, then print a sheet with the count and cash to collect. Both of you sign it."
-          actions={
-            <Link to="/vendor/orders" className={outlineBtn}>
-              Back to orders
-            </Link>
-          }
+          back={{ to: '/vendor/orders', label: 'All orders' }}
         />
 
         {made && (

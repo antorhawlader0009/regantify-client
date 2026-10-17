@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Copy, Gift, Trash2 } from 'lucide-react';
+import { Copy, Gift, Trash2 } from 'lucide-react';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { ToggleRow } from '../../../components/product/ProductFormKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -11,6 +11,7 @@ import { BD_PHONE_HINT, normalizeBdPhone, toLatinDigits } from '../../../lib/bdP
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
 import { DateField, UnitInput, copyText, taka, toLocalInput } from './MarketingKit';
+import { BackLink } from '../../../components/ui/BackLink';
 
 const errorMessage = (err: any, fallback: string): string => {
   const message = err?.response?.data?.message;
@@ -111,10 +112,7 @@ export default function GiftCardDetail() {
   });
 
   const back = (
-    <Link to="/vendor/marketing/gift-cards" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-      <ChevronLeft size={16} aria-hidden />
-      Gift cards
-    </Link>
+    <BackLink to="/vendor/marketing/gift-cards" label="Gift cards" />
   );
 
   if (isLoading) {

@@ -10,6 +10,7 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { SavedRepliesDialog } from './SavedRepliesDialog';
 import { adminHelpApi } from '../../../lib/helpApi';
+import { BackLink } from '../../../components/ui/BackLink';
 
 type Tab = SupportStatus | 'ALL' | 'WAITING';
 const TABS: { value: Tab; label: string }[] = [
@@ -257,7 +258,12 @@ function TicketPane({ id }: { id: string }) {
     );
   }
   if (isError || !ticket) {
-    return <p className="p-6 text-sm text-regantify-text">This ticket could not be found.</p>;
+    return (
+      <div className="p-6">
+        <BackLink to="/admin/support" label="All tickets" className="mb-3 lg:hidden" />
+        <p className="text-sm text-regantify-text">This ticket could not be found.</p>
+      </div>
+    );
   }
 
   const closed = ticket.status === 'CLOSED';
@@ -266,9 +272,7 @@ function TicketPane({ id }: { id: string }) {
   return (
     <>
       <header className="border-b border-black/10 px-6 py-4">
-        <Link to="/admin/support" className="mb-2 inline-block text-xs text-regantify-text-muted hover:text-regantify-text lg:hidden">
-          All tickets
-        </Link>
+        <BackLink to="/admin/support" label="All tickets" className="mb-2 lg:hidden" />
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="break-words text-lg font-semibold text-regantify-text">{ticket.subject}</h2>

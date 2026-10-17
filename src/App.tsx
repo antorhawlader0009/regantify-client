@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { NavTrail } from './components/ui/BackLink';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
@@ -435,6 +436,8 @@ export default function App() {
       {/* Auth restoration bootstrap */}
       <AuthBootstrap>
         <BrowserRouter>
+          {/* The in-tab history the "‹ Back" links read (components/ui/BackLink.tsx). */}
+          <NavTrail />
           <Suspense fallback={<PageLoading />}>
           <Routes>
             {/* Root → marketing landing page */}

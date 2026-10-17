@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CalendarClock, Pause, Play, Trash2 } from 'lucide-react';
+import { CalendarClock, Pause, Play, Trash2 } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, outlineBtn } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { standingOrdersApi, type StandingOrder } from '../../../lib/standingOrdersApi';
@@ -104,12 +104,7 @@ export default function StandingOrders() {
       <PageHeader
         title="Standing orders"
         description="Regular customers whose same order is made again for you on a rhythm. Open an order and choose “Make it regular”."
-        actions={
-          <Link to="/vendor/orders" className={`${outlineBtn} inline-flex items-center gap-1.5`}>
-            <ArrowLeft size={15} />
-            Orders
-          </Link>
-        }
+        back={{ to: '/vendor/orders', label: 'All orders' }}
       />
       {isLoading ? (
         <p className="py-8 text-center text-sm text-neutral-500">Loading…</p>

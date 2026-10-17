@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Gift, Pencil, Plus, Trash2 } from 'lucide-react';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
@@ -19,6 +18,7 @@ import {
   toLocalInput,
   type PickedItem,
 } from './MarketingKit';
+import { BackLink } from '../../../components/ui/BackLink';
 
 type Mode = 'BUY_PRODUCT' | 'CART_AMOUNT';
 
@@ -57,9 +57,7 @@ export default function GiftOffers() {
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/vendor/marketing/discounts" className="text-xs text-neutral-500 hover:underline">
-            Discounts
-          </Link>
+          <BackLink to="/vendor/marketing/discounts" label="Discounts" className="mb-1" />
           <h1 className="text-xl font-semibold">Free gifts</h1>
           <p className="text-sm text-neutral-600">A free product is added to the cart by itself when the shopper qualifies. It comes out of stock like any item.</p>
         </div>

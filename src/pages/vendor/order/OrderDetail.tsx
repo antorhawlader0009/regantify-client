@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
-import { CalendarClock, CalendarDays, CheckCircle2, ChevronDown, ChevronLeft, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
+import { CalendarClock, CalendarDays, CheckCircle2, ChevronDown, Copy, FileText, Link2, MessageCircle, Package, Phone, ReceiptText, Send, StickyNote, Truck } from 'lucide-react';
 import { whatsappNumber } from '../../../lib/bdPhone';
 import { advancePaid, codDue, orderRef, ordersApi, vendorOrderTotal, type CourierProvider, type Order, type OrderStatus } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
@@ -67,6 +67,7 @@ import { OrderComments } from '../../../components/order/OrderComments';
 import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
 import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { BackLink } from '../../../components/ui/BackLink';
 
 function formatPrice(value: string) {
   return `৳${Number(value).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -454,10 +455,7 @@ export default function OrderDetail() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Link to="/vendor/orders" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} />
-        All orders
-      </Link>
+      <BackLink to="/vendor/orders" label="All orders" />
 
       {/* Header + the next step */}
       <div className="mb-4 flex flex-wrap items-center gap-2">

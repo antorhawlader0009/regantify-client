@@ -203,11 +203,7 @@ export default function RiderCash() {
       <PageHeader
         title="Rider cash"
         description="The cash your own delivery riders collect, what they hand in, and what they still hold. Name the rider on each order (Order detail > Own delivery)."
-        actions={
-          <Link to="/vendor/orders" className={outlineBtn}>
-            Back to orders
-          </Link>
-        }
+        back={{ to: '/vendor/orders', label: 'All orders' }}
       />
 
       {isLoading ? (

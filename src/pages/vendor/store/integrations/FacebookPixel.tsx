@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BackLink } from '../../../../components/ui/BackLink';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Copy, Loader2, Save } from 'lucide-react';
+import { Copy, Loader2, Save } from 'lucide-react';
 import { metaPixelApi, type MetaPixelEventMode, type MetaPixelSettings } from '../../../../lib/metaPixelApi';
 import { getVendorDomain } from '../../../../lib/vendorApi';
 import { storefrontStoreUrl } from '../../../../lib/storefrontUrl';
@@ -85,13 +86,7 @@ export default function FacebookPixel() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <Link
-          to="/vendor/store/integrations"
-          className="inline-flex items-center gap-1.5 text-xs text-regantify-cta hover:underline mb-1"
-        >
-          <ArrowLeft size={14} />
-          Integrations
-        </Link>
+        <BackLink to="/vendor/store/integrations" label="Integrations" />
         <h1 className="text-2xl font-semibold text-regantify-text">Facebook Pixel (Meta)</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
           Track visits, add-to-carts and purchases on your storefront for Facebook &amp; Instagram ads.

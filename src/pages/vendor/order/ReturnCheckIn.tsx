@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ClipboardCheck, ScanLine } from 'lucide-react';
-import { EmptyState, PageHeader, PageSection, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { EmptyState, PageHeader, PageSection, primaryBtn } from '../../../components/ui/PageKit';
 import {
   RETURN_OUTCOME_LABELS,
   returnCheckInApi,
@@ -190,11 +190,7 @@ export default function ReturnCheckIn() {
       <PageHeader
         title="Return check-in"
         description="Parcels the courier sent back. Open each one, say what you found, and stock is kept right."
-        actions={
-          <Link to="/vendor/orders" className={outlineBtn}>
-            Back to orders
-          </Link>
-        }
+        back={{ to: '/vendor/orders', label: 'All orders' }}
       />
 
       <div className="mb-3 rounded-lg border border-line bg-neutral-50 px-4 py-3 text-sm text-neutral-600">

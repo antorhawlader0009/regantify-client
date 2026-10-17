@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, MessageCircle, Pencil, Phone, Plus, ShoppingBag, Trash2, UserX } from 'lucide-react';
+import { ChevronRight, MessageCircle, Pencil, Phone, Plus, ShoppingBag, Trash2, UserX } from 'lucide-react';
 import { customersApi, type VendorCustomerDetail } from '../../../lib/customersApi';
 import { ordersApi, type OrderStatus } from '../../../lib/ordersApi';
 import { normalizeBdPhone, whatsappNumber } from '../../../lib/bdPhone';
@@ -28,6 +28,7 @@ import {
   theadRow,
   trClass,
 } from '../../../components/ui/PageKit';
+import { BackLink } from '../../../components/ui/BackLink';
 
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -208,10 +209,7 @@ export default function CustomerDetail() {
   });
 
   const back = (
-    <Link to="/vendor/customers" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-      <ChevronLeft size={16} aria-hidden />
-      Customers
-    </Link>
+    <BackLink to="/vendor/customers" label="Customers" />
   );
 
   if (isLoading) {

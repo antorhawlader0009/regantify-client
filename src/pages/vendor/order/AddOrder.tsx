@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Minus, Package, Plus, Search, ShoppingCart, Trash2, UserCheck } from 'lucide-react';
+import { Minus, Package, Plus, Search, ShoppingCart, Trash2, UserCheck } from 'lucide-react';
 import { normalizeBdPhone } from '../../../lib/bdPhone';
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { ordersApi, type Order, type OrderItemInput } from '../../../lib/ordersApi';
@@ -20,6 +20,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { ChannelPicker } from '../../../components/order/ChannelPicker';
 import { lmsApi } from '../../../lib/lmsApi';
 import { cloudinaryThumb } from '../../../lib/cloudinaryThumb';
+import { BackLink } from '../../../components/ui/BackLink';
 
 interface CartLine extends OrderItemInput {
   key: string; // productId + variantId, for React keys / dedupe within this form only
@@ -417,10 +418,7 @@ export default function AddOrder() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Link to="/vendor/orders" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} />
-        All orders
-      </Link>
+      <BackLink to="/vendor/orders" label="All orders" />
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-regantify-text">Add order</h1>
         <p className="mt-0.5 text-sm text-neutral-500">For an order taken on the phone, Facebook or in the shop. It’s saved as cash on delivery.</p>

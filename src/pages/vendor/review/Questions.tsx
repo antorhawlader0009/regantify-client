@@ -174,11 +174,7 @@ export default function Questions() {
       <PageHeader
         title="Questions"
         description={data && data.unanswered > 0 ? `${data.unanswered} waiting for your answer. A question shows on the product page once you answer it.` : 'Questions shoppers ask on your product pages.'}
-        actions={
-          <Link to="/vendor/reviews" className={outlineBtn}>
-            Reviews
-          </Link>
-        }
+        back={{ to: '/vendor/reviews', label: 'Reviews' }}
       />
 
       <PillTabs<QuestionStatus>

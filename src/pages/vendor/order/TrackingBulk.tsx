@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ListChecks } from 'lucide-react';
-import { PageHeader, PageSection, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { PageHeader, PageSection, primaryBtn } from '../../../components/ui/PageKit';
 import { CloseReasonSelect } from '../../../components/order/CloseReasonSelect';
 import { RETURN_REASONS, type CloseReasonCode } from '../../../lib/closeReasons';
 import { trackingBulkApi, type TrackingBulkPreview, type TrackingBulkResult, type TrackingBulkStatus } from '../../../lib/trackingBulkApi';
@@ -54,11 +53,7 @@ export default function TrackingBulk() {
       <PageHeader
         title="Bulk update by tracking ID"
         description="Paste the IDs from your courier’s report and mark them delivered or returned in one go."
-        actions={
-          <Link to="/vendor/orders" className={outlineBtn}>
-            Back to orders
-          </Link>
-        }
+        back={{ to: '/vendor/orders', label: 'All orders' }}
       />
 
       <PageSection><h2 className="m-0 mb-2 text-sm font-semibold">1. Paste the IDs</h2>

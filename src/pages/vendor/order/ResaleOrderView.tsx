@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Handshake } from 'lucide-react';
+import { Handshake } from 'lucide-react';
 import { OrderComments } from '../../../components/order/OrderComments';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
 import { orderRef, type Order, type OrderStatusHistoryEntry, type ResaleOrderInfo } from '../../../lib/ordersApi';
 import { OrderStatusBadge } from './orderStatus';
 import { ReportProblemCard } from '../../../components/resale/ResaleProblems';
+import { BackLink } from '../../../components/ui/BackLink';
 
 const money = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric' }) : '');
@@ -85,10 +86,7 @@ export function ResaleOrderView({ order, history }: { order: Order; history: Ord
   const itemsTotal = order.items.reduce((n, i) => n + Number(i.lineTotal), 0);
   return (
     <div className="mx-auto max-w-6xl space-y-4">
-      <Link to="/vendor/orders" className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} />
-        All orders
-      </Link>
+      <BackLink to="/vendor/orders" label="All orders" className="" />
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-semibold text-regantify-text">{orderRef(order)}</h1>

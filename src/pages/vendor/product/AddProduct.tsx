@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, Loader2, Plus, Sparkles, UploadCloud } from 'lucide-react';
+import { Loader2, Plus, Sparkles, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
@@ -50,6 +50,7 @@ import { outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { BarcodeInput } from '../../../components/product/BarcodeField';
 import { ProductAiChat } from '../../../components/product/ProductAiChat';
 import type { AiFormAccess } from '../../../lib/productAiApply';
+import { BackLink } from '../../../components/ui/BackLink';
 
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
@@ -418,10 +419,7 @@ export default function AddProduct() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Link to="/vendor/product/all" className="mb-2 inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-regantify-text">
-        <ChevronLeft size={16} />
-        All products
-      </Link>
+      <BackLink to="/vendor/product/all" label="All products" />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <h1 className="mr-auto text-xl font-semibold text-regantify-text">Add product</h1>
