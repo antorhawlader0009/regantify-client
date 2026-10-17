@@ -24,7 +24,7 @@ const FEATURE_SHORT: Record<AiFeature, string> = {
 
 const SOURCE_BADGE: Record<AiRateSource, { label: string; className: string }> = {
   ADMIN: { label: 'Set here', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-  BUILT_IN: { label: 'Cloudflare price', className: 'bg-neutral-50 text-neutral-600 border-neutral-200' },
+  BUILT_IN: { label: 'Claude price', className: 'bg-neutral-50 text-neutral-600 border-neutral-200' },
   FALLBACK: { label: 'No price: highest rate', className: 'bg-amber-50 text-amber-800 border-amber-200' },
 };
 
@@ -96,7 +96,7 @@ function PriceRow({ row }: { row: AiModelPriceRow }) {
   const reset = useMutation({
     mutationFn: () => clearAiModelPrice(row.modelName),
     onSuccess: () => {
-      toast.success(row.builtIn ? 'Back to the Cloudflare price.' : 'Price removed: this model is charged at the highest rate.');
+      toast.success(row.builtIn ? 'Back to the Claude price.' : 'Price removed: this model is charged at the highest rate.');
       refresh();
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not change the price. Please try again.')),
@@ -141,7 +141,7 @@ function PriceRow({ row }: { row: AiModelPriceRow }) {
                 className="inline-flex items-center gap-1 font-medium text-regantify-text-muted hover:text-regantify-text disabled:opacity-50"
               >
                 <RotateCcw size={12} aria-hidden />
-                {row.builtIn ? 'Use Cloudflare price' : 'Remove'}
+                {row.builtIn ? 'Use Claude price' : 'Remove'}
               </button>
             )}
           </span>
@@ -173,7 +173,7 @@ function AddModelPrice({ onDone }: { onDone: () => void }) {
           type="text"
           value={modelName}
           onChange={(e) => setModelName(e.target.value)}
-          placeholder="@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+          placeholder="claude-haiku-5-5"
           className="w-full px-2.5 py-1.5 rounded-lg border border-black/10 text-sm text-regantify-text bg-white focus:outline-none focus:border-regantify-cta"
         />
       </label>

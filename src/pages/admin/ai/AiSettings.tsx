@@ -104,7 +104,7 @@ export default function AiSettings() {
       const modelList = await getAiModels();
       setModels(modelList);
     } catch {
-      setLoadError('Could not load the model list. Check that WORKERS_AI_API_KEY/WORKERS_AI_ACCOUNT_ID are set on the server.');
+      setLoadError('Could not load the model list. Check that CLAUDE_API_KEY is set on the server.');
     } finally {
       setFetchingModels(false);
     }
@@ -155,7 +155,7 @@ export default function AiSettings() {
           <div>
             <h1 className="text-2xl font-semibold text-regantify-text">AI Settings</h1>
             <p className="text-sm text-regantify-text-muted mt-0.5">
-              Choose which Cloudflare Workers AI model each AI-powered feature uses across the whole platform.
+              Choose which Claude model each AI-powered feature uses across the whole platform.
             </p>
           </div>
         </div>
@@ -181,8 +181,7 @@ export default function AiSettings() {
         <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-6">
           {models.length === 0 ? (
             <p className="text-sm text-regantify-text-muted">
-              No models loaded yet — click <span className="font-medium">Fetch Models</span> above to pull the live list from
-              Cloudflare.
+              No models loaded yet — click <span className="font-medium">Fetch Models</span> above to pull the list of Claude models.
             </p>
           ) : (
             FEATURES.map((field) => {
