@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, Filter, LogIn, Mail, Search, Tag, X } from 'lucide-react';
+import { Copy, Download, Filter, LogIn, Mail, Plus, Search, Tag, X } from 'lucide-react';
+import { NewStoreDialog } from '../../../components/admin/NewStoreDialog';
 import { adminApi, type AdminVendor, type BulkBody, type HealthBand, type ListVendorsParams, type VendorSort, type VendorStatus } from '../../../lib/adminApi';
 import type { PlanCode } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
@@ -102,7 +103,19 @@ function BulkDialog({ kind, ids, onClose, onDone }: { kind: BulkKind | null; ids
  * All Vendors, Pending Approval and Suspended Vendors share this list (super-admin-plan.md Step 5): filters, sorting, health, tags, bulk actions and a CSV
  * export. `chips` are the status chips shown (the first is selected at start; `null` means "all").
  */
-export function VendorListPage({ title, chips, children }: { title: string; chips: Array<VendorStatus | null>; children?: ReactNode }) {
+export function VendorListPage({
+  title,
+  chips,
+  children,
+  allowCreate = false,
+}: {
+  title: string;
+  chips: Array<VendorStatus | null>;
+  children?: ReactNode;
+  /** Show "New store" (All stores only). */
+  allowCreate?: boolean;
+}) {
+  const [creating, setCreating] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const viewer = useAdminViewer();
@@ -181,7 +194,14 @@ export function VendorListPage({ title, chips, children }: { title: string; chip
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-semibold text-regantify-text">{title}</h1>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <h1 className="mr-auto text-2xl font-semibold text-regantify-text">{title}</h1>
+        {allowCreate && can('stores.edit') && (
+          <button type="button" onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-xl bg-regantify-cta px-3.5 py-2 text-sm font-medium text-white">
+            <Plus size={15} /> New store
+          </button>
+        )}
+      </div>
       {children}
 
       {chips.length > 1 && (
@@ -411,6 +431,7 @@ export function VendorListPage({ title, chips, children }: { title: string; chip
         <ChangeVendorStatusModal open onOpenChange={(open) => !open && setStatusModalVendor(null)} storeName={statusModalVendor.storeName} currentStatus={statusModalVendor.status} submitting={statusMutation.isPending} onConfirm={(next, reason) => statusMutation.mutate({ vendorId: statusModalVendor.id, status: next, reason })} />
       )}
       <ImpersonateDialog vendor={impersonateVendor} onClose={() => setImpersonateVendor(null)} />
+      {allowCreate && <NewStoreDialog open={creating} onClose={() => setCreating(false)} />}
       {planModalVendor && (
         <ChangeVendorPlanModal open onOpenChange={(open) => !open && setPlanModalVendor(null)} storeName={planModalVendor.storeName} currentPlanCode={planModalVendor.planCode} submitting={planMutation.isPending} onConfirm={(next) => planMutation.mutate({ vendorId: planModalVendor.id, planCode: next })} />
       )}

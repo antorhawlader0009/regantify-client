@@ -238,9 +238,25 @@ export interface AdminAuditQuery {
   search?: string;
 }
 
+export interface AdminCreateStoreBody {
+  ownerName: string;
+  phone: string;
+  password: string;
+  storeName: string;
+  subdomain?: string;
+  email?: string;
+  sendSms?: boolean;
+}
+
 export const adminApi = {
   listVendors: (params: ListVendorsParams = {}) =>
     api.get<AdminVendorListResponse>('/v1/admin/vendors', { params }).then((r) => r.data),
+
+  // "New store": the platform team opens a store with the owner's phone and a password, no OTP (AuthService.adminCreateVendor).
+  createVendor: (body: AdminCreateStoreBody) =>
+    api
+      .post<{ vendorId: string; storeName: string; subdomain: string; phone: string; smsSent: boolean }>('/v1/admin/vendors', body)
+      .then((r) => r.data),
 
   // "Login as Vendor" — returns a one-time token, valid 24h if unused,
   // that VendorImpersonateEntry exchanges for a 15-min vendor session in
