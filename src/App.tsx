@@ -123,6 +123,7 @@ const CustomerDetails = lazy(() => import('./pages/vendor/customer/CustomerDetai
 const AddCustomer = lazy(() => import('./pages/vendor/customer/AddCustomer'));
 const BulkUploadCustomers = lazy(() => import('./pages/vendor/customer/BulkUploadCustomers'));
 const CustomerDetail = lazy(() => import('./pages/vendor/customer/CustomerDetail'));
+const CustomerMessages = lazy(() => import('./pages/vendor/customer/Messages'));
 const EditCustomer = lazy(() => import('./pages/vendor/customer/EditCustomer'));
 const Reviews = lazy(() => import('./pages/vendor/review/Reviews'));
 const AddReview = lazy(() => import('./pages/vendor/review/AddReview'));
@@ -575,6 +576,7 @@ export default function App() {
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />
+                <Route path="/vendor/customers/messages" element={<CustomerMessages />} />
                 <Route path="/vendor/customers/add" element={<AddCustomer />} />
                 <Route path="/vendor/customers/bulk-upload" element={<BulkUploadCustomers />} />
                 <Route path="/vendor/customers/:phone/edit" element={<EditCustomer />} />

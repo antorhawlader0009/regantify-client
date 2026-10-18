@@ -182,6 +182,8 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
 
   // ------------------------------------------------------------------ Customers
   { title: 'Customer groups (New, Returning, VIP, Sleeping)', where: 'Customers > Group settings', path: '/vendor/customers', keywords: 'vip returning sleeping new segment loyalty best customers limit orders spent days inactive কাস্টমার গ্রুপ' },
+  { title: 'Customer messages (Contact page)', where: 'Customers > Messages', path: '/vendor/customers/messages', keywords: 'contact us inbox message enquiry support reply email whatsapp contact form যোগাযোগ বার্তা মেসেজ' },
+  { title: 'Contact page settings', where: 'Customers > Messages > Contact page', path: '/vendor/customers/messages', keywords: 'contact us page whatsapp phone address based in form যোগাযোগ পেজ' },
   { title: 'Blacklist a customer', where: 'Customers', path: '/vendor/customers', keywords: 'block fake blacklisted number ban ব্ল্যাকলিস্ট' },
   { title: 'Customer tags and notes', where: 'Customers', path: '/vendor/customers', keywords: 'tag label note wholesale vip remark' },
   { title: 'Customers who owe money (due / baki)', where: 'Customers', path: '/vendor/customers', keywords: 'due baki credit owed pos balance বাকি' },

@@ -74,6 +74,7 @@ export function FooterLinkListEditor({ links, onChange }: FooterLinkListEditorPr
   const choices: FooterLink[] = [
     { label: 'Track order', url: '/orders' },
     { label: 'FAQ', url: '/faq' },
+    { label: 'Contact us', url: '/contact' },
     { label: 'Magazine', url: '/blog' },
     { label: 'Gift cards', url: '/gift-card' },
     { label: 'Wishlist', url: '/wishlist' },
