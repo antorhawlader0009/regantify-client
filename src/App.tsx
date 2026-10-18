@@ -167,6 +167,7 @@ const PathaoLabelsPrintPage = lazy(() => import('./pages/vendor/courier/pathao/P
 const AiSettings = lazy(() => import('./pages/admin/ai/AiSettings'));
 const SystemStatus = lazy(() => import('./pages/admin/SystemStatus'));
 const FeatureFlags = lazy(() => import('./pages/admin/FeatureFlags'));
+const AdminShop = lazy(() => import('./pages/admin/Shop'));
 const TrustSafety = lazy(() => import('./pages/admin/TrustSafety'));
 const Automations = lazy(() => import('./pages/admin/Automations'));
 const Churn = lazy(() => import('./pages/admin/Churn'));
@@ -377,6 +378,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/ai-settings' &&
     r.path !== '/admin/system-status' &&
     r.path !== '/admin/feature-flags' &&
+    r.path !== '/admin/shop' &&
     r.path !== '/admin/trust-safety' &&
     r.path !== '/admin/verification' &&
     r.path !== '/admin/resale-disputes' &&
@@ -685,6 +687,7 @@ export default function App() {
                 <Route path="/admin/ai-settings" element={<AiSettings />} />
                 <Route path="/admin/system-status" element={<SystemStatus />} />
                 <Route path="/admin/feature-flags" element={<FeatureFlags />} />
+                <Route path="/admin/shop" element={<AdminShop />} />
                 <Route path="/admin/trust-safety" element={<TrustSafety />} />
                 <Route path="/admin/verification" element={<AdminVerification />} />
                 <Route path="/admin/resale-disputes" element={<AdminResaleDisputes />} />

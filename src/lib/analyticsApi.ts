@@ -167,7 +167,7 @@ export interface CustomersAnalytics {
 }
 
 /** 'untracked' = visits/orders recorded before attribution existed. */
-export type TrafficChannel = 'facebook' | 'instagram' | 'google' | 'tiktok' | 'youtube' | 'whatsapp' | 'qr' | 'direct' | 'other' | 'untracked';
+export type TrafficChannel = 'facebook' | 'instagram' | 'google' | 'tiktok' | 'youtube' | 'whatsapp' | 'qr' | 'shop' | 'direct' | 'other' | 'untracked';
 
 /** Visits, online-store orders and sales for one channel or campaign in the period. */
 export interface MarketingRow {

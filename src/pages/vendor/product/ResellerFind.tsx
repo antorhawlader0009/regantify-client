@@ -93,6 +93,26 @@ function ResellerFindPage() {
 
 function CatalogTab({ onSupplier }: { onSupplier: (id: string) => void }) {
   const [adding, setAdding] = useState<CatalogItem | null>(null);
+  // The Regantify Shop's "Sell this in your store" link (SHOP-plan.md Step 8) arrives as ?offer=<id>: that offer's "Add to my store" opens by
+  // itself, under the same rules as the list (a supplier this store can't work with yet simply isn't found).
+  const [params, setParams] = useSearchParams();
+  const offerParam = params.get('offer');
+  const linked = useQuery({
+    queryKey: [...RESALE_SELL_KEY, 'catalog-offer', offerParam],
+    queryFn: () => resaleSellApi.catalog({ offerId: offerParam ?? undefined }),
+    enabled: !!offerParam,
+    retry: false,
+  });
+  const linkedItem = linked.data?.items[0] ?? null;
+  useEffect(() => {
+    if (linkedItem) setAdding(linkedItem);
+  }, [linkedItem]);
+  const dropOfferParam = () => {
+    if (!params.has('offer')) return;
+    const next = new URLSearchParams(params);
+    next.delete('offer');
+    setParams(next, { replace: true });
+  };
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [sort, setSort] = useState<CatalogSort>('newest');
@@ -108,6 +128,14 @@ function CatalogTab({ onSupplier }: { onSupplier: (id: string) => void }) {
 
   return (
     <>
+      {offerParam && linked.isSuccess && !linkedItem && (
+        <div className="mb-3 flex items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p>The product you opened from the Shop isn&apos;t available to your store right now. Its supplier may need to approve you first, or the offer has ended.</p>
+          <button type="button" className={outlineBtn} onClick={dropOfferParam}>
+            Close
+          </button>
+        </div>
+      )}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
         <SelectBox ariaLabel="Category" value={category} onChange={setCategory}>
@@ -153,7 +181,15 @@ function CatalogTab({ onSupplier }: { onSupplier: (id: string) => void }) {
           </button>
         </div>
       )}
-      {adding && <AddListingDialog item={adding} onClose={() => setAdding(null)} />}
+      {adding && (
+        <AddListingDialog
+          item={adding}
+          onClose={() => {
+            setAdding(null);
+            dropOfferParam();
+          }}
+        />
+      )}
     </>
   );
 }

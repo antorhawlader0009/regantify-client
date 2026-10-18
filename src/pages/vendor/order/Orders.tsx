@@ -1374,6 +1374,7 @@ export default function Orders() {
                   <option value="youtube">YouTube</option>
                   <option value="whatsapp">WhatsApp</option>
                   <option value="qr">QR code</option>
+                  <option value="shop">Regantify Shop</option>
                   <option value="other">Other websites</option>
                   <option value="untracked">Not tracked</option>
                   <optgroup label="Orders you entered">

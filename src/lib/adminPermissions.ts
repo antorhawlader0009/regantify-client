@@ -9,7 +9,7 @@ import { isNavGroup, navLinks, type NavSection } from './navConfig';
 export type AdminPermission =
   | 'dashboard.view' | 'stores.view' | 'stores.edit' | 'stores.danger' | 'stores.impersonate_view' | 'stores.impersonate_edit' | 'money.view' | 'money.adjust' | 'payouts.manage'
   | 'plans.view' | 'plans.edit' | 'orders.view' | 'orders.edit' | 'shoppers.view' | 'shoppers.manage' | 'support.manage' | 'kyc.manage' | 'messages.send' | 'announcements.manage'
-  | 'ai.manage' | 'gateways.manage' | 'receipts.manage' | 'system.view' | 'audit.view' | 'settings.manage' | 'team.manage' | 'flags.manage';
+  | 'ai.manage' | 'gateways.manage' | 'receipts.manage' | 'system.view' | 'audit.view' | 'settings.manage' | 'team.manage' | 'flags.manage' | 'shop.manage';
 
 export type AdminRoleKey = 'OWNER' | 'MANAGER' | 'FINANCE' | 'SUPPORT';
 
@@ -49,6 +49,7 @@ const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/automations', 'messages.send'],
   ['/admin/ai-settings', 'ai.manage'],
   ['/admin/system-status', 'system.view'],
+  ['/admin/shop', 'shop.manage'],
   ['/admin/feature-flags', 'flags.manage'],
   ['/admin/addons', 'settings.manage'],
   ['/admin/approvals', null],

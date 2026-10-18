@@ -150,7 +150,7 @@ export type CatalogSort = 'newest' | 'earning' | 'price_low' | 'price_high';
 export const RESALE_SELL_KEY = ['resale-sell'] as const;
 
 export const resaleSellApi = {
-  catalog: (params: { q?: string; category?: string; supplierId?: string; sort?: CatalogSort; page?: number }) =>
+  catalog: (params: { q?: string; category?: string; supplierId?: string; offerId?: string; sort?: CatalogSort; page?: number }) =>
     api.get<{ total: number; page: number; perPage: number; items: CatalogItem[]; categories: string[] }>('/v1/resale/sell/catalog', { params }).then((r) => r.data),
   supplier: (supplierId: string) => api.get<SupplierCard>(`/v1/resale/sell/suppliers/${supplierId}`).then((r) => r.data),
   request: (supplierId: string, message?: string) => api.post<Partnership>(`/v1/resale/sell/suppliers/${supplierId}/request`, { message }).then((r) => r.data),

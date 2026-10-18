@@ -14,6 +14,7 @@ import { LockedBadge, upgradeToast } from '../../components/ui/UpgradePrompt';
 import { SetupChecklist } from '../../components/dashboard/SetupChecklist';
 import { TodayKpis } from '../../components/dashboard/TodayKpis';
 import { GoalCard } from '../../components/dashboard/GoalCard';
+import { ShopListingCard } from '../../components/dashboard/ShopListingCard';
 import { AttentionList } from '../../components/dashboard/AttentionList';
 import { SalesOverview } from '../../components/dashboard/SalesOverview';
 import { OrderMapPanel } from '../../components/dashboard/OrderMapPanel';
@@ -257,6 +258,7 @@ export default function VendorDashboard() {
               const right = [
                 trend && canSeeMap ? <div key="map" className="order-2 min-w-0"><OrderMapPanel /></div> : null,
                 status ? <div key="status" className="order-3 min-w-0">{status}</div> : null,
+                <div key="shop" className="order-7"><ShopListingCard isOwner={isOwner} /></div>,
                 hasMoneyColumn && dashboard.data.target ? (
                   <div key="goal" className="order-7"><GoalCard target={dashboard.data.target} isOwner={isOwner} /></div>
                 ) : null,

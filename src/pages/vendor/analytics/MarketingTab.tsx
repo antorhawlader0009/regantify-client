@@ -16,6 +16,7 @@ const CHANNEL_LABELS: Record<string, string> = {
   youtube: 'YouTube',
   whatsapp: 'WhatsApp',
   qr: 'QR code',
+  shop: 'Regantify Shop',
   direct: 'Direct',
   other: 'Other websites',
   untracked: 'Not tracked',
