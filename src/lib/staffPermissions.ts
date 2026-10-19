@@ -356,6 +356,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/store/pages': 'store.content',
   '/vendor/store/magazine': 'store.content',
   '/vendor/store/faq': 'store.content',
+  '/vendor/store/social-feed': 'store.content',
   '/vendor/store/share': 'store.content',
   '/vendor/store/landing-pages': 'store.content',
   '/vendor/store/media': 'store.content',

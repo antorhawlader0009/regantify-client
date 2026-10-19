@@ -17,6 +17,7 @@ export const HOME_SECTION_INFO: Record<HomeSectionId, { label: string; descripti
   HIGHLIGHTS: { label: 'Store highlights', description: 'Short points with an icon, such as free delivery or easy returns. You write them below.' },
   REVIEWS: { label: 'Customer reviews', description: 'Recent reviews from your customers. Hidden on its own when there are none.' },
   FAQ: { label: 'FAQ', description: 'Your first 5 questions as an accordion, with a link to all. Hidden on its own until you switch a question on (Store > Content > FAQ).' },
+  SOCIAL_FEED: { label: 'Social Feed', description: 'Your newest YouTube videos with your channel name. Hidden on its own until you connect a channel and switch it on (Store > Content > Social Feed).' },
   MAGAZINE: { label: 'Magazine', description: 'Your latest Magazine posts as photo cards. Hidden on its own until you publish a post (Store > Content > Magazine).' },
 };
 
@@ -31,6 +32,7 @@ export const HOME_SECTION_ORDER: HomeSectionId[] = [
   'REVIEWS',
   'MAGAZINE',
   'FAQ',
+  'SOCIAL_FEED',
 ];
 
 /** The saved sections in the vendor's order, then any StorePal section they haven't placed yet (shown), so the list is always complete. */

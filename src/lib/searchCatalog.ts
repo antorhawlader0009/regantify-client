@@ -83,6 +83,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Trust strip (free delivery, return, safe payment icons)', where: 'Store > Design > Trust Strip', path: '/vendor/store/trust-strip', keywords: 'trust badges icons guarantee free delivery return secure payment product page checkout বিশ্বাস ব্যাজ' },
   { title: 'Checkout form fields (second phone, thana, note)', where: 'Store > Checkout > Form Fields', path: '/vendor/store/checkout-form', keywords: 'checkout form fields second phone alternate email thana note optional required hide চেকআউট ফর্ম দ্বিতীয় ফোন' },
   { title: 'Share & QR code (poster)', where: 'Store > Content > Share & QR', path: '/vendor/store/share', keywords: 'qr code poster share link print scan banner card কিউআর পোস্টার' },
+  { title: 'Social Feed (YouTube videos on the store)', where: 'Store > Content > Social Feed', path: '/vendor/store/social-feed', keywords: 'youtube channel videos social feed instagram tiktok facebook reels shorts ইউটিউব ভিডিও সোশ্যাল চ্যানেল' },
   { title: 'FAQ (questions and answers)', where: 'Store > Content > FAQ', path: '/vendor/store/faq', keywords: 'faq questions answers common questions help প্রশ্ন উত্তর সাধারণ প্রশ্ন' },
   { title: 'Magazine (blog posts)', where: 'Store > Content > Magazine', path: '/vendor/store/magazine', keywords: 'magazine blog article news story post ম্যাগাজিন ব্লগ' },
   { title: 'Pages (About, Contact, Privacy)', where: 'Store > Content > Pages', path: '/vendor/store/pages', keywords: 'about us contact privacy policy terms refund return policy page cms পেজ' },

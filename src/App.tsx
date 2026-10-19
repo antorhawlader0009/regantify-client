@@ -57,6 +57,7 @@ const Pages = lazy(() => import('./pages/vendor/store/Pages'));
 const AddPage = lazy(() => import('./pages/vendor/store/AddPage'));
 const Magazine = lazy(() => import('./pages/vendor/store/Magazine'));
 const Faq = lazy(() => import('./pages/vendor/store/Faq'));
+const SocialFeed = lazy(() => import('./pages/vendor/store/SocialFeed'));
 const ShareQr = lazy(() => import('./pages/vendor/store/ShareQr'));
 const CheckoutFormFields = lazy(() => import('./pages/vendor/store/design/CheckoutFormFields'));
 const AddPost = lazy(() => import('./pages/vendor/store/AddPost'));
@@ -311,6 +312,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/magazine' &&
     r.path !== '/vendor/store/faq' &&
+    r.path !== '/vendor/store/social-feed' &&
     r.path !== '/vendor/store/share' &&
     r.path !== '/vendor/store/checkout-form' &&
     r.path !== '/vendor/store/landing-pages' &&
@@ -516,6 +518,7 @@ export default function App() {
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
                 <Route path="/vendor/store/faq" element={<Faq />} />
+                <Route path="/vendor/store/social-feed" element={<SocialFeed />} />
                 <Route path="/vendor/store/share" element={<ShareQr />} />
                 <Route path="/vendor/store/checkout-form" element={<CheckoutFormFields />} />
                 <Route path="/vendor/store/magazine" element={<Magazine />} />
