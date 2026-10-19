@@ -14,6 +14,7 @@ import { ordersApi } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
+import { PrepaidDiscountCard } from '../../../components/store/PrepaidDiscountCard';
 
 const TYPES: { value: CodVerificationType; label: string; disabled?: boolean }[] = [
   { value: 'NONE', label: 'None' },
@@ -535,6 +536,10 @@ export default function CodGuard() {
           </div>
         </div>
       )}
+
+      <div className="mt-6">
+        <PrepaidDiscountCard />
+      </div>
     </div>
   );
 }

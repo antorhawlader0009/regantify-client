@@ -55,6 +55,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Invoice: thank-you note, terms, signature, paper size', where: 'Store > Invoice', path: INVOICE, keywords: 'invoice receipt 80mm a4 bin trade licence bkash bank signature seal terms memo ইনভয়েস রসিদ সই' },
   { title: 'Low stock alert limit', where: 'Store > Stock Settings', path: STOCK, keywords: 'low stock threshold minimum quantity alert warning running out কম স্টক সতর্কতা' },
   { title: 'Block fake or bad customers (auto block)', where: 'Store > COD Guard', path: COD, keywords: 'blacklist fake order cod block auto block blocked customer ব্ল্যাকলিস্ট ভুয়া অর্ডার' },
+  { title: 'Discount for paying online', where: 'Store > COD Guard', path: `${COD}#prepaid-discount`, keywords: 'prepaid discount online payment bkash nagad save cod to prepaid pay now offer অনলাইন পেমেন্ট ছাড় প্রিপেইড' },
   { title: 'SMS code to verify COD orders', where: 'Store > COD Guard', path: COD, keywords: 'otp verification phone verify code before after checkout fake order sms ভেরিফিকেশন ওটিপি' },
   { title: 'Cancel or hold orders never verified', where: 'Store > COD Guard', path: COD, keywords: 'verification expiry time allowed enter code on hold cancel unverified' },
   { title: 'Take an advance on COD (delivery charge)', where: 'Store > COD Guard', path: COD, keywords: 'advance payment delivery charge in advance cod minimum order অগ্রিম অ্যাডভান্স' },
