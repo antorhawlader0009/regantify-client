@@ -26,11 +26,12 @@ function isActive(path: string, pathname: string): boolean {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-function SupportDot() {
+function SupportDot({ onAccent }: { onAccent: boolean }) {
   const viewer = useAdminViewer();
   const { data: count = 0 } = useQuery({ queryKey: ['support-unread', 'admin'], queryFn: adminSupportApi.unreadCount, refetchInterval: idlePoll(60_000, 5), retry: false, enabled: adminCan(viewer, 'support.manage') });
   if (!count) return null;
-  return <span className="ml-auto min-w-[18px] rounded-full bg-[var(--console-brass)] px-1.5 text-center text-[10.5px] font-semibold leading-[18px] text-[#0c2b25]">{count > 99 ? '99+' : count}</span>;
+  // On the orange pill the count turns white so it still stands out.
+  return <span className={`ml-auto min-w-[20px] rounded-full px-1.5 text-center text-[10.5px] font-semibold leading-[20px] ${onAccent ? 'bg-white text-regantify-cta' : 'bg-[var(--console-brass)] text-[#0F2027]'}`}>{count > 99 ? '99+' : count}</span>;
 }
 
 /**
@@ -68,30 +69,31 @@ export function AdminSidebar({ sections, mobileOpen, onMobileClose }: { sections
 
   const initials = (user?.fullName ?? 'A').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
+  // Dark rail with an orange-to-coral pill for the open page (admin-panel-new-theme.md Step 2).
   const rail = (
-    <aside className="flex h-full w-[236px] shrink-0 flex-col bg-regantify-sidebar text-[var(--console-rail-text)]" aria-label="Admin navigation">
-      <div className="flex h-[52px] shrink-0 items-center gap-2.5 px-4">
-        <Link to="/admin/dashboard" className="flex items-center gap-2.5" aria-label="Regantify console, home">
-          <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--console-brass)] text-[15px] font-bold text-[#0c2b25]">R</span>
-          <span className="text-[15px] font-semibold leading-none text-white">Regantify <span className="font-normal text-[var(--console-rail-text)]">Console</span></span>
+    <aside className="flex h-full w-[256px] shrink-0 flex-col bg-regantify-sidebar text-[var(--console-rail-text)]" aria-label="Admin navigation">
+      <div className="flex h-[72px] shrink-0 items-center gap-2.5 px-6">
+        <Link to="/admin/dashboard" className="flex items-baseline gap-1.5" aria-label="Regantify console, home">
+          <span className="bg-[image:var(--console-accent-gradient)] bg-clip-text text-[24px] font-bold leading-none tracking-tight text-transparent">regantify</span>
+          <span className="text-[11px] font-medium text-[var(--console-rail-muted)]">console</span>
         </Link>
-        <button type="button" onClick={onMobileClose} aria-label="Close menu" className="ml-auto rounded p-1 text-[var(--console-rail-text)] hover:bg-[var(--console-rail-hover)] lg:hidden">
-          <X size={16} />
+        <button type="button" onClick={onMobileClose} aria-label="Close menu" className="ml-auto rounded-lg p-1.5 text-[var(--console-rail-text)] hover:bg-[var(--console-rail-hover)] lg:hidden">
+          <X size={18} />
         </button>
       </div>
 
-      <nav className="console-rail min-h-0 flex-1 overflow-y-auto px-2.5 pb-3 pt-1">
+      <nav className="console-rail min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-1">
         {groups.map((g) => {
           const holdsActive = g.items.some((i) => isActive(i.path!, pathname));
           const open = holdsActive || !collapsed.includes(g.name);
           return (
-            <div key={g.name} className="mb-1">
-              <button type="button" onClick={() => toggle(g.name)} aria-expanded={open} className="flex w-full items-center justify-between rounded px-2 py-1.5 text-[11.5px] font-medium text-[#7fa396] hover:text-white">
+            <div key={g.name} className="mb-3">
+              <button type="button" onClick={() => toggle(g.name)} aria-expanded={open} className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-[var(--console-rail-muted)] hover:text-white">
                 {g.name}
-                <ChevronDown size={13} className={`transition-transform ${open ? '' : '-rotate-90'}`} />
+                <ChevronDown size={14} className={`transition-transform ${open ? '' : '-rotate-90'}`} />
               </button>
               {open && (
-                <ul className="mt-0.5 space-y-px">
+                <ul className="mt-1 space-y-1">
                   {g.items.map((it) => {
                     const active = isActive(it.path!, pathname);
                     return (
@@ -99,12 +101,15 @@ export function AdminSidebar({ sections, mobileOpen, onMobileClose }: { sections
                         <NavLink
                           to={it.path!}
                           aria-current={active ? 'page' : undefined}
-                          className={`relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors ${active ? 'bg-[var(--console-rail-hover)] font-medium text-white' : 'hover:bg-[var(--console-rail-hover)] hover:text-white'}`}
+                          className={`flex h-10 items-center gap-3 rounded-xl px-3 text-[13.5px] transition-colors ${
+                            active
+                              ? 'bg-[image:var(--console-accent-gradient)] font-medium text-white shadow-[0_6px_16px_rgba(245,87,108,0.28)]'
+                              : 'hover:bg-[var(--console-rail-hover)] hover:text-white'
+                          }`}
                         >
-                          {active && <span className="absolute -left-2.5 top-1.5 h-5 w-[3px] rounded-r bg-[var(--console-brass)]" aria-hidden />}
-                          <it.icon size={15} strokeWidth={1.75} className={active ? 'text-[var(--console-brass)]' : 'text-[#8fb0a4]'} />
+                          <it.icon size={17} strokeWidth={1.8} className={active ? 'text-white' : 'text-[var(--console-rail-muted)]'} />
                           <span className="truncate">{it.label}</span>
-                          {it.path === '/admin/support' && <SupportDot />}
+                          {it.path === '/admin/support' && <SupportDot onAccent={active} />}
                         </NavLink>
                       </li>
                     );
@@ -116,14 +121,14 @@ export function AdminSidebar({ sections, mobileOpen, onMobileClose }: { sections
         })}
       </nav>
 
-      <div className="flex shrink-0 items-center gap-2.5 border-t border-[var(--console-rail-line)] px-3.5 py-3">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[var(--console-rail-hover)] text-[12px] font-semibold text-white ring-1 ring-[var(--console-rail-line)]">{initials}</span>
+      <div className="flex shrink-0 items-center gap-3 border-t border-[var(--console-rail-line)] px-5 py-4">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--console-rail-hover)] text-[12px] font-semibold text-white ring-1 ring-[var(--console-rail-line)]">{initials}</span>
         <span className="min-w-0 flex-1 leading-tight">
           <span className="block truncate text-[13px] font-medium text-white">{user?.fullName ?? 'Admin'}</span>
-          <span className="block truncate text-[11.5px] text-[#7fa396]">{ADMIN_ROLE_LABEL[viewer.role ?? 'OWNER']}</span>
+          <span className="block truncate text-[11.5px] text-[var(--console-rail-muted)]">{ADMIN_ROLE_LABEL[viewer.role ?? 'OWNER']}</span>
         </span>
-        <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="rounded-md p-1.5 text-[#8fb0a4] hover:bg-[var(--console-rail-hover)] hover:text-white">
-          <LogOut size={15} />
+        <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="rounded-lg p-2 text-[var(--console-rail-muted)] hover:bg-[var(--console-rail-hover)] hover:text-white">
+          <LogOut size={16} />
         </button>
       </div>
     </aside>

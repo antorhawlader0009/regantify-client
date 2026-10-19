@@ -5,6 +5,8 @@ import { Loader2, Timer } from 'lucide-react';
 import { deliveryTimesApi } from '../../lib/deliveryTimesApi';
 import { formatDhakaDate } from '../../lib/dhakaDate';
 import { Dialog } from '../../components/ui/Dialog';
+import { GradientBarChart, RadialRings, SERIES } from '../../components/admin/charts';
+import { Card, CardHeader } from '../../components/admin/ui/Card';
 
 const th = 'px-4 py-2 font-normal';
 const thR = 'px-4 py-2 text-right font-normal';
@@ -69,6 +71,42 @@ export default function DeliveryTimes() {
               hint={data.totals.delivered ? `${Math.round((data.totals.deliveredLate / data.totals.delivered) * 100)}% of deliveries` : undefined}
             />
           </div>
+
+          {data.totals.delivered > 0 && (
+            <div className="grid gap-4 lg:grid-cols-3">
+              <Card>
+                <CardHeader title="On time" subtitle="share of deliveries in this period" />
+                <RadialRings
+                  label="Share of deliveries that arrived on time"
+                  rings={[
+                    {
+                      key: 'ontime',
+                      label: 'On time',
+                      value: data.totals.delivered - data.totals.deliveredLate,
+                      max: data.totals.delivered,
+                      detail: `${(data.totals.delivered - data.totals.deliveredLate).toLocaleString('en-US')} of ${data.totals.delivered.toLocaleString('en-US')} deliveries`,
+                    },
+                  ]}
+                  centerCaption="on time"
+                  height={220}
+                />
+              </Card>
+              <Card className="lg:col-span-2">
+                <CardHeader title="Most late deliveries" subtitle="top 10 stores" />
+                <GradientBarChart
+                  label="Stores with the most late deliveries, top 10"
+                  rows={[...data.stores].sort((a, b) => b.deliveredLate - a.deliveredLate).slice(0, 10).filter((s) => s.deliveredLate > 0)}
+                  xKey="storeName"
+                  series={[
+                    { key: 'deliveredLate', label: 'Delivered late' },
+                    { key: 'openLate', label: 'Still on the way, late', color: SERIES.purple },
+                  ]}
+                  format={(n) => n.toLocaleString('en-US')}
+                  height={240}
+                />
+              </Card>
+            </div>
+          )}
 
           <div className="overflow-x-auto rounded-xl border border-line bg-white">
             <table className="w-full min-w-[760px] text-sm">

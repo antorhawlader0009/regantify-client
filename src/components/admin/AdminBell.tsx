@@ -28,12 +28,12 @@ export function AdminBell() {
   const unread = data?.unread ?? 0;
   return (
     <div ref={box} className="relative shrink-0">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-label={unread ? `${unread} new alerts` : 'Alerts'} className="relative flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white text-neutral-700 transition hover:border-neutral-300 hover:shadow-sm">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-label={unread ? `${unread} new alerts` : 'Alerts'} className="relative flex h-10 w-10 items-center justify-center rounded-full bg-regantify-search text-regantify-text transition hover:bg-[var(--console-hover)]">
         <Bell size={17} />
         {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-[18px] text-white">{unread > 99 ? '99+' : unread}</span>}
       </button>
       {open && (
-        <div className="fixed inset-x-3 top-[64px] z-50 overflow-hidden rounded-xl border border-line bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[380px]">
+        <div className="fixed inset-x-3 top-[76px] z-50 overflow-hidden rounded-xl border border-line bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[380px]">
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
             <p className="text-sm font-semibold text-regantify-text">Alerts</p>
             <div className="flex items-center gap-3 text-xs">

@@ -8,8 +8,7 @@ import { isPendingApproval, toastPendingApproval } from '../../../lib/approvalsA
 import { toast } from '../../../lib/toast';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
-import { ColumnChart } from '../../../components/analytics/TrendChart';
-import { bucketLabel, formatTaka } from '../../../components/analytics/format';
+import { GradientAreaChart, GradientBarChart, SERIES, bucketLabel, formatCompact, formatTaka } from '../../../components/admin/charts';
 import { ImpersonateDialog } from '../../../components/admin/ImpersonateDialog';
 import { Dialog } from '../../../components/ui/Dialog';
 import { StatusBadge } from './StatusBadge';
@@ -23,6 +22,7 @@ import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adm
 import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 import { StoreResaleCard } from '../../../components/admin/StoreResaleCard';
 import { BackLink } from '../../../components/ui/BackLink';
+import { RangeTabs } from '../../../components/admin/ui/RangeTabs';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4): everything about one store, and the actions on it.
 const TABS = [
@@ -54,7 +54,7 @@ function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
 function Card({ title, children, className = '' }: { title?: string; children: ReactNode; className?: string }) {
   return (
     <section className={`rounded-2xl border border-black/5 bg-white p-5 ${className}`}>
-      {title && <h2 className="mb-2 text-sm font-semibold text-regantify-text">{title}</h2>}
+      {title && <h2 className="mb-3 text-[17px] font-semibold text-regantify-text">{title}</h2>}
       {children}
     </section>
   );
@@ -311,12 +311,29 @@ function Usage({ d }: { d: StoreDetail }) {
         <Row label="Orders value, last 30 days">{formatTaka(u.gmv30d)}</Row>
       </Card>
       <Card title="Orders per day, last 30 days" className="lg:col-span-2">
-        <ColumnChart
-          data={u.perDay.map((p) => ({ key: p.bucket, value: p.orders, tick: bucketLabel(p.bucket, 'day'), tooltip: `${bucketLabel(p.bucket, 'day', true)}: ${p.orders} orders, ${formatTaka(p.gmv)}` }))}
-          label="Orders"
-          ariaLabel="Orders per day for the last 30 days"
-          tickEvery={7}
+        <GradientBarChart
+          label="Orders per day for the last 30 days"
+          rows={u.perDay}
+          xKey="bucket"
+          series={[{ key: 'orders', label: 'Orders' }]}
+          xLabel={(v) => bucketLabel(String(v), 'day')}
+          tooltipTitle={(v) => bucketLabel(String(v), 'day', true)}
+          format={(n) => String(n)}
+          height={240}
         />
+        <div className="mt-5">
+          <GradientAreaChart
+            label="Order value per day for the last 30 days"
+            rows={u.perDay}
+            xKey="bucket"
+            series={[{ key: 'gmv', label: 'Order value', color: SERIES.purple }]}
+            xLabel={(v) => bucketLabel(String(v), 'day')}
+            tooltipTitle={(v) => bucketLabel(String(v), 'day', true)}
+            format={formatTaka}
+            axisFormat={(n) => formatCompact(n, 'money')}
+            height={200}
+          />
+        </div>
       </Card>
     </div>
   );
@@ -849,19 +866,22 @@ export default function StoreDetailPage() {
   return (
     <div className="max-w-6xl">
       <BackLink to="/admin/vendors/all" label="All stores" className="" />
-      <div className="mt-2 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold text-regantify-text">{data.storeName}</h1>
-        <StatusBadge status={data.status} />
-        <span className="rounded-md bg-black/5 px-2 py-1 text-xs font-medium">{data.plan.name}</span>
+      <div className="mt-3 flex flex-wrap items-center gap-4 rounded-2xl bg-white p-5 shadow-[var(--console-card-shadow)]">
+        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[var(--tint-orange-bg)] text-[20px] font-semibold text-[var(--tint-orange-fg)]" aria-hidden>
+          {data.storeName.trim().charAt(0).toUpperCase() || 'S'}
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl font-semibold text-regantify-text">{data.storeName}</h1>
+            <StatusBadge status={data.status} />
+            <span className="rounded-full bg-[var(--tint-orange-bg)] px-2.5 py-0.5 text-xs font-medium text-[var(--tint-orange-fg)]">{data.plan.name}</span>
+          </div>
+          <p className="console-id mt-1 text-regantify-text-muted">{data.id}</p>
+        </div>
       </div>
-      <p className="mt-1 font-mono text-xs text-regantify-text-muted">{data.id}</p>
 
-      <div className="mt-5 flex gap-1 overflow-x-auto border-b border-black/5">
-        {TABS.filter((t) => t.id !== 'money' || adminCan(viewer, 'money.view')).map((t) => (
-          <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`whitespace-nowrap px-4 py-2 text-sm font-medium ${tab === t.id ? 'border-b-2 border-regantify-cta text-regantify-text' : 'text-regantify-text-muted hover:text-regantify-text'}`}>
-            {t.label}
-          </button>
-        ))}
+      <div className="mt-5 inline-flex max-w-full overflow-x-auto rounded-full bg-white p-1.5 shadow-[var(--console-card-shadow)]">
+        <RangeTabs options={TABS.filter((t) => t.id !== 'money' || adminCan(viewer, 'money.view'))} value={tab} onChange={setTab} label="Store sections" />
       </div>
 
       <div className="mt-5">

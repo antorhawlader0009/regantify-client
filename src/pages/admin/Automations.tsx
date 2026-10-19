@@ -46,7 +46,7 @@ export default function Automations() {
       </div>
 
       {data?.paused && (
-        <p className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+        <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">
           All automations are paused by the "Automatic nudges to stores" switch in{' '}
           <Link to="/admin/settings?tab=switches" className="underline">
             Settings

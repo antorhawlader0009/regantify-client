@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../ui/DropdownMenu';
 
 export interface RowMenuItem {
@@ -22,8 +22,8 @@ export function RowMenu({ items, label = 'More actions' }: { items: RowMenuItem[
     <DropdownMenu
       widthClass="w-48"
       trigger={
-        <button type="button" aria-label={label} title={label} className="grid h-7 w-7 place-items-center rounded-md text-regantify-text-muted transition hover:bg-black/5 hover:text-regantify-text">
-          <MoreHorizontal size={16} />
+        <button type="button" aria-label={label} title={label} className="grid h-8 w-8 place-items-center rounded-full text-regantify-text-muted transition hover:bg-regantify-search hover:text-regantify-text">
+          <MoreVertical size={16} />
         </button>
       }
     >

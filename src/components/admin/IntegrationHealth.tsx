@@ -9,7 +9,7 @@ import { toast } from '../../lib/toast';
 
 const STATE: Record<IntegrationState, { label: string; cls: string; Icon: typeof CheckCircle2 }> = {
   ok: { label: 'Working', cls: 'text-green-700', Icon: CheckCircle2 },
-  shaky: { label: 'Some failing', cls: 'text-amber-700', Icon: TriangleAlert },
+  shaky: { label: 'Some failing', cls: 'text-red-700', Icon: TriangleAlert },
   down: { label: 'Looks down', cls: 'text-red-700', Icon: CircleAlert },
   idle: { label: 'No calls', cls: 'text-regantify-text-muted', Icon: CircleDashed },
 };
@@ -68,7 +68,7 @@ export function IntegrationsSection() {
         </p>
       </div>
       {trouble > 0 && (
-        <p className="mb-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+        <p className="mb-3 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">
           {trouble === 1 ? '1 service is' : `${trouble} services are`} failing calls right now. The red bars show when it started.
         </p>
       )}

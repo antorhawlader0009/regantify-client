@@ -9,6 +9,8 @@ import { churnApi, REASON_LABEL, type ChurnOverview, type ChurnReason } from '..
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
+import { GradientBarChart, GradientDonut, SERIES } from '../../components/admin/charts';
+import { Card, CardHeader } from '../../components/admin/ui/Card';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const pct = (n: number, d: number) => (d > 0 ? `${Math.round((n / d) * 100)}%` : '-');
@@ -51,6 +53,36 @@ export default function Churn() {
         <Tile label="Told us why" value={pct(l.answered, l.total)} hint={`${l.answered} answered, ${l.skipped} skipped`} />
         <Tile label="Won back" value={pct(l.wonBack, l.total)} hint={`${l.wonBack} paid again`} />
         <Tile label="Offers taken" value={pct(data.reasons.reduce((n, r) => n + r.taken, 0), data.reasons.reduce((n, r) => n + r.offered, 0))} hint="of promo / free-day offers shown" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader title="Why they left" subtitle="last 90 days" />
+          <GradientDonut
+            label="Reasons stores gave for losing or cutting a plan, last 90 days"
+            slices={[...data.reasons].sort((a, b) => b.count - a.count).map((r) => ({ key: r.reason, label: REASON_LABEL[r.reason], value: r.count }))}
+            format={(n) => `${n} ${n === 1 ? 'store' : 'stores'}`}
+            centerValue={String(data.reasons.reduce((n, r) => n + r.count, 0))}
+            centerCaption="answers"
+            height={220}
+          />
+        </Card>
+        <Card className="lg:col-span-2">
+          <CardHeader title="By month" subtitle="lost, moved to cheaper, won back" />
+          <GradientBarChart
+            label="Stores that lost a plan, moved to a cheaper one, or were won back, per month"
+            rows={data.months}
+            xKey="month"
+            series={[
+              { key: 'lapsed', label: 'Lost a plan' },
+              { key: 'downgraded', label: 'Moved to cheaper' },
+              { key: 'wonBack', label: 'Won back', color: SERIES.green },
+            ]}
+            xLabel={(v) => monthLabel(String(v))}
+            format={(n) => String(n)}
+            height={250}
+          />
+        </Card>
       </div>
 
       <section>
@@ -159,9 +191,9 @@ export default function Churn() {
 
 function Tile({ label, value, hint }: { label: string; value: number | string; hint: string }) {
   return (
-    <div className="rounded-xl border border-black/5 bg-white p-4">
-      <p className="text-xs text-regantify-text-muted">{label}</p>
-      <p className="text-lg font-semibold tabular-nums text-regantify-text">{value}</p>
+    <div className="rounded-2xl bg-white p-5 shadow-[var(--console-card-shadow)]">
+      <p className="text-[13px] font-medium text-regantify-text-muted">{label}</p>
+      <p className="mt-1 text-[24px] font-semibold leading-tight tracking-tight tabular-nums text-regantify-text">{value}</p>
       <p className="text-xs text-regantify-text-muted">{hint}</p>
     </div>
   );

@@ -58,7 +58,7 @@ export default function Domains() {
       </div>
 
       {!data.ready && (
-        <p className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+        <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">
           PLATFORM_PUBLIC_IPS is not set in server/.env, so no domain can be verified yet. Set it to the VPS public address and restart the server. The Caddy setup is in
           z-others/vps/caddy/README.md.
         </p>

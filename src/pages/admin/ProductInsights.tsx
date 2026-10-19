@@ -3,11 +3,21 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, Loader2, PackageSearch, TrendingDown, TrendingUp } from 'lucide-react';
 import { productInsightsApi, type InsightProduct } from '../../lib/productInsightsApi';
-import { formatTaka } from '../../components/analytics/format';
+import { GradientBarChart, GradientDonut, SERIES, formatCompact, formatTaka } from '../../components/admin/charts';
+import { RangeTabs } from '../../components/admin/ui/RangeTabs';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { storefrontProductUrl } from '../../lib/storefrontUrl';
 
-const panel = 'rounded-xl border border-line bg-white';
+const panel = 'rounded-2xl bg-white shadow-[var(--console-card-shadow)]';
+const DAY_OPTIONS = [
+  { id: '7', label: '7 days' },
+  { id: '30', label: '30 days' },
+  { id: '90', label: '90 days' },
+] as const;
+const BY_OPTIONS = [
+  { id: 'units', label: 'Most pieces' },
+  { id: 'revenue', label: 'Most money' },
+] as const;
 const th = 'px-4 py-2 font-normal';
 const thR = 'px-4 py-2 text-right font-normal';
 const td = 'px-4 py-2.5';
@@ -36,13 +46,9 @@ export default function ProductInsights() {
             </p>
           </div>
         </div>
-        <select value={days} onChange={(e) => setDays(Number(e.target.value))} className="rounded-lg border border-line bg-white px-3 py-2 text-sm">
-          {[7, 30, 90].map((d) => (
-            <option key={d} value={d}>
-              Last {d} days
-            </option>
-          ))}
-        </select>
+        <div className="max-w-full overflow-x-auto rounded-full bg-white px-1.5 py-1 shadow-[var(--console-card-shadow)]">
+          <RangeTabs options={DAY_OPTIONS} value={String(days) as (typeof DAY_OPTIONS)[number]['id']} onChange={(id) => setDays(Number(id))} />
+        </div>
       </div>
 
       {isLoading || !data ? (
@@ -61,13 +67,7 @@ export default function ProductInsights() {
           <Section
             title="Best-selling products"
             right={
-              <div className="flex gap-1 rounded-lg bg-regantify-search p-1 text-xs">
-                {(['units', 'revenue'] as const).map((k) => (
-                  <button key={k} type="button" onClick={() => setBy(k)} className={`rounded-md px-3 py-1 ${by === k ? 'bg-white font-medium text-regantify-text shadow-sm' : 'text-regantify-text-muted'}`}>
-                    {k === 'units' ? 'Most pieces' : 'Most money'}
-                  </button>
-                ))}
-              </div>
+              <RangeTabs options={BY_OPTIONS} value={by} onChange={setBy} label="Sort best sellers by" />
             }
           >
             <ProductTable rows={by === 'units' ? data.topByUnits : data.topByRevenue} empty="Nothing sold in this period." />
@@ -82,7 +82,16 @@ export default function ProductInsights() {
               {data.categories.length === 0 ? (
                 <Empty>No category sold in this period.</Empty>
               ) : (
-                <div className={`overflow-x-auto ${panel}`}>
+                <div className={`overflow-x-auto ${panel} p-5`}>
+                  <GradientDonut
+                    label="Sales by category"
+                    slices={[...data.categories].sort((a, b) => b.revenue - a.revenue).map((c) => ({ key: c.label, label: c.label, value: c.revenue }))}
+                    format={formatTaka}
+                    centerValue={formatCompact(data.categories.reduce((s, c) => s + c.revenue, 0), 'money')}
+                    centerCaption="sales"
+                    height={210}
+                  />
+                  <div className="mt-4" />
                   <table className="w-full min-w-[460px] text-sm">
                     <thead>
                       <tr className="border-b border-line text-left text-xs text-regantify-text-muted">
@@ -121,7 +130,17 @@ export default function ProductInsights() {
             </Section>
 
             <Section title="Price levels that sell" hint="Pieces and sales by the price a piece was sold at.">
-              <div className={`overflow-x-auto ${panel}`}>
+              <div className={`overflow-x-auto ${panel} p-5`}>
+                <GradientBarChart
+                  label="Pieces sold at each price level"
+                  rows={data.priceBands}
+                  xKey="label"
+                  series={[{ key: 'units', label: 'Pieces', color: SERIES.purple }]}
+                  format={num}
+                  axisFormat={(n) => formatCompact(n)}
+                  height={210}
+                />
+                <div className="mt-4" />
                 <table className="w-full min-w-[420px] text-sm">
                   <thead>
                     <tr className="border-b border-line text-left text-xs text-regantify-text-muted">
@@ -251,7 +270,7 @@ function Section({ title, hint, right, children }: { title: string; hint?: strin
     <section>
       <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-regantify-text">{title}</h2>
+          <h2 className="text-[17px] font-semibold text-regantify-text">{title}</h2>
           {hint && <p className="max-w-3xl text-xs text-regantify-text-muted">{hint}</p>}
         </div>
         {right}
@@ -263,9 +282,9 @@ function Section({ title, hint, right, children }: { title: string; hint?: strin
 
 function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className={`${panel} p-4`}>
-      <p className="text-xs text-regantify-text-muted">{label}</p>
-      <p className="text-lg font-semibold tabular-nums text-regantify-text">{value}</p>
+    <div className={`${panel} p-5`}>
+      <p className="text-[13px] font-medium text-regantify-text-muted">{label}</p>
+      <p className="mt-1 text-[24px] font-semibold leading-tight tracking-tight tabular-nums text-regantify-text">{value}</p>
       {hint && <p className="text-xs text-regantify-text-muted">{hint}</p>}
     </div>
   );

@@ -9,6 +9,8 @@ import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { RowMenu } from '../../components/admin/RowMenu';
+import { GradientBarChart } from '../../components/admin/charts';
+import { Card, CardHeader } from '../../components/admin/ui/Card';
 
 const field = 'w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-regantify-text focus:outline-none';
 const th = 'px-4 py-2 font-normal';
@@ -72,6 +74,22 @@ export default function FeatureRequests() {
           <Loader2 className="animate-spin text-neutral-400" />
         </div>
       ) : (
+        <>
+        {(data ?? []).some((r) => r.votes > 0) && (
+          <Card>
+            <CardHeader title="Most wanted" subtitle="top 8 ideas by votes, in this list" />
+            <GradientBarChart
+              label="The 8 ideas with the most votes in this list"
+              rows={[...(data ?? [])].sort((a, b) => b.votes - a.votes).slice(0, 8).filter((r) => r.votes > 0)}
+              xKey="title"
+              series={[{ key: 'votes', label: 'Votes' }]}
+              xLabel={(v) => (String(v).length > 16 ? `${String(v).slice(0, 15)}…` : String(v))}
+              tooltipTitle={(v) => String(v)}
+              format={(n) => `${n} ${n === 1 ? 'vote' : 'votes'}`}
+              height={220}
+            />
+          </Card>
+        )}
         <div className="overflow-x-auto rounded-xl border border-line bg-white">
           <table className="w-full min-w-[820px] text-sm">
             <thead>
@@ -128,6 +146,7 @@ export default function FeatureRequests() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <RequestDialog request={editing} onClose={() => setEditing(null)} />

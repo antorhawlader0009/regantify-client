@@ -1,11 +1,21 @@
-import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowDownRight, ArrowRight, ArrowUpRight, CircleCheck, Loader2, Receipt } from 'lucide-react';
+import { AlertCircle, ArrowDownRight, ArrowUpRight, CircleCheck, Landmark, Loader2, Receipt, Repeat, ShoppingBag, Sparkles, Store as StoreIcon, TrendingDown } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { adminDashboardApi, type AdminOverview, type Compared, type OverviewRange } from '../../lib/adminDashboardApi';
-import { ColumnChart, PALETTE, TrendChart } from '../../components/analytics/TrendChart';
-import { bucketLabel, changeOf, formatCompact, formatTaka, formatValue, type ValueKind } from '../../components/analytics/format';
+// This page is imported eagerly by App.tsx, so its charts come from the lazy wrappers (Recharts stays out of the first download).
+import {
+  LazyGradientBarChart as GradientBarChart,
+  LazyGradientDonut as GradientDonut,
+  LazyRadialRings as RadialRings,
+  LazySparkline as Sparkline,
+} from '../../components/admin/charts/lazy';
+import { SERIES, bucketLabel, formatCompact, formatTaka, formatValue, type ValueKind } from '../../components/admin/charts/theme';
+import { Card, CardHeader } from '../../components/admin/ui/Card';
+import { RangeTabs } from '../../components/admin/ui/RangeTabs';
+import { ChangeTag, StatCard } from '../../components/admin/ui/StatCard';
+import { ListTile } from '../../components/admin/ui/ListTile';
+import { EmptyState, Skeleton } from '../../components/admin/ui/Primitives';
 import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
 import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 
@@ -21,68 +31,19 @@ function formatAmount(value: string) {
 }
 
 /** "+12.5%" in green (or red when a rise is bad, like plans that ended); nothing when there is nothing to compare with. */
-function Change({ value, kind = 'count', badWhenUp }: { value: Compared; kind?: ValueKind; badWhenUp?: boolean }) {
-  const c = changeOf(value, kind);
-  if (!c || c.value === 0) return null;
-  const up = c.value > 0;
-  const good = badWhenUp ? !up : up;
-  const Icon = up ? ArrowUpRight : ArrowDownRight;
-  return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${good ? 'text-green-700' : 'text-red-700'}`}>
-      <Icon size={13} />
-      {c.label}
-    </span>
-  );
-}
-
-function Card({ title, to, children, className = '' }: { title: string; to?: string; children: ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-xl border border-line bg-white ${className}`}>
-      <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-        <h2 className="text-[13px] font-semibold text-regantify-text">{title}</h2>
-        {to && (
-          <Link to={to} className="inline-flex items-center gap-1 text-xs text-regantify-text-muted hover:text-regantify-cta">
-            Open <ArrowRight size={12} />
-          </Link>
-        )}
-      </div>
-      <div className="px-4 py-3">{children}</div>
-    </section>
-  );
-}
-
+/** A label and a value with its change, one line in a card. */
 function Row({ label, value, change, kind, note, badWhenUp }: { label: string; value: string; change?: Compared; kind?: ValueKind; note?: string; badWhenUp?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-black/5 py-2 last:border-b-0">
+    <div className="flex items-baseline justify-between gap-3 border-b border-[var(--console-tile-line)] py-2.5 last:border-b-0">
       <div>
-        <p className="text-sm text-regantify-text">{label}</p>
+        <p className="text-[13.5px] text-regantify-text">{label}</p>
         {note && <p className="text-xs text-regantify-text-muted">{note}</p>}
       </div>
       <div className="flex items-baseline gap-2 text-right">
-        {change && <Change value={change} kind={kind} badWhenUp={badWhenUp} />}
-        <span className="text-sm font-medium tabular-nums text-regantify-text">{value}</span>
+        {change && <ChangeTag value={change} kind={kind} badWhenUp={badWhenUp} />}
+        <span className="text-[13.5px] font-semibold tabular-nums text-regantify-text">{value}</span>
       </div>
     </div>
-  );
-}
-
-/** One cell of the ledger strip at the top: a number you read first, its label above, its change and note under. Opens the page behind it. */
-function Kpi({ label, value, change, kind, hint, to }: { label: string; value: string; change?: Compared; kind?: ValueKind; hint?: string; to: string }) {
-  const c = change ? changeOf(change, kind ?? 'count') : null;
-  return (
-    <Link to={to} className="group block px-5 py-4 transition-colors hover:bg-white/[0.04] focus-visible:outline-offset-[-2px]">
-      <p className="text-[12px] text-[var(--console-rail-text)]">{label}</p>
-      <p className="mt-1.5 text-[28px] font-medium leading-none tabular-nums text-white">{value}</p>
-      <div className="mt-2 flex items-center gap-2 text-[12px] text-[#8fb0a4]">
-        {c && c.value !== 0 && (
-          <span className={`inline-flex items-center gap-0.5 font-medium ${c.value > 0 ? 'text-[#7ee0b0]' : 'text-[#f4a3a3]'}`}>
-            {c.value > 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-            {c.label}
-          </span>
-        )}
-        {hint && <span>{hint}</span>}
-      </div>
-    </Link>
   );
 }
 
@@ -128,9 +89,13 @@ export default function AdminDashboard() {
   const fees = useQuery({ queryKey: ['admin', 'dashboard', 'platform-revenue'], queryFn: () => adminDashboardApi.getPlatformRevenue(), enabled: canSeeFees });
 
   const items = data ? actionItems(data.needsAction) : [];
+  const day = (v: string | number) => bucketLabel(String(v), 'day');
+  const dayLong = (v: string | number) => bucketLabel(String(v), 'day', true);
+  const taka = (n: number) => formatTaka(n);
+  const takaShort = (n: number) => formatCompact(n, 'money');
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="max-w-6xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1>Dashboard</h1>
@@ -138,115 +103,186 @@ export default function AdminDashboard() {
             {data ? `Hello ${(user?.fullName ?? 'there').split(' ')[0]}. Numbers compared with ${data.period.previousLabel}, refreshed every minute.` : 'The whole platform at a glance.'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {isFetching && <Loader2 size={14} className="animate-spin text-neutral-400" />}
-          <div className="inline-flex rounded-lg border border-line bg-white p-0.5" role="tablist" aria-label="Period">
-            {RANGES.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                role="tab"
-                aria-selected={range === r.id}
-                onClick={() => setRange(r.id)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${range === r.id ? 'bg-regantify-black text-white' : 'text-regantify-text-muted hover:text-regantify-text'}`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+        <div className="flex max-w-full items-center gap-2 overflow-x-auto rounded-full bg-white px-1.5 py-1 shadow-[var(--console-card-shadow)]">
+          {isFetching && <Loader2 size={14} className="ml-1 animate-spin text-neutral-400" />}
+          <RangeTabs options={RANGES} value={range} onChange={setRange} />
         </div>
       </div>
 
       {error && !data && <p className="py-10 text-center text-sm text-red-600">Could not load the dashboard.</p>}
       {isLoading && !data && (
-        <div className="flex justify-center py-16">
-          <Loader2 className="animate-spin text-neutral-400" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-[150px] w-full rounded-2xl" />
+          ))}
         </div>
       )}
 
       {data && (
         <>
-          <div className="overflow-hidden rounded-xl bg-regantify-topbar shadow-[0_1px_0_rgba(12,43,37,0.4)]">
-            <div className="grid grid-cols-2 divide-x divide-white/10 lg:grid-cols-4 [&>*:nth-child(n+3)]:border-t [&>*:nth-child(n+3)]:border-white/10 lg:[&>*:nth-child(n+3)]:border-t-0">
-              <Kpi label="Platform income" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" hint="plans, packs, fees" to="/admin/finance/revenue" />
-              <Kpi label="Monthly recurring revenue" value={formatTaka(data.subscriptions.mrr)} hint={`${data.subscriptions.payingStores} paying ${data.subscriptions.payingStores === 1 ? 'store' : 'stores'}`} to="/admin/plans" />
-              <Kpi label="Active stores" value={String(data.stores.active7d)} hint={`of ${data.stores.total}, last 7 days`} to="/admin/vendors/all" />
-              <Kpi label="Orders value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" hint={`${data.gmv.orders.current} orders`} to="/admin/orders" />
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard
+              label="Platform income"
+              value={formatTaka(data.income.total.current)}
+              change={data.income.total}
+              kind="money"
+              hint="plans, packs, fees"
+              icon={<Landmark />}
+              tone="orange"
+              to="/admin/finance/revenue"
+              chart={<Sparkline values={data.charts.income.map((d) => d.income)} color={SERIES.orange} />}
+            />
+            <StatCard
+              label="Monthly recurring revenue"
+              value={formatTaka(data.subscriptions.mrr)}
+              hint={`${data.subscriptions.payingStores} paying ${data.subscriptions.payingStores === 1 ? 'store' : 'stores'}`}
+              icon={<Repeat />}
+              tone="purple"
+              to="/admin/plans"
+            />
+            <StatCard
+              label="Active stores"
+              value={String(data.stores.active7d)}
+              hint={`of ${data.stores.total}, last 7 days`}
+              icon={<StoreIcon />}
+              tone="cyan"
+              to="/admin/vendors/all"
+              chart={<Sparkline values={data.charts.signups.map((d) => d.signups)} color={SERIES.cyan} />}
+            />
+            <StatCard
+              label="Orders value (GMV)"
+              value={formatTaka(data.gmv.total.current)}
+              change={data.gmv.total}
+              kind="money"
+              hint={`${data.gmv.orders.current} orders`}
+              icon={<ShoppingBag />}
+              tone="green"
+              to="/admin/orders"
+            />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-          <Card title={items.length ? `Needs action now (${items.length})` : 'Needs action now'} className="lg:col-span-2">
-            {items.length === 0 ? (
-              <p className="flex items-center gap-2 text-sm text-green-700">
-                <CircleCheck size={16} /> Nothing needs you right now.
-              </p>
-            ) : (
-              <ul className="divide-y divide-black/5">
-                {items.map((i) => (
-                  <li key={i.key}>
-                    <Link to={i.to} className="relative flex items-center gap-3 py-2.5 pl-3 text-[13.5px] text-regantify-text hover:text-black">
-                      <span className={`absolute inset-y-2 left-0 w-[3px] rounded-full ${i.tone === 'red' ? 'bg-red-600' : 'bg-amber-500'}`} aria-hidden />
-                      <span className="flex-1">{i.text}</span>
-                      <ArrowRight size={14} className="text-neutral-400" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-          <SmsBalanceCard />
+            <Card>
+              <CardHeader title="Stores by plan" subtitle="every store, today" to="/admin/plans" toLabel="Plans" />
+              <GradientDonut
+                label="Stores on each plan"
+                slices={[
+                  ...data.subscriptions.plans.map((p) => ({ key: p.code, label: p.name, value: p.stores })),
+                  { key: 'FREE', label: 'Free', value: data.subscriptions.freeStores },
+                ].sort((a, b) => b.value - a.value)}
+                format={(n) => `${n} ${n === 1 ? 'store' : 'stores'}`}
+                centerValue={String(data.subscriptions.payingStores + data.subscriptions.freeStores)}
+                centerCaption="stores"
+                pill={data.subscriptions.payingStores ? `${data.subscriptions.payingStores} paying` : undefined}
+              />
+            </Card>
+            <Card className="lg:col-span-2">
+              <CardHeader title="Platform income" subtitle="per day, last 30 days" to="/admin/finance/revenue" toLabel="Revenue" />
+              <GradientBarChart
+                label="Platform income per day for the last 30 days"
+                rows={data.charts.income}
+                xKey="bucket"
+                series={[{ key: 'income', label: 'Income' }]}
+                xLabel={day}
+                tooltipTitle={dayLong}
+                format={taka}
+                axisFormat={takaShort}
+                height={290}
+              />
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card>
+              <CardHeader title={items.length ? `Needs action now (${items.length})` : 'Needs action now'} />
+              {items.length === 0 ? (
+                <ListTile title="Nothing needs you right now." icon={<CircleCheck />} tone="green" />
+              ) : (
+                <div className="space-y-2.5">
+                  {items.map((i) => (
+                    <ListTile key={i.key} title={i.text} icon={<AlertCircle />} tone="red" to={i.to} />
+                  ))}
+                </div>
+              )}
+            </Card>
+            <Card>
+              <CardHeader title="Store health" subtitle="share of all stores" to="/admin/vendors/all" toLabel="Stores" />
+              <RadialRings
+                label="Share of stores that pay and that were active in the last 7 days"
+                rings={[
+                  { key: 'paying', label: 'Paying', value: data.subscriptions.payingStores, max: data.stores.total, detail: `${data.subscriptions.payingStores} of ${data.stores.total} stores` },
+                  { key: 'active', label: 'Active, 7 days', value: data.stores.active7d, max: data.stores.total, detail: `${data.stores.active7d} of ${data.stores.total} stores` },
+                ]}
+                centerCaption="paying"
+              />
+            </Card>
+            <SmsBalanceCard />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card title="Platform income" to="/admin/finance/revenue">
-              <Row label="Plans" value={formatTaka(data.income.plans.current)} change={data.income.plans} kind="money" />
-              <Row label="SMS packs" value={formatTaka(data.income.sms.current)} change={data.income.sms} kind="money" />
-              <Row label="AI credit packs" value={formatTaka(data.income.ai.current)} change={data.income.ai} kind="money" />
-              <Row label="Platform fees on orders" value={formatTaka(data.income.platformFees.current)} change={data.income.platformFees} kind="money" />
-              <Row label="Total" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" />
-              <p className="mt-3 rounded-lg bg-regantify-content px-3 py-2 text-xs text-regantify-text-muted">
+            <Card>
+              <CardHeader title="Where income came from" subtitle="this period" to="/admin/finance/revenue" />
+              <GradientDonut
+                label="Platform income by kind"
+                slices={[
+                  { key: 'plans', label: 'Plans', value: data.income.plans.current },
+                  { key: 'sms', label: 'SMS packs', value: data.income.sms.current },
+                  { key: 'ai', label: 'AI credit packs', value: data.income.ai.current },
+                  { key: 'fees', label: 'Fees on orders', value: data.income.platformFees.current },
+                ]}
+                format={taka}
+                centerValue={takaShort(data.income.total.current)}
+                centerCaption="income"
+                height={220}
+              />
+              <div className="mt-4">
+                <Row label="Plans" value={formatTaka(data.income.plans.current)} change={data.income.plans} kind="money" />
+                <Row label="SMS packs" value={formatTaka(data.income.sms.current)} change={data.income.sms} kind="money" />
+                <Row label="AI credit packs" value={formatTaka(data.income.ai.current)} change={data.income.ai} kind="money" />
+                <Row label="Platform fees on orders" value={formatTaka(data.income.platformFees.current)} change={data.income.platformFees} kind="money" />
+                <Row label="Total" value={formatTaka(data.income.total.current)} change={data.income.total} kind="money" />
+              </div>
+              <p className="mt-3 rounded-xl bg-[var(--console-tile)] px-3 py-2 text-xs text-regantify-text-muted">
                 Not income: {formatTaka(data.income.walletTopups.current)} added to store wallets (their own money, held by the platform)
                 {data.income.debtsCleared.current > 0 ? ` and ${formatTaka(data.income.debtsCleared.current)} of old store debts paid inside purchases` : ''}.
               </p>
             </Card>
 
-            <Card title="Subscriptions" to="/admin/plans">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs text-regantify-text-muted">
-                      <th className="pb-2 font-medium">Plan</th>
-                      <th className="pb-2 text-right font-medium">Stores</th>
-                      <th className="pb-2 text-right font-medium">Per month</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.subscriptions.plans.map((p) => (
-                      <tr key={p.code} className="border-t border-black/5">
-                        <td className="py-2">{p.name}</td>
-                        <td className="py-2 text-right tabular-nums">{p.stores}</td>
-                        <td className="py-2 text-right tabular-nums">{formatTaka(p.mrr)}</td>
-                      </tr>
-                    ))}
-                    <tr className="border-t border-black/5 text-regantify-text-muted">
-                      <td className="py-2">Free</td>
-                      <td className="py-2 text-right tabular-nums">{data.subscriptions.freeStores}</td>
-                      <td className="py-2 text-right tabular-nums">৳0</td>
-                    </tr>
-                  </tbody>
-                </table>
+            <Card>
+              <CardHeader title="Orders across all stores" subtitle="cancelled, unpaid and returned left out" to="/admin/orders" />
+              <GradientDonut
+                label="Order value by where the order was made"
+                slices={(Object.keys(SOURCE_LABEL) as Array<keyof typeof SOURCE_LABEL>).map((s) => ({ key: s, label: SOURCE_LABEL[s], value: data.gmv.bySource[s].gmv }))}
+                format={taka}
+                centerValue={takaShort(data.gmv.total.current)}
+                centerCaption="GMV"
+                height={220}
+              />
+              <div className="mt-4">
+                <Row label="Orders" value={String(data.gmv.orders.current)} change={data.gmv.orders} />
+                <Row label="Value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" />
+                <Row label="Average order" value={formatTaka(data.gmv.average.current)} change={data.gmv.average} kind="money" />
+                {(Object.keys(SOURCE_LABEL) as Array<keyof typeof SOURCE_LABEL>).map((s) => (
+                  <Row key={s} label={SOURCE_LABEL[s]} value={`${data.gmv.bySource[s].orders} · ${formatTaka(data.gmv.bySource[s].gmv)}`} />
+                ))}
               </div>
-              <div className="mt-3">
-                <Row label="First plan payment" note="stores that paid for a plan for the first time" value={String(data.subscriptions.newPaying.current)} change={data.subscriptions.newPaying} />
-                <Row label="Plan payments again" note="a paying store paid again" value={String(data.subscriptions.renewals.current)} change={data.subscriptions.renewals} />
-                <Row label="Upgrades" note="moved to a dearer paid plan" value={String(data.subscriptions.upgrades.current)} change={data.subscriptions.upgrades} />
-                <Row label="Downgrades" note="moved to a cheaper paid plan" value={String(data.subscriptions.downgrades.current)} change={data.subscriptions.downgrades} badWhenUp />
-                <Row label="Plans that ended" note="ran out and went back to Free" value={String(data.subscriptions.ended.current)} change={data.subscriptions.ended} badWhenUp />
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card>
+              <CardHeader title="Plan moves" subtitle="this period" to="/admin/plans" />
+              <div className="space-y-2.5">
+                <ListTile title="First plan payment" subtitle="paid for a plan for the first time" icon={<Sparkles />} tone="green" trailing={<MoveValue value={data.subscriptions.newPaying} />} />
+                <ListTile title="Plan payments again" subtitle="a paying store paid again" icon={<Repeat />} tone="cyan" trailing={<MoveValue value={data.subscriptions.renewals} />} />
+                <ListTile title="Upgrades" subtitle="moved to a dearer plan" icon={<ArrowUpRight />} tone="purple" trailing={<MoveValue value={data.subscriptions.upgrades} />} />
+                <ListTile title="Downgrades" subtitle="moved to a cheaper plan" icon={<ArrowDownRight />} tone="orange" trailing={<MoveValue value={data.subscriptions.downgrades} badWhenUp />} />
+                <ListTile title="Plans that ended" subtitle="went back to Free" icon={<TrendingDown />} tone="red" trailing={<MoveValue value={data.subscriptions.ended} badWhenUp />} />
               </div>
             </Card>
 
-            <Card title="Stores" to="/admin/vendors/all">
+            <Card>
+              <CardHeader title="Stores" to="/admin/vendors/all" />
               <Row label="All stores" value={String(data.stores.total)} />
               <Row label="Active in the last 7 days" note="owner signed in or an order came" value={String(data.stores.active7d)} />
               <Row label="New in this period" value={String(data.stores.signups.current)} change={data.stores.signups} />
@@ -256,78 +292,74 @@ export default function AdminDashboard() {
               <Row label="Being verified (KYC)" value={String(data.stores.underKyc)} />
             </Card>
 
-            <Card title="Orders across all stores" to="/admin/orders">
-              <Row label="Orders" note="cancelled, unpaid and returned left out" value={String(data.gmv.orders.current)} change={data.gmv.orders} />
-              <Row label="Value (GMV)" value={formatTaka(data.gmv.total.current)} change={data.gmv.total} kind="money" />
-              <Row label="Average order" value={formatTaka(data.gmv.average.current)} change={data.gmv.average} kind="money" />
-              {(Object.keys(SOURCE_LABEL) as Array<keyof typeof SOURCE_LABEL>).map((s) => (
-                <Row key={s} label={SOURCE_LABEL[s]} value={`${data.gmv.bySource[s].orders} · ${formatTaka(data.gmv.bySource[s].gmv)}`} />
-              ))}
-            </Card>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card title="Platform income, last 30 days">
-              <TrendChart
-                data={data.charts.income}
-                series={[{ key: 'income', label: 'Income', color: PALETTE.blue }]}
-                kind="money"
-                bucket="day"
-                ariaLabel="Platform income per day for the last 30 days"
-              />
-            </Card>
-            <Card title="New stores per day, last 30 days">
-              <ColumnChart
-                data={data.charts.signups.map((d) => ({
-                  key: d.bucket,
-                  value: d.signups,
-                  tick: bucketLabel(d.bucket, 'day'),
-                  tooltip: `${bucketLabel(d.bucket, 'day', true)}: ${formatValue(d.signups, 'count')} new ${d.signups === 1 ? 'store' : 'stores'}`,
-                }))}
-                label="New stores"
-                ariaLabel="New stores per day for the last 30 days"
-                tickEvery={7}
+            <Card>
+              <CardHeader title="New stores" subtitle="per day, last 30 days" />
+              <GradientBarChart
+                label="New stores per day for the last 30 days"
+                rows={data.charts.signups}
+                xKey="bucket"
+                series={[{ key: 'signups', label: 'New stores', color: SERIES.purple }]}
+                xLabel={day}
+                tooltipTitle={dayLong}
+                format={(n) => formatValue(n, 'count')}
+                height={250}
               />
             </Card>
           </div>
         </>
       )}
 
-      {canSeeFees && <div className="overflow-hidden rounded-xl border border-line bg-white">
-        <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
-          <Receipt size={16} className="text-regantify-text-muted" />
-          <p className="text-[13px] font-semibold text-regantify-text">Recent platform fees</p>
-          <span className="ml-auto text-xs text-regantify-text-muted">all-time: {fees.data ? formatAmount(fees.data.totalRevenue) : '…'}</span>
-        </div>
-        {fees.isLoading ? (
-          <div className="p-8 text-center text-sm text-regantify-text-muted">Loading…</div>
-        ) : !fees.data?.recent.length ? (
-          <div className="p-8 text-center text-sm text-regantify-text-muted">No platform fees collected yet.</div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="text-left">
-                <th>Order</th>
-                <th>Store</th>
-                <th className="text-right">Fee</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fees.data.recent.map((row) => (
-                <tr key={row.id}>
-                  <td className="console-id text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}</td>
-                  <td className="text-regantify-text">{row.vendorName ?? '—'}</td>
-                  <td className="text-right font-medium text-regantify-text">{formatAmount(row.amount)}</td>
-                  <td className="text-regantify-text-muted">
-                    {new Date(row.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>}
+      {canSeeFees && (
+        <Card flush>
+          <div className="flex items-center gap-3 px-5 pb-3 pt-5 sm:px-6">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--tint-orange-bg)] text-regantify-cta">
+              <Receipt size={18} />
+            </span>
+            <div>
+              <h2 className="text-[17px] font-semibold text-regantify-text">Recent platform fees</h2>
+              <p className="text-[13px] text-regantify-text-muted">all-time: {fees.data ? formatAmount(fees.data.totalRevenue) : '…'}</p>
+            </div>
+          </div>
+          {fees.isLoading ? (
+            <div className="p-8 text-center text-sm text-regantify-text-muted">Loading…</div>
+          ) : !fees.data?.recent.length ? (
+            <EmptyState icon={<Receipt />} title="No platform fees collected yet." />
+          ) : (
+            <div className="overflow-x-auto px-5 pb-5 sm:px-6">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left">
+                    <th>Order</th>
+                    <th>Store</th>
+                    <th className="text-right">Fee</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fees.data.recent.map((row) => (
+                    <tr key={row.id}>
+                      <td className="console-id text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}</td>
+                      <td className="text-regantify-text">{row.vendorName ?? '—'}</td>
+                      <td className="text-right font-medium text-regantify-text">{formatAmount(row.amount)}</td>
+                      <td className="text-regantify-text-muted">{new Date(row.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
+  );
+}
+
+/** A plan-move count with its change, for the ListTile's right side. */
+function MoveValue({ value, badWhenUp }: { value: Compared; badWhenUp?: boolean }) {
+  return (
+    <span className="flex items-center gap-2">
+      <ChangeTag value={value} badWhenUp={badWhenUp} />
+      <span className="text-[15px] font-semibold tabular-nums">{value.current}</span>
+    </span>
   );
 }

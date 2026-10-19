@@ -1,5 +1,7 @@
-import { useLocation } from 'react-router-dom';
-import { Check, Menu, Rows3 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Check, ChevronRight, Menu, Moon, Rows3, Sun } from 'lucide-react';
+import { useAdminTheme } from './useAdminTheme';
+import { useAuthStore } from '../../store/authStore';
 import type { NavSection } from '../../lib/navConfig';
 import { DENSITY_LABEL, type ConsoleDensity } from '../../lib/useConsoleDensity';
 import { DropdownMenu, DropdownMenuItem } from '../ui/DropdownMenu';
@@ -24,30 +26,36 @@ function crumbs(sections: NavSection[], pathname: string): string[] {
 }
 
 /** The slim bar over every Super Admin page: where you are, Ctrl K search, row density, alerts. */
-export function AdminTopbar({ sections, onMenuClick, density, onDensity }: { sections: NavSection[]; onMenuClick: () => void; density: ConsoleDensity; onDensity: (d: ConsoleDensity) => void }) {
-  const { pathname } = useLocation();
-  const trail = crumbs(sections, pathname);
+/** Round light icon button used in the top bar (admin-panel-new-theme.md Step 2). */
+const ICON_BUTTON = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-regantify-search text-regantify-text transition hover:bg-[var(--console-hover)]';
+
+export function AdminTopbar({ onMenuClick, density, onDensity }: { sections: NavSection[]; onMenuClick: () => void; density: ConsoleDensity; onDensity: (d: ConsoleDensity) => void }) {
+  const user = useAuthStore((s) => s.user);
+  const [theme, setTheme] = useAdminTheme();
+  const initials = (user?.fullName ?? 'A').split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-line bg-white px-3 sm:gap-3 sm:px-5">
-      <button type="button" onClick={onMenuClick} aria-label="Open menu" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line text-regantify-text lg:hidden">
-        <Menu size={17} />
+    <header className="flex h-[72px] shrink-0 items-center gap-2 bg-white px-3 sm:gap-3 sm:px-6">
+      <button type="button" onClick={onMenuClick} aria-label="Open menu" className={`${ICON_BUTTON} lg:hidden`}>
+        <Menu size={18} />
       </button>
-      <nav aria-label="Breadcrumb" className="hidden min-w-0 shrink-0 items-center gap-1.5 text-[13px] md:flex">
-        {trail.map((c, i) => (
-          <span key={`${c}-${i}`} className="flex items-center gap-1.5">
-            {i > 0 && <span className="text-neutral-300" aria-hidden>/</span>}
-            <span className={i === trail.length - 1 ? 'font-medium text-regantify-text' : 'text-regantify-text-muted'}>{c}</span>
-          </span>
-        ))}
-      </nav>
-      <div className="flex min-w-0 flex-1 items-center justify-end gap-2 md:justify-center">
+      <div className="flex min-w-0 flex-1 items-center justify-end md:justify-start">
         <AdminSearch />
       </div>
+      <button
+        type="button"
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-pressed={theme === 'dark'}
+        title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        className={ICON_BUTTON}
+      >
+        {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+      </button>
       <DropdownMenu
         widthClass="w-48"
         trigger={
-          <button type="button" aria-label="Row density" title="Row density" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-white text-neutral-600 transition hover:border-neutral-300">
-            <Rows3 size={16} />
+          <button type="button" aria-label="Row density" title="Row density" className={ICON_BUTTON}>
+            <Rows3 size={17} />
           </button>
         }
       >
@@ -59,6 +67,26 @@ export function AdminTopbar({ sections, onMenuClick, density, onDensity }: { sec
         ))}
       </DropdownMenu>
       <AdminBell />
+      <Link to="/admin/settings" aria-label="Your account settings" title={user?.fullName ?? 'Account'} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--tint-orange-bg)] text-[12.5px] font-semibold text-[var(--tint-orange-fg)]">
+        {initials}
+      </Link>
     </header>
+  );
+}
+
+/** "Overview > Dashboard" above the page, like the reference (it used to sit inside the top bar). */
+export function AdminBreadcrumb({ sections }: { sections: NavSection[] }) {
+  const { pathname } = useLocation();
+  const trail = crumbs(sections, pathname);
+  if (trail.length === 0) return null;
+  return (
+    <nav aria-label="Breadcrumb" className="mb-4 flex min-w-0 flex-wrap items-center gap-1.5 text-[14px]">
+      {trail.map((c, i) => (
+        <span key={`${c}-${i}`} className="flex items-center gap-1.5">
+          {i > 0 && <ChevronRight size={15} className="text-regantify-text-muted" aria-hidden />}
+          <span className={i === trail.length - 1 ? 'font-medium text-regantify-text' : 'text-regantify-text-muted'}>{c}</span>
+        </span>
+      ))}
+    </nav>
   );
 }

@@ -104,12 +104,12 @@ export function AdminSearch() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="mx-auto hidden h-9 w-full max-w-[360px] items-center gap-2 rounded-lg border border-line px-3 text-left text-sm text-neutral-500 transition hover:border-neutral-300 md:flex" aria-label="Search">
+      <button type="button" onClick={() => setOpen(true)} className="hidden h-11 w-full max-w-[480px] items-center gap-2.5 rounded-full bg-regantify-search px-4 text-left text-sm text-regantify-text-muted transition hover:bg-[var(--console-hover)] md:flex" aria-label="Search">
         <Search size={16} className="shrink-0 text-neutral-600" />
         <span className="flex-1 truncate">Search stores, orders, IDs…</span>
-        <kbd className="rounded border border-line px-1.5 text-[11px] text-neutral-500">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+        <kbd className="rounded-md bg-white px-1.5 text-[11px] text-neutral-500">{isMac ? '⌘' : 'Ctrl'} K</kbd>
       </button>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Search" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line text-neutral-700 md:hidden">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Search" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-regantify-search text-regantify-text md:hidden">
         <Search size={17} />
       </button>
       <Dialog open={open} onOpenChange={setOpen} maxWidth="max-w-xl">

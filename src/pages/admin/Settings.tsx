@@ -155,7 +155,7 @@ function SecurityTab() {
             <p className="text-sm font-semibold text-regantify-text">Recovery codes</p>
             <p className="text-sm text-regantify-text-muted mt-1">
               {data ? `${data.recoveryCodesLeft} of 10 unused.` : ''} Use one if you lose your phone. Making new codes stops the old ones working.
-              {data && data.recoveryCodesLeft <= 3 && <span className="text-amber-600"> Running low — make new codes.</span>}
+              {data && data.recoveryCodesLeft <= 3 && <span className="text-red-600"> Running low — make new codes.</span>}
             </p>
 
             {newCodes ? (

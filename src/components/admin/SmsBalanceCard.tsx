@@ -10,7 +10,7 @@ import { formatDhakaDateTime } from '../../lib/dhakaDate';
 
 const LEVEL: Record<SmsBalanceLevel, { label: string; cls: string; Icon: typeof CircleCheck }> = {
   OK: { label: 'Fine', cls: 'bg-green-50 text-green-700 border-green-200', Icon: CircleCheck },
-  LOW: { label: 'Low, top up soon', cls: 'bg-amber-50 text-amber-800 border-amber-200', Icon: CircleAlert },
+  LOW: { label: 'Low, top up soon', cls: 'bg-red-50 text-red-800 border-red-200', Icon: CircleAlert },
   CRITICAL: { label: 'Almost empty', cls: 'bg-red-50 text-red-700 border-red-200', Icon: MessageSquareWarning },
   UNKNOWN: { label: 'Could not read', cls: 'bg-neutral-50 text-neutral-600 border-neutral-200', Icon: CircleAlert },
 };

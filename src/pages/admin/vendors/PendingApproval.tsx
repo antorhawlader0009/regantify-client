@@ -103,7 +103,7 @@ export default function PendingApproval() {
               {s.warnings.length > 0 && (
                 <ul className="mt-3 space-y-1">
                   {s.warnings.map((w) => (
-                    <li key={w} className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-1.5 text-xs text-amber-900">
+                    <li key={w} className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-900">
                       <CircleAlert size={13} /> {w}
                     </li>
                   ))}

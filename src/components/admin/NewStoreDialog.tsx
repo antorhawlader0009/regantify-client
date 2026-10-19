@@ -109,7 +109,7 @@ export function NewStoreDialog({ open, onClose }: { open: boolean; onClose: () =
           </p>
           <pre className="whitespace-pre-wrap rounded-xl bg-neutral-50 p-3.5 text-[13px] leading-relaxed text-regantify-text">{details}</pre>
           {created.smsAsked && (
-            <p className={`text-xs ${created.smsSent ? 'text-emerald-700' : 'text-amber-700'}`}>
+            <p className={`text-xs ${created.smsSent ? 'text-emerald-700' : 'text-red-700'}`}>
               {created.smsSent ? 'The sign-in details were texted to the owner.' : 'The SMS could not be sent. Share the details another way.'}
             </p>
           )}

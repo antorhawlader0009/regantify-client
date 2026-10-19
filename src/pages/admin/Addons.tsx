@@ -52,7 +52,7 @@ export default function AdminAddons() {
         </p>
       </header>
 
-      {off > 0 && <p className="mb-4 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">{off === 1 ? '1 add-on is' : `${off} add-ons are`} off right now.</p>}
+      {off > 0 && <p className="mb-4 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">{off === 1 ? '1 add-on is' : `${off} add-ons are`} off right now.</p>}
 
       {isLoading || !data ? (
         <p className="text-sm text-regantify-text-muted">Loading…</p>

@@ -57,7 +57,7 @@ export default function SupportInbox() {
   const tickets = data?.tickets ?? [];
 
   return (
-    <div className="flex h-[calc(100vh-82px-4rem)] min-h-[520px] flex-col">
+    <div className="flex h-[calc(100vh-72px-36px-3rem)] min-h-[520px] flex-col">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-regantify-text">Support</h1>
@@ -75,7 +75,7 @@ export default function SupportInbox() {
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 overflow-hidden rounded-2xl border border-black/10 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid min-h-0 flex-1 overflow-hidden rounded-2xl bg-white shadow-[var(--console-card-shadow)] lg:grid-cols-[360px_minmax(0,1fr)]">
         {/* List */}
         <section className={`flex min-h-0 flex-col border-black/10 lg:border-r ${id ? 'hidden lg:flex' : 'flex'}`}>
           <div className="space-y-3 border-b border-black/10 p-3">

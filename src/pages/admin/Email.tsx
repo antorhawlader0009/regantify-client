@@ -63,13 +63,13 @@ export default function AdminEmail() {
 
       <section className="space-y-3 rounded-xl border border-line bg-white p-5">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          {s.configured ? <CheckCircle2 size={16} className="text-emerald-600" /> : <AlertTriangle size={16} className="text-amber-600" />}
+          {s.configured ? <CheckCircle2 size={16} className="text-emerald-600" /> : <AlertTriangle size={16} className="text-red-600" />}
           <span className="font-medium text-regantify-text">{s.configured ? `${s.provider === 'RESEND' ? 'Resend' : s.provider} is set up` : 'Not set up: no Resend API key on the server'}</span>
           <span className="text-regantify-text-muted">· sender {s.from}</span>
           {s.replyTo && <span className="text-regantify-text-muted">· replies to {s.replyTo}</span>}
         </div>
         {s.testSender && (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-900">
             Still on Resend's test sender, which only delivers to the Resend account owner's own address. Verify your domain in Resend, then set EMAIL_FROM on the server (for
             example "Regantify &lt;no-reply@yourdomain.com&gt;") so emails reach store owners.
           </p>

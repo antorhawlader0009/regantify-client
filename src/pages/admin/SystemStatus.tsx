@@ -5,6 +5,8 @@ import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { SmsBalanceCard } from '../../components/admin/SmsBalanceCard';
 import { ErrorLogSection, IntegrationsSection } from '../../components/admin/IntegrationHealth';
 import { ApiTimingsSection, WebVitalsSection } from '../../components/admin/PerfSections';
+import { GradientDonut, SERIES } from '../../components/admin/charts';
+import { Card, CardHeader } from '../../components/admin/ui/Card';
 
 const ago = (seconds: number | null) => {
   if (seconds === null) return 'never';
@@ -110,7 +112,7 @@ export default function SystemStatus() {
         <EventLoopCard loop={data.server.eventLoop} />
         <div className="rounded-xl border border-black/5 bg-white p-4">
           <p className="text-xs text-regantify-text-muted">Text when a job stops</p>
-          <p className={`text-lg font-semibold ${data.alertPhoneSet ? 'text-green-700' : 'text-amber-700'}`}>{data.alertPhoneSet ? 'On' : 'Off'}</p>
+          <p className={`text-lg font-semibold ${data.alertPhoneSet ? 'text-green-700' : 'text-red-700'}`}>{data.alertPhoneSet ? 'On' : 'Off'}</p>
           <p className="text-xs text-regantify-text-muted">{data.alertPhoneSet ? 'to ADMIN_ALERT_PHONE' : 'set ADMIN_ALERT_PHONE in server/.env'}</p>
         </div>
       </div>
@@ -132,6 +134,25 @@ export default function SystemStatus() {
       <WebVitalsSection />
 
       <ApiTimingsSection />
+
+      <Card>
+        <CardHeader title="Background jobs at a glance" subtitle={`${data.jobs.length} jobs watched`} />
+        <div className="mx-auto max-w-md">
+          <GradientDonut
+            label="Background jobs by state: running, waiting, stopped, never ran"
+            slices={[
+              { key: 'ok', label: 'Running', value: data.jobs.filter((j) => j.state === 'OK').length, color: SERIES.green },
+              { key: 'wait', label: 'Waiting', value: data.jobs.filter((j) => j.state === 'WAITING').length, color: SERIES.cyan },
+              { key: 'late', label: 'Stopped?', value: data.jobs.filter((j) => j.state === 'LATE').length, color: SERIES.orange },
+              { key: 'never', label: 'Never ran', value: data.jobs.filter((j) => j.state === 'NEVER').length, color: SERIES.purple },
+            ]}
+            format={(n) => `${n} ${n === 1 ? 'job' : 'jobs'}`}
+            centerValue={`${data.jobs.filter((j) => j.state === 'OK').length}/${data.jobs.length}`}
+            centerCaption="running"
+            height={210}
+          />
+        </div>
+      </Card>
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-regantify-text">Background jobs</h2>

@@ -5,7 +5,8 @@ import { CircleCheck, Download, Loader2 } from 'lucide-react';
 import { adminFinanceApi, downloadText, type RevenueGroup } from '../../../lib/adminFinanceApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
-import { formatTaka } from '../../../components/analytics/format';
+import { GradientBarChart, GradientDonut, formatCompact, formatTaka } from '../../../components/admin/charts';
+import { Card, CardHeader } from '../../../components/admin/ui/Card';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 
 const field = 'rounded-xl border border-black/10 bg-white px-3 py-2 text-sm text-regantify-text focus:outline-none';
@@ -57,11 +58,47 @@ function Revenue() {
               ['AI packs', data.totals.ai],
               ['Order fees', data.totals.fees],
             ].map(([label, value]) => (
-              <div key={label as string} className="rounded-xl border border-black/5 bg-white p-4">
-                <p className="text-xs text-regantify-text-muted">{label}</p>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-regantify-text">{formatTaka(value as number)}</p>
+              <div key={label as string} className="rounded-2xl bg-white p-5 shadow-[var(--console-card-shadow)]">
+                <p className="text-[13px] font-medium text-regantify-text-muted">{label}</p>
+                <p className="mt-1 text-[22px] font-semibold leading-tight tracking-tight tabular-nums text-regantify-text">{formatTaka(value as number)}</p>
               </div>
             ))}
+          </div>
+          <div className="mb-4 grid gap-4 lg:grid-cols-3">
+            <Card>
+              <CardHeader title="By kind" subtitle="this period" />
+              <GradientDonut
+                label="Platform income by kind"
+                slices={[
+                  { key: 'plans', label: 'Plans', value: data.totals.plans },
+                  { key: 'sms', label: 'SMS packs', value: data.totals.sms },
+                  { key: 'ai', label: 'AI packs', value: data.totals.ai },
+                  { key: 'fees', label: 'Order fees', value: data.totals.fees },
+                ]}
+                format={formatTaka}
+                centerValue={formatCompact(data.totals.total, 'money')}
+                centerCaption="income"
+                height={220}
+              />
+            </Card>
+            <Card className="lg:col-span-2">
+              <CardHeader title={group === 'store' ? 'Top stores' : group === 'month' ? 'Per month' : 'Per day'} subtitle="plans, SMS, AI packs and order fees" />
+              <GradientBarChart
+                label={`Platform income ${group === 'store' ? 'by store, top 15' : group === 'month' ? 'per month' : 'per day'}, by kind`}
+                rows={group === 'store' ? [...data.rows].sort((a, b) => b.total - a.total).slice(0, 15) : data.rows}
+                xKey="label"
+                series={[
+                  { key: 'plans', label: 'Plans' },
+                  { key: 'sms', label: 'SMS' },
+                  { key: 'ai', label: 'AI packs' },
+                  { key: 'fees', label: 'Fees' },
+                ]}
+                stacked
+                format={formatTaka}
+                axisFormat={(n) => formatCompact(n, 'money')}
+                height={250}
+              />
+            </Card>
           </div>
           <div className="overflow-hidden rounded-2xl border border-black/5 bg-white">
             <div className="overflow-x-auto">
@@ -145,7 +182,7 @@ function Reconciliation() {
         </section>
       )}
       {data.orderNotWaiting.length > 0 && (
-        <section className="rounded-2xl border border-amber-200 bg-white p-5">
+        <section className="rounded-2xl border border-red-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-regantify-text">Paid online, but the order is cancelled, failed or returned ({data.orderNotWaiting.length})</h2>
           <p className="mb-3 text-xs text-regantify-text-muted">The shopper’s money is with the store. The store may owe a refund (they see it in Orders &gt; Refunds to pay).</p>
           {data.orderNotWaiting.map((p) => (
@@ -159,7 +196,7 @@ function Reconciliation() {
         </section>
       )}
       {data.doublePaid.length > 0 && (
-        <section className="rounded-2xl border border-amber-200 bg-white p-5">
+        <section className="rounded-2xl border border-red-200 bg-white p-5">
           <h2 className="text-sm font-semibold text-regantify-text">One order paid more than once ({data.doublePaid.length})</h2>
           <p className="mb-3 text-xs text-regantify-text-muted">Look at each in PayStation. The extra money may need to go back to the shopper.</p>
           {data.doublePaid.map((d) => (

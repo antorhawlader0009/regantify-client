@@ -332,7 +332,7 @@ export function TermsSection() {
         <textarea className={field} rows={9} value={privacy} onChange={(e) => setPrivacy(e.target.value)} maxLength={60000} />
       </Label>
       {confirm ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">
           Every store owner will be asked to accept this before using the dashboard.
           <button type="button" disabled={publish.isPending || terms.trim().length < 50} onClick={() => publish.mutate()} className="rounded-lg bg-regantify-cta px-3 py-1.5 font-medium text-white disabled:opacity-50">
             {publish.isPending ? 'Publishing…' : `Publish version ${t.version + 1}`}
@@ -370,7 +370,7 @@ export function MaintenanceSection() {
       valid={!from || !until || until > from}
       body={() => ({ maintenanceText: text, maintenanceFrom: fromInputDate(from), maintenanceUntil: fromInputDate(until) })}
     >
-      {data.maintenance.showingNow && <p className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">The banner is showing to stores right now.</p>}
+      {data.maintenance.showingNow && <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">The banner is showing to stores right now.</p>}
       <Label text="Message (empty = no banner)">
         <textarea className={field} rows={2} maxLength={300} value={text} onChange={(e) => setText(e.target.value)} placeholder="Regantify will be down for about 30 minutes tonight at 2 AM for an update." />
       </Label>

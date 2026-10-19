@@ -49,6 +49,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('@dnd-kit')) return 'lib-dnd';
           if (id.includes('/qrcode/') || id.includes('/jsbarcode/')) return 'lib-codes';
           if (id.includes('barcode-detector') || id.includes('zxing')) return 'lib-scanner';
+          // Recharts and everything it brings, used only by the Super Admin chart kit (components/admin/charts/).
+          if (/[\\/]node_modules[\\/](recharts|react-is|victory-vendor|d3-[^\\/]+|internmap|@reduxjs|react-redux|redux|redux-thunk|immer|reselect|es-toolkit|decimal\.js-light|eventemitter3|clsx|tiny-invariant)[\\/]/.test(id)) return 'lib-charts';
           return undefined;
         },
       },

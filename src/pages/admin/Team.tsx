@@ -135,7 +135,7 @@ export default function Team() {
                       </select>
                     )}
                   </td>
-                  <td className="px-4 py-3">{m.twoFactorOn ? 'On' : <span className="text-amber-700">Not set up yet</span>}</td>
+                  <td className="px-4 py-3">{m.twoFactorOn ? 'On' : <span className="text-red-700">Not set up yet</span>}</td>
                   <td className="whitespace-nowrap px-4 py-3">
                     {m.lastLoginAt ? (
                       <button type="button" onClick={() => setSignInsOf({ id: m.userId, name: m.name })} className="underline decoration-dotted underline-offset-2 hover:text-regantify-text" title="See the last 20 sign-ins">

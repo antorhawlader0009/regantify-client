@@ -233,7 +233,7 @@ function RulesTab() {
           <span className="font-mono text-regantify-text">{form.yourIp ?? 'unknown'}</span>; it must be on the list. If you ever get locked out, set ADMIN_IP_ALLOWLIST_OFF=true in
           server/.env and restart.
         </p>
-        {form.envOverride && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">ADMIN_IP_ALLOWLIST_OFF=true is set on the server, so the list is not enforced right now.</p>}
+        {form.envOverride && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-900">ADMIN_IP_ALLOWLIST_OFF=true is set on the server, so the list is not enforced right now.</p>}
         <label className="flex items-center gap-2 text-sm text-regantify-text">
           <input type="checkbox" checked={form.ipAllowListOn} onChange={(e) => set('ipAllowListOn', e.target.checked)} className="h-4 w-4 accent-regantify-cta" />
           Only allow the addresses below

@@ -147,7 +147,7 @@ function ShopperErase({ onDone }: { onDone: () => void }) {
       <button type="button" disabled={phone.trim().length < 10 || look.isPending} onClick={() => look.mutate()} className="rounded-lg border border-black/10 px-3 py-1.5 text-sm disabled:opacity-50">See what would be erased</button>
       {preview && (
         <div className="space-y-3">
-          <p className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+          <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">
             {preview.phone}: {preview.account ? 'has an account' : 'no account'}, {preview.orders} orders, {preview.reviews} reviews, {preview.abandonedCheckouts} abandoned checkouts, {preview.storeNotes} store notes (cleared of name, tags and note text).
           </p>
           <input className={field} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Type the phone again to confirm" inputMode="tel" />

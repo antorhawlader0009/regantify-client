@@ -50,7 +50,7 @@ function PackDialog({ kind, pack, open, onClose, onDone }: { kind: PackKind; pac
             <input type="number" min={1} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} className={field} />
           </div>
         </div>
-        {locked && <p className="text-xs text-amber-700">{pack!.sold} store{pack!.sold === 1 ? '' : 's'} already bought this pack, so its amount can’t change. Hide it and add a new pack for a different amount.</p>}
+        {locked && <p className="text-xs text-red-700">{pack!.sold} store{pack!.sold === 1 ? '' : 's'} already bought this pack, so its amount can’t change. Hide it and add a new pack for a different amount.</p>}
         <div>
           <label className={label}>Label (optional, up to 24 letters)</label>
           <input value={badge} onChange={(e) => setBadge(e.target.value)} maxLength={24} placeholder="Best value" className={field} />
@@ -189,7 +189,7 @@ function PromoDialog({ promo, open, onClose, onDone }: { promo: AdminPromo | nul
             <input type="number" min={1} value={value} onChange={(e) => setValue(e.target.value)} disabled={used} className={`${field} disabled:opacity-50`} />
           </div>
         </div>
-        {used && <p className="text-xs text-amber-700">This code was already used, so its discount can’t change. Switch it off and make a new one.</p>}
+        {used && <p className="text-xs text-red-700">This code was already used, so its discount can’t change. Switch it off and make a new one.</p>}
         <div>
           <label className={label}>Works for</label>
           <div className="flex flex-wrap gap-3 text-sm">

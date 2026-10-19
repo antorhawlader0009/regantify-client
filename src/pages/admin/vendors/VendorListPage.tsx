@@ -18,17 +18,26 @@ import { RowMenu } from '../../../components/admin/RowMenu';
 import { adminCan, useAdminViewer, type AdminPermission } from '../../../lib/adminPermissions';
 import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
-const BAND: Record<HealthBand, { label: string; cls: string }> = {
-  HEALTHY: { label: 'Healthy', cls: 'bg-green-100 text-green-700' },
-  NEEDS_HELP: { label: 'Needs help', cls: 'bg-amber-100 text-amber-800' },
-  AT_RISK: { label: 'At risk', cls: 'bg-red-100 text-red-700' },
+const BAND: Record<HealthBand, { label: string; color: string; text: string }> = {
+  HEALTHY: { label: 'Healthy', color: '#059669', text: 'text-green-700' },
+  NEEDS_HELP: { label: 'Needs help', color: '#F26B3A', text: 'text-[var(--tint-orange-fg)]' },
+  AT_RISK: { label: 'At risk', color: '#DC2626', text: 'text-red-700' },
 };
 
+/** The store's health score as a small ring (filled to the score out of 100) with its band word. Plain SVG, so lists don't load the chart library. */
 export function HealthChip({ health }: { health: AdminVendor['health'] }) {
   const b = BAND[health.band];
+  const r = 10;
+  const c = 2 * Math.PI * r;
+  const filled = (Math.max(0, Math.min(100, health.score)) / 100) * c;
   return (
-    <span title={health.gaps.length ? `Missing: ${health.gaps.join(', ')}` : 'Nothing missing'} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold ${b.cls}`}>
-      {health.score} · {b.label}
+    <span title={health.gaps.length ? `Missing: ${health.gaps.join(', ')}` : 'Nothing missing'} className={`inline-flex items-center gap-1.5 text-xs font-semibold ${b.text}`}>
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden>
+        <circle cx="13" cy="13" r={r} fill="none" stroke="#EEF1F5" strokeWidth="4" />
+        <circle cx="13" cy="13" r={r} fill="none" stroke={b.color} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${filled} ${c}`} transform="rotate(-90 13 13)" />
+      </svg>
+      <span className="tabular-nums">{health.score}</span>
+      <span className="font-medium">{b.label}</span>
     </span>
   );
 }

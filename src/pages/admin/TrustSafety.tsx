@@ -10,6 +10,8 @@ import { toast } from '../../lib/toast';
 import { CATEGORY_LABEL, PROHIBITED_CATEGORIES, trustSafetyApi, type AdminProductRow, type ProductFlagRow } from '../../lib/trustSafetyApi';
 import { Dialog } from '../../components/ui/Dialog';
 import { ReasonNeed } from '../../components/admin/ReasonNeed';
+import { GradientDonut, SERIES } from '../../components/admin/charts';
+import { Card, CardHeader } from '../../components/admin/ui/Card';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
 const TABS = [
@@ -419,6 +421,24 @@ function RiskList() {
       {data.length === 0 ? (
         <p className="rounded-xl border border-black/5 bg-white px-4 py-8 text-center text-sm text-regantify-text-muted">No store shows any risk signal right now.</p>
       ) : (
+        <>
+        <Card>
+          <CardHeader title="Stores by risk" subtitle="last 30 days" />
+          <div className="mx-auto max-w-md">
+            <GradientDonut
+              label="Stores by risk score: high (60 or more), medium (30 to 59), low (under 30)"
+              slices={[
+                { key: 'high', label: 'High (60+)', value: data.filter((s) => s.score >= 60).length, color: SERIES.orange },
+                { key: 'mid', label: 'Medium (30-59)', value: data.filter((s) => s.score >= 30 && s.score < 60).length, color: SERIES.purple },
+                { key: 'low', label: 'Low (under 30)', value: data.filter((s) => s.score < 30).length, color: SERIES.cyan },
+              ]}
+              format={(n) => `${n} ${n === 1 ? 'store' : 'stores'}`}
+              centerValue={String(data.length)}
+              centerCaption="stores with a signal"
+              height={210}
+            />
+          </div>
+        </Card>
         <ul className="divide-y divide-black/5 rounded-xl border border-black/5 bg-white">
           {data.map((s) => (
             <li key={s.vendorId} className="flex gap-4 p-4">
@@ -449,6 +469,7 @@ function RiskList() {
             </li>
           ))}
         </ul>
+        </>
       )}
     </section>
   );

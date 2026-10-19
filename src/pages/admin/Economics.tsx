@@ -6,11 +6,11 @@ import { adminEconomicsApi, type EconomicsOverview, type EconomicsRates } from '
 import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
 import { apiErrorMessage } from '../../lib/api';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
-import { formatTaka } from '../../components/analytics/format';
+import { GradientAreaChart, GradientBarChart, GradientDonut, SERIES, formatCompact, formatTaka } from '../../components/admin/charts';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
 
-const panel = 'rounded-xl border border-line bg-white';
+const panel = 'rounded-2xl bg-white shadow-[var(--console-card-shadow)]';
 const th = 'px-4 py-2 font-normal';
 const thR = 'px-4 py-2 text-right font-normal';
 const td = 'px-4 py-2.5';
@@ -86,7 +86,7 @@ export default function Economics() {
       </div>
 
       {missing.length > 0 && (
-        <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
           <p>
             Not set yet: {missing.join(', ')}. Costs look lower than they are until these are set{canAdjust ? ' in Cost rates' : ''}.
@@ -106,8 +106,22 @@ export default function Economics() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className={`${panel} p-4`}>
-          <h2 className="mb-3 text-sm font-semibold text-regantify-text">Where the money came from</h2>
+        <section className={`${panel} p-5 sm:p-6`}>
+          <h2 className="mb-3 text-[17px] font-semibold text-regantify-text">Where the money came from</h2>
+          <GradientDonut
+            label={`Revenue by kind, ${monthLong(data.month)}`}
+            slices={[
+              { key: 'plan', label: 'Plans', value: t.revPlan },
+              { key: 'sms', label: 'SMS packs', value: t.revSms },
+              { key: 'ai', label: 'AI Credit packs', value: t.revAi },
+              { key: 'fees', label: 'Charges on orders', value: t.revFees },
+            ]}
+            format={formatTaka}
+            centerValue={formatCompact(t.revenue, 'money')}
+            centerCaption="revenue"
+            height={210}
+          />
+          <div className="mt-4" />
           <Lines
             rows={[
               ['Plans', t.revPlan],
@@ -118,8 +132,22 @@ export default function Economics() {
             total={t.revenue}
           />
         </section>
-        <section className={`${panel} p-4`}>
-          <h2 className="mb-3 text-sm font-semibold text-regantify-text">What it cost us</h2>
+        <section className={`${panel} p-5 sm:p-6`}>
+          <h2 className="mb-3 text-[17px] font-semibold text-regantify-text">What it cost us</h2>
+          <GradientDonut
+            label={`Cost by kind, ${monthLong(data.month)}`}
+            slices={[
+              { key: 'ai', label: 'AI', value: t.costAi },
+              { key: 'sms', label: 'SMS', value: t.costSms },
+              { key: 'gw', label: 'PayStation fee', value: t.costGateway },
+              { key: 'ref', label: 'Referrals', value: t.costReferral },
+            ]}
+            format={formatTaka}
+            centerValue={formatCompact(t.cost, 'money')}
+            centerCaption="cost"
+            height={210}
+          />
+          <div className="mt-4" />
           <Lines
             rows={[
               [`AI ($${t.aiUsd.toFixed(2)} at ${r.aiUsdRate} taka)`, t.costAi],
@@ -222,6 +250,42 @@ export default function Economics() {
         )}
       </section>
 
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className={`${panel} p-5 sm:p-6`}>
+          <h2 className="mb-1 text-[17px] font-semibold text-regantify-text">Revenue against cost</h2>
+          <p className="mb-4 text-[13px] text-regantify-text-muted">last 12 months</p>
+          <GradientBarChart
+            label="Revenue and cost per month for the last 12 months"
+            rows={data.trend}
+            xKey="month"
+            series={[
+              { key: 'revenue', label: 'Revenue' },
+              { key: 'cost', label: 'Cost', neutral: true },
+            ]}
+            xLabel={(v) => monthLabel(String(v))}
+            tooltipTitle={(v) => monthLong(String(v))}
+            format={formatTaka}
+            axisFormat={(n) => formatCompact(n, 'money')}
+            height={250}
+          />
+        </section>
+        <section className={`${panel} p-5 sm:p-6`}>
+          <h2 className="mb-1 text-[17px] font-semibold text-regantify-text">Margin</h2>
+          <p className="mb-4 text-[13px] text-regantify-text-muted">revenue less cost, last 12 months</p>
+          <GradientAreaChart
+            label="Margin per month for the last 12 months"
+            rows={data.trend}
+            xKey="month"
+            series={[{ key: 'margin', label: 'Margin', color: SERIES.green }]}
+            xLabel={(v) => monthLabel(String(v))}
+            tooltipTitle={(v) => monthLong(String(v))}
+            format={formatTaka}
+            axisFormat={(n) => formatCompact(n, 'money')}
+            height={250}
+          />
+        </section>
+      </div>
+
       <section>
         <h2 className="mb-2 text-sm font-semibold text-regantify-text">Last 12 months</h2>
         <div className={`overflow-x-auto ${panel}`}>
@@ -265,10 +329,10 @@ export default function Economics() {
 
 function Tile({ label, value, hint, danger }: { label: string; value: string; hint: string; danger?: boolean }) {
   return (
-    <div className={`${panel} p-4`}>
-      <p className="text-xs text-regantify-text-muted">{label}</p>
-      <p className={`text-lg font-semibold tabular-nums ${danger ? 'text-red-700' : 'text-regantify-text'}`}>{value}</p>
-      <p className="text-xs text-regantify-text-muted">{hint}</p>
+    <div className={`${panel} p-5`}>
+      <p className="text-[13px] font-medium text-regantify-text-muted">{label}</p>
+      <p className={`mt-1 text-[24px] font-semibold leading-tight tracking-tight tabular-nums ${danger ? 'text-red-700' : 'text-regantify-text'}`}>{value}</p>
+      <p className="mt-1 text-xs text-regantify-text-muted">{hint}</p>
     </div>
   );
 }
@@ -297,8 +361,8 @@ function Lines({ rows, total }: { rows: Array<[string, number]>; total: number }
 function Versus({ title, paid, cost, note }: { title: string; paid: number; cost: number; note: string }) {
   const diff = paid - cost;
   return (
-    <div className={`${panel} p-4`}>
-      <p className="text-xs text-regantify-text-muted">{title}</p>
+    <div className={`${panel} p-5`}>
+      <p className="text-[13px] font-medium text-regantify-text-muted">{title}</p>
       <p className="mt-1 text-sm text-regantify-text">
         Paid {formatTaka(paid)} · cost {formatTaka(cost)} · <span className={`font-medium ${marginClass(diff)}`}>{formatTaka(diff)}</span>
       </p>

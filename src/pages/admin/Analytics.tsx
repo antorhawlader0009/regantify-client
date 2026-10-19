@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { adminAnalyticsApi, type Adoption } from '../../lib/adminAnalyticsApi';
-import { ColumnChart } from '../../components/analytics/TrendChart';
-import { bucketLabel, formatTaka } from '../../components/analytics/format';
+import { GradientAreaChart, GradientBarChart, GradientDonut, SERIES, bucketLabel, formatCompact, formatTaka } from '../../components/admin/charts';
+import { Card as AdminCard, CardHeader } from '../../components/admin/ui/Card';
+import { RangeTabs } from '../../components/admin/ui/RangeTabs';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
 import { adminHelpApi } from '../../lib/helpApi';
 
@@ -20,21 +21,31 @@ type TabId = (typeof TABS)[number]['id'];
 
 function Card({ title, hint, children, className = '' }: { title: string; hint?: string; children: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-2xl border border-black/5 bg-white p-5 ${className}`}>
-      <h2 className="text-sm font-semibold text-regantify-text">{title}</h2>
-      {hint && <p className="mt-0.5 text-xs text-regantify-text-muted">{hint}</p>}
-      <div className="mt-3">{children}</div>
-    </section>
+    <AdminCard className={className}>
+      <CardHeader title={title} subtitle={hint} />
+      {children}
+    </AdminCard>
   );
 }
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-black/5 bg-white p-4">
-      <p className="text-xs text-regantify-text-muted">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums text-regantify-text">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-regantify-text-muted">{sub}</p>}
+    <div className="rounded-2xl bg-white p-5 shadow-[var(--console-card-shadow)]">
+      <p className="text-[13px] font-medium text-regantify-text-muted">{label}</p>
+      <p className="mt-1 text-[24px] font-semibold leading-tight tracking-tight tabular-nums text-regantify-text">{value}</p>
+      {sub && <p className="mt-1 text-xs text-regantify-text-muted">{sub}</p>}
     </div>
+  );
+}
+
+/** A retention or funnel share as a cell tinted by its size: one hue, light to dark (a sequential scale), with the number always written. */
+function HeatCell({ value }: { value: number | null }) {
+  if (value === null) return <td className={`${td} text-regantify-text-muted`}>—</td>;
+  const a = Math.max(0.06, Math.min(1, value / 100) * 0.55);
+  return (
+    <td className={`${td} font-medium ${value >= 60 ? 'admin-heat-strong' : ''}`} style={{ background: `rgba(234, 88, 12, ${a})` }}>
+      {value}%
+    </td>
   );
 }
 
@@ -66,12 +77,8 @@ export default function AdminAnalytics() {
         </ul>
       </details>
 
-      <div className="mt-5 flex gap-1 overflow-x-auto border-b border-black/5">
-        {TABS.map((t) => (
-          <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${tab === t.id ? 'border-regantify-black text-regantify-text' : 'border-transparent text-regantify-text-muted hover:text-regantify-text'}`}>
-            {t.label}
-          </button>
-        ))}
+      <div className="mt-5 inline-flex max-w-full overflow-x-auto rounded-full bg-white p-1.5 shadow-[var(--console-card-shadow)]">
+        <RangeTabs options={TABS} value={tab} onChange={setTab} label="Analytics section" />
       </div>
 
       <div className="mt-6 space-y-4">
@@ -113,7 +120,18 @@ export default function AdminAnalytics() {
             </Card>
 
             <Card title="MRR by month" hint="Where recurring revenue came from and went: new stores, upgrades, downgrades and lost stores.">
-              <div className="overflow-x-auto">
+              <GradientAreaChart
+                label="Monthly recurring revenue at the end of each month"
+                rows={revenue.mrrByMonth}
+                xKey="month"
+                series={[{ key: 'mrr', label: 'MRR at end', color: SERIES.purple }]}
+                xLabel={(v) => bucketLabel(String(v), 'month')}
+                tooltipTitle={(v) => monthLong(String(v))}
+                format={formatTaka}
+                axisFormat={(n) => formatCompact(n, 'money')}
+                height={240}
+              />
+              <div className="mt-5 overflow-x-auto">
                 <table className="w-full min-w-[640px] text-sm">
                   <thead>
                     <tr><th className={th}>Month</th><th className={th}>MRR at end</th><th className={th}>New</th><th className={th}>Upgrade</th><th className={th}>Downgrade</th><th className={th}>Lost</th></tr>
@@ -136,18 +154,37 @@ export default function AdminAnalytics() {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <Card title="Platform income by month" hint="Money the platform earned: plans, SMS packs, AI packs and order fees. Wallet top-ups are not income.">
-                <ColumnChart
-                  data={revenue.incomeByMonth.map((m) => ({ key: m.month, value: m.total, tick: bucketLabel(m.month, 'month'), tooltip: `${monthLong(m.month)}: ${formatTaka(m.total)} (plans ${formatTaka(m.plans)}, SMS ${formatTaka(m.sms)}, AI ${formatTaka(m.ai)}, fees ${formatTaka(m.fees)})` }))}
-                  label="Income"
-                  ariaLabel="Platform income per month for the last 12 months"
-                  tickEvery={2}
+                <GradientBarChart
+                  label="Platform income per month for the last 12 months, by kind"
+                  rows={revenue.incomeByMonth}
+                  xKey="month"
+                  series={[
+                    { key: 'plans', label: 'Plans' },
+                    { key: 'sms', label: 'SMS' },
+                    { key: 'ai', label: 'AI packs' },
+                    { key: 'fees', label: 'Fees' },
+                  ]}
+                  stacked
+                  xLabel={(v) => bucketLabel(String(v), 'month')}
+                  tooltipTitle={(v) => monthLong(String(v))}
+                  format={formatTaka}
+                  axisFormat={(n) => formatCompact(n, 'money')}
                 />
               </Card>
               <Card title="Plan income, last 12 months" hint="What each plan brought in through PayStation.">
                 {revenue.incomePerPlan.length === 0 ? (
                   <p className="text-sm text-regantify-text-muted">No plan was paid for through PayStation yet.</p>
                 ) : (
-                  <table className="w-full text-sm">
+                  <>
+                  <GradientDonut
+                    label="Plan income for the last 12 months, by plan"
+                    slices={[...revenue.incomePerPlan].sort((a, b) => b.amount - a.amount).map((p) => ({ key: p.plan, label: p.plan, value: p.amount }))}
+                    format={formatTaka}
+                    centerValue={formatCompact(revenue.incomePerPlan.reduce((s, p) => s + p.amount, 0), 'money')}
+                    centerCaption="12 months"
+                    height={210}
+                  />
+                  <table className="mt-4 w-full text-sm">
                     <thead><tr><th className={th}>Plan</th><th className={th}>Payments</th><th className={th}>Income</th></tr></thead>
                     <tbody>
                       {revenue.incomePerPlan.map((p) => (
@@ -155,6 +192,7 @@ export default function AdminAnalytics() {
                       ))}
                     </tbody>
                   </table>
+                  </>
                 )}
               </Card>
             </div>
@@ -164,19 +202,26 @@ export default function AdminAnalytics() {
         {tab === 'growth' && (
           <>
             <Card title="Sign-ups per day, last 90 days">
-              <ColumnChart
-                data={growth.signupsPerDay.map((d) => ({ key: d.day, value: d.count, tick: bucketLabel(d.day, 'day'), tooltip: `${bucketLabel(d.day, 'day', true)}: ${d.count} sign-ups` }))}
-                label="Sign-ups"
-                ariaLabel="Sign-ups per day for the last 90 days"
-                tickEvery={15}
+              <GradientBarChart
+                label="Sign-ups per day for the last 90 days"
+                rows={growth.signupsPerDay}
+                xKey="day"
+                series={[{ key: 'count', label: 'Sign-ups', color: SERIES.cyan }]}
+                xLabel={(v) => bucketLabel(String(v), 'day')}
+                tooltipTitle={(v) => bucketLabel(String(v), 'day', true)}
+                format={(n) => String(n)}
               />
             </Card>
             <Card title="Sign-ups per week" hint="Weeks start on Monday.">
-              <ColumnChart
-                data={growth.signupsPerWeek.map((w) => ({ key: w.week, value: w.count, tick: bucketLabel(w.week, 'day'), tooltip: `Week of ${bucketLabel(w.week, 'day', true)}: ${w.count} sign-ups` }))}
-                label="Sign-ups"
-                ariaLabel="Sign-ups per week"
-                tickEvery={4}
+              <GradientAreaChart
+                label="Sign-ups per week"
+                rows={growth.signupsPerWeek}
+                xKey="week"
+                series={[{ key: 'count', label: 'Sign-ups', color: SERIES.cyan }]}
+                xLabel={(v) => bucketLabel(String(v), 'day')}
+                tooltipTitle={(v) => `Week of ${bucketLabel(String(v), 'day', true)}`}
+                format={(n) => String(n)}
+                height={240}
               />
             </Card>
             <Card title="Sign-up to first product to first order" hint="By the month the store signed up.">
@@ -219,8 +264,8 @@ export default function AdminAnalytics() {
                       <tr key={r.month} className="border-t border-black/5">
                         <td className={td}>{monthLong(r.month)}</td>
                         <td className={td}>{r.signups}</td>
-                        {r.active.map((v, i) => (<td key={`a${i}`} className={td}>{pctText(v)}</td>))}
-                        {r.paying.map((v, i) => (<td key={`p${i}`} className={td}>{pctText(v)}</td>))}
+                        {r.active.map((v, i) => (<HeatCell key={`a${i}`} value={v} />))}
+                        {r.paying.map((v, i) => (<HeatCell key={`p${i}`} value={v} />))}
                       </tr>
                     ))}
                   </tbody>
@@ -233,7 +278,15 @@ export default function AdminAnalytics() {
         {tab === 'usage' && (
           <>
             <Card title="Stores by size, last 30 days" hint={`${usage.storesWithSales30d} of ${usage.activeStoresTotal} active stores sold something. Size = the store's sales in 30 days.`}>
-              <table className="w-full text-sm">
+              <GradientDonut
+                label="Stores by sales size in the last 30 days"
+                slices={usage.bySize.map((b) => ({ key: b.label, label: b.label, value: b.stores }))}
+                format={(n) => `${n} ${n === 1 ? 'store' : 'stores'}`}
+                centerValue={String(usage.bySize.reduce((s, b) => s + b.stores, 0))}
+                centerCaption="stores"
+                height={210}
+              />
+              <table className="mt-4 w-full text-sm">
                 <thead><tr><th className={th}>Size</th><th className={th}>Stores</th><th className={th}>Orders</th><th className={th}>GMV</th></tr></thead>
                 <tbody>
                   {usage.bySize.map((b) => (
@@ -269,10 +322,29 @@ export default function AdminAnalytics() {
             </Card>
             <div className="grid gap-4 lg:grid-cols-2">
               <Card title="SMS used per day, last 30 days" hint="SMS credits stores spent sending (one per text part).">
-                <ColumnChart data={usage.smsPerDay.map((d) => ({ key: d.day, value: d.count, tick: bucketLabel(d.day, 'day'), tooltip: `${bucketLabel(d.day, 'day', true)}: ${d.count} SMS` }))} label="SMS" ariaLabel="SMS credits used per day" tickEvery={7} />
+                <GradientBarChart
+                  label="SMS credits used per day for the last 30 days"
+                  rows={usage.smsPerDay}
+                  xKey="day"
+                  series={[{ key: 'count', label: 'SMS', color: SERIES.green }]}
+                  xLabel={(v) => bucketLabel(String(v), 'day')}
+                  tooltipTitle={(v) => bucketLabel(String(v), 'day', true)}
+                  format={(n) => n.toLocaleString('en-US')}
+                  height={240}
+                />
               </Card>
               <Card title="AI credits spent per day, last 30 days">
-                <ColumnChart data={usage.aiCreditsPerDay.map((d) => ({ key: d.day, value: d.count, tick: bucketLabel(d.day, 'day'), tooltip: `${bucketLabel(d.day, 'day', true)}: ${d.count.toLocaleString('en-US')} credits` }))} label="Credits" ariaLabel="AI credits spent per day" tickEvery={7} />
+                <GradientBarChart
+                  label="AI credits spent per day for the last 30 days"
+                  rows={usage.aiCreditsPerDay}
+                  xKey="day"
+                  series={[{ key: 'count', label: 'Credits', color: SERIES.purple }]}
+                  xLabel={(v) => bucketLabel(String(v), 'day')}
+                  tooltipTitle={(v) => bucketLabel(String(v), 'day', true)}
+                  format={(n) => n.toLocaleString('en-US')}
+                  axisFormat={(n) => formatCompact(n)}
+                  height={240}
+                />
               </Card>
             </div>
           </>
@@ -302,6 +374,22 @@ function NpsTab() {
           <Stat label="Unhappy (0-6)" value={String(l.detractors)} sub={l.responses ? `${Math.round((l.detractors / l.responses) * 100)}%` : '-'} />
           <Stat label="Skipped" value={String(l.skipped)} />
         </div>
+        {l.responses > 0 && (
+          <div className="mx-auto mt-5 max-w-md">
+            <GradientDonut
+              label="Seller answers in the last 90 days: would recommend, neutral, unhappy"
+              slices={[
+                { key: 'pro', label: 'Would recommend', value: l.promoters, color: SERIES.green },
+                { key: 'pas', label: 'Neutral', value: l.passives, color: SERIES.cyan },
+                { key: 'det', label: 'Unhappy', value: l.detractors, color: SERIES.orange },
+              ]}
+              format={(n) => `${n} ${n === 1 ? 'answer' : 'answers'}`}
+              centerValue={l.nps === null ? '-' : String(l.nps)}
+              centerCaption="NPS"
+              height={220}
+            />
+          </div>
+        )}
       </Card>
       <Card title="By month">
         {data.byMonth.length === 0 ? (

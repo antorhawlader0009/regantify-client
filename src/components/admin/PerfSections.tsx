@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { perfApi, type VitalSummary } from '../../lib/systemStatusApi';
 import { formatDhakaDateTime } from '../../lib/dhakaDate';
+import { GradientBarChart, RadialRings } from './charts';
 
 // Super Admin > System status: real shoppers' page speed and this server's request timings (PERFORMANCE-PLAN.md Step 1).
 
@@ -32,6 +33,21 @@ export function WebVitalsSection() {
           <option value={30}>Last 30 days</option>
         </select>
       </div>
+      {rows.some((v) => v.device === 'MOBILE') && (
+        <div className="mb-3 rounded-2xl bg-white p-5 shadow-[var(--console-card-shadow)]">
+          <p className="mb-3 text-[13px] font-medium text-regantify-text-muted">Share of phone page views that were good</p>
+          <div className="mx-auto max-w-md">
+            <RadialRings
+              label="Share of phone page views with a good result, per measure"
+              rings={(['LCP', 'INP', 'CLS', 'TTFB'] as const)
+                .map((m) => rows.find((v) => v.metric === m && v.device === 'MOBILE'))
+                .filter((v): v is VitalSummary => !!v)
+                .map((v) => ({ key: v.metric, label: METRIC_LABEL[v.metric].name, value: v.goodPercent, max: 100, detail: `${v.goodPercent}% good of ${v.samples.toLocaleString()} views` }))}
+              height={240}
+            />
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto rounded-xl border border-line bg-white">
         <table className="w-full min-w-[640px] text-sm">
           <thead>
@@ -118,6 +134,24 @@ export function ApiTimingsSection() {
   return (
     <section>
       <h2 className="mb-2 text-sm font-semibold text-regantify-text">Slowest server routes</h2>
+      {routes.length > 0 && (
+        <div className="mb-3 rounded-2xl bg-white p-5 shadow-[var(--console-card-shadow)]">
+          <p className="mb-3 text-[13px] font-medium text-regantify-text-muted">Slow 5% time of the 10 slowest routes</p>
+          <GradientBarChart
+            label="Slow 5% response time of the 10 slowest server routes, in milliseconds"
+            rows={routes.slice(0, 10)}
+            xKey="route"
+            series={[
+              { key: 'p50Ms', label: 'Typical', neutral: true },
+              { key: 'p95Ms', label: 'Slow 5%' },
+            ]}
+            xLabel={(v) => String(v).split(/\s+/).pop()?.split('/').filter(Boolean).slice(-2).join('/') ?? String(v)}
+            tooltipTitle={(v) => String(v)}
+            format={(n) => `${n} ms`}
+            height={230}
+          />
+        </div>
+      )}
       <div className="overflow-x-auto rounded-xl border border-line bg-white">
         <table className="w-full min-w-[720px] text-sm">
           <thead>

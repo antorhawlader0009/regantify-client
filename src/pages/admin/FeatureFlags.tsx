@@ -99,7 +99,7 @@ export default function FeatureFlags() {
                 {f.description && <p className="mt-0.5 line-clamp-2 text-xs text-regantify-text-muted">{f.description}</p>}
                 <p className="mt-1 text-xs text-regantify-text">{summary(f)}</p>
                 {f.stale && (
-                  <p className="mt-1 flex items-center gap-1 text-xs text-amber-800">
+                  <p className="mt-1 flex items-center gap-1 text-xs text-red-800">
                     <AlertTriangle size={12} /> On for everyone for over 30 days. Remove the check from the code, then delete this flag.
                   </p>
                 )}

@@ -5,8 +5,9 @@
 /*
  * Dashboard colours as RGB channels (tailwind.config.js reads them).
  * Default = indigo, the vendor panel. The Super Admin panel sets
- * body.admin-panel (AdminLayout) and gets the red set instead; it's on
- * <body> so dialogs and dropdowns in portals follow it too.
+ * body.admin-panel (AdminLayout) and gets its own set instead (see the
+ * Super Admin console block below); it's on <body> so dialogs and
+ * dropdowns in portals follow it too.
  */
 :root {
   --c-brand: 79 70 229; /* #4F46E5 */
@@ -25,25 +26,50 @@
 }
 
 /*
- * Super Admin console: bottle green + brass, IBM Plex, flat panels. A different place from the vendor panel (indigo, Inter, soft cards) on purpose.
+ * Super Admin console (new theme, admin-panel-new-theme.md, 2026-10-19): a dark teal rail, an orange-to-coral accent, a soft light canvas and white
+ * borderless cards. Only under body.admin-panel, so the vendor panel, LMS, POS and marketing site keep their own colours.
  * Tokens here feed the same Tailwind names (regantify-*, brand, line) so every existing admin page re-colours without edits; the structural rules
- * (tables, form controls, radii, density) are in the "Super Admin console" section at the end of this file.
+ * (cards, tables, form controls, radii, density) are in the "Super Admin console" section at the end of this file.
  */
 body.admin-panel {
-  --c-brand: 15 107 83; /* #0F6B53 primary: buttons, links, selected tabs */
-  --c-brand-dark: 12 43 37; /* #0C2B25 the rail, dark cards */
-  --c-accent: 226 240 235; /* #E2F0EB soft highlight */
-  --c-line: 208 216 212; /* #D0D8D4 hairlines and panel edges */
-  --c-content: 243 245 244; /* #F3F5F4 page canvas */
-  --c-sidebar: 12 43 37; /* rail */
-  --c-search: 238 242 240; /* #EEF2F0 filled inputs */
-  --c-text: 20 32 28; /* #14201C */
-  --c-muted: 95 111 105; /* #5F6F69 */
-  --console-brass: #d6a94a;
-  --console-grid: #c3ccc8; /* table grid lines */
-  --console-rail-hover: #13392f;
-  --console-rail-line: #1d4b40;
-  --console-rail-text: #b9cfc7;
+  --c-brand: 207 74 31; /* #CF4A1F primary: buttons, links, selected tabs (the accent darkened so white text and links stay readable) */
+  --c-brand-dark: 15 32 39; /* #0F2027 the rail, dark cards */
+  --c-accent: 255 237 228; /* #FFEDE4 soft highlight */
+  --c-line: 230 234 240; /* #E6EAF0 hairlines */
+  --c-content: 241 244 248; /* #F1F4F8 page canvas */
+  --c-sidebar: 15 32 39; /* rail */
+  --c-search: 241 243 247; /* #F1F3F7 filled inputs, the search pill */
+  --c-text: 27 36 48; /* #1B2430 */
+  --c-muted: 107 114 128; /* #6B7280 */
+  --console-accent-from: #ff8a3d; /* the orange-to-coral gradient: active menu pill, primary buttons, the main chart series */
+  --console-accent-to: #f5576c;
+  --console-accent-gradient: linear-gradient(90deg, var(--console-accent-from), var(--console-accent-to));
+  --console-brass: #ff8a3d; /* old name, still read by the rail badges; now the accent orange */
+  --console-grid: #e6eaf0; /* table lines */
+  --console-rail-hover: #18303a;
+  --console-rail-line: #1f3943;
+  --console-rail-text: #c9d3d6;
+  --console-rail-muted: #7f9399; /* rail group labels */
+  --console-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.04);
+  --console-tile: #f7f9fc; /* soft rows inside a card */
+  --console-tile-line: #eef1f5;
+  --console-tile-line-strong: #e3e8ef;
+  --console-surface: #fff; /* cards, tables, the top bar */
+  --console-input-bg: #fff;
+  --console-skeleton: #eef1f5; /* loading placeholders */
+  --console-hover: #e6eaf0; /* round icon buttons on hover */
+  --console-row-hover: #fafbfd;
+  /* Soft tints for icon chips, badges and avatars: background and readable text of the same hue. */
+  --tint-orange-bg: #ffede4;
+  --tint-orange-fg: #b5401a;
+  --tint-purple-bg: #f3e8ff;
+  --tint-purple-fg: #7c3aed;
+  --tint-cyan-bg: #e0f7fc;
+  --tint-cyan-fg: #0e7490;
+  --tint-green-bg: #dcfce7;
+  --tint-green-fg: #047857;
+  --tint-rose-bg: #ffe4e6;
+  --tint-rose-fg: #be123c;
   --cell-y: 10px;
   --cell-x: 14px;
 }
@@ -143,12 +169,12 @@ body.vendor-panel .bg-white {
 }
 
 /* ==========================================================================
-   Super Admin console (super-admin design pass, 2026-10-13)
-   Rules below apply only under body.admin-panel (AdminLayout), so the vendor
-   panel, LMS, POS and the marketing site are untouched.
+   Super Admin console (new theme, admin-panel-new-theme.md Step 1, 2026-10-19)
+   Rules below apply only under body.admin-panel (AdminLayout, ConsoleAuthShell),
+   so the vendor panel, LMS, POS and the marketing site are untouched.
    ========================================================================== */
 body.admin-panel {
-  font-family: 'IBM Plex Sans', 'Hind Siliguri', system-ui, sans-serif;
+  font-family: 'Inter', 'Hind Siliguri', system-ui, sans-serif;
   font-size: 14px;
   background: rgb(var(--c-content));
   -webkit-font-smoothing: antialiased;
@@ -156,98 +182,239 @@ body.admin-panel {
 body.admin-panel[data-density='compact'] { --cell-y: 6px; --cell-x: 12px; }
 body.admin-panel[data-density='comfortable'] { --cell-y: 13px; --cell-x: 16px; }
 
-/* Tighter corners than the vendor panel: panels 10px, controls 8px/6px; pills stay round. */
-body.admin-panel .rounded-2xl { border-radius: 10px; }
-body.admin-panel .rounded-xl { border-radius: 8px; }
-body.admin-panel .rounded-lg { border-radius: 6px; }
-body.admin-panel .shadow-xl, body.admin-panel .shadow-lg { box-shadow: 0 8px 24px rgba(12, 43, 37, 0.14), 0 0 0 1px rgba(12, 43, 37, 0.06); }
-body.admin-panel .shadow-sm { box-shadow: none; }
+/* Soft, round corners like the reference: cards 20px, inner boxes and controls 12px / 8px; pills stay round. */
+body.admin-panel .rounded-2xl { border-radius: 20px; }
+body.admin-panel .rounded-xl { border-radius: 12px; }
+body.admin-panel .rounded-lg { border-radius: 8px; }
+body.admin-panel .shadow-xl, body.admin-panel .shadow-lg { box-shadow: 0 12px 32px rgba(16, 24, 40, 0.12), 0 0 0 1px rgba(16, 24, 40, 0.04); }
+body.admin-panel .shadow-sm { box-shadow: var(--console-card-shadow); }
 
-/* Page titles: working size, not a hero. */
-body.admin-panel main h1 { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.012em; }
+/* Page titles. */
+body.admin-panel main h1 { font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: -0.015em; }
 body.admin-panel main h1 + p { font-size: 13.5px; }
 
 body.admin-panel :focus-visible { outline: 2px solid rgb(var(--c-brand)); outline-offset: 2px; }
 body.admin-panel input[type='checkbox'], body.admin-panel input[type='radio'] { accent-color: rgb(var(--c-brand)); }
 
-/* Panels written with a faint black border get the console hairline, so they read against the canvas. */
-body.admin-panel .border-black/5, body.admin-panel .border-black/10 { border-color: rgb(var(--c-line)); }
-body.admin-panel .divide-black/5 > :not([hidden]) ~ :not([hidden]) { border-color: #edf0ee; }
+/* Cards: a white panel on the canvas loses its border and gets a soft shadow instead (the reference has no card edges).
+   Only boxes (div/section/article/aside), never inputs or buttons that share the same classes. */
+body.admin-panel main :is(div, section, article, aside).bg-white.border:is(.rounded-xl, .rounded-2xl) {
+  border-color: transparent;
+  box-shadow: var(--console-card-shadow);
+}
+/* A card with a coloured edge (a red problem card, a highlighted row) keeps its colour; revert-layer hands it back to the Tailwind class. */
+body.admin-panel main :is(div, section, article, aside, li).bg-white.border:is(.border-amber-200, .border-amber-300) { border-color: #ffb593; }
+body.admin-panel main :is(div, section, article, aside, li).bg-white:is([class*='border-red-'], [class*='border-emerald-'], [class*='border-green-'], [class*='border-sky-'], [class*='border-violet-'], [class*='border-orange-']) {
+  border-color: revert-layer;
+}
+/* A white box inside another card is an inner tile: a hairline, no shadow. */
+body.admin-panel main :is(div, section, article, aside).bg-white.border:is(.rounded-xl, .rounded-2xl) :is(div, section, article, aside).bg-white.border:is(.rounded-xl, .rounded-2xl) {
+  border-color: var(--console-tile-line);
+  box-shadow: none;
+}
 
-/* Page width: pages were capped (max-w-2xl to max-w-6xl, about 670px to 1150px) and left a wide empty strip on a big screen. Every admin page now uses the
-   whole workspace; the workspace itself stops at 1760px so it does not stretch on an ultra-wide monitor. */
+/* Faint black borders read as the console hairline. */
+body.admin-panel .border-black\/5, body.admin-panel .border-black\/10 { border-color: rgb(var(--c-line)); }
+body.admin-panel .divide-black\/5 > :not([hidden]) ~ :not([hidden]) { border-color: var(--console-tile-line); }
+
+/* Page width: every admin page uses the whole workspace, up to 1760px on an ultra-wide monitor. */
 body.admin-panel main > :is(.max-w-6xl, .max-w-5xl, .max-w-4xl, .max-w-3xl, .max-w-2xl) { max-width: 1760px; }
 
-/* ---- Tables: a full grid like the vendor order table (a line between columns as well as rows), tabular numbers, row height from the density setting ---- */
+/* ---- Tables: one hairline per row (no column lines), a soft header, tabular numbers, row height from the density setting ---- */
 body.admin-panel table {
   border-collapse: separate;
   border-spacing: 0;
   font-variant-numeric: tabular-nums;
   font-size: 13px;
+  border: 1px solid var(--console-grid);
+  border-radius: 12px;
+  background: var(--console-surface);
 }
 body.admin-panel thead th {
-  background: #eaefec;
-  color: rgb(var(--c-text));
-  font-size: 13px;
+  background: var(--console-tile);
+  color: rgb(var(--c-muted));
+  font-size: 12.5px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
   white-space: nowrap;
-  padding: 10px var(--cell-x);
-  border-top: 1px solid var(--console-grid);
+  padding: 11px var(--cell-x);
   border-bottom: 1px solid var(--console-grid);
-  border-right: 1px solid var(--console-grid);
 }
 body.admin-panel tbody td, body.admin-panel tbody th {
   padding: var(--cell-y) var(--cell-x);
   border-bottom: 1px solid var(--console-grid);
-  border-right: 1px solid var(--console-grid);
   vertical-align: middle;
 }
-/* The table is its own box: a clear outline with rounded corners, like the vendor order table. Its wrapper gets a little room so the box does not touch the panel edge. */
-body.admin-panel table {
-  border: 1px solid var(--console-grid);
-  border-radius: 8px;
-  background: #fff;
-}
-body.admin-panel thead th:first-child { border-top-left-radius: 7px; }
-body.admin-panel thead th:last-child { border-top-right-radius: 7px; }
-body.admin-panel tbody tr:last-child > :first-child { border-bottom-left-radius: 7px; }
-body.admin-panel tbody tr:last-child > :last-child { border-bottom-right-radius: 7px; }
-/* The table now draws its own edge, so the first row, last row and last column add none. */
-body.admin-panel thead th { border-top: 0; }
-body.admin-panel thead th:last-child, body.admin-panel tbody td:last-child, body.admin-panel tbody th:last-child { border-right: 0; }
+body.admin-panel thead th:first-child { border-top-left-radius: 11px; }
+body.admin-panel thead th:last-child { border-top-right-radius: 11px; }
+body.admin-panel tbody tr:last-child > :first-child { border-bottom-left-radius: 11px; }
+body.admin-panel tbody tr:last-child > :last-child { border-bottom-right-radius: 11px; }
 /* Only a table that sits flush against a panel's edge gets room; a table inside a padded card body already has it. */
 body.admin-panel :is(.rounded-2xl, .rounded-xl) > div:has(> table) { padding: 0 16px 16px; }
 body.admin-panel tbody tr:last-child td, body.admin-panel tbody tr:last-child th { border-bottom: 0; }
-body.admin-panel tbody tr:hover > td { background: #f6f9f8; }
-body.admin-panel tbody tr:has(input[type='checkbox']:checked) > td { background: #eaf4f0; }
+body.admin-panel tbody tr:hover > td { background: var(--console-row-hover); }
+body.admin-panel tbody tr:has(input[type='checkbox']:checked) > td { background: var(--tint-orange-bg); }
 body.admin-panel td .text-xs, body.admin-panel td .text-\[11px\] { line-height: 1.35; }
 
 /* ---- Form controls: native selects and date pickers look like the rest ---- */
 body.admin-panel select {
   appearance: none;
   -webkit-appearance: none;
-  height: 34px;
-  padding: 0 30px 0 10px;
+  height: 36px;
+  padding: 0 30px 0 12px;
   font-size: 13px;
   color: rgb(var(--c-text));
-  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235f6f69' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+  background: var(--console-input-bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
   border: 1px solid rgb(var(--c-line));
-  border-radius: 6px;
+  border-radius: 10px;
 }
 body.admin-panel input[type='date'], body.admin-panel input[type='datetime-local'], body.admin-panel input[type='month'] {
-  height: 34px;
-  padding: 0 10px;
+  height: 36px;
+  padding: 0 12px;
   font-size: 13px;
   font-family: inherit;
-  background-color: #fff;
+  background-color: var(--console-input-bg);
   border: 1px solid rgb(var(--c-line));
-  border-radius: 6px;
+  border-radius: 10px;
 }
-body.admin-panel select:hover, body.admin-panel input[type='date']:hover, body.admin-panel input[type='datetime-local']:hover { border-color: #c9d2cf; }
-body.admin-panel select:focus, body.admin-panel input[type='date']:focus, body.admin-panel input[type='datetime-local']:focus { outline: none; border-color: rgb(var(--c-brand)); box-shadow: 0 0 0 3px rgba(15, 107, 83, 0.14); }
+body.admin-panel select:hover, body.admin-panel input[type='date']:hover, body.admin-panel input[type='datetime-local']:hover { border-color: #cbd2dc; }
+body.admin-panel select:focus, body.admin-panel input[type='date']:focus, body.admin-panel input[type='datetime-local']:focus { outline: none; border-color: rgb(var(--c-brand)); box-shadow: 0 0 0 3px rgba(207, 74, 31, 0.14); }
 
 /* IDs, invoices, phone numbers: the one place a fixed-width face earns its keep. */
 body.admin-panel .console-id { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0; }
 
+/* ---- Step 3: existing pages that are not rewritten yet still match ---- */
+/* Text inputs and text areas: rounder, with the accent focus ring. */
+body.admin-panel :is(input[type='text'], input[type='search'], input[type='number'], input[type='email'], input[type='tel'], input[type='password'], input[type='url'], input:not([type]), textarea) {
+  border-radius: 10px;
+}
+body.admin-panel :is(input[type='text'], input[type='search'], input[type='number'], input[type='email'], input[type='tel'], input[type='password'], input[type='url'], input:not([type]), textarea):focus {
+  outline: none;
+  border-color: rgb(var(--c-brand));
+  box-shadow: 0 0 0 3px rgba(207, 74, 31, 0.14);
+}
+/* Filled primary buttons and links (written as solid brand colour) get the orange-to-coral gradient. */
+body.admin-panel :is(button, a).text-white:is(.bg-regantify-black, .bg-regantify-cta, .bg-brand) {
+  background-image: var(--console-accent-gradient);
+  box-shadow: 0 6px 14px rgba(245, 87, 108, 0.22);
+}
+body.admin-panel :is(button, a).text-white:is(.bg-regantify-black, .bg-regantify-cta, .bg-brand):hover { filter: brightness(1.05); }
+body.admin-panel :is(button, a).text-white:is(.bg-regantify-black, .bg-regantify-cta, .bg-brand):disabled { box-shadow: none; filter: none; }
+/* Dialogs (portaled into <body>): no edge, the larger shadow, the card's corners. */
+body.admin-panel [role='dialog'].bg-white { border-color: transparent; border-radius: 20px; box-shadow: 0 24px 48px rgba(16, 24, 40, 0.18); }
+/* Dropdown menus: rounder, no edge, a soft shadow, rounded hover rows. */
+body.admin-panel [role='menu'].bg-white { border-color: transparent; border-radius: 14px; padding: 6px; box-shadow: 0 12px 32px rgba(16, 24, 40, 0.14), 0 0 0 1px rgba(16, 24, 40, 0.04); }
+body.admin-panel [role='menu'] [role='menuitem'] { border-radius: 8px; }
+body.admin-panel [role='menu'] [role='menuitem'][data-highlighted] { background: var(--console-tile); }
+/* Tab bars written as a white boxed row of buttons become a soft pill track. */
+body.admin-panel main [role='tablist'].border.bg-white { border-color: transparent; background: var(--console-surface); box-shadow: var(--console-card-shadow); border-radius: 14px; }
+/* Number tiles written by hand on older pages (a small white box in a grid: label, big number, note) read like the StatCard. */
+body.admin-panel main .grid > :is(div, section).bg-white.p-4:is(.rounded-xl, .rounded-2xl) { padding: 20px; border-radius: 20px; }
+body.admin-panel main .grid > :is(div, section).bg-white.p-4:is(.rounded-xl, .rounded-2xl) > p.text-xs:first-child { font-size: 13px; font-weight: 500; }
+body.admin-panel main .grid > :is(div, section).bg-white.p-4:is(.rounded-xl, .rounded-2xl) > p:is(.text-lg, .text-xl) { margin-top: 4px; font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; }
+
+/* Amber status pills and highlights ("Pending", "Being built", "New device") take the theme's soft orange, so the panel has one warm colour.
+   Problems and warnings are red, written as red in the page (user's rule). Rating stars (amber-400/500, fill-amber-*) keep their gold. */
+body.admin-panel :is(.bg-amber-50, .bg-amber-100) { background-color: var(--tint-orange-bg); }
+body.admin-panel .bg-amber-50\/50 { background-color: rgba(255, 237, 228, 0.5); }
+body.admin-panel :is(.text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900) { color: var(--tint-orange-fg); }
+body.admin-panel :is(.border-amber-200, .border-amber-300) { border-color: #ffd3bf; }
+/* Underlined tabs: the selected line in the accent. */
+body.admin-panel main .border-b-2.border-regantify-cta, body.admin-panel main .border-b-2.border-regantify-black { border-bottom-color: #ea580c; }
+
+/* ==========================================================================
+   Super Admin dark mode (admin-panel-new-theme.md Step 11, 2026-10-19)
+   Only under body.admin-panel[data-admin-theme='dark'], which AdminLayout / ConsoleAuthShell set from the top-bar switch and remove when the
+   admin screen closes. The tokens change first; then the Tailwind colour utilities the admin pages use are re-pointed at them.
+   The chart series colours are the same in both modes (checked against #121F25 with the dataviz validator).
+   ========================================================================== */
+body.admin-panel[data-admin-theme='dark'] {
+  color-scheme: dark;
+  --c-brand: 255 138 92; /* #FF8A5C: links and selected text stay readable on dark */
+  --c-brand-dark: 9 18 22;
+  --c-accent: 58 36 28;
+  --c-line: 40 56 64; /* #283840 */
+  --c-content: 11 21 26; /* #0B151A canvas */
+  --c-sidebar: 9 18 22; /* #091216 rail, a step darker than the canvas */
+  --c-search: 27 41 48; /* #1B2930 */
+  --c-text: 231 236 239;
+  --c-muted: 150 166 173;
+  --console-grid: #26363e;
+  --console-rail-hover: #142a33;
+  --console-rail-line: #1b3039;
+  --console-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.22);
+  --console-tile: #17252c;
+  --console-tile-line: #22323a;
+  --console-tile-line-strong: #2a3c44;
+  --console-surface: #121f25;
+  --console-input-bg: #17252c;
+  --console-skeleton: #1e2d34;
+  --console-hover: #22343c;
+  --console-row-hover: #16242b;
+  --tint-orange-bg: rgba(255, 138, 61, 0.16);
+  --tint-orange-fg: #ffb088;
+  --tint-purple-bg: rgba(147, 51, 234, 0.2);
+  --tint-purple-fg: #d8b4fe;
+  --tint-cyan-bg: rgba(14, 165, 233, 0.18);
+  --tint-cyan-fg: #7dd3fc;
+  --tint-green-bg: rgba(16, 185, 129, 0.18);
+  --tint-green-fg: #6ee7b7;
+  --tint-rose-bg: rgba(244, 63, 94, 0.18);
+  --tint-rose-fg: #fda4af;
+  color: rgb(var(--c-text));
+}
+body.admin-panel[data-admin-theme='dark'] :is(input, textarea, select) { color: rgb(var(--c-text)); }
+body.admin-panel[data-admin-theme='dark'] :is(input, textarea)::placeholder { color: rgb(var(--c-muted)); }
+
+/* Surfaces */
+body.admin-panel[data-admin-theme='dark'] :is(.bg-white, .hover\:bg-white:hover) { background-color: var(--console-surface); }
+body.admin-panel[data-admin-theme='dark'] :is(.bg-neutral-50, .bg-neutral-100, .hover\:bg-neutral-50:hover, .hover\:bg-neutral-100:hover) { background-color: var(--console-tile); }
+body.admin-panel[data-admin-theme='dark'] :is(.bg-black\/5, .hover\:bg-black\/5:hover, .bg-black\/10) { background-color: rgba(255, 255, 255, 0.06); }
+body.admin-panel[data-admin-theme='dark'] .bg-slate-300 { background-color: #3a4b53; }
+/* Lines */
+body.admin-panel[data-admin-theme='dark'] :is(.border-black\/5, .border-black\/10, .border-neutral-200, .border-line) { border-color: rgb(var(--c-line)); }
+body.admin-panel[data-admin-theme='dark'] :is(.divide-black\/5, .divide-black\/10) > :not([hidden]) ~ :not([hidden]) { border-color: var(--console-tile-line); }
+body.admin-panel[data-admin-theme='dark'] .ring-black\/5 { --tw-ring-color: rgba(255, 255, 255, 0.06); }
+/* Grey text */
+body.admin-panel[data-admin-theme='dark'] :is(.text-neutral-400, .text-neutral-500, .text-neutral-600, .text-black\/50) { color: rgb(var(--c-muted)); }
+body.admin-panel[data-admin-theme='dark'] :is(.text-neutral-700, .text-black\/70, .hover\:text-black:hover) { color: rgb(var(--c-text)); }
+/* Status tints: same meaning, dark-friendly values. Red stays the problem colour. */
+body.admin-panel[data-admin-theme='dark'] :is(.bg-red-50, .bg-red-100) { background-color: rgba(220, 38, 38, 0.16); }
+body.admin-panel[data-admin-theme='dark'] :is(.text-red-500, .text-red-600, .text-red-700, .text-red-800, .text-red-900) { color: #fca5a5; }
+body.admin-panel[data-admin-theme='dark'] :is(.border-red-200, .border-red-300) { border-color: rgba(248, 113, 113, 0.4); }
+body.admin-panel[data-admin-theme='dark'] :is(.bg-green-50, .bg-green-100, .bg-emerald-50) { background-color: rgba(16, 185, 129, 0.16); }
+body.admin-panel[data-admin-theme='dark'] :is(.text-green-700, .text-green-800, .text-green-900, .text-emerald-600, .text-emerald-700, .text-emerald-800) { color: #6ee7b7; }
+body.admin-panel[data-admin-theme='dark'] :is(.border-green-200, .border-emerald-200) { border-color: rgba(52, 211, 153, 0.35); }
+body.admin-panel[data-admin-theme='dark'] :is(.bg-blue-50, .bg-blue-100, .bg-sky-50, .bg-sky-50\/60) { background-color: rgba(14, 165, 233, 0.16); }
+body.admin-panel[data-admin-theme='dark'] :is(.text-blue-700, .text-blue-800, .text-blue-900, .text-sky-700, .text-sky-800) { color: #7dd3fc; }
+body.admin-panel[data-admin-theme='dark'] .border-blue-200 { border-color: rgba(125, 211, 252, 0.3); }
+body.admin-panel[data-admin-theme='dark'] .bg-violet-50 { background-color: rgba(139, 92, 246, 0.18); }
+body.admin-panel[data-admin-theme='dark'] :is(.text-violet-600, .text-violet-700) { color: #c4b5fd; }
+body.admin-panel[data-admin-theme='dark'] .bg-orange-50 { background-color: var(--tint-orange-bg); }
+body.admin-panel[data-admin-theme='dark'] :is(.text-orange-800, .text-orange-900) { color: var(--tint-orange-fg); }
+body.admin-panel[data-admin-theme='dark'] :is(.border-orange-200, .border-amber-200, .border-amber-300) { border-color: rgba(255, 138, 61, 0.35); }
+body.admin-panel[data-admin-theme='dark'] .bg-amber-50\/50 { background-color: rgba(255, 138, 61, 0.08); }
+body.admin-panel[data-admin-theme='dark'] main :is(div, section, article, aside, li).bg-white.border:is(.border-amber-200, .border-amber-300) { border-color: rgba(255, 138, 61, 0.45); }
+
+/* Form controls, menus and dialogs */
+body.admin-panel[data-admin-theme='dark'] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2396a6ad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+body.admin-panel[data-admin-theme='dark'] :is(select, input[type='date'], input[type='datetime-local']):hover { border-color: #3a4f58; }
+body.admin-panel[data-admin-theme='dark'] [role='menu'].bg-white { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06); }
+body.admin-panel[data-admin-theme='dark'] [role='dialog'].bg-white { box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06); }
+body.admin-panel[data-admin-theme='dark'] .bg-black\/40 { background-color: rgba(0, 0, 0, 0.6); }
+
+/* Charts: CSS beats SVG presentation attributes, so the grid, axis text, tracks and grey series switch here without any chart code knowing the theme. */
+body.admin-panel[data-admin-theme='dark'] .recharts-cartesian-grid line { stroke: #22323a; }
+body.admin-panel[data-admin-theme='dark'] :is(.recharts-cartesian-axis-tick-value, .recharts-cartesian-axis-tick text) { fill: rgb(var(--c-muted)); }
+body.admin-panel[data-admin-theme='dark'] .recharts-radial-bar-background-sector { fill: #1e2d34; }
+body.admin-panel[data-admin-theme='dark'] rect.recharts-tooltip-cursor { fill: rgba(255, 255, 255, 0.05); }
+body.admin-panel[data-admin-theme='dark'] :is(path, line).recharts-tooltip-cursor { stroke: #3a4f58; }
+body.admin-panel[data-admin-theme='dark'] :is(.admin-chart-neutral .recharts-rectangle, .admin-chart-neutral path, path.admin-chart-neutral) { fill: #3a4b53; }
+body.admin-panel[data-admin-theme='dark'] .recharts-active-dot circle { stroke: var(--console-surface); }
+
+/* Retention heat cells: the strongest shade gets dark text in light mode and white in dark mode. */
+body.admin-panel .admin-heat-strong { color: #5a1a06; }
+body.admin-panel[data-admin-theme='dark'] .admin-heat-strong { color: #fff; }

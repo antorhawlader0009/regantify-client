@@ -41,7 +41,7 @@ export function PlatformSwitches() {
         Pause a feature for every store at once, for example during an outage or when a provider is down. Stores that use it see a short “temporarily paused” message; nothing is deleted
         and it comes back the moment you turn it on. A change reaches every server within 30 seconds.
       </p>
-      {off > 0 && <p className="mb-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">{off === 1 ? '1 feature is' : `${off} features are`} paused right now.</p>}
+      {off > 0 && <p className="mb-3 rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-900">{off === 1 ? '1 feature is' : `${off} features are`} paused right now.</p>}
       <div className="divide-y divide-black/5 rounded-2xl border border-black/5 bg-white">
         {data.map((s) => (
           <div key={s.key} className="flex items-start justify-between gap-4 p-4">

@@ -25,7 +25,7 @@ const FEATURE_SHORT: Record<AiFeature, string> = {
 const SOURCE_BADGE: Record<AiRateSource, { label: string; className: string }> = {
   ADMIN: { label: 'Set here', className: 'bg-blue-50 text-blue-700 border-blue-200' },
   BUILT_IN: { label: 'Claude price', className: 'bg-neutral-50 text-neutral-600 border-neutral-200' },
-  FALLBACK: { label: 'No price: highest rate', className: 'bg-amber-50 text-amber-800 border-amber-200' },
+  FALLBACK: { label: 'No price: highest rate', className: 'bg-red-50 text-red-800 border-red-200' },
 };
 
 const inputCls =
