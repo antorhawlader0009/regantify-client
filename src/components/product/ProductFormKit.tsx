@@ -3,6 +3,7 @@ import { Camera, ChevronDown, Clock, Eye, EyeOff, GripVertical, Plus, Star, Uplo
 import { productInputClass } from './ProductFormPieces';
 import { useCan } from '../../lib/useStaffAccess';
 import { dhakaInputToIso, isoToDhakaInput, nowDhakaInput } from '../../lib/dhakaInput';
+import { PhotoHoverActions, PhotoLightbox, PhotoPickerDialog } from './PhotoPicker';
 
 // Pieces shared by Add Product and Edit Product (theme-update-plan.md
 // Step 2), so both forms get the same photos, price, status, search
@@ -142,6 +143,8 @@ export function PhotoManager<P extends PhotoItem>({
   onReorder,
   photoSize,
   onPhotoSizeChange,
+  onAddUrls,
+  onReplace,
 }: {
   photos: P[];
   onFiles: (files: FileList) => void;
@@ -150,13 +153,22 @@ export function PhotoManager<P extends PhotoItem>({
   onReorder: (from: number, to: number) => void;
   photoSize: 'SQUARE' | 'PORTRAIT';
   onPhotoSizeChange: (size: 'SQUARE' | 'PORTRAIT') => void;
+  /** Photos picked in the Add photos dialog (already uploaded or from Media), added at the end. */
+  onAddUrls: (urls: string[]) => void;
+  /** "Change" on a photo: put this picture in its place. */
+  onReplace: (id: string, url: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<number | null>(null);
+  const [picker, setPicker] = useState<{ mode: 'SINGLE' | 'MULTI'; id?: string } | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [fileOver, setFileOver] = useState(false);
 
   const isFileDrag = (e: DragEvent) => Array.from(e.dataTransfer.types).includes('Files');
+  // Photos that can be previewed (uploaded, no error), with their place in `photos`.
+  const shown = photos
+    .map((p, index) => ({ url: p.uploadedUrl || p.previewUrl, index, ok: !p.uploading && !p.error }))
+    .filter((p) => p.ok);
 
   const onDropZone = (e: DragEvent) => {
     e.preventDefault();
@@ -223,6 +235,9 @@ export function PhotoManager<P extends PhotoItem>({
                   className="absolute bottom-1.5 left-1.5 rounded bg-white/90 text-neutral-600 opacity-0 transition-opacity group-hover:opacity-100"
                   aria-hidden
                 />
+                {!photo.uploading && !photo.error && (
+                  <PhotoHoverActions onPreview={() => setPreview(i)} onChange={() => setPicker({ mode: 'SINGLE', id: photo.id })} />
+                )}
                 {photo.uploading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -257,7 +272,7 @@ export function PhotoManager<P extends PhotoItem>({
 
       <button
         type="button"
-        onClick={() => inputRef.current?.click()}
+        onClick={() => setPicker({ mode: 'MULTI' })}
         onDragOver={(e) => {
           if (!isFileDrag(e)) return;
           e.preventDefault();
@@ -271,18 +286,30 @@ export function PhotoManager<P extends PhotoItem>({
       >
         {photos.length > 0 ? <Camera size={20} className="text-neutral-500" /> : <UploadCloud size={26} className="text-neutral-500" />}
         <span className="text-sm font-medium text-regantify-text">{photos.length > 0 ? 'Add more photos' : 'Upload photos'}</span>
-        <span className="text-xs text-neutral-500">Drag and drop here, or click to choose</span>
+        <span className="text-xs text-neutral-500">Drag and drop here, or click to upload or pick from Media</span>
       </button>
-      <input
-        ref={inputRef}
-        type="file"
-        multiple
-        accept={ACCEPT}
-        onChange={(e) => {
-          if (e.target.files) onFiles(e.target.files);
-          e.target.value = '';
+      <PhotoLightbox
+        urls={shown.map((p) => p.url)}
+        index={preview === null ? null : Math.max(0, shown.findIndex((p) => p.index === preview))}
+        onIndexChange={(k) => setPreview(shown[k]?.index ?? null)}
+        onClose={() => setPreview(null)}
+        onChange={(k) => {
+          const target = photos[shown[k]?.index ?? -1];
+          setPreview(null);
+          if (target) setPicker({ mode: 'SINGLE', id: target.id });
         }}
-        className="hidden"
+      />
+      <PhotoPickerDialog
+        open={picker !== null}
+        onOpenChange={(o) => !o && setPicker(null)}
+        mode={picker?.mode ?? 'MULTI'}
+        photoSize={photoSize}
+        current={picker?.id ? shown.filter((p) => photos[p.index]?.id === picker.id).map((p) => p.url) : shown.map((p) => p.url)}
+        onPick={(urls) => {
+          if (picker?.mode === 'SINGLE' && picker.id) {
+            if (urls[0]) onReplace(picker.id, urls[0]);
+          } else onAddUrls(urls);
+        }}
       />
     </div>
   );

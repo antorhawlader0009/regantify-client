@@ -6,6 +6,7 @@ import { productsApi } from '../../lib/productsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
+import { PhotoHoverActions, PhotoLightbox, PhotoPickerDialog } from './PhotoPicker';
 
 interface VariationsEditorProps {
   productSku: string;
@@ -87,8 +88,6 @@ export function VariationsEditor({
     if (variationPhotos.length > 0) setPhotoOptionName(firstPhotoEntry(variationPhotos).optionName);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variationPhotos]);
-  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const combinations = useMemo(() => cartesianCombinations(options), [options]);
 
@@ -217,20 +216,13 @@ export function VariationsEditor({
     setPhotosFor(value, getPhotosFor(value).filter((u) => u !== url));
   };
 
-  const handlePhotoFilesSelected = (value: string, files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const key = `${photoOptionName}:${value}`;
-    const validFiles = Array.from(files).filter((f) => /^image\/(jpe?g|png|webp|gif)$/.test(f.type));
-    if (validFiles.length === 0) return;
-
-    setUploadingKey(key);
-    Promise.all(validFiles.map((file) => productsApi.uploadPhoto(file)))
-      .then((results) => {
-        setPhotosFor(value, [...getPhotosFor(value), ...results.map((r) => r.url)]);
-      })
-      .finally(() => {
-        setUploadingKey((k) => (k === key ? null : k));
-      });
+  // Preview / change / add photos of one value, through the shared photo tools (PhotoPicker.tsx).
+  const [photoTool, setPhotoTool] = useState<{ value: string; kind: 'preview' | 'change' | 'add'; index: number } | null>(null);
+  const pickPhotos = (urls: string[]) => {
+    if (!photoTool || urls.length === 0) return;
+    const list = getPhotosFor(photoTool.value);
+    const next = photoTool.kind === 'change' ? list.map((u, i) => (i === photoTool.index ? urls[0] : u)) : [...list, ...urls];
+    setPhotosFor(photoTool.value, next.filter((u, i) => next.indexOf(u) === i));
   };
 
   // Options that can have photos assigned — any variation option with at
@@ -379,23 +371,27 @@ export function VariationsEditor({
             <div className="rounded-lg border border-line divide-y divide-line">
               {photoOption.values.map((value) => {
                 const photos = getPhotosFor(value);
-                const key = `${photoOptionName}:${value}`;
-                const isUploading = uploadingKey === key;
                 return (
                   <div key={value} className="flex items-start gap-3 p-3">
                     <div className="w-24 shrink-0 pt-1.5 text-sm font-medium text-regantify-text truncate">
                       {value}
                     </div>
                     <div className="flex-1 flex flex-wrap items-center gap-2">
-                      {photos.map((url) => (
+                      {photos.map((url, i) => (
                         <div
                           key={url}
-                          className="relative w-14 h-14 rounded-lg overflow-hidden bg-neutral-50 border border-line"
+                          className="group relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-50 border border-line"
                         >
                           <img src={url} alt="" className="w-full h-full object-cover" />
+                          <PhotoHoverActions
+                            size="sm"
+                            onPreview={() => setPhotoTool({ value, kind: 'preview', index: i })}
+                            onChange={() => setPhotoTool({ value, kind: 'change', index: i })}
+                          />
                           <button
                             type="button"
                             onClick={() => removePhotoUrl(value, url)}
+                            aria-label="Remove photo"
                             className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black"
                           >
                             <X size={10} />
@@ -404,37 +400,35 @@ export function VariationsEditor({
                       ))}
                       <button
                         type="button"
-                        onClick={() => fileInputRefs.current[key]?.click()}
-                        disabled={isUploading}
-                        className="w-14 h-14 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
-                          flex items-center justify-center text-regantify-text-muted hover:border-neutral-300 disabled:opacity-50"
+                        onClick={() => setPhotoTool({ value, kind: 'add', index: -1 })}
+                        className="w-16 h-16 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50
+                          flex items-center justify-center text-regantify-text-muted hover:border-brand/60 hover:text-brand"
                         title={`Add photos for ${value}`}
+                        aria-label={`Add photos for ${value}`}
                       >
-                        {isUploading ? (
-                          <div className="w-4 h-4 border-2 border-regantify-text-muted border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Camera size={16} />
-                        )}
+                        <Camera size={16} />
                       </button>
-                      <input
-                        ref={(el) => {
-                          fileInputRefs.current[key] = el;
-                        }}
-                        type="file"
-                        multiple
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        onChange={(e) => {
-                          handlePhotoFilesSelected(value, e.target.files);
-                          e.target.value = '';
-                        }}
-                        className="hidden"
-                      />
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
+          <PhotoLightbox
+            urls={photoTool ? getPhotosFor(photoTool.value) : []}
+            index={photoTool?.kind === 'preview' ? photoTool.index : null}
+            onIndexChange={(k) => setPhotoTool((t) => t && { ...t, index: k })}
+            onClose={() => setPhotoTool(null)}
+            onChange={(k) => setPhotoTool((t) => t && { ...t, kind: 'change', index: k })}
+          />
+          <PhotoPickerDialog
+            open={photoTool?.kind === 'change' || photoTool?.kind === 'add'}
+            onOpenChange={(o) => !o && setPhotoTool(null)}
+            mode={photoTool?.kind === 'change' ? 'SINGLE' : 'MULTI'}
+            title={photoTool ? (photoTool.kind === 'change' ? `Change photo for ${photoTool.value}` : `Photos for ${photoTool.value}`) : undefined}
+            current={photoTool ? getPhotosFor(photoTool.value) : []}
+            onPick={pickPhotos}
+          />
         </div>
       )}
 

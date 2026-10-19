@@ -35,6 +35,7 @@ import { AddonProductsField } from '../../../components/product/AddonProductsFie
 import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilIso } from '../../../components/product/BadgeField';
 import { VideoLinkField } from '../../../components/product/VideoLinkField';
+import { PageFileDrop } from '../../../components/product/PageFileDrop';
 import { EMPTY_POLICY, PolicyField, policyToPayload } from '../../../components/product/PolicyField';
 import { CustomFieldsField, customFieldsPayload, customRowsFromProduct, type CustomFieldRow } from '../../../components/product/CustomFieldsField';
 import { PriceBreaksField, breakPayload, breakRowsFromProduct, type PriceBreakRow } from '../../../components/product/PriceBreaksField';
@@ -56,9 +57,15 @@ import { BackLink } from '../../../components/ui/BackLink';
 type PhotoSize = 'SQUARE' | 'PORTRAIT';
 type WeightUnit = 'KG' | 'G' | 'LB';
 
+/** A photo picked in the photo dialog: already uploaded (or from Media), so nothing to wait for. */
+function pickedPhoto(url: string): PendingPhoto {
+  return { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, previewUrl: url, uploadedUrl: url, uploading: false };
+}
+
 interface PendingPhoto {
   id: string;
-  file: File;
+  /** Only for a photo uploaded from this computer here; one picked from Media has none. */
+  file?: File;
   previewUrl: string;
   uploadedUrl?: string;
   uploading: boolean;
@@ -248,7 +255,7 @@ export default function AddProduct() {
 
     newPhotos.forEach((photo) => {
       productsApi
-        .uploadPhoto(photo.file)
+        .uploadPhoto(photo.file!)
         .then((res) => {
           setPhotos((prev) => prev.map((p) => (p.id === photo.id ? { ...p, uploadedUrl: res.url, uploading: false } : p)));
         })
@@ -466,11 +473,19 @@ export default function AddProduct() {
           </SectionCard>
 
           <SectionCard title="Photos" id="photos" description="Clear photos sell better. The first photo is the one shoppers see first.">
+            <PageFileDrop
+              onFiles={(files) => {
+                handlePhotoFiles(files);
+                document.getElementById('photos')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+            />
             <PhotoManager
               photos={photos}
               onFiles={handlePhotoFiles}
               onRemove={removePhoto}
               onReorder={(from, to) => setPhotos((prev) => moveItem(prev, from, to))}
+              onAddUrls={(urls) => setPhotos((prev) => [...prev, ...urls.map(pickedPhoto)])}
+              onReplace={(id, url) => setPhotos((prev) => prev.map((p) => (p.id === id ? pickedPhoto(url) : p)))}
               photoSize={photoSize}
               onPhotoSizeChange={setPhotoSize}
             />
