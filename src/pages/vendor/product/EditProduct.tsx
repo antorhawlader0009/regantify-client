@@ -39,6 +39,7 @@ import { SearchWordsField } from '../../../components/product/SearchWordsField';
 import { AddonProductsField } from '../../../components/product/AddonProductsField';
 import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilDate, badgeUntilIso } from '../../../components/product/BadgeField';
+import { VideoLinkField } from '../../../components/product/VideoLinkField';
 import { EMPTY_POLICY, PolicyField, policyFromProduct, policyToPayload } from '../../../components/product/PolicyField';
 import { CustomFieldsField, customFieldsPayload, customRowsFromProduct, type CustomFieldRow } from '../../../components/product/CustomFieldsField';
 import { PriceBreaksField, breakPayload, breakRowsFromProduct, type PriceBreakRow } from '../../../components/product/PriceBreaksField';
@@ -567,7 +568,8 @@ export default function EditProduct() {
         unpublishAt: visibility === 'PUBLIC' || schedule.publishAt ? schedule.unpublishAt : null,
         photoSize,
         photoUrls: photos.filter((p) => p.uploadedUrl && !p.uploading).map((p) => p.uploadedUrl),
-        videoUrl: videoUrl.trim() || undefined,
+        // Empty = remove the video (the server stores null).
+        videoUrl: videoUrl.trim(),
         price: Number(price),
         discountPrice: discountPrice.toString().trim() ? Number(discountPrice) : undefined,
         cost: cost.toString().trim() ? Number(cost) : undefined,
@@ -1059,16 +1061,7 @@ export default function EditProduct() {
               <Field label="Short summary" hint="Shown near the price on the product page.">
                 <RichTextEditor value={summary} onChange={setSummary} placeholder="Short summary shown on the storefront…" maxLength={500} />
               </Field>
-              <Field label="Video link" hint="A YouTube link, shown with the photos.">
-                <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value.slice(0, 500))}
-                  placeholder="https://youtube.com/watch?v=…"
-                  maxLength={500}
-                  className={productInputClass}
-                />
-              </Field>
+              <VideoLinkField value={videoUrl} onChange={setVideoUrl} />
               <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
               <PolicyField value={policy} onChange={setPolicy} />
               <InfoTabsField tabs={infoTabs} onChange={setInfoTabs} />

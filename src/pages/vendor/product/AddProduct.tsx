@@ -34,6 +34,7 @@ import { SearchWordsField } from '../../../components/product/SearchWordsField';
 import { AddonProductsField } from '../../../components/product/AddonProductsField';
 import type { PickedItem } from '../marketing/MarketingKit';
 import { BadgeField, badgeUntilIso } from '../../../components/product/BadgeField';
+import { VideoLinkField } from '../../../components/product/VideoLinkField';
 import { EMPTY_POLICY, PolicyField, policyToPayload } from '../../../components/product/PolicyField';
 import { CustomFieldsField, customFieldsPayload, customRowsFromProduct, type CustomFieldRow } from '../../../components/product/CustomFieldsField';
 import { PriceBreaksField, breakPayload, breakRowsFromProduct, type PriceBreakRow } from '../../../components/product/PriceBreaksField';
@@ -602,16 +603,7 @@ export default function AddProduct() {
               <Field label="Short summary" hint="Shown near the price on the product page.">
                 <RichTextEditor value={summary} onChange={setSummary} placeholder="A short summary shown in listings" maxLength={500} />
               </Field>
-              <Field label="Video link" hint="A YouTube link, shown with the photos.">
-                <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value.slice(0, 500))}
-                  placeholder="https://youtube.com/watch?v=…"
-                  maxLength={500}
-                  className={productInputClass}
-                />
-              </Field>
+              <VideoLinkField value={videoUrl} onChange={setVideoUrl} />
               <BadgeField text={badge.text} until={badge.until} onChange={setBadge} />
               <PolicyField value={policy} onChange={setPolicy} />
               <InfoTabsField tabs={infoTabs} onChange={setInfoTabs} />
