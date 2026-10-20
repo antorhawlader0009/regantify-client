@@ -12,9 +12,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
 import { useVendorNav } from '../../lib/useStaffAccess';
-import { advancedNavGroups, countAdvancedNav, withoutAdvanced, withoutFlagged } from '../../lib/navConfig';
+import { withoutFlagged } from '../../lib/navConfig';
 import { useVendorFeatures } from '../../lib/features';
-import { useAdvancedMenu } from '../../store/advancedStore';
 import { VendorPageGate } from '../staff/VendorPageGate';
 import { WelcomeNote } from '../staff/WelcomeNote';
 import { AssistantPanel } from '../assistant/AssistantPanel';
@@ -37,12 +36,7 @@ export function VendorLayout() {
   const flagsOn = useVendorFeatures().data?.on;
   const roleNav = useVendorNav();
   const nav = useMemo(() => withoutFlagged(roleNav, flagsOn ?? []), [roleNav, flagsOn]);
-  // Advanced pages stay out of the sidebar and tab bar until the seller turns on "Advanced menu".
-  const { showAdvancedMenu, setShowAdvancedMenu } = useAdvancedMenu();
-  // The sidebar lists advanced pages apart, under the normal menu, once "Advanced pages" is on (the page you are on stays in place while it is off).
-  const sidebarNav = withoutAdvanced(nav, false, showAdvancedMenu ? '' : pathname);
-  const shownNav = withoutAdvanced(nav, showAdvancedMenu, pathname);
-  const advancedCount = countAdvancedNav(nav);
+  // Every page sits in its own section again (the separate "Advanced pages" block was removed 2026-10-20).
 
   // Marks <body> while the vendor dashboard is open so index.css can swap its
   // white surfaces for #FAFAFD. On <body> (not this div) so dropdowns and
@@ -54,10 +48,9 @@ export function VendorLayout() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar
-        sections={sidebarNav}
+        sections={nav}
         mobileOpen={menuOpen}
         onMobileClose={closeMenu}
-        advancedMenu={advancedCount > 0 ? { on: showAdvancedMenu, count: advancedCount, groups: advancedNavGroups(nav), onToggle: () => setShowAdvancedMenu(!showAdvancedMenu) } : undefined}
       />
       <div className="flex min-w-0 flex-1 flex-col bg-[#efeff6] lg:border-l lg:border-line">
         <ImpersonationBar />
@@ -68,7 +61,7 @@ export function VendorLayout() {
         {!isLms && <AnnouncementBanner />}
         {!isLms && <ResaleMoneyBanner />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
-          <SectionTabs sections={shownNav} />
+          <SectionTabs sections={nav} />
           <VendorPageGate>
             <Suspense fallback={<PageLoading />}>
               <Outlet />
