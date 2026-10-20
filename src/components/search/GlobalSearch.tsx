@@ -93,7 +93,6 @@ function scrollToHash(path: string) {
   }, 100);
 }
 
-const isMac = typeof navigator !== 'undefined' && /mac|iphone|ipad/i.test(navigator.platform);
 
 /** Bolds the words typed inside a result title. */
 function Highlight({ text, tokens }: { text: string; tokens: string[] }) {
@@ -128,9 +127,7 @@ export function SearchTrigger() {
       >
         <Search size={16} className="shrink-0 text-neutral-600" />
         <span className="flex-1 truncate">Search</span>
-        <kbd className="hidden shrink-0 rounded border border-line bg-neutral-50 px-1.5 py-0.5 font-sans text-[11px] text-neutral-500 lg:block">
-          {isMac ? '⌘' : 'Ctrl'} K
-        </kbd>
+        <kbd className="hidden shrink-0 rounded border border-line bg-neutral-50 px-1.5 py-0.5 font-sans text-[11px] text-neutral-500 lg:block">/</kbd>
       </button>
       <button
         type="button"

@@ -46,14 +46,20 @@ export function AdminSearch() {
   const [debounced, setDebounced] = useState('');
   const [active, setActive] = useState(0);
   const input = useRef<HTMLInputElement>(null);
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setOpen((o) => !o);
+        return;
       }
+      // "/" opens it too (the platform's search key), unless the person is typing in a field.
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
+      e.preventDefault();
+      setOpen(true);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -107,7 +113,7 @@ export function AdminSearch() {
       <button type="button" onClick={() => setOpen(true)} className="hidden h-11 w-full max-w-[480px] items-center gap-2.5 rounded-full bg-regantify-search px-4 text-left text-sm text-regantify-text-muted transition hover:bg-[var(--console-hover)] md:flex" aria-label="Search">
         <Search size={16} className="shrink-0 text-neutral-600" />
         <span className="flex-1 truncate">Search stores, orders, IDs…</span>
-        <kbd className="rounded-md bg-white px-1.5 text-[11px] text-neutral-500">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+        <kbd className="rounded-md bg-white px-1.5 text-[11px] text-neutral-500">/</kbd>
       </button>
       <button type="button" onClick={() => setOpen(true)} aria-label="Search" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-regantify-search text-regantify-text md:hidden">
         <Search size={17} />

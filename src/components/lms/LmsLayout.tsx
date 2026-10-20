@@ -135,7 +135,7 @@ function LmsBar({ me }: { me: LmsMe }) {
 
 /* ------------------------------------------------------------ lead search */
 
-/** Find a lead by name or phone from any LMS page; `/` focuses it. */
+/** Find a lead by name or phone from any LMS page (`/` opens the dashboard-wide search, like everywhere else). */
 function LeadSearch({ me }: { me: LmsMe }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -150,19 +150,6 @@ function LeadSearch({ me }: { me: LmsMe }) {
     const t = setTimeout(() => setTerm(q.trim()), 250);
     return () => clearTimeout(t);
   }, [q]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
-      const el = e.target as HTMLElement;
-      if (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) return;
-      e.preventDefault();
-      setPhoneOpen(true);
-      inputRef.current?.focus();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
 
   const searching = term.length >= 2;
   const results = useQuery({

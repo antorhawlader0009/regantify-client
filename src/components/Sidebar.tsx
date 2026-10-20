@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminCan, useAdminViewer } from '../lib/adminPermissions';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronsLeft, ChevronsRight, LogOut, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronsLeft, ChevronsRight, Headphones, LogOut, SlidersHorizontal, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { idlePoll } from '../lib/idlePolling';
 import { isNavGroup, navLinks, type AdvancedNavGroup, type NavGroup, type NavLinkItem, type NavSection } from '../lib/navConfig';
@@ -30,7 +30,7 @@ function writeCollapsed(value: boolean) {
 }
 
 /** Tickets with a reply the viewer hasn't opened: support replies for a store, new store messages for Super Admin. */
-function SupportUnreadBadge({ admin, collapsed }: { admin: boolean; collapsed: boolean }) {
+function SupportUnreadBadge({ admin, collapsed, dotClass = 'right-3 top-2' }: { admin: boolean; collapsed: boolean; dotClass?: string }) {
   const viewer = useAdminViewer();
   const { data: count = 0 } = useQuery({
     queryKey: ['support-unread', admin ? 'admin' : 'vendor'],
@@ -41,7 +41,7 @@ function SupportUnreadBadge({ admin, collapsed }: { admin: boolean; collapsed: b
   });
   if (!count) return null;
   if (collapsed) {
-    return <span className="absolute right-3 top-2 h-2 w-2 rounded-full bg-orange-500" aria-label={`${count} unread`} />;
+    return <span className={`absolute ${dotClass} h-2 w-2 rounded-full bg-orange-500`}aria-label={`${count} unread`} />;
   }
   return (
     <span className="ml-auto min-w-[20px] rounded-full bg-orange-500 px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none text-white">
@@ -66,6 +66,80 @@ function Badge({ children }: { children: string }) {
 }
 
 const isSettingsRow = (s: NavSection) => Boolean(s.path?.endsWith('/settings'));
+const isSupportRow = (s: NavSection) => Boolean(s.path?.endsWith('/support'));
+
+// Same look as the main menu rows: plain on white, grey on hover, the shared nav-active highlight for the open page.
+const tileClass = (active: boolean) =>
+  `relative flex min-w-0 flex-col items-center gap-1 rounded-md px-0.5 py-2 text-[11px] leading-none transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 ${
+    active ? 'nav-active' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+  }`;
+
+/**
+ * The sidebar's foot: the bottom pages (Add-ons, Support, Settings) and Log out as one row of small tiles, then who is
+ * signed in with the store's plan and an Upgrade button. No card of its own, so it reads as part of the menu above.
+ */
+function AccountDock({ links, onLogout }: { links: NavSection[]; onLogout: () => void }) {
+  const user = useAuthStore((s) => s.user);
+  const { data } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage, retry: false });
+  const name = user?.fullName?.trim() || user?.vendor?.storeName || 'My account';
+  const sub = user?.email || user?.phone || '';
+  const initials = name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+  const plan = data?.plan;
+  const topPlan = plan?.code === 'ADVANCE';
+  // Billing is owner-only, so staff see the plan without the button.
+  const canBuy = user?.isOwner !== false;
+  // Add-ons, Support, Settings, then Log out.
+  const ordered = [...links.filter((s) => !isSettingsRow(s)), ...links.filter(isSettingsRow)].filter((s) => s.path);
+
+  return (
+    <div>
+      <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${ordered.length + 1}, minmax(0, 1fr))` }}>
+        {ordered.map((s) => {
+          const Icon = s.icon;
+          return (
+            <NavLink key={s.label} to={s.path!} title={s.label} className={({ isActive }) => tileClass(isActive)}>
+              <Icon size={17} strokeWidth={1.6} />
+              <span className="max-w-full truncate">{s.label}</span>
+              {isSupportRow(s) && <SupportUnreadBadge admin={false} collapsed dotClass="right-2.5 top-1.5" />}
+            </NavLink>
+          );
+        })}
+        <button type="button" onClick={onLogout} title="Log out" className={`${tileClass(false)} hover:!bg-red-50 hover:!text-red-600`}>
+          <LogOut size={17} strokeWidth={1.6} />
+          <span>Log out</span>
+        </button>
+      </div>
+
+      <div className="mt-2.5 flex items-center gap-2.5 border-t border-dashed border-neutral-200 px-1 pt-3">
+        {user?.avatarUrl ? (
+          <img src={user.avatarUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+        ) : (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-[12px] font-semibold text-brand" aria-hidden>
+            {initials || 'R'}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold leading-tight text-regantify-text" title={sub ? `${name} · ${sub}` : name}>{name}</p>
+          {plan && <p className="mt-0.5 truncate text-[11.5px] leading-tight text-neutral-500">{plan.name} plan</p>}
+        </div>
+        {plan && canBuy && (
+          <Link
+            to="/vendor/billing?tab=plan"
+            className={`inline-flex h-7 shrink-0 items-center rounded-md px-2.5 text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 active:scale-95 ${
+              topPlan ? 'border border-line bg-white text-neutral-700 hover:bg-neutral-100' : 'bg-brand text-white hover:bg-brand/90'
+            }`}
+          >
+            {topPlan ? 'Manage' : 'Upgrade'}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const rowClass = (active: boolean, collapsed: boolean) =>
   `relative flex w-full items-center rounded-md py-2.5 text-[14px] ${
@@ -346,33 +420,17 @@ export function Sidebar({ sections, advancedMenu, mobileOpen = false, onMobileCl
         )}
       </nav>
 
-      {/* Always pinned to the bottom */}
+      {/* Always pinned to the bottom. Expanded: one compact card (profile, plan, Add-ons, Support, Settings, Log out). */}
       <div className="shrink-0 space-y-0.5 border-t border-dashed border-neutral-200 bg-white px-3 py-3">
-        {sections.filter((s) => s.bottom).map((s) =>
-          // Expanded: Settings carries a small Logout icon at its right edge, so Logout needs no row of its own.
-          isSettingsRow(s) && !collapsed ? (
-            <div key={s.label} className="flex items-center gap-1">
-              <div className="min-w-0 flex-1">{renderSection(s)}</div>
-              <button
-                type="button"
-                onClick={() => setConfirmLogout(true)}
-                title="Logout"
-                aria-label="Logout"
-                className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-white text-neutral-500 shadow-[0_1px_0_rgba(0,0,0,0.03)] transition duration-150 hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus-visible:border-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 active:scale-95"
-              >
-                <LogOut size={16} strokeWidth={1.8} className="transition-transform duration-150 group-hover:translate-x-0.5" />
-              </button>
-            </div>
-          ) : (
-            renderSection(s)
-          ),
-        )}
-        {/* Collapsed rail, or a menu with no Settings row: Logout keeps its own row. */}
-        {(collapsed || !sections.some((s) => s.bottom && isSettingsRow(s))) && (
-          <button onClick={() => setConfirmLogout(true)} title={collapsed ? 'Logout' : undefined} className={rowClass(false, collapsed)}>
-            <LogOut size={17} strokeWidth={1.6} className="shrink-0" />
-            {!collapsed && <span className="truncate">Logout</span>}
-          </button>
+        {collapsed ? (
+          <>
+            {sections.filter((s) => s.bottom).map((s) => renderSection(s))}
+            <button onClick={() => setConfirmLogout(true)} title="Logout" className={rowClass(false, true)}>
+              <LogOut size={17} strokeWidth={1.6} className="shrink-0" />
+            </button>
+          </>
+        ) : (
+          <AccountDock links={sections.filter((s) => s.bottom)} onLogout={() => setConfirmLogout(true)} />
         )}
       </div>
     </aside>

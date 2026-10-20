@@ -532,6 +532,8 @@ export default function OrderDetail() {
         ))}
       </div>
 
+      {/* The notes and cards between the summary strip and the columns, kept apart by one even gap. */}
+      <div className="mb-4 space-y-3 empty:hidden">
       {moreTools && (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-line bg-neutral-50/60 px-4 py-3">
           <span className="mr-2 text-sm text-neutral-500">More tools:</span>
@@ -542,7 +544,7 @@ export default function OrderDetail() {
       )}
 
       {/* Reseller system (Step 10): the reseller that sold this, its earning and how it was settled. */}
-      {order.resale && <div className="mb-4"><ResaleCard info={order.resale} /></div>}
+      {order.resale && <ResaleCard info={order.resale} />}
 
       {/* Why a cancelled / returned / failed order ended (Analytics > Orders groups by it). */}
       <OrderCloseReasonCard order={order} canEdit={canEdit} onChanged={invalidateOrder} />
@@ -554,15 +556,15 @@ export default function OrderDetail() {
       <ManualPaymentCard order={order} canEdit={canEdit} />
       <OrderRiskCard order={order} />
       {orderAddressProblem(order) && (
-        <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-900">
           <span className="font-medium">Address incomplete?</span> {ADDRESS_PROBLEM_TEXT[orderAddressProblem(order)!]} Call the customer and fix it with Edit contact before you book a courier.
         </p>
       )}
       {/* Same phone and product as an earlier open order within 24 hours (OrdersService.findPossibleDuplicate). */}
       {order.possibleDuplicateOfId && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-          <Copy size={16} className="shrink-0 text-amber-700" aria-hidden />
-          <p className="min-w-0 flex-1 text-sm text-amber-900">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <Copy size={16} className="shrink-0 text-red-700" aria-hidden />
+          <p className="min-w-0 flex-1 text-sm text-red-900">
             <span className="font-medium">Possible duplicate.</span> This customer ordered the same product again within 24 hours
             {order.possibleDuplicateOf ? (
               <>
@@ -581,7 +583,7 @@ export default function OrderDetail() {
               type="button"
               onClick={() => notDuplicate.mutate()}
               disabled={notDuplicate.isPending}
-              className="shrink-0 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-60"
+              className="shrink-0 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-900 hover:bg-red-100 disabled:opacity-60"
             >
               Not a duplicate
             </button>
@@ -591,10 +593,10 @@ export default function OrderDetail() {
 
       {/* Customers > "Note & tags" on this phone plus its automatic group ("VIP · 7 orders"), so whoever calls sees it first. */}
       {(order.vendorCustomerNote || order.customerGroup) && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
           <div className="flex flex-wrap items-center gap-2">
-            <StickyNote size={15} className="text-amber-700" aria-hidden />
-            <span className="text-sm font-medium text-amber-900">About this customer</span>
+            <StickyNote size={15} className="text-red-700" aria-hidden />
+            <span className="text-sm font-medium text-red-900">About this customer</span>
             <CustomerGroupChip
               group={order.customerGroup?.group}
               suffix={order.customerGroup ? `${order.customerGroup.orders} ${order.customerGroup.orders === 1 ? 'order' : 'orders'}, ৳${Math.round(order.customerGroup.spent).toLocaleString('en-US')}` : undefined}
@@ -604,6 +606,7 @@ export default function OrderDetail() {
           {order.vendorCustomerNote?.note && <p className="mt-1.5 whitespace-pre-line text-sm text-regantify-text">{order.vendorCustomerNote.note}</p>}
         </div>
       )}
+      </div>
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}
