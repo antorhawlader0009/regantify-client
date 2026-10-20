@@ -246,7 +246,7 @@ startIdleWatch(queryClient);
 
 // Step 7: pages are separate files named by their content, so after a new deploy a tab opened before it may ask for a
 // file that no longer exists. Vite reports that here; the page reloads once to pick up the new build (once per 30 s, so a
-// real outage can't loop).
+// real outage can't loop)..
 if (typeof window !== 'undefined') {
   window.addEventListener('vite:preloadError', (event) => {
     let last = 0;
