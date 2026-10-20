@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { addonsApi } from '../../../lib/addonsApi';
 import {
   ChevronRight,
+  CreditCard,
   HandCoins,
   Mail,
   MessageSquare,
@@ -25,15 +26,13 @@ import {
  * - neither: waiting for the provider's documentation. Greyed out and not clickable; the list of missing documents is
  *   kept in z-others/documentations/missing-documentation.txt.
  * Super Admin can turn any add-on off for every store (Super Admin > Add-ons): it then shows greyed out as turned off.
- * Logos live in /public/addons; an add-on with no logo shows an icon.
+ * Every card shows a generic icon, never another company's logo (a brand-protection complaint took the server down on 2026-10-20).
  */
 interface Addon {
   /** Same key as server/src/addons/addons.ts: Super Admin can turn it off for every store. */
   key: string;
   name: string;
   about: string;
-  /** File in /public/addons. */
-  logo?: string;
   icon?: ComponentType<LucideProps>;
   /** Ready: the dashboard page that sets it up. */
   path?: string;
@@ -45,24 +44,24 @@ const GROUPS: { title: string; items: Addon[] }[] = [
   {
     title: 'Payments',
     items: [
-      { key: 'SSLCOMMERZ', name: 'SSLCommerz Payment Gateway', about: 'Cards, mobile wallets and net banking at checkout', logo: 'sslcommerz.svg', path: '/vendor/store/payment-gateway?connect=sslcommerz' },
-      { key: 'SHURJOPAY', name: 'shurjoPay', about: 'Cards and mobile wallets through your own shurjoPay store', logo: 'shurjopay.png', path: '/vendor/store/payment-gateway?connect=shurjopay' },
-      { key: 'EPS', name: 'EPS - Easy Payment System', about: 'Cards, bKash, Nagad and more through your own EPS merchant account', logo: 'eps.png', path: '/vendor/store/payment-gateway?connect=eps' },
+      { key: 'SSLCOMMERZ', name: 'SSLCommerz Payment Gateway', about: 'Cards, mobile wallets and net banking at checkout', icon: CreditCard, path: '/vendor/store/payment-gateway?connect=sslcommerz' },
+      { key: 'SHURJOPAY', name: 'shurjoPay', about: 'Cards and mobile wallets through your own shurjoPay store', icon: CreditCard, path: '/vendor/store/payment-gateway?connect=shurjopay' },
+      { key: 'EPS', name: 'EPS - Easy Payment System', about: 'Cards, bKash, Nagad and more through your own EPS merchant account', icon: CreditCard, path: '/vendor/store/payment-gateway?connect=eps' },
       { key: 'PARTIAL_PAYMENT', name: 'Partial Payment', about: 'Take an advance on cash on delivery orders before they ship', icon: Wallet, path: '/vendor/store/cod-guard' },
       { key: 'MANUAL_MOBILE_PAYMENT', name: 'Manual Mobile Payment', about: 'Take payments to personal bKash, Nagad and other accounts', icon: HandCoins, path: '/vendor/store/payment-gateway?connect=manual-mobile' },
-      { key: 'AAMARPAY', name: 'aamarPay', about: 'Cards and mobile wallets through your own aamarPay store', logo: 'aamarpay.png', path: '/vendor/store/payment-gateway?connect=aamarpay' },
-      { key: 'BKASH', name: 'bKash', about: 'Let customers pay with bKash through your merchant account', logo: 'bkash.png', path: '/vendor/store/payment-gateway?connect=bkash-merchant' },
-      { key: 'NAGAD', name: 'Nagad', about: 'Take Nagad payments at checkout', logo: 'nagad.png' },
-      { key: 'PORTWALLET', name: 'PortWallet Payment Gateway', about: 'Accept digital payments through your own PortWallet (PortPos) account', logo: 'portwallet.png', path: '/vendor/store/payment-gateway?connect=portwallet' },
+      { key: 'AAMARPAY', name: 'aamarPay', about: 'Cards and mobile wallets through your own aamarPay store', icon: CreditCard, path: '/vendor/store/payment-gateway?connect=aamarpay' },
+      { key: 'BKASH', name: 'bKash', about: 'Let customers pay with bKash through your merchant account', icon: Smartphone, path: '/vendor/store/payment-gateway?connect=bkash-merchant' },
+      { key: 'NAGAD', name: 'Nagad', about: 'Take Nagad payments at checkout', icon: Smartphone },
+      { key: 'PORTWALLET', name: 'PortWallet Payment Gateway', about: 'Accept digital payments through your own PortWallet (PortPos) account', icon: CreditCard, path: '/vendor/store/payment-gateway?connect=portwallet' },
       { key: 'PAYSTATION', name: 'PayStation', about: 'Take payments through your own PayStation merchant account', icon: Wallet, path: '/vendor/store/payment-gateway?connect=vendor-paystation' },
     ],
   },
   {
     title: 'Couriers',
     items: [
-      { key: 'PATHAO', name: 'Pathao Courier', about: 'Book parcels and follow delivery with Pathao', logo: 'pathao.png', path: '/vendor/courier/pathao' },
-      { key: 'STEADFAST', name: 'SteadFast Courier', about: 'Book parcels and follow delivery with SteadFast', logo: 'steadfast.png', path: '/vendor/courier/steadfast' },
-      { key: 'REDX', name: 'REDX Courier', about: 'Book parcels and follow delivery with REDX', logo: 'redx.svg', path: '/vendor/courier/redx' },
+      { key: 'PATHAO', name: 'Pathao Courier', about: 'Book parcels and follow delivery with Pathao', icon: Truck, path: '/vendor/courier/pathao' },
+      { key: 'STEADFAST', name: 'SteadFast Courier', about: 'Book parcels and follow delivery with SteadFast', icon: Truck, path: '/vendor/courier/steadfast' },
+      { key: 'REDX', name: 'REDX Courier', about: 'Book parcels and follow delivery with REDX', icon: Truck, path: '/vendor/courier/redx' },
       { key: 'PAPERFLY', name: 'Paperfly Courier', about: 'Book parcels and follow delivery with Paperfly', icon: Truck },
       { key: 'CARRYBEE', name: 'CarryBee Courier', about: 'Book parcels and follow delivery with CarryBee', icon: Truck, path: '/vendor/courier/carrybee' },
       { key: 'MOVEON_DROP', name: 'MoveOn Drop', about: 'Sell MoveOn products and have MoveOn ship them', icon: Package },
@@ -74,7 +73,7 @@ const GROUPS: { title: string; items: Addon[] }[] = [
     items: [
       { key: 'REGANTIFY_SMS', name: 'Regantify SMS', about: 'Ready-to-use SMS sending for your store, no setup needed', icon: MessageSquare, path: '/vendor/sms' },
       { key: 'CUSTOM_SMS', name: 'Custom SMS', about: 'Your own text for each order status sent to customers', icon: MessageSquareText, path: '/vendor/store/order-tracking' },
-      { key: 'ISMSPLUS', name: 'SSL Wireless iSMSplus', about: 'Send texts through the SSL Wireless SMS gateway', logo: 'sslwireless.png', path: '/vendor/sms?tab=gateway&provider=ISMSPLUS' },
+      { key: 'ISMSPLUS', name: 'SSL Wireless iSMSplus', about: 'Send texts through the SSL Wireless SMS gateway', icon: MessagesSquare, path: '/vendor/sms?tab=gateway&provider=ISMSPLUS' },
       { key: 'MIM_SMS', name: 'MIM SMS', about: 'Send texts through your own MIM SMS account', icon: MessagesSquare, path: '/vendor/sms?tab=gateway&provider=MIM_SMS' },
       { key: 'SMSGEN', name: 'SMSGen', about: 'Send texts through your own SMSGen account', icon: MessagesSquare },
       { key: 'GENNET_SMS', name: 'Gennet SMS', about: 'Send texts through your own Gennet SMS account', icon: MessagesSquare },
@@ -99,16 +98,7 @@ function AddonCard({ addon, turnedOff }: { addon: Addon; turnedOff: boolean }) {
   const body = (
     <>
       <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-line bg-white">
-        {addon.logo ? (
-          <img
-            src={`/addons/${addon.logo}`}
-            alt=""
-            className={`h-full w-full object-contain p-1.5 ${waiting ? 'grayscale' : ''}`}
-            loading="lazy"
-          />
-        ) : (
-          Icon && <Icon size={24} strokeWidth={1.6} className="text-neutral-500" aria-hidden />
-        )}
+        {Icon && <Icon size={24} strokeWidth={1.6} className={waiting ? 'text-neutral-400' : 'text-neutral-500'} aria-hidden />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-medium leading-snug text-regantify-text">{addon.name}</p>

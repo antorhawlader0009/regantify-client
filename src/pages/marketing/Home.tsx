@@ -38,9 +38,9 @@ const dict = {
     hero_s1_title: 'Your whole shop, one app',
     hero_s1_detail: 'Orders, payments and deliveries in one simple dashboard, made for Bangladeshi sellers.',
     hero_s2_title: 'Book couriers in a tap',
-    hero_s2_detail: 'Send parcels with Pathao, SteadFast or RedX and follow them without leaving the dashboard.',
+    hero_s2_detail: 'Send parcels with the leading local couriers and follow them without leaving the dashboard.',
     hero_s3_title: 'Get paid your way',
-    hero_s3_detail: 'bKash, Nagad, Rocket and Upay payments reach your built-in wallet.',
+    hero_s3_detail: 'Mobile banking, card and QR payments reach your built-in wallet.',
     hero_s4_title: 'Photo to product page',
     hero_s4_detail: 'Snap a picture and AI drafts the title and details of your listing.',
 
@@ -69,9 +69,9 @@ const dict = {
     f1_b3: 'Find any past order by customer name',
 
     f2_eyebrow: 'Payments',
-    f2_title: 'A wallet that already speaks bKash and Nagad',
-    f2_detail: 'Regantify comes with one wallet built in. Customers pay with bKash, Nagad, Rocket, or a card — it all lands in the same place. No merchant account. No paperwork. Start taking payments today.',
-    f2_b1: 'bKash and Nagad from day one',
+    f2_title: 'A wallet that already speaks mobile banking',
+    f2_detail: 'Regantify comes with one wallet built in. Customers pay with mobile banking, a card or QR — it all lands in the same place. No merchant account. No paperwork. Start taking payments today.',
+    f2_b1: 'Mobile banking payments from day one',
     f2_b2: 'No merchant account needed',
     f2_b3: 'No developer or setup required',
 
@@ -90,7 +90,7 @@ const dict = {
     feat3_title: 'A shop page, ready to go',
     feat3_detail: 'The moment you add your first product, your shop is live. No website needed.',
     feat4_title: 'Made for Bangladesh',
-    feat4_detail: 'bKash, Nagad, and courier handoff, ready from the start.',
+    feat4_detail: 'Mobile payments and courier handoff, ready from the start.',
 
     pricing_title: 'Simple pricing',
     pricing_sub: 'Start for free. Pay only when your shop grows.',
@@ -160,7 +160,7 @@ const dict = {
     val_aichat_basic: '100 msg/day',
     val_aichat_starter: '500 msg/day',
     val_aichat_advance: 'Unlimited',
-    val_courier_free: '✓ (Steadfast)',
+    val_courier_free: '✓ (1 courier)',
     val_courier_paid: '✓',
     val_staff_free: '1',
     val_staff_basic: '2',
@@ -178,7 +178,7 @@ const dict = {
     faq1_q: 'Do I need my own website?',
     faq1_a: 'No. Your shop page goes live the moment you add your first product. You can add your own domain name later if you want.',
     faq2_q: 'Do I need a merchant account to get paid?',
-    faq2_a: 'No. The built-in wallet handles bKash, Nagad, and card payments for you. Nothing else to set up.',
+    faq2_a: 'No. The built-in wallet handles mobile banking and card payments for you. Nothing else to set up.',
     faq3_q: 'Can I change plans later?',
     faq3_a: 'Yes, any time, from Settings. The change starts on your next billing date. You keep everything you had.',
     faq4_q: 'What kind of shops is this for?',
@@ -202,9 +202,9 @@ const dict = {
     hero_s1_title: 'পুরো দোকান, এক অ্যাপে',
     hero_s1_detail: 'অর্ডার, পেমেন্ট আর ডেলিভারি, সব এক সহজ ড্যাশবোর্ডে। বাংলাদেশের বিক্রেতাদের জন্য তৈরি।',
     hero_s2_title: 'এক ট্যাপে কুরিয়ার বুক',
-    hero_s2_detail: 'পাঠাও, স্টেডফাস্ট বা রেডএক্স দিয়ে পার্সেল পাঠান, ড্যাশবোর্ড ছেড়ে না গিয়েই ট্র্যাক করুন।',
+    hero_s2_detail: 'দেশের পরিচিত কুরিয়ার দিয়ে পার্সেল পাঠান, ড্যাশবোর্ড ছেড়ে না গিয়েই ট্র্যাক করুন।',
     hero_s3_title: 'পেমেন্ট নিন আপনার মতো',
-    hero_s3_detail: 'বিকাশ, নগদ, রকেট আর উপায়ের পেমেন্ট সরাসরি আপনার ওয়ালেটে।',
+    hero_s3_detail: 'মোবাইল ব্যাংকিং, কার্ড আর QR পেমেন্ট সরাসরি আপনার ওয়ালেটে।',
     hero_s4_title: 'ছবি থেকে প্রোডাক্ট পেজ',
     hero_s4_detail: 'একটা ছবি তুলুন, AI আপনার লিস্টিংয়ের টাইটেল আর বিবরণ লিখে দেবে।',
 
@@ -233,9 +233,9 @@ const dict = {
     f1_b3: 'কাস্টমারের নাম দিয়ে পুরনো অর্ডার খুঁজুন',
 
     f2_eyebrow: 'পেমেন্ট',
-    f2_title: 'একটা ওয়ালেট, যা bKash আর Nagad বোঝে',
-    f2_detail: 'Regantify তে একটা ওয়ালেট আগে থেকেই আছে। কাস্টমার bKash, Nagad, Rocket, বা কার্ড দিয়ে পে করুক — সব একই জায়গায় জমা হবে। মার্চেন্ট অ্যাকাউন্ট লাগবে না। কাগজপত্র লাগবে না। আজই টাকা নেওয়া শুরু করুন।',
-    f2_b1: 'প্রথম দিন থেকেই bKash আর Nagad',
+    f2_title: 'একটা ওয়ালেট, যা মোবাইল ব্যাংকিং বোঝে',
+    f2_detail: 'Regantify তে একটা ওয়ালেট আগে থেকেই আছে। কাস্টমার মোবাইল ব্যাংকিং, কার্ড বা QR দিয়ে পে করুক — সব একই জায়গায় জমা হবে। মার্চেন্ট অ্যাকাউন্ট লাগবে না। কাগজপত্র লাগবে না। আজই টাকা নেওয়া শুরু করুন।',
+    f2_b1: 'প্রথম দিন থেকেই মোবাইল ব্যাংকিং পেমেন্ট',
     f2_b2: 'মার্চেন্ট অ্যাকাউন্ট লাগে না',
     f2_b3: 'ডেভেলপার বা সেটআপ লাগে না',
 
@@ -254,7 +254,7 @@ const dict = {
     feat3_title: 'দোকানের পেজ, রেডি',
     feat3_detail: 'প্রথম প্রোডাক্ট যোগ করার সাথে সাথেই দোকান লাইভ হয়ে যায়। ওয়েবসাইট লাগে না।',
     feat4_title: 'বাংলাদেশের জন্য তৈরি',
-    feat4_detail: 'bKash, Nagad, আর কুরিয়ার হ্যান্ডঅফ — শুরু থেকেই রেডি।',
+    feat4_detail: 'মোবাইল পেমেন্ট আর কুরিয়ার হ্যান্ডঅফ — শুরু থেকেই রেডি।',
 
     pricing_title: 'সহজ মূল্য',
     pricing_sub: 'ফ্রি শুরু করুন। দোকান বড় হলে তখন দিন।',
@@ -324,7 +324,7 @@ const dict = {
     val_aichat_basic: 'দৈনিক ১০০ মেসেজ',
     val_aichat_starter: 'দৈনিক ৫০০ মেসেজ',
     val_aichat_advance: 'আনলিমিটেড',
-    val_courier_free: '✓ (Steadfast)',
+    val_courier_free: '✓ (1 courier)',
     val_courier_paid: '✓',
     val_staff_free: '১',
     val_staff_basic: '২',
@@ -342,7 +342,7 @@ const dict = {
     faq1_q: 'নিজের ওয়েবসাইট লাগবে কি?',
     faq1_a: 'না। প্রথম প্রোডাক্ট যোগ করার সাথে সাথেই আপনার দোকান লাইভ হয়ে যায়। পরে চাইলে নিজের ডোমেইন নাম যোগ করতে পারবেন।',
     faq2_q: 'টাকা নিতে মার্চেন্ট অ্যাকাউন্ট লাগবে কি?',
-    faq2_a: 'না। বিল্ট-ইন ওয়ালেট bKash, Nagad, আর কার্ড পেমেন্ট সামলায়। আর কিছু সেট আপ করতে হয় না।',
+    faq2_a: 'না। বিল্ট-ইন ওয়ালেট মোবাইল ব্যাংকিং আর কার্ড পেমেন্ট সামলায়। আর কিছু সেট আপ করতে হয় না।',
     faq3_q: 'পরে প্ল্যান বদলাতে পারব?',
     faq3_a: 'হ্যাঁ, যেকোনো সময়, সেটিংস থেকে। পরের বিলিং তারিখ থেকে বদল শুরু হবে। আগের সব কিছু থেকে যাবে।',
     faq4_q: 'এটা কোন ধরনের দোকানের জন্য?',
@@ -516,8 +516,8 @@ function HomeInner() {
   // The four pictures of the hero rail, in the order they should be met.
   const builtInSlides = [
     { image: '/hero/slide-1.jpg', alt: 'A seller showing the Regantify dashboard on two phones, with courier and payment logos around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
-    { image: '/hero/slide-2.jpg', alt: 'A delivery rider with parcels and the Pathao, Steadfast and RedX logos', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
-    { image: '/hero/slide-3.jpg', alt: 'A shopkeeper holding a phone with bKash, Nagad, Rocket and Upay payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
+    { image: '/hero/slide-2.jpg', alt: 'A delivery rider with parcels ready to send', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
+    { image: '/hero/slide-3.jpg', alt: 'A shopkeeper holding a phone with mobile payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
     { image: '/hero/slide-4.jpg', alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
   ];
 
@@ -540,7 +540,7 @@ function HomeInner() {
       detail: t('f2_detail'),
       bullets: [t('f2_b1'), t('f2_b2'), t('f2_b3')],
       image: '/img2.png',
-      alt: 'Built-in wallet accepting bKash and Nagad payments',
+      alt: 'Built-in wallet accepting mobile payments',
     },
     {
       eyebrow: t('f3_eyebrow'),

@@ -50,7 +50,7 @@ const dict = {
     perk2_title: 'Orders & delivery in sync',
     perk2_detail: 'Print labels and track every parcel.',
     perk3_title: 'See payments land',
-    perk3_detail: 'bKash and Nagad, all in your wallet.',
+    perk3_detail: 'Mobile banking and card payments, all in your wallet.',
     perk4_title: 'Know how you are doing',
     perk4_detail: 'Sales and customers at a glance.',
 
@@ -93,7 +93,7 @@ const dict = {
     perk2_title: 'অর্ডার আর ডেলিভারি মিলে থাকে',
     perk2_detail: 'লেবেল প্রিন্ট করুন, প্রতিটা পার্সেল ট্র্যাক করুন।',
     perk3_title: 'পেমেন্ট আসা দেখুন',
-    perk3_detail: 'bKash আর Nagad, সব আপনার ওয়ালেটে।',
+    perk3_detail: 'মোবাইল ব্যাংকিং আর কার্ড পেমেন্ট, সব আপনার ওয়ালেটে।',
     perk4_title: 'কেমন চলছে জানুন',
     perk4_detail: 'বিক্রি আর কাস্টমার এক নজরে।',
 

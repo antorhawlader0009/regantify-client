@@ -48,7 +48,7 @@ const dict = {
 
     perk1_title: 'Live in minutes',
     perk1_detail: 'Add one product and your shop page is live.',
-    perk2_title: 'bKash & Nagad built in',
+    perk2_title: 'Mobile payments built in',
     perk2_detail: 'No merchant account, no paperwork.',
     perk3_title: 'No card needed',
     perk3_detail: 'Free 14-day trial. Cancel any time.',
@@ -96,7 +96,7 @@ const dict = {
 
     perk1_title: 'কয়েক মিনিটেই লাইভ',
     perk1_detail: 'একটা প্রোডাক্ট যোগ করুন, দোকান লাইভ হয়ে যাবে।',
-    perk2_title: 'bKash আর Nagad বিল্ট-ইন',
+    perk2_title: 'মোবাইল পেমেন্ট বিল্ট-ইন',
     perk2_detail: 'মার্চেন্ট অ্যাকাউন্ট নেই, কাগজপত্র নেই।',
     perk3_title: 'কার্ড লাগবে না',
     perk3_detail: '১৪ দিন ফ্রি ট্রায়াল। যেকোনো সময় বাতিল করুন।',

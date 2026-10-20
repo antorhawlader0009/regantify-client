@@ -378,7 +378,6 @@ interface StoreGatewayDef {
   type: PaymentGatewayType;
   slug: StoreGatewaySlug;
   name: string;
-  logo?: string;
   about: string;
   defaultLabel: string;
   sandboxHelp: string;
@@ -396,7 +395,6 @@ const STORE_GATEWAYS: StoreGatewayDef[] = [
     type: 'BKASH_MERCHANT',
     slug: 'bkash-merchant',
     name: 'bKash',
-    logo: 'bkash.png',
     about: 'Customers pay from their bKash wallet through your own bKash merchant account.',
     defaultLabel: 'bKash',
     sandboxHelp: "For testing with bKash's sandbox keys. No real money moves. Turn it off with your live keys before selling.",
@@ -420,7 +418,6 @@ const STORE_GATEWAYS: StoreGatewayDef[] = [
     type: 'AAMARPAY',
     slug: 'aamarpay',
     name: 'aamarPay',
-    logo: 'aamarpay.png',
     about: 'Cards, bKash, Nagad and more through your own aamarPay store.',
     defaultLabel: 'aamarPay (cards, bKash, Nagad)',
     sandboxHelp: "For testing with aamarPay's sandbox store (aamarpaytest). No real money moves. Turn it off with your live keys before selling.",
@@ -447,7 +444,6 @@ const STORE_GATEWAYS: StoreGatewayDef[] = [
     type: 'PORTWALLET',
     slug: 'portwallet',
     name: 'PortWallet (PortPos)',
-    logo: 'portwallet.png',
     about: 'Cards, mobile wallets and banks through your own PortWallet (PortPos) account.',
     defaultLabel: 'PortWallet (cards, wallets)',
     sandboxHelp: "For testing with keys from PortPos's sandbox panel. No real money moves. Turn it off with your live keys before selling.",
@@ -535,11 +531,7 @@ function StoreGatewayCard({
   return (
     <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
       <div className="flex items-start gap-3">
-        {def.logo ? (
-          <img src={`/addons/${def.logo}`} alt="" className="h-6 w-6 mt-0.5 shrink-0 object-contain" />
-        ) : (
-          <CreditCard size={20} className="mt-0.5 shrink-0 text-regantify-text-muted" />
-        )}
+        <CreditCard size={20} className="mt-0.5 shrink-0 text-regantify-text-muted" />
         <div className="flex-1">
           <p className="text-sm font-medium text-regantify-text flex items-center gap-2">
             {gateway?.displayLabel ?? def.name}
@@ -734,7 +726,7 @@ function ShurjopayCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentG
   return (
     <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
       <div className="flex items-start gap-3">
-        <img src="/addons/shurjopay.png" alt="" className="h-6 w-6 mt-0.5 shrink-0 object-contain" />
+        <CreditCard size={20} className="mt-0.5 shrink-0 text-regantify-text-muted" />
         <div className="flex-1">
           <p className="text-sm font-medium text-regantify-text flex items-center gap-2">
             {gateway?.displayLabel ?? 'shurjoPay'}
@@ -933,7 +925,7 @@ function EpsCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway
   return (
     <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
       <div className="flex items-start gap-3">
-        <img src="/addons/eps.png" alt="" className="h-6 w-6 mt-0.5 shrink-0 object-contain" />
+        <CreditCard size={20} className="mt-0.5 shrink-0 text-regantify-text-muted" />
         <div className="flex-1">
           <p className="text-sm font-medium text-regantify-text flex items-center gap-2">
             {gateway?.displayLabel ?? 'EPS (Easy Payment System)'}
