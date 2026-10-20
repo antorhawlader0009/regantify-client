@@ -8,7 +8,6 @@ import { useAssistantUi } from '../../store/assistantStore';
 import { useAuthStore } from '../../store/authStore';
 import { viewerOf } from '../../lib/useStaffAccess';
 import { canOpenPath } from '../../lib/staffPermissions';
-import { searchStatic } from '../../lib/searchIndex';
 
 /*
  * Dashboard "Ask AI" side panel: docked on the right of the vendor
@@ -231,6 +230,8 @@ function PanelBody({
       // so the assistant names real ones instead of guessing.
       const viewer = viewerOf(useAuthStore.getState().user);
       const previous = withQuestion.messages.filter((m) => m.role === 'user').slice(-2, -1)[0]?.content ?? '';
+      // Loaded on first use: the settings list names third-party services, so it stays out of the site's first download.
+      const { searchStatic } = await import('../../lib/searchIndex');
       const found = searchStatic(text, 12);
       if (found.length < 4 && previous) found.push(...searchStatic(`${previous} ${text}`, 8));
       const seen = new Set<string>();

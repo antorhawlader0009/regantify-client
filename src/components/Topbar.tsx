@@ -9,7 +9,7 @@ import { AccountMenu } from './AccountMenu';
 import { NotificationBell } from './NotificationBell';
 import { BalanceButton } from './BalanceButton';
 import { HelpButton } from './help/HelpButton';
-import { SearchPalette, SearchTrigger } from './search/GlobalSearch';
+import { SearchPalette, SearchTrigger } from './search/SearchShell';
 import { AdminSearch } from './admin/AdminSearch';
 import { AdminBell } from './admin/AdminBell';
 

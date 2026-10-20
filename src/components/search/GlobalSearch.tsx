@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
@@ -31,7 +30,6 @@ import { clearRecents, loadRecents, queryTokens, quickActions, saveRecent, searc
 import { useAuthStore } from '../../store/authStore';
 import { useViewer } from '../../lib/useStaffAccess';
 import { canOpenPath } from '../../lib/staffPermissions';
-import { useSearchUi } from '../../store/searchStore';
 
 /*
  * Top-bar search for the vendor dashboard, a "command palette": one box
@@ -114,61 +112,11 @@ function Highlight({ text, tokens }: { text: string; tokens: string[] }) {
   );
 }
 
-/** The field in the top bar. Looks like a search box, opens the palette. */
-export function SearchTrigger() {
-  const setOpen = useSearchUi((s) => s.setOpen);
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Search"
-        className="mx-auto hidden h-9 w-full max-w-[360px] items-center gap-2 rounded-lg border border-line px-3 text-left text-sm text-neutral-500 transition hover:border-neutral-300 md:flex"
-      >
-        <Search size={16} className="shrink-0 text-neutral-600" />
-        <span className="flex-1 truncate">Search</span>
-        <kbd className="hidden shrink-0 rounded border border-line bg-neutral-50 px-1.5 py-0.5 font-sans text-[11px] text-neutral-500 lg:block">/</kbd>
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Search"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-white text-neutral-700 md:hidden"
-      >
-        <Search size={17} />
-      </button>
-    </>
-  );
-}
-
-/** Mounted once in the Topbar; renders nothing until opened. */
-export function SearchPalette() {
-  const open = useSearchUi((s) => s.open);
-  const setOpen = useSearchUi((s) => s.setOpen);
-
-  // Ctrl/Cmd+K toggles it anywhere; "/" opens it when not typing in a field.
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setOpen(!useSearchUi.getState().open);
-        return;
-      }
-      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || useSearchUi.getState().open) return;
-      const el = e.target as HTMLElement | null;
-      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
-      e.preventDefault();
-      setOpen(true);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [setOpen]);
-
-  if (!open) return null;
-  return createPortal(<PaletteBody onClose={() => setOpen(false)} />, document.body);
-}
-
-function PaletteBody({ onClose }: { onClose: () => void }) {
+/**
+ * The open palette. Loaded on demand by SearchShell.tsx (the top-bar button and the keyboard shortcut live there), so this
+ * file and the settings catalog it searches stay out of the site's first download.
+ */
+export default function PaletteBody({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const userId = useAuthStore((s) => s.user?.id) ?? '';
   const viewer = useViewer();
