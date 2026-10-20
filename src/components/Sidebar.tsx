@@ -114,17 +114,35 @@ function AccountDock({ links, onLogout }: { links: NavSection[]; onLogout: () =>
         </button>
       </div>
 
-      <div className="mt-2.5 flex items-center gap-2.5 border-t border-dashed border-neutral-200 px-1 pt-3">
-        {user?.avatarUrl ? (
-          <img src={user.avatarUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
-        ) : (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-[12px] font-semibold text-brand" aria-hidden>
-            {initials || 'R'}
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold leading-tight text-regantify-text" title={sub ? `${name} · ${sub}` : name}>{name}</p>
-          {plan && <p className="mt-0.5 truncate text-[11.5px] leading-tight text-neutral-500">{plan.name} plan</p>}
+      <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-neutral-200 pt-3">
+        {/* Photo and name open the person's own profile; the plan line opens Billing (owner only; staff see plain text). */}
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 px-1 py-1">
+          <Link to="/vendor/profile" title="Your profile" className="shrink-0 rounded-full transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/10 text-[12px] font-semibold text-brand" aria-hidden>
+                {initials || 'R'}
+              </span>
+            )}
+          </Link>
+          <div className="min-w-0 flex-1">
+            <Link
+              to="/vendor/profile"
+              title={sub ? `${name} · ${sub}` : name}
+              className="block truncate text-[13px] font-semibold leading-tight text-regantify-text hover:text-brand focus-visible:outline-none focus-visible:underline"
+            >
+              {name}
+            </Link>
+            {plan &&
+              (canBuy ? (
+                <Link to="/vendor/billing?tab=plan" className="mt-0.5 block truncate text-[11.5px] leading-tight text-neutral-500 hover:text-brand hover:underline focus-visible:outline-none focus-visible:underline">
+                  {plan.name} plan
+                </Link>
+              ) : (
+                <span className="mt-0.5 block truncate text-[11.5px] leading-tight text-neutral-500">{plan.name} plan</span>
+              ))}
+          </div>
         </div>
         {plan && canBuy && (
           <Link

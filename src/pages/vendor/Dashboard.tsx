@@ -10,7 +10,8 @@ import { getVendorPlanUsage } from '../../lib/plansApi';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
-import { LockedBadge, upgradeToast } from '../../components/ui/UpgradePrompt';
+import { LockedBadge, dailyLimitToast } from '../../components/ui/UpgradePrompt';
+import { DailyLimitBanner } from '../../components/DailyLimitBanner';
 import { SetupChecklist } from '../../components/dashboard/SetupChecklist';
 import { TodayKpis } from '../../components/dashboard/TodayKpis';
 import { GoalCard } from '../../components/dashboard/GoalCard';
@@ -110,9 +111,9 @@ export default function VendorDashboard() {
 
   // Same plan-limit locks as the Products / Orders pages' Add buttons.
   const { data: planUsage } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
-  const atLimit = (u?: { used: number; limit: number | null }) => u != null && u.limit !== null && u.used >= u.limit;
-  const atProductLimit = atLimit(planUsage?.usage.products);
-  const atOrderLimit = atLimit(planUsage?.usage.ordersToday);
+  // Products and orders are unlimited; only today's hidden cap can lock the buttons (lib/dailyLimits.ts).
+  const atProductLimit = !!planUsage?.daily.products.reached;
+  const atOrderLimit = !!planUsage?.daily.orders.reached;
 
   const isOwner = user?.role === 'VENDOR';
   // Money is owner only and delivery needs a courier: without either, the to-dos take the full width.
@@ -175,8 +176,8 @@ export default function VendorDashboard() {
         )}
         <button
           type="button"
-          onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
-          title={atOrderLimit ? 'Upgrade your plan to add more orders today.' : undefined}
+          onClick={() => (atOrderLimit ? dailyLimitToast('orders') : navigate('/vendor/orders/add'))}
+          title={atOrderLimit ? "Today's order limit is used up. Talk to support to raise it." : undefined}
           className={`${outlineBtn} ${atOrderLimit ? 'text-regantify-text-muted' : ''}`}
         >
           {atOrderLimit ? <LockedBadge size={14} /> : <Plus size={15} />}
@@ -184,8 +185,8 @@ export default function VendorDashboard() {
         </button>
         <button
           type="button"
-          onClick={() => (atProductLimit ? upgradeToast('add more products') : navigate('/vendor/product/add'))}
-          title={atProductLimit ? 'Upgrade your plan to add more products.' : undefined}
+          onClick={() => (atProductLimit ? dailyLimitToast('products') : navigate('/vendor/product/add'))}
+          title={atProductLimit ? "Today's limit for new products is used up. Talk to support to raise it." : undefined}
           className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
             atProductLimit ? 'bg-neutral-100 text-regantify-text-muted' : 'bg-brand text-white hover:bg-brand-dark'
           }`}
@@ -194,6 +195,8 @@ export default function VendorDashboard() {
           Add Product
         </button>
       </section>
+
+      <DailyLimitBanner daily={planUsage?.daily} kinds={['orders', 'products', 'images']} />
 
       {dashboard.data && <DailyBrief data={dashboard.data} />}
 

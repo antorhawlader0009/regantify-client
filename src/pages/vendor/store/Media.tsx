@@ -5,6 +5,8 @@ import { Plus, Search, ChevronDown, SquareArrowOutUpRight } from 'lucide-react';
 import { mediaApi, type MediaAsset } from '../../../lib/mediaApi';
 import { DropdownMenu, DropdownMenuItem } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { DailyLimitBanner, UnlimitedBadge } from '../../../components/DailyLimitBanner';
 
 // CONTEXT values the app's own upload endpoints record (see
 // ImageStorageService's uploadXPhoto methods) — used only to label rows,
@@ -86,6 +88,9 @@ export default function Media() {
   // same reasoning as AllProducts.tsx (stale "Delete Selected" count,
   // stale header-checkbox state).
   useEffect(() => setSelected(new Set()), [search, type, page, perPage]);
+
+  // Image uploads are unlimited; today's hidden cap only shows up as a warning (lib/dailyLimits.ts).
+  const { data: planUsage } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
 
   const { data, isLoading } = useQuery({
     queryKey: ['media', { search, type, page, perPage }],
@@ -176,8 +181,10 @@ export default function Media() {
 
   return (
     <div>
+      <DailyLimitBanner daily={planUsage?.daily} kinds={['images']} className="mb-4" />
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Media</h1>
+        {planUsage && <UnlimitedBadge label="Unlimited image uploads" />}
         <input
           ref={fileInputRef}
           type="file"

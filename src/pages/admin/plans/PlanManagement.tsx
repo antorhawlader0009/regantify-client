@@ -75,8 +75,9 @@ export default function PlanManagement() {
                 <tr className="bg-regantify-content text-left text-regantify-text-muted">
                   <th className="px-4 py-3 font-medium">Plan</th>
                   <th className="px-4 py-3 font-medium">Price/mo</th>
-                  <th className="px-4 py-3 font-medium">Products</th>
+                  <th className="px-4 py-3 font-medium">New products/day</th>
                   <th className="px-4 py-3 font-medium">Orders/day</th>
+                  <th className="px-4 py-3 font-medium">Images/day</th>
                   <th className="px-4 py-3 font-medium">Visits/mo</th>
                   <th className="px-4 py-3 font-medium">Themes</th>
                   <th className="px-4 py-3 font-medium">Staff</th>
@@ -91,8 +92,9 @@ export default function PlanManagement() {
                   <tr key={plan.id} className="border-t border-black/5">
                     <td className="px-4 py-3 font-medium text-regantify-text">{plan.name}</td>
                     <td className="px-4 py-3 text-regantify-text">৳{Number(plan.priceMonthly).toLocaleString('en-US')}</td>
-                    <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.productLimit)}</td>
-                    <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.orderLimitPerDay)}</td>
+                    <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.productLimitPerDay ?? null)}</td>
+                    <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.orderLimitPerDay ?? null)}</td>
+                    <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.imageUploadLimitPerDay ?? null)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.monthlyVisitLimit)}</td>
                     <td className="px-4 py-3 text-regantify-text">{formatLimit(plan.themeAllowance)}</td>
                     <td className="px-4 py-3 text-regantify-text">

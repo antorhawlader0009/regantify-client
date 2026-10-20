@@ -127,6 +127,15 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
       } catch (err: any) {
         const message = err?.response?.data?.message ?? 'Could not create this product.';
         nextResults.push({ rowNumber: row.rowNumber, name: row.payload!.name, status: 'error', message });
+        // Today's limit for new products is used up: the rest would fail the same way, so mark them and stop.
+        if (err?.response?.status === 402 && err?.response?.data?.limitType === 'productPerDay') {
+          for (const rest of validRows.slice(i + 1)) {
+            nextResults.push({ rowNumber: rest.rowNumber, name: rest.payload!.name, status: 'error', message: 'Not imported: today’s limit for new products is used up. Import it again tomorrow.' });
+          }
+          setResults([...nextResults]);
+          setProgress(validRows.length);
+          break;
+        }
       }
       setResults([...nextResults]);
       setProgress(i + 1);

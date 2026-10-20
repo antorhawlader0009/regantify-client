@@ -54,7 +54,8 @@ import {
   type CourierAccountProvider,
 } from '../../../lib/courierApi';
 import { apiErrorMessage } from '../../../lib/api';
-import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { LockedBadge, dailyLimitToast, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { DailyLimitBanner, UnlimitedBadge } from '../../../components/DailyLimitBanner';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub } from '../../../components/ui/DropdownMenu';
 import { Dialog } from '../../../components/ui/Dialog';
 import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
@@ -977,15 +978,15 @@ export default function Orders() {
   });
   const otherCouriersAllowed = planUsage ? planUsage.plan.code !== 'FREE' : undefined;
 
-  // PLAN.md Step 4 — Free: 5 orders/day, others: unlimited. Server
+  // Orders are unlimited in total; the plan caps one Dhaka day (Free 1,000 ... Advance 30,000). Server
   // already hard-blocks both STOREFRONT and MANUAL orders at the cap
   // (OrdersService.create) — this is purely so a Free vendor at the cap
   // doesn't click through to the Add Order form only to fail on submit,
   // same "surface value before the vendor hits the wall" precedent as
   // Staff.tsx's Add New button (Step 10) and AllProducts.tsx's Add New
   // button (Step 3 retrofit).
-  const ordersUsage = planUsage?.usage.ordersToday;
-  const atOrderLimit = ordersUsage != null && ordersUsage.limit !== null && ordersUsage.used >= ordersUsage.limit;
+  // Orders are unlimited; only today's hidden cap can lock Add Order (lib/dailyLimits.ts).
+  const atOrderLimit = !!planUsage?.daily.orders.reached;
 
   const tabsMutation = useMutation({
     mutationFn: (statuses: OrderStatus[]) => ordersApi.updateStatusTabs(statuses),
@@ -1213,14 +1214,15 @@ export default function Orders() {
     <div>
       {!trashView && activeTab !== 'ABANDONED' && <NeedsAttention />}
       <section className="rounded-xl border border-line bg-white p-3.5">
+        <DailyLimitBanner daily={planUsage?.daily} kinds={['orders']} className="mb-3" />
         {!trashView && activeTab !== 'ABANDONED' && <SavedViewsBar current={currentViewFilters} onApply={applyView} />}
         {/* Toolbar */}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="mr-auto">
             <h1 className="text-[15px] font-semibold text-regantify-text">{trashView ? 'Orders · Trash' : 'Orders'}</h1>
-            {ordersUsage && (
-              <div className="mt-0.5 [&_p]:text-xs">
-                <UsageLine label="orders today" used={ordersUsage.used} limit={ordersUsage.limit} />
+            {planUsage && (
+              <div className="mt-1">
+                <UnlimitedBadge label="Unlimited orders" />
               </div>
             )}
           </div>
@@ -1319,9 +1321,9 @@ export default function Orders() {
 
           {canCreate && (
           <button
-            onClick={() => (atOrderLimit ? upgradeToast('add more orders today') : navigate('/vendor/orders/add'))}
+            onClick={() => (atOrderLimit ? dailyLimitToast('orders') : navigate('/vendor/orders/add'))}
             disabled={atOrderLimit}
-            title={atOrderLimit ? 'Upgrade your plan to add more orders today.' : undefined}
+            title={atOrderLimit ? "Today's order limit is used up. Talk to support to raise it." : undefined}
             className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
               atOrderLimit ? 'cursor-not-allowed bg-neutral-100 text-regantify-text-muted' : 'bg-brand text-white hover:bg-brand-dark'
             }`}

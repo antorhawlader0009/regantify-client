@@ -1,5 +1,6 @@
 import { api } from './api';
 import type { AiCreditSummary } from './aiChatBotApi';
+import type { DailyCaps } from './dailyLimits';
 
 export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
@@ -27,11 +28,13 @@ export interface Plan {
   code: PlanCode;
   name: string;
   priceMonthly: string;
-  productLimit: number | null;
-  orderLimitPerDay: number | null;
+  /** Daily caps (products, orders and image uploads are unlimited in total). Only Super Admin's plan list has them; the vendor
+   *  answers leave them out, because the number is never shown to a store (lib/dailyLimits.ts). null = no daily cap. */
+  productLimitPerDay?: number | null;
+  orderLimitPerDay?: number | null;
+  imageUploadLimitPerDay?: number | null;
   monthlyVisitLimit: number | null;
   themeAllowance: number | null;
-  imageUploadLimit: number | null;
   /** AI Credits the plan gives once, when it's bought. Free: once at sign-up. */
   aiCreditGrant: number | null;
   staffLimit: number | null;
@@ -77,11 +80,15 @@ export interface VendorPlanUsage {
   /** After the end date a paid plan keeps working until graceEndsAt; the "renew now" bar shows meanwhile (Step 9). */
   planGrace?: { inGrace: boolean; graceEndsAt: string | null };
   usage: {
+    /** Products in the store (limit always null: unlimited). */
     products: UsageStat;
     staff: UsageStat;
+    /** Orders today (limit always null: unlimited; the daily cap is in `daily`). */
     ordersToday: UsageStat;
     monthlyVisits: UsageStat;
   };
+  /** The daily caps, without their numbers: how many are left once 5 or fewer remain, and whether today's is used up. */
+  daily: DailyCaps;
   /** The store's AI Credit wallet. */
   aiCredits: AiCreditSummary;
 }

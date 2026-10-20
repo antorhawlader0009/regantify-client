@@ -28,7 +28,8 @@ import {
 import { productsApi, type Product } from '../../../lib/productsApi';
 import { downloadProducts } from '../../../lib/productExport';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
-import { LockedBadge, UsageLine, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { LockedBadge, dailyLimitToast } from '../../../components/ui/UpgradePrompt';
+import { DailyLimitBanner, UnlimitedBadge } from '../../../components/DailyLimitBanner';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
@@ -151,7 +152,7 @@ function ActionsMenu({
       <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>
       {onQr && <DropdownMenuItem onSelect={onQr}>QR code</DropdownMenuItem>}
       {canEdit && (
-        <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onDuplicate())}>
+        <DropdownMenuItem onSelect={() => (atProductLimit ? dailyLimitToast('products') : onDuplicate())}>
           <span className="flex items-center gap-1.5">
             Duplicate
             {atProductLimit && <LockedBadge size={12} />}
@@ -159,7 +160,7 @@ function ActionsMenu({
         </DropdownMenuItem>
       )}
       {canEdit && (
-        <DropdownMenuItem onSelect={() => (atProductLimit ? upgradeToast('add more products') : onCreateStockProduct())}>
+        <DropdownMenuItem onSelect={() => (atProductLimit ? dailyLimitToast('products') : onCreateStockProduct())}>
           <span className="flex items-center gap-1.5">
             Create Stock Product
             {atProductLimit && <LockedBadge size={12} />}
@@ -454,7 +455,7 @@ export default function AllProducts() {
     queryFn: productsApi.categoriesInUse,
   });
 
-  // PLAN.md Step 3 — Free: 5 products, others: unlimited. Server already
+  // Products are unlimited in total; the plan caps NEW products per Dhaka day (Free 50 ... Advance 500). Server already
   // hard-blocks both ProductsService.create and createStockProduct at
   // the cap — this is purely so a Free vendor at the cap doesn't click
   // through to the Add Product form (or Create Stock Product action)
@@ -464,8 +465,8 @@ export default function AllProducts() {
     queryKey: ['vendor-plan-usage'],
     queryFn: getVendorPlanUsage,
   });
-  const productsUsage = planUsage?.usage.products;
-  const atProductLimit = productsUsage != null && productsUsage.limit !== null && productsUsage.used >= productsUsage.limit;
+  // Products are unlimited; only today's hidden cap on new products can lock Add (lib/dailyLimits.ts).
+  const atProductLimit = !!planUsage?.daily.products.reached;
 
   // The list rows are lightweight (no variationOptions) — fetch the full
   // record only when the Create Stock Product modal actually needs it.
@@ -673,13 +674,14 @@ export default function AllProducts() {
   return (
     <div>
       <section className="rounded-xl border border-line bg-white p-3.5">
+        <DailyLimitBanner daily={planUsage?.daily} kinds={['products', 'images']} className="mb-3" />
         {/* Toolbar */}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="mr-auto">
             <h1 className="text-[15px] font-semibold text-regantify-text">All Products</h1>
-            {productsUsage && (
-              <div className="mt-0.5 [&_p]:text-xs">
-                <UsageLine label="products used" used={productsUsage.used} limit={productsUsage.limit} />
+            {planUsage && (
+              <div className="mt-1">
+                <UnlimitedBadge label="Unlimited products" />
               </div>
             )}
           </div>
@@ -717,9 +719,9 @@ export default function AllProducts() {
           {canEditProducts && (
           <>
           <button
-            onClick={() => (atProductLimit ? upgradeToast('add more products') : navigate('/vendor/product/add'))}
+            onClick={() => (atProductLimit ? dailyLimitToast('products') : navigate('/vendor/product/add'))}
             disabled={atProductLimit}
-            title={atProductLimit ? 'Upgrade your plan to add more products.' : undefined}
+            title={atProductLimit ? "Today's limit for new products is used up. Talk to support to raise it." : undefined}
             className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
               atProductLimit
                 ? 'cursor-not-allowed bg-neutral-100 text-regantify-text-muted'
@@ -731,8 +733,8 @@ export default function AllProducts() {
           </button>
 
           <button
-            onClick={() => (atProductLimit ? upgradeToast('add more products') : setShowImportModal(true))}
-            title={atProductLimit ? 'Upgrade your plan to add more products.' : 'Import products from CSV'}
+            onClick={() => (atProductLimit ? dailyLimitToast('products') : setShowImportModal(true))}
+            title={atProductLimit ? "Today's limit for new products is used up. Talk to support to raise it." : 'Import products from CSV'}
             className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
               atProductLimit ? 'bg-neutral-100 text-regantify-text-muted' : 'bg-brand-blue text-white hover:opacity-90'
             }`}

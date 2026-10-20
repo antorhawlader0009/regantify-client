@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
+import { toastDailyLimitHeader } from './dailyLimits';
 
 // If VITE_API_URL is set, always use it. Otherwise, derive the API host
 // from whatever host the browser used to load the app itself — this is
@@ -35,7 +36,11 @@ const REFRESH_URL = '/v1/auth/refresh';
 const SIGNED_OUT_AUTH = /\/v1\/auth\/(vendor\/(login|send-otp|verify-otp|forgot-password\/|impersonate-exchange)|admin\/login|admin\/2fa\/setup|logout)/;
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // "Only N left today" for the daily caps on new products, orders and image uploads (lib/dailyLimits.ts).
+    toastDailyLimitHeader(response.headers?.['x-daily-limit']);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     const isRefreshCall = originalRequest?.url?.includes(REFRESH_URL);

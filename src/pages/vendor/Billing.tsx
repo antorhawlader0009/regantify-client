@@ -29,6 +29,7 @@ import { SmsPackBuyer, perSms } from './sms/BuySmsDialog';
 import { AiCreditPackBuyer } from './ai-automation/BuyChatBotDialog';
 import { AddMoneyDialog } from './finance/AddMoneyDialog';
 import Receipts from './finance/Receipts';
+import { DailyLimitBanner, UnlimitedBadge } from '../../components/DailyLimitBanner';
 
 /*
  * Billing: everything the store pays the platform for, in one place (2026-10-16, after vendors said buying the
@@ -66,6 +67,15 @@ function feeText(flat: string, percent: string, payer: PaymentFeePayer) {
 }
 
 /** One feature line on a plan card: a tick (or a dash for "no") and the words. */
+/** "Unlimited products": the word highlighted, as everywhere products, orders and image uploads are listed. */
+function Unlimited({ children }: { children: ReactNode }) {
+  return (
+    <>
+      <strong className="font-semibold text-emerald-700">Unlimited</strong> {children}
+    </>
+  );
+}
+
 function Feature({ on = true, children }: { on?: boolean; children: ReactNode }) {
   return (
     <li className={`flex items-start gap-2 ${on ? 'text-regantify-text' : 'text-neutral-400'}`}>
@@ -218,6 +228,10 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
               <p className="mt-1 text-xs text-neutral-500">For your information: your store keeps working for shoppers past the number.</p>
             </div>
           </div>
+          <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-neutral-600">
+            <UnlimitedBadge /> Products, orders and image uploads are unlimited on every plan.
+          </p>
+          <DailyLimitBanner daily={usage.daily} kinds={['products', 'orders', 'images']} className="mt-3" />
         </section>
       )}
 
@@ -269,11 +283,11 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
                 </p>
 
                 <ul className="my-4 flex-1 space-y-1.5 text-sm">
-                  <Feature>{limitText(plan.productLimit)} products</Feature>
-                  <Feature>{limitText(plan.orderLimitPerDay)} orders a day</Feature>
+                  <Feature><Unlimited>products</Unlimited></Feature>
+                  <Feature><Unlimited>orders</Unlimited></Feature>
+                  <Feature><Unlimited>image uploads</Unlimited></Feature>
                   <Feature>{limitText(plan.staffLimit)} staff</Feature>
                   <Feature>{plan.themeAllowance === null ? 'All themes' : `${plan.themeAllowance} ${plan.themeAllowance === 1 ? 'theme' : 'themes'}`}</Feature>
-                  <Feature>{limitText(plan.imageUploadLimit)} image uploads</Feature>
                   <Feature on={!!plan.aiCreditGrant}>{aiCreditsText(plan)}</Feature>
                   <Feature on={plan.customDomainAllowed}>Your own domain</Feature>
                   <Feature on={plan.customPaymentGatewayAllowed}>Your own payment gateway</Feature>

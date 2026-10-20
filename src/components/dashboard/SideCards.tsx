@@ -5,6 +5,7 @@ import type { DashboardSummary } from '../../lib/dashboardApi';
 import type { VendorPlanUsage } from '../../lib/plansApi';
 import type { AiCreditSummary } from '../../lib/aiChatBotApi';
 import { formatValue } from '../analytics/format';
+import { UnlimitedBadge } from '../DailyLimitBanner';
 
 // Dashboard > right-hand column (dashboard-plan.md Step 8): money, delivery,
 // top products and plan usage. Money figures carry the `dash-money` class
@@ -207,9 +208,16 @@ export function UsageBar({ label, used, limit }: { label: string; used: number; 
     <div>
       <div className="flex items-baseline justify-between gap-2 text-sm">
         <span className="text-neutral-600">{label}</span>
-        <span className="tabular-nums text-regantify-text">
-          {used.toLocaleString()} / {limit == null ? 'Unlimited' : limit.toLocaleString()}
-        </span>
+        {limit == null ? (
+          <span className="flex items-center gap-1.5 tabular-nums text-regantify-text">
+            {used.toLocaleString()}
+            <UnlimitedBadge />
+          </span>
+        ) : (
+          <span className="tabular-nums text-regantify-text">
+            {used.toLocaleString()} / {limit.toLocaleString()}
+          </span>
+        )}
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100" aria-hidden>
         <div className={`h-full rounded-full ${tone}`} style={{ width: limit == null ? '100%' : `${Math.max(pct, used > 0 ? 3 : 0)}%`, opacity: limit == null ? 0.25 : 1 }} />

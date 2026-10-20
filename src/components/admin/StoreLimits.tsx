@@ -16,7 +16,7 @@ export function StoreLimits({ vendorId, storeName }: { vendorId: string; storeNa
   const { data } = useQuery({ queryKey: ['admin-store-limits', vendorId], queryFn: () => adminSwitchesApi.limits(vendorId) });
   const [editing, setEditing] = useState(false);
   const [ending, setEnding] = useState(false);
-  const [values, setValues] = useState<Record<LimitField, string>>({ productLimit: '', orderLimitPerDay: '', staffLimit: '', imageUploadLimit: '', landingPageLimit: '' });
+  const [values, setValues] = useState<Record<LimitField, string>>({ productLimitPerDay: '', orderLimitPerDay: '', staffLimit: '', imageUploadLimitPerDay: '', landingPageLimit: '' });
   const [days, setDays] = useState('30');
   const [reason, setReason] = useState('');
 

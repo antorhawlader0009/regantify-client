@@ -39,6 +39,10 @@ export interface StoreDetail {
     landingPages: StoreLimit;
     visitsThisMonth: StoreLimit;
     dailyOrderLimit: number | null;
+    /** New products the store may add per Dhaka day (products have no total limit). */
+    dailyProductLimit: number | null;
+    /** Image uploads the store may make per Dhaka day (no total limit). */
+    dailyImageLimit: number | null;
     /** Set when Super Admin gave this store limits of its own (Step 14); the numbers above already include them. */
     ownLimits: { until: string | null; reason: string } | null;
     orders30d: number;

@@ -16,11 +16,12 @@ export interface UpdatePlanPayload {
   hiddenFromSignup?: boolean;
   name?: string;
   priceMonthly?: number;
-  productLimit?: number | null;
+  /** New products a store may add per Dhaka day (null = no daily cap). */
+  productLimitPerDay?: number | null;
   orderLimitPerDay?: number | null;
   monthlyVisitLimit?: number | null;
   themeAllowance?: number | null;
-  imageUploadLimit?: number | null;
+  imageUploadLimitPerDay?: number | null;
   /** AI Credits given once when the plan is bought (0 = none). */
   aiCreditGrant?: number | null;
   staffLimit?: number | null;

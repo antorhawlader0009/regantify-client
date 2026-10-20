@@ -161,11 +161,11 @@ function FeeInputField({
 export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPlanModalProps) {
   const [name, setName] = useState(plan?.name ?? '');
   const [priceMonthly, setPriceMonthly] = useState(plan ? Number(plan.priceMonthly) : 0);
-  const [productLimit, setProductLimit] = useState<number | null>(plan?.productLimit ?? null);
+  const [productLimitPerDay, setProductLimitPerDay] = useState<number | null>(plan?.productLimitPerDay ?? null);
   const [orderLimitPerDay, setOrderLimitPerDay] = useState<number | null>(plan?.orderLimitPerDay ?? null);
   const [monthlyVisitLimit, setMonthlyVisitLimit] = useState<number | null>(plan?.monthlyVisitLimit ?? null);
   const [themeAllowance, setThemeAllowance] = useState<number | null>(plan?.themeAllowance ?? null);
-  const [imageUploadLimit, setImageUploadLimit] = useState<number | null>(plan?.imageUploadLimit ?? null);
+  const [imageUploadLimitPerDay, setImageUploadLimitPerDay] = useState<number | null>(plan?.imageUploadLimitPerDay ?? null);
   const [aiCreditGrant, setAiCreditGrant] = useState<number>(plan?.aiCreditGrant ?? 0);
   const [staffLimit, setStaffLimit] = useState<number | null>(plan?.staffLimit ?? null);
   const [staffRoleTier, setStaffRoleTier] = useState<number>(plan?.staffRoleTier ?? 0);
@@ -199,11 +199,11 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
     onSave({
       name,
       priceMonthly,
-      productLimit,
+      productLimitPerDay,
       orderLimitPerDay,
       monthlyVisitLimit,
       themeAllowance,
-      imageUploadLimit,
+      imageUploadLimitPerDay,
       aiCreditGrant,
       staffLimit,
       staffRoleTier,
@@ -296,13 +296,15 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             </p>
           </div>
 
-          <p className="text-xs text-regantify-text-muted -mb-2">Leave a limit field blank for unlimited.</p>
+          <p className="text-xs text-regantify-text-muted -mb-2">
+            Leave a limit field blank for unlimited. Products, orders and image uploads are unlimited in total; the three "per day" numbers cap a single day (Dhaka time). Stores never see these numbers; they get a warning once 5 or fewer are left.
+          </p>
           <div className="grid grid-cols-2 gap-3">
-            <LimitField label="Product limit" value={productLimit} onChange={setProductLimit} />
+            <LimitField label="New products / day" value={productLimitPerDay} onChange={setProductLimitPerDay} />
             <LimitField label="Orders / day" value={orderLimitPerDay} onChange={setOrderLimitPerDay} />
             <LimitField label="Monthly visits" value={monthlyVisitLimit} onChange={setMonthlyVisitLimit} />
             <LimitField label="Theme allowance" value={themeAllowance} onChange={setThemeAllowance} />
-            <LimitField label="Image uploads" value={imageUploadLimit} onChange={setImageUploadLimit} />
+            <LimitField label="Image uploads / day" value={imageUploadLimitPerDay} onChange={setImageUploadLimitPerDay} />
             <LimitField label="Staff limit" value={staffLimit} onChange={setStaffLimit} />
           </div>
 

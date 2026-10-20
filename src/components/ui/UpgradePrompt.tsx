@@ -1,5 +1,6 @@
 import { Lock } from 'lucide-react';
 import { toast } from '../../lib/toast';
+import { dailyCapMessage, type DailyKind } from '../../lib/dailyLimits';
 
 /**
  * Shared "you're locked out of this by your plan" UX — PLAN.md Step 16.
@@ -70,13 +71,21 @@ export function LockedBadge({ size = 12, className = 'text-regantify-text-muted'
   return <Lock size={size} className={`shrink-0 ${className}`} />;
 }
 
-/** "X / N used" line with amber highlight at the cap — same shape Staff.tsx (Step 10) built for its own usage line. `null` limit renders "∞" (unlimited), never treated as "at the limit". */
-export function UsageLine({ label, used, limit }: { label: string; used: number; limit: number | null }) {
+/**
+ * Toast for a used-up DAILY cap (new products, orders, image uploads). Everything is unlimited in total on every plan and the
+ * daily number is never shown, so the answer is "after midnight, or ask support", not "upgrade" (lib/dailyLimits.ts).
+ */
+export function dailyLimitToast(kind: DailyKind) {
+  toast.error(dailyCapMessage(kind, { left: 0, reached: true }) ?? '');
+}
+
+/** "X / N used" line with amber highlight at the cap — same shape Staff.tsx (Step 10) built for its own usage line. `null` limit renders "∞" (unlimited), never treated as "at the limit". `atLimitText` replaces the upgrade hint (daily caps point to support). */
+export function UsageLine({ label, used, limit, atLimitText = 'upgrade your plan to add more' }: { label: string; used: number; limit: number | null; atLimitText?: string }) {
   const atLimit = limit !== null && used >= limit;
   return (
     <p className="text-sm text-regantify-text-muted">
       {used} / {limit ?? '∞'} {label}
-      {atLimit && <span className="text-amber-600"> — upgrade your plan to add more</span>}
+      {atLimit && <span className="text-amber-600"> — {atLimitText}</span>}
     </p>
   );
 }

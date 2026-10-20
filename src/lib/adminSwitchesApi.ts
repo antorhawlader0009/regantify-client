@@ -14,13 +14,13 @@ export interface PlatformSwitch {
   changedAt: string | null;
 }
 
-export const LIMIT_FIELDS = ['productLimit', 'orderLimitPerDay', 'staffLimit', 'imageUploadLimit', 'landingPageLimit'] as const;
+export const LIMIT_FIELDS = ['productLimitPerDay', 'orderLimitPerDay', 'staffLimit', 'imageUploadLimitPerDay', 'landingPageLimit'] as const;
 export type LimitField = (typeof LIMIT_FIELDS)[number];
 export const LIMIT_LABEL: Record<LimitField, string> = {
-  productLimit: 'Products',
+  productLimitPerDay: 'New products per day',
   orderLimitPerDay: 'Orders per day',
   staffLimit: 'Staff',
-  imageUploadLimit: 'Image uploads',
+  imageUploadLimitPerDay: 'Image uploads per day',
   landingPageLimit: 'Landing pages',
 };
 
