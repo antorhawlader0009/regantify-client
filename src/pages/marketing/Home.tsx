@@ -515,10 +515,10 @@ function HomeInner() {
 
   // The four pictures of the hero rail, in the order they should be met.
   const builtInSlides = [
-    { image: '/hero/slide-1.jpg', alt: 'A seller showing the Regantify dashboard on two phones, with courier and payment logos around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
-    { image: '/hero/slide-2.jpg', alt: 'A delivery rider with parcels ready to send', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
-    { image: '/hero/slide-3.jpg', alt: 'A shopkeeper holding a phone with mobile payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
-    { image: '/hero/slide-4.jpg', alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
+    { image: '/site/hero-1.jpg', alt: 'A seller showing the Regantify dashboard on two phones, with delivery and payment icons around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
+    { image: '/site/hero-2.jpg', alt: 'A delivery rider with parcels ready to send', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
+    { image: '/site/hero-3.jpg', alt: 'A shopkeeper holding a phone with mobile payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
+    { image: '/site/hero-4.jpg', alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
   ];
 
   const heroSlides = cms?.hero.slides.length
@@ -531,7 +531,7 @@ function HomeInner() {
       title: t('f1_title'),
       detail: t('f1_detail'),
       bullets: [t('f1_b1'), t('f1_b2'), t('f1_b3')],
-      image: '/img3.png',
+      image: '/site/feature-courier.jpg',
       alt: 'Vendor managing orders and courier pickup from one screen',
     },
     {
@@ -539,7 +539,7 @@ function HomeInner() {
       title: t('f2_title'),
       detail: t('f2_detail'),
       bullets: [t('f2_b1'), t('f2_b2'), t('f2_b3')],
-      image: '/img2.png',
+      image: '/site/feature-payments.jpg',
       alt: 'Built-in wallet accepting mobile payments',
     },
     {
@@ -547,7 +547,7 @@ function HomeInner() {
       title: t('f3_title'),
       detail: t('f3_detail'),
       bullets: [t('f3_b1'), t('f3_b2'), t('f3_b3')],
-      image: '/img1.png',
+      image: '/site/feature-photo.jpg',
       alt: 'Product photo turning into a finished listing automatically',
     },
   ];
@@ -1289,10 +1289,10 @@ function HomeInner() {
         </div>
       </section>
 
-      {/* Closing CTA — full section bg uses hero.png */}
+      {/* Closing CTA — full section bg uses /site/closing.jpg */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/hero.png" alt="" className="w-full h-full object-cover" />
+          <img src="/site/closing.jpg" alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[#1A1A1A]/90" />
         </div>
         <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
