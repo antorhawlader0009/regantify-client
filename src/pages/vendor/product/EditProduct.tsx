@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { X, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
@@ -407,6 +408,7 @@ export default function EditProduct() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   // null = follow the data: the advanced options open by themselves when this product already uses one.
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   const nameError = triedSave && !name.trim() ? 'Enter a product name.' : null;
   const priceError = triedSave && (!price.toString().trim() || Number.isNaN(Number(price))) ? 'Enter the price shoppers pay.' : null;
   const skuError = triedSave && !sku.trim() ? 'Enter a SKU code (any short code you use for this product).' : null;
@@ -792,7 +794,8 @@ export default function EditProduct() {
   ].filter(Boolean).length;
   // Once opened by the data, stay open: clearing the last value must not make the field vanish under the cursor.
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  const adv = advancedPick ?? false;
+  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  const adv = !isSimple && (advancedPick ?? false);
   const toggleAdvanced = () => setAdvancedPick(!adv);
 
   // AI assistant (under Status): it reads the form through these values and writes its answer back through these setters.
@@ -1004,7 +1007,8 @@ export default function EditProduct() {
         <div className="space-y-4">
           <StatusCard visibility={visibility} onChange={setVisibility} />
 
-          <ProductAiChat getAccess={aiAccess} photosUploading={photos.some((p) => p.uploading)} onAddPhotos={handlePhotoFiles} />
+          {/* The product AI chat uses AI Credits, so it is Full view (SIMPLE-VIEW-plan.md Step 6). */}
+          {!isSimple && <ProductAiChat getAccess={aiAccess} photosUploading={photos.some((p) => p.uploading)} onAddPhotos={handlePhotoFiles} />}
 
           <ProductSideCard title="Category">
             <div className="space-y-3">

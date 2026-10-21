@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react';
+import { useDashboardView } from '../../lib/useDashboardView';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Check, Clock, Minus } from 'lucide-react';
@@ -376,6 +377,7 @@ export default function Billing() {
   const [searchParams, setSearchParams] = useSearchParams();
   const asked = searchParams.get('tab') as Tab | null;
   const tab: Tab = asked && TABS.includes(asked) ? asked : 'plan';
+  const { isSimple } = useDashboardView();
   const [addMoneyOpen, setAddMoneyOpen] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -494,7 +496,8 @@ export default function Billing() {
             { id: 'sms', label: 'SMS' },
             { id: 'ai', label: 'AI Credits' },
             { id: 'wallet', label: 'Wallet' },
-            { id: 'receipts', label: 'Receipts' },
+            // Receipts are Full view (SIMPLE-VIEW-plan.md Step 9), unless a link opened that tab.
+            ...(!isSimple || tab === 'receipts' ? [{ id: 'receipts' as const, label: 'Receipts' }] : []),
           ]}
         />
       </div>

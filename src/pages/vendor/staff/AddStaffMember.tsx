@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Copy, MessageSquare, Shuffle } from 'lucide-react';
@@ -62,6 +63,7 @@ export default function AddStaffMember() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState(() => generateSuggestedPassword());
   const [allowedIp, setAllowedIp] = useState('');
+  const { isSimple } = useDashboardView();
   const [roleKey, setRoleKey] = useState<StaffRoleKey | null>(null); // set once we know the plan (add) or the member (edit)
   const [customChoice, setCustomChoice] = useState(''); // a saved custom role's id, or NEW_ROLE
   const [newRoleName, setNewRoleName] = useState('');
@@ -318,9 +320,13 @@ export default function AddStaffMember() {
                 </div>
               </Field>
             )}
+            {/* Allowed IP and the welcome message are Full view (SIMPLE-VIEW-plan.md Step 9); their values stay in state
+                and an edit only sends what changed, so nothing set in Full view is cleared. */}
+            {(!isSimple || allowedIp) && (
             <Field label="Allowed IP address" error={shown('allowedIp')} hint="Optional. They can sign in only from this internet connection, e.g. your shop’s.">
               <input type="text" value={allowedIp} onChange={(e) => setAllowedIp(e.target.value.trim())} placeholder="e.g. 103.112.54.10" className={productInputClass} />
             </Field>
+            )}
             {!isEdit && (
               <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-line p-3">
                 <input type="checkbox" checked={sendSms} onChange={(e) => setSendSms(e.target.checked)} className="mt-0.5 h-4 w-4 cursor-pointer accent-brand" />
@@ -339,6 +345,7 @@ export default function AddStaffMember() {
           </div>
         </SectionCard>
 
+        {!isSimple && (
         <SectionCard title="Welcome message" description="Optional. They see it once, the next time they sign in.">
           <textarea
             value={welcome}
@@ -352,6 +359,7 @@ export default function AddStaffMember() {
             {welcome.length}/{WELCOME_MAX}
           </p>
         </SectionCard>
+        )}
       </div>
 
       <SaveBar

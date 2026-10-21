@@ -15,6 +15,8 @@ import { getVendorPlanUsage, formatFeeParts } from '../../../lib/plansApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
+import { MoreInFullView } from '../../../components/ui/FullViewOnly';
+import { useDashboardView } from '../../../lib/useDashboardView';
 
 const DEFAULT_LABELS: Record<PaymentGatewayType, string> = {
   COD: 'Cash On Delivery',
@@ -43,6 +45,7 @@ export default function PaymentGateway() {
   // Add-ons opens this page with ?connect=<gateway> so that gateway's form is already open.
   const [searchParams] = useSearchParams();
   const connectParam = searchParams.get('connect');
+  const { isSimple } = useDashboardView();
 
   const { data: gateways = [], isLoading: gatewaysLoading } = useQuery({
     queryKey: ['payment-gateways'],
@@ -69,6 +72,13 @@ export default function PaymentGateway() {
   const eps = gateways.find((g) => g.type === 'EPS');
   const manualMobile = gateways.find((g) => g.type === 'MANUAL_MOBILE');
   const catalogFor = (type: PaymentGatewayType) => catalog.find((c) => c.type === type);
+  const visibleStoreGateways = STORE_GATEWAYS.filter((def) => !isSimple || connectParam === def.slug || gateways.some((g) => g.type === def.type));
+  const hiddenGatewayCount =
+    STORE_GATEWAYS.length - visibleStoreGateways.length + [
+      [sslcommerz, 'sslcommerz'],
+      [shurjopay, 'shurjopay'],
+      [eps, 'eps'],
+    ].filter(([g, slug]) => isSimple && !g && connectParam !== slug).length;
 
   if (gatewaysLoading) {
     return (
@@ -117,11 +127,13 @@ export default function PaymentGateway() {
         />
       ) : (
         <div className="space-y-4">
-          <SslcommerzCard gateway={sslcommerz} onSaved={invalidate} autoOpen={connectParam === 'sslcommerz'} />
-          <ShurjopayCard gateway={shurjopay} onSaved={invalidate} autoOpen={connectParam === 'shurjopay'} />
-          <EpsCard gateway={eps} onSaved={invalidate} autoOpen={connectParam === 'eps'} />
+          {/* Simple view (SIMPLE-VIEW-plan.md Step 8): Manual Mobile Payment plus the gateways already connected (or the
+              one a link asked to connect); adding the other gateways is Full view. */}
+          {(!isSimple || sslcommerz || connectParam === 'sslcommerz') && <SslcommerzCard gateway={sslcommerz} onSaved={invalidate} autoOpen={connectParam === 'sslcommerz'} />}
+          {(!isSimple || shurjopay || connectParam === 'shurjopay') && <ShurjopayCard gateway={shurjopay} onSaved={invalidate} autoOpen={connectParam === 'shurjopay'} />}
+          {(!isSimple || eps || connectParam === 'eps') && <EpsCard gateway={eps} onSaved={invalidate} autoOpen={connectParam === 'eps'} />}
           <ManualMobileCard gateway={manualMobile} onSaved={invalidate} autoOpen={connectParam === 'manual-mobile'} />
-          {STORE_GATEWAYS.map((def) => (
+          {visibleStoreGateways.map((def) => (
             <StoreGatewayCard
               key={def.type}
               def={def}
@@ -130,6 +142,7 @@ export default function PaymentGateway() {
               autoOpen={connectParam === def.slug}
             />
           ))}
+          <MoreInFullView count={hiddenGatewayCount} />
         </div>
       )}
     </div>

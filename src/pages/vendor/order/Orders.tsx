@@ -1,5 +1,6 @@
 import { useFeature } from '../../../lib/features';
 import { useEffect, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
@@ -270,6 +271,11 @@ function OrderRow({
   const queryClient = useQueryClient();
   // The store's label list (TellMe idea 91); the same cached answer the list's filter uses.
   const { data: labelCatalog } = useQuery({ queryKey: ['order-labels'], queryFn: ordersApi.labelCatalog, staleTime: 60_000 });
+  // Simple view (SIMPLE-VIEW-plan.md Step 5): no label chips, and only connected couriers in the booking menu
+  // (all the plan allows when none is connected yet, so a beginner can still start one).
+  const { isSimple } = useDashboardView();
+  const connectedCouriers = BOOKABLE_COURIERS.filter((p) => connectedProviders?.has(p));
+  const rowCouriers = !isSimple ? BOOKABLE_COURIERS : connectedCouriers.length > 0 ? connectedCouriers : BOOKABLE_COURIERS.filter((p) => !courierLocked(p));
   // What this person's role can do to an order (rule-plan.md Step 10); the server checks each again.
   const canEdit = useCan('orders.edit');
   const canCancelRefund = useCan('orders.cancel_refund');
@@ -448,7 +454,7 @@ function OrderRow({
             {order.manualChannel}
           </span>
         )}
-        {(order.labels ?? []).length > 0 && (
+        {!isSimple && (order.labels ?? []).length > 0 && (
           <span className="mt-1.5 flex flex-wrap gap-1">
             {(order.labels ?? []).map((name) => (
               <LabelChip key={name} name={name} catalog={labelCatalog} />
@@ -759,7 +765,7 @@ function OrderRow({
                   )}
                   <DropdownMenuSub icon={<Truck />} label={assigned ? 'Send to another courier' : 'Send to courier'} widthClass="w-64">
                     <DropdownMenuLabel>Book now</DropdownMenuLabel>
-                    {BOOKABLE_COURIERS.map((provider) => (
+                    {rowCouriers.map((provider) => (
                       <DropdownMenuItem
                         key={provider}
                         icon={<Send />}
@@ -774,7 +780,7 @@ function OrderRow({
                     ))}
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel>Mark only (no booking)</DropdownMenuLabel>
-                    {BOOKABLE_COURIERS.map((provider) => (
+                    {rowCouriers.map((provider) => (
                       <DropdownMenuItem
                         key={provider}
                         icon={order.courierProvider === provider ? <Check /> : <span className="block w-4" />}
@@ -868,6 +874,7 @@ export default function Orders() {
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product
   // within 24 hours). Also reachable from the bell notice via ?possibleDuplicate=true.
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   const [duplicatesOnly, setDuplicatesOnly] = useState(() => searchParams.get('possibleDuplicate') === 'true');
   // Manual Mobile Payment (Add-ons): orders whose TrxID nobody has checked yet. Also ?manualPayment=PENDING_CHECK.
   const [mobileToCheck, setMobileToCheck] = useState(() => searchParams.get('manualPayment') === 'PENDING_CHECK');
@@ -1207,7 +1214,8 @@ export default function Orders() {
   // The less-used filters and tools sit behind "More filters and tools"; it opens by itself while one of them is in use.
   const advancedInUse = [preOrder !== '', labelFilter !== '', channel !== '', preferredDate !== '', expressOnly, duplicatesOnly, mobileToCheck, risk !== '', lossOnly, showProfit].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  const adv = advancedPick ?? false;
+  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  const adv = !isSimple && (advancedPick ?? false);
   const toggleAdvanced = () => setAdvancedPick(!adv);
 
   return (
@@ -1215,7 +1223,7 @@ export default function Orders() {
       {!trashView && activeTab !== 'ABANDONED' && <NeedsAttention />}
       <section className="rounded-xl border border-line bg-white p-3.5">
         <DailyLimitBanner daily={planUsage?.daily} kinds={['orders']} className="mb-3" />
-        {!trashView && activeTab !== 'ABANDONED' && <SavedViewsBar current={currentViewFilters} onApply={applyView} />}
+        {!isSimple && !trashView && activeTab !== 'ABANDONED' && <SavedViewsBar current={currentViewFilters} onApply={applyView} />}
         {/* Toolbar */}
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="mr-auto">
@@ -1238,6 +1246,8 @@ export default function Orders() {
                   setDateTo(to);
                 }}
               />
+              {/* Simple view hides the Source and Handled by filters, unless one is set (then it can be cleared). */}
+              {(!isSimple || source) && (
               <div className="relative">
                 <select
                   aria-label="Source"
@@ -1254,7 +1264,8 @@ export default function Orders() {
                 </select>
                 <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-3" />
               </div>
-              {(assignment.data?.staff.length ?? 0) > 0 && (
+              )}
+              {(assignment.data?.staff.length ?? 0) > 0 && (!isSimple || assignee) && (
                 <select value={assignee} onChange={(e) => setAssignee(e.target.value)} aria-label="Handled by" className="h-9 rounded-lg border border-line bg-white px-2 text-sm text-regantify-text">
                   <option value="">All orders</option>
                   {assignment.data?.myStaffId && <option value="me">My orders</option>}
@@ -1297,21 +1308,21 @@ export default function Orders() {
 
           {activeTab !== 'ABANDONED' && !trashView && (<AdvancedToggle open={adv} onToggle={toggleAdvanced} inUse={advancedInUse} label="More filters and tools" />)}
 
-          {activeTab !== 'ABANDONED' && !trashView && (
+          {!isSimple && activeTab !== 'ABANDONED' && !trashView && (
             <button type="button" onClick={handleExport} disabled={exporting} className={toolbarBtn} title="Download as a CSV file (opens in Excel)">
               <Download size={15} />
               {exporting ? 'Exporting…' : selectedIds.size > 0 ? `Export ${selectedIds.size}` : 'Export'}
             </button>
           )}
 
-          {canCreate && activeTab !== 'ABANDONED' && !trashView && (
+          {!isSimple && canCreate && activeTab !== 'ABANDONED' && !trashView && (
             <button type="button" onClick={() => navigate('/vendor/orders/import')} className={toolbarBtn} title="Bring orders in from an Excel or CSV file">
               <Upload size={15} />
               Import
             </button>
           )}
 
-          {canCourier && activeTab !== 'ABANDONED' && !trashView && (
+          {!isSimple && canCourier && activeTab !== 'ABANDONED' && !trashView && (
             <button type="button" onClick={() => navigate('/vendor/orders/handover')} className={toolbarBtn} title="Hand parcels to a courier with a signed sheet">
               <Truck size={15} />
               Courier handover
@@ -1515,7 +1526,7 @@ export default function Orders() {
                 {t === 'ALL' ? 'All' : t === 'ABANDONED' ? 'Abandoned Cart' : orderStatusLabel(t)}
               </button>
             ))}
-            {canEdit && (
+            {canEdit && !isSimple && (
               <button
                 onClick={() => setCustomizeOpen(true)}
                 title="Customize tabs"
@@ -1556,30 +1567,41 @@ export default function Orders() {
                 {canEdit && (
                   <BulkStatusMenu ids={[...selectedIds]} canCancel={canCancelRefund} className={bulkBtn} onDone={() => setSelectedIds(new Set())} />
                 )}
+                {/* Simple view: only the couriers this store has connected (SIMPLE-VIEW-plan.md Step 5). */}
+                {(!isSimple || connectedProviders?.has('PATHAO')) && (
                 <button type="button" onClick={sendSelectedToPathao} className={bulkBtn}>
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
                   Send to Pathao
                 </button>
+                )}
+                {(!isSimple || connectedProviders?.has('STEADFAST')) && (
                 <button type="button" onClick={sendSelectedToSteadfast} className={bulkBtn}>
                   <Send size={13} />
                   Send to SteadFast
                 </button>
+                )}
+                {(!isSimple || connectedProviders?.has('REDX')) && (
                 <button type="button" onClick={sendSelectedToRedx} className={bulkBtn}>
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
                   Send to RedX
                 </button>
+                )}
+                {(!isSimple || connectedProviders?.has('CARRYBEE')) && (
                 <button type="button" onClick={sendSelectedToCarrybee} className={bulkBtn}>
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
                   Send to CarryBee
                 </button>
+                )}
                 <button type="button" onClick={() => setPrintingInvoices([...selectedIds])} className={bulkBtn}>
                   <Printer size={13} />
                   Print invoices
                 </button>
+                {(!isSimple || connectedProviders?.has('PATHAO')) && (
                 <button type="button" onClick={() => openPathaoLabels([...selectedIds])} className={bulkBtn}>
                   <Printer size={13} />
                   Print Pathao labels
                 </button>
+                )}
                 {adv && (
                   <>
                 {(assignment.data?.staff.length ?? 0) > 0 && (
@@ -1607,9 +1629,11 @@ export default function Orders() {
                 )}
                   </>
                 )}
+                {!isSimple && (
                 <button type="button" onClick={toggleAdvanced} className={bulkBtn}>
                   {adv ? 'Fewer options' : 'More options'}
                 </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedIds(new Set())}

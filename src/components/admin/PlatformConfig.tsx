@@ -87,21 +87,27 @@ const MODES: Array<{ id: SignupMode; label: string; text: string }> = [
   { id: 'CLOSED', label: 'Closed', text: 'No new store can sign up. Existing stores are not affected.' },
 ];
 const words = (v: string) => v.split(/[\n,]/).map((w) => w.trim()).filter(Boolean);
+const NEW_STORE_VIEWS: { id: 'SIMPLE' | 'FULL'; label: string; text: string }[] = [
+  { id: 'SIMPLE', label: 'Simple view', text: 'Only the pages and options an everyday seller needs (recommended for new sellers).' },
+  { id: 'FULL', label: 'Full view', text: 'Every page and option from the first day.' },
+];
 
 export function SignupSection() {
   const { data } = usePlatformConfig();
   const [mode, setMode] = useState<SignupMode>('OPEN');
   const [reserved, setReserved] = useState('');
   const [blocked, setBlocked] = useState('');
+  const [newStoreView, setNewStoreView] = useState<'SIMPLE' | 'FULL'>('SIMPLE');
   useEffect(() => {
     if (!data) return;
     setMode(data.signup.mode);
     setReserved(data.signup.reservedSubdomains.join('\n'));
     setBlocked(data.signup.blockedStoreWords.join('\n'));
+    setNewStoreView(data.signup.newStoreView ?? 'SIMPLE');
   }, [data]);
   if (!data) return <p className="text-sm text-regantify-text-muted">Loading…</p>;
   return (
-    <Section title="Sign-up" section="signup" body={() => ({ mode, reservedSubdomains: words(reserved), blockedStoreWords: words(blocked) })}>
+    <Section title="Sign-up" section="signup" body={() => ({ mode, reservedSubdomains: words(reserved), blockedStoreWords: words(blocked), newStoreView })}>
       <div className="space-y-2">
         {MODES.map((m) => (
           <label key={m.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 ${mode === m.id ? 'border-regantify-cta bg-regantify-cta/5' : 'border-black/10'}`}>
@@ -119,6 +125,22 @@ export function SignupSection() {
       <Label text="Blocked words in store names" hint="One per line. A store name containing any of these is refused (not case sensitive).">
         <textarea className={field} rows={4} value={blocked} onChange={(e) => setBlocked(e.target.value)} />
       </Label>
+      {/* SIMPLE-VIEW-plan.md: only new owners from now on; existing accounts and staff are not changed. */}
+      <div>
+        <p className="text-sm font-medium text-regantify-text">Dashboard view for new stores</p>
+        <p className="mb-2 text-xs text-regantify-text-muted">The view a new store owner starts in. They can switch any time; existing stores and staff accounts are not changed (staff start in Full view).</p>
+        <div className="space-y-2">
+          {NEW_STORE_VIEWS.map((v) => (
+            <label key={v.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 ${newStoreView === v.id ? 'border-regantify-cta bg-regantify-cta/5' : 'border-black/10'}`}>
+              <input type="radio" name="new-store-view" checked={newStoreView === v.id} onChange={() => setNewStoreView(v.id)} className="mt-1" />
+              <span>
+                <span className="block text-sm font-medium text-regantify-text">{v.label}</span>
+                <span className="block text-xs text-regantify-text-muted">{v.text}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
     </Section>
   );
 }

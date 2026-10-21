@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Minus, Package, Plus, Search, ShoppingCart, Trash2, UserCheck } from 'lucide-react';
@@ -193,6 +194,7 @@ export default function AddOrder() {
   const [chargeMode, setChargeMode] = useState<ChargeMode | null>(null);
   const [customCharge, setCustomCharge] = useState('');
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountAmount, setDiscountAmount] = useState('');
   const [discountLabel, setDiscountLabel] = useState('');
@@ -414,7 +416,8 @@ export default function AddOrder() {
   // Seldom-needed fields stay behind "Advanced" and open by themselves when one holds a value (a returning customer, a lead).
   const advancedInUse = [customerPhoneAlt.trim(), customerEmail.trim(), shippingZip.trim(), manualChannel, pathaoLocation.cityId].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  const adv = advancedPick ?? false;
+  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  const adv = !isSimple && (advancedPick ?? false);
 
   return (
     <div className="mx-auto max-w-6xl">

@@ -7,6 +7,7 @@ import { toast } from '../../lib/toast';
 import { outlineBtn, primaryBtn } from '../ui/PageKit';
 import { productInputClass } from '../product/ProductFormPieces';
 import { PaymentLinkPanel } from './PaymentLinkPanel';
+import { FullViewOnly } from '../ui/FullViewOnly';
 
 const money = (value: number) => `৳${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
@@ -101,12 +102,15 @@ export function OrderAdvanceCard({ order, onChanged }: { order: Order; onChanged
 
   return (
     <div className="space-y-3">
-      {(order.source === 'MANUAL' || order.source === 'STOREFRONT') && order.paymentMethod === 'COD' && (
-        <>
-          <PaymentLinkPanel order={order} onChanged={onChanged} />
-          <hr className="border-line" />
-        </>
-      )}
+      {/* Making a new payment link is Full view (SIMPLE-VIEW-plan.md Step 5); a link already out shows above in both views. */}
+      <FullViewOnly>
+        {(order.source === 'MANUAL' || order.source === 'STOREFRONT') && order.paymentMethod === 'COD' && (
+          <>
+            <PaymentLinkPanel order={order} onChanged={onChanged} />
+            <hr className="border-line" />
+          </>
+        )}
+      </FullViewOnly>
       <p className="text-xs text-neutral-500">
         Took part of the payment yourself, like the delivery charge on your own bKash? Record it here and the courier is asked to collect only
         the rest. Nothing is added to your wallet.

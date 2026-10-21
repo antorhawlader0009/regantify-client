@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Eye, EyeOff, Pin, PinOff, RefreshCw, Youtube } from 'lucide-react';
 import { SectionCard } from '../../../components/product/ProductFormPieces';
@@ -24,7 +25,10 @@ export default function SocialFeed() {
   const { data, isLoading } = useQuery({ queryKey: ['social-feed'], queryFn: socialFeedApi.state });
   const [form, setForm] = useState<SocialFeedSettings | null>(null);
   const [channel, setChannel] = useState('');
-  const [adv, setAdv] = useState(false);
+  const [advOpen, setAdv] = useState(false);
+  // Simple view never shows these options (SIMPLE-VIEW-plan.md Step 4).
+  const { isSimple } = useDashboardView();
+  const adv = !isSimple && advOpen;
   const [confirmOff, setConfirmOff] = useState(false);
 
   useEffect(() => {

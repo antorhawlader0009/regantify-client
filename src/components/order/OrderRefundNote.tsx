@@ -6,6 +6,7 @@ import { orderRefundsApi } from '../../lib/orderRefundsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
+import { useDashboardView } from '../../lib/useDashboardView';
 
 const taka = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 
@@ -19,6 +20,8 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
   const relevant = status === 'CANCELLED' || status === 'RETURN' || status === 'PAYMENT_FAILED';
   const queryClient = useQueryClient();
   const canRefund = useCan('orders.cancel_refund');
+  // Refunding through the gateway is Full view (SIMPLE-VIEW-plan.md Step 5); the amount still owed shows in both views.
+  const { isSimple } = useDashboardView();
   const { data } = useQuery({ queryKey: ['order-refunds', 'order', orderId, status], queryFn: () => orderRefundsApi.forOrder(orderId), enabled: relevant });
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -57,7 +60,7 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
         <p className="min-w-0 flex-1 text-sm text-amber-900">
           <span className="font-medium">{taka(data.remaining)} to pay back.</span> The customer paid {taka(data.paid)} online for this order.
         </p>
-        {via && canRefund && !open && (
+        {via && canRefund && !open && !isSimple && (
           <button
             type="button"
             onClick={start}

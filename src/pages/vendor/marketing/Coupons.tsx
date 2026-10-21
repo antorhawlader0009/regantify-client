@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Copy, Link2, Plus, TicketPercent } from 'lucide-react';
@@ -58,6 +59,8 @@ function useCouponActions(coupon: Coupon, subdomain?: string) {
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [generating, setGenerating] = useState(false);
+  // "Make codes like this" is Full view (SIMPLE-VIEW-plan.md Step 7).
+  const { isSimple } = useDashboardView();
 
   const activeMutation = useMutation({
     mutationFn: () => couponsApi.setActive(coupon.id, !coupon.active),
@@ -89,7 +92,7 @@ function useCouponActions(coupon: Coupon, subdomain?: string) {
       extra={
         <>
           <DropdownMenuItem onSelect={() => copyText(coupon.code, 'Code')}>Copy code</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setGenerating(true)}>Make codes like this</DropdownMenuItem>
+          {!isSimple && <DropdownMenuItem onSelect={() => setGenerating(true)}>Make codes like this</DropdownMenuItem>}
           {shareUrl && <DropdownMenuItem onSelect={() => copyText(shareUrl, 'Share link')}>Copy share link</DropdownMenuItem>}
         </>
       }

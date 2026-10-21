@@ -7,6 +7,8 @@ import { outlineBtn } from '../../../components/ui/PageKit';
 import { discountsApi } from '../../../lib/discountsApi';
 import type { DiscountType } from '../../../lib/couponsApi';
 import { toast } from '../../../lib/toast';
+import { useDashboardView } from '../../../lib/useDashboardView';
+import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
 import {
   CategoryPicker,
   DateField,
@@ -57,6 +59,9 @@ export default function AddDiscount() {
 
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // "More options" (null = follow the data: opens by itself when a rule there is in use). Never open in Simple view.
+  const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   const [saved, setSaved] = useState(false);
 
   // One-time fill once the saved discount arrives.
@@ -149,6 +154,17 @@ export default function AddDiscount() {
     endsAt,
   });
 
+  // The "More options" rules holding a value (an older discount being edited): the section then opens by itself.
+  const advancedInUse = [
+    discountType === 'PERCENT' && maxDiscount.trim() !== '',
+    discountType !== 'FREE_SHIPPING' && applyOnListPrice,
+    minQuantity.trim() !== '',
+    limitProducts,
+    limitCategories,
+  ].filter(Boolean).length;
+  if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
+  const adv = !isSimple && (advancedPick ?? false);
+
   if (isEdit && isLoading) {
     return (
       <div className="mx-auto max-w-3xl space-y-4" aria-busy>
@@ -203,29 +219,57 @@ export default function AddDiscount() {
                   <Field label={discountType === 'PERCENT' ? 'Percent off' : 'Amount off'} required error={shown('amount')}>
                     <UnitInput unit={discountType === 'PERCENT' ? '%' : '৳'} value={amount} onChange={setAmount} placeholder={discountType === 'PERCENT' ? 'e.g. 10' : 'e.g. 200'} />
                   </Field>
-                  {discountType === 'PERCENT' && (
+                </div>
+              </>
+            )}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="When a cart gets it" description="Leave it empty and every order gets it.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Minimum order amount">
+              <UnitInput unit="৳" value={minCartAmount} onChange={setMinCartAmount} placeholder="No minimum" />
+            </Field>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="When it runs">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DateField label="Starts" value={startsAt} onChange={setStartsAt} role="start" optional />
+            <DateField label="Ends" value={endsAt} onChange={setEndsAt} role="end" optional error={shown('endsAt')} />
+          </div>
+        </SectionCard>
+
+        {/* The rarely-used rules sit behind "More options" (opens by itself when one is in use); Simple view never
+            shows them, only a line when one holds a value (SIMPLE-VIEW-plan.md Step 7). Their values stay in this page's
+            state and are saved as before. */}
+        <AdvancedHint
+          open={adv}
+          onToggle={() => setAdvancedPick(!adv)}
+          inUse={advancedInUse}
+          what="most it can take off, count from the regular price, minimum number of items, only on some products or categories"
+        />
+        {adv && (
+        <SectionCard title="More discount options">
+          <div className="space-y-2">
+            {discountType !== 'FREE_SHIPPING' && (
+              <div className="space-y-4 pb-2">
+                {discountType === 'PERCENT' && (
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <Field label="Most it can take off" hint="Leave empty for no limit.">
                       <UnitInput unit="৳" value={maxDiscount} onChange={setMaxDiscount} placeholder="e.g. 500" />
                     </Field>
-                  )}
-                </div>
+                  </div>
+                )}
                 <ToggleRow
                   checked={applyOnListPrice}
                   onChange={setApplyOnListPrice}
                   label="Count from the regular price"
                   hint="On: the % is taken from the price before any sale price. Off: from the price the shopper sees."
                 />
-              </>
+              </div>
             )}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="When a cart gets it" description="Leave everything empty and every order gets it.">
-          <div className="space-y-2">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Minimum order amount">
-                <UnitInput unit="৳" value={minCartAmount} onChange={setMinCartAmount} placeholder="No minimum" />
-              </Field>
               <Field label="Minimum number of items">
                 <UnitInput unit={null} integer value={minQuantity} onChange={setMinQuantity} placeholder="No minimum" />
               </Field>
@@ -254,13 +298,7 @@ export default function AddDiscount() {
             </div>
           </div>
         </SectionCard>
-
-        <SectionCard title="When it runs">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DateField label="Starts" value={startsAt} onChange={setStartsAt} role="start" optional />
-            <DateField label="Ends" value={endsAt} onChange={setEndsAt} role="end" optional error={shown('endsAt')} />
-          </div>
-        </SectionCard>
+        )}
       </div>
 
       <SaveBar

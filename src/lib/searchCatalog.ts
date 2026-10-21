@@ -211,6 +211,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Notification sound and desktop pop-up', where: 'Notifications > Alert settings', path: NOTIF, keywords: 'sound ring bell desktop popup this device' },
   { title: 'Store name, URL and address', where: 'Settings', path: '/vendor/settings', keywords: 'store details subdomain rename shop name address দোকানের নাম' },
   { title: 'Change password', where: 'Settings', path: '/vendor/settings', keywords: 'password reset change login security পাসওয়ার্ড' },
+  { title: 'Simple view / Full view of the dashboard', where: 'Settings > Dashboard view', path: '/vendor/settings', keywords: 'simple view full view basic mode advanced mode simple easy sohoj shohoj show all options hide options less more pages dashboard view সহজ সব অপশন' },
   { title: 'Your profile', where: 'Profile', path: '/vendor/profile', keywords: 'my profile photo name email phone account' },
   { title: 'Plan, upgrade and invoices', where: 'Billing', path: '/vendor/billing', keywords: 'subscription upgrade renew advance starter basic free plan limits usage pay buy everything sms ai credits wallet receipts প্ল্যান কিনুন' },
   { title: 'Buy AI Credits', where: 'Billing > AI Credits', path: '/vendor/billing?tab=ai', keywords: 'ai credits tokens buy recharge chatbot ask ai এআই ক্রেডিট কিনুন' },

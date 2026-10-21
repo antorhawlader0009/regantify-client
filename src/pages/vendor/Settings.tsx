@@ -33,7 +33,10 @@ import { useViewer } from '../../lib/useStaffAccess';
 import { useSetBeta, useVendorFeatures } from '../../lib/features';
 import { canAccess, canOpenPath } from '../../lib/staffPermissions';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore, type DashboardView } from '../../store/authStore';
+import { useDashboardView } from '../../lib/useDashboardView';
+import { isFullViewPath } from '../../lib/simpleView';
+import { FullViewOnly, MoreInFullView } from '../../components/ui/FullViewOnly';
 import { Field, IconInput, IconTextarea, SaveButton, Section, flashFor } from '../../components/ui/FormKit';
 import { GoogleSignInSection, TwoStepSection } from '../../components/settings/SignInSecurity';
 
@@ -94,7 +97,11 @@ export default function VendorSettings() {
   // A staff role only gets the tabs it can use (rule-plan.md Step 7): store details need
   // store.settings, "More settings" only lists pages the role can open; Security is everyone's.
   const viewer = useViewer();
-  const moreLinks = MORE_SETTINGS.filter((s) => canOpenPath(viewer, s.path));
+  // Simple view lists only the everyday ones (SIMPLE-VIEW-plan.md Step 3); the tab says how many more Full view has.
+  const { isSimple, pins } = useDashboardView();
+  const roleLinks = MORE_SETTINGS.filter((s) => canOpenPath(viewer, s.path));
+  const moreLinks = isSimple ? roleLinks.filter((s) => !isFullViewPath(s.path) || pins.includes(s.path)) : roleLinks;
+  const hiddenMore = roleLinks.length - moreLinks.length;
   const tabs = TABS.filter((t) => (t.key === 'general' ? canAccess(viewer, 'store.settings') : t.key === 'more' ? moreLinks.length > 0 : true));
   const asked = params.get('tab');
   const tab: TabKey = isTab(asked) && tabs.some((t) => t.key === asked) ? (asked as TabKey) : tabs[0].key;
@@ -130,7 +137,7 @@ export default function VendorSettings() {
 
       {tab === 'general' && <GeneralTab />}
       {tab === 'security' && <SecurityTab />}
-      {tab === 'more' && <MoreTab links={moreLinks} />}
+      {tab === 'more' && <MoreTab links={moreLinks} hidden={hiddenMore} />}
     </div>
   );
 }
@@ -252,8 +259,46 @@ function GeneralTab() {
         </form>
       </Section>
 
-      {isOwner && <BetaProgramSection />}
+      <DashboardViewSection />
+
+      {/* Full view (SIMPLE-VIEW-plan.md Step 9); a store already in the beta stays in it. */}
+      {isOwner && (
+        <FullViewOnly>
+          <BetaProgramSection />
+        </FullViewOnly>
+      )}
     </>
+  );
+}
+
+/** Settings > General > Dashboard view (SIMPLE-VIEW-plan.md): the same choice as the top-bar pill, with what each one means. */
+function DashboardViewSection() {
+  const { view, setView } = useDashboardView();
+  const options: { key: DashboardView; label: string; text: string }[] = [
+    { key: 'SIMPLE', label: 'Simple view', text: 'Only the pages and options an everyday seller needs. Less to look through, nothing is lost.' },
+    { key: 'FULL', label: 'Full view', text: 'Every page, option and tool the dashboard has.' },
+  ];
+  return (
+    <Section title="Dashboard view" description="Choose how much of the dashboard you see. This is just for you; your team chooses their own.">
+      <div className="grid gap-3 sm:grid-cols-2">
+        {options.map((o) => {
+          const active = view === o.key;
+          return (
+            <button
+              key={o.key}
+              type="button"
+              onClick={() => setView(o.key)}
+              aria-pressed={active}
+              className={`rounded-lg border p-3 text-left transition ${active ? 'border-brand bg-brand/5' : 'border-line hover:border-neutral-300 hover:bg-neutral-50'}`}
+            >
+              <span className="block text-sm font-medium text-regantify-text">{o.label}{active ? ' (on)' : ''}</span>
+              <span className="mt-0.5 block text-xs text-neutral-500">{o.text}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-xs text-neutral-500">Switching never deletes or turns off anything. A hidden setting keeps working, and search (Ctrl K) finds every page in both views.</p>
+    </Section>
   );
 }
 
@@ -397,12 +442,14 @@ function SecurityTab() {
       <GoogleSignInSection />
       <TwoStepSection />
 
-      <LoginHistorySection />
+      <FullViewOnly>
+        <LoginHistorySection />
+      </FullViewOnly>
     </>
   );
 }
 
-function MoreTab({ links }: { links: typeof MORE_SETTINGS }) {
+function MoreTab({ links, hidden }: { links: typeof MORE_SETTINGS; hidden: number }) {
   return (
     <Section title="Store settings" description="Everything else about how your store works has its own page.">
       <div className="grid gap-3 sm:grid-cols-2">
@@ -426,6 +473,7 @@ function MoreTab({ links }: { links: typeof MORE_SETTINGS }) {
           );
         })}
       </div>
+      <MoreInFullView count={hidden} className="mt-3" />
     </Section>
   );
 }

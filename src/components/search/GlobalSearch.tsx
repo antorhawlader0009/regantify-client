@@ -30,6 +30,8 @@ import { clearRecents, loadRecents, queryTokens, quickActions, saveRecent, searc
 import { useAuthStore } from '../../store/authStore';
 import { useViewer } from '../../lib/useStaffAccess';
 import { canOpenPath } from '../../lib/staffPermissions';
+import { fullViewPageOf, useSimpleViewKeeps } from '../../lib/simpleView';
+import { useDashboardView } from '../../lib/useDashboardView';
 
 /*
  * Top-bar search for the vendor dashboard, a "command palette": one box
@@ -120,6 +122,8 @@ export default function PaletteBody({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const userId = useAuthStore((s) => s.user?.id) ?? '';
   const viewer = useViewer();
+  const { isSimple } = useDashboardView();
+  const viewKeeps = useSimpleViewKeeps();
   const [query, setQuery] = useState('');
   const [term, setTerm] = useState('');
   const [active, setActive] = useState(0);
@@ -223,6 +227,11 @@ export default function PaletteBody({ onClose }: { onClose: () => void }) {
   };
 
   const tokens = queryTokens(query);
+  // Simple view: search still finds every page; a Full view one is tagged (SIMPLE-VIEW-plan.md Step 3).
+  const isHiddenPage = (path: string) => {
+    const page = fullViewPageOf(path.split(/[?#]/)[0]);
+    return page !== null && !viewKeeps.includes(page);
+  };
   const waiting = searching && (remote.isFetching || term !== query.trim());
   const empty = query.trim().length > 0 && rows.length === 0 && !waiting;
 
@@ -285,6 +294,11 @@ export default function PaletteBody({ onClose }: { onClose: () => void }) {
                 </span>
               )}
             </span>
+            {isSimple && isHiddenPage(row.path) && (
+              <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-neutral-500" title="Opens fine; this page is part of Full view">
+                Full view
+              </span>
+            )}
             {i === active && <CornerDownLeft size={14} className="shrink-0 text-neutral-400" aria-hidden />}
           </button>
         </Fragment>

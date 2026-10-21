@@ -6,6 +6,7 @@ import { reviewsApi, type Review } from '../../../lib/reviewsApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 
 const MAX_REPLY = 500;
 
@@ -69,6 +70,8 @@ export function ReviewReplyCard({ review }: { review: Review }) {
           )}
         </p>
         <div className="flex gap-2">
+          {/* The AI draft uses AI Credits, so it is Full view (SIMPLE-VIEW-plan.md Step 6). */}
+          <FullViewOnly>
           <button
             type="button"
             onClick={() => draft.mutate()}
@@ -79,6 +82,7 @@ export function ReviewReplyCard({ review }: { review: Review }) {
             <Sparkles className="h-4 w-4" />
             {draft.isPending ? 'Writing…' : 'AI draft'}
           </button>
+          </FullViewOnly>
           {saved && (
             <button
               type="button"

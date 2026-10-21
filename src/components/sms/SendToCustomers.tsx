@@ -13,6 +13,7 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { ScheduledSmsList } from './ScheduledSmsList';
 import { SmsTemplatePicker } from './SmsTemplatePicker';
 import { toast } from '../../lib/toast';
+import { useDashboardView } from '../../lib/useDashboardView';
 
 /** What the server answers: sent now (queued) or saved for later (scheduled). */
 type SendResult = { queued: number; totalCredits: number } | { scheduled: true; id: string; sendAt: string; recipients: number; totalCredits: number };
@@ -33,6 +34,7 @@ function isQuietInput(value: string): boolean {
 export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] }) {
   const queryClient = useQueryClient();
   const [audience, setAudience] = useState<SmsAudience>(selectedPhones?.length ? 'SELECTED' : 'ALL');
+  const { isSimple } = useDashboardView();
   const [recentDays, setRecentDays] = useState('30');
   const [inactiveDays, setInactiveDays] = useState('60');
   const [tag, setTag] = useState('');
@@ -131,7 +133,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
     (preview?.recipients ?? 0) > 0 &&
     (!usesPersonalCoupon || (when === 'NOW' && couponTemplateId !== '')) &&
     (when === 'LATER' ? laterProblem === null : !notEnough);
-  const options: { id: SmsAudience; label: string }[] = [
+  const allOptions: { id: SmsAudience; label: string }[] = [
     ...(selectedPhones?.length ? [{ id: 'SELECTED' as const, label: `Customers you picked (${selectedPhones.length})` }] : []),
     { id: 'ALL', label: 'Everyone who ordered' },
     { id: 'RECENT', label: 'Ordered in the last…' },
@@ -144,6 +146,8 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
     // Customers > note and tags: only once the store has tagged someone.
     ...((storeTags?.length ?? 0) > 0 ? [{ id: 'TAG' as const, label: 'Customers with a tag…' }] : []),
   ];
+  // Simple view (SIMPLE-VIEW-plan.md Step 7): the everyday audiences only (and the one already picked).
+  const options = allOptions.filter((o) => !isSimple || o.id === 'SELECTED' || o.id === 'ALL' || o.id === 'RECENT' || o.id === audience);
 
   const daysInput = (value: string, set: (v: string) => void) => (
     <span className="flex items-center gap-1.5 text-sm text-neutral-600">
@@ -216,9 +220,11 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
         )}
       </Field>
       <Field label="Message" hint="English: 160 letters = 1 SMS. Bangla: 70 letters = 1 SMS. {order} is each customer’s latest order.">
-        <div className="mb-2">
-          <SmsTemplatePicker message={message} setMessage={setMessage} textareaRef={messageRef} />
-        </div>
+        {!isSimple && (
+          <div className="mb-2">
+            <SmsTemplatePicker message={message} setMessage={setMessage} textareaRef={messageRef} />
+          </div>
+        )}
         <textarea
           ref={messageRef}
           value={message}
@@ -242,6 +248,8 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
         </Field>
       )}
 
+      {/* "Send later" is Full view; Simple view always sends now (a time already picked keeps its choice). */}
+      {(!isSimple || when === 'LATER') && (
       <Field label="When">
         <div className="flex flex-wrap items-center gap-2">
           {(['NOW', 'LATER'] as const).filter((w) => w === 'NOW' || audience !== 'OPEN_ORDERS').map((w) => (
@@ -269,6 +277,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
           </div>
         )}
       </Field>
+      )}
 
       {preview && !needsTag && (
         <p className={`text-sm ${notEnough && when === 'NOW' ? 'text-red-600' : 'text-neutral-600'}`}>

@@ -11,6 +11,7 @@ import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { useCan } from '../../../lib/useStaffAccess';
 import { CheckoutReminderButton } from '../../../components/order/CheckoutReminderSettings';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 
 const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
 
@@ -358,7 +359,10 @@ export default function AbandonedCart() {
           />
         </div>
 
-        <CheckoutReminderButton canChange={canSms} />
+        {/* The reminder SMS settings are Full view (SIMPLE-VIEW-plan.md Step 5); a reminder that is on keeps being sent. */}
+        <FullViewOnly>
+          <CheckoutReminderButton canChange={canSms} />
+        </FullViewOnly>
 
         {(canEdit || canDelete) && (
         <DropdownMenu

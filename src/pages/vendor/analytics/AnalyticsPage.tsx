@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useIsFetching } from '@tanstack/react-query';
 import { BarChart3, Boxes, ClipboardList, LayoutGrid, Megaphone, Users, type LucideIcon } from 'lucide-react';
@@ -66,6 +67,7 @@ function readRange(params: URLSearchParams, today: string): { range: DateRange; 
  */
 export default function AnalyticsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isSimple } = useDashboardView();
   const fetching = useIsFetching({ queryKey: ['analytics'] }) > 0;
   const today = todayDhaka();
   const canProfit = useCan('analytics.profit'); // the Sales tab is sales only without it (rule-plan.md Step 10)
@@ -134,7 +136,8 @@ export default function AnalyticsPage() {
           className=""
           value={tab}
           onChange={setTab}
-          tabs={TABS.map((t) => {
+          // Simple view (SIMPLE-VIEW-plan.md Step 9): Overview and Sales, plus the tab a link opened.
+          tabs={TABS.filter((t) => !isSimple || t.id === 'overview' || t.id === 'sales' || t.id === tab).map((t) => {
             const Icon = t.icon;
             return {
               id: t.id,

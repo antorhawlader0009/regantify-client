@@ -13,6 +13,8 @@ import {
 } from '../../../lib/vendorApi';
 import { toast } from 'sonner';
 import { WatermarkSection } from '../../../components/store/WatermarkSection';
+import { FullViewOnly, SimpleViewOnly } from '../../../components/ui/FullViewOnly';
+import { StoreLanguageCard } from './design/StoreLanguageCard';
 
 // Same upload guard as the old standalone Logo page (see git history) —
 // the server resizes/recompresses regardless (see ImageStorageService's
@@ -383,6 +385,9 @@ export default function Branding() {
         {colorError && <p className="text-red-500 text-sm">{colorError}</p>}
       </div>
 
+      {/* Fonts and the link preview are Full view (SIMPLE-VIEW-plan.md Step 8). Their values stay in `branding` and are
+          saved unchanged by "Update Branding". */}
+      <FullViewOnly>
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-4 mt-6">
         <h2 className="text-sm font-semibold text-regantify-text">Typography (Fonts)</h2>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -434,6 +439,7 @@ export default function Branding() {
           </div>
         </div>
       </div>
+      </FullViewOnly>
 
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-3 mt-6">
         <h2 className="text-sm font-semibold text-regantify-text">Website cover photo</h2>
@@ -516,6 +522,7 @@ export default function Branding() {
         <p className="text-xs text-regantify-text-muted">The banner is part of the StorePal theme and can be switched on or off in Design &gt; Customize.</p>
       </div>
 
+      <FullViewOnly>
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-4 mt-6">
         <h2 className="text-sm font-semibold text-regantify-text">Link preview cover &amp; text</h2>
         <p className="text-xs text-regantify-text-muted -mt-2">
@@ -609,6 +616,7 @@ export default function Branding() {
           <p className="text-xs text-regantify-text-muted mt-1.5">Short line shown under the title in link previews and on Google. About 80 to 160 letters works best.</p>
         </div>
       </div>
+      </FullViewOnly>
 
       <div className="mt-6">
         <button
@@ -622,7 +630,14 @@ export default function Branding() {
         </button>
       </div>
 
-      <WatermarkSection />
+      {/* In Full view the store language stays on Layout Settings. */}
+      <SimpleViewOnly>
+        <StoreLanguageCard />
+      </SimpleViewOnly>
+
+      <FullViewOnly>
+        <WatermarkSection />
+      </FullViewOnly>
     </div>
   );
 }

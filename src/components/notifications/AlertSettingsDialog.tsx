@@ -9,6 +9,8 @@ import { smsApi } from '../../lib/smsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
+import { useDashboardView } from '../../lib/useDashboardView';
+import { FullViewOnly } from '../ui/FullViewOnly';
 import { ALL_ALERT_TYPES, desktopPermission, playChime, readAlertPrefs, saveAlertPrefs, type DeviceAlertPrefs } from '../../lib/notificationAlerts';
 import { TYPE_LABEL } from './notificationUi';
 import { PhoneNotificationsSection } from './PhoneNotificationsSection';
@@ -37,6 +39,7 @@ function SectionTitle({ icon: Icon, title, hint }: { icon: typeof Bell; title: s
 export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const queryClient = useQueryClient();
   const isOwner = useCan('owner');
+  const { isSimple } = useDashboardView();
   const canSeeSms = useCan('sms.view');
 
   // On this device: saved as soon as it's changed.
@@ -108,18 +111,22 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
 
         <PhoneNotificationsSection open={open} />
 
-        <TelegramSection open={open} />
+        {/* Telegram and the daily/weekly summaries are Full view (SIMPLE-VIEW-plan.md Step 9); ones already on keep going. */}
+        <FullViewOnly>
+          <TelegramSection open={open} />
+        </FullViewOnly>
 
         <section className="border-t border-line pt-5">
           <SectionTitle
             icon={ClipboardList}
-            title="Daily summary"
-            hint="One message at the end of the day: orders and sales so far, orders still pending, products running low. Free (no SMS credits)."
+            title={isSimple ? 'Email' : 'Daily summary'}
+            hint={isSimple ? 'Receipts and tips from Regantify.' : 'One message at the end of the day: orders and sales so far, orders still pending, products running low. Free (no SMS credits).'}
           />
           {!settings ? (
             <div className="h-16 animate-pulse rounded-lg bg-neutral-100" aria-busy />
           ) : (
             <fieldset disabled={!isOwner} className="space-y-4 disabled:opacity-70">
+              <FullViewOnly>
               <ToggleRow
                 checked={settings.dailySummary}
                 onChange={(on) => saveSummary.mutate({ dailySummary: on })}
@@ -149,6 +156,7 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
                 label="Send me a weekly report"
                 hint="Every Sunday at 9 AM (Dhaka): last week's orders and sales against the week before, best sellers, new buyers, cancelled or returned orders and low stock. It shows in the bell; tick “Weekly summary” for a phone or Telegram chat above to get it there. Never sent by SMS."
               />
+              </FullViewOnly>
               <ToggleRow
                 checked={settings.emailTips}
                 onChange={(on) => saveSummary.mutate({ emailTips: on })}

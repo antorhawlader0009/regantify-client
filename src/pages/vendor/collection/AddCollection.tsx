@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { X, ImagePlus, Search } from 'lucide-react';
@@ -76,6 +77,7 @@ export default function AddCollection() {
   const [productFocused, setProductFocused] = useState(false);
 
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   const [formError, setFormError] = useState<string | null>(null);
   const populatedRef = useRef(false);
 
@@ -226,7 +228,8 @@ export default function AddCollection() {
   // Page layout, rules, categories and SKU entry stay behind "Advanced"; they open by themselves when in use.
   const advancedInUse = [hideHeader, hideFooter, hideSidebar, hideBreadcrumb, smart, categoryNames.length > 0].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  const adv = advancedPick ?? false;
+  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  const adv = !isSimple && (advancedPick ?? false);
 
   return (
     <div className="max-w-3xl">

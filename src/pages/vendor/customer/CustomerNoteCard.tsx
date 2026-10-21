@@ -5,6 +5,8 @@ import { CUSTOMER_GROUP_LABELS, customersApi, SUGGESTED_CUSTOMER_TAGS, type Cust
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { productInputClass } from '../../../components/product/ProductFormPieces';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
+import { useDashboardView } from '../../../lib/useDashboardView';
 
 const MAX_TAGS = 10;
 
@@ -99,6 +101,7 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
   const queryClient = useQueryClient();
   const [note, setNote] = useState(customer.note ?? '');
   const [tags, setTags] = useState<string[]>(customer.tags);
+  const { isSimple } = useDashboardView();
   const [draft, setDraft] = useState('');
   const [birthday, setBirthday] = useState<{ month: number | null; day: number | null }>({ month: customer.birthdayMonth, day: customer.birthdayDay });
   const [special, setSpecial] = useState<{ month: number | null; day: number | null }>({ month: customer.specialMonth, day: customer.specialDay });
@@ -156,7 +159,9 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
     return (
       <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
         <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">Note & tags</h2>
-        <CustomerTagChips tags={customer.tags} />
+        <FullViewOnly>
+          <CustomerTagChips tags={customer.tags} />
+        </FullViewOnly>
         {customer.note && <p className="mt-2 whitespace-pre-line text-sm text-regantify-text">{customer.note}</p>}
       </section>
     );
@@ -164,9 +169,12 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
 
   return (
     <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-      <h2 className="mb-1 text-[15px] font-semibold text-regantify-text">Note & tags</h2>
+      <h2 className="mb-1 text-[15px] font-semibold text-regantify-text">{isSimple ? 'Note' : 'Note & tags'}</h2>
       <p className="mb-3 text-xs text-neutral-500">Only your team sees these. They show at the top of every order from this customer.</p>
 
+      {/* Tags, birthday and special day are Full view (SIMPLE-VIEW-plan.md Step 7). Their values stay in this card's
+          state and are saved unchanged with the note, so nothing set in Full view is lost. */}
+      <FullViewOnly>
       <CustomerTagChips tags={tags} onRemove={(tag) => setTags(tags.filter((t) => t !== tag))} />
       <form
         className={`flex gap-2 ${tags.length > 0 ? 'mt-2' : ''}`}
@@ -205,6 +213,7 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
           ))}
         </div>
       )}
+      </FullViewOnly>
 
       <textarea
         value={note}
@@ -215,8 +224,10 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
         className={`${productInputClass} mt-3 resize-y`}
       />
 
-      <MonthDayInput label="Birthday" month={birthday.month} day={birthday.day} onChange={(month, day) => setBirthday({ month, day })} />
-      <MonthDayInput label="Special day (anniversary...)" month={special.month} day={special.day} onChange={(month, day) => setSpecial({ month, day })} />
+      <FullViewOnly>
+        <MonthDayInput label="Birthday" month={birthday.month} day={birthday.day} onChange={(month, day) => setBirthday({ month, day })} />
+        <MonthDayInput label="Special day (anniversary...)" month={special.month} day={special.day} onChange={(month, day) => setSpecial({ month, day })} />
+      </FullViewOnly>
 
       <button
         type="button"

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Plus, Sparkles, UploadCloud } from 'lucide-react';
@@ -393,9 +394,11 @@ export default function AddProduct() {
     Boolean(metaTitle.trim() || metaDescription.trim() || slugTouched),
   ].filter(Boolean).length;
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   // Once opened by the data, stay open: clearing the last value must not make the field vanish under the cursor.
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  const adv = advancedPick ?? false;
+  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  const adv = !isSimple && (advancedPick ?? false);
   const toggleAdvanced = () => setAdvancedPick(!adv);
 
   // AI assistant (under Status): it reads the form through these values and writes its answer back through these setters.
@@ -561,7 +564,8 @@ export default function AddProduct() {
         <div className="space-y-4">
           <StatusCard visibility={visibility} onChange={setVisibility} />
 
-          <ProductAiChat getAccess={aiAccess} photosUploading={photos.some((p) => p.uploading)} onAddPhotos={handlePhotoFiles} />
+          {/* The product AI chat uses AI Credits, so it is Full view (SIMPLE-VIEW-plan.md Step 6). */}
+          {!isSimple && <ProductAiChat getAccess={aiAccess} photosUploading={photos.some((p) => p.uploading)} onAddPhotos={handlePhotoFiles} />}
 
           <ProductSideCard title="Category">
             <div className="space-y-3">

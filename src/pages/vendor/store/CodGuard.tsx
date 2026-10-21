@@ -15,6 +15,7 @@ import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import { AdvancedPanel } from '../../../components/ui/AdvancedToggle';
 import { PrepaidDiscountCard } from '../../../components/store/PrepaidDiscountCard';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 
 const TYPES: { value: CodVerificationType; label: string; disabled?: boolean }[] = [
   { value: 'NONE', label: 'None' },
@@ -537,9 +538,12 @@ export default function CodGuard() {
         </div>
       )}
 
-      <div className="mt-6">
-        <PrepaidDiscountCard />
-      </div>
+      {/* The online-payment discount is Full view (SIMPLE-VIEW-plan.md Step 8); one that is on keeps working. */}
+      <FullViewOnly>
+        <div className="mt-6">
+          <PrepaidDiscountCard />
+        </div>
+      </FullViewOnly>
     </div>
   );
 }

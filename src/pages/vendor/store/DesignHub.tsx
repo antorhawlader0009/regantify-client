@@ -1,11 +1,17 @@
 import { Link } from 'react-router-dom';
 import { DESIGN_CARDS } from '../../../lib/designPages';
+import { isFullViewPath } from '../../../lib/simpleView';
+import { useDashboardView } from '../../../lib/useDashboardView';
+import { MoreInFullView } from '../../../components/ui/FullViewOnly';
 
 /**
  * Store > Design: one card per design page, opened one at a time. Replaces the sidebar sub-menu, so the
  * Store menu stays short and the design tools are easy to browse with a sentence under each name.
  */
 export default function DesignHub() {
+  // Simple view keeps the everyday design pages (SIMPLE-VIEW-plan.md Step 3); pinned ones stay.
+  const { isSimple, pins } = useDashboardView();
+  const cards = isSimple ? DESIGN_CARDS.filter((c) => !isFullViewPath(c.path) || pins.includes(c.path)) : DESIGN_CARDS;
   return (
     <div>
       <div className="mb-6">
@@ -14,7 +20,7 @@ export default function DesignHub() {
       </div>
 
       <ul className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
-        {DESIGN_CARDS.map((card) => {
+        {cards.map((card) => {
           const Icon = card.icon;
           return (
             <li key={card.path}>
@@ -32,6 +38,7 @@ export default function DesignHub() {
           );
         })}
       </ul>
+      <MoreInFullView count={DESIGN_CARDS.length - cards.length} className="mt-4" />
     </div>
   );
 }

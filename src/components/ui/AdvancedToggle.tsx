@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, Eye, SlidersHorizontal } from 'lucide-react';
+import { useDashboardView } from '../../lib/useDashboardView';
+import { InUseNote } from './FullViewOnly';
 
 /**
  * The "Advanced" button used across the vendor dashboard. A page keeps the
@@ -13,7 +15,7 @@ export function AdvancedToggle({
   open,
   onToggle,
   inUse = 0,
-  label = 'Advanced',
+  label = 'More options',
   className = '',
 }: {
   open: boolean;
@@ -23,12 +25,28 @@ export function AdvancedToggle({
   label?: string;
   className?: string;
 }) {
+  const { isSimple, setView } = useDashboardView();
+  // Simple view (SIMPLE-VIEW-plan.md Step 4): no button; only a small chip when hidden options are in use (rule 3).
+  if (isSimple) {
+    if (inUse <= 0) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => setView('FULL', window.location.pathname)}
+        title="These options keep working. Switch to Full view to see or change them."
+        className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-line bg-white px-3 text-sm text-neutral-500 hover:bg-neutral-50 ${className}`}
+      >
+        <Eye size={15} />
+        {inUse} more in use (Full view)
+      </button>
+    );
+  }
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      title={open ? 'Hide the advanced options' : 'Show the advanced options'}
+      title={open ? 'Hide the extra options' : 'Show the extra options'}
       className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors ${
         open ? 'border-brand bg-brand/10 text-brand' : 'border-line bg-white text-regantify-text hover:bg-neutral-50'
       } ${className}`}
@@ -56,10 +74,13 @@ export function AdvancedHint({
   /** What the hidden options cover, e.g. "bundles, quantity prices, barcode, SEO". */
   what: string;
 }) {
+  const { isSimple } = useDashboardView();
+  // Simple view: the hidden options are not offered; only the rule 3 line when some hold a value.
+  if (isSimple) return <InUseNote count={inUse} />;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-line bg-neutral-50/60 px-4 py-3">
       <p className="min-w-0 flex-1 text-sm text-neutral-500">
-        {open ? 'Advanced options are showing.' : 'More options are hidden to keep this simple:'} <span className="text-neutral-400">{what}</span>
+        {open ? 'All options are showing.' : 'More options are hidden to keep this simple:'} <span className="text-neutral-400">{what}</span>
       </p>
       <AdvancedToggle open={open} onToggle={onToggle} inUse={inUse} />
     </div>
@@ -85,7 +106,7 @@ function readPanel(key: string): boolean | null {
  */
 export function AdvancedPanel({
   id,
-  title = 'Advanced settings',
+  title = 'More settings',
   what,
   inUse = 0,
   spaced = false,
@@ -102,8 +123,12 @@ export function AdvancedPanel({
   spaced?: boolean;
   children: ReactNode;
 }) {
+  const { isSimple } = useDashboardView();
   const [pick, setPick] = useState<boolean | null>(() => readPanel(id));
   if (pick === null && inUse > 0) setPick(true);
+  // Simple view: the panel and its blocks are not rendered (each saves on its own, so nothing is lost); only the
+  // rule 3 line when something inside is switched on, and it keeps working.
+  if (isSimple) return inUse > 0 ? <InUseNote count={inUse} className="mt-6" /> : null;
   const open = pick ?? false;
   const toggle = () => {
     const next = !open;

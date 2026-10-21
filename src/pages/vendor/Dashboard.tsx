@@ -22,6 +22,8 @@ import { OrderMapPanel } from '../../components/dashboard/OrderMapPanel';
 import { RecentOrders } from '../../components/dashboard/RecentOrders';
 import { DeliveryCard, InStoreCard, MoneyCard, PlanCard, TopProductsCard } from '../../components/dashboard/SideCards';
 import { DailyBrief } from '../../components/dashboard/DailyBrief';
+import { SimpleViewIntro } from '../../components/dashboard/SimpleViewIntro';
+import { useDashboardView } from '../../lib/useDashboardView';
 
 // Vendor dashboard home (dashboard-plan.md). Step 2: the page shell —
 // greeting, quick actions, loading and error states. The cards come in
@@ -93,6 +95,7 @@ export default function VendorDashboard() {
   const user = useAuthStore((s) => s.user);
   const canSeeOrders = useCan('orders.view');
   const canSeeMap = useCan('analytics.view');
+  const { isSimple } = useDashboardView();
   const [copied, setCopied] = useState(false);
   const [hideNumbers, setHideNumbers] = useState(readHideNumbers);
   const toggleHideNumbers = () => {
@@ -140,6 +143,7 @@ export default function VendorDashboard() {
 
   return (
     <div className="space-y-4" data-hide-numbers={hideNumbers || undefined}>
+      <SimpleViewIntro />
       {/* Header: greeting + quick actions */}
       <section className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
         <div className="mr-auto flex min-w-0 items-center gap-3">
@@ -259,10 +263,11 @@ export default function VendorDashboard() {
                 ) : null,
               ].filter(Boolean);
               const right = [
-                trend && canSeeMap ? <div key="map" className="order-2 min-w-0"><OrderMapPanel /></div> : null,
+                // Simple view (SIMPLE-VIEW-plan.md Step 9): no order map, and the goal card only once a goal is set.
+                trend && canSeeMap && !isSimple ? <div key="map" className="order-2 min-w-0"><OrderMapPanel /></div> : null,
                 status ? <div key="status" className="order-3 min-w-0">{status}</div> : null,
                 <div key="shop" className="order-7"><ShopListingCard isOwner={isOwner} /></div>,
-                hasMoneyColumn && dashboard.data.target ? (
+                hasMoneyColumn && dashboard.data.target && (!isSimple || !!dashboard.data.target.salesTarget || !!dashboard.data.target.ordersTarget) ? (
                   <div key="goal" className="order-7"><GoalCard target={dashboard.data.target} isOwner={isOwner} /></div>
                 ) : null,
                 hasMoneyColumn && dashboard.data.money ? (

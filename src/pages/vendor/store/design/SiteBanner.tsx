@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { RichTextEditor } from '../../../../components/editor/RichTextEditor';
 import { ScheduledBanners } from './ScheduledBanners';
+import { FullViewOnly } from '../../../../components/ui/FullViewOnly';
 import { DesignLoading, DesignPageHeader, SaveButton, inputClass, useDesignSettings } from './designShared';
 
 // A stable empty list, so the scheduled-banner editor is not reset on every render.
@@ -108,7 +109,10 @@ export default function SiteBanner() {
           </div>
         </div>
       )}
-      {settings && <ScheduledBanners saved={settings.bannerSchedule ?? NO_SCHEDULE} pending={save.isPending} onSave={(bannerSchedule) => save.mutate({ bannerSchedule })} />}
+      {/* Scheduled banners are Full view (SIMPLE-VIEW-plan.md Step 8); saved ones keep showing on the store. */}
+      <FullViewOnly>
+        {settings && <ScheduledBanners saved={settings.bannerSchedule ?? NO_SCHEDULE} pending={save.isPending} onSave={(bannerSchedule) => save.mutate({ bannerSchedule })} />}
+      </FullViewOnly>
     </div>
   );
 }

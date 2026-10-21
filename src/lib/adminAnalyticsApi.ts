@@ -74,6 +74,18 @@ export interface AdminAnalytics {
   };
 }
 
+/** Super Admin > Analytics > Simple view (SIMPLE-VIEW-plan.md Step 12). */
+export interface DashboardViewsReport {
+  since: string;
+  owners: { simple: number; full: number };
+  switches: { toSimple: number; toFull: number };
+  pinsAdded: number;
+  hiddenPagesOpened: Array<{ path: string; count: number }>;
+  leftFrom: Array<{ path: string; count: number }>;
+  pinned: Array<{ path: string; people: number }>;
+}
+
 export const adminAnalyticsApi = {
   get: () => api.get<AdminAnalytics>('/v1/admin/analytics').then((r) => r.data),
+  dashboardViews: () => api.get<DashboardViewsReport>('/v1/admin/analytics/dashboard-views').then((r) => r.data),
 };

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as RadixDropdown from '@radix-ui/react-dropdown-menu';
@@ -127,7 +128,8 @@ function ActionsMenu({
   onChangeStatus: () => void;
   onCreateStockProduct: () => void;
   onDuplicate: () => void;
-  onPrintLabels: () => void;
+  /** Absent in Simple view (SIMPLE-VIEW-plan.md Step 6). */
+  onPrintLabels?: () => void;
   /** QR code of this product's page (TellMe idea 125); absent when the store has no address yet. */
   onQr?: () => void;
   atProductLimit: boolean;
@@ -149,7 +151,7 @@ function ActionsMenu({
     >
       <DropdownMenuItem onSelect={onEdit}>{canEdit ? 'Edit' : 'View'}</DropdownMenuItem>
       {canEdit && <DropdownMenuItem onSelect={onChangeStatus}>Change Status</DropdownMenuItem>}
-      <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>
+      {onPrintLabels && <DropdownMenuItem onSelect={onPrintLabels}>Print labels</DropdownMenuItem>}
       {onQr && <DropdownMenuItem onSelect={onQr}>QR code</DropdownMenuItem>}
       {canEdit && (
         <DropdownMenuItem onSelect={() => (atProductLimit ? dailyLimitToast('products') : onDuplicate())}>
@@ -408,7 +410,10 @@ export default function AllProducts() {
 
   // Table look & feel (from the design reference): filter panel toggle,
   // row density, visible columns and a per-page sort.
-  const [adv, setAdv] = useState(false);
+  const [advOpen, setAdv] = useState(false);
+  // Simple view never shows the "More tools" row (SIMPLE-VIEW-plan.md Step 4).
+  const { isSimple } = useDashboardView();
+  const adv = !isSimple && advOpen;
   const [showFilters, setShowFilters] = useState(false);
   const [density, setDensity] = useState<Density>(() => loadPrefs().density);
   const [columns, setColumns] = useState<Record<ColumnKey, boolean>>(() => loadPrefs().columns);
@@ -689,6 +694,14 @@ export default function AllProducts() {
 
           <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
 
+          {/* Simple view (SIMPLE-VIEW-plan.md Step 6): no Export / Import; "Deleted" sits here so a delete can be undone. */}
+          {isSimple && canDeleteProducts && (
+            <button onClick={() => setTrashOpen(true)} className={toolbarBtn} title="Products you deleted in the last 30 days, which you can bring back">
+              <Undo2 size={14} />
+              Deleted
+            </button>
+          )}
+          {!isSimple && (
           <button
             onClick={handleExport}
             disabled={exporting}
@@ -698,6 +711,7 @@ export default function AllProducts() {
             <Download size={14} />
             {exporting ? 'Exporting…' : selected.size > 0 ? `Export (${selected.size})` : 'Export'}
           </button>
+          )}
 
 
           <AdvancedToggle open={adv} onToggle={() => setAdv((v) => !v)} label="More tools" />
@@ -732,6 +746,7 @@ export default function AllProducts() {
             Add Product
           </button>
 
+          {!isSimple && (
           <button
             onClick={() => (atProductLimit ? dailyLimitToast('products') : setShowImportModal(true))}
             title={atProductLimit ? "Today's limit for new products is used up. Talk to support to raise it." : 'Import products from CSV'}
@@ -742,6 +757,7 @@ export default function AllProducts() {
             {atProductLimit ? <LockedBadge size={14} /> : <Upload size={15} />}
             Import Product
           </button>
+          )}
           </>
           )}
         </div>
@@ -874,7 +890,7 @@ export default function AllProducts() {
                   >
                     Make Draft
                   </button>
-                  {canOfferToResellers && (
+                  {canOfferToResellers && !isSimple && (
                     <button
                       onClick={() => setResaleOpen(true)}
                       disabled={bulkVisibility}
@@ -1105,8 +1121,8 @@ export default function AllProducts() {
                       onChangeStatus={() => setStatusModalProduct(p)}
                       onCreateStockProduct={() => setStockProductModalId(p.id)}
                       onDuplicate={() => duplicateMutation.mutate(p.id)}
-                      onPrintLabels={() => setLabelProductIds([p.id])}
-                      onQr={storeSubdomain ? () => setQrProduct({ name: p.name, slug: p.slug }) : undefined}
+                      onPrintLabels={isSimple ? undefined : () => setLabelProductIds([p.id])}
+                      onQr={!isSimple && storeSubdomain ? () => setQrProduct({ name: p.name, slug: p.slug }) : undefined}
                       atProductLimit={atProductLimit}
                     />
                   </td>

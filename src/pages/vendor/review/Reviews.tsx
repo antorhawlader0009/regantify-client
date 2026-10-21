@@ -27,6 +27,8 @@ import {
 import { formatDhakaDate } from '../../../lib/dhakaDate';
 import { toast } from '../../../lib/toast';
 import { useCan } from '../../../lib/useStaffAccess';
+import { useDashboardView } from '../../../lib/useDashboardView';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 
 type StatusTab = 'all' | 'pending' | 'approved';
 
@@ -272,6 +274,7 @@ export default function Reviews() {
   const filtered = Boolean(search.trim() || status !== 'all' || rating);
   const COLS = 5;
 
+  const { isSimple } = useDashboardView();
   const addButton = canEdit ? (
     <Link to="/vendor/reviews/add" className={primaryBtn}>
       <Plus size={15} aria-hidden />
@@ -283,7 +286,7 @@ export default function Reviews() {
     : {
         title: 'No reviews yet',
         hint: 'Shoppers can review from your store’s product pages. You can also add reviews you got on Facebook or WhatsApp.',
-        action: addButton,
+        action: isSimple ? undefined : addButton,
       };
 
   return (
@@ -292,13 +295,14 @@ export default function Reviews() {
         title="Reviews"
         description={counts && counts.pending > 0 ? `${counts.pending} not shown on your store. Turn on Shown to publish them.` : 'What customers say about your products.'}
         actions={
-          <>
+          // Questions and adding a review by hand are Full view (SIMPLE-VIEW-plan.md Step 6).
+          <FullViewOnly>
             <Link to="/vendor/reviews/questions" className={outlineBtn}>
               <MessageCircleQuestion size={15} aria-hidden />
               Questions
             </Link>
             {addButton}
-          </>
+          </FullViewOnly>
         }
       />
       <PillTabs<StatusTab>

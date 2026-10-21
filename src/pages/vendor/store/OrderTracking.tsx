@@ -13,6 +13,11 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { Checkbox } from '../../../components/ui/Checkbox';
 import { HeardFromSection } from '../../../components/store/HeardFromSection';
+import { FullViewOnly, InUseNote } from '../../../components/ui/FullViewOnly';
+import { useDashboardView } from '../../../lib/useDashboardView';
+
+/** The customer texts Simple view shows (SIMPLE-VIEW-plan.md Step 8); the rest are Full view. */
+const SIMPLE_EVENTS: string[] = ['confirmed', 'shipped', 'delivered'];
 
 // Store > Order Tracking (tracking-plan.md Step 5): which texts a shopper gets as their order moves,
 // and their wording. Every text costs SMS credits, so each one is off until the owner turns it on.
@@ -137,6 +142,7 @@ export default function OrderTracking() {
 
   const [language, setLanguage] = useState<'en' | 'bn'>('en');
   const [quietHours, setQuietHours] = useState(true);
+  const { isSimple } = useDashboardView();
   const [stalledHours, setStalledHours] = useState('48');
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
 
@@ -216,6 +222,9 @@ export default function OrderTracking() {
               <p className="mt-1.5 text-xs text-regantify-text-muted">Texts you have written yourself stay as you wrote them.</p>
             </div>
 
+            {/* Quiet hours and the stalled-parcel hours are Full view (SIMPLE-VIEW-plan.md Step 8); their values stay in
+                this page's state and are saved unchanged. */}
+            <FullViewOnly>
             <Checkbox
               checked={quietHours}
               onChange={setQuietHours}
@@ -242,10 +251,17 @@ export default function OrderTracking() {
                 notification. Failed deliveries, late orders and returns are flagged too.
               </p>
             </div>
+            </FullViewOnly>
           </section>
 
           <section className="space-y-4">
-            {data.events.map((event) => (
+            {/* Simple view: the three everyday texts. A hidden text that is on keeps being sent (its draft stays in state
+                and is saved), and the line below says so. */}
+            <InUseNote
+              count={data.events.filter((e) => !SIMPLE_EVENTS.includes(e.event) && (drafts[e.event]?.enabled ?? e.enabled)).length}
+              names="other customer texts"
+            />
+            {data.events.filter((e) => !isSimple || SIMPLE_EVENTS.includes(e.event)).map((event) => (
               <EventCard
                 key={event.event}
                 event={event}
@@ -274,7 +290,9 @@ export default function OrderTracking() {
         </div>
       )}
 
-      <HeardFromSection />
+      <FullViewOnly>
+        <HeardFromSection />
+      </FullViewOnly>
     </div>
   );
 }

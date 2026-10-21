@@ -14,6 +14,7 @@ import type { SmsGatewayProvider } from '../../../lib/smsApi';
 import { SendToCustomers } from '../../../components/sms/SendToCustomers';
 import { BirthdayWishes } from '../../../components/sms/BirthdayWishes';
 import { OwnSmsGateway } from '../../../components/sms/OwnSmsGateway';
+import { useDashboardView } from '../../../lib/useDashboardView';
 
 type Tab = 'send' | 'logs' | 'test' | 'birthday' | 'gateway';
 
@@ -164,6 +165,7 @@ export default function Sms() {
   // Add-ons opens ?tab=gateway&provider=ISMSPLUS|MIM_SMS.
   const [searchParams] = useSearchParams();
   const gatewayProvider = (searchParams.get('provider') as SmsGatewayProvider | null) ?? undefined;
+  const { isSimple } = useDashboardView();
   const [tab, setTab] = useState<Tab>(pickedPhones?.length ? 'send' : searchParams.get('tab') === 'gateway' ? 'gateway' : 'logs');
   const [buyDialogOpen, setBuyDialogOpen] = useState(false);
 
@@ -207,11 +209,13 @@ export default function Sms() {
           onChange={setTab}
           tabs={[
             ...(canTest ? [{ id: 'send' as const, label: 'Send to customers' }] : []),
-            { id: 'logs', label: 'Sent messages' },
+            { id: 'logs' as const, label: 'Sent messages' },
             ...(canTest ? [{ id: 'birthday' as const, label: 'Birthday wishes' }] : []),
             ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : []),
             { id: 'gateway' as const, label: 'Your own gateway' },
-          ]}
+            // Simple view (SIMPLE-VIEW-plan.md Step 7): only sending and the log, plus the tab a link opened.
+            // Birthday wishes and a connected own gateway keep working while hidden.
+          ].filter((t) => !isSimple || t.id === 'send' || t.id === 'logs' || t.id === tab)}
         />
         <div className="px-0.5">
           {tab === 'gateway' ? <OwnSmsGateway initialProvider={gatewayProvider} isOwner={isOwner} /> : tab === 'birthday' && canTest ? <BirthdayWishes /> : tab === 'test' && canTest ? <TestSms /> : tab === 'send' && canTest ? <SendToCustomers selectedPhones={pickedPhones} /> : <SentLogs />}

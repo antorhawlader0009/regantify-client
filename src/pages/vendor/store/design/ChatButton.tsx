@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { ChatButtonChannel, ChatButtonPage } from '../../../../lib/designSettingsApi';
 import { getVendorSocialLinks } from '../../../../lib/vendorApi';
 import { toast } from '../../../../lib/toast';
+import { FullViewOnly } from '../../../../components/ui/FullViewOnly';
 import {
   DesignLoading,
   DesignPageHeader,
@@ -126,6 +127,9 @@ export default function ChatButton() {
                   </div>
                 )}
 
+                {/* Position, pages and "Mention the product" are Full view (SIMPLE-VIEW-plan.md Step 8). Their values stay
+                    in this page's state and are saved unchanged. */}
+                <FullViewOnly>
                 <RadioGroup
                   label="Position"
                   value={side}
@@ -169,6 +173,7 @@ export default function ChatButton() {
                     </span>
                   </div>
                 )}
+                </FullViewOnly>
               </>
             )}
 

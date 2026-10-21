@@ -12,7 +12,10 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Topbar } from '../Topbar';
 import { Sidebar } from '../Sidebar';
 import { useVendorNav } from '../../lib/useStaffAccess';
-import { withoutFlagged } from '../../lib/navConfig';
+import { withoutAdvanced, withoutFlagged } from '../../lib/navConfig';
+import { useDashboardView } from '../../lib/useDashboardView';
+import { useSimpleViewKeeps } from '../../lib/simpleView';
+import { FullViewPageBar } from '../FullViewPageBar';
 import { useVendorFeatures } from '../../lib/features';
 import { VendorPageGate } from '../staff/VendorPageGate';
 import { WelcomeNote } from '../staff/WelcomeNote';
@@ -35,8 +38,16 @@ export function VendorLayout() {
   // ...and without pages behind a feature flag that is off for this store (super-admin-new.md Step 1).
   const flagsOn = useVendorFeatures().data?.on;
   const roleNav = useVendorNav();
-  const nav = useMemo(() => withoutFlagged(roleNav, flagsOn ?? []), [roleNav, flagsOn]);
-  // Every page sits in its own section again (the separate "Advanced pages" block was removed 2026-10-20).
+  // ...and in Simple view without the Full view pages, except pinned or in-use ones and the page you are on
+  // (SIMPLE-VIEW-plan.md Step 3). Each page stays in its own section (no separate block, 2026-10-20 rule).
+  const { isSimple } = useDashboardView();
+  const keep = useSimpleViewKeeps();
+  const keepKey = keep.join('|');
+  const nav = useMemo(
+    () => withoutAdvanced(withoutFlagged(roleNav, flagsOn ?? []), !isSimple, pathname, keep),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [roleNav, flagsOn, isSimple, pathname, keepKey],
+  );
 
   // Marks <body> while the vendor dashboard is open so index.css can swap its
   // white surfaces for #FAFAFD. On <body> (not this div) so dropdowns and
@@ -62,6 +73,7 @@ export function VendorLayout() {
         {!isLms && <ResaleMoneyBanner />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
           <SectionTabs sections={nav} />
+          {!isLms && <FullViewPageBar />}
           <VendorPageGate>
             <Suspense fallback={<PageLoading />}>
               <Outlet />

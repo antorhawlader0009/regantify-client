@@ -8,6 +8,7 @@ import { googleTagManagerApi } from '../../../../lib/googleTagManagerApi';
 import { tiktokPixelApi } from '../../../../lib/tiktokPixelApi';
 import { webhooksApi } from '../../../../lib/webhooksApi';
 import { apiKeysApi } from '../../../../lib/apiKeysApi';
+import { useDashboardView } from '../../../../lib/useDashboardView';
 
 /**
  * Store > Integrations — one card per marketing/analytics integration.
@@ -21,6 +22,8 @@ export default function Integrations() {
   const { data: tiktokPixel } = useQuery({ queryKey: ['tiktok-pixel'], queryFn: tiktokPixelApi.get });
   const { data: webhooks } = useQuery({ queryKey: ['webhooks'], queryFn: webhooksApi.list });
   const { data: apiKeys } = useQuery({ queryKey: ['api-keys'], queryFn: apiKeysApi.list });
+  // Simple view (SIMPLE-VIEW-plan.md Step 8): Facebook Pixel, plus whatever is already connected.
+  const { isSimple } = useDashboardView();
 
   return (
     <div className="max-w-4xl">
@@ -43,6 +46,7 @@ export default function Integrations() {
         {/* Same MetaPixelSettings as the card above, its own page. */}
         <IntegrationCard
           to="/vendor/store/integrations/meta-conversions-api"
+          fullViewOnly
           icon={<Server size={20} />}
           iconClass="bg-[#1877F2]/10 text-[#1877F2]"
           title="Meta Conversions API"
@@ -59,6 +63,7 @@ export default function Integrations() {
         />
         <IntegrationCard
           to="/vendor/store/integrations/tiktok-pixel"
+          fullViewOnly
           icon={<Music2 size={20} />}
           iconClass="bg-black/5 text-regantify-text"
           title="TikTok Pixel"
@@ -67,6 +72,7 @@ export default function Integrations() {
         />
         <IntegrationCard
           to="/vendor/store/integrations/google-analytics"
+          fullViewOnly
           icon={<BarChart3 size={20} />}
           iconClass="bg-[#F9AB00]/10 text-[#E37400]"
           title="Google Analytics 4"
@@ -75,6 +81,7 @@ export default function Integrations() {
         />
         <IntegrationCard
           to="/vendor/store/integrations/google-tag-manager"
+          fullViewOnly
           icon={<Tags size={20} />}
           iconClass="bg-[#4285F4]/10 text-[#4285F4]"
           title="Google Tag Manager"
@@ -83,10 +90,14 @@ export default function Integrations() {
         />
       </div>
 
-      <h2 className="text-lg font-semibold text-regantify-text mt-8 mb-3">Advanced</h2>
+      {/* Simple view shows the developer tools only once one is set up. */}
+      {(!isSimple || (webhooks?.length ?? 0) > 0 || (apiKeys?.length ?? 0) > 0) && (
+      <h2 className="text-lg font-semibold text-regantify-text mt-8 mb-3">For developers</h2>
+      )}
       <div className="grid sm:grid-cols-2 gap-4">
         <IntegrationCard
           to="/vendor/store/integrations/webhooks"
+          fullViewOnly
           icon={<Webhook size={20} />}
           iconClass="bg-violet-50 text-violet-700"
           title="Webhooks"
@@ -103,6 +114,7 @@ export default function Integrations() {
         />
         <IntegrationCard
           to="/vendor/store/integrations/external-api"
+          fullViewOnly
           icon={<KeyRound size={20} />}
           iconClass="bg-slate-100 text-slate-700"
           title="External API"
@@ -121,6 +133,7 @@ function IntegrationCard({
   title,
   description,
   status,
+  fullViewOnly,
 }: {
   // No link = not built yet ("Coming soon").
   to?: string;
@@ -130,7 +143,11 @@ function IntegrationCard({
   description: string;
   // 'attention' = set up, but the service rejected it (e.g. an expired token).
   status?: 'connected' | 'not-set' | 'attention';
+  /** Hidden in Simple view unless it is already set up (SIMPLE-VIEW-plan.md Step 8). */
+  fullViewOnly?: boolean;
 }) {
+  const { isSimple } = useDashboardView();
+  if (isSimple && fullViewOnly && status !== 'connected' && status !== 'attention') return null;
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">

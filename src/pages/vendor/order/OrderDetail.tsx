@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { CreateOrderFromIncompleteState } from './AddOrder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -146,7 +147,10 @@ export default function OrderDetail() {
   const [showInvoice, setShowInvoice] = useState(false);
   const [editingItems, setEditingItems] = useState(false);
   // Rarely-used actions (merge, split, repeat order, team comments) stay behind "More tools".
-  const [moreTools, setMoreTools] = useState(false);
+  const [moreToolsOpen, setMoreTools] = useState(false);
+  // Simple view never shows "More tools" (SIMPLE-VIEW-plan.md Step 4).
+  const { isSimple } = useDashboardView();
+  const moreTools = !isSimple && moreToolsOpen;
   const [merging, setMerging] = useState(false);
   const [makingRegular, setMakingRegular] = useState(false);
   const [splitting, setSplitting] = useState(false);
@@ -549,7 +553,7 @@ export default function OrderDetail() {
       {/* Why a cancelled / returned / failed order ended (Analytics > Orders groups by it). */}
       <OrderCloseReasonCard order={order} canEdit={canEdit} onChanged={invalidateOrder} />
       <OrderReturnCheckCard order={order} canEdit={canEdit} />
-      <OrderProfitCard orderId={order.id} />
+      {!isSimple && <OrderProfitCard orderId={order.id} />}
 
       {/* Medium or high risk (TellMe idea 143, OrderRiskService). */}
       <OrderRefundNote orderId={order.id} status={order.status} />
@@ -636,7 +640,7 @@ export default function OrderDetail() {
                     Edit items
                   </button>
                 </span>
-              ) : canCreate && order.source !== 'POS' && (order.status === 'COMPLETED' || order.status === 'RETURN') ? (
+              ) : !isSimple && canCreate && order.source !== 'POS' && (order.status === 'COMPLETED' || order.status === 'RETURN') ? (
                 // A size or product swap after delivery: Add Order with this customer and these lines, linked back here.
                 <button type="button" onClick={startExchange} className="text-sm font-medium text-brand hover:underline">
                   Exchange
@@ -752,7 +756,8 @@ export default function OrderDetail() {
             <OrderTimeline orderId={order.id} history={history} hasCourier={provider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED'} />
           </Card>
 
-          {moreTools && (
+          {/* Full view: behind "More tools" as before. Simple view: shown only when the order already has comments. */}
+          {(moreTools || (isSimple && (order.commentCount ?? 0) > 0)) && (
             <Card title="Comments">
               <OrderComments orderId={order.id} />
             </Card>

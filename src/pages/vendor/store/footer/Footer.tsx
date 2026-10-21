@@ -10,6 +10,7 @@ import { FooterPreview } from './FooterPreview';
 import { FooterTemplateModal } from './FooterTemplateModal';
 import { FooterItemSettings } from './FooterItemSettings';
 import { FooterExtras } from './FooterExtras';
+import { FullViewOnly } from '../../../../components/ui/FullViewOnly';
 
 type SelectedBlock = 'logo' | 'menu' | 'info' | 'about' | null;
 
@@ -131,7 +132,10 @@ export default function Footer() {
         Click a block above to edit its content. Currently using the <strong>{FOOTER_TEMPLATES[draft.template].label}</strong> template.
       </p>
 
-      <FooterExtras config={draft} onChange={patchDraft} storeAddress={settings?.address} storePhone={settings?.phone} />
+      {/* "Contact, app links and credit" is Full view (SIMPLE-VIEW-plan.md Step 8); its values stay in the draft and are saved. */}
+      <FullViewOnly>
+        <FooterExtras config={draft} onChange={patchDraft} storeAddress={settings?.address} storePhone={settings?.phone} />
+      </FullViewOnly>
 
       {templateModalOpen && (
         <FooterTemplateModal

@@ -6,7 +6,7 @@ export type SignupMode = 'OPEN' | 'APPROVAL' | 'CLOSED';
 
 export interface PlatformConfig {
   contact: { supportPhone: string; supportWhatsapp: string; alertPhone: string; alertPhoneFromEnv: boolean };
-  signup: { mode: SignupMode; reservedSubdomains: string[]; blockedStoreWords: string[]; builtInReserved: string[] };
+  signup: { mode: SignupMode; reservedSubdomains: string[]; blockedStoreWords: string[]; builtInReserved: string[]; newStoreView: 'SIMPLE' | 'FULL' };
   money: {
     minWithdraw: number;
     withdrawFeeFlat: number;

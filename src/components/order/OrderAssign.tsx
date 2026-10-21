@@ -5,6 +5,7 @@ import { ordersApi, type Order } from '../../lib/ordersApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
+import { useDashboardView } from '../../lib/useDashboardView';
 import { Dialog } from '../ui/Dialog';
 import { outlineBtn, primaryBtn } from '../ui/PageKit';
 
@@ -34,6 +35,7 @@ export function AssigneeChip({ order }: { order: Pick<Order, 'assignedStaffId'> 
  */
 export function AssignCard({ order, onChanged }: { order: Order; onChanged: () => void }) {
   const { data } = useAssignment();
+  const { isSimple } = useDashboardView();
   const canGive = useCan('orders.cancel_refund');
   const queryClient = useQueryClient();
   const mutate = useMutation({
@@ -48,6 +50,16 @@ export function AssignCard({ order, onChanged }: { order: Order; onChanged: () =
 
   const holder = data.staff.find((s) => s.id === order.assignedStaffId);
   const mine = !!data.myStaffId && order.assignedStaffId === data.myStaffId;
+  // Simple view (SIMPLE-VIEW-plan.md Step 5): only the name when someone handles it, no controls.
+  if (isSimple) {
+    if (!holder) return null;
+    return (
+      <div className="rounded-xl border border-line bg-white p-4">
+        <p className="text-sm font-semibold text-regantify-text">Handled by</p>
+        <p className="mt-1 text-sm text-neutral-700">{mine ? 'You' : holder.name}</p>
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl border border-line bg-white p-4">
       <p className="text-sm font-semibold text-regantify-text">Handled by</p>

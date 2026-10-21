@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BadgePercent, Gift } from 'lucide-react';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 import { discountsApi, type Discount } from '../../../lib/discountsApi';
 import { PromoListPage, PromoStatusBadge, StandardPromoMenu, promoStatus, scheduleText, taka } from './MarketingKit';
 
@@ -45,9 +46,12 @@ function DiscountMenu({ item }: { item: Discount }) {
 export default function Discounts() {
   return (
     <>
-    <Link to="/vendor/marketing/discounts/gifts" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline">
-      <Gift size={15} /> Free gifts (buy 2 get 1, spend ৳3000 get a gift)
-    </Link>
+    {/* Free gifts are Full view (SIMPLE-VIEW-plan.md Step 7); running offers keep working. */}
+    <FullViewOnly>
+      <Link to="/vendor/marketing/discounts/gifts" className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-700 hover:underline">
+        <Gift size={15} /> Free gifts (buy 2 get 1, spend ৳3000 get a gift)
+      </Link>
+    </FullViewOnly>
     <PromoListPage<Discount>
       title="Discounts"
       description="Taken off the cart by itself when the conditions are met. No code to type."

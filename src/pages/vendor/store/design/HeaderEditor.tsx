@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { useDashboardView } from '../../../../lib/useDashboardView';
+import { FullViewOnly } from '../../../../components/ui/FullViewOnly';
 import { Phone, Search, ShoppingBag, User } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getVendorSettings } from '../../../../lib/vendorApi';
@@ -31,7 +33,9 @@ const MENU_INFO: Record<MenuKey, { title: string; hint: string }> = {
 export default function HeaderEditor() {
   const { settings, isLoading, save } = useDesignSettings();
   const [menus, setMenus] = useState<Menus | null>(null);
-  const [editing, setEditing] = useState<MenuKey>('headerLeftMenu');
+  // Simple view (SIMPLE-VIEW-plan.md Step 8): top links, logo size and the cart total are Full view, so it starts on the menu.
+  const { isSimple } = useDashboardView();
+  const [editing, setEditing] = useState<MenuKey>(isSimple ? 'siteMenu' : 'headerLeftMenu');
   // "Call Us Now" beside the search bar: off by default, shown only with a number.
   const [phoneOn, setPhoneOn] = useState(false);
   const [phoneLabel, setPhoneLabel] = useState('');
@@ -90,6 +94,7 @@ export default function HeaderEditor() {
           <div>
             <p className="text-sm font-medium text-regantify-text mb-2">Preview</p>
             <div className="bg-white rounded-2xl border border-black/5 px-6 py-4 space-y-3">
+              {(!isSimple || menus.headerLeftMenu.length > 0 || menus.headerRightMenu.length > 0) && (
               <div className="flex items-center justify-between gap-4">
                 <Zone active={editing === 'headerLeftMenu'} onClick={() => setEditing('headerLeftMenu')}>
                   <MenuPreview items={menus.headerLeftMenu} />
@@ -101,6 +106,7 @@ export default function HeaderEditor() {
                   </Zone>
                 )}
               </div>
+              )}
               <div className="flex items-center gap-4">
                 <span className="font-extrabold text-xl text-regantify-text shrink-0">
                   {showLogo && <span className="mr-2 inline-block rounded bg-black/10 px-2 py-0.5 text-xs align-middle">Logo</span>}
@@ -198,6 +204,7 @@ export default function HeaderEditor() {
                 <input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} className="w-4 h-4" />
               </label>
             </div>
+            <FullViewOnly>
             <div>
               <h2 className="text-base font-medium text-regantify-text">Logo size</h2>
               <p className="text-xs text-regantify-text-muted mt-0.5 mb-2">How big your logo (or store name) is in the header.</p>
@@ -222,6 +229,7 @@ export default function HeaderEditor() {
               <span className="text-sm font-medium text-regantify-text">Show the cart total beside the bag icon</span>
               <input type="checkbox" checked={cartTotalOn} onChange={(e) => setCartTotalOn(e.target.checked)} className="w-4 h-4" />
             </label>
+            </FullViewOnly>
           </div>
           <SaveButton pending={save.isPending} onClick={handleSave} />
         </div>

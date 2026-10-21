@@ -1,4 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
+import { useDashboardView } from '../../lib/useDashboardView';
 import { Link } from 'react-router-dom';
 import * as Popover from '@radix-ui/react-popover';
 import { Check, ChevronDown, Lock, Sparkles, type LucideIcon } from 'lucide-react';
@@ -26,6 +27,9 @@ function IconTile({ icon: Icon, muted = false }: { icon: LucideIcon; muted?: boo
  * again on save.
  */
 export function RolePicker({ value, onChange, roleTier }: { value: StaffRoleKey; onChange: (key: StaffRoleKey) => void; roleTier: number }) {
+  // Simple view (SIMPLE-VIEW-plan.md Step 9): the ready-made roles only; a member who already has a custom role keeps it.
+  const { isSimple } = useDashboardView();
+  const roleKeys = STAFF_ROLE_KEYS.filter((k) => !isSimple || k !== 'CUSTOM' || value === 'CUSTOM');
   const [open, setOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const current = STAFF_ROLES[value];
@@ -76,7 +80,7 @@ export function RolePicker({ value, onChange, roleTier }: { value: StaffRoleKey;
           className="z-50 max-h-[min(70vh,560px)] w-[var(--radix-popover-trigger-width)] min-w-[280px] overflow-y-auto rounded-xl border border-line bg-white p-1.5 shadow-xl"
         >
           <div ref={listRef} role="listbox" aria-label="Role" onKeyDown={onListKey}>
-            {STAFF_ROLE_KEYS.map((key) => {
+            {roleKeys.map((key) => {
               const role = STAFF_ROLES[key];
               const isLocked = locked(key);
               const selected = key === value;

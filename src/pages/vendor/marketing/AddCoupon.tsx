@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, Shuffle } from 'lucide-react';
@@ -72,6 +73,7 @@ export default function AddCoupon() {
   const [categories, setCategories] = useState<PickedItem[]>([]);
 
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
+  const { isSimple } = useDashboardView();
   const [usageLimit, setUsageLimit] = useState('');
   const [perCustomer, setPerCustomer] = useState('');
 
@@ -207,7 +209,8 @@ export default function AddCoupon() {
     perCustomer.trim() !== '',
   ].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  const adv = advancedPick ?? false;
+  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  const adv = !isSimple && (advancedPick ?? false);
 
   return (
     <form

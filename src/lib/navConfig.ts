@@ -53,8 +53,9 @@ export interface NavLinkItem {
   /** Other pages that should keep this link highlighted (e.g. the pages a hub page opens). */
   alsoActive?: string[];
   /**
-   * An advanced page: left out of the sidebar until the seller turns on "Advanced menu" (the toggle above the
-   * sidebar's bottom bar), or while they are on that very page. Search (Ctrl K), links and routes are unaffected.
+   * A Full view page (SIMPLE-VIEW-plan.md): left out of the sidebar, tab bars and hubs in Simple view, unless the person
+   * pinned it, it is in use (LMS/POS in the plan) or they are on that very page. Search (Ctrl K), links and routes are
+   * unaffected. lib/simpleView.ts reads these marks.
    */
   advanced?: boolean;
   /** A page behind a feature flag (super-admin-new.md Step 1): left out of the sidebar for stores the flag is off for. Guard its route with <FeatureGate> too. */
@@ -127,9 +128,9 @@ export const vendorNav: NavSection[] = [
   { label: 'Customers', icon: Users, group: 'Main Menu', path: '/vendor/customers' },
   // LMS: a dashboard page with its own section tabs (LMS-plan.md Step 4). Its sections
   // (Leads, Call Desk, Tasks, Reports, Settings) are tabs at the top of the page.
-  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms' },
+  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms', advanced: true },
   // POS: selling over the counter, a dashboard page with its own section tabs (POS-system-plan.md).
-  { label: 'POS', icon: ScanBarcode, group: 'Main Menu', path: '/vendor/pos' },
+  { label: 'POS', icon: ScanBarcode, group: 'Main Menu', path: '/vendor/pos', advanced: true },
   {
     label: 'Product',
     icon: PackageSearch,
@@ -138,8 +139,8 @@ export const vendorNav: NavSection[] = [
       { label: 'All Products', path: '/vendor/product/all' },
       { label: 'Add Product', path: '/vendor/product/add' },
       { label: 'Categories', path: '/vendor/product/categories' },
-      { label: 'Collections', path: '/vendor/product/collections' },
-      { label: 'Brands', path: '/vendor/product/brands' },
+      { label: 'Collections', path: '/vendor/product/collections', advanced: true },
+      { label: 'Brands', path: '/vendor/product/brands', advanced: true },
       { label: 'Size Guides', path: '/vendor/product/size-guides', advanced: true },
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
       { label: 'Stock Count', path: '/vendor/product/stock-count', advanced: true },
@@ -156,7 +157,7 @@ export const vendorNav: NavSection[] = [
     tabs: true,
     children: [
       { label: 'Coupons', path: '/vendor/marketing/coupons' },
-      { label: 'Campaigns', path: '/vendor/marketing/campaigns' },
+      { label: 'Campaigns', path: '/vendor/marketing/campaigns', advanced: true },
       { label: 'Discounts', path: '/vendor/marketing/discounts' },
       { label: 'Flash Sale', path: '/vendor/marketing/flash-sale', advanced: true },
       { label: 'Gift Cards', path: '/vendor/marketing/gift-cards', advanced: true },
@@ -170,7 +171,7 @@ export const vendorNav: NavSection[] = [
     group: 'Sales Marketing',
     tabs: true,
     children: [
-      { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot' },
+      { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot', advanced: true },
       { label: 'n8n', path: '/vendor/ai-automation/n8n', advanced: true },
     ],
   },
@@ -190,13 +191,13 @@ export const vendorNav: NavSection[] = [
           { label: 'Customize', path: '/vendor/store/customize' },
           { label: 'Header Editor', path: '/vendor/store/header-editor' },
           { label: 'Footer', path: '/vendor/store/footer' },
-          { label: 'Layout Settings', path: '/vendor/store/layout-settings' },
+          { label: 'Layout Settings', path: '/vendor/store/layout-settings', advanced: true },
           { label: 'Site Banner', path: '/vendor/store/site-banner' },
           { label: 'Chat Button', path: '/vendor/store/chat-button' },
-          { label: 'Product Display', path: '/vendor/store/product-display' },
-          { label: 'Product Card', path: '/vendor/store/product-card' },
-          { label: 'Trust Strip', path: '/vendor/store/trust-strip' },
-          { label: 'Store Reputation', path: '/vendor/store/reputation' },
+          { label: 'Product Display', path: '/vendor/store/product-display', advanced: true },
+          { label: 'Product Card', path: '/vendor/store/product-card', advanced: true },
+          { label: 'Trust Strip', path: '/vendor/store/trust-strip', advanced: true },
+          { label: 'Store Reputation', path: '/vendor/store/reputation', advanced: true },
         ],
       },
       {
@@ -204,8 +205,8 @@ export const vendorNav: NavSection[] = [
         children: [
           { label: 'Pages', path: '/vendor/store/pages' },
           { label: 'Magazine', path: '/vendor/store/magazine', advanced: true },
-          { label: 'FAQ', path: '/vendor/store/faq' },
-          { label: 'Social Feed', path: '/vendor/store/social-feed' },
+          { label: 'FAQ', path: '/vendor/store/faq', advanced: true },
+          { label: 'Social Feed', path: '/vendor/store/social-feed', advanced: true },
           { label: 'Share & QR', path: '/vendor/store/share', advanced: true },
           { label: 'Landing Page', path: '/vendor/store/landing-pages' },
           { label: 'Media', path: '/vendor/store/media' },
@@ -216,11 +217,11 @@ export const vendorNav: NavSection[] = [
         children: [
           { label: 'Payment Gateway', path: '/vendor/store/payment-gateway' },
           { label: 'Delivery Charge', path: '/vendor/store/delivery-charge' },
-          { label: 'Stock Settings', path: '/vendor/store/stock-settings' },
-          { label: 'Invoice', path: '/vendor/store/invoice' },
+          { label: 'Stock Settings', path: '/vendor/store/stock-settings', advanced: true },
+          { label: 'Invoice', path: '/vendor/store/invoice', advanced: true },
           { label: 'COD Guard', path: '/vendor/store/cod-guard' },
           { label: 'Form Fields', path: '/vendor/store/checkout-form', advanced: true },
-          { label: 'Store Away', path: '/vendor/store/store-away' },
+          { label: 'Store Away', path: '/vendor/store/store-away', advanced: true },
           { label: 'Backup', path: '/vendor/store/backup', advanced: true },
           { label: 'Order Tracking', path: '/vendor/store/order-tracking' },
         ],
@@ -228,7 +229,7 @@ export const vendorNav: NavSection[] = [
       {
         label: 'SEO & Tracking',
         children: [
-          { label: 'SEO', path: '/vendor/store/seo' },
+          { label: 'SEO', path: '/vendor/store/seo', advanced: true },
           { label: 'Integrations', path: '/vendor/store/integrations' },
         ],
       },
@@ -277,9 +278,9 @@ export const vendorNav: NavSection[] = [
       { label: 'Wallet', path: '/vendor/finance/wallet' },
       { label: 'Reseller earnings', path: '/vendor/finance/reseller-earnings', flag: 'RESALE_SELL' },
       { label: 'Transactions', path: '/vendor/finance/transactions' },
-      { label: 'Expenses', path: '/vendor/finance/expenses' },
+      { label: 'Expenses', path: '/vendor/finance/expenses', advanced: true },
       { label: 'Withdraw', path: '/vendor/finance/withdraw' },
-      { label: 'Refer and earn', path: '/vendor/finance/referrals' },
+      { label: 'Refer and earn', path: '/vendor/finance/referrals', advanced: true },
       { label: 'Fee Summary', path: '/vendor/finance/fee-summary', advanced: true },
       { label: 'Receipts', path: '/vendor/finance/receipts', advanced: true },
     ],
@@ -287,7 +288,7 @@ export const vendorNav: NavSection[] = [
   { label: 'Billing', icon: CreditCard, group: 'Account', path: '/vendor/billing' },
   { label: 'Staff', icon: UsersRound, group: 'Account', path: '/vendor/staff' },
   { label: 'Activity Log', icon: History, group: 'Account', path: '/vendor/activity', advanced: true },
-  { label: 'Add-ons', icon: Puzzle, bottom: true, path: '/vendor/addons' },
+  { label: 'Add-ons', icon: Puzzle, bottom: true, path: '/vendor/addons', advanced: true },
   { label: 'Support', icon: Headphones, bottom: true, path: '/vendor/support' },
   { label: 'Settings', icon: Settings, bottom: true, path: '/vendor/settings' },
 ];
@@ -351,37 +352,27 @@ export const adminNav: NavSection[] = [
 const isHere = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
 /** How many sidebar pages are marked advanced (0 = no "Advanced menu" button is needed for this person). */
-export function countAdvancedNav(sections: NavSection[]): number {
-  let n = 0;
-  for (const s of sections) {
-    if (s.advanced) n++;
-    for (const c of s.children ?? []) {
-      if (isNavGroup(c)) n += c.advanced ? c.children.length : c.children.filter((l) => l.advanced).length;
-      else if (c.advanced) n++;
-    }
-  }
-  return n;
-}
-
 /**
  * The nav without its advanced pages, unless `show` is on. A page you are standing on always stays, so the
  * sidebar and tab bar never lose the page you opened from search, a link or a bookmark. A section left with no
  * pages disappears. Only the sidebar and tab bar use this; search, breadcrumbs and routes use the full list.
  */
-export function withoutAdvanced(sections: NavSection[], show: boolean, pathname: string): NavSection[] {
+export function withoutAdvanced(sections: NavSection[], show: boolean, pathname: string, keep: string[] = []): NavSection[] {
   if (show) return sections;
+  // A page stays when you are on it, or when it is in `keep` (pinned to the menu, or in use like LMS/POS in the plan).
+  const stays = (path: string) => isHere(pathname, path) || keep.includes(path);
   const out: NavSection[] = [];
   for (const section of sections) {
-    if (section.advanced && !(section.path && isHere(pathname, section.path))) continue;
+    if (section.advanced && !(section.path && stays(section.path))) continue;
     if (!section.children) {
       out.push(section);
       continue;
     }
     const children = section.children
       .map((c): NavChild | null => {
-        if (!isNavGroup(c)) return !c.advanced || isHere(pathname, c.path) ? c : null;
+        if (!isNavGroup(c)) return !c.advanced || stays(c.path) ? c : null;
         if (c.hidden) return c;
-        const kept = c.children.filter((l) => !(c.advanced || l.advanced) || isHere(pathname, l.path));
+        const kept = c.children.filter((l) => !(c.advanced || l.advanced) || stays(l.path));
         return kept.length ? { ...c, children: kept } : null;
       })
       .filter((c): c is NavChild => c !== null);
@@ -408,25 +399,4 @@ export function withoutFlagged(sections: NavSection[], on: string[]): NavSection
     .filter((s): s is NavSection => s !== null);
 }
 
-export interface AdvancedNavGroup {
-  /** The section the pages belong to (Product, Marketing, Store...). */
-  label: string;
-  links: NavLinkItem[];
-}
-
 /** Every advanced page, grouped by its section, for the sidebar's "Advanced" list under the normal menu. */
-export function advancedNavGroups(sections: NavSection[]): AdvancedNavGroup[] {
-  const out: AdvancedNavGroup[] = [];
-  for (const s of sections) {
-    const links: NavLinkItem[] = [];
-    if (s.advanced && s.path) links.push({ label: s.label, path: s.path });
-    for (const c of s.children ?? []) {
-      if (isNavGroup(c)) {
-        if (c.hidden) continue;
-        for (const l of c.children) if (c.advanced || l.advanced) links.push(l);
-      } else if (c.advanced) links.push(c);
-    }
-    if (links.length > 0) out.push({ label: s.label, links });
-  }
-  return out;
-}

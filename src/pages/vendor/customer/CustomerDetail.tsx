@@ -16,6 +16,7 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { CustomerDueSection } from './CustomerDueSection';
 import { CustomerRewardsCard } from './CustomerRewardsCard';
 import { CustomerGroupChip, CustomerNoteCard } from './CustomerNoteCard';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 import { useCan } from '../../../lib/useStaffAccess';
 import {
   EmptyState,
@@ -273,7 +274,9 @@ export default function CustomerDetail() {
           <div className="mr-auto min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="truncate text-[15px] font-semibold text-regantify-text">{customer.name}</h1>
-              <CustomerGroupChip group={customer.group} />
+              <FullViewOnly>
+                <CustomerGroupChip group={customer.group} />
+              </FullViewOnly>
               {customer.blacklisted && (
                 <span className="rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700">Blacklisted</span>
               )}
@@ -432,7 +435,12 @@ export default function CustomerDetail() {
           )}
 
           {canEdit && <BlacklistCard customer={customer} />}
-          {canEdit && <SmsOptOutCard customer={customer} />}
+          {/* Full view (SIMPLE-VIEW-plan.md Step 7); a customer already opted out stays opted out. */}
+          {canEdit && (
+            <FullViewOnly>
+              <SmsOptOutCard customer={customer} />
+            </FullViewOnly>
+          )}
 
           {canDelete && (
             <button

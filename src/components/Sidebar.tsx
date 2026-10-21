@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, Headphones, LogOut, SlidersHorizontal, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { idlePoll } from '../lib/idlePolling';
-import { isNavGroup, navLinks, type AdvancedNavGroup, type NavGroup, type NavLinkItem, type NavSection } from '../lib/navConfig';
+import { isNavGroup, navLinks, type NavGroup, type NavLinkItem, type NavSection } from '../lib/navConfig';
 import { adminSupportApi, supportApi } from '../lib/supportApi';
 import { getVendorPlanUsage } from '../lib/plansApi';
 import { useAuthStore } from '../store/authStore';
@@ -185,14 +185,12 @@ function useIsDesktop() {
 
 interface SidebarProps {
   sections: NavSection[];
-  /** The vendor dashboard's "Advanced menu" switch (advanced pages are already filtered out of `sections`). */
-  advancedMenu?: { on: boolean; count: number; groups: AdvancedNavGroup[]; onToggle: () => void };
   /** Phones/tablets: whether the drawer is open (the topbar's menu button opens it). */
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 }
 
-export function Sidebar({ sections, advancedMenu, mobileOpen = false, onMobileClose }: SidebarProps) {
+export function Sidebar({ sections, mobileOpen = false, onMobileClose }: SidebarProps) {
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
@@ -403,39 +401,6 @@ export function Sidebar({ sections, advancedMenu, mobileOpen = false, onMobileCl
             {g.items.map(renderSection)}
           </div>
         ))}
-        {advancedMenu && (
-          <button
-            type="button"
-            onClick={advancedMenu.onToggle}
-            aria-pressed={advancedMenu.on}
-            title={advancedMenu.on ? 'Hide the advanced pages' : `Show ${advancedMenu.count} more pages for experienced sellers`}
-            className={`mb-3 flex w-full items-center rounded-md py-2 text-[13px] text-neutral-600 hover:bg-neutral-100 ${
-              collapsed ? 'justify-center px-0' : 'gap-3 px-3'
-            }`}
-          >
-            <SlidersHorizontal size={16} strokeWidth={1.6} className="shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="truncate">{advancedMenu.on ? 'Hide advanced pages' : 'Advanced pages'}</span>
-                <ChevronDown size={14} className={`ml-auto shrink-0 text-neutral-500 transition-transform ${advancedMenu.on ? 'rotate-180' : ''}`} />
-              </>
-            )}
-          </button>
-        )}
-        {advancedMenu?.on && !collapsed && (
-          <div className="mb-3 space-y-2 border-t border-dashed border-neutral-200 pt-3">
-            {advancedMenu.groups.map((g) => (
-              <div key={g.label}>
-                <p className="mb-1 px-3 text-[11px] uppercase tracking-wide text-neutral-400">{g.label}</p>
-                {g.links.map((l) => (
-                  <NavLink key={l.path} to={l.path} className={subLinkClass}>
-                    {l.label}
-                  </NavLink>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
       </nav>
 
       {/* Always pinned to the bottom. Expanded: one compact card (profile, plan, Add-ons, Support, Settings, Log out). */}

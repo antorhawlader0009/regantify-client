@@ -31,6 +31,8 @@ import { toCsv, downloadCsv } from '../../../lib/csv';
 import { CustomerTabs } from './CustomerTabs';
 import { CustomerGroupChip, CustomerTagChips } from './CustomerNoteCard';
 import { CustomerGroupSettingsDialog } from './CustomerGroupSettingsDialog';
+import { useDashboardView } from '../../../lib/useDashboardView';
+import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 import { useCan } from '../../../lib/useStaffAccess';
 
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -144,9 +146,11 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
             )}
             <p className="mt-0.5 text-xs text-neutral-500">{customer.phone}</p>
             {customer.group && (
-              <div className="mt-1.5">
-                <CustomerGroupChip group={customer.group} />
-              </div>
+              <FullViewOnly>
+                <div className="mt-1.5">
+                  <CustomerGroupChip group={customer.group} />
+                </div>
+              </FullViewOnly>
             )}
             {customer.blacklisted && (
               <div className="mt-1.5">
@@ -154,9 +158,11 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
               </div>
             )}
             {customer.tags.length > 0 && (
-              <div className="mt-1.5">
-                <CustomerTagChips tags={customer.tags} />
-              </div>
+              <FullViewOnly>
+                <div className="mt-1.5">
+                  <CustomerTagChips tags={customer.tags} />
+                </div>
+              </FullViewOnly>
             )}
           </div>
         </div>
@@ -200,9 +206,11 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
           {customer.dueBalance > 0 && <span className="font-medium text-amber-700"> · owes {formatMoney(customer.dueBalance)}</span>}
         </p>
         {customer.group && (
-          <div className="mt-1">
-            <CustomerGroupChip group={customer.group} />
-          </div>
+          <FullViewOnly>
+            <div className="mt-1">
+              <CustomerGroupChip group={customer.group} />
+            </div>
+          </FullViewOnly>
         )}
         {customer.blacklisted && (
           <div className="mt-1">
@@ -210,9 +218,11 @@ function CustomerListItem({ customer }: { customer: VendorCustomer }) {
           </div>
         )}
         {customer.tags.length > 0 && (
-          <div className="mt-1">
-            <CustomerTagChips tags={customer.tags} />
-          </div>
+          <FullViewOnly>
+            <div className="mt-1">
+              <CustomerTagChips tags={customer.tags} />
+            </div>
+          </FullViewOnly>
         )}
       </Link>
       {menu}
@@ -254,6 +264,7 @@ export default function Customers() {
   const canEdit = useCan('customers.edit');
   const canExport = useCan('customers.export');
   const canSms = useCan('sms.manage');
+  const { isSimple } = useDashboardView();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<CustomerFilter>('ALL');
   // Customers > tag filter ('' = any tag).
@@ -363,7 +374,8 @@ export default function Customers() {
               <option value="BLACKLISTED">Blacklisted</option>
               <option value="DUE">Owes money (due)</option>
             </SelectBox>
-            {(storeTags?.length ?? 0) > 0 && (
+            {/* Simple view (SIMPLE-VIEW-plan.md Step 7): no tag filter (unless one is set), SMS to picked, export or bulk upload. */}
+            {(storeTags?.length ?? 0) > 0 && (!isSimple || tag) && (
               <SelectBox ariaLabel="Filter by tag" value={tag} onChange={setTag}>
                 <option value="">Any tag</option>
                 {storeTags!.map((t) => (
@@ -373,13 +385,13 @@ export default function Customers() {
                 ))}
               </SelectBox>
             )}
-            {canSms && selected.size > 0 && (
+            {canSms && !isSimple && selected.size > 0 && (
               <button type="button" onClick={() => navigate('/vendor/sms', { state: { smsPhones: Array.from(selected) } })} className={outlineBtn}>
                 <Send size={15} />
                 Send SMS ({selected.size})
               </button>
             )}
-            {canExport && (
+            {canExport && !isSimple && (
               <button type="button" onClick={handleExportCsv} disabled={exporting} className={outlineBtn}>
                 <Download size={15} />
                 {exporting ? 'Exporting…' : selected.size > 0 ? `Export CSV (${selected.size})` : 'Export CSV'}
@@ -387,10 +399,12 @@ export default function Customers() {
             )}
             {canEdit && (
               <>
+                {!isSimple && (
                 <button type="button" onClick={() => navigate('/vendor/customers/bulk-upload')} className={secondaryBtn}>
                   <Upload size={15} />
                   Bulk upload
                 </button>
+                )}
                 <button type="button" onClick={() => navigate('/vendor/customers/add')} className={primaryBtn}>
                   <Plus size={15} />
                   Add customer
@@ -401,7 +415,8 @@ export default function Customers() {
         }
       />
 
-      {/* Automatic groups: one chip per group with its count; tap again to clear. */}
+      {/* Automatic groups: one chip per group with its count; tap again to clear. Full view, or while a group is picked. */}
+      {(!isSimple || group) && (
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -432,6 +447,7 @@ export default function Customers() {
           </button>
         )}
       </div>
+      )}
       <CustomerGroupSettingsDialog open={groupSettingsOpen} onOpenChange={setGroupSettingsOpen} current={data?.groupSettings} />
 
       {/* Selection bar */}
