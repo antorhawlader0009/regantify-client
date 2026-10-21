@@ -146,7 +146,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
     // Customers > note and tags: only once the store has tagged someone.
     ...((storeTags?.length ?? 0) > 0 ? [{ id: 'TAG' as const, label: 'Customers with a tag…' }] : []),
   ];
-  // Simple view (SIMPLE-VIEW-plan.md Step 7): the everyday audiences only (and the one already picked).
+  // Simple mode (SIMPLE-VIEW-plan.md Step 7): the everyday audiences only (and the one already picked).
   const options = allOptions.filter((o) => !isSimple || o.id === 'SELECTED' || o.id === 'ALL' || o.id === 'RECENT' || o.id === audience);
 
   const daysInput = (value: string, set: (v: string) => void) => (
@@ -248,7 +248,7 @@ export function SendToCustomers({ selectedPhones }: { selectedPhones?: string[] 
         </Field>
       )}
 
-      {/* "Send later" is Full view; Simple view always sends now (a time already picked keeps its choice). */}
+      {/* "Send later" is Full mode; Simple mode always sends now (a time already picked keeps its choice). */}
       {(!isSimple || when === 'LATER') && (
       <Field label="When">
         <div className="flex flex-wrap items-center gap-2">

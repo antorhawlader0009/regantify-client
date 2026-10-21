@@ -97,7 +97,7 @@ export default function VendorSettings() {
   // A staff role only gets the tabs it can use (rule-plan.md Step 7): store details need
   // store.settings, "More settings" only lists pages the role can open; Security is everyone's.
   const viewer = useViewer();
-  // Simple view lists only the everyday ones (SIMPLE-VIEW-plan.md Step 3); the tab says how many more Full view has.
+  // Simple mode lists only the everyday ones (SIMPLE-VIEW-plan.md Step 3); the tab says how many more Full mode has.
   const { isSimple, pins } = useDashboardView();
   const roleLinks = MORE_SETTINGS.filter((s) => canOpenPath(viewer, s.path));
   const moreLinks = isSimple ? roleLinks.filter((s) => !isFullViewPath(s.path) || pins.includes(s.path)) : roleLinks;
@@ -261,7 +261,7 @@ function GeneralTab() {
 
       <DashboardViewSection />
 
-      {/* Full view (SIMPLE-VIEW-plan.md Step 9); a store already in the beta stays in it. */}
+      {/* Full mode (SIMPLE-VIEW-plan.md Step 9); a store already in the beta stays in it. */}
       {isOwner && (
         <FullViewOnly>
           <BetaProgramSection />
@@ -271,15 +271,15 @@ function GeneralTab() {
   );
 }
 
-/** Settings > General > Dashboard view (SIMPLE-VIEW-plan.md): the same choice as the top-bar pill, with what each one means. */
+/** Settings > General > Dashboard mode (SIMPLE-VIEW-plan.md): the same choice as the top-bar pill, with what each one means. */
 function DashboardViewSection() {
   const { view, setView } = useDashboardView();
   const options: { key: DashboardView; label: string; text: string }[] = [
-    { key: 'SIMPLE', label: 'Simple view', text: 'Only the pages and options an everyday seller needs. Less to look through, nothing is lost.' },
-    { key: 'FULL', label: 'Full view', text: 'Every page, option and tool the dashboard has.' },
+    { key: 'SIMPLE', label: 'Simple mode', text: 'Only the pages and options an everyday seller needs. Less to look through, nothing is lost.' },
+    { key: 'FULL', label: 'Full mode', text: 'Every page, option and tool the dashboard has.' },
   ];
   return (
-    <Section title="Dashboard view" description="Choose how much of the dashboard you see. This is just for you; your team chooses their own.">
+    <Section title="Dashboard mode" description="Choose how much of the dashboard you see. This is just for you; your team chooses their own.">
       <div className="grid gap-3 sm:grid-cols-2">
         {options.map((o) => {
           const active = view === o.key;
@@ -297,7 +297,7 @@ function DashboardViewSection() {
           );
         })}
       </div>
-      <p className="mt-3 text-xs text-neutral-500">Switching never deletes or turns off anything. A hidden setting keeps working, and search (Ctrl K) finds every page in both views.</p>
+      <p className="mt-3 text-xs text-neutral-500">Switching never deletes or turns off anything. A hidden setting keeps working, and search (Ctrl K) finds every page in both modes.</p>
     </Section>
   );
 }

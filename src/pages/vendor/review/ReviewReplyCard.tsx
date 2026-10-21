@@ -70,7 +70,7 @@ export function ReviewReplyCard({ review }: { review: Review }) {
           )}
         </p>
         <div className="flex gap-2">
-          {/* The AI draft uses AI Credits, so it is Full view (SIMPLE-VIEW-plan.md Step 6). */}
+          {/* The AI draft uses AI Credits, so it is Full mode (SIMPLE-VIEW-plan.md Step 6). */}
           <FullViewOnly>
           <button
             type="button"

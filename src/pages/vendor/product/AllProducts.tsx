@@ -128,7 +128,7 @@ function ActionsMenu({
   onChangeStatus: () => void;
   onCreateStockProduct: () => void;
   onDuplicate: () => void;
-  /** Absent in Simple view (SIMPLE-VIEW-plan.md Step 6). */
+  /** Absent in Simple mode (SIMPLE-VIEW-plan.md Step 6). */
   onPrintLabels?: () => void;
   /** QR code of this product's page (TellMe idea 125); absent when the store has no address yet. */
   onQr?: () => void;
@@ -411,7 +411,7 @@ export default function AllProducts() {
   // Table look & feel (from the design reference): filter panel toggle,
   // row density, visible columns and a per-page sort.
   const [advOpen, setAdv] = useState(false);
-  // Simple view never shows the "More tools" row (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never shows the "More tools" row (SIMPLE-VIEW-plan.md Step 4).
   const { isSimple } = useDashboardView();
   const adv = !isSimple && advOpen;
   const [showFilters, setShowFilters] = useState(false);
@@ -694,7 +694,7 @@ export default function AllProducts() {
 
           <SearchBox value={search} onChange={setSearch} placeholder="Search products" />
 
-          {/* Simple view (SIMPLE-VIEW-plan.md Step 6): no Export / Import; "Deleted" sits here so a delete can be undone. */}
+          {/* Simple mode (SIMPLE-VIEW-plan.md Step 6): no Export / Import; "Deleted" sits here so a delete can be undone. */}
           {isSimple && canDeleteProducts && (
             <button onClick={() => setTrashOpen(true)} className={toolbarBtn} title="Products you deleted in the last 30 days, which you can bring back">
               <Undo2 size={14} />

@@ -22,7 +22,7 @@ export default function Integrations() {
   const { data: tiktokPixel } = useQuery({ queryKey: ['tiktok-pixel'], queryFn: tiktokPixelApi.get });
   const { data: webhooks } = useQuery({ queryKey: ['webhooks'], queryFn: webhooksApi.list });
   const { data: apiKeys } = useQuery({ queryKey: ['api-keys'], queryFn: apiKeysApi.list });
-  // Simple view (SIMPLE-VIEW-plan.md Step 8): Facebook Pixel, plus whatever is already connected.
+  // Simple mode (SIMPLE-VIEW-plan.md Step 8): Facebook Pixel, plus whatever is already connected.
   const { isSimple } = useDashboardView();
 
   return (
@@ -90,7 +90,7 @@ export default function Integrations() {
         />
       </div>
 
-      {/* Simple view shows the developer tools only once one is set up. */}
+      {/* Simple mode shows the developer tools only once one is set up. */}
       {(!isSimple || (webhooks?.length ?? 0) > 0 || (apiKeys?.length ?? 0) > 0) && (
       <h2 className="text-lg font-semibold text-regantify-text mt-8 mb-3">For developers</h2>
       )}
@@ -143,7 +143,7 @@ function IntegrationCard({
   description: string;
   // 'attention' = set up, but the service rejected it (e.g. an expired token).
   status?: 'connected' | 'not-set' | 'attention';
-  /** Hidden in Simple view unless it is already set up (SIMPLE-VIEW-plan.md Step 8). */
+  /** Hidden in Simple mode unless it is already set up (SIMPLE-VIEW-plan.md Step 8). */
   fullViewOnly?: boolean;
 }) {
   const { isSimple } = useDashboardView();

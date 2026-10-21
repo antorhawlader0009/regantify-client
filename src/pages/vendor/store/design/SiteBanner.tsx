@@ -109,7 +109,7 @@ export default function SiteBanner() {
           </div>
         </div>
       )}
-      {/* Scheduled banners are Full view (SIMPLE-VIEW-plan.md Step 8); saved ones keep showing on the store. */}
+      {/* Scheduled banners are Full mode (SIMPLE-VIEW-plan.md Step 8); saved ones keep showing on the store. */}
       <FullViewOnly>
         {settings && <ScheduledBanners saved={settings.bannerSchedule ?? NO_SCHEDULE} pending={save.isPending} onSave={(bannerSchedule) => save.mutate({ bannerSchedule })} />}
       </FullViewOnly>

@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { ExternalLink, Menu, Sparkles } from 'lucide-react';
+import { ExternalLink, Menu } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useAssistantUi } from '../store/assistantStore';
@@ -83,12 +83,11 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           onClick={toggleAssistant}
           aria-label="Ask AI"
           aria-pressed={assistantOpen}
-          className={`flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border text-sm transition active:scale-95 sm:w-auto sm:px-4 ${
+          className={`flex h-10 shrink-0 items-center justify-center rounded-full border px-3 text-sm transition active:scale-95 sm:px-4 ${
             assistantOpen ? 'border-neutral-300 bg-neutral-100 text-neutral-900' : 'border-line bg-white text-neutral-700 hover:border-neutral-300 hover:shadow-sm'
           }`}
         >
-          <Sparkles size={15} className="text-neutral-600" />
-          <span className="hidden sm:inline">Ask AI</span>
+          Ask AI
         </button>
       )}
 
@@ -99,14 +98,15 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Visit Shop"
-          className="flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border border-line bg-white text-sm text-neutral-700 transition hover:border-neutral-300 hover:shadow-sm active:scale-95 sm:w-auto sm:px-4"
+          // While the Ask AI panel is open the page is narrower: icon only, so the top bar never runs past its edge.
+          className={`flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full border border-line bg-white text-sm text-neutral-700 transition hover:border-neutral-300 hover:shadow-sm active:scale-95 ${assistantOpen ? '' : 'sm:w-auto sm:px-4'}`}
         >
-          <span className="hidden sm:inline">Visit Shop</span>
+          <span className={assistantOpen ? 'hidden' : 'hidden sm:inline'}>Visit Shop</span>
           <ExternalLink size={13} className="text-neutral-400" />
         </a>
       )}
 
-      {/* Simple view / Full view: always shows the current view (SIMPLE-VIEW-plan.md); owner and staff. */}
+      {/* Simple mode / Full mode: always shows the current view (SIMPLE-VIEW-plan.md); owner and staff. */}
       <ViewSwitch />
 
       {/* Help, What's new and Ideas (super-admin-new.md Step 11); a red dot when What's new has unseen entries. */}

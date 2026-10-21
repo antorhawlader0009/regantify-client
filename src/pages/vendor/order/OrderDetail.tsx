@@ -148,7 +148,7 @@ export default function OrderDetail() {
   const [editingItems, setEditingItems] = useState(false);
   // Rarely-used actions (merge, split, repeat order, team comments) stay behind "More tools".
   const [moreToolsOpen, setMoreTools] = useState(false);
-  // Simple view never shows "More tools" (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never shows "More tools" (SIMPLE-VIEW-plan.md Step 4).
   const { isSimple } = useDashboardView();
   const moreTools = !isSimple && moreToolsOpen;
   const [merging, setMerging] = useState(false);
@@ -756,7 +756,7 @@ export default function OrderDetail() {
             <OrderTimeline orderId={order.id} history={history} hasCourier={provider !== 'NONE' && order.courierBookingStatus !== 'NOT_BOOKED'} />
           </Card>
 
-          {/* Full view: behind "More tools" as before. Simple view: shown only when the order already has comments. */}
+          {/* Full mode: behind "More tools" as before. Simple mode: shown only when the order already has comments. */}
           {(moreTools || (isSimple && (order.commentCount ?? 0) > 0)) && (
             <Card title="Comments">
               <OrderComments orderId={order.id} />

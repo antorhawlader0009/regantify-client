@@ -3,7 +3,7 @@ import { useAuthStore, type DashboardView } from '../store/authStore';
 import { accountApi } from './accountApi';
 import { toast } from './toast';
 
-/** Most pages a person can pin to their Simple view menu (the server keeps the same cap). */
+/** Most pages a person can pin to their Simple mode menu (the server keeps the same cap). */
 export const MAX_SIMPLE_PINS = 20;
 
 /**
@@ -40,6 +40,26 @@ const useSessionView = create<SessionView & { set: (next: Partial<SessionView>) 
   },
 }));
 
+/** Set just before the reload that follows a switch, read once by `takeSwitchedMode` to show the toast. */
+const SWITCHED_KEY = 'regantify.modeSwitched';
+
+export function switchedMessage(mode: DashboardView): string {
+  return mode === 'SIMPLE'
+    ? 'Simple mode is on. Rarely-used pages and options are hidden; everything you set keeps working.'
+    : 'Full mode is on. Every page and option is showing.';
+}
+
+/** The mode a switch just reloaded the page into, once (null otherwise). */
+export function takeSwitchedMode(): DashboardView | null {
+  try {
+    const v = sessionStorage.getItem(SWITCHED_KEY);
+    sessionStorage.removeItem(SWITCHED_KEY);
+    return v === 'SIMPLE' || v === 'FULL' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Patch the in-memory signed-in user (the dashboard reads both values from it). */
 function patchUser(patch: { dashboardView?: DashboardView; simplePins?: string[] }) {
   const { accessToken, user, setAuth } = useAuthStore.getState();
@@ -47,7 +67,7 @@ function patchUser(patch: { dashboardView?: DashboardView; simplePins?: string[]
 }
 
 /**
- * Simple view / Full view of the vendor dashboard (SIMPLE-VIEW-plan.md). Simple view hides rarely-used pages and options
+ * Simple mode / Full mode of the vendor dashboard (SIMPLE-VIEW-plan.md). Simple mode hides rarely-used pages and options
  * from view only; it never locks anything or changes a setting. One choice per person, saved on the server so it follows
  * them to every device; the app never switches it by itself.
  */
@@ -57,37 +77,38 @@ export function useDashboardView() {
   const session = useSessionView();
 
   const inDashboard = user?.role === 'VENDOR' || user?.role === 'STAFF';
-  // A session saved before the feature has no value: Full view, which is exactly the old panel.
+  // A session saved before the feature has no value: Full mode, which is exactly the old panel.
   const saved: DashboardView = user?.dashboardView ?? 'FULL';
   const view: DashboardView = !inDashboard ? 'FULL' : impersonated && session.view ? session.view : saved;
   const pins: string[] = (impersonated && session.pins) || user?.simplePins || [];
 
-  /** `from` = the page a "Switch to Full view" note was pressed on (counted for Super Admin, Step 12). */
+  /** `from` = the page a "Switch to Full mode" note was pressed on (counted for Super Admin, Step 12). */
   const setView = async (next: DashboardView, from?: string) => {
     if (next === view) return;
     if (!impersonated) {
       accountApi.viewStat(next === 'SIMPLE' ? 'TO_SIMPLE' : 'TO_FULL');
       if (from && next === 'FULL') accountApi.viewStat('LEAVE_NOTE', from);
     }
-    const done = () =>
-      toast.info(
-        next === 'SIMPLE'
-          ? 'Simple view is on. Rarely-used pages and options are hidden; everything you set keeps working.'
-          : 'Full view is on. Every page and option is showing.',
-      );
+    // "Login as store" lives only in this tab's memory, so a reload would end it: switch in place there.
     if (impersonated) {
       session.set({ view: next });
-      done();
+      toast.info(switchedMessage(next));
       return;
     }
-    patchUser({ dashboardView: next });
-    done();
+    // Everywhere else the choice is saved first, then the whole page reloads (the user's rule, 2026-10-21), so the
+    // dashboard visibly starts again in the new mode; the toast is shown after the reload (SwitchedToast).
     try {
       await accountApi.setDashboardView(next);
     } catch {
-      patchUser({ dashboardView: saved });
-      toast.error('Could not save the view. Please try again.');
+      toast.error('Could not switch the mode. Please try again.');
+      return;
     }
+    try {
+      sessionStorage.setItem(SWITCHED_KEY, next);
+    } catch {
+      // storage blocked: the page still reloads, just without the toast
+    }
+    window.location.reload();
   };
 
   const savePins = async (next: string[]) => {
@@ -106,7 +127,7 @@ export function useDashboardView() {
     }
   };
 
-  /** Add a page to the Simple view menu, or take it off. */
+  /** Add a page to the Simple mode menu, or take it off. */
   const togglePin = (path: string) => {
     if (pins.includes(path)) return savePins(pins.filter((p) => p !== path));
     if (pins.length >= MAX_SIMPLE_PINS) {

@@ -33,7 +33,7 @@ const MENU_INFO: Record<MenuKey, { title: string; hint: string }> = {
 export default function HeaderEditor() {
   const { settings, isLoading, save } = useDesignSettings();
   const [menus, setMenus] = useState<Menus | null>(null);
-  // Simple view (SIMPLE-VIEW-plan.md Step 8): top links, logo size and the cart total are Full view, so it starts on the menu.
+  // Simple mode (SIMPLE-VIEW-plan.md Step 8): top links, logo size and the cart total are Full mode, so it starts on the menu.
   const { isSimple } = useDashboardView();
   const [editing, setEditing] = useState<MenuKey>(isSimple ? 'siteMenu' : 'headerLeftMenu');
   // "Call Us Now" beside the search bar: off by default, shown only with a number.

@@ -59,7 +59,7 @@ export default function AddDiscount() {
 
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  // "More options" (null = follow the data: opens by itself when a rule there is in use). Never open in Simple view.
+  // "More options" (null = follow the data: opens by itself when a rule there is in use). Never open in Simple mode.
   const [advancedPick, setAdvancedPick] = useState<boolean | null>(null);
   const { isSimple } = useDashboardView();
   const [saved, setSaved] = useState(false);
@@ -240,7 +240,7 @@ export default function AddDiscount() {
           </div>
         </SectionCard>
 
-        {/* The rarely-used rules sit behind "More options" (opens by itself when one is in use); Simple view never
+        {/* The rarely-used rules sit behind "More options" (opens by itself when one is in use); Simple mode never
             shows them, only a line when one holds a value (SIMPLE-VIEW-plan.md Step 7). Their values stay in this page's
             state and are saved as before. */}
         <AdvancedHint

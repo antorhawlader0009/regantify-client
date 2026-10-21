@@ -172,8 +172,8 @@ export function CustomerNoteCard({ customer, canEdit }: { customer: VendorCustom
       <h2 className="mb-1 text-[15px] font-semibold text-regantify-text">{isSimple ? 'Note' : 'Note & tags'}</h2>
       <p className="mb-3 text-xs text-neutral-500">Only your team sees these. They show at the top of every order from this customer.</p>
 
-      {/* Tags, birthday and special day are Full view (SIMPLE-VIEW-plan.md Step 7). Their values stay in this card's
-          state and are saved unchanged with the note, so nothing set in Full view is lost. */}
+      {/* Tags, birthday and special day are Full mode (SIMPLE-VIEW-plan.md Step 7). Their values stay in this card's
+          state and are saved unchanged with the note, so nothing set in Full mode is lost. */}
       <FullViewOnly>
       <CustomerTagChips tags={tags} onRemove={(tag) => setTags(tags.filter((t) => t !== tag))} />
       <form

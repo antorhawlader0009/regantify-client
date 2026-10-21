@@ -16,7 +16,7 @@ import { HeardFromSection } from '../../../components/store/HeardFromSection';
 import { FullViewOnly, InUseNote } from '../../../components/ui/FullViewOnly';
 import { useDashboardView } from '../../../lib/useDashboardView';
 
-/** The customer texts Simple view shows (SIMPLE-VIEW-plan.md Step 8); the rest are Full view. */
+/** The customer texts Simple mode shows (SIMPLE-VIEW-plan.md Step 8); the rest are Full mode. */
 const SIMPLE_EVENTS: string[] = ['confirmed', 'shipped', 'delivered'];
 
 // Store > Order Tracking (tracking-plan.md Step 5): which texts a shopper gets as their order moves,
@@ -222,7 +222,7 @@ export default function OrderTracking() {
               <p className="mt-1.5 text-xs text-regantify-text-muted">Texts you have written yourself stay as you wrote them.</p>
             </div>
 
-            {/* Quiet hours and the stalled-parcel hours are Full view (SIMPLE-VIEW-plan.md Step 8); their values stay in
+            {/* Quiet hours and the stalled-parcel hours are Full mode (SIMPLE-VIEW-plan.md Step 8); their values stay in
                 this page's state and are saved unchanged. */}
             <FullViewOnly>
             <Checkbox
@@ -255,7 +255,7 @@ export default function OrderTracking() {
           </section>
 
           <section className="space-y-4">
-            {/* Simple view: the three everyday texts. A hidden text that is on keeps being sent (its draft stays in state
+            {/* Simple mode: the three everyday texts. A hidden text that is on keeps being sent (its draft stays in state
                 and is saved), and the line below says so. */}
             <InUseNote
               count={data.events.filter((e) => !SIMPLE_EVENTS.includes(e.event) && (drafts[e.event]?.enabled ?? e.enabled)).length}

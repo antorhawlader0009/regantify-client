@@ -27,7 +27,7 @@ function IconTile({ icon: Icon, muted = false }: { icon: LucideIcon; muted?: boo
  * again on save.
  */
 export function RolePicker({ value, onChange, roleTier }: { value: StaffRoleKey; onChange: (key: StaffRoleKey) => void; roleTier: number }) {
-  // Simple view (SIMPLE-VIEW-plan.md Step 9): the ready-made roles only; a member who already has a custom role keeps it.
+  // Simple mode (SIMPLE-VIEW-plan.md Step 9): the ready-made roles only; a member who already has a custom role keeps it.
   const { isSimple } = useDashboardView();
   const roleKeys = STAFF_ROLE_KEYS.filter((k) => !isSimple || k !== 'CUSTOM' || value === 'CUSTOM');
   const [open, setOpen] = useState(false);

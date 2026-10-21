@@ -538,7 +538,7 @@ export default function CodGuard() {
         </div>
       )}
 
-      {/* The online-payment discount is Full view (SIMPLE-VIEW-plan.md Step 8); one that is on keeps working. */}
+      {/* The online-payment discount is Full mode (SIMPLE-VIEW-plan.md Step 8); one that is on keeps working. */}
       <FullViewOnly>
         <div className="mt-6">
           <PrepaidDiscountCard />

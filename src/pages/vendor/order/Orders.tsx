@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Copy,
   CalendarClock,
+  MessageSquareText,
   Download,
   HandCoins,
   ShieldAlert,
@@ -93,6 +94,7 @@ import { AssigneeChip, AssignSettingsDialog, BulkAssignDialog, useAssignment } f
 import { orderProfitApi, type OrderProfit } from '../../../lib/orderProfitApi';
 import { downloadCsv, toCsv } from '../../../lib/csv';
 import { CartLinkDialog } from '../../../components/order/CartLinkDialog';
+import { InstantCheckoutDialog } from '../../../components/order/InstantCheckoutDialog';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 import { imageThumb } from '../../../lib/imageThumb';
 
@@ -271,7 +273,7 @@ function OrderRow({
   const queryClient = useQueryClient();
   // The store's label list (TellMe idea 91); the same cached answer the list's filter uses.
   const { data: labelCatalog } = useQuery({ queryKey: ['order-labels'], queryFn: ordersApi.labelCatalog, staleTime: 60_000 });
-  // Simple view (SIMPLE-VIEW-plan.md Step 5): no label chips, and only connected couriers in the booking menu
+  // Simple mode (SIMPLE-VIEW-plan.md Step 5): no label chips, and only connected couriers in the booking menu
   // (all the plan allows when none is connected yet, so a beginner can still start one).
   const { isSimple } = useDashboardView();
   const connectedCouriers = BOOKABLE_COURIERS.filter((p) => connectedProviders?.has(p));
@@ -944,6 +946,7 @@ export default function Orders() {
   const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
   const [assignSettingsOpen, setAssignSettingsOpen] = useState(false);
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
+  const [instantOpen, setInstantOpen] = useState(false);
   const isOwner = useCan('owner');
   const assignment = useAssignment();
   // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
@@ -1214,7 +1217,7 @@ export default function Orders() {
   // The less-used filters and tools sit behind "More filters and tools"; it opens by itself while one of them is in use.
   const advancedInUse = [preOrder !== '', labelFilter !== '', channel !== '', preferredDate !== '', expressOnly, duplicatesOnly, mobileToCheck, risk !== '', lossOnly, showProfit].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
   const adv = !isSimple && (advancedPick ?? false);
   const toggleAdvanced = () => setAdvancedPick(!adv);
 
@@ -1246,7 +1249,7 @@ export default function Orders() {
                   setDateTo(to);
                 }}
               />
-              {/* Simple view hides the Source and Handled by filters, unless one is set (then it can be cleared). */}
+              {/* Simple mode hides the Source and Handled by filters, unless one is set (then it can be cleared). */}
               {(!isSimple || source) && (
               <div className="relative">
                 <select
@@ -1403,6 +1406,11 @@ export default function Orders() {
               <button type="button" onClick={() => setCartLinkOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Make a link that fills a customer's cart">
                 Cart link
               </button>
+              {canCreate && (
+                <button type="button" onClick={() => setInstantOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="A link with the products and the customer's details: they confirm the order in one tap">
+                  Instant checkout link
+                </button>
+              )}
               {isOwner && (
                 <button type="button" onClick={() => setAssignSettingsOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Give new orders to staff in turn">
                   Share out orders
@@ -1488,6 +1496,13 @@ export default function Orders() {
             </button>
           )}
 
+          {canCreate && (
+            <button type="button" onClick={() => navigate('/vendor/orders/chats')} className={toolbarBtn} title="Orders saved from Messenger and WhatsApp chats with the Regantify Chrome extension">
+              <MessageSquareText size={15} />
+              Chat orders
+            </button>
+          )}
+
           {(
             <button type="button" onClick={() => navigate('/vendor/orders/refunds')} className={toolbarBtn} title="Customers who paid online for a cancelled or returned order and are still owed their money">
               <HandCoins size={15} />
@@ -1567,7 +1582,7 @@ export default function Orders() {
                 {canEdit && (
                   <BulkStatusMenu ids={[...selectedIds]} canCancel={canCancelRefund} className={bulkBtn} onDone={() => setSelectedIds(new Set())} />
                 )}
-                {/* Simple view: only the couriers this store has connected (SIMPLE-VIEW-plan.md Step 5). */}
+                {/* Simple mode: only the couriers this store has connected (SIMPLE-VIEW-plan.md Step 5). */}
                 {(!isSimple || connectedProviders?.has('PATHAO')) && (
                 <button type="button" onClick={sendSelectedToPathao} className={bulkBtn}>
                   {!otherCouriersAllowed ? <LockedBadge /> : <Send size={13} />}
@@ -1772,6 +1787,7 @@ export default function Orders() {
       <BulkAssignDialog ids={assigningIds ?? []} open={assigningIds !== null} onOpenChange={(open) => !open && setAssigningIds(null)} onDone={() => setSelectedIds(new Set())} />
       <AssignSettingsDialog open={assignSettingsOpen} onOpenChange={setAssignSettingsOpen} />
       <CartLinkDialog open={cartLinkOpen} onOpenChange={setCartLinkOpen} />
+      {instantOpen && <InstantCheckoutDialog open={instantOpen} onOpenChange={setInstantOpen} />}
       <Dialog
         open={timelineOrder != null}
         onOpenChange={(open) => !open && setTimelineOrder(null)}

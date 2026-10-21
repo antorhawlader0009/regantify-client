@@ -111,7 +111,7 @@ export function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onO
 
         <PhoneNotificationsSection open={open} />
 
-        {/* Telegram and the daily/weekly summaries are Full view (SIMPLE-VIEW-plan.md Step 9); ones already on keep going. */}
+        {/* Telegram and the daily/weekly summaries are Full mode (SIMPLE-VIEW-plan.md Step 9); ones already on keep going. */}
         <FullViewOnly>
           <TelegramSection open={open} />
         </FullViewOnly>

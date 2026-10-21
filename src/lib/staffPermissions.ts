@@ -440,6 +440,7 @@ const ROUTE_RULES: ReadonlyArray<readonly [RegExp, NavAccess]> = [
   [/^\/vendor\/orders\/return-check-in$/, 'orders.edit'], // counting returned parcels back in
   [/^\/vendor\/orders\/tracking-bulk$/, 'orders.edit'], // bulk update by tracking ID
   [/^\/vendor\/orders\/rider-cash$/, 'orders.courier'], // own riders' cash
+  [/^\/vendor\/orders\/chats$/, 'orders.create'], // Chat order saver extension
   [/^\/vendor\/orders(\/|$)/, 'orders.view'],
   [/^\/vendor\/customers\/(add|bulk-upload)$/, 'customers.edit'],
   [/^\/vendor\/customers\/[^/]+\/edit$/, 'customers.edit'],

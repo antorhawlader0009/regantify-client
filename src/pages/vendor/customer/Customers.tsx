@@ -374,7 +374,7 @@ export default function Customers() {
               <option value="BLACKLISTED">Blacklisted</option>
               <option value="DUE">Owes money (due)</option>
             </SelectBox>
-            {/* Simple view (SIMPLE-VIEW-plan.md Step 7): no tag filter (unless one is set), SMS to picked, export or bulk upload. */}
+            {/* Simple mode (SIMPLE-VIEW-plan.md Step 7): no tag filter (unless one is set), SMS to picked, export or bulk upload. */}
             {(storeTags?.length ?? 0) > 0 && (!isSimple || tag) && (
               <SelectBox ariaLabel="Filter by tag" value={tag} onChange={setTag}>
                 <option value="">Any tag</option>
@@ -415,7 +415,7 @@ export default function Customers() {
         }
       />
 
-      {/* Automatic groups: one chip per group with its count; tap again to clear. Full view, or while a group is picked. */}
+      {/* Automatic groups: one chip per group with its count; tap again to clear. Full mode, or while a group is picked. */}
       {(!isSimple || group) && (
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <button

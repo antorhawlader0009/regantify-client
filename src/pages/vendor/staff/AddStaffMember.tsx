@@ -320,8 +320,8 @@ export default function AddStaffMember() {
                 </div>
               </Field>
             )}
-            {/* Allowed IP and the welcome message are Full view (SIMPLE-VIEW-plan.md Step 9); their values stay in state
-                and an edit only sends what changed, so nothing set in Full view is cleared. */}
+            {/* Allowed IP and the welcome message are Full mode (SIMPLE-VIEW-plan.md Step 9); their values stay in state
+                and an edit only sends what changed, so nothing set in Full mode is cleared. */}
             {(!isSimple || allowedIp) && (
             <Field label="Allowed IP address" error={shown('allowedIp')} hint="Optional. They can sign in only from this internet connection, e.g. your shop’s.">
               <input type="text" value={allowedIp} onChange={(e) => setAllowedIp(e.target.value.trim())} placeholder="e.g. 103.112.54.10" className={productInputClass} />

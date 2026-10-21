@@ -295,7 +295,7 @@ export default function Reviews() {
         title="Reviews"
         description={counts && counts.pending > 0 ? `${counts.pending} not shown on your store. Turn on Shown to publish them.` : 'What customers say about your products.'}
         actions={
-          // Questions and adding a review by hand are Full view (SIMPLE-VIEW-plan.md Step 6).
+          // Questions and adding a review by hand are Full mode (SIMPLE-VIEW-plan.md Step 6).
           <FullViewOnly>
             <Link to="/vendor/reviews/questions" className={outlineBtn}>
               <MessageCircleQuestion size={15} aria-hidden />

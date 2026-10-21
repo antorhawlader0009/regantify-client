@@ -263,7 +263,7 @@ export default function VendorDashboard() {
                 ) : null,
               ].filter(Boolean);
               const right = [
-                // Simple view (SIMPLE-VIEW-plan.md Step 9): no order map, and the goal card only once a goal is set.
+                // Simple mode (SIMPLE-VIEW-plan.md Step 9): no order map, and the goal card only once a goal is set.
                 trend && canSeeMap && !isSimple ? <div key="map" className="order-2 min-w-0"><OrderMapPanel /></div> : null,
                 status ? <div key="status" className="order-3 min-w-0">{status}</div> : null,
                 <div key="shop" className="order-7"><ShopListingCard isOwner={isOwner} /></div>,

@@ -9,7 +9,7 @@ import { MoreInFullView } from '../../../components/ui/FullViewOnly';
  * Store menu stays short and the design tools are easy to browse with a sentence under each name.
  */
 export default function DesignHub() {
-  // Simple view keeps the everyday design pages (SIMPLE-VIEW-plan.md Step 3); pinned ones stay.
+  // Simple mode keeps the everyday design pages (SIMPLE-VIEW-plan.md Step 3); pinned ones stay.
   const { isSimple, pins } = useDashboardView();
   const cards = isSimple ? DESIGN_CARDS.filter((c) => !isFullViewPath(c.path) || pins.includes(c.path)) : DESIGN_CARDS;
   return (

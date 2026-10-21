@@ -435,7 +435,7 @@ export default function CustomerDetail() {
           )}
 
           {canEdit && <BlacklistCard customer={customer} />}
-          {/* Full view (SIMPLE-VIEW-plan.md Step 7); a customer already opted out stays opted out. */}
+          {/* Full mode (SIMPLE-VIEW-plan.md Step 7); a customer already opted out stays opted out. */}
           {canEdit && (
             <FullViewOnly>
               <SmsOptOutCard customer={customer} />

@@ -794,7 +794,7 @@ export default function EditProduct() {
   ].filter(Boolean).length;
   // Once opened by the data, stay open: clearing the last value must not make the field vanish under the cursor.
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
   const adv = !isSimple && (advancedPick ?? false);
   const toggleAdvanced = () => setAdvancedPick(!adv);
 
@@ -1007,7 +1007,7 @@ export default function EditProduct() {
         <div className="space-y-4">
           <StatusCard visibility={visibility} onChange={setVisibility} />
 
-          {/* The product AI chat uses AI Credits, so it is Full view (SIMPLE-VIEW-plan.md Step 6). */}
+          {/* The product AI chat uses AI Credits, so it is Full mode (SIMPLE-VIEW-plan.md Step 6). */}
           {!isSimple && <ProductAiChat getAccess={aiAccess} photosUploading={photos.some((p) => p.uploading)} onAddPhotos={handlePhotoFiles} />}
 
           <ProductSideCard title="Category">

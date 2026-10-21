@@ -496,7 +496,7 @@ export default function Billing() {
             { id: 'sms', label: 'SMS' },
             { id: 'ai', label: 'AI Credits' },
             { id: 'wallet', label: 'Wallet' },
-            // Receipts are Full view (SIMPLE-VIEW-plan.md Step 9), unless a link opened that tab.
+            // Receipts are Full mode (SIMPLE-VIEW-plan.md Step 9), unless a link opened that tab.
             ...(!isSimple || tab === 'receipts' ? [{ id: 'receipts' as const, label: 'Receipts' }] : []),
           ]}
         />

@@ -130,7 +130,7 @@ export function AccountMenu() {
             icon={<Tile>{dashboardView.isSimple ? <LayoutGrid size={16} /> : <Rows3 size={16} />}</Tile>}
             hint={dashboardView.isSimple ? 'Show every page and option' : 'Only what you need every day'}
           >
-            {dashboardView.isSimple ? 'Switch to Full view' : 'Switch to Simple view'}
+            {dashboardView.isSimple ? 'Switch to Full mode' : 'Switch to Simple mode'}
           </DropdownMenuItem>
         )}
         {isAdmin && (

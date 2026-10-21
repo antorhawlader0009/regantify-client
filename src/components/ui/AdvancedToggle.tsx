@@ -26,18 +26,18 @@ export function AdvancedToggle({
   className?: string;
 }) {
   const { isSimple, setView } = useDashboardView();
-  // Simple view (SIMPLE-VIEW-plan.md Step 4): no button; only a small chip when hidden options are in use (rule 3).
+  // Simple mode (SIMPLE-VIEW-plan.md Step 4): no button; only a small chip when hidden options are in use (rule 3).
   if (isSimple) {
     if (inUse <= 0) return null;
     return (
       <button
         type="button"
         onClick={() => setView('FULL', window.location.pathname)}
-        title="These options keep working. Switch to Full view to see or change them."
+        title="These options keep working. Switch to Full mode to see or change them."
         className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-dashed border-line bg-white px-3 text-sm text-neutral-500 hover:bg-neutral-50 ${className}`}
       >
         <Eye size={15} />
-        {inUse} more in use (Full view)
+        {inUse} more in use (Full mode)
       </button>
     );
   }
@@ -75,7 +75,7 @@ export function AdvancedHint({
   what: string;
 }) {
   const { isSimple } = useDashboardView();
-  // Simple view: the hidden options are not offered; only the rule 3 line when some hold a value.
+  // Simple mode: the hidden options are not offered; only the rule 3 line when some hold a value.
   if (isSimple) return <InUseNote count={inUse} />;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-line bg-neutral-50/60 px-4 py-3">
@@ -126,7 +126,7 @@ export function AdvancedPanel({
   const { isSimple } = useDashboardView();
   const [pick, setPick] = useState<boolean | null>(() => readPanel(id));
   if (pick === null && inUse > 0) setPick(true);
-  // Simple view: the panel and its blocks are not rendered (each saves on its own, so nothing is lost); only the
+  // Simple mode: the panel and its blocks are not rendered (each saves on its own, so nothing is lost); only the
   // rule 3 line when something inside is switched on, and it keeps working.
   if (isSimple) return inUse > 0 ? <InUseNote count={inUse} className="mt-6" /> : null;
   const open = pick ?? false;

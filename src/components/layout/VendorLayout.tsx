@@ -38,7 +38,7 @@ export function VendorLayout() {
   // ...and without pages behind a feature flag that is off for this store (super-admin-new.md Step 1).
   const flagsOn = useVendorFeatures().data?.on;
   const roleNav = useVendorNav();
-  // ...and in Simple view without the Full view pages, except pinned or in-use ones and the page you are on
+  // ...and in Simple mode without the Full mode pages, except pinned or in-use ones and the page you are on
   // (SIMPLE-VIEW-plan.md Step 3). Each page stays in its own section (no separate block, 2026-10-20 rule).
   const { isSimple } = useDashboardView();
   const keep = useSimpleViewKeeps();

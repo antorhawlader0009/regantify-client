@@ -16,7 +16,7 @@ const TABS = [
   { id: 'retention', label: 'Retention' },
   { id: 'usage', label: 'Usage' },
   { id: 'feedback', label: 'Seller rating' },
-  { id: 'views', label: 'Simple view' },
+  { id: 'views', label: 'Simple mode' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -357,7 +357,7 @@ export default function AdminAnalytics() {
   );
 }
 
-/** A two-column count table (page, number) for the Simple view tab. */
+/** A two-column count table (page, number) for the Simple mode tab. */
 function PathCounts({ rows, unit }: { rows: Array<{ path: string; count: number }>; unit: string }) {
   if (rows.length === 0) return <p className="text-sm text-regantify-text-muted">Nothing yet.</p>;
   return (
@@ -381,8 +381,8 @@ function PathCounts({ rows, unit }: { rows: Array<{ path: string; count: number 
 }
 
 /**
- * Simple view vs Full view (SIMPLE-VIEW-plan.md Step 12): how store owners use the two views over the last 30 days.
- * The pages people open, pin or leave Simple view from most often are the candidates to move into Simple view.
+ * Simple mode vs Full mode (SIMPLE-VIEW-plan.md Step 12): how store owners use the two views over the last 30 days.
+ * The pages people open, pin or leave Simple mode from most often are the candidates to move into Simple mode.
  */
 function DashboardViewsTab() {
   const { data, isLoading, isError } = useQuery({ queryKey: ['admin-analytics-views'], queryFn: adminAnalyticsApi.dashboardViews, staleTime: 5 * 60_000 });
@@ -391,19 +391,19 @@ function DashboardViewsTab() {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Owners in Simple view" value={data.owners.simple.toLocaleString()} />
-        <Stat label="Owners in Full view" value={data.owners.full.toLocaleString()} />
-        <Stat label="Switched to Full view" value={data.switches.toFull.toLocaleString()} sub={`Last 30 days (since ${data.since})`} />
-        <Stat label="Switched to Simple view" value={data.switches.toSimple.toLocaleString()} sub={`Pages added to menus: ${data.pinsAdded.toLocaleString()}`} />
+        <Stat label="Owners in Simple mode" value={data.owners.simple.toLocaleString()} />
+        <Stat label="Owners in Full mode" value={data.owners.full.toLocaleString()} />
+        <Stat label="Switched to Full mode" value={data.switches.toFull.toLocaleString()} sub={`Last 30 days (since ${data.since})`} />
+        <Stat label="Switched to Simple mode" value={data.switches.toSimple.toLocaleString()} sub={`Pages added to menus: ${data.pinsAdded.toLocaleString()}`} />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Full view pages opened from Simple view" hint="Once per page per browser session.">
+        <Card title="Full mode pages opened from Simple mode" hint="Once per page per browser session.">
           <PathCounts rows={data.hiddenPagesOpened} unit="Opened" />
         </Card>
         <Card title="Pages most added to menus" hint="Pinned right now, across all accounts.">
           <PathCounts rows={data.pinned.map((p) => ({ path: p.path, count: p.people }))} unit="People" />
         </Card>
-        <Card title="Where people leave Simple view" hint="&quot;Switch to Full view&quot; pressed from a note on this page.">
+        <Card title="Where people leave Simple mode" hint="&quot;Switch to Full mode&quot; pressed from a note on this page.">
           <PathCounts rows={data.leftFrom} unit="Times" />
         </Card>
       </div>

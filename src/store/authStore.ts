@@ -39,7 +39,7 @@ export interface AuthUser {
   adminPermissions?: string[];
   // The owner's note for a staff member, until they've seen it once (Step 7).
   welcomeMessage?: string | null;
-  // Simple view / Full view of the dashboard and the pages pinned to the menu in Simple view (SIMPLE-VIEW-plan.md).
+  // Simple mode / Full mode of the dashboard and the pages pinned to the menu in Simple mode (SIMPLE-VIEW-plan.md).
   // Missing on a session saved before the feature: treated as FULL (see useDashboardView).
   dashboardView?: DashboardView;
   simplePins?: string[];

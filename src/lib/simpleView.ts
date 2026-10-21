@@ -4,13 +4,14 @@ import { getVendorPlanUsage } from './plansApi';
 import { useDashboardView } from './useDashboardView';
 
 /**
- * Which dashboard pages are Full view only (SIMPLE-VIEW-plan.md Step 3). The sidebar pages are the `advanced: true`
+ * Which dashboard pages are Full mode only (SIMPLE-VIEW-plan.md Step 3). The sidebar pages are the `advanced: true`
  * marks in navConfig.ts; the rest are pages reached from buttons inside other pages, listed here.
  */
 const EXTRA_FULL_VIEW_PATHS = [
   // Orders sub-pages (the tools behind Orders' "More filters and tools").
   '/vendor/orders/rider-cash',
   '/vendor/orders/standing',
+  '/vendor/orders/chats',
   '/vendor/orders/refunds',
   '/vendor/orders/return-check-in',
   '/vendor/orders/tracking-bulk',
@@ -36,7 +37,7 @@ function markedPaths(): string[] {
 
 const FULL_VIEW_PATHS = [...markedPaths(), ...EXTRA_FULL_VIEW_PATHS];
 
-/** The Full view page a dashboard address belongs to (itself or a page under it), or null for a Simple view page. */
+/** The Full mode page a dashboard address belongs to (itself or a page under it), or null for a Simple mode page. */
 export function fullViewPageOf(pathname: string): string | null {
   let best: string | null = null;
   for (const p of FULL_VIEW_PATHS) {
@@ -48,8 +49,8 @@ export function fullViewPageOf(pathname: string): string | null {
 export const isFullViewPath = (pathname: string) => fullViewPageOf(pathname) !== null;
 
 /**
- * Full view pages that stay in a Simple view menu for this person: the ones they pinned, plus the ones in use that the
- * app knows cheaply (LMS and POS when the plan includes them; rule 10). Empty in Full view.
+ * Full mode pages that stay in a Simple mode menu for this person: the ones they pinned, plus the ones in use that the
+ * app knows cheaply (LMS and POS when the plan includes them; rule 10). Empty in Full mode.
  */
 export function useSimpleViewKeeps(): string[] {
   const { isSimple, pins } = useDashboardView();

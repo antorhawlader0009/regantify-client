@@ -385,7 +385,7 @@ export default function Branding() {
         {colorError && <p className="text-red-500 text-sm">{colorError}</p>}
       </div>
 
-      {/* Fonts and the link preview are Full view (SIMPLE-VIEW-plan.md Step 8). Their values stay in `branding` and are
+      {/* Fonts and the link preview are Full mode (SIMPLE-VIEW-plan.md Step 8). Their values stay in `branding` and are
           saved unchanged by "Update Branding". */}
       <FullViewOnly>
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-4 mt-6">
@@ -630,7 +630,7 @@ export default function Branding() {
         </button>
       </div>
 
-      {/* In Full view the store language stays on Layout Settings. */}
+      {/* In Full mode the store language stays on Layout Settings. */}
       <SimpleViewOnly>
         <StoreLanguageCard />
       </SimpleViewOnly>

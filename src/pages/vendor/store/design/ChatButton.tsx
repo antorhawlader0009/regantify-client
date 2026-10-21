@@ -127,7 +127,7 @@ export default function ChatButton() {
                   </div>
                 )}
 
-                {/* Position, pages and "Mention the product" are Full view (SIMPLE-VIEW-plan.md Step 8). Their values stay
+                {/* Position, pages and "Mention the product" are Full mode (SIMPLE-VIEW-plan.md Step 8). Their values stay
                     in this page's state and are saved unchanged. */}
                 <FullViewOnly>
                 <RadioGroup

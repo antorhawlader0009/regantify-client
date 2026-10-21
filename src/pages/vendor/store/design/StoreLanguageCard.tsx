@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { RadioGroup, SaveButton, useDesignSettings } from './designShared';
 
 /**
- * Store language on the Branding page, for Simple view (SIMPLE-VIEW-plan.md Step 3): many everyday sellers want the
- * Bangla store labels, but the setting lives on Layout Settings, which is a Full view page. This card edits the same
+ * Store language on the Branding page, for Simple mode (SIMPLE-VIEW-plan.md Step 3): many everyday sellers want the
+ * Bangla store labels, but the setting lives on Layout Settings, which is a Full mode page. This card edits the same
  * `storeLanguage` design setting, nothing else.
  */
 export function StoreLanguageCard() {

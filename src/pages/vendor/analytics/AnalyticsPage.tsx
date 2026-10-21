@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
           className=""
           value={tab}
           onChange={setTab}
-          // Simple view (SIMPLE-VIEW-plan.md Step 9): Overview and Sales, plus the tab a link opened.
+          // Simple mode (SIMPLE-VIEW-plan.md Step 9): Overview and Sales, plus the tab a link opened.
           tabs={TABS.filter((t) => !isSimple || t.id === 'overview' || t.id === 'sales' || t.id === tab).map((t) => {
             const Icon = t.icon;
             return {

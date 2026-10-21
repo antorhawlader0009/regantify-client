@@ -215,7 +215,7 @@ export interface Order {
   advanceNote?: string | null;
   /** Order detail only: Customers > "Note & tags" on this phone; null when there are none. */
   vendorCustomerNote?: { note: string | null; tags: string[] } | null;
-  /** How many team comments the order has (GET /orders/:id only; Simple view shows the comments card when > 0). */
+  /** How many team comments the order has (GET /orders/:id only; Simple mode shows the comments card when > 0). */
   commentCount?: number;
   /** Vendor only: when and by whom a returned parcel was counted in at the shop (Orders > Return check-in); null = not yet. */
   returnCheckedAt?: string | null;

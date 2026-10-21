@@ -213,7 +213,7 @@ export default function Sms() {
             ...(canTest ? [{ id: 'birthday' as const, label: 'Birthday wishes' }] : []),
             ...(canTest ? [{ id: 'test' as const, label: 'Send a test' }] : []),
             { id: 'gateway' as const, label: 'Your own gateway' },
-            // Simple view (SIMPLE-VIEW-plan.md Step 7): only sending and the log, plus the tab a link opened.
+            // Simple mode (SIMPLE-VIEW-plan.md Step 7): only sending and the log, plus the tab a link opened.
             // Birthday wishes and a connected own gateway keep working while hidden.
           ].filter((t) => !isSimple || t.id === 'send' || t.id === 'logs' || t.id === tab)}
         />

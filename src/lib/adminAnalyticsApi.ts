@@ -74,7 +74,7 @@ export interface AdminAnalytics {
   };
 }
 
-/** Super Admin > Analytics > Simple view (SIMPLE-VIEW-plan.md Step 12). */
+/** Super Admin > Analytics > Simple mode (SIMPLE-VIEW-plan.md Step 12). */
 export interface DashboardViewsReport {
   since: string;
   owners: { simple: number; full: number };

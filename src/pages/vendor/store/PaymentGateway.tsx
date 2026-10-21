@@ -127,8 +127,8 @@ export default function PaymentGateway() {
         />
       ) : (
         <div className="space-y-4">
-          {/* Simple view (SIMPLE-VIEW-plan.md Step 8): Manual Mobile Payment plus the gateways already connected (or the
-              one a link asked to connect); adding the other gateways is Full view. */}
+          {/* Simple mode (SIMPLE-VIEW-plan.md Step 8): Manual Mobile Payment plus the gateways already connected (or the
+              one a link asked to connect); adding the other gateways is Full mode. */}
           {(!isSimple || sslcommerz || connectParam === 'sslcommerz') && <SslcommerzCard gateway={sslcommerz} onSaved={invalidate} autoOpen={connectParam === 'sslcommerz'} />}
           {(!isSimple || shurjopay || connectParam === 'shurjopay') && <ShurjopayCard gateway={shurjopay} onSaved={invalidate} autoOpen={connectParam === 'shurjopay'} />}
           {(!isSimple || eps || connectParam === 'eps') && <EpsCard gateway={eps} onSaved={invalidate} autoOpen={connectParam === 'eps'} />}

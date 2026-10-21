@@ -14,7 +14,7 @@ function seen(userId: string): boolean {
 }
 
 /**
- * A one-time note on the Dashboard for a person in Simple view (new store owners start there): what it is and where the
+ * A one-time note on the Dashboard for a person in Simple mode (new store owners start there): what it is and where the
  * switch is. Closed once, per person per browser; it never switches the view by itself.
  */
 export function SimpleViewIntro() {
@@ -39,13 +39,13 @@ export function SimpleViewIntro() {
         <Rows3 size={17} strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1 text-sm">
-        <p className="font-medium text-regantify-text">You are in Simple view</p>
+        <p className="font-medium text-regantify-text">You are in Simple mode</p>
         <p className="mt-0.5 text-neutral-600">
-          The dashboard shows what you need every day. More tools are one click away: use the "Simple view" button at the top to switch to Full view any time.
-          Search finds every page in both views.
+          The dashboard shows what you need every day. More tools are one click away: press "Switch to Full mode" at the top any time.
+          Search finds every page in both modes.
         </p>
         <button type="button" onClick={() => { close(); setView('FULL'); }} className="mt-2 text-sm font-medium text-brand hover:underline">
-          Show me Full view
+          Show me Full mode
         </button>
       </div>
       <button type="button" onClick={close} aria-label="Close" className="shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600">

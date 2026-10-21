@@ -102,7 +102,7 @@ export function OrderAdvanceCard({ order, onChanged }: { order: Order; onChanged
 
   return (
     <div className="space-y-3">
-      {/* Making a new payment link is Full view (SIMPLE-VIEW-plan.md Step 5); a link already out shows above in both views. */}
+      {/* Making a new payment link is Full mode (SIMPLE-VIEW-plan.md Step 5); a link already out shows above in both modes. */}
       <FullViewOnly>
         {(order.source === 'MANUAL' || order.source === 'STOREFRONT') && order.paymentMethod === 'COD' && (
           <>

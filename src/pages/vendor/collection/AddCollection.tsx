@@ -228,7 +228,7 @@ export default function AddCollection() {
   // Page layout, rules, categories and SKU entry stay behind "Advanced"; they open by themselves when in use.
   const advancedInUse = [hideHeader, hideFooter, hideSidebar, hideBreadcrumb, smart, categoryNames.length > 0].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
   const adv = !isSimple && (advancedPick ?? false);
 
   return (

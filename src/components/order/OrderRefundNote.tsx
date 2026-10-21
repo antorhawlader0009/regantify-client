@@ -20,7 +20,7 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
   const relevant = status === 'CANCELLED' || status === 'RETURN' || status === 'PAYMENT_FAILED';
   const queryClient = useQueryClient();
   const canRefund = useCan('orders.cancel_refund');
-  // Refunding through the gateway is Full view (SIMPLE-VIEW-plan.md Step 5); the amount still owed shows in both views.
+  // Refunding through the gateway is Full mode (SIMPLE-VIEW-plan.md Step 5); the amount still owed shows in both modes.
   const { isSimple } = useDashboardView();
   const { data } = useQuery({ queryKey: ['order-refunds', 'order', orderId, status], queryFn: () => orderRefundsApi.forOrder(orderId), enabled: relevant });
   const [open, setOpen] = useState(false);

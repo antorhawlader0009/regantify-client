@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { ArrowUp, Check, ChevronDown, ExternalLink, Maximize2, Minimize2, PanelLeft, Plus, Search, Sparkles, Trash2, X } from 'lucide-react';
 import { apiErrorMessage } from '../../lib/api';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -117,19 +117,95 @@ function renderReply(text: string): ReactNode[] {
 export function AssistantPanel() {
   const { open, expanded, setOpen, toggleExpanded } = useAssistantUi();
   const userId = useAuthStore((s) => s.user?.id);
+  const [width, setWidth] = useState(readPanelWidth);
+  const drag = useRef<{ startX: number; startWidth: number; last: number } | null>(null);
 
   // Remount per user so a different login never sees someone else's chats.
   if (!open || !userId) return null;
+
+  // Drag the left edge to resize the docked panel (desktop only); double-click puts it back to the default.
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const start = clampPanelWidth(width);
+    drag.current = { startX: e.clientX, startWidth: start, last: start };
+  };
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    const next = clampPanelWidth(drag.current.startWidth + (drag.current.startX - e.clientX));
+    drag.current.last = next;
+    setWidth(next);
+  };
+  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    // Save the width the last move set (the `width` state here can still be one render behind).
+    savePanelWidth(drag.current.last);
+    drag.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+  const resetWidth = () => {
+    setWidth(PANEL_DEFAULT_WIDTH);
+    savePanelWidth(PANEL_DEFAULT_WIDTH);
+  };
+
   return (
     <aside
       aria-label="Ask AI"
+      style={{ '--ai-panel-w': `${clampPanelWidth(width)}px` } as CSSProperties}
       className={`fixed inset-0 z-50 flex ${
-        expanded ? 'bg-neutral-900/80 p-2 sm:p-3' : 'flex-col bg-[#fafafa] lg:static lg:z-auto lg:w-[400px] lg:shrink-0 lg:border-l lg:border-line'
+        expanded ? 'bg-neutral-900/80 p-2 sm:p-3' : 'flex-col bg-[#fafafa] lg:relative lg:inset-auto lg:z-auto lg:w-[var(--ai-panel-w)] lg:shrink-0 lg:border-l lg:border-line'
       }`}
     >
+      {!expanded && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Drag to resize the Ask AI panel"
+          title="Drag to resize. Double-click to reset."
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onDoubleClick={resetWidth}
+          className="group absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none lg:block"
+        >
+          <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-transparent transition-colors group-hover:bg-brand/40 group-active:bg-brand" />
+          <span className="absolute left-1/2 top-1/2 h-10 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-neutral-300 transition-colors group-hover:bg-brand/60 group-active:bg-brand" />
+        </div>
+      )}
       <PanelBody key={userId} userId={userId} expanded={expanded} onToggleExpanded={toggleExpanded} onClose={() => setOpen(false)} />
     </aside>
   );
+}
+
+/** The docked panel's width: 400 by default, remembered per browser, and always leaving the page enough room. */
+const PANEL_DEFAULT_WIDTH = 400;
+const PANEL_MIN_WIDTH = 320;
+const PANEL_MAX_WIDTH = 800;
+const PANEL_WIDTH_KEY = 'regantify.assistantWidth';
+// The sidebar (about 305px) plus the narrowest page that still fits the top bar.
+const PAGE_ROOM = 305 + 640;
+
+function clampPanelWidth(w: number): number {
+  const max = typeof window === 'undefined' ? PANEL_MAX_WIDTH : Math.min(PANEL_MAX_WIDTH, window.innerWidth - PAGE_ROOM);
+  return Math.round(Math.max(PANEL_MIN_WIDTH, Math.min(w, Math.max(PANEL_MIN_WIDTH, max))));
+}
+
+function readPanelWidth(): number {
+  try {
+    const v = Number(localStorage.getItem(PANEL_WIDTH_KEY));
+    return v > 0 ? v : PANEL_DEFAULT_WIDTH;
+  } catch {
+    return PANEL_DEFAULT_WIDTH;
+  }
+}
+
+function savePanelWidth(w: number) {
+  try {
+    localStorage.setItem(PANEL_WIDTH_KEY, String(clampPanelWidth(w)));
+  } catch {
+    // storage blocked: the width lasts until the page reloads
+  }
 }
 
 function PanelBody({

@@ -53,7 +53,7 @@ export interface NavLinkItem {
   /** Other pages that should keep this link highlighted (e.g. the pages a hub page opens). */
   alsoActive?: string[];
   /**
-   * A Full view page (SIMPLE-VIEW-plan.md): left out of the sidebar, tab bars and hubs in Simple view, unless the person
+   * A Full mode page (SIMPLE-VIEW-plan.md): left out of the sidebar, tab bars and hubs in Simple mode, unless the person
    * pinned it, it is in use (LMS/POS in the plan) or they are on that very page. Search (Ctrl K), links and routes are
    * unaffected. lib/simpleView.ts reads these marks.
    */

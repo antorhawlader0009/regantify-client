@@ -359,7 +359,7 @@ export default function AbandonedCart() {
           />
         </div>
 
-        {/* The reminder SMS settings are Full view (SIMPLE-VIEW-plan.md Step 5); a reminder that is on keeps being sent. */}
+        {/* The reminder SMS settings are Full mode (SIMPLE-VIEW-plan.md Step 5); a reminder that is on keeps being sent. */}
         <FullViewOnly>
           <CheckoutReminderButton canChange={canSms} />
         </FullViewOnly>

@@ -59,7 +59,7 @@ function useCouponActions(coupon: Coupon, subdomain?: string) {
   const queryClient = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [generating, setGenerating] = useState(false);
-  // "Make codes like this" is Full view (SIMPLE-VIEW-plan.md Step 7).
+  // "Make codes like this" is Full mode (SIMPLE-VIEW-plan.md Step 7).
   const { isSimple } = useDashboardView();
 
   const activeMutation = useMutation({

@@ -109,6 +109,8 @@ const TrackingBulk = lazy(() => import('./pages/vendor/order/TrackingBulk'));
 const RiderCash = lazy(() => import('./pages/vendor/order/RiderCash'));
 const Refunds = lazy(() => import('./pages/vendor/order/Refunds'));
 const StandingOrders = lazy(() => import('./pages/vendor/order/StandingOrders'));
+const ChatOrders = lazy(() => import('./pages/vendor/order/ChatOrders'));
+const ChatExtensionPrivacy = lazy(() => import('./pages/marketing/ChatExtensionPrivacy'));
 const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
 const Questions = lazy(() => import('./pages/vendor/review/Questions'));
 const CourierRules = lazy(() => import('./pages/vendor/courier/CourierRules'));
@@ -450,6 +452,7 @@ export default function App() {
             {/* Root → marketing landing page */}
             <Route path="/" element={<Home />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/legal/chat-extension-privacy" element={<ChatExtensionPrivacy />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
 
             {/* Public storefront now lives in its own app — see storefront/
@@ -576,6 +579,7 @@ export default function App() {
                 <Route path="/vendor/orders/rider-cash" element={<RiderCash />} />
                 <Route path="/vendor/orders/refunds" element={<Refunds />} />
                 <Route path="/vendor/orders/standing" element={<StandingOrders />} />
+                <Route path="/vendor/orders/chats" element={<ChatOrders />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />

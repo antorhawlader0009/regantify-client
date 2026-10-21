@@ -26,7 +26,7 @@ export default function SocialFeed() {
   const [form, setForm] = useState<SocialFeedSettings | null>(null);
   const [channel, setChannel] = useState('');
   const [advOpen, setAdv] = useState(false);
-  // Simple view never shows these options (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never shows these options (SIMPLE-VIEW-plan.md Step 4).
   const { isSimple } = useDashboardView();
   const adv = !isSimple && advOpen;
   const [confirmOff, setConfirmOff] = useState(false);

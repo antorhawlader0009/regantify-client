@@ -132,7 +132,7 @@ export default function Footer() {
         Click a block above to edit its content. Currently using the <strong>{FOOTER_TEMPLATES[draft.template].label}</strong> template.
       </p>
 
-      {/* "Contact, app links and credit" is Full view (SIMPLE-VIEW-plan.md Step 8); its values stay in the draft and are saved. */}
+      {/* "Contact, app links and credit" is Full mode (SIMPLE-VIEW-plan.md Step 8); its values stay in the draft and are saved. */}
       <FullViewOnly>
         <FooterExtras config={draft} onChange={patchDraft} storeAddress={settings?.address} storePhone={settings?.phone} />
       </FullViewOnly>

@@ -20,6 +20,7 @@ import { toast } from '../../../lib/toast';
 import { apiErrorMessage } from '../../../lib/api';
 import { ChannelPicker } from '../../../components/order/ChannelPicker';
 import { lmsApi } from '../../../lib/lmsApi';
+import { chatExtensionApi } from '../../../lib/chatExtensionApi';
 import { imageThumb } from '../../../lib/imageThumb';
 import { BackLink } from '../../../components/ui/BackLink';
 
@@ -135,6 +136,27 @@ export default function AddOrder() {
     setStaffNote(p.staffNote);
     setCart(p.items.map((item) => ({ ...item, key: `${item.productId}:${item.variantId ?? ''}` })));
   }, [prefillQuery.data]);
+
+  // -- From a saved chat (?fromChat=, Orders > Chat orders "Make order") --
+  // Fills in the customer and a staff note with the items they asked for; the
+  // vendor adds the products at today's prices. Saving links the chat to the order.
+  const fromChat = searchParams.get('fromChat');
+  const chatPrefill = useQuery({
+    queryKey: ['chat-order-prefill', fromChat],
+    queryFn: () => chatExtensionApi.orderPrefill(fromChat!),
+    enabled: !!fromChat,
+    retry: false,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    const p = chatPrefill.data;
+    if (!p) return;
+    setCustomerName(p.customerName);
+    if (p.customerPhone) setCustomerPhone(p.customerPhone);
+    if (p.shippingAddress) setShippingAddress(p.shippingAddress);
+    if (p.shippingDistrict) setShippingDistrict(p.shippingDistrict);
+    setStaffNote(p.staffNote);
+  }, [chatPrefill.data]);
 
   // -- Returning customer: a full phone number looks up this store's own
   // latest order for it and fills in the fields that are still empty.
@@ -294,6 +316,7 @@ export default function AddOrder() {
           toast.error(apiErrorMessage(err, "The order was created, but the LMS lead wasn't closed. Close it from the lead."));
         }
       }
+      if (fromChat) await chatExtensionApi.linkOrder(fromChat, order.id).catch(() => undefined);
       navigate(`/vendor/orders/${order.id}`);
     },
     onError: (err) => {
@@ -416,7 +439,7 @@ export default function AddOrder() {
   // Seldom-needed fields stay behind "Advanced" and open by themselves when one holds a value (a returning customer, a lead).
   const advancedInUse = [customerPhoneAlt.trim(), customerEmail.trim(), shippingZip.trim(), manualChannel, pathaoLocation.cityId].filter(Boolean).length;
   if (advancedPick === null && advancedInUse > 0) setAdvancedPick(true);
-  // Simple view never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
+  // Simple mode never opens it, not even by itself when an option is in use (SIMPLE-VIEW-plan.md Step 4).
   const adv = !isSimple && (advancedPick ?? false);
 
   return (

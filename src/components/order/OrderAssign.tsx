@@ -50,7 +50,7 @@ export function AssignCard({ order, onChanged }: { order: Order; onChanged: () =
 
   const holder = data.staff.find((s) => s.id === order.assignedStaffId);
   const mine = !!data.myStaffId && order.assignedStaffId === data.myStaffId;
-  // Simple view (SIMPLE-VIEW-plan.md Step 5): only the name when someone handles it, no controls.
+  // Simple mode (SIMPLE-VIEW-plan.md Step 5): only the name when someone handles it, no controls.
   if (isSimple) {
     if (!holder) return null;
     return (

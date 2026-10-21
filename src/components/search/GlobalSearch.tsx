@@ -227,7 +227,7 @@ export default function PaletteBody({ onClose }: { onClose: () => void }) {
   };
 
   const tokens = queryTokens(query);
-  // Simple view: search still finds every page; a Full view one is tagged (SIMPLE-VIEW-plan.md Step 3).
+  // Simple mode: search still finds every page; a Full mode one is tagged (SIMPLE-VIEW-plan.md Step 3).
   const isHiddenPage = (path: string) => {
     const page = fullViewPageOf(path.split(/[?#]/)[0]);
     return page !== null && !viewKeeps.includes(page);
@@ -295,8 +295,8 @@ export default function PaletteBody({ onClose }: { onClose: () => void }) {
               )}
             </span>
             {isSimple && isHiddenPage(row.path) && (
-              <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-neutral-500" title="Opens fine; this page is part of Full view">
-                Full view
+              <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-[11px] text-neutral-500" title="Opens fine; this page is part of Full mode">
+                Full mode
               </span>
             )}
             {i === active && <CornerDownLeft size={14} className="shrink-0 text-neutral-400" aria-hidden />}
