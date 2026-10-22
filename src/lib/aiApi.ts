@@ -75,3 +75,17 @@ export async function clearAiModelPrice(modelName: string) {
   const { data } = await api.delete('/v1/admin/ai/model-prices', { params: { modelName } });
   return data;
 }
+
+// Where the text in a photo sent to a store's AI chat is read (server photo-match/photo-text.ts): BROWSER = Tesseract.js in
+// the shopper's browser (default, about 7 MB the first time), SERVER = Tesseract on our server (nothing to download).
+export type PhotoTextMode = 'BROWSER' | 'SERVER';
+
+export async function getPhotoTextMode(): Promise<PhotoTextMode> {
+  const { data } = await api.get<{ mode: PhotoTextMode }>('/v1/admin/ai/photo-text');
+  return data.mode;
+}
+
+export async function setPhotoTextMode(mode: PhotoTextMode): Promise<PhotoTextMode> {
+  const { data } = await api.put<{ mode: PhotoTextMode }>('/v1/admin/ai/photo-text', { mode });
+  return data.mode;
+}

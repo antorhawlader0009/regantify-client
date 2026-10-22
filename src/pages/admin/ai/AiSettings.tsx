@@ -3,6 +3,7 @@ import { Bot, Sparkles, MessageSquareText, LayoutTemplate, PhoneCall, Save, Load
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { ModelPrices, MODEL_PRICES_KEY } from './ModelPrices';
+import { PhotoTextSetting } from './PhotoTextSetting';
 import {
   getAiModels,
   getAiSettings,
@@ -253,6 +254,8 @@ export default function AiSettings() {
           </p>
         </div>
       )}
+
+      <PhotoTextSetting />
 
       <ModelPrices />
     </div>
