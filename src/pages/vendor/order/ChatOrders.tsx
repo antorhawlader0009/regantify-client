@@ -14,7 +14,7 @@ import { toast } from '../../../lib/toast';
 import { useCan } from '../../../lib/useStaffAccess';
 
 const inputClass = 'w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-regantify-text focus:border-brand focus:outline-none';
-const SOURCE_LABEL: Record<ChatRecord['source'], string> = { FB_MESSAGES: 'Messenger', BUSINESS_INBOX: 'Business inbox', WHATSAPP: 'WhatsApp', OTHER: 'Chat' };
+const SOURCE_LABEL: Record<ChatRecord['source'], string> = { FB_MESSAGES: 'Messenger', BUSINESS_INBOX: 'Business inbox', WHATSAPP: 'WhatsApp', INSTAGRAM: 'Instagram', TIKTOK: 'TikTok', OTHER: 'Chat' };
 const RETENTION_CHOICES = [7, 30, 60, 90, 180, 365];
 
 /** Linking the Chrome extension: a one-time code and the browsers already linked. */

@@ -21,7 +21,7 @@ export interface ChatExtensionStatus {
 
 export interface ChatRecord {
   id: string;
-  source: 'FB_MESSAGES' | 'BUSINESS_INBOX' | 'WHATSAPP' | 'OTHER';
+  source: 'FB_MESSAGES' | 'BUSINESS_INBOX' | 'WHATSAPP' | 'INSTAGRAM' | 'TIKTOK' | 'OTHER';
   customerName: string;
   phone: string | null;
   address: string | null;
