@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Users,
   Truck,
+  Plug,
   Wallet,
   Megaphone,
   BarChart3,
@@ -270,6 +271,8 @@ export const vendorNav: NavSection[] = [
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
     ],
   },
+  // The Chat order saver Chrome extension: linking, AI instructions, privacy, saved chats and checkout links.
+  { label: 'Connect Extension', path: '/vendor/store/extension', icon: Plug, group: 'Store' },
   {
     label: 'Finance',
     icon: Wallet,

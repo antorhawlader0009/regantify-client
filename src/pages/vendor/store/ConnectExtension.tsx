@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Download, KeyRound, MessageSquareText, ShieldCheck, ShoppingCart, Trash2, Zap } from 'lucide-react';
+import { Copy, Download, KeyRound, MessageSquareText, ShieldCheck, ShoppingCart, Sparkles, Trash2, Zap } from 'lucide-react';
 import { InstantCheckoutDialog } from '../../../components/order/InstantCheckoutDialog';
 import { instantCheckoutApi } from '../../../lib/instantCheckoutApi';
-import { EmptyState, PageHeader, PageSection, SearchBox, TableFooter, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { EmptyState, PageHeader, PageSection, PillTabs, SearchBox, TableFooter, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { Dialog } from '../../../components/ui/Dialog';
 import { chatExtensionApi, type ChatRecord, type ChatRecordEdit, type ChatRecordPhoto } from '../../../lib/chatExtensionApi';
@@ -16,6 +16,16 @@ import { useCan } from '../../../lib/useStaffAccess';
 const inputClass = 'w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-regantify-text focus:border-brand focus:outline-none';
 const SOURCE_LABEL: Record<ChatRecord['source'], string> = { FB_MESSAGES: 'Messenger', BUSINESS_INBOX: 'Business inbox', WHATSAPP: 'WhatsApp', INSTAGRAM: 'Instagram', TIKTOK: 'TikTok', OTHER: 'Chat' };
 const RETENTION_CHOICES = [7, 30, 60, 90, 180, 365];
+
+// Store > Connect Extension: everything about the Chat order saver extension in one page (the user's rule, 2026-10-23;
+// it was Orders > Chat orders, which now redirects to the "chats" tab). The tab is kept in ?tab= so links can open one.
+type ExtensionTab = 'connect' | 'settings' | 'chats' | 'links';
+const EXTENSION_TABS: { id: ExtensionTab; label: string }[] = [
+  { id: 'connect', label: 'Connect' },
+  { id: 'settings', label: 'AI and privacy' },
+  { id: 'chats', label: 'Saved chats' },
+  { id: 'links', label: 'Checkout links' },
+];
 
 /** Linking the Chrome extension: a one-time code and the browsers already linked. */
 function ConnectCard() {
@@ -45,7 +55,10 @@ function ConnectCard() {
       <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-neutral-600">
         <li>Install the Regantify Chat Order Saver in Chrome.</li>
         <li>Press “Make a pairing code” below and type the code into the extension (it works once, for 10 minutes).</li>
-        <li>Open a customer chat on facebook.com/messages, messenger.com or WhatsApp Web and press the green R button. Nothing is read until you press it.</li>
+        <li>
+          Open a customer chat on Messenger (facebook.com/messages or messenger.com), the Meta Business Suite inbox, Instagram Direct, TikTok messages or WhatsApp Web, then click the
+          Regantify tab on the right edge (or press Alt+Shift+R) to open the side panel. Nothing is read until you press “Read this chat”.
+        </li>
       </ol>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button type="button" className={primaryBtn} onClick={() => pair.mutate()} disabled={pair.isPending}>
@@ -197,6 +210,93 @@ function PrivacyCard() {
         busy={removeAll.isPending}
         onConfirm={() => removeAll.mutate()}
       />
+    </div>
+  );
+}
+
+const INSTRUCTIONS_MAX = 1000;
+const INSTRUCTION_IDEAS = [
+  'কাস্টমারকে "আপু" বা "ভাইয়া" বলে ডাকবে।',
+  'নিজে থেকে কোনো ছাড় বা ডিসকাউন্ট দেবে না।',
+  'উত্তর ছোট রাখবে, ইমোজি দেবে না।',
+  'অর্ডার নিতে নাম, ফোন নম্বর আর পুরো ঠিকানা চাইবে।',
+];
+
+/**
+ * The store's own instructions for the extension's AI reply drafts (the same text the side panel edits). Kept per store
+ * on the server, owner only to change; Regantify's own rules still come first (no invented prices, stock or dates).
+ */
+function AiInstructionsCard() {
+  const queryClient = useQueryClient();
+  const isOwner = useCan('owner');
+  const { data: status } = useQuery({ queryKey: ['chat-extension-status'], queryFn: chatExtensionApi.status });
+  const saved = status?.replyInstructions ?? '';
+  const [text, setText] = useState<string | null>(null);
+  const value = text ?? saved;
+  const save = useMutation({
+    mutationFn: () => chatExtensionApi.updateSettings({ replyInstructions: value.trim() }),
+    onSuccess: () => {
+      toast.success(value.trim() ? 'Saved. The next replies follow your instructions.' : 'Instructions removed.');
+      setText(null);
+      void queryClient.invalidateQueries({ queryKey: ['chat-extension-status'] });
+    },
+    onError: (err) => toast.error(apiErrorMessage(err, 'Could not save.')),
+  });
+  const addIdea = (line: string) => {
+    const cur = value.trim();
+    if (cur.includes(line)) return;
+    const next = (cur ? `${cur}\n` : '') + line;
+    if (next.length > INSTRUCTIONS_MAX) return toast.error('That would be too long.');
+    setText(next);
+  };
+
+  return (
+    <div className="rounded-xl border border-line p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-regantify-text">
+        <Sparkles size={16} aria-hidden /> AI instructions
+      </h2>
+      <p className="mt-1 text-xs text-neutral-600">
+        Tell the AI how your shop answers: how to greet, what never to promise, facts like delivery days. Every reply draft for your store follows it. It can’t make the AI invent prices or stock.
+      </p>
+      <textarea
+        value={value}
+        onChange={(e) => setText(e.target.value)}
+        maxLength={INSTRUCTIONS_MAX}
+        rows={6}
+        readOnly={!isOwner}
+        placeholder={isOwner ? 'e.g. Call customers Apu or Bhaiya. Never offer a discount. Delivery inside Dhaka takes 2 days.' : 'No instructions yet. The store owner can add them.'}
+        aria-label="AI instructions"
+        className={`${inputClass} mt-2`}
+      />
+      {isOwner ? (
+        <>
+          <div className="mt-1 flex items-center justify-between text-xs text-neutral-500">
+            <span>Ideas (tap to add)</span>
+            <span className="tabular-nums">
+              {value.length}/{INSTRUCTIONS_MAX}
+            </span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {INSTRUCTION_IDEAS.map((line) => (
+              <button key={line} type="button" onClick={() => addIdea(line)} className="rounded-full border border-line px-2.5 py-1 text-xs text-neutral-700 hover:border-brand">
+                + {line}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button type="button" className={primaryBtn} onClick={() => save.mutate()} disabled={save.isPending || text === null || value === saved}>
+              Save
+            </button>
+            {text !== null && value !== saved && (
+              <button type="button" className={outlineBtn} onClick={() => setText(null)}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="mt-1 text-xs text-neutral-500">Only the store owner can change these.</p>
+      )}
     </div>
   );
 }
@@ -471,63 +571,90 @@ function InstantLinks() {
   );
 }
 
-export default function ChatOrders() {
+export default function ConnectExtension() {
+  const [params, setParams] = useSearchParams();
+  const tab: ExtensionTab = EXTENSION_TABS.some((t) => t.id === params.get('tab')) ? (params.get('tab') as ExtensionTab) : 'connect';
+  const setTab = (id: ExtensionTab) => setParams(id === 'connect' ? {} : { tab: id }, { replace: true });
+  const { data: status } = useQuery({ queryKey: ['chat-extension-status'], queryFn: chatExtensionApi.status });
+
+  return (
+    <div className="space-y-3">
+      <PageSection>
+        <PageHeader
+          title="Connect Extension"
+          description="The Regantify Chrome extension reads a customer chat on Messenger, Instagram, TikTok or WhatsApp Web when you press it, writes a reply with AI and saves the order to your store. Everything about it is here."
+        />
+        <PillTabs
+          tabs={EXTENSION_TABS.map((t) => (t.id === 'chats' ? { ...t, count: status?.recordCount } : t))}
+          value={tab}
+          onChange={setTab}
+          className="mb-0"
+        />
+      </PageSection>
+
+      {tab === 'connect' && (
+        <PageSection>
+          <ConnectCard />
+        </PageSection>
+      )}
+      {tab === 'settings' && (
+        <PageSection>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <AiInstructionsCard />
+            <PrivacyCard />
+          </div>
+        </PageSection>
+      )}
+      {tab === 'chats' && <SavedChats />}
+      {tab === 'links' && <InstantLinks />}
+    </div>
+  );
+}
+
+/** The chats saved from the extension, with a search and the detail dialog. */
+function SavedChats() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState<string | null>(null);
   const { data, isLoading } = useQuery({ queryKey: ['chat-records', q, page], queryFn: () => chatExtensionApi.records(q, page) });
 
   return (
-    <div className="space-y-3">
-      <PageSection>
-        <PageHeader
-          title="Chat orders"
-          description="Order details saved from Facebook Messenger and WhatsApp chats with the Regantify Chrome extension. Check them and make the order in one click."
-          back={{ to: '/vendor/orders', label: 'All orders' }}
+    <PageSection>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <h2 className="mr-auto text-sm font-semibold text-regantify-text">Saved chats</h2>
+        <SearchBox
+          value={q}
+          onChange={(v) => {
+            setQ(v);
+            setPage(1);
+          }}
+          placeholder="Name, phone or item"
         />
-        <div className="grid gap-3 lg:grid-cols-2">
-          <ConnectCard />
-          <PrivacyCard />
-        </div>
-      </PageSection>
-
-      <PageSection>
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <h2 className="mr-auto text-sm font-semibold text-regantify-text">Saved chats</h2>
-          <SearchBox
-            value={q}
-            onChange={(v) => {
-              setQ(v);
-              setPage(1);
-            }}
-            placeholder="Name, phone or item"
-          />
-        </div>
-        {isLoading ? (
-          <p className="py-8 text-center text-sm text-neutral-500">Loading…</p>
-        ) : !data?.items.length ? (
-          <EmptyState icon={MessageSquareText} title={q ? 'Nothing matches' : 'No saved chats yet'} hint="Open a customer chat on Messenger or WhatsApp Web, press the Regantify button, check the details and save." />
-        ) : (
-          <>
-            <ul className="divide-y divide-line rounded-xl border border-line">
-              {data.items.map((r) => (
-                <li key={r.id}>
-                  <button type="button" onClick={() => setOpen(r.id)} className="flex w-full flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2.5 text-left hover:bg-neutral-50">
-                    <span className="font-medium text-regantify-text">{r.customerName}</span>
-                    <span className="text-sm tabular-nums text-neutral-600">{r.phone ?? 'No phone'}</span>
-                    <span className="min-w-0 flex-1 truncate text-sm text-neutral-500">{[r.address, r.district].filter(Boolean).join(', ')}</span>
-                    {r.orderId && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">Ordered</span>}
-                    <span className="text-xs text-neutral-500">{formatDhakaDateTime(r.createdAt)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <TableFooter page={data.page} perPage={data.perPage} total={data.total} onPageChange={setPage} />
-          </>
-        )}
-      </PageSection>
-      <InstantLinks />
+      </div>
+      {isLoading ? (
+        <p className="py-8 text-center text-sm text-neutral-500">Loading…</p>
+      ) : !data?.items.length ? (
+        <EmptyState icon={MessageSquareText} title={q ? 'Nothing matches' : 'No saved chats yet'} hint="Open a customer chat, open the Regantify side panel, read the chat, check the details and save." />
+      ) : (
+        <>
+          <ul className="divide-y divide-line rounded-xl border border-line">
+            {data.items.map((r) => (
+              <li key={r.id}>
+                <button type="button" onClick={() => setOpen(r.id)} className="flex w-full flex-wrap items-center gap-x-3 gap-y-0.5 px-3 py-2.5 text-left hover:bg-neutral-50">
+                  <span className="font-medium text-regantify-text">{r.customerName}</span>
+                  <span className="text-sm tabular-nums text-neutral-600">{r.phone ?? 'No phone'}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-neutral-500">{[r.address, r.district].filter(Boolean).join(', ')}</span>
+                  <span className="text-xs text-neutral-500">{SOURCE_LABEL[r.source] ?? 'Chat'}</span>
+                  {r.orderId && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">Ordered</span>}
+                  <span className="text-xs text-neutral-500">{formatDhakaDateTime(r.createdAt)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <TableFooter page={data.page} perPage={data.perPage} total={data.total} onPageChange={setPage} />
+        </>
+      )}
       {open && <RecordDialog id={open} onClose={() => setOpen(null)} />}
-    </div>
+    </PageSection>
   );
 }

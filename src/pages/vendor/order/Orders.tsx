@@ -1497,7 +1497,7 @@ export default function Orders() {
           )}
 
           {canCreate && (
-            <button type="button" onClick={() => navigate('/vendor/orders/chats')} className={toolbarBtn} title="Orders saved from Messenger and WhatsApp chats with the Regantify Chrome extension">
+            <button type="button" onClick={() => navigate('/vendor/store/extension?tab=chats')} className={toolbarBtn} title="Orders saved from Messenger and WhatsApp chats with the Regantify Chrome extension">
               <MessageSquareText size={15} />
               Chat orders
             </button>

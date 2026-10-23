@@ -109,7 +109,7 @@ const TrackingBulk = lazy(() => import('./pages/vendor/order/TrackingBulk'));
 const RiderCash = lazy(() => import('./pages/vendor/order/RiderCash'));
 const Refunds = lazy(() => import('./pages/vendor/order/Refunds'));
 const StandingOrders = lazy(() => import('./pages/vendor/order/StandingOrders'));
-const ChatOrders = lazy(() => import('./pages/vendor/order/ChatOrders'));
+const ConnectExtension = lazy(() => import('./pages/vendor/store/ConnectExtension'));
 const ChatExtensionPrivacy = lazy(() => import('./pages/marketing/ChatExtensionPrivacy'));
 const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
 const Questions = lazy(() => import('./pages/vendor/review/Questions'));
@@ -374,6 +374,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/redx' &&
     r.path !== '/vendor/courier/carrybee' &&
     r.path !== '/vendor/courier/rules' &&
+    r.path !== '/vendor/store/extension' &&
     r.path !== '/vendor/analytics' &&
     !r.path.startsWith('/vendor/lms') &&
     !r.path.startsWith('/vendor/pos'),
@@ -579,7 +580,8 @@ export default function App() {
                 <Route path="/vendor/orders/rider-cash" element={<RiderCash />} />
                 <Route path="/vendor/orders/refunds" element={<Refunds />} />
                 <Route path="/vendor/orders/standing" element={<StandingOrders />} />
-                <Route path="/vendor/orders/chats" element={<ChatOrders />} />
+                <Route path="/vendor/orders/chats" element={<Navigate to="/vendor/store/extension?tab=chats" replace />} />
+                <Route path="/vendor/store/extension" element={<ConnectExtension />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />

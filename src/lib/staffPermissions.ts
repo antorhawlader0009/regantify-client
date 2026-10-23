@@ -381,6 +381,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/courier/redx': 'courier.manage',
   '/vendor/courier/carrybee': 'courier.manage',
   '/vendor/courier/rules': 'courier.manage',
+  '/vendor/store/extension': 'orders.create', // Chat order saver extension
   '/vendor/shipping/tracking': 'orders.view',
   '/vendor/finance/wallet': 'finance.view',
   '/vendor/finance/reseller-earnings': 'finance.view',
