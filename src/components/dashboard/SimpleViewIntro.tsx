@@ -35,7 +35,7 @@ export function SimpleViewIntro() {
 
   return (
     <section className="flex items-start gap-3 rounded-xl border border-line bg-white p-4">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-lime/60 text-brand">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
         <Rows3 size={17} strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1 text-sm">

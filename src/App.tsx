@@ -110,6 +110,7 @@ const RiderCash = lazy(() => import('./pages/vendor/order/RiderCash'));
 const Refunds = lazy(() => import('./pages/vendor/order/Refunds'));
 const StandingOrders = lazy(() => import('./pages/vendor/order/StandingOrders'));
 const ConnectExtension = lazy(() => import('./pages/vendor/store/ConnectExtension'));
+const AppsPage = lazy(() => import('./pages/vendor/AppsPage'));
 const ChatExtensionPrivacy = lazy(() => import('./pages/marketing/ChatExtensionPrivacy'));
 const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
 const Questions = lazy(() => import('./pages/vendor/review/Questions'));
@@ -375,6 +376,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/courier/carrybee' &&
     r.path !== '/vendor/courier/rules' &&
     r.path !== '/vendor/store/extension' &&
+    r.path !== '/vendor/app' &&
     r.path !== '/vendor/analytics' &&
     !r.path.startsWith('/vendor/lms') &&
     !r.path.startsWith('/vendor/pos'),
@@ -582,6 +584,7 @@ export default function App() {
                 <Route path="/vendor/orders/standing" element={<StandingOrders />} />
                 <Route path="/vendor/orders/chats" element={<Navigate to="/vendor/store/extension?tab=chats" replace />} />
                 <Route path="/vendor/store/extension" element={<ConnectExtension />} />
+                <Route path="/vendor/app" element={<AppsPage />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />

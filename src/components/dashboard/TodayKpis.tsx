@@ -63,7 +63,7 @@ function KpiTile({ kpi }: { kpi: Kpi }) {
     >
       <div className="flex items-center justify-between gap-2">
         <p className="truncate text-sm text-neutral-600">{kpi.label}</p>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: tone.soft, color: tone.accent }}>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
           <Icon size={16} strokeWidth={1.8} aria-hidden />
         </span>
       </div>
@@ -146,7 +146,7 @@ export function TodayKpis({
       <section className="space-y-3" aria-label="Today so far">
         {header}
         <div className="flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-neutral-300 bg-white p-5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-lime/60 text-brand">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
             <ShoppingBag size={20} strokeWidth={1.8} aria-hidden />
           </span>
           <div className="mr-auto min-w-0">

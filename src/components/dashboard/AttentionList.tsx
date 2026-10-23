@@ -213,7 +213,7 @@ export function AttentionList({ todo, isOwner, planName }: { todo: DashboardTodo
 
       {rows.length === 0 ? (
         <div className="flex items-center gap-3 border-t border-line px-4 py-6">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
             <Check size={17} strokeWidth={2.5} aria-hidden />
           </span>
           <div>

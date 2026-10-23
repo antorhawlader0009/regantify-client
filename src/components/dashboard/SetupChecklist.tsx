@@ -127,7 +127,7 @@ export function SetupChecklist({
   return (
     <section className="rounded-xl border border-line bg-white" aria-labelledby="setup-title">
       <div className="flex items-start gap-3 p-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-lime text-brand">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
           <Rocket size={18} strokeWidth={1.8} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">

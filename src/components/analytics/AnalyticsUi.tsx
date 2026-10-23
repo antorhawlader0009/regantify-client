@@ -97,7 +97,7 @@ function Cell({ label, aside, value, hint }: { label: string; aside?: ReactNode;
     <div className="min-w-0 rounded-xl border border-line bg-white px-5 py-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--kpi-soft,#dbeafe)] text-[var(--kpi,#1d4ed8)]">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
             <Icon size={16} strokeWidth={1.9} aria-hidden />
           </span>
           <p className="truncate text-[13px] text-neutral-500">{label}</p>

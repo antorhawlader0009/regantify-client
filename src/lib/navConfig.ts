@@ -1,5 +1,6 @@
 import {
   Activity,
+  Smartphone,
   ShieldCheck,
   History,
   ReceiptText,
@@ -99,6 +100,10 @@ export interface NavSection {
   advanced?: boolean;
   /** Its pages (all plain links) also show as a tab bar above each page, so they can be switched without the sidebar. */
   tabs?: boolean;
+  /** Plain page links marked `pair` that sit next to each other share one row in the expanded sidebar (LMS | POS). */
+  pair?: boolean;
+  /** Opening this section in the sidebar also opens its first page (Product -> All Products). */
+  openFirst?: boolean;
 }
 
 /**
@@ -129,13 +134,17 @@ export const vendorNav: NavSection[] = [
   { label: 'Customers', icon: Users, group: 'Main Menu', path: '/vendor/customers' },
   // LMS: a dashboard page with its own section tabs (LMS-plan.md Step 4). Its sections
   // (Leads, Call Desk, Tasks, Reports, Settings) are tabs at the top of the page.
-  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms', advanced: true },
+  { label: 'LMS', icon: PhoneCall, group: 'Main Menu', path: '/vendor/lms', advanced: true, pair: true },
   // POS: selling over the counter, a dashboard page with its own section tabs (POS-system-plan.md).
-  { label: 'POS', icon: ScanBarcode, group: 'Main Menu', path: '/vendor/pos', advanced: true },
+  { label: 'POS', icon: ScanBarcode, group: 'Main Menu', path: '/vendor/pos', advanced: true, pair: true },
+  // Under LMS | POS, also side by side: the Chrome extension's page (was Store > Connect Extension) and the app page.
+  { label: 'Extension', icon: Plug, group: 'Main Menu', path: '/vendor/store/extension', pair: true },
+  { label: 'App', icon: Smartphone, group: 'Main Menu', path: '/vendor/app', pair: true },
   {
     label: 'Product',
     icon: PackageSearch,
     group: 'Product',
+    openFirst: true,
     children: [
       { label: 'All Products', path: '/vendor/product/all' },
       { label: 'Add Product', path: '/vendor/product/add' },
@@ -272,7 +281,6 @@ export const vendorNav: NavSection[] = [
     ],
   },
   // The Chat order saver Chrome extension: linking, AI instructions, privacy, saved chats and checkout links.
-  { label: 'Connect Extension', path: '/vendor/store/extension', icon: Plug, group: 'Store' },
   {
     label: 'Finance',
     icon: Wallet,

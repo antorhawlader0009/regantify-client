@@ -147,7 +147,7 @@ export default function VendorDashboard() {
       {/* Header: greeting + quick actions */}
       <section className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-4">
         <div className="mr-auto flex min-w-0 items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-lime text-brand">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
             <GreetingIcon size={19} strokeWidth={1.8} aria-hidden />
           </span>
           <div className="min-w-0">

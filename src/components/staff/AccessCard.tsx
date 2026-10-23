@@ -27,7 +27,7 @@ export function AccessCard({ permissions, emptyHint = 'Nothing yet. Tick what th
   return (
     <div className="rounded-xl border border-brand/25 bg-brand/[0.04] p-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
           <LayoutGrid size={17} strokeWidth={1.8} aria-hidden />
         </span>
         <div className="min-w-0">

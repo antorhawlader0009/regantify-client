@@ -20,11 +20,11 @@ export function SearchTrigger() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
-        className="mx-auto hidden h-9 w-full max-w-[360px] items-center gap-2 rounded-lg border border-line px-3 text-left text-sm text-neutral-500 transition hover:border-neutral-300 md:flex"
+        className="mx-auto hidden h-9 min-w-[110px] flex-1 basis-[180px] max-w-[480px] items-center gap-2 rounded-lg border border-line px-3 text-left text-sm text-neutral-500 transition hover:border-neutral-300 md:flex"
       >
         <Search size={16} className="shrink-0 text-neutral-600" />
         <span className="flex-1 truncate">Search</span>
-        <kbd className="hidden shrink-0 rounded border border-line bg-neutral-50 px-1.5 py-0.5 font-sans text-[11px] text-neutral-500 lg:block">/</kbd>
+        <kbd className="hidden shrink-0 rounded border border-line bg-neutral-50 px-1.5 py-0.5 font-sans text-[11px] text-neutral-500 xl:block">/</kbd>
       </button>
       <button
         type="button"

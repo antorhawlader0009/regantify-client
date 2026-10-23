@@ -64,7 +64,8 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
       {/* Pushes the right-hand buttons over while breadcrumb and search are hidden (below md). */}
       <div className="flex-1 md:hidden" aria-hidden />
 
-      <div className="hidden min-w-0 shrink truncate text-[15px] text-neutral-500 md:block">
+      {/* The page name keeps its own width (up to 40% of the bar); the search box grows and shrinks with what is left. */}
+      <div className="hidden min-w-0 max-w-[40%] flex-none truncate text-[15px] text-neutral-500 md:block">
         {crumbs.map((c, i) => (
           <Fragment key={i}>
             {i > 0 && <span className="mx-1.5 text-neutral-400">&gt;</span>}

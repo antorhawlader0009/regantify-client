@@ -127,7 +127,7 @@ export function DailyBrief({ data }: { data: DashboardSummary }) {
 
   return (
     <section className="flex gap-3 rounded-xl border border-line bg-white p-4" aria-labelledby="brief-title">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-lime/60 text-brand">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
         <Newspaper size={17} strokeWidth={1.8} aria-hidden />
       </span>
       <div className="min-w-0">

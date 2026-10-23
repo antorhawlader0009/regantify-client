@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminCan, useAdminViewer } from '../lib/adminPermissions';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronsLeft, ChevronsRight, Headphones, LogOut, SlidersHorizontal, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { idlePoll } from '../lib/idlePolling';
@@ -114,7 +114,7 @@ function AccountDock({ links, onLogout }: { links: NavSection[]; onLogout: () =>
         </button>
       </div>
 
-      <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-neutral-200 pt-3">
+      <div className="mt-1.5 flex items-center gap-2 border-t border-neutral-200 pt-1.5">
         {/* Photo and name open the person's own profile; the plan line opens Billing (owner only; staff see plain text). */}
         <div className="flex min-w-0 flex-1 items-center gap-2.5 px-1 py-1">
           <Link to="/vendor/profile" title="Your profile" className="shrink-0 rounded-full transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
@@ -159,6 +159,29 @@ function AccountDock({ links, onLogout }: { links: NavSection[]; onLogout: () =>
   );
 }
 
+/** Sidebar rows: consecutive `pair` links share a row while the sidebar shows labels; everything else is a row of its own. */
+function rowsOf(items: NavSection[], collapsed: boolean): NavSection[][] {
+  const rows: NavSection[][] = [];
+  for (const s of items) {
+    const last = rows[rows.length - 1];
+    const pairable = !collapsed && s.pair && s.path && !s.children?.length;
+    if (pairable && last && last.length === 1 && last[0].pair && last[0].path && !last[0].children?.length) last.push(s);
+    else rows.push([s]);
+  }
+  return rows;
+}
+
+/** Consecutive paired rows (2+ links) form one block, so the space between them can match the space beside them. */
+function blocksOf(rows: NavSection[][]): NavSection[][][] {
+  const blocks: NavSection[][][] = [];
+  for (const row of rows) {
+    const last = blocks[blocks.length - 1];
+    if (row.length > 1 && last && last[last.length - 1].length > 1) last.push(row);
+    else blocks.push([row]);
+  }
+  return blocks;
+}
+
 const rowClass = (active: boolean, collapsed: boolean) =>
   `relative flex w-full items-center rounded-md py-2.5 text-[14px] ${
     collapsed ? 'justify-center px-0' : 'gap-3 px-3'
@@ -192,6 +215,7 @@ interface SidebarProps {
 
 export function Sidebar({ sections, mobileOpen = false, onMobileClose }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -306,7 +330,15 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
     const open = openSections.includes(section.label);
     return (
       <div key={section.label}>
-        <button onClick={() => toggle(section.label)} aria-expanded={open} className={rowClass(active, false)}>
+        <button
+          onClick={() => {
+            toggle(section.label);
+            // Opening a section marked openFirst also opens its first page, unless one of its pages is already open.
+            if (!open && section.openFirst && !active && links[0]) navigate(links[0].path);
+          }}
+          aria-expanded={open}
+          className={rowClass(active, false)}
+        >
           {icon}
           {label}
           <ChevronDown size={16} className={`ml-auto shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -395,16 +427,41 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
         {groups.map((g, i) => (
           <div
             key={g.title ?? i}
-            className="mb-3 space-y-0.5 border-b border-dashed border-neutral-200 pb-3 last:mb-0 last:border-b-0 last:pb-1"
+            className="mb-1.5 space-y-0.5 border-b border-neutral-200 pb-1.5 last:mb-0 last:border-b-0 last:pb-1"
           >
             {!collapsed && g.title && <p className="mb-2 px-3 text-[12px] text-neutral-500">{g.title}</p>}
-            {g.items.map(renderSection)}
+            {blocksOf(rowsOf(g.items, collapsed)).map((block) =>
+              block.length === 1 && block[0].length === 1 ? (
+                renderSection(block[0][0])
+              ) : (
+                // Short pages side by side (LMS | POS, Extension | App), each in a light grey bordered box so they read as
+                // separate choices. The gap between rows equals the gap between the boxes, with the same space above and
+                // below the block. Equal labels share a row evenly; otherwise the longer one ("Extension") takes just the
+                // width its text needs and the shorter ("App") gets the rest.
+                <div key={block.map((r) => r.map((s) => s.label).join('|')).join('/')} className="flex flex-col gap-1.5 py-1">
+                  {block.map((row) => (
+                    <div key={row.map((s) => s.label).join('|')} className="flex gap-1.5">
+                      {row.map((s) => (
+                        <div
+                          key={s.label}
+                          className={`rounded-md border border-neutral-200 [&>a]:px-2.5 ${
+                            row.every((o) => o.label.length === s.label.length) || s.label.length < Math.max(...row.map((o) => o.label.length)) ? 'min-w-0 flex-1' : 'flex-none'
+                          }`}
+                        >
+                          {renderSection(s)}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ),
+            )}
           </div>
         ))}
       </nav>
 
       {/* Always pinned to the bottom. Expanded: one compact card (profile, plan, Add-ons, Support, Settings, Log out). */}
-      <div className="shrink-0 space-y-0.5 border-t border-dashed border-neutral-200 bg-white px-3 py-3">
+      <div className="shrink-0 space-y-0.5 border-t border-neutral-200 bg-white px-2.5 py-2.5">
         {collapsed ? (
           <>
             {sections.filter((s) => s.bottom).map((s) => renderSection(s))}
@@ -413,7 +470,10 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
             </button>
           </>
         ) : (
-          <AccountDock links={sections.filter((s) => s.bottom)} onLogout={() => setConfirmLogout(true)} />
+          // Its own rounded card with a light grey border (like LMS | POS), so it reads as the fixed part that never scrolls.
+          <div className="rounded-xl border border-neutral-200 px-1.5 py-2">
+            <AccountDock links={sections.filter((s) => s.bottom)} onLogout={() => setConfirmLogout(true)} />
+          </div>
         )}
       </div>
     </aside>

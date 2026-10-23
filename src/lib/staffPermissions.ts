@@ -382,6 +382,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/courier/carrybee': 'courier.manage',
   '/vendor/courier/rules': 'courier.manage',
   '/vendor/store/extension': 'orders.create', // Chat order saver extension
+  '/vendor/app': 'any', // Main Menu > App: the coming mobile apps (info only)
   '/vendor/shipping/tracking': 'orders.view',
   '/vendor/finance/wallet': 'finance.view',
   '/vendor/finance/reseller-earnings': 'finance.view',
