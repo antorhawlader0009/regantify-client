@@ -148,7 +148,7 @@ function PrivacyCard() {
         <ShieldCheck size={16} aria-hidden /> Privacy and data
       </h2>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-neutral-600">
-        <li>The extension reads only the chat open on your screen, only when you press a button, and only the last {status?.messageLimit ?? 10} visible messages.</li>
+        <li>The extension reads only the chat open on your screen, only when you press a button, and only the last {status?.messageLimit ?? 30} messages already loaded in it (it never scrolls to load older ones).</li>
         <li>You see and can edit everything before it is sent. It never clicks, types or sends anything on Facebook or WhatsApp.</li>
         <li>Saved: customer name, phone, address, items and note (phone, address and messages are encrypted).</li>
         <li>“Suggest reply” sends the messages to our AI provider (Anthropic) with phone numbers and addresses hidden. Nothing from it is saved.</li>
@@ -175,12 +175,12 @@ function PrivacyCard() {
         </label>
         <select
           id="chat-limit"
-          value={status?.messageLimit ?? 10}
+          value={status?.messageLimit ?? 30}
           disabled={!isOwner || save.isPending}
           onChange={(e) => save.mutate({ messageLimit: Number(e.target.value) })}
           className="h-9 rounded-lg border border-line bg-white px-2 text-sm"
         >
-          {[5, 10, 15, 20, 30].map((n) => (
+          {[10, 20, 30, 40, 50].map((n) => (
             <option key={n} value={n}>
               {n}
             </option>
@@ -645,6 +645,11 @@ function SavedChats() {
                   <span className="text-sm tabular-nums text-neutral-600">{r.phone ?? 'No phone'}</span>
                   <span className="min-w-0 flex-1 truncate text-sm text-neutral-500">{[r.address, r.district].filter(Boolean).join(', ')}</span>
                   <span className="text-xs text-neutral-500">{SOURCE_LABEL[r.source] ?? 'Chat'}</span>
+                  {r.autoSaved && (
+                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600" title="Saved by itself while a reply was written">
+                      Auto-saved
+                    </span>
+                  )}
                   {r.orderId && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">Ordered</span>}
                   <span className="text-xs text-neutral-500">{formatDhakaDateTime(r.createdAt)}</span>
                 </button>

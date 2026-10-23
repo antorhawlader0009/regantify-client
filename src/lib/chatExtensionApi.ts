@@ -30,6 +30,8 @@ export interface ChatRecord {
   district: string | null;
   items: string | null;
   orderId: string | null;
+  /** Saved by the extension while writing a reply (name, phone, address from the chat), not by "Confirm and save". */
+  autoSaved?: boolean;
   createdAt: string;
 }
 
