@@ -27,6 +27,98 @@ const EXTENSION_TABS: { id: ExtensionTab; label: string }[] = [
   { id: 'links', label: 'Checkout links' },
 ];
 
+/** Install steps per browser: the same zip works in Chrome and Microsoft Edge (both run Chrome extensions). */
+type InstallBrowser = 'chrome' | 'edge';
+const INSTALL_STEPS: Record<InstallBrowser, { label: string; page: string; steps: string[] }> = {
+  chrome: {
+    label: 'Chrome',
+    page: 'chrome://extensions',
+    steps: [
+      'Turn on “Developer mode” at the top right.',
+      'Press “Load unpacked” and pick the unzipped folder.',
+      'Pin it: press the puzzle icon in the toolbar, then the pin beside Regantify.',
+    ],
+  },
+  edge: {
+    label: 'Microsoft Edge',
+    page: 'edge://extensions',
+    steps: [
+      'Turn on “Developer mode” (on the left side of the page, at the bottom).',
+      'Press “Load unpacked” and pick the unzipped folder.',
+      'Pin it: press the puzzle icon in the toolbar, then the eye icon beside Regantify (“Show in toolbar”).',
+    ],
+  },
+};
+
+/**
+ * Downloading the extension: the zip lives on R2 (uploaded with `npm run ext:upload` in server/), so a store installs it
+ * with "Load unpacked" in Chrome or Edge until it is on the browsers' web stores.
+ */
+function DownloadCard() {
+  const { data: download, isLoading } = useQuery({ queryKey: ['chat-extension-download'], queryFn: chatExtensionApi.download, staleTime: 5 * 60_000 });
+  const [browser, setBrowser] = useState<InstallBrowser>(() => (/\bEdg\//.test(navigator.userAgent) ? 'edge' : 'chrome'));
+  const guide = INSTALL_STEPS[browser];
+
+  return (
+    <div className="rounded-xl border border-line p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-regantify-text">
+        <Download size={16} aria-hidden /> Download the extension
+      </h2>
+      <p className="mt-1 text-xs text-neutral-600">One file for Google Chrome and Microsoft Edge on a computer. It doesn't work on phones.</p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        {download ? (
+          <>
+            <a href={download.url} download className={primaryBtn}>
+              <Download size={15} aria-hidden /> Download for Chrome and Edge
+            </a>
+            <span className="text-xs text-neutral-500">
+              Version {download.version}
+              {download.size ? ` · ${Math.max(1, Math.round(download.size / 1024))} KB` : ''}
+              {download.uploadedAt ? ` · updated ${formatDhakaDateTime(download.uploadedAt)}` : ''}
+            </span>
+          </>
+        ) : (
+          <p className="text-sm text-neutral-500">{isLoading ? 'Checking for the download…' : 'The download is not ready yet. Please try again later or contact support.'}</p>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <h3 className="mr-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">How to install it in</h3>
+        {(Object.keys(INSTALL_STEPS) as InstallBrowser[]).map((b) => (
+          <button
+            key={b}
+            type="button"
+            onClick={() => setBrowser(b)}
+            aria-pressed={browser === b}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${browser === b ? 'border-brand bg-brand/5 text-regantify-text' : 'border-line text-neutral-600 hover:text-regantify-text'}`}
+          >
+            {INSTALL_STEPS[b].label}
+          </button>
+        ))}
+      </div>
+      <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-neutral-600">
+        <li>Download the file above and unzip it (right click › Extract All). Keep the folder; {guide.label} uses it from there.</li>
+        <li>
+          In {guide.label}, open{' '}
+          <button
+            type="button"
+            className="font-mono text-regantify-text underline decoration-dotted"
+            title="Copy"
+            onClick={() => navigator.clipboard.writeText(guide.page).then(() => toast.success('Copied. Paste it in the address bar.'))}
+          >
+            {guide.page}
+          </button>{' '}
+          (type or paste it in the address bar; a website can't open it for you).
+        </li>
+        {guide.steps.map((s) => (
+          <li key={s}>{s}</li>
+        ))}
+        <li>When a new version comes, download it again, unzip it over the same folder and press the reload button on the extension's card.</li>
+      </ol>
+    </div>
+  );
+}
+
 /** Linking the Chrome extension: a one-time code and the browsers already linked. */
 function ConnectCard() {
   const queryClient = useQueryClient();
@@ -53,7 +145,7 @@ function ConnectCard() {
         <KeyRound size={16} aria-hidden /> Connect the extension
       </h2>
       <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs text-neutral-600">
-        <li>Install the Regantify Chat Order Saver in Chrome.</li>
+        <li>Install the Regantify Chat Order Saver in Chrome or Edge (download it above).</li>
         <li>Press “Make a pairing code” below and type the code into the extension (it works once, for 10 minutes).</li>
         <li>
           Open a customer chat on Messenger (facebook.com/messages or messenger.com), the Meta Business Suite inbox, Instagram Direct, TikTok messages or WhatsApp Web, then click the
@@ -594,7 +686,10 @@ export default function ConnectExtension() {
 
       {tab === 'connect' && (
         <PageSection>
-          <ConnectCard />
+          <div className="space-y-3">
+            <DownloadCard />
+            <ConnectCard />
+          </div>
         </PageSection>
       )}
       {tab === 'settings' && (

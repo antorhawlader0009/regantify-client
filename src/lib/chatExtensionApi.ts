@@ -68,8 +68,17 @@ export interface ChatOrderPrefill {
   orderId: string | null;
 }
 
+/** The newest extension zip on R2; null while none has been uploaded (`npm run ext:upload` in server/). */
+export interface ExtensionDownload {
+  version: string;
+  url: string;
+  size: number | null;
+  uploadedAt: string | null;
+}
+
 export const chatExtensionApi = {
   status: () => api.get<ChatExtensionStatus>('/v1/chat-extension/status').then((r) => r.data),
+  download: () => api.get<{ download: ExtensionDownload | null }>('/v1/chat-extension/download').then((r) => r.data.download),
   pairCode: () => api.post<{ code: string; expiresAt: string }>('/v1/chat-extension/pair-code').then((r) => r.data),
   revokeDevice: (id: string) => api.delete(`/v1/chat-extension/devices/${id}`).then((r) => r.data),
   updateSettings: (body: { retentionDays?: number; messageLimit?: number; replyInstructions?: string }) => api.patch('/v1/chat-extension/settings', body).then((r) => r.data),
