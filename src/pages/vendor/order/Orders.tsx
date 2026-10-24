@@ -489,7 +489,6 @@ function OrderRow({
         )}
         <OrderRiskBadge order={order} />
         <AddressCheckMark order={order} />
-        <OrderIpLine ipInfo={order.ipInfo} />
         {order.manualPaymentStatus === 'PENDING_CHECK' && (
           <p
             className="mt-1 inline-flex items-center gap-1 rounded border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-900"
@@ -596,6 +595,8 @@ function OrderRow({
         {order.shippingDistrict && (
           <p className="text-xs text-neutral-500">District: {order.shippingDistrict}</p>
         )}
+        {/* Where a store order came from by IP (OrderIpLine). */}
+        <OrderIpLine ipInfo={order.ipInfo} />
       </td>
       <td className={`${td} min-w-[200px]`}>
         <div className="flex items-center gap-3">

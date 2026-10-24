@@ -12,7 +12,7 @@ const NETWORK_TEXT: Record<IpNetwork, string> = {
 };
 
 /**
- * Orders list, under the status: the IP and the place, small. On mobile data the place is the operator's gateway, so it says so; a VPN or a
+ * Orders list, at the bottom of the Address column: the IP and the place, small. On mobile data the place is the operator's gateway, so it says so; a VPN or a
  * place outside Bangladesh is red (both add to the risk badge too).
  */
 const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
