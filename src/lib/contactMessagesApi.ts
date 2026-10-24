@@ -10,10 +10,23 @@ export interface ContactMessageRow {
   email: string | null;
   /** The first 200 characters in the list. */
   message: string;
+  /** CONTACT_FORM = the /contact page; AI_CHAT = a complaint the store AI chat recorded (no email, call the customer). */
+  source: 'CONTACT_FORM' | 'AI_CHAT';
+  kind: 'COMPLAINT' | 'ORDER_CHANGE' | 'RETURN_REFUND' | null;
+  /** Set only when the order number and the phone matched one of the store's orders. */
+  orderId: string | null;
+  /** The order number as the customer said it (or the matched one). */
+  orderRef: string | null;
   status: ContactMessageStatus;
   createdAt: string;
   repliedAt: string | null;
 }
+
+export const COMPLAINT_KIND_LABEL: Record<NonNullable<ContactMessageRow['kind']>, string> = {
+  COMPLAINT: 'Complaint',
+  ORDER_CHANGE: 'Order change',
+  RETURN_REFUND: 'Return or refund',
+};
 
 export interface ContactReply {
   id: string;
@@ -38,7 +51,7 @@ export interface ContactPageSettings {
 }
 
 export const contactMessagesApi = {
-  list: (q: { status?: string; search?: string; page?: number }) =>
+  list: (q: { status?: string; search?: string; page?: number; source?: 'CONTACT_FORM' | 'AI_CHAT' }) =>
     api
       .get<{ items: ContactMessageRow[]; total: number; page: number; pageSize: number; counts: Record<ContactMessageStatus, number> }>('/v1/contact-messages', { params: q })
       .then((r) => r.data),

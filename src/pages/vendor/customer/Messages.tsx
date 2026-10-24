@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, ExternalLink, Inbox, Mail, MessageCircle, Phone, Search, Settings2, Trash2 } from 'lucide-react';
 import { CustomerTabs } from './CustomerTabs';
 import { Dialog } from '../../../components/ui/Dialog';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
-import { contactMessagesApi, type ContactMessageStatus, type ContactPageSettings } from '../../../lib/contactMessagesApi';
+import { COMPLAINT_KIND_LABEL, contactMessagesApi, type ContactMessageStatus, type ContactPageSettings } from '../../../lib/contactMessagesApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { useCan } from '../../../lib/useStaffAccess';
@@ -41,6 +41,8 @@ export default function Messages() {
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState<'' | ContactMessageStatus>('');
+  // Where it came from: the Contact page, or a complaint the store AI chat recorded.
+  const [source, setSource] = useState<'' | 'CONTACT_FORM' | 'AI_CHAT'>('');
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -58,7 +60,10 @@ export default function Messages() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const list = useQuery({ queryKey: ['contact-messages', tab, query, page], queryFn: () => contactMessagesApi.list({ status: tab || undefined, search: query || undefined, page }) });
+  const list = useQuery({
+    queryKey: ['contact-messages', tab, source, query, page],
+    queryFn: () => contactMessagesApi.list({ status: tab || undefined, source: source || undefined, search: query || undefined, page }),
+  });
   const open = (id: string | null) => {
     const next = new URLSearchParams(params);
     if (id) next.set('open', id);
@@ -73,7 +78,7 @@ export default function Messages() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-regantify-text">Messages</h1>
-          <p className="mt-1 text-sm text-neutral-600">What customers wrote on your store’s Contact page. Answer by email, or call / WhatsApp them.</p>
+          <p className="mt-1 text-sm text-neutral-600">What customers wrote on your store’s Contact page, and the complaints your store’s AI chat recorded. Answer by email, or call / WhatsApp them.</p>
         </div>
         <div className="flex items-center gap-2">
           <CustomerTabs />
@@ -102,6 +107,19 @@ export default function Messages() {
             </button>
           ))}
         </div>
+        <select
+          value={source}
+          onChange={(e) => {
+            setSource(e.target.value as typeof source);
+            setPage(1);
+          }}
+          aria-label="Where it came from"
+          className="h-9 rounded-lg border border-line bg-white px-2.5 text-sm text-regantify-text"
+        >
+          <option value="">Everything</option>
+          <option value="CONTACT_FORM">Contact page</option>
+          <option value="AI_CHAT">AI chat complaints</option>
+        </select>
         <label className="relative min-w-[200px] flex-1 sm:max-w-xs">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, phone, email or words" className={`${inputClass} pl-9`} />
@@ -128,6 +146,12 @@ export default function Messages() {
                       <span className={`text-sm text-regantify-text ${m.status === 'NEW' ? 'font-semibold' : 'font-medium'}`}>{m.name}</span>
                       <span className="text-xs text-neutral-500">{m.phone}</span>
                       {m.email && <Mail size={12} className="text-neutral-400" aria-label="Has email" />}
+                      {m.source === 'AI_CHAT' && (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">
+                          AI chat · {m.kind ? COMPLAINT_KIND_LABEL[m.kind] : 'Complaint'}
+                        </span>
+                      )}
+                      {m.orderRef && <span className="text-xs text-neutral-500">{m.orderRef}</span>}
                     </span>
                     <span className="mt-0.5 block truncate text-sm text-neutral-600">{m.message}</span>
                   </span>
@@ -242,6 +266,20 @@ function MessageDialog({ id, canEdit, canDelete, onClose, onChanged }: { id: str
               <span className="ml-auto text-xs text-neutral-500">{when(m.createdAt)}</span>
             </div>
 
+            {m.source === 'AI_CHAT' && (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-800">
+                <span className="font-medium">{m.kind ? COMPLAINT_KIND_LABEL[m.kind] : 'Complaint'} recorded by your store’s AI chat.</span>
+                <span>The customer was told it was received and that the store will look into it. Call them, then mark it done.</span>
+                {m.orderId ? (
+                  <Link to={`/vendor/orders/${m.orderId}`} className="flex items-center gap-1 font-medium underline">
+                    Open order {m.orderRef} <ExternalLink size={12} />
+                  </Link>
+                ) : (
+                  m.orderRef && <span>Order number they gave: {m.orderRef} (did not match this phone)</span>
+                )}
+              </div>
+            )}
+
             <div className="whitespace-pre-wrap rounded-xl bg-neutral-50 p-4 text-sm leading-relaxed text-regantify-text">{m.message}</div>
 
             {m.replies.length > 0 && (
@@ -290,14 +328,14 @@ function MessageDialog({ id, canEdit, canDelete, onClose, onChanged }: { id: str
                   </button>
                 </div>
               ) : (
-                <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">This customer did not give an email address. Call or WhatsApp them instead.</p>
+                <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">{m.source === 'AI_CHAT' ? 'This came from the AI chat, so there is no email. Call or WhatsApp the customer.' : 'This customer did not give an email address. Call or WhatsApp them instead.'}</p>
               ))}
 
             {canEdit && (
               <div className="flex flex-wrap items-center gap-2 border-t border-black/5 pt-4">
                 {m.status !== 'ARCHIVED' ? (
                   <button type="button" onClick={() => status.mutate('ARCHIVED')} className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-sm text-regantify-text hover:bg-neutral-50">
-                    <Archive size={14} /> Archive
+                    <Archive size={14} /> {m.source === 'AI_CHAT' ? 'Mark done' : 'Archive'}
                   </button>
                 ) : (
                   <button type="button" onClick={() => status.mutate('READ')} className="rounded-lg border border-line px-3 py-1.5 text-sm text-regantify-text hover:bg-neutral-50">

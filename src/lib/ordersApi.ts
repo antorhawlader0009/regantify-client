@@ -500,11 +500,36 @@ export interface BlockedCheckoutSummary {
   byDay: Array<{ day: string; count: number }>;
 }
 
+/** MOBILE: the place is the operator's gateway, not the customer. HOSTING: a data center or VPN. */
+export type IpNetwork = 'MOBILE' | 'BROADBAND' | 'HOSTING' | 'UNKNOWN';
+
+export interface OrderIpInfoResponse {
+  /** False only while the server is still loading its IP data after a fresh start. */
+  dataReady: boolean;
+  info: {
+    /** Whole for people who may see customer contact details, else with its last part hidden. */
+    ip: string | null;
+    country: string | null;
+    countryName: string | null;
+    region: string | null;
+    city: string | null;
+    /** The area's centre (never on a mobile connection). */
+    point: { lat: number; lon: number } | null;
+    isp: string | null;
+    network: IpNetwork;
+    /** Other orders from the same connection in the last 30 days (never for mobile, whose addresses are shared). */
+    sameConnection: Array<{ id: string; ref: string; customerName: string; status: OrderStatus; createdAt: string }>;
+  } | null;
+}
+
 export const ordersApi = {
   list: (params: ListOrdersParams = {}) =>
     api.get<OrderListResponse>('/v1/orders', { params }).then((r) => r.data),
 
   findOne: (id: string) => api.get<Order>(`/v1/orders/${id}`).then((r) => r.data),
+
+  /** Where a store order came from by its IP (server OrderRiskService.ipInfoForVendor). */
+  ipInfo: (id: string) => api.get<OrderIpInfoResponse>(`/v1/orders/${id}/ip-info`).then((r) => r.data),
 
   /** Split order (TellMe idea 59): moves these lines (or pieces of them) into a new order. */
   split: (id: string, lines: Array<{ itemId: string; quantity: number }>) =>

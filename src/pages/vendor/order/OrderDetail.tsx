@@ -52,6 +52,7 @@ import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { CustomerGroupChip, CustomerTagChips } from '../customer/CustomerNoteCard';
 import { OrderCloseReasonCard } from '../../../components/order/OrderCloseReasonCard';
 import { OrderReturnCheckCard } from '../../../components/order/OrderReturnCheckCard';
+import { OrderIpCard } from '../../../components/order/OrderIpCard';
 import { OrderProfitCard } from '../../../components/order/OrderProfitCard';
 import { RedxCancelDialog } from '../../../components/courier/RedxCancelDialog';
 import { CarrybeeCancelDialog } from '../../../components/courier/CarrybeeCancelDialog';
@@ -820,6 +821,9 @@ export default function OrderDetail() {
               </div>
             )}
           </Card>
+
+          {/* Where a store order came from by its IP (OrderRiskService.ipInfoForVendor). */}
+          {(order.source === 'STOREFRONT' || order.source === 'RESELLER') && <OrderIpCard orderId={order.id} simple={isSimple} />}
 
           {/* A counter sale was handed over in the shop: no delivery, no courier, no tracking. */}
           {order.source === 'POS' ? (
