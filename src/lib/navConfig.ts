@@ -216,6 +216,7 @@ export const vendorNav: NavSection[] = [
           { label: 'Pages', path: '/vendor/store/pages' },
           { label: 'Magazine', path: '/vendor/store/magazine', advanced: true },
           { label: 'FAQ', path: '/vendor/store/faq', advanced: true },
+          { label: 'Shop Locations', path: '/vendor/store/locations', advanced: true },
           { label: 'Social Feed', path: '/vendor/store/social-feed', advanced: true },
           { label: 'Share & QR', path: '/vendor/store/share', advanced: true },
           { label: 'Landing Page', path: '/vendor/store/landing-pages' },

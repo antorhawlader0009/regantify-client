@@ -222,6 +222,8 @@ export interface Order {
   returnCheckedBy?: string | null;
   /** Order detail only: this phone's automatic customer group with its real orders and spend; null = none yet. */
   customerGroup?: { group: 'NEW' | 'RETURNING' | 'VIP' | 'SLEEPING'; orders: number; spent: number } | null;
+  /** Orders list only: where a store order came from by IP (the IP is masked for staff without contact access). Null until it was looked up. */
+  ipInfo?: { ip: string; country: string | null; region: string | null; city: string | null; network: IpNetwork; isp: string | null } | null;
   /** What an online advance is for (DELIVERY = delivery charge, PREORDER = pre-order products, LINK = a payment link the vendor sent); null = no advance. */
   advanceFor?: 'DELIVERY' | 'PREORDER' | 'LINK' | null;
   /** Order detail only: the payment link on an order the vendor entered (see PaymentLinkInfo); null = none. */

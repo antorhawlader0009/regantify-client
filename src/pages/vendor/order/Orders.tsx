@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOrdersAutoRefresh } from '../../../lib/useOrdersAutoRefresh';
 import { AddressCheckMark, OrderRiskBadge } from '../../../components/order/OrderRiskBadge';
+import { OrderIpLine } from '../../../components/order/OrderIpCard';
 import {
   ArrowLeft,
   Check,
@@ -488,6 +489,7 @@ function OrderRow({
         )}
         <OrderRiskBadge order={order} />
         <AddressCheckMark order={order} />
+        <OrderIpLine ipInfo={order.ipInfo} />
         {order.manualPaymentStatus === 'PENDING_CHECK' && (
           <p
             className="mt-1 inline-flex items-center gap-1 rounded border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[11px] font-medium text-sky-900"

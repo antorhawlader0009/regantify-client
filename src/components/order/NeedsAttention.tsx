@@ -12,7 +12,7 @@ import { toast } from '../../lib/toast';
 
 interface AttentionItem {
   id: string;
-  reason: 'DELIVERY_FAILED' | 'STALLED' | 'LATE' | 'RETURNING';
+  reason: 'DELIVERY_FAILED' | 'STALLED' | 'LATE' | 'RETURNING' | 'PARTLY_DELIVERED' | 'COURIER_CANCELLED';
   title: string;
   note: string;
   createdAt: string;

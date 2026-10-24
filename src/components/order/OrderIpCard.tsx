@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Globe, MapPin } from 'lucide-react';
-import { ordersApi, type IpNetwork } from '../../lib/ordersApi';
+import { ordersApi, type IpNetwork, type Order } from '../../lib/ordersApi';
 import { orderStatusLabel } from '../../pages/vendor/order/orderStatus';
 
 const NETWORK_TEXT: Record<IpNetwork, string> = {
@@ -10,6 +10,44 @@ const NETWORK_TEXT: Record<IpNetwork, string> = {
   HOSTING: 'Data center or VPN',
   UNKNOWN: 'Unknown network',
 };
+
+/**
+ * Orders list, under the status: the IP and the place, small. On mobile data the place is the operator's gateway, so it says so; a VPN or a
+ * place outside Bangladesh is red (both add to the risk badge too).
+ */
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+function countryName(iso: string): string {
+  try {
+    return regionNames.of(iso) ?? iso;
+  } catch {
+    return iso;
+  }
+}
+
+export function OrderIpLine({ ipInfo }: { ipInfo: Order['ipInfo'] }) {
+  if (!ipInfo) return null;
+  const abroad = !!ipInfo.country && ipInfo.country !== 'BD';
+  const place =
+    ipInfo.network === 'HOSTING'
+      ? `VPN${ipInfo.isp ? ` (${ipInfo.isp})` : ''}`
+      : abroad
+        ? countryName(ipInfo.country!)
+        : ipInfo.city || ipInfo.region || 'Bangladesh';
+  const mobile = ipInfo.network === 'MOBILE';
+  const title = mobile
+    ? `${ipInfo.ip} · ${ipInfo.isp ?? 'Mobile'} mobile data. The place is where the operator connects, not the customer.`
+    : `${ipInfo.ip} · ${NETWORK_TEXT[ipInfo.network]}${ipInfo.isp ? `, ${ipInfo.isp}` : ''}`;
+  return (
+    <p className="mt-1 max-w-[180px] truncate text-[11px] leading-4 text-neutral-500" title={title}>
+      <span className="font-mono">{ipInfo.ip}</span>
+      {' · '}
+      <span className={ipInfo.network === 'HOSTING' || abroad ? 'font-medium text-red-700' : ''}>
+        {place}
+        {mobile && <span className="text-neutral-400"> (mobile)</span>}
+      </span>
+    </p>
+  );
+}
 
 /**
  * Order detail: where a store order came from by its IP (server ip-geo/, data by DB-IP Lite, which must be credited with a link).
