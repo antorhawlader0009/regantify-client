@@ -149,6 +149,9 @@ export interface DesignSettings {
   headerPhone: string | null;
   headerLogoSize: 'SMALL' | 'MEDIUM' | 'LARGE';
   headerShowCartTotal: boolean;
+  // Install as app: the home-screen banner for returning shoppers, and the name under the icon (null = the store name).
+  appInstallEnabled: boolean;
+  appName: string | null;
   headerShowLogo: boolean;
   headerShowStoreName: boolean;
 

@@ -13,6 +13,7 @@ import {
 } from '../../../lib/vendorApi';
 import { toast } from 'sonner';
 import { WatermarkSection } from '../../../components/store/WatermarkSection';
+import { InstallAppSection } from '../../../components/store/InstallAppSection';
 import { FullViewOnly, SimpleViewOnly } from '../../../components/ui/FullViewOnly';
 import { StoreLanguageCard } from './design/StoreLanguageCard';
 
@@ -637,6 +638,7 @@ export default function Branding() {
 
       <FullViewOnly>
         <WatermarkSection />
+        <InstallAppSection />
       </FullViewOnly>
     </div>
   );

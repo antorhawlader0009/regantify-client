@@ -71,6 +71,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   // ------------------------------------------------------------------ Store > Design & content
   { title: 'Store theme / template', where: 'Store > Templates', path: '/vendor/store/themes', keywords: 'theme template storepal medium minimal change look design থিম টেমপ্লেট' },
   { title: 'Logo, favicon and brand colours', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'logo favicon color colour brand store name icon লোগো রঙ' },
+  { title: 'Install as app (home screen)', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'app install home screen pwa mobile app add to home screen phone icon apps অ্যাপ হোম স্ক্রিন মোবাইল অ্যাপ' },
   { title: 'Store language (Bangla / English)', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla bengali english language translate store labels বাংলা ভাষা' },
   { title: 'Homepage sections and layout', where: 'Store > Design > Customize', path: '/vendor/store/customize', keywords: 'home page sections banner slider categories featured products reorder হোম পেজ' },
   { title: 'Menu and header', where: 'Store > Design > Header Editor', path: '/vendor/store/header-editor', keywords: 'navigation menu links header announcement top bar মেনু হেডার' },
