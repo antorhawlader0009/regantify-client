@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { CodeEditor } from '../../../../components/editor/CodeEditor';
 import { BackLink } from '../../../../components/ui/BackLink';
+import { CustomCodeAiHelper } from '../../../../components/store/CustomCodeAiHelper';
 
 const EMPTY: StoreScriptInput = { name: '', position: 'HEAD', code: '' };
 
@@ -64,6 +65,7 @@ export default function EditJavaScript() {
         </div>
       ) : (
         <div className="space-y-5">
+          <CustomCodeAiHelper kind="js" />
           <div className="bg-white rounded-2xl border border-black/5 p-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-regantify-text mb-1.5">Name</label>

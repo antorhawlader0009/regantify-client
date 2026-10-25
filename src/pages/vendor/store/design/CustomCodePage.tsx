@@ -5,6 +5,7 @@ import { customCodeApi, type CustomCode } from '../../../../lib/customCodeApi';
 import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { CodeEditor } from '../../../../components/editor/CodeEditor';
+import { CustomCodeAiHelper } from '../../../../components/store/CustomCodeAiHelper';
 
 interface CustomCodePageProps {
   field: keyof CustomCode;
@@ -49,6 +50,7 @@ function CustomCodePage({ field, title, description, language }: CustomCodePageP
         </div>
       ) : (
         <div className="space-y-5">
+          <CustomCodeAiHelper kind={language === 'css' ? 'css' : 'head'} />
           <div className="bg-white rounded-2xl border border-black/5 p-3">
             <CodeEditor value={value} onChange={setValue} language={language} />
           </div>
