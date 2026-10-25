@@ -108,6 +108,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
 
   // ------------------------------------------------------------------ Orders & couriers
   { title: 'Add an order by hand', where: 'Orders > Add Order', path: '/vendor/orders/add', keywords: 'manual order phone order facebook order whatsapp new order create অর্ডার যোগ' },
+  { title: 'Checkout links (instant checkout)', where: 'Checkout Links', path: '/vendor/orders/instant-checkout', keywords: 'instant checkout link order ready customer confirm one tap messenger whatsapp send link pay link checkout link অর্ডার লিংক চেকআউট লিংক' },
   { title: 'Import orders from Excel / CSV', where: 'Orders > Import', path: '/vendor/orders/import', keywords: 'bulk upload spreadsheet excel csv many orders xlsx' },
   { title: 'Packing list and pick list (for packers)', where: 'Orders > select orders > Packing list', path: '/vendor/orders', keywords: 'pack packing slip pick list shelf print box items without price প্যাকিং লিস্ট' },
   { title: 'Profit on each order', where: 'Orders > Order detail / Show profit', path: '/vendor/orders', keywords: 'order profit margin loss making loss orders cost per order লাভ লোকসান' },

@@ -95,7 +95,6 @@ import { AssigneeChip, AssignSettingsDialog, BulkAssignDialog, useAssignment } f
 import { orderProfitApi, type OrderProfit } from '../../../lib/orderProfitApi';
 import { downloadCsv, toCsv } from '../../../lib/csv';
 import { CartLinkDialog } from '../../../components/order/CartLinkDialog';
-import { InstantCheckoutDialog } from '../../../components/order/InstantCheckoutDialog';
 import { CourierStatusBadge } from '../../../components/courier/courierStatus';
 import { imageThumb } from '../../../lib/imageThumb';
 
@@ -951,7 +950,6 @@ export default function Orders() {
   const [assigningIds, setAssigningIds] = useState<string[] | null>(null);
   const [assignSettingsOpen, setAssignSettingsOpen] = useState(false);
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
-  const [instantOpen, setInstantOpen] = useState(false);
   const isOwner = useCan('owner');
   const assignment = useAssignment();
   // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
@@ -1412,7 +1410,7 @@ export default function Orders() {
                 Cart link
               </button>
               {canCreate && (
-                <button type="button" onClick={() => setInstantOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="A link with the products and the customer's details: they confirm the order in one tap">
+                <button type="button" onClick={() => navigate('/vendor/orders/instant-checkout?new=1')} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="A link with the products and the customer's details: they confirm the order in one tap">
                   Instant checkout link
                 </button>
               )}
@@ -1782,7 +1780,6 @@ export default function Orders() {
       <BulkAssignDialog ids={assigningIds ?? []} open={assigningIds !== null} onOpenChange={(open) => !open && setAssigningIds(null)} onDone={() => setSelectedIds(new Set())} />
       <AssignSettingsDialog open={assignSettingsOpen} onOpenChange={setAssignSettingsOpen} />
       <CartLinkDialog open={cartLinkOpen} onOpenChange={setCartLinkOpen} />
-      {instantOpen && <InstantCheckoutDialog open={instantOpen} onOpenChange={setInstantOpen} />}
       <Dialog
         open={timelineOrder != null}
         onOpenChange={(open) => !open && setTimelineOrder(null)}

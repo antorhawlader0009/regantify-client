@@ -189,7 +189,7 @@ export function CarrybeeSettingsTab({ overview: o }: { overview: CarrybeeOvervie
       {webhook && (
         <div className={`${card} space-y-2`}>
           <h2 className="text-sm font-semibold text-regantify-text">Webhook (automatic status updates)</h2>
-          <p className="text-xs text-regantify-text-muted">Paste this URL and secret into your CarryBee panel’s webhook settings. Without it, statuses are checked every 20 minutes instead.</p>
+          <p className="text-xs text-regantify-text-muted">In your CarryBee panel open Webhook Integration, paste this URL and secret, tick “All” events and press Add Webhook. Without it, statuses are checked every 20 minutes instead.</p>
           {[
             ['URL', webhook.url],
             ['Secret', webhook.secret],

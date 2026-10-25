@@ -109,6 +109,7 @@ const ReturnCheckIn = lazy(() => import('./pages/vendor/order/ReturnCheckIn'));
 const TrackingBulk = lazy(() => import('./pages/vendor/order/TrackingBulk'));
 const RiderCash = lazy(() => import('./pages/vendor/order/RiderCash'));
 const Refunds = lazy(() => import('./pages/vendor/order/Refunds'));
+const InstantCheckout = lazy(() => import('./pages/vendor/order/InstantCheckout'));
 const StandingOrders = lazy(() => import('./pages/vendor/order/StandingOrders'));
 const ConnectExtension = lazy(() => import('./pages/vendor/store/ConnectExtension'));
 const AppsPage = lazy(() => import('./pages/vendor/AppsPage'));
@@ -298,6 +299,7 @@ function flattenRoutes(sections: typeof vendorNav) {
 const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
   (r) =>
     r.path !== '/vendor/settings' &&
+    r.path !== '/vendor/orders/instant-checkout' &&
     r.path !== '/vendor/support' &&
     r.path !== '/vendor/notifications' &&
     r.path !== '/vendor/addons' &&
@@ -584,6 +586,7 @@ export default function App() {
                 <Route path="/vendor/orders/tracking-bulk" element={<TrackingBulk />} />
                 <Route path="/vendor/orders/rider-cash" element={<RiderCash />} />
                 <Route path="/vendor/orders/refunds" element={<Refunds />} />
+                <Route path="/vendor/orders/instant-checkout" element={<InstantCheckout />} />
                 <Route path="/vendor/orders/standing" element={<StandingOrders />} />
                 <Route path="/vendor/orders/chats" element={<Navigate to="/vendor/store/extension?tab=chats" replace />} />
                 <Route path="/vendor/store/extension" element={<ConnectExtension />} />
