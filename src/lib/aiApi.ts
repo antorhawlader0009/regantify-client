@@ -89,3 +89,26 @@ export async function setPhotoTextMode(mode: PhotoTextMode): Promise<PhotoTextMo
   const { data } = await api.put<{ mode: PhotoTextMode }>('/v1/admin/ai/photo-text', { mode });
   return data.mode;
 }
+
+// The voice model of store voice calls (server storefront/voice-files.ts VOICE_MODELS): the same voice stored in fewer
+// bits for a smaller download. `downloadMb` is what a shopper downloads once; `changeDb` how far the voice moves from
+// the original (lower = closer).
+export interface VoiceModelOption {
+  key: string;
+  file: string;
+  label: string;
+  downloadMb: number;
+  changeDb: number;
+  voice: string;
+  note: string;
+}
+
+export async function getVoiceModel(): Promise<{ model: string; defaultModel: string; models: VoiceModelOption[] }> {
+  const { data } = await api.get<{ model: string; defaultModel: string; models: VoiceModelOption[] }>('/v1/admin/ai/voice-model');
+  return data;
+}
+
+export async function setVoiceModel(model: string): Promise<string> {
+  const { data } = await api.put<{ model: string }>('/v1/admin/ai/voice-model', { model });
+  return data.model;
+}

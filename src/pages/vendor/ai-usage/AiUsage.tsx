@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bot,
+  Check,
   Coins,
+  Copy,
+  ExternalLink,
   LayoutTemplate,
   MessageCircle,
   Mic,
@@ -29,6 +32,8 @@ import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 import { useViewer } from '../../../lib/useStaffAccess';
+import { useAuthStore } from '../../../store/authStore';
+import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import {
   EmptyState,
   PillTabs,
@@ -659,6 +664,66 @@ const fromField = (v: string): number | null => {
   return v.trim() === '' || !Number.isFinite(num) || num <= 0 ? null : num;
 };
 
+/**
+ * A link anyone can open to talk with the store's AI by voice: the store's address with #call, which opens the store
+ * with a "Call" card (the storefront's AiAssistantWidget). The shopper taps once, since browsers allow the microphone
+ * only after a tap. Works on StorePal while the voice call is on.
+ */
+function VoiceCallLinkCard({ theme }: { theme: string | undefined }) {
+  const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
+  const { data: switches } = useQuery({ queryKey: ['ai-usage-settings'], queryFn: aiChatBotApi.getSettings });
+  const [copied, setCopied] = useState(false);
+  const link = subdomain ? `${storefrontStoreUrl(subdomain)}/#call` : '';
+  const off = !!switches && (switches.aiOff || switches.storeChatOff || switches.voiceOff);
+  const notStorePal = theme !== undefined && theme !== 'STOREPAL';
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      toast.success('Voice call link copied');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Could not copy. Select the link and copy it.');
+    }
+  };
+
+  return (
+    <section className={panel}>
+      <h2 className="text-[15px] font-semibold text-regantify-text">Voice call link</h2>
+      <p className="mt-0.5 text-[13px] text-neutral-500">Share it on Facebook, WhatsApp or anywhere. One tap and the customer talks with your store's AI.</p>
+      <div className="mt-4 flex items-center gap-2">
+        <input
+          readOnly
+          value={link}
+          onFocus={(e) => e.currentTarget.select()}
+          aria-label="Voice call link"
+          className="h-9 min-w-0 flex-1 rounded-lg border border-line bg-neutral-50 px-3 text-sm text-neutral-700 outline-none focus:border-indigo-400"
+        />
+        <button type="button" onClick={copy} disabled={!link} className={`${secondaryBtn} h-9 shrink-0 px-3`}>
+          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+        <a
+          href={link || undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open the voice call link"
+          className={`${secondaryBtn} h-9 shrink-0 px-2.5`}
+        >
+          <ExternalLink size={15} aria-hidden />
+        </a>
+      </div>
+      {(off || notStorePal) && (
+        <p className="mt-2 text-xs text-red-600">
+          {notStorePal ? 'Voice calls work only on the StorePal template, so this link opens your store without a call.' : 'The voice call is turned off above, so this link opens the chat instead.'}
+        </p>
+      )}
+      <p className="mt-2 text-xs text-neutral-500">Calls need Chrome, Edge or Safari. Inside the Facebook or Messenger app, the customer is asked to open it in Chrome.</p>
+    </section>
+  );
+}
+
 function SwitchRow({
   label,
   hint,
@@ -896,6 +961,7 @@ export default function AiUsage() {
         </div>
         <div className="space-y-4">
           <AiSwitches />
+          <VoiceCallLinkCard theme={themeInfo?.theme} />
           <SpendingControls />
           <AllowancesCard report={report} />
         </div>

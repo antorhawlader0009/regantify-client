@@ -228,6 +228,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: "What's new", where: 'Help', path: '/vendor/help?tab=new', keywords: 'new features updates changelog release notes notun ki নতুন আপডেট' },
   { title: 'Suggest a feature', where: 'Help > Ideas', path: '/vendor/help?tab=ideas', keywords: 'idea feature request vote wish suggestion feedback ichha আইডিয়া ফিচার অনুরোধ' },
   { title: 'AI Usages', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'ai credits tokens usage used history buy store chatbot assistant ask ai চ্যাটবট এআই' },
+  { title: 'Voice call link', where: 'AI Usages > Voice call link', path: '/vendor/ai-usage', keywords: 'voice call link share call ai talk phone customer copy ভয়েস কল লিংক কথা বলা' },
   { title: 'Monthly AI limit', where: 'AI Usages > Spending limits', path: '/vendor/ai-usage', keywords: 'ai limit cap budget spending stop ai credits month keep for store chat reserve' },
 
   // ------------------------------------------------------------------ LMS (lead management)
