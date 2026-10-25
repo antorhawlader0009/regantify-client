@@ -155,7 +155,7 @@ const GiftCards = lazy(() => import('./pages/vendor/marketing/GiftCards'));
 const AddGiftCard = lazy(() => import('./pages/vendor/marketing/AddGiftCard'));
 const GiftCardDetail = lazy(() => import('./pages/vendor/marketing/GiftCardDetail'));
 const Sms = lazy(() => import('./pages/vendor/sms/Sms'));
-const AiChatBot = lazy(() => import('./pages/vendor/ai-automation/AiChatBot'));
+const AiUsage = lazy(() => import('./pages/vendor/ai-usage/AiUsage'));
 const Wallet = lazy(() => import('./pages/vendor/finance/Wallet'));
 const ResellerEarnings = lazy(() => import('./pages/vendor/finance/ResellerEarnings'));
 const Transactions = lazy(() => import('./pages/vendor/finance/Transactions'));
@@ -361,7 +361,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/gift-cards' &&
     r.path !== '/vendor/marketing/rewards' &&
     r.path !== '/vendor/sms' &&
-    r.path !== '/vendor/ai-automation/ai-chat-bot' &&
+    r.path !== '/vendor/ai-usage' &&
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/reseller-earnings' &&
     r.path !== '/vendor/finance/transactions' &&
@@ -624,7 +624,9 @@ export default function App() {
                 <Route path="/vendor/marketing/gift-cards/add" element={<AddGiftCard />} />
                 <Route path="/vendor/marketing/gift-cards/:id" element={<GiftCardDetail />} />
                 <Route path="/vendor/sms" element={<Sms />} />
-                <Route path="/vendor/ai-automation/ai-chat-bot" element={<AiChatBot />} />
+                <Route path="/vendor/ai-usage" element={<AiUsage />} />
+                {/* The old AI & Automation pages (AI Chat Bot, the n8n placeholder) are now AI Usages. */}
+                <Route path="/vendor/ai-automation/*" element={<Navigate to="/vendor/ai-usage" replace />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/reseller-earnings" element={<ResellerEarnings />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />

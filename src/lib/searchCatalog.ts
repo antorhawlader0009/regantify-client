@@ -90,7 +90,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Shop locations (Google Maps)', where: 'Store > Content > Shop Locations', path: '/vendor/store/locations', keywords: 'shop location branch outlet showroom address google map map link directions our shops dokan thikana branch shakha দোকান ঠিকানা শাখা ম্যাপ লোকেশন' },
   { title: 'Magazine (blog posts)', where: 'Store > Content > Magazine', path: '/vendor/store/magazine', keywords: 'magazine blog article news story post ম্যাগাজিন ব্লগ' },
   { title: 'Pages (About, Contact, Privacy)', where: 'Store > Content > Pages', path: '/vendor/store/pages', keywords: 'about us contact privacy policy terms refund return policy page cms পেজ' },
-  { title: 'Landing pages', where: 'Store > Content > Landing Page', path: '/vendor/store/landing-pages', keywords: 'landing page builder one product sales page facebook ad ল্যান্ডিং পেজ' },
+  { title: 'Landing pages', where: 'Store > Landing Page', path: '/vendor/store/landing-pages', keywords: 'landing page builder one product sales page facebook ad ল্যান্ডিং পেজ' },
   { title: 'Media library (uploaded images)', where: 'Store > Content > Media', path: '/vendor/store/media', keywords: 'images photos upload gallery files delete unused মিডিয়া ছবি' },
   { title: 'Custom domain', where: 'Store > Store Settings > Domain', path: '/vendor/store/domain', keywords: 'domain name dns record connect website url .com ডোমেইন' },
   { title: 'Social media links', where: 'Store > Store Settings > Social', path: '/vendor/store/social', keywords: 'facebook instagram youtube tiktok whatsapp number link page সোশ্যাল ফেসবুক' },
@@ -227,7 +227,8 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Help center', where: 'Help', path: '/vendor/help', keywords: 'help guide how to tutorial article video faq kivabe সাহায্য গাইড কিভাবে' },
   { title: "What's new", where: 'Help', path: '/vendor/help?tab=new', keywords: 'new features updates changelog release notes notun ki নতুন আপডেট' },
   { title: 'Suggest a feature', where: 'Help > Ideas', path: '/vendor/help?tab=ideas', keywords: 'idea feature request vote wish suggestion feedback ichha আইডিয়া ফিচার অনুরোধ' },
-  { title: 'AI chat bot credits', where: 'AI & Automation > AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot', keywords: 'ai credits tokens buy store chatbot assistant ask ai চ্যাটবট' },
+  { title: 'AI Usages', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'ai credits tokens usage used history buy store chatbot assistant ask ai চ্যাটবট এআই' },
+  { title: 'Monthly AI limit', where: 'AI Usages > Spending limits', path: '/vendor/ai-usage', keywords: 'ai limit cap budget spending stop ai credits month keep for store chat reserve' },
 
   // ------------------------------------------------------------------ LMS (lead management)
   { title: 'LMS: turn it on or off', where: 'LMS > Settings', path: `${LMS}#status`, keywords: 'lead management enable disable status' },

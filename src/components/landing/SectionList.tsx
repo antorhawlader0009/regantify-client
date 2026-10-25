@@ -124,25 +124,25 @@ function SortableSectionRow({
       className={`group relative flex items-center gap-1 rounded-lg border px-1.5 py-2 transition-colors ${
         selected
           ? 'border-violet-400/50 bg-violet-500/10'
-          : 'border-white/10 bg-white/[0.04] hover:border-white/20'
-      } ${isDragging ? 'z-10 opacity-80 shadow-lg shadow-black/40' : ''}`}
+          : 'border-line bg-white hover:border-neutral-300'
+      } ${isDragging ? 'z-10 opacity-80 shadow-lg shadow-black/10' : ''}`}
     >
       <button
         {...attributes}
         {...listeners}
-        className="shrink-0 cursor-grab touch-none rounded p-0.5 text-slate-600 hover:text-slate-300 active:cursor-grabbing"
+        className="shrink-0 cursor-grab touch-none rounded p-0.5 text-neutral-400 hover:text-neutral-700 active:cursor-grabbing"
         aria-label={`Reorder ${sectionLabel(section.type)}`}
       >
         <GripVertical size={14} />
       </button>
 
-      <button onClick={onSelect} className="min-w-0 flex-1 truncate text-left text-[12.5px] text-slate-200">
+      <button onClick={onSelect} className="min-w-0 flex-1 truncate text-left text-[12.5px] text-neutral-700">
         {sectionLabel(section.type)}
       </button>
 
       {(hiddenDesktop || hiddenMobile) && (
         <span
-          className="shrink-0 text-slate-600"
+          className="shrink-0 text-neutral-400"
           title={hiddenDesktop && hiddenMobile ? 'Hidden everywhere' : hiddenDesktop ? 'Hidden on desktop' : 'Hidden on mobile'}
         >
           {hiddenDesktop && !hiddenMobile ? <Monitor size={12} /> : <Smartphone size={12} />}
@@ -152,7 +152,7 @@ function SortableSectionRow({
       <div className="relative shrink-0" ref={menuRef}>
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="rounded p-0.5 text-slate-500 opacity-0 transition-opacity hover:text-slate-200
+          className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:text-regantify-text
             focus:opacity-100 group-hover:opacity-100"
           aria-label="Section actions"
         >
@@ -160,13 +160,13 @@ function SortableSectionRow({
         </button>
 
         {menuOpen && (
-          <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-white/10 bg-[#1B1B24] py-1 shadow-xl shadow-black/50">
+          <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl shadow-black/10">
             <button
               onClick={() => {
                 setMenuOpen(false);
                 onDuplicate();
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-white/5"
+              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-neutral-700 hover:bg-neutral-100"
             >
               <Copy size={13} />
               Make a copy
@@ -176,7 +176,7 @@ function SortableSectionRow({
                 setMenuOpen(false);
                 onToggleVisibility('desktop');
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-white/5"
+              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-neutral-700 hover:bg-neutral-100"
             >
               <Monitor size={13} />
               {hiddenDesktop ? 'Show on desktop' : 'Hide on desktop'}
@@ -186,7 +186,7 @@ function SortableSectionRow({
                 setMenuOpen(false);
                 onToggleVisibility('mobile');
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-slate-200 hover:bg-white/5"
+              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-neutral-700 hover:bg-neutral-100"
             >
               <Smartphone size={13} />
               {hiddenMobile ? 'Show on mobile' : 'Hide on mobile'}
@@ -196,7 +196,7 @@ function SortableSectionRow({
                 setMenuOpen(false);
                 onDelete();
               }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-red-400 hover:bg-red-500/10"
+              className="flex w-full items-center gap-2 px-3 py-2 text-[12px] text-red-600 hover:bg-red-500/10"
             >
               <Trash2 size={13} />
               Delete

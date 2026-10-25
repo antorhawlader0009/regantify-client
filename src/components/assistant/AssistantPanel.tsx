@@ -21,7 +21,7 @@ const MAX_CHATS = 10;
 
 /** Ask AI is paid from the store's AI Credits; the server answers 402 AI_CREDITS_EMPTY when they've run out. */
 const OUT_OF_CREDITS = '__AI_CREDITS_EMPTY__';
-const AI_CREDITS_PAGE = '/vendor/ai-automation/ai-chat-bot';
+const AI_CREDITS_PAGE = '/vendor/ai-usage';
 
 function isOutOfCredits(e: unknown): boolean {
   const res = (e as { response?: { status?: number; data?: { code?: string } } })?.response;

@@ -25,27 +25,27 @@ export function AddSectionModal({ onPick, onClose }: AddSectionModalProps) {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#15151D]"
+        className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-line bg-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
-          <h3 className="text-[15px] font-semibold text-slate-100">Add a section</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-100" aria-label="Close">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          <h3 className="text-[15px] font-semibold text-regantify-text">Add a section</h3>
+          <button onClick={onClose} className="text-neutral-500 hover:text-regantify-text" aria-label="Close">
             <X size={18} />
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-5 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-line px-5 py-3">
           <div className="relative mr-1 w-52">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={14} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search sections"
-              className="w-full rounded-lg border border-white/10 bg-white/[0.04] py-1.5 pl-9 pr-3
-                text-[12.5px] text-slate-100 placeholder:text-slate-500 focus:outline-none"
+              className="w-full rounded-lg border border-line bg-white py-1.5 pl-9 pr-3
+                text-[12.5px] text-regantify-text placeholder:text-neutral-400 focus:outline-none"
             />
           </div>
 
@@ -54,7 +54,7 @@ export function AddSectionModal({ onPick, onClose }: AddSectionModalProps) {
               key={c}
               onClick={() => setCategory(c)}
               className={`rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors ${
-                category === c ? 'bg-white/10 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                category === c ? 'bg-neutral-100 text-regantify-text' : 'text-neutral-500 hover:text-regantify-text'
               }`}
             >
               {c}
@@ -64,7 +64,7 @@ export function AddSectionModal({ onPick, onClose }: AddSectionModalProps) {
 
         <div className="grid grid-cols-2 gap-3 overflow-y-auto p-5 sm:grid-cols-3">
           {visible.length === 0 && (
-            <p className="col-span-full py-10 text-center text-[13px] text-slate-500">
+            <p className="col-span-full py-10 text-center text-[13px] text-neutral-400">
               No sections match that search.
             </p>
           )}
@@ -73,15 +73,15 @@ export function AddSectionModal({ onPick, onClose }: AddSectionModalProps) {
             <button
               key={s.type}
               onClick={() => onPick(s.type)}
-              className="group overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] text-left
-                transition-colors hover:border-violet-400/50 hover:bg-white/[0.06]"
+              className="group overflow-hidden rounded-xl border border-line bg-white text-left
+                transition-colors hover:border-violet-400/50 hover:bg-neutral-50"
             >
-              <div className="flex h-28 items-center justify-center overflow-hidden bg-white/[0.02] p-3">
+              <div className="flex h-28 items-center justify-center overflow-hidden bg-neutral-50 p-3">
                 <SectionThumbnail type={s.type} />
               </div>
-              <div className="border-t border-white/10 px-3 py-2.5">
-                <span className="block text-[13px] font-medium text-slate-100">{s.label}</span>
-                <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">{s.description}</span>
+              <div className="border-t border-line px-3 py-2.5">
+                <span className="block text-[13px] font-medium text-regantify-text">{s.label}</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-neutral-400">{s.description}</span>
               </div>
             </button>
           ))}

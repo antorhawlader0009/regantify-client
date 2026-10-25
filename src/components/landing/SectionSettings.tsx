@@ -91,7 +91,7 @@ export function SectionSettings({ type, props, onChange }: SectionSettingsProps)
       return <LeadFormForm props={props as unknown as LeadFormProps} onChange={onChange} />;
     default:
       return (
-        <p className="text-[12px] leading-relaxed text-slate-500">
+        <p className="text-[12px] leading-relaxed text-neutral-400">
           This section type ({type}) has no settings form in this version of the builder.
         </p>
       );
@@ -502,8 +502,8 @@ function CountdownTimerForm({
             const d = new Date(e.target.value);
             if (!Number.isNaN(d.getTime())) set({ endsAt: d.toISOString() });
           }}
-          className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-2 text-[12.5px]
-            text-slate-100 focus:border-white/20 focus:outline-none [color-scheme:dark]"
+          className="w-full rounded-lg border border-line bg-white px-2.5 py-2 text-[12.5px]
+            text-regantify-text focus:border-violet-400 focus:outline-none [color-scheme:dark]"
         />
       </Field>
       <Field label="Style">
@@ -621,7 +621,7 @@ function CustomerReviewsForm({
 
       <AddRowButton label="+ Add review" onClick={() => set({ reviews: [...reviews, { name: '', text: '' }] })} />
 
-      <p className="rounded-lg border border-amber-400/20 bg-amber-400/5 px-2.5 py-2 text-[10.5px] leading-relaxed text-amber-200/70">
+      <p className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10.5px] leading-relaxed text-amber-800">
         These are testimonials you write yourself — they are not your store's verified customer reviews.
         Only publish what real customers actually said.
       </p>
@@ -826,11 +826,11 @@ function CheckoutFormForm({ props, onChange }: { props: CheckoutFormProps; onCha
         onChange={(productIds) => set({ productIds })}
       />
 
-      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
-        <span className="mb-1.5 block text-[10.5px] font-medium uppercase tracking-wide text-slate-500">
+      <div className="rounded-lg border border-line bg-white p-2.5">
+        <span className="mb-1.5 block text-[10.5px] font-medium uppercase tracking-wide text-neutral-400">
           Fields
         </span>
-        <p className="mb-2 text-[10.5px] leading-relaxed text-slate-600">
+        <p className="mb-2 text-[10.5px] leading-relaxed text-neutral-400">
           Name, phone and address are always collected.
         </p>
         <Toggle
@@ -872,11 +872,11 @@ function LeadFormForm({ props, onChange }: { props: LeadFormProps; onChange: (p:
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
-        <span className="mb-1.5 block text-[10.5px] font-medium uppercase tracking-wide text-slate-500">
+      <div className="rounded-lg border border-line bg-white p-2.5">
+        <span className="mb-1.5 block text-[10.5px] font-medium uppercase tracking-wide text-neutral-400">
           Fields
         </span>
-        <p className="mb-2 text-[10.5px] leading-relaxed text-slate-600">
+        <p className="mb-2 text-[10.5px] leading-relaxed text-neutral-400">
           Name and phone are always collected.
         </p>
         <Toggle

@@ -520,7 +520,7 @@ export default function Billing() {
         <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
           <TabIntro title="Buy AI Credits">
             The store chat and Ask AI use these. Credits never expire.{' '}
-            <Link to="/vendor/ai-automation/ai-chat-bot" className="font-medium text-brand hover:underline">
+            <Link to="/vendor/ai-usage" className="font-medium text-brand hover:underline">
               See where they went
             </Link>
           </TabIntro>

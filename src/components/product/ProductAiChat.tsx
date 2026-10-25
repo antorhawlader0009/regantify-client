@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { viewerOf } from '../../lib/useStaffAccess';
 import { canOpenPath } from '../../lib/staffPermissions';
 
-const AI_CREDITS_PAGE = '/vendor/ai-automation/ai-chat-bot';
+const AI_CREDITS_PAGE = '/vendor/ai-usage';
 /** What the browser sends back of the conversation: the last few turns are enough for follow-ups. */
 const HISTORY = 8;
 

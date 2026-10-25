@@ -57,19 +57,19 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+    <div className="overflow-hidden rounded-xl border border-line bg-white">
       <button
         onClick={onToggle}
-        className="flex w-full items-center gap-2.5 px-3.5 py-3 text-left transition-colors hover:bg-white/[0.04]"
+        className="flex w-full items-center gap-2.5 px-3.5 py-3 text-left transition-colors hover:bg-neutral-50"
       >
-        <span className="text-slate-400">{icon}</span>
+        <span className="text-neutral-500">{icon}</span>
         <span className="flex-1">
-          <span className="block text-[13px] font-medium text-slate-100">{title}</span>
-          {subtitle && <span className="block text-[11px] text-slate-500">{subtitle}</span>}
+          <span className="block text-[13px] font-medium text-regantify-text">{title}</span>
+          {subtitle && <span className="block text-[11px] text-neutral-400">{subtitle}</span>}
         </span>
-        <ChevronDown size={15} className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={15} className={`text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && <div className="border-t border-white/10 px-3.5 py-3">{children}</div>}
+      {open && <div className="border-t border-line px-3.5 py-3">{children}</div>}
     </div>
   );
 }
@@ -252,7 +252,7 @@ export default function LandingPageBuilder() {
 
   if (isLoading || (!draft && !isError)) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0B0B10] text-sm text-slate-400">
+      <div className="flex h-screen items-center justify-center bg-neutral-50 text-sm text-neutral-500">
         Loading builder…
       </div>
     );
@@ -260,11 +260,11 @@ export default function LandingPageBuilder() {
 
   if (isError || !draft) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-[#0B0B10]">
-        <p className="text-sm text-slate-400">This landing page could not be loaded.</p>
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-neutral-50">
+        <p className="text-sm text-neutral-500">This landing page could not be loaded.</p>
         <button
           onClick={() => navigate('/vendor/store/landing-pages')}
-          className="rounded-lg bg-white/10 px-4 py-2 text-sm text-slate-100 hover:bg-white/15"
+          className="rounded-lg bg-neutral-100 px-4 py-2 text-sm text-regantify-text hover:bg-neutral-200"
         >
           Back to Landing Pages
         </button>
@@ -276,42 +276,42 @@ export default function LandingPageBuilder() {
   const togglePanel = (key: PanelKey) => setOpenPanel((p) => (p === key ? ('' as PanelKey) : key));
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#0B0B10] text-slate-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-neutral-50 text-regantify-text">
       {/* Top bar */}
-      <header className="flex shrink-0 items-center gap-3 border-b border-white/10 px-4 py-2.5">
+      <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-2.5">
         <button
           onClick={leaveBuilder}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] text-slate-400 hover:bg-white/5 hover:text-slate-100"
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13px] text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
         >
           <ArrowLeft size={15} />
           Landing Pages
         </button>
 
-        <div className="h-5 w-px bg-white/10" />
+        <div className="h-5 w-px bg-neutral-100" />
 
         <input
           value={draft.title}
           onChange={(e) => patchDraft({ title: e.target.value })}
           className="min-w-0 max-w-xs flex-1 rounded-lg bg-transparent px-2 py-1.5 text-[15px] font-semibold
-            text-slate-100 outline-none transition-colors hover:bg-white/5 focus:bg-white/5"
+            text-regantify-text outline-none transition-colors hover:bg-neutral-100 focus:bg-white"
           aria-label="Landing page title"
         />
 
         <span
           className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-            isPublished ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/10 text-slate-400'
+            isPublished ? 'bg-emerald-50 text-emerald-600' : 'bg-neutral-100 text-neutral-500'
           }`}
         >
           {isPublished ? 'PUBLISHED' : 'DRAFT'}
         </span>
 
-        {dirty && <span className="shrink-0 text-[11px] text-amber-400/80">Unsaved changes</span>}
+        {dirty && <span className="shrink-0 text-[11px] text-amber-700">Unsaved changes</span>}
 
-        <div className="mx-auto flex shrink-0 items-center gap-0.5 rounded-xl bg-white/5 p-1">
+        <div className="mx-auto flex shrink-0 items-center gap-0.5 rounded-xl bg-neutral-50 p-1">
           <button
             onClick={() => setDevice('desktop')}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors ${
-              device === 'desktop' ? 'bg-white/10 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+              device === 'desktop' ? 'bg-neutral-100 text-regantify-text' : 'text-neutral-500 hover:text-regantify-text'
             }`}
           >
             <Monitor size={14} />
@@ -320,7 +320,7 @@ export default function LandingPageBuilder() {
           <button
             onClick={() => setDevice('mobile')}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-colors ${
-              device === 'mobile' ? 'bg-white/10 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+              device === 'mobile' ? 'bg-neutral-100 text-regantify-text' : 'text-neutral-500 hover:text-regantify-text'
             }`}
           >
             <Smartphone size={14} />
@@ -331,7 +331,7 @@ export default function LandingPageBuilder() {
         <button
           onClick={() => setAiGenerateOpen(true)}
           className="flex shrink-0 items-center gap-1.5 rounded-xl border border-violet-400/30 bg-violet-500/10
-            px-3 py-2 text-[12px] font-medium text-violet-300 transition-colors hover:bg-violet-500/20"
+            px-3 py-2 text-[12px] font-medium text-violet-700 transition-colors hover:bg-violet-500/20"
         >
           <Sparkles size={14} />
           AI Generate
@@ -343,7 +343,7 @@ export default function LandingPageBuilder() {
             target="_blank"
             rel="noreferrer"
             className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-medium
-              text-slate-400 hover:bg-white/5 hover:text-slate-100"
+              text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
           >
             <ExternalLink size={14} />
             Preview
@@ -353,8 +353,8 @@ export default function LandingPageBuilder() {
         <button
           onClick={handleSave}
           disabled={saveMutation.isPending || !dirty}
-          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white/10 px-3.5 py-2 text-[12px]
-            font-medium text-slate-100 transition-colors hover:bg-white/15 disabled:opacity-40"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl bg-neutral-100 px-3.5 py-2 text-[12px]
+            font-medium text-regantify-text transition-colors hover:bg-neutral-200 disabled:opacity-40"
         >
           <Check size={14} />
           {saveMutation.isPending ? 'Saving…' : 'Save'}
@@ -385,7 +385,7 @@ export default function LandingPageBuilder() {
           disabled={publishMutation.isPending}
           className={`shrink-0 rounded-xl px-3.5 py-2 text-[12px] font-medium transition-colors disabled:opacity-60 ${
             isPublished
-              ? 'bg-white/10 text-slate-100 hover:bg-white/15'
+              ? 'bg-neutral-100 text-regantify-text hover:bg-neutral-200'
               : 'bg-violet-600 text-white hover:bg-violet-500'
           }`}
         >
@@ -395,7 +395,7 @@ export default function LandingPageBuilder() {
 
       <div className="flex min-h-0 flex-1">
         {/* Left rail */}
-        <aside className="w-[310px] shrink-0 overflow-y-auto border-r border-white/10 p-3">
+        <aside className="w-[310px] shrink-0 overflow-y-auto border-r border-line p-3">
           {selectedSection ? (
             // Section settings replace the panel list while a section is
             // selected — the rail is narrow, and showing both at once
@@ -403,12 +403,12 @@ export default function LandingPageBuilder() {
             <div>
               <button
                 onClick={() => setSelectedSectionId(null)}
-                className="mb-3 flex items-center gap-1.5 text-[12px] text-slate-400 hover:text-slate-100"
+                className="mb-3 flex items-center gap-1.5 text-[12px] text-neutral-500 hover:text-regantify-text"
               >
                 <ChevronLeft size={14} />
                 All sections
               </button>
-              <h2 className="mb-3 text-[14px] font-semibold text-slate-100">
+              <h2 className="mb-3 text-[14px] font-semibold text-regantify-text">
                 {sectionLabel(selectedSection.type)}
               </h2>
               <SectionSettings
@@ -427,7 +427,7 @@ export default function LandingPageBuilder() {
                 onToggle={() => togglePanel('sections')}
               >
                 {sections.length === 0 ? (
-                  <p className="text-[12px] leading-relaxed text-slate-500">
+                  <p className="text-[12px] leading-relaxed text-neutral-400">
                     This page is empty. Sections are the building blocks — a hero, your product, reviews,
                     an order form.
                   </p>
@@ -446,8 +446,8 @@ export default function LandingPageBuilder() {
                 <button
                   onClick={() => setAddOpen(true)}
                   className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed
-                    border-white/15 py-2 text-[12px] font-medium text-slate-400 transition-colors
-                    hover:border-violet-400/50 hover:text-violet-300"
+                    border-neutral-300 py-2 text-[12px] font-medium text-neutral-500 transition-colors
+                    hover:border-violet-400/50 hover:text-violet-700"
                 >
                   <Plus size={14} />
                   Add Section
@@ -495,9 +495,9 @@ export default function LandingPageBuilder() {
         </aside>
 
         {/* Preview canvas */}
-        <main className="flex min-w-0 flex-1 items-start justify-center overflow-y-auto bg-[#101017] p-6">
+        <main className="flex min-w-0 flex-1 items-start justify-center overflow-y-auto bg-neutral-100 p-6">
           <div
-            className={`overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/40 transition-all ${
+            className={`overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/10 transition-all ${
               device === 'mobile' ? 'w-[390px]' : 'w-full max-w-5xl'
             }`}
           >

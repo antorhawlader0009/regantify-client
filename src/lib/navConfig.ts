@@ -46,6 +46,7 @@ import {
   Lightbulb,
   Gift,
   Globe,
+  LayoutTemplate,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -161,31 +162,6 @@ export const vendorNav: NavSection[] = [
   },
   { label: 'Reviews', icon: Star, group: 'Product', path: '/vendor/reviews' },
   {
-    label: 'Marketing',
-    icon: Megaphone,
-    group: 'Sales Marketing',
-    tabs: true,
-    children: [
-      { label: 'Coupons', path: '/vendor/marketing/coupons' },
-      { label: 'Campaigns', path: '/vendor/marketing/campaigns', advanced: true },
-      { label: 'Discounts', path: '/vendor/marketing/discounts' },
-      { label: 'Flash Sale', path: '/vendor/marketing/flash-sale', advanced: true },
-      { label: 'Gift Cards', path: '/vendor/marketing/gift-cards', advanced: true },
-      { label: 'Reward Points', path: '/vendor/marketing/rewards', advanced: true },
-    ],
-  },
-  { label: 'SMS', icon: MessageSquare, group: 'Sales Marketing', path: '/vendor/sms' },
-  {
-    label: 'AI & Automation',
-    icon: Bot,
-    group: 'Sales Marketing',
-    tabs: true,
-    children: [
-      { label: 'AI Chat Bot', path: '/vendor/ai-automation/ai-chat-bot', advanced: true },
-      { label: 'n8n', path: '/vendor/ai-automation/n8n', advanced: true },
-    ],
-  },
-  {
     label: 'Store',
     icon: StoreIcon,
     group: 'Store',
@@ -219,7 +195,6 @@ export const vendorNav: NavSection[] = [
           { label: 'Shop Locations', path: '/vendor/store/locations', advanced: true },
           { label: 'Social Feed', path: '/vendor/store/social-feed', advanced: true },
           { label: 'Share & QR', path: '/vendor/store/share', advanced: true },
-          { label: 'Landing Page', path: '/vendor/store/landing-pages' },
           { label: 'Media', path: '/vendor/store/media' },
         ],
       },
@@ -263,6 +238,7 @@ export const vendorNav: NavSection[] = [
       },
     ],
   },
+  { label: 'Landing Page', icon: LayoutTemplate, group: 'Store', path: '/vendor/store/landing-pages' },
   {
     label: 'Courier Integration',
     icon: Truck,
@@ -281,6 +257,23 @@ export const vendorNav: NavSection[] = [
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
     ],
   },
+  {
+    label: 'Marketing',
+    icon: Megaphone,
+    group: 'Store',
+    tabs: true,
+    children: [
+      { label: 'Coupons', path: '/vendor/marketing/coupons' },
+      { label: 'Campaigns', path: '/vendor/marketing/campaigns', advanced: true },
+      { label: 'Discounts', path: '/vendor/marketing/discounts' },
+      { label: 'Flash Sale', path: '/vendor/marketing/flash-sale', advanced: true },
+      { label: 'Gift Cards', path: '/vendor/marketing/gift-cards', advanced: true },
+      { label: 'Reward Points', path: '/vendor/marketing/rewards', advanced: true },
+    ],
+  },
+  { label: 'SMS', icon: MessageSquare, group: 'Store', path: '/vendor/sms', pair: true },
+  // AI Credits in one place: balance and pace, spending limits, use per tool, history (pages/vendor/ai-usage/AiUsage.tsx).
+  { label: 'AI Usages', icon: Bot, group: 'Store', path: '/vendor/ai-usage', pair: true },
   // The Chat order saver Chrome extension: linking, AI instructions, privacy, saved chats and checkout links.
   {
     label: 'Finance',

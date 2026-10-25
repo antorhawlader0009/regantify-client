@@ -102,20 +102,20 @@ export function FontsPanel({ page, onChange }: PanelProps) {
       </Field>
 
       <div>
-        <span className="mb-1.5 block text-[11px] font-medium text-slate-400">Suggestions</span>
+        <span className="mb-1.5 block text-[11px] font-medium text-neutral-500">Suggestions</span>
         <div className="flex flex-wrap gap-1.5">
           {FONT_SUGGESTIONS.map((font) => (
             <button
               key={font}
               onClick={() => onChange({ headingFont: font, bodyFont: font })}
-              className="rounded-md border border-white/10 px-2 py-1 text-[11px] text-slate-400
-                transition-colors hover:border-white/25 hover:text-slate-200"
+              className="rounded-md border border-line px-2 py-1 text-[11px] text-neutral-500
+                transition-colors hover:border-neutral-400 hover:text-regantify-text"
             >
               {font}
             </button>
           ))}
         </div>
-        <span className="mt-1.5 block text-[10.5px] leading-relaxed text-slate-600">
+        <span className="mt-1.5 block text-[10.5px] leading-relaxed text-neutral-400">
           These all render Bangla text correctly.
         </span>
       </div>
@@ -157,8 +157,8 @@ export function AdvancedPanel({ page, onChange }: PanelProps) {
         />
       </Field>
 
-      <div className="border-t border-white/10 pt-3">
-        <span className="mb-2 block text-[10.5px] font-medium uppercase tracking-wide text-slate-500">
+      <div className="border-t border-line pt-3">
+        <span className="mb-2 block text-[10.5px] font-medium uppercase tracking-wide text-neutral-400">
           Tracking
         </span>
         <div className="flex flex-col gap-3">
@@ -174,7 +174,7 @@ export function AdvancedPanel({ page, onChange }: PanelProps) {
         </div>
       </div>
 
-      <div className="border-t border-white/10 pt-3">
+      <div className="border-t border-line pt-3">
         <Field label="Custom CSS" hint="Applies to this page only. Leave blank unless you know CSS.">
           <TextArea
             value={page.customCss ?? ''}

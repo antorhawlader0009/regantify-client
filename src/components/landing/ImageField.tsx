@@ -37,14 +37,14 @@ export function ImageField({ value, onChange, label }: ImageFieldProps) {
 
   return (
     <div>
-      {label && <span className="mb-1.5 block text-[11px] font-medium text-slate-400">{label}</span>}
+      {label && <span className="mb-1.5 block text-[11px] font-medium text-neutral-500">{label}</span>}
 
       {value ? (
-        <div className="group relative overflow-hidden rounded-lg border border-white/10">
+        <div className="group relative overflow-hidden rounded-lg border border-line">
           <img src={value} alt="" className="h-28 w-full object-cover" />
           <button
             onClick={() => onChange('')}
-            className="absolute right-1.5 top-1.5 rounded-md bg-black/60 p-1.5 text-slate-200 opacity-0
+            className="absolute right-1.5 top-1.5 rounded-md bg-black/60 p-1.5 text-neutral-700 opacity-0
               transition-opacity hover:bg-black/80 group-hover:opacity-100"
             aria-label="Remove image"
           >
@@ -57,16 +57,16 @@ export function ImageField({ value, onChange, label }: ImageFieldProps) {
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed
-              border-white/15 py-3 text-[12px] text-slate-400 transition-colors hover:border-white/25
-              hover:text-slate-200 disabled:opacity-50"
+              border-neutral-300 py-3 text-[12px] text-neutral-500 transition-colors hover:border-neutral-400
+              hover:text-regantify-text disabled:opacity-50"
           >
             {uploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
             {uploading ? 'Uploading…' : 'Upload'}
           </button>
           <button
             onClick={() => setLibraryOpen(true)}
-            className="rounded-lg border border-white/10 px-3 text-[12px] text-slate-400
-              transition-colors hover:border-white/20 hover:text-slate-200"
+            className="rounded-lg border border-line px-3 text-[12px] text-neutral-500
+              transition-colors hover:border-neutral-300 hover:text-regantify-text"
           >
             Library
           </button>
@@ -104,22 +104,22 @@ function MediaLibraryPicker({ onClose, onPick }: { onClose: () => void; onPick: 
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#15151D]"
+        className="max-h-[80vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-line bg-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3.5">
-          <h3 className="text-[14px] font-semibold text-slate-100">Media Library</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-100" aria-label="Close">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          <h3 className="text-[14px] font-semibold text-regantify-text">Media Library</h3>
+          <button onClick={onClose} className="text-neutral-500 hover:text-regantify-text" aria-label="Close">
             <X size={17} />
           </button>
         </div>
 
         <div className="max-h-[calc(80vh-56px)] overflow-y-auto p-4">
-          {isLoading && <p className="py-10 text-center text-[13px] text-slate-500">Loading…</p>}
+          {isLoading && <p className="py-10 text-center text-[13px] text-neutral-400">Loading…</p>}
           {!isLoading && (data?.items.length ?? 0) === 0 && (
-            <p className="py-10 text-center text-[13px] text-slate-500">
+            <p className="py-10 text-center text-[13px] text-neutral-400">
               Nothing in your media library yet — upload an image instead.
             </p>
           )}
@@ -128,7 +128,7 @@ function MediaLibraryPicker({ onClose, onPick }: { onClose: () => void; onPick: 
               <button
                 key={asset.id}
                 onClick={() => onPick(asset.url)}
-                className="overflow-hidden rounded-lg border border-white/10 transition-colors hover:border-violet-400"
+                className="overflow-hidden rounded-lg border border-line transition-colors hover:border-violet-400"
               >
                 <img src={asset.url} alt="" className="aspect-square w-full object-cover" />
               </button>
