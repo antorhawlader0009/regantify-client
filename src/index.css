@@ -153,6 +153,66 @@ body {
   user-select: none;
 }
 
+/* Elevation in the vendor dashboard (every page inside VendorLayout, not the
+   LMS). Four steps by role, not one shadow on everything: a field sits in the
+   page, a control sits just above it, a card above that, and menus/dialogs keep
+   their own heavier shadow. Shadows are tinted with the brand ink (indigo
+   #2E2A6B) rather than plain grey, so they read as part of the palette.
+   Anything that already sets its own shadow class keeps it. */
+.vendor-cards {
+  --elev-ink: var(--c-brand-dark);
+  --elev-field: 0 1px 2px rgb(var(--elev-ink) / 0.05);
+  --elev-control: 0 1px 2px rgb(var(--elev-ink) / 0.07), 0 2px 6px -2px rgb(var(--elev-ink) / 0.1);
+  --elev-control-hover: 0 2px 4px rgb(var(--elev-ink) / 0.08), 0 6px 14px -4px rgb(var(--elev-ink) / 0.16);
+  --elev-card: 0 1px 3px rgb(var(--elev-ink) / 0.07), 0 8px 20px -6px rgb(var(--elev-ink) / 0.13);
+  --elev-card-hover: 0 2px 4px rgb(var(--elev-ink) / 0.08), 0 14px 28px -8px rgb(var(--elev-ink) / 0.2);
+}
+
+/* Cards: white rounded blocks. */
+.vendor-cards :is(.rounded-xl, .rounded-2xl).bg-white:not([class*=" shadow-"]):not([class^="shadow-"]) {
+  box-shadow: var(--elev-card);
+  transition: box-shadow 0.15s ease;
+}
+/* A card nested inside another card stays flat: one level of lift is enough. */
+.vendor-cards :is(.rounded-xl, .rounded-2xl).bg-white :is(.rounded-xl, .rounded-2xl).bg-white:not([class*=" shadow-"]):not([class^="shadow-"]) {
+  box-shadow: none;
+}
+/* Only a card you can click lifts on hover (it answers the pointer). */
+.vendor-cards a:is(.rounded-xl, .rounded-2xl).bg-white:not([class*=" shadow-"]):not([class^="shadow-"]):hover {
+  box-shadow: var(--elev-card-hover);
+}
+
+/* Controls: tab bars, white buttons (outlineBtn, iconBtn), the search box,
+   select boxes and anything marked .raised (Analytics date chips, picker). */
+.vendor-cards [role="tablist"].bg-white,
+.vendor-cards .raised,
+.vendor-cards :is(button, a):is(.rounded-lg, .rounded-md, .rounded-full).border.bg-white:not([class*=" shadow-"]):not([class^="shadow-"]),
+.vendor-cards div.rounded-lg.border.bg-white:has(> input):not([class*=" shadow-"]),
+.vendor-cards select.rounded-lg.border.bg-white {
+  box-shadow: var(--elev-control);
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.vendor-cards :is(button, a):is(.rounded-lg, .rounded-md, .rounded-full).border.bg-white:not([class*=" shadow-"]):not([class^="shadow-"]):not(:disabled):hover {
+  box-shadow: var(--elev-control-hover);
+}
+
+/* Main actions: a soft glow in their own colour (indigo for primaryBtn, blue for secondaryBtn). */
+.vendor-cards :is(button, a).rounded-lg.bg-brand:not([class*=" shadow-"]):not(:disabled) {
+  box-shadow: 0 1px 2px rgb(var(--elev-ink) / 0.12), 0 4px 12px -4px rgb(var(--c-brand) / 0.45);
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.vendor-cards :is(button, a).rounded-lg.bg-brand:not([class*=" shadow-"]):not(:disabled):hover {
+  box-shadow: 0 2px 4px rgb(var(--elev-ink) / 0.14), 0 8px 18px -6px rgb(var(--c-brand) / 0.55);
+}
+.vendor-cards :is(button, a).rounded-lg.bg-brand-blue:not([class*=" shadow-"]):not(:disabled) {
+  box-shadow: 0 1px 2px rgb(var(--elev-ink) / 0.12), 0 4px 12px -4px rgb(29 107 243 / 0.4);
+}
+
+/* Fields: the faintest step, so they read as set into the card. */
+.vendor-cards :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea).rounded-lg.border:not([class*=" shadow-"]) {
+  box-shadow: var(--elev-field);
+}
+
 /*
  * Vendor dashboard surfaces use #FBFBFB instead of pure white (cards, sidebar,
  * top bar, inputs, dropdowns and dialogs). Set by VendorLayout on <body>, so

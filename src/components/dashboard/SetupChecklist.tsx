@@ -121,7 +121,8 @@ export function SetupChecklist({
   if (allDone || hidden) return null;
 
   // The first step not done yet gets the green button; the rest stay quiet.
-  const nextKey = items.find((i) => !setup[i.key])?.key;
+  const todo = items.filter((i) => !setup[i.key]);
+  const nextKey = todo[0]?.key;
   const pct = Math.round((doneCount / items.length) * 100);
 
   return (
@@ -175,14 +176,15 @@ export function SetupChecklist({
       </div>
 
       {!collapsed && (
-        <ol id="setup-steps" className="grid gap-4 border-t border-line p-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => {
+        // Finished steps leave the list; the count and the bar above still show them.
+        <ol id="setup-steps" className={`grid gap-4 border-t border-line p-4 sm:grid-cols-2 ${todo.length >= 3 ? 'lg:grid-cols-3' : ''}`}>
+          {todo.map((item) => {
             const done = setup[item.key];
             const isNext = item.key === nextKey;
             return (
               <li
                 key={item.key}
-                className={`relative flex flex-col rounded-2xl border bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-shadow hover:shadow-md ${
+                className={`relative flex flex-col rounded-2xl border bg-white p-5 ${
                   isNext ? 'border-brand/40' : 'border-line'
                 }`}
               >

@@ -196,7 +196,7 @@ export function EmptyState({ text }: { text: string }) {
 /** Toggle for a chart's metric (e.g. Sales / Orders). */
 export function Segmented<T extends string>({ options, value, onChange }: { options: { id: T; label: string }[]; value: T; onChange: (id: T) => void }) {
   return (
-    <div className="inline-flex rounded-lg border border-line bg-white p-0.5">
+    <div className="raised inline-flex rounded-lg border border-line bg-white p-0.5">
       {options.map((o) => (
         <button
           key={o.id}

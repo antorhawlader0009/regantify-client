@@ -52,7 +52,7 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
 
   return (
     <>
-    <header className="flex h-[60px] shrink-0 items-center gap-1.5 border-b border-line bg-white px-3 sm:gap-4 sm:px-4">
+    <header className="relative z-10 flex h-[60px] shrink-0 items-center gap-1.5 border-b border-line bg-white px-3 shadow-[0_1px_3px_rgba(16,24,40,0.06),0_4px_12px_-6px_rgba(16,24,40,0.1)] sm:gap-4 sm:px-4">
       <button
         type="button"
         onClick={onMenuClick}

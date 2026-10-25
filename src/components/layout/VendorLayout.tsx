@@ -71,7 +71,7 @@ export function VendorLayout() {
         <MaintenanceBar />
         {!isLms && <AnnouncementBanner />}
         {!isLms && <ResaleMoneyBanner />}
-        <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "p-3 sm:p-6"}`}>
+        <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "vendor-cards p-3 sm:p-6"}`}>
           <SectionTabs sections={nav} />
           {!isLms && <FullViewPageBar />}
           <VendorPageGate>

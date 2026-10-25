@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
             type="button"
             onClick={() => setRange(clampRange(presetRange(id, today), today), id)}
             aria-pressed={preset === id}
-            className={`h-8 shrink-0 rounded-full border px-3 text-xs transition-colors ${
+            className={`raised h-8 shrink-0 rounded-full border px-3 text-xs transition-colors ${
               preset === id ? 'border-brand bg-brand-lime font-medium text-regantify-text' : 'border-line bg-white text-neutral-600 hover:bg-neutral-50'
             }`}
           >

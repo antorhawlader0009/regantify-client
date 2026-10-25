@@ -140,7 +140,7 @@ export function DateRangePicker({
       <RadixPopover.Trigger asChild>
         <button
           type="button"
-          className="inline-flex h-9 max-w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+          className="raised inline-flex h-9 max-w-full items-center gap-2 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
         >
           <CalendarDays size={15} className="shrink-0 text-neutral-500" aria-hidden />
           {preset && <span className="hidden sm:inline shrink-0 rounded-md bg-neutral-100 px-1.5 py-0.5 text-[12px] text-neutral-500">{presetLabel(preset)}</span>}

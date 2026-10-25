@@ -560,6 +560,15 @@ export default function OrderDetail() {
       <OrderRefundNote orderId={order.id} status={order.status} />
       <ManualPaymentCard order={order} canEdit={canEdit} />
       <OrderRiskCard order={order} />
+      {/* The customer's delivery record as cards, above the warnings (needs the full phone, so customers.contact). */}
+      {canContact && order.source !== 'POS' && (
+        <CustomerRecordStrip
+          stats={deliveryStats?.byPhone[order.customerPhone]}
+          onRefresh={() => void refetchDeliveryStats()}
+          refreshing={deliveryStatsFetching}
+          onFillInfo={() => setHistoryPhone(order.customerPhone)}
+        />
+      )}
       {orderAddressProblem(order) && (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-900">
           <span className="font-medium">Address incomplete?</span> {ADDRESS_PROBLEM_TEXT[orderAddressProblem(order)!]} Call the customer and fix it with Edit contact before you book a courier.
@@ -616,15 +625,6 @@ export default function OrderDetail() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}
         <div className="min-w-0 space-y-4 lg:col-span-2">
-          {/* The customer's delivery record as cards (needs the full phone, so customers.contact). */}
-          {canContact && order.source !== 'POS' && (
-            <CustomerRecordStrip
-              stats={deliveryStats?.byPhone[order.customerPhone]}
-              onRefresh={() => void refetchDeliveryStats()}
-              refreshing={deliveryStatsFetching}
-              onFillInfo={() => setHistoryPhone(order.customerPhone)}
-            />
-          )}
           {order.isGift && (
             <div className="rounded-xl border-2 border-pink-300 bg-pink-50 px-4 py-3 text-sm text-pink-900">
               <p className="font-semibold">Gift: wrap it nicely</p>
