@@ -71,7 +71,7 @@ import { CARRYBEE_PLACE_NOT_FOUND, carrybeeCancellable } from '../../../lib/carr
 import { CourierSetupModal } from '../../../components/courier/CourierSetupModal';
 import { PathaoBookingModal } from '../../../components/courier/PathaoBookingModal';
 import { PathaoBulkBookDialog } from '../../../components/courier/PathaoBulkBookDialog';
-import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
+import { DeliverySuccessRing } from '../../../components/courier/CustomerDeliveryStats';
 import type { PhoneCourierStats } from '../../../lib/ordersApi';
 import { toast } from '../../../lib/toast';
 import { ALL_ORDER_STATUSES, DEFAULT_TABS, OrderStatusBadge, canMoveOrderStatus, orderStatusLabel, preferredDayLabel } from './orderStatus';
@@ -577,7 +577,6 @@ function OrderRow({
             </button>
           )}
         </p>
-        <CustomerDeliveryStats stats={deliveryStats} compact />
         {canContact && (
           <button
             onClick={() => onCheckHistory(order.customerPhone)}
@@ -586,6 +585,9 @@ function OrderRow({
             Check History
           </button>
         )}
+      </td>
+      <td className={`${td} min-w-[150px]`}>
+        <DeliverySuccessRing stats={deliveryStats} />
       </td>
       <td className={`${td} min-w-[200px]`}>
         <p>{order.shippingAddress}</p>
@@ -1118,7 +1120,7 @@ export default function Orders() {
     refetchInterval: (query) =>
       query.state.dataUpdateCount < 3 && Object.values(query.state.data?.byPhone ?? {}).some((s) => s.pathao?.pending || s.steadfast?.pending) ? 4000 : false,
   });
-  const columnCount = trashView ? 7 : 8;
+  const columnCount = trashView ? 8 : 9;
 
   function sendSelectedToPathao() {
     if (!otherCouriersAllowed) {
@@ -1663,24 +1665,13 @@ export default function Orders() {
               </div>
             )}
 
-            {!trashView && deliveryStats && (!deliveryStats.pathaoConnected || deliveryStats.pathaoNeedsLogin) && (
+            {/* Any one courier connected shows every courier's shared record (customer-courier-check.service.ts). */}
+            {!trashView && deliveryStats?.anyCourierConnected === false && (
               <div className="mb-3 rounded-lg border border-line bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
-                {!deliveryStats.pathaoConnected ? (
-                  <>
-                    <Link to="/vendor/courier/pathao" className="font-medium text-brand underline">
-                      Connect Pathao
-                    </Link>{' '}
-                    to see each customer’s delivery history with Pathao — free on every plan.
-                  </>
-                ) : (
-                  <>
-                    Add your Pathao email and password in{' '}
-                    <Link to="/vendor/courier/pathao" className="font-medium text-brand underline">
-                      Courier Integration › Pathao
-                    </Link>{' '}
-                    so the Pathao delivery history can load.
-                  </>
-                )}
+                <Link to="/vendor/courier/pathao" className="font-medium text-brand underline">
+                  Connect any courier
+                </Link>{' '}
+                (Pathao, SteadFast, RedX or CarryBee) to see each customer’s delivery record with Pathao and SteadFast.
               </div>
             )}
 
@@ -1704,6 +1695,7 @@ export default function Orders() {
                     <th className={th}>Invoice</th>
                     <th className={th}>Status</th>
                     <th className={th}>Customer</th>
+                    <th className={th}>Success Rate</th>
                     <th className={th}>Address</th>
                     <th className={th}>Items</th>
                     <th className={th}>Total</th>

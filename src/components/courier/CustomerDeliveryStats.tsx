@@ -130,3 +130,86 @@ export function CustomerDeliveryStats({ stats, compact }: { stats: PhoneCourierS
     </div>
   );
 }
+
+const RING_STROKE: Record<string, string> = {
+  'text-emerald-700': 'stroke-emerald-500',
+  'text-amber-700': 'stroke-amber-500',
+  'text-red-600': 'stroke-red-500',
+  'text-neutral-500': 'stroke-neutral-300',
+};
+
+/**
+ * The Orders list's "Success Rate" cell: a ring filled to the combined
+ * delivery rate (same "Total" as CustomerDeliveryStats: StorePal plus the
+ * connected couriers' counts) with the figures beside it, coloured by risk.
+ * Hover for each source's line.
+ */
+export function DeliverySuccessRing({ stats }: { stats: PhoneCourierStats | undefined }) {
+  if (!stats) return <span className="text-xs text-neutral-400">—</span>;
+  const { pathao, steadfast, storepal } = stats;
+  const known = [pathao, steadfast].filter((line): line is CourierCheckLine => Boolean(line?.fetchedAt));
+  const combined: CourierStatLine = known.reduce(
+    (acc, line) => ({ successful: acc.successful + line.successful, returned: acc.returned + line.returned, total: acc.total + line.total }),
+    { ...storepal },
+  );
+  const sfScore = steadfast?.fetchedAt ? steadfast.steadfastScore : null;
+  // SteadFast gives a percent, not counts: with no counted history it is the only figure.
+  const sfOnly = combined.total === 0 && sfScore?.deliveryRatio != null;
+  const percent = sfOnly ? sfScore!.deliveryRatio : rate(combined);
+  const color = riskClass(percent);
+  const checking = Boolean(pathao?.pending || steadfast?.pending);
+  const fraud = (pathao?.fraudReports ?? 0) + (steadfast?.fraudReports ?? 0);
+
+  const r = 15;
+  const circumference = 2 * Math.PI * r;
+  const title = [
+    tooltip('StorePal', storepal),
+    pathao?.fetchedAt ? tooltip('Pathao', pathao) : null,
+    sfScore ? `SteadFast: Delivered=${sfScore.deliveryRatio ?? '?'}%, Cancelled=${sfScore.cancellationRatio ?? '?'}%` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return (
+    <div className="flex items-center gap-2.5" title={title}>
+      <div className="relative h-10 w-10 shrink-0">
+        <svg viewBox="0 0 36 36" className={`h-10 w-10 -rotate-90 ${checking ? 'animate-pulse' : ''}`} aria-hidden>
+          <circle cx="18" cy="18" r={r} fill="none" strokeWidth="3.5" className="stroke-neutral-100" />
+          <circle
+            cx="18"
+            cy="18"
+            r={r}
+            fill="none"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - (percent ?? 0) / 100)}
+            className={RING_STROKE[color]}
+          />
+        </svg>
+        <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold tabular-nums ${color}`}>
+          {percent == null ? 'New' : `${percent}%`}
+        </span>
+      </div>
+      <div className="text-[11px] leading-4 text-neutral-500">
+        <p>
+          Success: <span className={`font-semibold tabular-nums ${color}`}>{percent == null ? '—' : `${percent}%`}</span>
+        </p>
+        <p>
+          Order:{' '}
+          <span className={`font-semibold tabular-nums ${color}`}>
+            {sfOnly ? (sfScore!.volumeBand && sfScore!.volumeBand !== 'none' ? VOLUME_LABEL[sfScore!.volumeBand] ?? sfScore!.volumeBand : '—') : `${combined.successful}/${combined.total}`}
+          </span>
+        </p>
+        {sfScore?.deliveryRatio != null && !sfOnly && (
+          <p>
+            SteadFast: <span className={`font-semibold tabular-nums ${riskClass(sfScore.deliveryRatio)}`}>{sfScore.deliveryRatio}%</span>
+          </p>
+        )}
+        {sfOnly && <p className="text-neutral-400">from SteadFast</p>}
+        {fraud > 0 && <p className="font-semibold text-red-600">{fraud} fraud report{fraud === 1 ? '' : 's'}</p>}
+        {checking && <p className="text-neutral-400">checking…</p>}
+      </div>
+    </div>
+  );
+}

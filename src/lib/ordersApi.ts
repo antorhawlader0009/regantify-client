@@ -350,9 +350,11 @@ export interface SteadfastScore {
 
 export interface PhoneCourierStats {
   storepal: CourierStatLine;
-  /** null = this vendor has no Pathao account connected. */
+  /** This store's own orders from the phone: finished ones counted like `storepal`, plus open ones by status. */
+  ours?: CourierStatLine & { open: Partial<Record<OrderStatus, number>> };
+  /** null = the store has no courier connected at all (any one courier shows every courier's shared record). */
   pathao: CourierCheckLine | null;
-  /** null = this vendor has no SteadFast account connected. */
+  /** null = the store has no courier connected at all. */
   steadfast: CourierCheckLine | null;
 }
 
@@ -360,6 +362,8 @@ export interface PhoneCourierStats {
 export interface CustomerCourierStats {
   pathaoConnected: boolean;
   steadfastConnected: boolean;
+  /** False = no courier connected at all, so no courier records are shown. */
+  anyCourierConnected?: boolean;
   /** Connected, but no backup email/password saved — Pathao's lookup may refuse the API token. */
   pathaoNeedsLogin: boolean;
   loginErrorCode: string;

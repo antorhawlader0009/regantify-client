@@ -47,7 +47,7 @@ import { SplitOrderDialog, canSplitOrder } from '../../../components/order/Split
 import { AssignCard } from '../../../components/order/OrderAssign';
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { OrderMessageDialog } from '../../../components/order/OrderMessageDialog';
-import { CustomerDeliveryStats } from '../../../components/courier/CustomerDeliveryStats';
+import { CustomerRecordStrip } from '../../../components/courier/CustomerRecordStrip';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { CustomerGroupChip, CustomerTagChips } from '../customer/CustomerNoteCard';
 import { OrderCloseReasonCard } from '../../../components/order/OrderCloseReasonCard';
@@ -211,7 +211,7 @@ export default function OrderDetail() {
   const [messageOpen, setMessageOpen] = useState(false);
 
   // The customer's delivery record (same lookup as the Orders list); by full phone number, so it needs contact.
-  const { data: deliveryStats } = useQuery({
+  const { data: deliveryStats, refetch: refetchDeliveryStats, isFetching: deliveryStatsFetching } = useQuery({
     queryKey: ['customer-courier-stats', order ? [order.customerPhone] : []],
     queryFn: () => ordersApi.getCustomerCourierStats([order!.customerPhone]),
     enabled: Boolean(order) && canContact,
@@ -616,6 +616,15 @@ export default function OrderDetail() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}
         <div className="min-w-0 space-y-4 lg:col-span-2">
+          {/* The customer's delivery record as cards (needs the full phone, so customers.contact). */}
+          {canContact && order.source !== 'POS' && (
+            <CustomerRecordStrip
+              stats={deliveryStats?.byPhone[order.customerPhone]}
+              onRefresh={() => void refetchDeliveryStats()}
+              refreshing={deliveryStatsFetching}
+              onFillInfo={() => setHistoryPhone(order.customerPhone)}
+            />
+          )}
           {order.isGift && (
             <div className="rounded-xl border-2 border-pink-300 bg-pink-50 px-4 py-3 text-sm text-pink-900">
               <p className="font-semibold">Gift: wrap it nicely</p>
@@ -799,10 +808,6 @@ export default function OrderDetail() {
                   <button type="button" onClick={() => setHistoryPhone(order.customerPhone)} className={outlineBtn}>
                     Order history
                   </button>
-                </div>
-
-                <div className="mt-3">
-                  <CustomerDeliveryStats stats={deliveryStats?.byPhone[order.customerPhone]} />
                 </div>
               </>
             )}
