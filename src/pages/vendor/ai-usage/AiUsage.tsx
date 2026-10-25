@@ -948,33 +948,28 @@ export default function AiUsage() {
         <InOutCard report={report} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* Two columns that stack on their own, so a tall card on one side never leaves a gap on the other. */}
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           <UsageBars report={report} period={period} onPeriod={setPeriod} />
-        </div>
-        <RecentCard />
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
           <ToolsCard report={report} />
+          <section id="ai-credit-history" className={`${panel} scroll-mt-20`}>
+            <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">AI Credit history</h2>
+            <History />
+            <p className="mt-3 text-xs text-neutral-500">
+              Each AI answer takes credits for what it really costs. A store chat reply sends your product list with the shopper’s question, so a store with more
+              products uses a few more credits a reply. AI Credits never expire, and an answer that fails or gets cut off isn’t charged.
+            </p>
+          </section>
         </div>
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
+          <RecentCard />
           <AiSwitches />
           <VoiceCallLinkCard theme={themeInfo?.theme} />
           <SpendingControls />
           <AllowancesCard report={report} />
         </div>
       </div>
-
-      <section id="ai-credit-history" className={`${panel} scroll-mt-20`}>
-        <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">AI Credit history</h2>
-        <History />
-        <p className="mt-3 text-xs text-neutral-500">
-          Each AI answer takes credits for what it really costs. A store chat reply sends your product list with the shopper’s question, so a store with more
-          products uses a few more credits a reply. AI Credits never expire, and an answer that fails or gets cut off isn’t charged.
-        </p>
-      </section>
 
       <BuyChatBotDialog open={buyOpen} onOpenChange={setBuyOpen} creditsPerReply={report?.credits.creditsPerReply} />
     </div>

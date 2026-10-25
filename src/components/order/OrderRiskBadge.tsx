@@ -20,7 +20,7 @@ export function AddressCheckMark({ order }: { order: Parameters<typeof orderAddr
   if (!problem) return null;
   return (
     <p
-      className="mt-1 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-900"
+      className="mt-1.5 flex w-fit items-center gap-1 rounded-md border border-red-200 bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-700"
       title={`${ADDRESS_PROBLEM_TEXT[problem]} Call the customer and correct it with Edit contact before booking a courier.`}
     >
       <MapPinOff size={10} aria-hidden />
