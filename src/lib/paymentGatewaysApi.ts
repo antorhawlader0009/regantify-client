@@ -87,11 +87,13 @@ export const paymentGatewaysApi = {
   updateBuiltin: (type: 'COD' | 'ONLINE_PAYMENT', payload: { status: 'ACTIVE' | 'DISABLED' }) =>
     api.patch<VendorPaymentGateway>(`/v1/payment-gateways/${type}/builtin`, payload).then((r) => r.data),
 
-  connectSslcommerz: (storeId: string, storePassword: string, displayLabel?: string, platformChargeBdt?: number) =>
+  /** sandbox: true = SSLCommerz's test system (a test Store ID), false = live (real money). */
+  connectSslcommerz: (storeId: string, storePassword: string, sandbox: boolean, displayLabel?: string, platformChargeBdt?: number) =>
     api
       .post<{ id: string; type: PaymentGatewayType; status: PaymentGatewayStatus }>('/v1/payment-gateways/sslcommerz', {
         storeId,
         storePassword,
+        sandbox,
         displayLabel,
         platformChargeBdt,
       })

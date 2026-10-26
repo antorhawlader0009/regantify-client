@@ -238,12 +238,23 @@ function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPayment
   const [storePassword, setStorePassword] = useState('');
   const [displayLabel, setDisplayLabel] = useState('SSLCommerz');
   const [charge, setCharge] = useState('0');
+  const [sandbox, setSandbox] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const isConnected = gateway?.status === 'ACTIVE' && gateway.isConnected;
+  // Test or live: SSLCommerz gives a separate Store ID for each (z-others/documentations/SSLCOMMERZ).
+  const { data: connection } = useQuery({
+    queryKey: ['payment-gateway-connection', 'SSLCOMMERZ'],
+    queryFn: () => paymentGatewaysApi.getConnection('SSLCOMMERZ'),
+    enabled: isConnected,
+  });
 
   const connectMutation = useMutation({
-    mutationFn: () => paymentGatewaysApi.connectSslcommerz(storeId.trim(), storePassword, displayLabel.trim(), Number(charge)),
+    mutationFn: () => paymentGatewaysApi.connectSslcommerz(storeId.trim(), storePassword, sandbox, displayLabel.trim(), Number(charge)),
     onSuccess: () => {
-      toast.success('SSLCommerz connected.');
+      toast.success(sandbox ? 'SSLCommerz connected in sandbox mode.' : 'SSLCommerz connected.');
+      void queryClient.invalidateQueries({ queryKey: ['payment-gateway-connection', 'SSLCOMMERZ'] });
       setStoreId('');
       setStorePassword('');
       setShowForm(false);
@@ -262,14 +273,21 @@ function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPayment
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not disconnect SSLCommerz.')),
   });
 
-  const isConnected = gateway?.status === 'ACTIVE' && gateway.isConnected;
-
   return (
     <div ref={cardRef} className="bg-white rounded-2xl border border-black/5 p-5">
       <div className="flex items-start gap-3">
         <CreditCard size={18} className="text-regantify-text-muted mt-0.5 shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-medium text-regantify-text">{gateway?.displayLabel ?? 'SSLCommerz'}</p>
+          <p className="flex items-center gap-2 text-sm font-medium text-regantify-text">
+            {gateway?.displayLabel ?? 'SSLCommerz'}
+            {isConnected && connection && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
+              >
+                {connection.sandbox ? 'Sandbox' : 'Live'}
+              </span>
+            )}
+          </p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
             {isConnected
               ? `Connected — platform charge ${formatCharge(gateway!)}.`
@@ -330,6 +348,16 @@ function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPayment
               className="w-full px-3 py-2 rounded-lg bg-regantify-search text-sm text-regantify-text focus:outline-none"
             />
           </div>
+          <label className="flex items-start gap-2">
+            <input type="checkbox" checked={sandbox} onChange={(e) => setSandbox(e.target.checked)} className="mt-0.5" />
+            <span>
+              <span className="block text-sm font-medium text-regantify-text">Sandbox mode</span>
+              <span className="block text-xs text-regantify-text-muted">
+                For testing with a Store ID from SSLCommerz&apos;s sandbox (developer.sslcommerz.com). No real money moves. Leave it off with
+                your live Store ID before selling.
+              </span>
+            </span>
+          </label>
           <div>
             <label className="block text-xs font-medium text-regantify-text-muted mb-1">Display label</label>
             <input
