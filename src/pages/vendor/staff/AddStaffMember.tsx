@@ -221,7 +221,7 @@ export default function AddStaffMember() {
       }}
     >
       <div className="mb-4">
-        <BackLink to="/vendor/staff" label="Team" />
+        <BackLink to="/vendor/staff" label="Staff" />
         <h1 className="text-[15px] font-semibold text-regantify-text">{isEdit ? `Edit ${member?.name ?? 'staff'}` : 'Add staff'}</h1>
         <p className="mt-0.5 text-sm text-neutral-500">
           {isEdit ? 'Changes apply the next time they click anything.' : 'They get their own sign-in to your store’s dashboard.'}

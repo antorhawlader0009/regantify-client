@@ -86,7 +86,7 @@ const MORE_SETTINGS: { label: string; description: string; path: string; icon: L
   { label: 'Store Away', description: 'Close the store for a holiday', path: '/vendor/store/store-away', icon: Palmtree },
   { label: 'Backup', description: 'Download a copy of your store, or restore one', path: '/vendor/store/backup', icon: Package },
   { label: 'Integrations', description: 'Pixels, analytics and webhooks', path: '/vendor/store/integrations', icon: Plug },
-  { label: 'Team', description: 'Team members and their access', path: '/vendor/staff', icon: UsersRound },
+  { label: 'Staff', description: 'Team members and their access', path: '/vendor/staff', icon: UsersRound },
   { label: 'Billing', description: 'Your plan, usage and upgrades', path: '/vendor/billing', icon: Wallet },
 ];
 

@@ -296,7 +296,7 @@ export const vendorNav: NavSection[] = [
     ],
   },
   { label: 'Billing', icon: CreditCard, group: 'Account', path: '/vendor/billing' },
-  { label: 'Team', icon: UsersRound, group: 'Account', path: '/vendor/staff' },
+  { label: 'Staff', icon: UsersRound, group: 'Account', path: '/vendor/staff' },
   { label: 'Activity Log', icon: History, group: 'Account', path: '/vendor/activity', advanced: true },
   { label: 'Add-ons', icon: Puzzle, bottom: true, path: '/vendor/addons', advanced: true },
   { label: 'Support', icon: Headphones, bottom: true, path: '/vendor/support' },
