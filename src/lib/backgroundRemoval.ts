@@ -1,9 +1,11 @@
 /**
  * Product photo background removal, done entirely in the browser (TellMe IDEA-45). No server, no AI Credits.
  *
- * Model: U2-Net small ("u2netp", 4.6 MB, Apache-2.0, the same file the rembg tool ships), served from our own
- * dashboard at /models/ with a version in its name (nginx keeps it a year). Runtime: onnxruntime-web on the CPU
- * (WASM), loaded only when a seller first uses it, so nothing reaches the first page download.
+ * Model: U2-Net small ("u2netp", 4.6 MB, Apache-2.0, the same file the rembg tool ships). Runtime: onnxruntime-web on
+ * the CPU (WASM). Both are downloaded from R2 (Cloudflare CDN, server/src/products/bg-remove-files.ts, uploaded with
+ * `npm run bg-remove:upload` in server/), only when a seller first uses it, so nothing reaches the first page download.
+ * The server says where (`GET /v1/products/bg-remove/files`). They were first served from the dashboard's own /models/,
+ * but nginx sent the runtime's .mjs as application/octet-stream with nosniff and the browser refused it (2026-10-26).
  * Measured 2026-10-26 on 8 product photos: about 0.8 s a photo with 4 threads; the dashboard isn't cross-origin
  * isolated, so it runs on one thread here (a bit slower). ORMBG (trained on people), BiRefNet (runs out of memory)
  * and @imgly (AGPL) were tried or checked and dropped; the test page is z-others/bg-remove-test/.
@@ -13,9 +15,10 @@
  *   placeOnBackground(cut, color, …) -> that product centred on a plain colour, ready to upload
  */
 import type { InferenceSession } from 'onnxruntime-web';
+import { productsApi } from './productsApi';
 
-const MODEL_URL = '/models/bg-u2netp-v1.onnx';
-const ORT_FILES = '/models/ort-1.22.0/';
+// The R2 folder holds model.onnx and the runtime pair of the SAME onnxruntime-web version as package.json: upgrading
+// the package means uploading a new folder (server bg-remove-files.ts ORT_VERSION) before deploying.
 const SIZE = 320; // u2netp input is 320 x 320
 const MEAN = [0.485, 0.456, 0.406];
 const STD = [0.229, 0.224, 0.225];
@@ -28,12 +31,11 @@ let sessionPromise: Promise<{ ort: typeof import('onnxruntime-web'); session: In
 function loadModel() {
   if (!sessionPromise) {
     sessionPromise = (async () => {
-      const ort = await import('onnxruntime-web/wasm');
-      // The runtime's own .mjs + .wasm are copied from node_modules into public/models/ort-<version>/ (Vite doesn't
-      // emit them). Upgrading onnxruntime-web means copying the new pair into a new folder and changing this line.
-      ort.env.wasm.wasmPaths = ORT_FILES;
+      const [{ base }, ort] = await Promise.all([productsApi.bgRemoveFiles(), import('onnxruntime-web/wasm')]);
+      if (!base) throw new Error('The photo cleaner is not set up on this server.');
+      ort.env.wasm.wasmPaths = base;
       ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
-      const session = await ort.InferenceSession.create(MODEL_URL, { executionProviders: ['wasm'], graphOptimizationLevel: 'all' });
+      const session = await ort.InferenceSession.create(`${base}model.onnx`, { executionProviders: ['wasm'], graphOptimizationLevel: 'all' });
       return { ort: ort as unknown as typeof import('onnxruntime-web'), session };
     })().catch((err) => {
       sessionPromise = null; // let a later try load it again

@@ -61,7 +61,10 @@ export function RemoveBackgroundDialog({
     photoBlob(photoUrl)
       .then(cutOutProduct)
       .then((c) => live && setCut(c))
-      .catch(() => live && setError('Could not clean this photo. Check your connection and try again.'))
+      .catch((err) => {
+        console.error('[clean background]', err);
+        if (live) setError('Could not clean this photo. Check your connection and try again.');
+      })
       .finally(() => live && setWorking(false));
     return () => {
       live = false;

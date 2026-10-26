@@ -592,6 +592,9 @@ export const productsApi = {
     payload: { sku?: string; variantStocks: { optionValues: Record<string, string>; stock?: number }[] },
   ) => api.post<Product>(`/v1/products/${id}/stock-product`, payload).then((r) => r.data),
 
+  /** Where the photo background remover's model and runtime live on R2 (null base = not set up). */
+  bgRemoveFiles: () => api.get<{ base: string | null }>('/v1/products/bg-remove/files').then((r) => r.data),
+
   // Uploads one product photo and returns its picture URL. Called once
   // per selected file — the Add/Edit Product form collects the resulting
   // URLs and sends them together as photoUrls in the create()/update() call.
