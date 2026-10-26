@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { StoreLayoutType, StoreMenuItem } from '../../../../lib/designSettingsApi';
 import { toast } from '../../../../lib/toast';
 import { MenuEditor } from './MenuEditor';
+import { BanglaDigitsCheckbox } from './StoreLanguageCard';
 import { DesignLoading, DesignPageHeader, DesignSection, RadioGroup, SaveButton, menuError, useDesignSettings } from './designShared';
 
 /** Store > Design > Layout Settings — page width and the desktop site menu of the StorePal storefront. */
@@ -10,12 +11,14 @@ export default function LayoutSettings() {
   const [layoutType, setLayoutType] = useState<StoreLayoutType>('COMPACT');
   const [siteMenu, setSiteMenu] = useState<StoreMenuItem[]>([]);
   const [storeLanguage, setStoreLanguage] = useState<'en' | 'bn'>('en');
+  const [banglaDigits, setBanglaDigits] = useState(false);
 
   useEffect(() => {
     if (!settings) return;
     setLayoutType(settings.layoutType);
     setSiteMenu(settings.siteMenu);
     setStoreLanguage(settings.storeLanguage ?? 'en');
+    setBanglaDigits(settings.storeBanglaDigits ?? false);
   }, [settings]);
 
   const saveMenu = () => {
@@ -65,7 +68,8 @@ export default function LayoutSettings() {
               Shows your store's buttons and labels (Add to Cart, Buy Now, Cart, Search...) in the chosen language. Your product
               names and descriptions stay exactly as you wrote them.
             </p>
-            <SaveButton pending={save.isPending} onClick={() => save.mutate({ storeLanguage })} />
+            {storeLanguage === 'bn' && <BanglaDigitsCheckbox checked={banglaDigits} onChange={setBanglaDigits} />}
+            <SaveButton pending={save.isPending} onClick={() => save.mutate({ storeLanguage, storeBanglaDigits: banglaDigits })} />
           </DesignSection>
 
           <DesignSection

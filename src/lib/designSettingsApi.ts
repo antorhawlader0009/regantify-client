@@ -162,6 +162,8 @@ export interface DesignSettings {
 
   /** StorePal's own buttons and labels: English or Bangla. Product names and descriptions stay as written. */
   storeLanguage: 'en' | 'bn';
+  /** Prices in Bangla digits (৳১,২৫০) while storeLanguage is "bn". */
+  storeBanglaDigits: boolean;
 
   /** The floating chat bubble on the storefront (Store > Design > Chat Button). Mirrored by the server's CHAT_BUTTON_* lists. */
   chatButtonEnabled: boolean;
@@ -173,6 +175,8 @@ export interface DesignSettings {
   chatButtonProductMessage: boolean;
   /** Share button on the product page (TellMe idea 61). */
   productShareEnabled: boolean;
+  /** "Compare" tick box on product cards (IDEA-13); off by default. */
+  compareEnabled: boolean;
   /** "N bought in the last X days" window (TellMe idea 63): 0 = off, 7 or 30. */
   socialProofDays: number;
   /** Wishlist price / restock alerts by SMS (TellMe idea 62). */

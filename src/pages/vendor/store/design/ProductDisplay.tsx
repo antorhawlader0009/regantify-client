@@ -24,6 +24,7 @@ export default function ProductDisplay() {
   const [shape, setShape] = useState<ProductImageShape>('SQUARE');
   const [gallery, setGallery] = useState<ProductGalleryStyle>('BOTTOM');
   const [share, setShare] = useState(true);
+  const [compareOn, setCompareOn] = useState(false);
   const [proofDays, setProofDays] = useState<0 | 7 | 30>(0);
   const [wishAlerts, setWishAlerts] = useState(false);
   // "Someone bought" popup (TellMe idea 123).
@@ -37,6 +38,7 @@ export default function ProductDisplay() {
     setShape(settings.productImageShape);
     setGallery(settings.galleryStyle);
     setShare(settings.productShareEnabled);
+    setCompareOn(settings.compareEnabled ?? false);
     setProofDays((settings.socialProofDays as 0 | 7 | 30) ?? 0);
     setWishAlerts(settings.wishlistAlertsEnabled);
     setBuyersOn(settings.recentBuyersEnabled ?? false);
@@ -49,7 +51,7 @@ export default function ProductDisplay() {
     });
   }, [settings]);
 
-  const advancedInUse = [proofDays > 0, wishAlerts, buyersOn, Boolean(messages.inStockMessage || messages.outOfStockMessage || messages.preOrderMessage)].filter(Boolean).length;
+  const advancedInUse = [proofDays > 0, wishAlerts, compareOn, buyersOn, Boolean(messages.inStockMessage || messages.outOfStockMessage || messages.preOrderMessage)].filter(Boolean).length;
 
   return (
     <div className="max-w-3xl">
@@ -89,7 +91,7 @@ export default function ProductDisplay() {
             />
           </DesignSection>
 
-          <AdvancedPanel id="design-product-display" what="Share button, N bought in the last days, wishlist alerts, someone-bought popup, stock messages" inUse={advancedInUse} spaced>
+          <AdvancedPanel id="design-product-display" what="Share button, N bought in the last days, wishlist alerts, compare products, someone-bought popup, stock messages" inUse={advancedInUse} spaced>
           <DesignSection title="Share, sales and wishlist (StorePal)">
             <div className="flex items-center gap-3">
               <Switch checked={share} onChange={setShare} label="Share button" />
@@ -111,9 +113,14 @@ export default function ProductDisplay() {
               <span className="text-sm text-regantify-text">Let logged-in shoppers ask for an SMS when a wishlist product gets cheaper or is back in stock</span>
             </div>
             <p className="text-xs text-regantify-text-muted">Alert texts come from your SMS credits, at most one a day per product, never at night.</p>
+            <div className="flex items-center gap-3">
+              <Switch checked={compareOn} onChange={setCompareOn} label="Compare products" />
+              <span className="text-sm text-regantify-text">Show a “Compare” tick box on product cards (up to 3 products side by side)</span>
+            </div>
+            <p className="text-xs text-regantify-text-muted">Useful for gadgets and electronics, where shoppers compare specs. Most clothing, cosmetics and jewellery stores can leave it off.</p>
             <SaveButton
               pending={save.isPending}
-              onClick={() => save.mutate({ productShareEnabled: share, socialProofDays: proofDays, wishlistAlertsEnabled: wishAlerts })}
+              onClick={() => save.mutate({ productShareEnabled: share, socialProofDays: proofDays, wishlistAlertsEnabled: wishAlerts, compareEnabled: compareOn })}
             />
           </DesignSection>
 
