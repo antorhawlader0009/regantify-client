@@ -250,7 +250,7 @@ function TeamTab() {
     <div className="space-y-4">
       <PageSection>
         <PageHeader
-          title="Staff"
+          title="Team"
           description={
             isOwner && staffUsage
               ? staffUsage.limit === null
