@@ -625,9 +625,20 @@ export default function OrderDetail() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {/* Main column */}
         <div className="min-w-0 space-y-4 lg:col-span-2">
+          {order.customerConfirmedAt && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900">
+              <span className="font-semibold">Customer confirmed this order</span> from the SMS link ({new Date(order.customerConfirmedAt).toLocaleString()}). No need to call.
+            </div>
+          )}
           {order.isGift && (
             <div className="rounded-xl border-2 border-pink-300 bg-pink-50 px-4 py-3 text-sm text-pink-900">
               <p className="font-semibold">Gift: wrap it nicely</p>
+              {order.giftSenderName && (
+                <p className="mt-1">
+                  From <span className="font-semibold">{order.giftSenderName}</span>{order.giftSenderPhone ? ` (${order.giftSenderPhone})` : ''}. The delivery details above are the receiver's.
+                </p>
+              )}
+              <p className="mt-1">Paid in full online. Order texts go to the sender; the receiver is only told when it is out for delivery.</p>
               {order.giftMessage && <p className="mt-1">Message for the card: “{order.giftMessage}”</p>}
               {order.hidePricesOnInvoice && <p className="mt-1">Print the invoice without prices.</p>}
             </div>

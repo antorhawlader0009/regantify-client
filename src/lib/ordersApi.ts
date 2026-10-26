@@ -251,10 +251,15 @@ export interface Order {
   manualPaymentStatus?: 'PENDING_CHECK' | 'RECEIVED' | 'NOT_RECEIVED' | null;
   manualPaymentCheckedAt?: string | null;
   manualPaymentCheckedBy?: string | null;
+  /** When the customer confirmed the order from the SMS link (IDEA-24); null/absent = not. */
+  customerConfirmedAt?: string | null;
   /** Gift (TellMe idea 57): wrapped, with a message, optionally with the prices hidden on the invoice. giftWrapCharge is part of total. */
   isGift?: boolean;
   giftMessage?: string | null;
   hidePricesOnInvoice?: boolean;
+  /** Who sends the gift (IDEA-21); the delivery name, phone and address on the order are the receiver's. Always paid in full online. */
+  giftSenderName?: string | null;
+  giftSenderPhone?: string | null;
   giftWrapCharge?: string;
   /** Split order (TellMe idea 59): the order this one was split off from. */
   splitFromOrderId?: string | null;

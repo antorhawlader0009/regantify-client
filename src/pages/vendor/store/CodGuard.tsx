@@ -153,7 +153,7 @@ export default function CodGuard() {
 
   // Advanced settings that are switched on (the panel then starts open).
   const advancedInUse = form
-    ? [Boolean(form.preOrderAdvancePercent), form.duplicateOrderHold, form.autoConfirmTrusted, !form.customerCancelEnabled, !form.customerEditEnabled].filter(Boolean).length
+    ? [Boolean(form.preOrderAdvancePercent), form.duplicateOrderHold, form.autoConfirmTrusted, !form.customerCancelEnabled, !form.customerEditEnabled, form.confirmLinkEnabled].filter(Boolean).length
     : 0;
 
   return (
@@ -512,6 +512,35 @@ export default function CodGuard() {
               or area and a second phone. The main phone and the district stay as ordered. You get a notice, and the order&apos;s history
               keeps the old and the new address. Fewer parcels come back for a wrong address.
             </p>
+          </section>
+
+          <section className="bg-white rounded-2xl border border-black/5 p-5">
+            <Checkbox
+              checked={form.confirmLinkEnabled}
+              onChange={(v) => set('confirmLinkEnabled', v)}
+              label="Text new orders a one-tap “confirm your order” link"
+            />
+            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+              Off by default. When on, each new online <b>Cash on Delivery</b> order texts its customer one private link. The customer taps{' '}
+              <b>Yes, this is my order</b> and the order is marked <b>Customer confirmed</b>, or taps <b>I did not order this</b> and the order is
+              cancelled (its stock goes back) and you get a notice, because someone may be using their number. It saves you calls: you can start
+              with the orders the customers already confirmed. <b>Costs one SMS credit per order</b>, paid from your SMS balance; when the credits
+              run out the texts stop and you get one notice a day. Not sent for orders paid online, orders waiting for the SMS code above, gift
+              orders or blacklisted phones.
+            </p>
+            {form.confirmLinkEnabled && (
+              <div className="mt-3 ml-7">
+                <Checkbox
+                  checked={form.confirmLinkAutoProcess}
+                  onChange={(v) => set('confirmLinkAutoProcess', v)}
+                  label="Move a confirmed order to Processing by itself"
+                />
+                <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+                  A Pending order moves to Processing the moment the customer confirms it. It never does for an order with a High risk badge or one held as a
+                  possible duplicate. The history says &ldquo;Confirmed by the customer (SMS link)&rdquo;.
+                </p>
+              </div>
+            )}
           </section>
           </AdvancedPanel>
 

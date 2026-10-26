@@ -73,6 +73,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Logo, favicon and brand colours', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'logo favicon color colour brand store name icon লোগো রঙ' },
   { title: 'Install as app (home screen)', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'app install home screen pwa mobile app add to home screen phone icon apps অ্যাপ হোম স্ক্রিন মোবাইল অ্যাপ' },
   { title: 'Store language (Bangla / English)', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla bengali english language translate store labels বাংলা ভাষা' },
+  { title: 'Confirm link by SMS (one tap)', where: 'Store > COD Guard', path: '/vendor/store/cod-guard', keywords: 'confirm order link sms one tap customer confirm yes no did not order verify call save calls কনফার্ম লিংক' },
   { title: 'Prices in Bangla digits', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla digits numbers sonkha price taka ৳১২৩ বাংলা সংখ্যা দাম' },
   { title: 'Homepage sections and layout', where: 'Store > Design > Customize', path: '/vendor/store/customize', keywords: 'home page sections banner slider categories featured products reorder হোম পেজ' },
   { title: 'Menu and header', where: 'Store > Design > Header Editor', path: '/vendor/store/header-editor', keywords: 'navigation menu links header announcement top bar মেনু হেডার' },
@@ -132,6 +133,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
 
   // ------------------------------------------------------------------ Products & stock
   { title: 'Add a product', where: 'Product > Add Product', path: '/vendor/product/add', keywords: 'new product create item variants sizes colours ai generate পণ্য যোগ' },
+  { title: 'Clean a photo background (white or any colour)', where: 'Product > Add/Edit Product > Photos', path: '/vendor/product/add', keywords: 'remove background white background cut out photo clean product photo colour background bg remove chobi porishkar সাদা ব্যাকগ্রাউন্ড ছবি পরিষ্কার' },
   { title: 'Change prices of many products', where: 'Product > All Products', path: '/vendor/product/all', keywords: 'bulk price change increase decrease percent undo sale price dam bariye komano দাম পরিবর্তন' },
   { title: 'Import products from CSV', where: 'Product > All Products', path: '/vendor/product/all', keywords: 'bulk upload csv excel import products' },
   { title: 'Schedule a product to go live', where: 'Product > All Products', path: '/vendor/product/all', keywords: 'publish later schedule hide date time draft public' },

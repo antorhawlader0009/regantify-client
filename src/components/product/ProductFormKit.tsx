@@ -4,6 +4,7 @@ import { productInputClass } from './ProductFormPieces';
 import { useCan } from '../../lib/useStaffAccess';
 import { dhakaInputToIso, isoToDhakaInput, nowDhakaInput } from '../../lib/dhakaInput';
 import { PhotoHoverActions, PhotoLightbox, PhotoPickerDialog } from './PhotoPicker';
+import { RemoveBackgroundDialog } from './RemoveBackgroundDialog';
 
 // Pieces shared by Add Product and Edit Product (theme-update-plan.md
 // Step 2), so both forms get the same photos, price, status, search
@@ -163,6 +164,8 @@ export function PhotoManager<P extends PhotoItem>({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [fileOver, setFileOver] = useState(false);
+  // The photo whose background is being cleaned (RemoveBackgroundDialog).
+  const [cleaning, setCleaning] = useState<{ id: string; url: string } | null>(null);
 
   const isFileDrag = (e: DragEvent) => Array.from(e.dataTransfer.types).includes('Files');
   // Photos that can be previewed (uploaded, no error), with their place in `photos`.
@@ -236,7 +239,11 @@ export function PhotoManager<P extends PhotoItem>({
                   aria-hidden
                 />
                 {!photo.uploading && !photo.error && (
-                  <PhotoHoverActions onPreview={() => setPreview(i)} onChange={() => setPicker({ mode: 'SINGLE', id: photo.id })} />
+                  <PhotoHoverActions
+                    onPreview={() => setPreview(i)}
+                    onChange={() => setPicker({ mode: 'SINGLE', id: photo.id })}
+                    onCleanBackground={() => setCleaning({ id: photo.id, url: photo.uploadedUrl || photo.previewUrl })}
+                  />
                 )}
                 {photo.uploading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -310,6 +317,12 @@ export function PhotoManager<P extends PhotoItem>({
             if (urls[0]) onReplace(picker.id, urls[0]);
           } else onAddUrls(urls);
         }}
+      />
+      <RemoveBackgroundDialog
+        photoUrl={cleaning?.url ?? null}
+        photoSize={photoSize}
+        onClose={() => setCleaning(null)}
+        onDone={(url) => cleaning && onReplace(cleaning.id, url)}
       />
     </div>
   );

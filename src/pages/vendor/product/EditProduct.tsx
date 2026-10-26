@@ -168,6 +168,7 @@ export default function EditProduct() {
   const [maxOrderQty, setMaxOrderQty] = useState('');
   const [maxPerPhone, setMaxPerPhone] = useState('');
   const [bundleParts, setBundleParts] = useState<BundlePart[]>([]);
+  const [bundlePick, setBundlePick] = useState<number | null>(null);
   const [metaDescription, setMetaDescription] = useState('');
 
   // Main/Sub Category are just two views onto the same `categoryId` FK —
@@ -285,6 +286,7 @@ export default function EditProduct() {
       badge: { text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) },
       policy: policyFromProduct(p),
       isBundle: p.isBundle === true,
+      bundlePick: p.bundlePick ?? null,
       maxOrderQty: p.maxOrderQuantity ? String(p.maxOrderQuantity) : '',
       maxPerPhone: p.maxPerPhone24h ? String(p.maxPerPhone24h) : '',
       bundleParts: bundlePartsFromProduct(p.bundleItems).map((b) => [b.productId, b.quantity]),
@@ -360,6 +362,7 @@ export default function EditProduct() {
       badge,
       policy,
       isBundle,
+      bundlePick,
       maxOrderQty,
       maxPerPhone,
       bundleParts: bundleParts.map((b) => [b.productId, b.quantity]),
@@ -433,6 +436,7 @@ export default function EditProduct() {
     setBadge({ text: p.badgeText ?? '', until: badgeUntilDate(p.badgeUntil) });
     setPolicy(policyFromProduct(p));
     setIsBundle(p.isBundle === true);
+    setBundlePick(p.bundlePick ?? null);
     setMaxOrderQty(p.maxOrderQuantity ? String(p.maxOrderQuantity) : '');
     setMaxPerPhone(p.maxPerPhone24h ? String(p.maxPerPhone24h) : '');
     setBundleParts(bundlePartsFromProduct(p.bundleItems));
@@ -569,7 +573,7 @@ export default function EditProduct() {
         ...policyToPayload(policy),
         // Always sent: unticking turns a bundle back into a plain product.
         isBundle,
-        ...(isBundle ? { bundleItems: bundleItemsPayload(bundleParts) } : {}),
+        ...(isBundle ? { bundleItems: bundleItemsPayload(bundleParts), bundlePick } : {}),
         visibility,
         // null clears; the server also drops the one that doesn't fit the status.
         publishAt: visibility === 'DRAFT' ? schedule.publishAt : null,
@@ -704,7 +708,7 @@ export default function EditProduct() {
       setFormError('Wait for the photos to finish uploading.');
       return;
     }
-    const partsProblem = isBundle ? bundleError(bundleParts) : null;
+    const partsProblem = isBundle ? bundleError(bundleParts, bundlePick) : null;
     if (partsProblem) {
       setFormError(partsProblem);
       return;
@@ -1095,6 +1099,8 @@ export default function EditProduct() {
             onIsBundle={setIsBundle}
             parts={bundleParts}
             onParts={setBundleParts}
+            pick={bundlePick}
+            onPick={setBundlePick}
             price={price}
             discountPrice={discountPrice}
             excludeId={id}

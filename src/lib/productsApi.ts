@@ -140,6 +140,8 @@ export interface Product {
   maxPerPhone24h?: number | null;
   /** Bundle / combo (TellMe idea 51): made of `bundleItems`, no stock or variations of its own. */
   isBundle?: boolean;
+  /** "Pick N" box (IDEA-22): the shopper picks this many pieces from the parts; null = a fixed set. */
+  bundlePick?: number | null;
   /** A bundle's parts, with what the form needs to show them (the product detail only). */
   bundleItems?: Array<{
     quantity: number;
@@ -230,6 +232,8 @@ export interface CreateProductPayload {
   /** Bundle / combo (TellMe idea 51): true with `bundleItems` (2 to 10 parts); false turns a bundle back into a plain product. */
   isBundle?: boolean;
   bundleItems?: Array<{ productId: string; quantity: number }>;
+  /** "Pick N" box (IDEA-22): the shopper picks this many pieces from bundleItems; null = a fixed set. */
+  bundlePick?: number | null;
   stockQuantity?: number;
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
@@ -368,6 +372,8 @@ export interface UpdateProductPayload {
   /** Bundle / combo (TellMe idea 51): true with `bundleItems` (2 to 10 parts); false turns a bundle back into a plain product. */
   isBundle?: boolean;
   bundleItems?: Array<{ productId: string; quantity: number }>;
+  /** "Pick N" box (IDEA-22): the shopper picks this many pieces from bundleItems; null = a fixed set. */
+  bundlePick?: number | null;
   stockQuantity?: number;
   /** Why stock was changed by hand in this save (kept in the stock history). */
   stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';

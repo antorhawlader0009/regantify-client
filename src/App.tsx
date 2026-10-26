@@ -181,6 +181,8 @@ const Churn = lazy(() => import('./pages/admin/Churn'));
 const Economics = lazy(() => import('./pages/admin/Economics'));
 const AdminEmail = lazy(() => import('./pages/admin/Email'));
 const ProductInsights = lazy(() => import('./pages/admin/ProductInsights'));
+const FeatureUse = lazy(() => import('./pages/admin/FeatureUse'));
+const Activation = lazy(() => import('./pages/admin/Activation'));
 const DeliveryTimes = lazy(() => import('./pages/admin/DeliveryTimes'));
 const HelpArticles = lazy(() => import('./pages/admin/HelpArticles'));
 const Changelog = lazy(() => import('./pages/admin/Changelog'));
@@ -412,6 +414,8 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/economics' &&
     r.path !== '/admin/email' &&
     r.path !== '/admin/product-insights' &&
+    r.path !== '/admin/feature-use' &&
+    r.path !== '/admin/activation' &&
     r.path !== '/admin/delivery-times' &&
     r.path !== '/admin/help' &&
     r.path !== '/admin/changelog' &&
@@ -729,6 +733,8 @@ export default function App() {
                 <Route path="/admin/economics" element={<Economics />} />
                 <Route path="/admin/email" element={<AdminEmail />} />
                 <Route path="/admin/product-insights" element={<ProductInsights />} />
+                <Route path="/admin/feature-use" element={<FeatureUse />} />
+                <Route path="/admin/activation" element={<Activation />} />
                 <Route path="/admin/delivery-times" element={<DeliveryTimes />} />
                 <Route path="/admin/help" element={<HelpArticles />} />
                 <Route path="/admin/changelog" element={<Changelog />} />

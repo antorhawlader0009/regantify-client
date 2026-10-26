@@ -85,7 +85,51 @@ export interface DashboardViewsReport {
   pinned: Array<{ path: string; people: number }>;
 }
 
+/** Which storefront features shoppers use (IDEA-30): counts per feature over a window, against the period before. */
+export interface FeatureUseReport {
+  days: number;
+  /** The first day anything was counted; null = nothing yet. */
+  since: string | null;
+  /** Stores with any tracked use in the window. */
+  activeStores: number;
+  features: Array<{ key: string; label: string; group: string; uses: number; stores: number; before: number }>;
+}
+
+/** Where new stores get stuck (IDEA-37): how many stores of a sign-up group reached each early step. */
+export type ActivationStepKey = 'PRODUCT' | 'CONNECT' | 'ORDER' | 'DELIVERED';
+
+export interface ActivationReport {
+  days: number;
+  /** Active stores opened in the window. */
+  total: number;
+  steps: Array<{
+    key: ActivationStepKey;
+    label: string;
+    reached: number;
+    /** 0 to 1 of `total`. */
+    share: number;
+    /** Median days from sign-up to the step; null = nobody yet. */
+    medianDays: number | null;
+    /** The automatic nudge that works on this step: null = none exists; a name of null = not created yet. */
+    nudge: { name: string | null; enabled: boolean } | null;
+  }>;
+}
+
+export interface ActivationStuckStore {
+  vendorId: string;
+  storeName: string;
+  ownerName: string | null;
+  phone: string | null;
+  daysSinceSignup: number;
+  daysSinceSignIn: number | null;
+  done: Record<ActivationStepKey, boolean>;
+}
+
 export const adminAnalyticsApi = {
+  activation: (days: number) => api.get<ActivationReport>('/v1/admin/analytics/activation', { params: { days } }).then((r) => r.data),
+  activationStuck: (step: ActivationStepKey, days: number) =>
+    api.get<ActivationStuckStore[]>('/v1/admin/analytics/activation/stuck', { params: { step, days } }).then((r) => r.data),
+  featureUse: (days: number) => api.get<FeatureUseReport>('/v1/admin/analytics/feature-use', { params: { days } }).then((r) => r.data),
   get: () => api.get<AdminAnalytics>('/v1/admin/analytics').then((r) => r.data),
   dashboardViews: () => api.get<DashboardViewsReport>('/v1/admin/analytics/dashboard-views').then((r) => r.data),
 };

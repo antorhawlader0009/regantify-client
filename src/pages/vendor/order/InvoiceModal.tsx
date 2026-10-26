@@ -216,8 +216,11 @@ export function InvoiceSheet({
       </div>
       )}
 
-      {order.isGift && order.giftMessage && (
-        <div className="avoid-break mt-8 rounded border border-neutral-300 px-4 py-3 text-center text-sm italic text-neutral-700">“{order.giftMessage}”</div>
+      {order.isGift && (order.giftMessage || order.giftSenderName) && (
+        <div className="avoid-break mt-8 rounded border border-neutral-300 px-4 py-3 text-center text-sm italic text-neutral-700">
+          {order.giftMessage && <>“{order.giftMessage}”</>}
+          {order.giftSenderName && <p className="m-0 mt-1 not-italic font-medium">{order.giftMessage ? '— ' : 'A gift from '}{order.giftSenderName}</p>}
+        </div>
       )}
 
       {order.customerNote && (

@@ -16,6 +16,7 @@ export type CloseReasonCode =
   | 'OTHER'
   | 'ORDERED_BY_MISTAKE'
   | 'BOUGHT_ELSEWHERE'
+  | 'NOT_ORDERED'
   | 'NOT_VERIFIED'
   | 'UNPAID'
   | 'COURIER_RETURN';
@@ -35,6 +36,8 @@ export const CLOSE_REASON_LABEL: Record<CloseReasonCode, string> = {
   // Picked by the shopper on the "Cancel my order" button.
   ORDERED_BY_MISTAKE: 'Ordered by mistake',
   BOUGHT_ELSEWHERE: 'Bought from somewhere else',
+  // Written when the shopper answers "I did not order this" on the SMS confirm link.
+  NOT_ORDERED: 'Customer says they did not place this order',
   NOT_VERIFIED: 'SMS code not entered in time',
   UNPAID: 'Online payment not completed',
   COURIER_RETURN: 'Returned by the courier (reason not known)',

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronLeft, ChevronRight, Eye, FileImage, HardDrive, Info, Maximize2, Pencil, UploadCloud, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Eraser, Eye, FileImage, HardDrive, Info, Maximize2, Pencil, UploadCloud, X } from 'lucide-react';
 import { mediaApi } from '../../lib/mediaApi';
 import { productsApi } from '../../lib/productsApi';
 import { apiErrorMessage } from '../../lib/api';
@@ -24,10 +24,13 @@ const PAGE_SIZE = 24;
 export function PhotoHoverActions({
   onPreview,
   onChange,
+  onCleanBackground,
   size = 'md',
 }: {
   onPreview: () => void;
   onChange: () => void;
+  /** Optional third button: clean the background (RemoveBackgroundDialog). */
+  onCleanBackground?: () => void;
   /** sm = a small tile (variation photos): the two icons side by side. */
   size?: 'md' | 'sm';
 }) {
@@ -68,6 +71,23 @@ export function PhotoHoverActions({
         >
           <Pencil size={sm ? 11 : 15} strokeWidth={2.2} />
         </button>
+        {onCleanBackground && (
+          <>
+            <span className={sm ? 'h-3 w-px bg-white/35' : 'h-px w-5 bg-white/35'} aria-hidden />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCleanBackground();
+              }}
+              aria-label="Clean background"
+              title="Clean background"
+              className={btn}
+            >
+              <Eraser size={sm ? 11 : 15} strokeWidth={2.2} />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

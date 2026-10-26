@@ -220,7 +220,7 @@ export function PackingListPrint({ ids, open, onOpenChange }: { ids: string[]; o
                       </div>
                       {order.isGift && (
                         <div className="mt-1.5 rounded border-2 border-neutral-800 px-2 py-1.5 text-sm font-semibold">
-                          GIFT: wrap it{order.giftMessage ? `. Card message: “${order.giftMessage}”` : ''}
+                          GIFT{order.giftSenderName ? ` from ${order.giftSenderName}` : ''}: wrap it{order.giftMessage ? `. Card message: “${order.giftMessage}”` : ''}
                           {order.hidePricesOnInvoice ? '. Invoice without prices.' : ''}
                         </div>
                       )}

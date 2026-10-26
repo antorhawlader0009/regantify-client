@@ -108,6 +108,7 @@ export default function AddProduct() {
   const [maxOrderQty, setMaxOrderQty] = useState('');
   const [maxPerPhone, setMaxPerPhone] = useState('');
   const [bundleParts, setBundleParts] = useState<BundlePart[]>([]);
+  const [bundlePick, setBundlePick] = useState<number | null>(null);
   const [metaDescription, setMetaDescription] = useState('');
 
   // Web address: follows the name until the vendor edits it.
@@ -286,7 +287,7 @@ export default function AddProduct() {
       setFormError('Wait for the photos to finish uploading.');
       return;
     }
-    const partsProblem = isBundle ? bundleError(bundleParts) : null;
+    const partsProblem = isBundle ? bundleError(bundleParts, bundlePick) : null;
     if (partsProblem) {
       setFormError(partsProblem);
       return;
@@ -307,7 +308,7 @@ export default function AddProduct() {
       badgeText: badge.text.trim() || undefined,
       badgeUntil: badge.text.trim() ? badgeUntilIso(badge.until) : undefined,
       ...policyToPayload(policy),
-      ...(isBundle ? { isBundle: true, bundleItems: bundleItemsPayload(bundleParts) } : {}),
+      ...(isBundle ? { isBundle: true, bundleItems: bundleItemsPayload(bundleParts), bundlePick: bundlePick ?? undefined } : {}),
       slug: slug.trim() || undefined,
       visibility,
       // The server drops the one that doesn't fit the status (a go-live time on a Public product).
@@ -638,6 +639,8 @@ export default function AddProduct() {
             onIsBundle={setIsBundle}
             parts={bundleParts}
             onParts={setBundleParts}
+            pick={bundlePick}
+            onPick={setBundlePick}
             price={price}
             discountPrice={discountPrice}
           />

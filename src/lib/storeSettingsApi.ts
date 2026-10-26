@@ -79,6 +79,10 @@ export interface CodGuardSettings {
   customerCancelEnabled: boolean;
   // "Fix my address" on the same pages: the shopper corrects the street address, thana and a second phone.
   customerEditEnabled: boolean;
+  /** "Confirm my order" link by SMS (IDEA-24): off by default; costs one SMS credit per new Cash on Delivery order. */
+  confirmLinkEnabled: boolean;
+  /** A confirmed Pending order moves to Processing by itself (never when its risk is HIGH). */
+  confirmLinkAutoProcess: boolean;
 }
 
 // Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.

@@ -6,6 +6,8 @@ import {
   ReceiptText,
   LayoutDashboard,
   PackageSearch,
+  MousePointerClick,
+  Route,
   ClipboardList,
   Users,
   Truck,
@@ -311,6 +313,8 @@ export const adminNav: NavSection[] = [
   { label: 'Analytics', icon: BarChart3, group: 'Overview', path: '/admin/analytics' },
   { label: 'Economics', icon: Scale, group: 'Overview', path: '/admin/economics' },
   { label: 'Product insights', icon: PackageSearch, group: 'Overview', path: '/admin/product-insights' },
+  { label: 'Activation', icon: Route, group: 'Overview', path: '/admin/activation' },
+  { label: 'Feature use', icon: MousePointerClick, group: 'Overview', path: '/admin/feature-use' },
 
   { label: 'All stores', icon: StoreIcon, group: 'Stores', path: '/admin/vendors/all' },
   { label: 'Pending approval', icon: BadgeCheck, group: 'Stores', path: '/admin/vendors/pending' },

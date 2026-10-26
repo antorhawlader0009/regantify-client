@@ -473,6 +473,11 @@ function OrderRow({
       <td className={td}>
         <OrderStatusBadge status={order.status} />
         <AssigneeChip order={order} />
+        {order.customerConfirmedAt && (
+          <p className="mt-1 inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800" title="The customer confirmed this order from the SMS link">
+            Customer confirmed
+          </p>
+        )}
         {order.isGift && (
           <p className="mt-1 inline-flex items-center gap-1 rounded border border-pink-200 bg-pink-50 px-1.5 py-0.5 text-[11px] font-medium text-pink-800" title="Gift: wrap it and add the message">
             Gift

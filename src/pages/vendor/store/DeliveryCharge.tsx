@@ -415,7 +415,7 @@ function CheckoutRulesSection({
           Gift option at checkout (StorePal)
         </label>
         <p className="text-xs text-regantify-text-muted mt-1">
-          The shopper can tick &quot;this is a gift&quot;, write a short message and hide the prices on the invoice. You see a big gift note on the order and the packing list.
+          The shopper can tick &quot;this is a gift&quot;, give the sender&apos;s name (and phone, even from abroad), write a short message and hide the prices on the invoice. <strong>A gift is always paid in full online</strong>, never Cash on Delivery, so the option only shows while you have an online payment method connected. The sender gets the order texts; the receiver is only texted when it is out for delivery. You see a big gift note on the order and the packing list. To accept cards from abroad, connect a payment method that takes foreign cards (ask your provider).
         </p>
         <div className="mt-3 max-w-xs">{field('Gift wrap charge (৳)', wrap, setWrap, '0 = free wrapping. Added to the total as its own line.', !gift)}</div>
       </div>
