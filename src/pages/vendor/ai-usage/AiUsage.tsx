@@ -7,6 +7,7 @@ import {
   Coins,
   Copy,
   ExternalLink,
+  Image as ImageIcon,
   LayoutTemplate,
   MessageCircle,
   Mic,
@@ -35,6 +36,7 @@ import { useViewer } from '../../../lib/useStaffAccess';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { StoreAiInstructionsCard } from '../../../components/ai/StoreAiInstructionsCard';
+import { PhotoSearchAiCard } from '../../../components/ai/PhotoSearchAiCard';
 import {
   EmptyState,
   PillTabs,
@@ -66,6 +68,7 @@ const panel = 'rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgb
 const TOOLS: Record<AiToolKey, { name: string; what: string; icon: LucideIcon; to?: string }> = {
   STORE_CHAT: { name: 'Store chat', what: 'Answers shoppers on your store', icon: MessageCircle, to: '/vendor/store/themes' },
   STORE_VOICE: { name: 'Store voice call', what: 'Talks with shoppers by voice on your store', icon: Mic },
+  PHOTO_SEARCH: { name: 'Photo search (AI)', what: 'Finds a product from a shopper’s photo when the free match finds none', icon: ImageIcon },
   ASK_AI: { name: 'Ask AI', what: 'Answers your questions in the dashboard', icon: Sparkles },
   PRODUCT_AI: { name: 'Product AI', what: 'Writes and fills in product details', icon: PackageSearch, to: '/vendor/product/add' },
   CHAT_EXTENSION: { name: 'Chat extension', what: 'Reply drafts and photo reading in customer chats', icon: Plug, to: '/vendor/store/extension' },
@@ -81,6 +84,7 @@ const ALLOWANCES: Record<'LANDING_PAGE' | 'LMS', { name: string; what: string; i
 /** Client copy of the server's aiToolOf (ai-chatbot.service.ts), for the Recent list's icons. */
 function toolOf(description: string, feature: string | null): AiToolKey {
   if (description === 'Store voice reply') return 'STORE_VOICE';
+  if (description === 'Store photo search') return 'PHOTO_SEARCH';
   if (feature === 'STORE_CHATBOT' || description === 'Store chat reply') return 'STORE_CHAT';
   if (description === 'Ask AI answer') return 'ASK_AI';
   if (description === 'Product chat' || description === 'Product description' || description === 'AI photo look') return 'PRODUCT_AI';
@@ -967,6 +971,7 @@ export default function AiUsage() {
         <div className="min-w-0 space-y-4">
           <RecentCard />
           <AiSwitches />
+          <PhotoSearchAiCard className={panel} />
           <VoiceCallLinkCard theme={themeInfo?.theme} />
           <SpendingControls />
           <AllowancesCard report={report} />

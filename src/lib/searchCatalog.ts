@@ -75,6 +75,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Store language (Bangla / English)', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla bengali english language translate store labels বাংলা ভাষা' },
   { title: 'Language for store, AI chat and SMS', where: 'Settings > Language', path: '/vendor/settings?tab=language', keywords: 'language bangla english bhasha store text ai chat reply customer sms ভাষা বাংলা ইংরেজি এআই চ্যাট এসএমএস' },
   { title: 'Your instructions for the AI', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'ai instructions system prompt notes chatbot rules shop info voice call assistant tell ai নির্দেশনা এআই চ্যাটবট তথ্য' },
+  { title: 'AI photo search', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'photo search image search camera picture ai find product similar ছবি দিয়ে খোঁজা এআই' },
   { title: 'Confirm link by SMS (one tap)', where: 'Store > COD Guard', path: '/vendor/store/cod-guard', keywords: 'confirm order link sms one tap customer confirm yes no did not order verify call save calls কনফার্ম লিংক' },
   { title: 'Prices in Bangla digits', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla digits numbers sonkha price taka ৳১২৩ বাংলা সংখ্যা দাম' },
   { title: 'Homepage sections and layout', where: 'Store > Design > Customize', path: '/vendor/store/customize', keywords: 'home page sections banner slider categories featured products reorder হোম পেজ' },

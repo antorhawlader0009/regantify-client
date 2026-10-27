@@ -43,7 +43,7 @@ export interface AiCreditSummary {
 }
 
 /** The AI tools a store pays AI Credits for (server ai-chatbot.service.ts aiToolOf). */
-export type AiToolKey = 'STORE_CHAT' | 'STORE_VOICE' | 'ASK_AI' | 'PRODUCT_AI' | 'CHAT_EXTENSION' | 'REPLY_DRAFTS' | 'OTHER';
+export type AiToolKey = 'STORE_CHAT' | 'STORE_VOICE' | 'PHOTO_SEARCH' | 'ASK_AI' | 'PRODUCT_AI' | 'CHAT_EXTENSION' | 'REPLY_DRAFTS' | 'OTHER';
 
 export interface AiUsageReport {
   days: number;

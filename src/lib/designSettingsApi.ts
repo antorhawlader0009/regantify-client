@@ -168,6 +168,8 @@ export interface DesignSettings {
   aiChatLanguage: 'bn' | 'en' | 'auto';
   /** The store owner's own notes for the store AI chat (AI Usages), at most 1,500 characters; null = none. */
   aiChatInstructions: string | null;
+  /** Search by photo: the AI looks at the photo when the free picture match finds nothing (uses AI Credits; off by default). */
+  photoSearchAi: boolean;
 
   /** The floating chat bubble on the storefront (Store > Design > Chat Button). Mirrored by the server's CHAT_BUTTON_* lists. */
   chatButtonEnabled: boolean;
