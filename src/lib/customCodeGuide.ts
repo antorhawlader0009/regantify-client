@@ -33,7 +33,6 @@ export const HOOKS: { name: string; what: string; where: string }[] = [
   { name: 'product-buttons', what: 'The row with Add to Cart and Buy Now', where: 'product page' },
   { name: 'add-to-cart', what: '"Add to Cart" button', where: 'product page' },
   { name: 'buy-now', what: '"Buy Now" button', where: 'product page' },
-  { name: 'mobile-buy-bar', what: 'The buy bar stuck to the bottom on phones', where: 'product page, phones' },
   { name: 'product-summary', what: 'The short text under the buttons', where: 'product page' },
   { name: 'product-tabs', what: 'Description / reviews / questions tabs', where: 'product page' },
   { name: 'cart-drawer', what: 'The cart panel that slides in from the right', where: 'every page, when open' },

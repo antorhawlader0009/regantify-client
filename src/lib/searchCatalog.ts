@@ -71,10 +71,12 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   // ------------------------------------------------------------------ Store > Design & content
   { title: 'Store theme / template', where: 'Store > Templates', path: '/vendor/store/themes', keywords: 'theme template storepal medium minimal change look design থিম টেমপ্লেট' },
   { title: 'Logo, favicon and brand colours', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'logo favicon color colour brand store name icon লোগো রঙ' },
+  { title: 'Store fonts', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'font fonts typeface typography letters heading font body font google fonts bangla font ফন্ট অক্ষর লেখার ধরন' },
   { title: 'Install as app (home screen)', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'app install home screen pwa mobile app add to home screen phone icon apps অ্যাপ হোম স্ক্রিন মোবাইল অ্যাপ' },
   { title: 'Store language (Bangla / English)', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla bengali english language translate store labels বাংলা ভাষা' },
   { title: 'Language for store, AI chat and SMS', where: 'Settings > Language', path: '/vendor/settings?tab=language', keywords: 'language bangla english bhasha store text ai chat reply customer sms ভাষা বাংলা ইংরেজি এআই চ্যাট এসএমএস' },
   { title: 'Your instructions for the AI', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'ai instructions system prompt notes chatbot rules shop info voice call assistant tell ai নির্দেশনা এআই চ্যাটবট তথ্য' },
+  { title: 'Your AI assistant', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'ai assistant name picture avatar photo greeting welcome message first message ready questions starters voice call opening voice speed chat button left right corner side সহকারীর নাম ছবি শুরুর বার্তা প্রশ্ন কণ্ঠ বাম ডান' },
   { title: 'AI photo search', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'photo search image search camera picture ai find product similar ছবি দিয়ে খোঁজা এআই' },
   { title: 'Confirm link by SMS (one tap)', where: 'Store > COD Guard', path: '/vendor/store/cod-guard', keywords: 'confirm order link sms one tap customer confirm yes no did not order verify call save calls কনফার্ম লিংক' },
   { title: 'Prices in Bangla digits', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla digits numbers sonkha price taka ৳১২৩ বাংলা সংখ্যা দাম' },

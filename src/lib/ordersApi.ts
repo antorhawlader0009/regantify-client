@@ -174,6 +174,8 @@ export interface Order {
   // has only one location tier, unlike Pathao's city/zone/area cascade.
   redxAreaId?: number | null;
   deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA' | 'PICKUP';
+  /** Store pickup: the customer has a pickup code (the code itself never comes to the dashboard; the shop types what they show). */
+  hasPickupCode?: boolean;
   /** Express delivery (TellMe idea 132): the extra the shopper paid is already inside deliveryCharge. */
   deliverySpeed?: 'STANDARD' | 'EXPRESS';
   expressCharge?: string;
@@ -605,6 +607,10 @@ export const ordersApi = {
   /** Order detail's "Not a duplicate": clears the possible-duplicate mark. */
   dismissDuplicate: (id: string) =>
     api.post<{ id: string; possibleDuplicateOfId: null }>(`/v1/orders/${id}/not-duplicate`).then((r) => r.data),
+
+  /** Store pickup: checks the code the customer shows; a match marks the order Completed. */
+  checkPickupCode: (id: string, code: string) =>
+    api.post<{ id: string; status: 'COMPLETED' }>(`/v1/orders/${id}/pickup-code`, { code }).then((r) => r.data),
 
   updateLabel: (id: string, label: string | null) =>
     api.patch<Order>(`/v1/orders/${id}/label`, { label }).then((r) => r.data),

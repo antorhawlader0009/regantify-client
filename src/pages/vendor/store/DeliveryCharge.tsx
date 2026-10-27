@@ -323,6 +323,7 @@ function CheckoutRulesSection({
   const [minOrder, setMinOrder] = useState('');
   const [gift, setGift] = useState(false);
   const [wrap, setWrap] = useState('0');
+  const [usdRate, setUsdRate] = useState('');
   const [weightOn, setWeightOn] = useState(false);
   const [freeKg, setFreeKg] = useState('1');
   const [perInside, setPerInside] = useState('0');
@@ -337,6 +338,7 @@ function CheckoutRulesSection({
     setMinOrder(charges.minOrderAmount && Number(charges.minOrderAmount) > 0 ? String(Number(charges.minOrderAmount)) : '');
     setGift(charges.giftOptionEnabled);
     setWrap(String(Number(charges.giftWrapCharge)));
+    setUsdRate(charges.giftUsdRate && Number(charges.giftUsdRate) > 0 ? String(Number(charges.giftUsdRate)) : '');
     setWeightOn(charges.weightChargeEnabled);
     setFreeKg(String(Number(charges.weightFreeKg)));
     setPerInside(String(Number(charges.weightPerKgInside)));
@@ -358,6 +360,7 @@ function CheckoutRulesSection({
         minOrderAmount: minOrder.trim() ? num(minOrder, 'The minimum order') : null,
         giftOptionEnabled: gift,
         giftWrapCharge: num(wrap, 'The gift wrap charge'),
+        giftUsdRate: usdRate.trim() ? num(usdRate, 'The dollar rate') : null,
         weightChargeEnabled: weightOn,
         weightFreeKg: num(freeKg, 'The free weight'),
         weightPerKgInside: num(perInside, 'The Inside Dhaka amount'),
@@ -418,7 +421,16 @@ function CheckoutRulesSection({
         <p className="text-xs text-regantify-text-muted mt-1">
           The shopper can tick &quot;this is a gift&quot;, give the sender&apos;s name (and phone, even from abroad), write a short message and hide the prices on the invoice. <strong>A gift is always paid in full online</strong>, never Cash on Delivery, so the option only shows while you have an online payment method connected. The sender gets the order texts; the receiver is only texted when it is out for delivery. You see a big gift note on the order and the packing list. To accept cards from abroad, connect a payment method that takes foreign cards (ask your provider).
         </p>
-        <div className="mt-3 max-w-xs">{field('Gift wrap charge (৳)', wrap, setWrap, '0 = free wrapping. Added to the total as its own line.', !gift)}</div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {field('Gift wrap charge (৳)', wrap, setWrap, '0 = free wrapping. Added to the total as its own line.', !gift)}
+          {field(
+            'Dollar rate for senders abroad (৳ per $1)',
+            usdRate,
+            setUsdRate,
+            'e.g. 122. Shoppers whose phone is outside Bangladesh, and anyone sending a gift, see “≈ US$X” beside the price and the total. Only a guide: they still pay in taka. Empty = off. Update it when the rate moves.',
+            !gift,
+          )}
+        </div>
       </div>
 
       <div className="mt-6 border-t border-black/5 pt-4">

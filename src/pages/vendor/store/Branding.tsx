@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import { WatermarkSection } from '../../../components/store/WatermarkSection';
 import { InstallAppSection } from '../../../components/store/InstallAppSection';
+import { StoreFontsCard } from '../../../components/store/StoreFontsCard';
 import { FullViewOnly, SimpleViewOnly } from '../../../components/ui/FullViewOnly';
 import { StoreLanguageCard } from './design/StoreLanguageCard';
 
@@ -386,61 +387,13 @@ export default function Branding() {
         {colorError && <p className="text-red-500 text-sm">{colorError}</p>}
       </div>
 
-      {/* Fonts and the link preview are Full mode (SIMPLE-VIEW-plan.md Step 8). Their values stay in `branding` and are
-          saved unchanged by "Update Branding". */}
-      <FullViewOnly>
-      <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-4 mt-6">
-        <h2 className="text-sm font-semibold text-regantify-text">Typography (Fonts)</h2>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Font – Headline</label>
-            <input
-              type="text"
-              value={branding.brandHeadingFont ?? ''}
-              onChange={(e) => handleField('brandHeadingFont', e.target.value || null)}
-              placeholder="Open Sans"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text
-                placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors"
-            />
-            <p className="text-xs text-regantify-text-muted mt-1.5">
-              For a list of all available fonts,{' '}
-              <a
-                href="https://fonts.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-regantify-cta hover:underline"
-              >
-                browse Google Fonts library
-              </a>
-              .
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-regantify-text mb-1.5">Font – Body</label>
-            <input
-              type="text"
-              value={branding.brandBodyFont ?? ''}
-              onChange={(e) => handleField('brandBodyFont', e.target.value || null)}
-              placeholder="Open Sans"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text
-                placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors"
-            />
-            <p className="text-xs text-regantify-text-muted mt-1.5">
-              For a list of all available fonts,{' '}
-              <a
-                href="https://fonts.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-regantify-cta hover:underline"
-              >
-                browse Google Fonts library
-              </a>
-              .
-            </p>
-          </div>
-        </div>
-      </div>
-      </FullViewOnly>
+      {/* Fonts (lib/storeFonts.ts): shown in Simple mode too (2026-10-27, the user's request). Saved by "Update Branding". */}
+      <StoreFontsCard
+        heading={branding.brandHeadingFont}
+        body={branding.brandBodyFont}
+        onHeading={(v) => handleField('brandHeadingFont', v)}
+        onBody={(v) => handleField('brandBodyFont', v)}
+      />
 
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-3 mt-6">
         <h2 className="text-sm font-semibold text-regantify-text">Website cover photo</h2>

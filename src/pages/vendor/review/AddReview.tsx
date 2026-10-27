@@ -76,6 +76,8 @@ export default function AddReview() {
   const [date, setDate] = useState(''); // datetime-local string; blank = now, on create
   const [photos, setPhotos] = useState<PhotoState[]>([]);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  // The buyer's own video (sent from the store's review form); "Remove" takes it off on Save.
+  const [removeVideo, setRemoveVideo] = useState(false);
 
   const [orderQuery, setOrderQuery] = useState('');
   const [orderFocused, setOrderFocused] = useState(false);
@@ -162,6 +164,7 @@ export default function AddReview() {
         customerName: customerName.trim() || undefined,
         customerEmail: customerEmail.trim() || undefined,
         customerPhone: customerPhone.trim() || undefined,
+        ...(isEdit && removeVideo ? { removeVideo: true } : {}),
       };
       return isEdit ? reviewsApi.update(id!, payload) : reviewsApi.create(payload);
     },
@@ -270,6 +273,30 @@ export default function AddReview() {
           />
           {submitted && errors.photos && <p className="mt-2 text-xs text-red-600">{errors.photos}</p>}
         </SectionCard>
+
+        {isEdit && existing?.videoUrl && (
+          <SectionCard title="Customer’s video" description="Sent by the buyer with this review. Removing it deletes the file when you save.">
+            {removeVideo ? (
+              <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+                The video will be removed when you save.
+                <button type="button" onClick={() => setRemoveVideo(false)} className="font-medium text-brand hover:underline">
+                  Keep it
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-start gap-3">
+                <video src={existing.videoUrl} controls playsInline preload="metadata" className="max-h-72 w-full max-w-xs rounded-lg border border-line bg-black" />
+                <button
+                  type="button"
+                  onClick={() => setRemoveVideo(true)}
+                  className="rounded-lg border border-line px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Remove video
+                </button>
+              </div>
+            )}
+          </SectionCard>
+        )}
 
         <SectionCard title="What it’s about" description="Link the order and products so the review shows on those product pages.">
           <div className="space-y-4">

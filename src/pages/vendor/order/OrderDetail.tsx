@@ -37,6 +37,7 @@ import { ManualDeliveryCard } from '../../../components/courier/ManualDeliveryCa
 import { OrderTrackingCard } from '../../../components/order/OrderTrackingCard';
 import { OrderAdvanceCard } from '../../../components/order/OrderAdvanceCard';
 import { OrderRefundNote } from '../../../components/order/OrderRefundNote';
+import { PickupCodeCard } from '../../../components/order/PickupCodeCard';
 import { ManualPaymentCard } from '../../../components/order/ManualPaymentCard';
 import { OrderRiskCard, orderAddressProblem } from '../../../components/order/OrderRiskBadge';
 import { ADDRESS_PROBLEM_TEXT } from '../../../lib/addressCheck';
@@ -558,6 +559,8 @@ export default function OrderDetail() {
 
       {/* Medium or high risk (TellMe idea 143, OrderRiskService). */}
       <OrderRefundNote orderId={order.id} status={order.status} />
+      {/* Store pickup: the shop checks the customer's code before handing over. */}
+      <PickupCodeCard order={order} canEdit={canEdit} onDone={invalidateOrder} />
       <ManualPaymentCard order={order} canEdit={canEdit} />
       <OrderRiskCard order={order} />
       {/* The customer's delivery record as cards, above the warnings (needs the full phone, so customers.contact). */}

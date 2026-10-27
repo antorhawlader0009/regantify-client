@@ -36,6 +36,7 @@ import { useViewer } from '../../../lib/useStaffAccess';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { StoreAiInstructionsCard } from '../../../components/ai/StoreAiInstructionsCard';
+import { AiAssistantLookCard } from '../../../components/ai/AiAssistantLookCard';
 import { PhotoSearchAiCard } from '../../../components/ai/PhotoSearchAiCard';
 import {
   EmptyState,
@@ -959,6 +960,7 @@ export default function AiUsage() {
           <UsageBars report={report} period={period} onPeriod={setPeriod} />
           <ToolsCard report={report} />
           <StoreAiInstructionsCard className={panel} />
+          <AiAssistantLookCard className={panel} />
           <section id="ai-credit-history" className={`${panel} scroll-mt-20`}>
             <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">AI Credit history</h2>
             <History />

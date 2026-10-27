@@ -23,6 +23,8 @@ export interface Review {
   content: string | null;
   rating: number;
   photos: string[];
+  /** A buyer's own video from the store's review form (Advance plan only); null = none. */
+  videoUrl?: string | null;
   orderId: string | null;
   order: ReviewOrderRef | null;
   products: ReviewProductRef[];
@@ -73,6 +75,8 @@ export interface ReviewPayload {
   customerPhone?: string;
   approved?: boolean;
   featured?: boolean;
+  /** Takes the buyer's video off and deletes the file. */
+  removeVideo?: boolean;
 }
 
 export const reviewsApi = {

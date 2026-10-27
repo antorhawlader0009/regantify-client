@@ -170,6 +170,14 @@ export interface DesignSettings {
   aiChatInstructions: string | null;
   /** Search by photo: the AI looks at the photo when the free picture match finds nothing (uses AI Credits; off by default). */
   photoSearchAi: boolean;
+  /** The store AI assistant's own name, picture, first message, ready questions, voice-call opening, speed and corner (AI Usages). Texts are Bangla only. */
+  aiAssistantName: string | null;
+  aiAssistantAvatarUrl: string | null;
+  aiChatGreeting: string | null;
+  aiChatStarters: string[];
+  aiVoiceGreeting: string | null;
+  aiVoiceSpeed: 'SLOW' | 'NORMAL' | 'FAST';
+  aiChatSide: 'RIGHT' | 'LEFT';
 
   /** The floating chat bubble on the storefront (Store > Design > Chat Button). Mirrored by the server's CHAT_BUTTON_* lists. */
   chatButtonEnabled: boolean;

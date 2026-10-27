@@ -108,6 +108,8 @@ export interface DeliveryCharges {
   minOrderAmount: string | null;
   giftOptionEnabled: boolean;
   giftWrapCharge: string;
+  /** Taka per 1 US dollar for "about $X" prices to gift senders abroad; null = off. */
+  giftUsdRate?: string | null;
   weightChargeEnabled: boolean;
   weightFreeKg: string;
   weightPerKgInside: string;
@@ -152,6 +154,7 @@ export interface DeliveryChargesUpdate {
   minOrderAmount?: number | null;
   giftOptionEnabled?: boolean;
   giftWrapCharge?: number;
+  giftUsdRate?: number | null;
   weightChargeEnabled?: boolean;
   weightFreeKg?: number;
   weightPerKgInside?: number;
