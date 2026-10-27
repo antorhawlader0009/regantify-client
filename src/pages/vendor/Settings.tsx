@@ -25,6 +25,7 @@ import {
   UsersRound,
   Wallet,
   Palmtree,
+  Languages,
   type LucideIcon,
 } from 'lucide-react';
 import { authApi } from '../../lib/authApi';
@@ -39,6 +40,7 @@ import { isFullViewPath } from '../../lib/simpleView';
 import { FullViewOnly, MoreInFullView } from '../../components/ui/FullViewOnly';
 import { Field, IconInput, IconTextarea, SaveButton, Section, flashFor } from '../../components/ui/FormKit';
 import { GoogleSignInSection, TwoStepSection } from '../../components/settings/SignInSecurity';
+import { LanguageSettings, canUseLanguageSettings } from '../../components/settings/LanguageSettings';
 
 const subdomainRegex = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -65,10 +67,11 @@ const passwordSchema = z
 type StoreFormValues = z.infer<typeof storeSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-type TabKey = 'general' | 'security' | 'more';
+type TabKey = 'general' | 'language' | 'security' | 'more';
 
 const TABS: { key: TabKey; label: string; icon: LucideIcon }[] = [
   { key: 'general', label: 'General', icon: Store },
+  { key: 'language', label: 'Language', icon: Languages },
   { key: 'security', label: 'Security', icon: ShieldCheck },
   { key: 'more', label: 'More settings', icon: SlidersHorizontal },
 ];
@@ -90,7 +93,7 @@ const MORE_SETTINGS: { label: string; description: string; path: string; icon: L
   { label: 'Billing', description: 'Your plan, usage and upgrades', path: '/vendor/billing', icon: Wallet },
 ];
 
-const isTab = (v: string | null): v is TabKey => v === 'general' || v === 'security' || v === 'more';
+const isTab = (v: string | null): v is TabKey => v === 'general' || v === 'language' || v === 'security' || v === 'more';
 
 export default function VendorSettings() {
   const [params, setParams] = useSearchParams();
@@ -102,7 +105,15 @@ export default function VendorSettings() {
   const roleLinks = MORE_SETTINGS.filter((s) => canOpenPath(viewer, s.path));
   const moreLinks = isSimple ? roleLinks.filter((s) => !isFullViewPath(s.path) || pins.includes(s.path)) : roleLinks;
   const hiddenMore = roleLinks.length - moreLinks.length;
-  const tabs = TABS.filter((t) => (t.key === 'general' ? canAccess(viewer, 'store.settings') : t.key === 'more' ? moreLinks.length > 0 : true));
+  const tabs = TABS.filter((t) =>
+    t.key === 'general'
+      ? canAccess(viewer, 'store.settings')
+      : t.key === 'language'
+        ? canUseLanguageSettings(viewer)
+        : t.key === 'more'
+          ? moreLinks.length > 0
+          : true,
+  );
   const asked = params.get('tab');
   const tab: TabKey = isTab(asked) && tabs.some((t) => t.key === asked) ? (asked as TabKey) : tabs[0].key;
   const selectTab = (key: TabKey) => setParams(key === 'general' ? {} : { tab: key }, { replace: true });
@@ -136,6 +147,7 @@ export default function VendorSettings() {
       </div>
 
       {tab === 'general' && <GeneralTab />}
+      {tab === 'language' && <LanguageSettings />}
       {tab === 'security' && <SecurityTab />}
       {tab === 'more' && <MoreTab links={moreLinks} hidden={hiddenMore} />}
     </div>

@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ModelPrices, MODEL_PRICES_KEY } from './ModelPrices';
 import { PhotoTextSetting } from './PhotoTextSetting';
 import { VoiceModelSetting } from './VoiceModelSetting';
+import { VoiceFallbackSetting } from './VoiceFallbackSetting';
 import {
   getAiModels,
   getAiSettings,
@@ -259,6 +260,8 @@ export default function AiSettings() {
       <PhotoTextSetting />
 
       <VoiceModelSetting />
+
+      <VoiceFallbackSetting />
 
       <ModelPrices />
     </div>

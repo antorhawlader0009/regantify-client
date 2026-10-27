@@ -34,6 +34,7 @@ import { toast } from '../../../lib/toast';
 import { useViewer } from '../../../lib/useStaffAccess';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
+import { StoreAiInstructionsCard } from '../../../components/ai/StoreAiInstructionsCard';
 import {
   EmptyState,
   PillTabs,
@@ -953,6 +954,7 @@ export default function AiUsage() {
         <div className="min-w-0 space-y-4 lg:col-span-2">
           <UsageBars report={report} period={period} onPeriod={setPeriod} />
           <ToolsCard report={report} />
+          <StoreAiInstructionsCard className={panel} />
           <section id="ai-credit-history" className={`${panel} scroll-mt-20`}>
             <h2 className="mb-3 text-[15px] font-semibold text-regantify-text">AI Credit history</h2>
             <History />

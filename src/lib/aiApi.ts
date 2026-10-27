@@ -112,3 +112,16 @@ export async function setVoiceModel(model: string): Promise<string> {
   const { data } = await api.put<{ model: string }>('/v1/admin/ai/voice-model', { model });
   return data.model;
 }
+
+/** The voice a call switches to when a shopper's phone is too slow for the Piper voice. */
+export type VoiceFallback = 'GOOGLE' | 'SERVER';
+
+export async function getVoiceFallback(): Promise<VoiceFallback> {
+  const { data } = await api.get<{ fallback: VoiceFallback }>('/v1/admin/ai/voice-fallback');
+  return data.fallback;
+}
+
+export async function setVoiceFallback(fallback: VoiceFallback): Promise<VoiceFallback> {
+  const { data } = await api.put<{ fallback: VoiceFallback }>('/v1/admin/ai/voice-fallback', { fallback });
+  return data.fallback;
+}

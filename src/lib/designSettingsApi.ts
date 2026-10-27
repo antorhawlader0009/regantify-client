@@ -164,6 +164,10 @@ export interface DesignSettings {
   storeLanguage: 'en' | 'bn';
   /** Prices in Bangla digits (৳১,২৫০) while storeLanguage is "bn". */
   storeBanglaDigits: boolean;
+  /** The store AI chat's reply language (Settings > Language): Bangla, English, or the shopper's own. */
+  aiChatLanguage: 'bn' | 'en' | 'auto';
+  /** The store owner's own notes for the store AI chat (AI Usages), at most 1,500 characters; null = none. */
+  aiChatInstructions: string | null;
 
   /** The floating chat bubble on the storefront (Store > Design > Chat Button). Mirrored by the server's CHAT_BUTTON_* lists. */
   chatButtonEnabled: boolean;
