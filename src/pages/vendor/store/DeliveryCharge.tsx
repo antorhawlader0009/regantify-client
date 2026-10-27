@@ -15,6 +15,7 @@ const deliveryChargeSchema = z.object({
   vatChargeBdt: z.coerce.number().min(0, 'Enter a valid amount').max(1000000, 'Amount is too large'),
 });
 type DeliveryChargeFormValues = z.infer<typeof deliveryChargeSchema>;
+type DeliveryChargeFormInput = z.input<typeof deliveryChargeSchema>;
 
 const inputClass = `w-full px-4 py-2.5 rounded-xl bg-regantify-search text-regantify-text
   focus:outline-none focus:ring-2 focus:ring-regantify-black`;
@@ -38,7 +39,7 @@ export default function DeliveryCharge() {
     queryFn: getVendorDeliveryCharges,
   });
 
-  const form = useForm<DeliveryChargeFormValues>({
+  const form = useForm<DeliveryChargeFormInput, unknown, DeliveryChargeFormValues>({
     resolver: zodResolver(deliveryChargeSchema),
     defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, vatChargeBdt: 10 },
   });

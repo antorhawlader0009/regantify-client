@@ -30,20 +30,6 @@ export interface VariationValuePhoto {
   photoUrls: string[];
 }
 
-// Add/Edit Product's "AI Generate" result — see AiService.generateProductInfo.
-// Deliberately excludes price/stock (the vendor's own business decision,
-// never inferred).
-export interface GeneratedProductInfo {
-  description: string;
-  category: string;
-  brand: string;
-  summary: string;
-  metaTitle: string;
-  metaDescription: string;
-  weight: number | null;
-  weightUnit: 'KG' | 'G' | 'LB';
-}
-
 export interface Product {
   id: string;
   vendorId: string;
@@ -545,13 +531,6 @@ export const productsApi = {
 
   // Distinct category names currently in use, for the "All Categories" filter dropdown.
   categoriesInUse: () => api.get<string[]>('/v1/products/categories-in-use').then((r) => r.data),
-
-  // Add/Edit Product's "AI Generate" button — see AiService.generateProductInfo
-  // on the server. photoUrl must already be an uploaded picture URL,
-  // not a local file — the form always uploads a photo before this is
-  // ever callable (see the button's disabled condition).
-  aiGenerate: (name: string, photoUrl: string) =>
-    api.post<GeneratedProductInfo>('/v1/products/ai-generate', { name, photoUrl }).then((r) => r.data),
 
   // "Generate" next to a barcode field: in-store EAN-13 codes nothing in this store uses yet.
   generateBarcodes: (count = 1) =>

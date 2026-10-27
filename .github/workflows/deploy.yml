@@ -23,6 +23,6 @@ jobs:
             cd ~/regantify/client
             git pull origin main
             cd ~/regantify
-            docker compose build client
+            docker compose build --pull client
             docker compose up -d --no-deps client
             docker image prune -f

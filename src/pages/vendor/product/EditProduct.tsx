@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDashboardView } from '../../../lib/useDashboardView';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, Trash2, Sparkles, Loader2, PackageX, ExternalLink } from 'lucide-react';
+import { X, Trash2, PackageX, ExternalLink } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { StockHistoryDialog } from '../../../components/product/StockHistoryDialog';
@@ -524,30 +524,6 @@ export default function EditProduct() {
     setFormError(null);
   };
 
-  // "AI Generate" — needs a name and at least one already-uploaded photo
-  // (not still uploading, not a local-only preview) since the server
-  // fetches the photo by URL to hand to a vision model. See
-  // AiService.generateProductInfo for what it does and doesn't fill in —
-  // price/stock are deliberately never touched.
-  const firstUploadedPhotoUrl = photos.find((p) => p.uploadedUrl && !p.uploading)?.uploadedUrl;
-  const canAiGenerate = Boolean(name.trim()) && Boolean(firstUploadedPhotoUrl);
-
-  const aiGenerateMutation = useMutation({
-    mutationFn: () => productsApi.aiGenerate(name.trim(), firstUploadedPhotoUrl!),
-    onSuccess: (info) => {
-      setDescription(info.description);
-      setCategory(info.category);
-      setBrand(info.brand);
-      setSummary(info.summary);
-      setMetaTitle(info.metaTitle);
-      setMetaDescription(info.metaDescription);
-      if (info.weight != null) setWeight(String(info.weight));
-      setWeightUnit(info.weightUnit);
-      toast.success('AI-generated info added — review before saving.');
-    },
-    onError: () => toast.error('Could not generate product info. Please try again.'),
-  });
-
   const updateMutation = useMutation({
     mutationFn: () =>
       productsApi.update(id!, {
@@ -872,21 +848,7 @@ export default function EditProduct() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* Main column: only what every product needs. Everything else is under "Advanced" at the bottom. */}
         <div className="min-w-0 space-y-4">
-          <SectionCard
-            title="Product details"
-            action={
-              <button
-                type="button"
-                onClick={() => aiGenerateMutation.mutate()}
-                disabled={!canAiGenerate || aiGenerateMutation.isPending}
-                title={canAiGenerate ? 'Fill in description, category, brand and search listing from the name and first photo' : 'Add a name and one photo first'}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-brand-lime bg-brand-lime/40 px-3 text-sm font-medium text-brand transition-colors hover:bg-brand-lime/70 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-                {aiGenerateMutation.isPending ? 'Generating…' : 'AI Generate'}
-              </button>
-            }
-          >
+          <SectionCard title="Product details">
             <div className="space-y-4">
               <Field label="Product name" required error={nameError}>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value.slice(0, 200))} maxLength={200} className={productInputClass} />

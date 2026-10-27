@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDashboardView } from '../../../lib/useDashboardView';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Plus, Sparkles, UploadCloud } from 'lucide-react';
+import { Plus, UploadCloud } from 'lucide-react';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, productInputClass } from '../../../components/product/ProductFormPieces';
 import { AdvancedHint } from '../../../components/ui/AdvancedToggle';
@@ -208,27 +208,6 @@ export default function AddProduct() {
     setCategory(categoryOptions.find((c) => c.id === resolvedId)?.name ?? '');
   };
 
-  // "AI Generate" needs a name and one uploaded photo (the server reads the
-  // photo by URL). It never touches price or stock (AiService.generateProductInfo).
-  const firstUploadedPhotoUrl = photos.find((p) => p.uploadedUrl && !p.uploading)?.uploadedUrl;
-  const canAiGenerate = Boolean(name.trim()) && Boolean(firstUploadedPhotoUrl);
-
-  const aiGenerateMutation = useMutation({
-    mutationFn: () => productsApi.aiGenerate(name.trim(), firstUploadedPhotoUrl!),
-    onSuccess: (info) => {
-      setDescription(info.description);
-      setCategory(info.category);
-      setBrand(info.brand);
-      setSummary(info.summary);
-      setMetaTitle(info.metaTitle);
-      setMetaDescription(info.metaDescription);
-      if (info.weight != null) setWeight(String(info.weight));
-      setWeightUnit(info.weightUnit);
-      toast.success('Product info filled in. Check it before saving.');
-    },
-    onError: () => toast.error('Could not generate product info. Please try again.'),
-  });
-
   const createMutation = useMutation({
     mutationFn: productsApi.create,
     onSuccess: () => {
@@ -363,7 +342,7 @@ export default function AddProduct() {
   const urlBase = `${typeof window !== 'undefined' ? window.location.host : ''}/store/${storeSubdomain ?? '…'}`;
 
   // Rarely-needed options sit behind one "Advanced" button. Hidden fields keep their values and are still saved; the
-  // section opens by itself when one of them holds a value (AI Generate filling the search listing, say).
+  // section opens by itself when one of them holds a value (the AI assistant filling the search listing, say).
   const advancedInUse = [
     Boolean(summary.trim()),
     Boolean(videoUrl.trim()),
@@ -444,21 +423,7 @@ export default function AddProduct() {
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* Main column: only what every product needs. Everything else is under "Advanced" at the bottom. */}
         <div className="min-w-0 space-y-4">
-          <SectionCard
-            title="Product details"
-            action={
-              <button
-                type="button"
-                onClick={() => aiGenerateMutation.mutate()}
-                disabled={!canAiGenerate || aiGenerateMutation.isPending}
-                title={canAiGenerate ? 'Fill in description, category, brand and search listing from the name and first photo' : 'Add a name and one photo first'}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-brand-lime bg-brand-lime/40 px-3 text-sm font-medium text-brand transition-colors hover:bg-brand-lime/70 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {aiGenerateMutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-                {aiGenerateMutation.isPending ? 'Generating…' : 'AI Generate'}
-              </button>
-            }
-          >
+          <SectionCard title="Product details">
             <div className="space-y-4">
               <Field label="Product name" required error={nameError}>
                 <input
@@ -470,7 +435,7 @@ export default function AddProduct() {
                   className={productInputClass}
                 />
               </Field>
-              <Field label="Description" hint="Tip: add a name and a photo, then use AI Generate to write this for you.">
+              <Field label="Description" hint="Tip: the AI assistant beside this form can write it for you.">
                 <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product…" maxLength={10000} />
               </Field>
             </div>

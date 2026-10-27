@@ -27,6 +27,7 @@ import {
   Handshake,
 } from 'lucide-react';
 import { productsApi, type Product } from '../../../lib/productsApi';
+import { categoriesApi } from '../../../lib/categoriesApi';
 import { downloadProducts } from '../../../lib/productExport';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { LockedBadge, dailyLimitToast } from '../../../components/ui/UpgradePrompt';
@@ -459,6 +460,23 @@ export default function AllProducts() {
     queryKey: ['products-categories-in-use'],
     queryFn: productsApi.categoriesInUse,
   });
+
+  // The Category column shows the picked category as "Main > Sub", the same
+  // thing Edit Product's two dropdowns show; the old free text only when the
+  // product has no picked category.
+  const { data: categoryTree = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.list(),
+  });
+  const categoryPath = useMemo(() => {
+    const byId = new Map(categoryTree.map((c) => [c.id, c]));
+    return (p: Product): string | null => {
+      const c = p.categoryId ? byId.get(p.categoryId) : undefined;
+      if (!c) return p.category ?? null;
+      const parent = c.parentId ? byId.get(c.parentId) : undefined;
+      return parent ? `${parent.name} > ${c.name}` : c.name;
+    };
+  }, [categoryTree]);
 
   // Products are unlimited in total; the plan caps NEW products per Dhaka day (Free 50 ... Advance 500). Server already
   // hard-blocks both ProductsService.create and createStockProduct at
@@ -1065,7 +1083,7 @@ export default function AllProducts() {
                       {p.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={p.slug} />}
                     </div>
                   </td>
-                  {columns.category && <td className={`${td} ${cellY} whitespace-nowrap`}>{p.category ?? '—'}</td>}
+                  {columns.category && <td className={`${td} ${cellY} whitespace-nowrap`}>{categoryPath(p) ?? '—'}</td>}
                   {columns.sku && (
                     <td className={`${td} ${cellY}`}>
                       <span className="block max-w-[220px] truncate" title={p.sku}>

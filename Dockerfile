@@ -20,7 +20,7 @@ ENV VITE_ROOT_DOMAIN=$VITE_ROOT_DOMAIN
 RUN npm run build
 
 # --- runner ------------------------------------------------------------------
-FROM nginx:1.27-alpine AS runner
+FROM nginx:1.30-alpine AS runner
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
