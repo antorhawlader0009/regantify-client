@@ -98,6 +98,8 @@ const CSS_VARS = [
 
 const EVENTS = [
   ['page_view', '{ page, path }: every page the shopper opens (also after in-page navigation)'],
+  ['view_item_list', '{ item_list_name, items }: a list of products was shown (home, a category, search results...)'],
+  ['select_item', '{ item_list_name, items }: a product card in a list was clicked'],
   ['view_item', 'a product page was shown'],
   ['add_to_cart', 'a product went into the cart'],
   ['remove_from_cart', 'a product was taken out of the cart'],
@@ -105,9 +107,11 @@ const EVENTS = [
   ['add_to_wishlist', 'heart pressed on a product'],
   ['search', '{ search_term }'],
   ['begin_checkout', 'the checkout form opened'],
+  ['add_shipping_info', '{ shipping_tier }: the delivery details were filled in at "Place order"'],
   ['add_payment_info', 'a payment method was chosen'],
   ['purchase', '{ transaction_id, value, shipping, tax, items }: on the thank-you page, once per order'],
   ['sign_up', 'a shopper made an account'],
+  ['login', '{ method }: a shopper signed in'],
 ];
 
 const TASK_BY_KIND: Record<CustomCodeKind, string> = {

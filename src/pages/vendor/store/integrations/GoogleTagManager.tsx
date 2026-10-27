@@ -33,16 +33,21 @@ function toForm(s: GoogleTagManagerSettings): FormState {
 // Custom Event triggers and Data Layer Variables to create in GTM (see
 // storefront/src/lib/ecommerceEvents.ts and googleTagManager.ts).
 const ECOMMERCE_EVENTS = [
+  'view_item_list',
+  'select_item',
   'view_item',
   'add_to_cart',
   'remove_from_cart',
   'view_cart',
   'add_to_wishlist',
   'begin_checkout',
+  'add_shipping_info',
   'add_payment_info',
   'purchase',
 ];
-const OTHER_EVENTS = ['search', 'sign_up', 'generate_lead', 'virtual_page_view', 'cookie_consent_granted'];
+const OTHER_EVENTS = ['search', 'sign_up', 'login', 'generate_lead', 'virtual_page_view', 'cookie_consent_granted'];
+// Page variables pushed before the container loads and again with every virtual_page_view (Data Layer Variables in GTM).
+const PAGE_VARIABLES = ['page_type', 'store_subdomain', 'store_name', 'currency'];
 
 /**
  * Store > Integrations > Google Tag Manager. The browser side is
@@ -205,7 +210,9 @@ export default function GoogleTagManager() {
               <span className="font-mono text-xs">{ECOMMERCE_EVENTS.join(', ')}</span> (product data in{' '}
               <span className="font-mono text-xs">ecommerce</span>), and{' '}
               <span className="font-mono text-xs">{OTHER_EVENTS.join(', ')}</span>. For GA4 ecommerce tags, tick
-              &quot;Send Ecommerce data&quot; with Data source &quot;Data Layer&quot;.
+              &quot;Send Ecommerce data&quot; with Data source &quot;Data Layer&quot;. Every page also sets{' '}
+              <span className="font-mono text-xs">{PAGE_VARIABLES.join(', ')}</span> before the container loads, so a
+              trigger can be &quot;page_type equals product&quot; (home, product, category, search, cart, checkout, thank-you...).
             </Notice>
           )}
 
