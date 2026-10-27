@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle, Save, Loader2 } from 'lucide-react';
 import { getVendorSocialLinks, updateVendorSocialLinks, type SocialLinks } from '../../../lib/vendorApi';
 import { toast } from 'sonner';
+import { apiErrorMessage } from '../../../lib/api';
 
 type FieldKey = keyof SocialLinks;
 
@@ -10,6 +11,10 @@ interface PlatformField {
   label: string;
   placeholder: string;
   icon: typeof Facebook;
+  /** A line under the box. */
+  hint?: string;
+  /** Takes a plain phone number too, not only a link (WhatsApp). */
+  phone?: boolean;
 }
 
 // Order matches the icons shown in the storefront footer (see
@@ -26,8 +31,11 @@ const FIELDS: PlatformField[] = [
   {
     key: 'whatsappUrl',
     label: 'WhatsApp',
-    placeholder: 'https://wa.me/8801XXXXXXXXX',
+    placeholder: '01712345678 or https://wa.me/8801712345678',
     icon: MessageCircle,
+    // The server turns any number form (with or without 88) into a wa.me link (whatsapp-link.ts).
+    hint: 'Type your WhatsApp number (88 not needed) or paste a WhatsApp link. A number is saved as a link by itself.',
+    phone: true,
   },
 ];
 
@@ -63,8 +71,9 @@ export default function Social() {
       const updated = await updateVendorSocialLinks(links);
       setLinks(updated);
       toast.success('Social links updated. Your storefront footer will reflect this shortly.');
-    } catch {
-      toast.error('Could not save your social links. Please try again.');
+    } catch (err) {
+      // The server says what is wrong (for example a WhatsApp box that is neither a number nor a link).
+      toast.error(apiErrorMessage(err, 'Could not save your social links. Please try again.'));
     } finally {
       setSaving(false);
     }
@@ -95,13 +104,15 @@ export default function Social() {
                   {field.label}
                 </label>
                 <input
-                  type="url"
+                  type={field.phone ? 'text' : 'url'}
+                  inputMode={field.phone ? 'text' : 'url'}
                   value={links[field.key] ?? ''}
                   onChange={(e) => handleChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-black/10 text-sm text-regantify-text
                     placeholder:text-regantify-text-muted focus:outline-none focus:border-regantify-cta transition-colors"
                 />
+                {field.hint && <p className="mt-1.5 text-xs text-regantify-text-muted">{field.hint}</p>}
               </div>
             );
           })}
