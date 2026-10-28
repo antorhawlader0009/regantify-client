@@ -189,6 +189,8 @@ export interface DesignSettings {
   chatButtonProductMessage: boolean;
   /** Share button on the product page (TellMe idea 61). */
   productShareEnabled: boolean;
+  /** Average star rating on the product page, cards and Google (from 3 approved reviews); on by default. */
+  showRatings?: boolean;
   /** "Compare" tick box on product cards (IDEA-13); off by default. */
   compareEnabled: boolean;
   /** "N bought in the last X days" window (TellMe idea 63): 0 = off, 7 or 30. */
