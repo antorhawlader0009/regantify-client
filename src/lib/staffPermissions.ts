@@ -390,7 +390,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/finance/expenses': 'finance.view',
   '/vendor/finance/withdraw': 'owner',
   '/vendor/finance/receipts': 'owner',
-  '/vendor/finance/referrals': 'owner',
+
   '/vendor/finance/fee-summary': 'finance.view',
   '/vendor/billing': 'owner',
   '/vendor/store/backup': 'owner',

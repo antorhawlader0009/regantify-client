@@ -539,6 +539,17 @@ export default function CodGuard() {
                   A Pending order moves to Processing the moment the customer confirms it. It never does for an order with a High risk badge or one held as a
                   possible duplicate. The history says &ldquo;Confirmed by the customer (SMS link)&rdquo;.
                 </p>
+                <div className="mt-3">
+                  <Checkbox
+                    checked={form.confirmLinkReminder}
+                    onChange={(v) => set('confirmLinkReminder', v)}
+                    label="Remind once if the customer doesn't answer"
+                  />
+                  <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
+                    Off by default. When the customer hasn&apos;t tapped the link 3 hours later, they get one more text with the same link (only between
+                    9 am and 9 pm, never after a day). <b>Costs one more SMS credit</b> for each order that gets the reminder.
+                  </p>
+                </div>
               </div>
             )}
           </section>

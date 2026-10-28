@@ -290,7 +290,7 @@ export default function EditProduct() {
       policy: policyFromProduct(p),
       isBundle: p.isBundle === true,
       bundlePick: p.bundlePick ?? null,
-      maxOrderQty: p.maxOrderQuantity ? String(p.maxOrderQuantity) : '',
+      maxOrderQty: p.maxOrderQuantity != null ? String(p.maxOrderQuantity) : '',
       maxPerPhone: p.maxPerPhone24h ? String(p.maxPerPhone24h) : '',
       bundleParts: bundlePartsFromProduct(p.bundleItems).map((b) => [b.productId, b.quantity]),
       metaDescription: p.metaDescription ?? '',
@@ -440,7 +440,7 @@ export default function EditProduct() {
     setPolicy(policyFromProduct(p));
     setIsBundle(p.isBundle === true);
     setBundlePick(p.bundlePick ?? null);
-    setMaxOrderQty(p.maxOrderQuantity ? String(p.maxOrderQuantity) : '');
+    setMaxOrderQty(p.maxOrderQuantity != null ? String(p.maxOrderQuantity) : '');
     setMaxPerPhone(p.maxPerPhone24h ? String(p.maxPerPhone24h) : '');
     setBundleParts(bundlePartsFromProduct(p.bundleItems));
     setMetaDescription(p.metaDescription ?? '');
@@ -593,8 +593,8 @@ export default function EditProduct() {
         quoteOnly,
         // Always sent: an empty field removes the minimum.
         minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : null,
-        // Always sent: an empty field removes the limit.
-        maxOrderQuantity: Number(maxOrderQty) > 0 ? Number(maxOrderQty) : null,
+        // Always sent: empty = the default 5, 0 = no limit (server products/order-limit.ts).
+        maxOrderQuantity: maxOrderQty.trim() ? Number(maxOrderQty) : null,
         maxPerPhone24h: Number(maxPerPhone) > 0 ? Number(maxPerPhone) : null,
         // Always sent: an empty field goes back to the store default.
         lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : null,
@@ -1139,14 +1139,14 @@ export default function EditProduct() {
                   className={productInputClass}
                 />
               </Field>
-              <Field label="Most per order" hint="Most pieces one shopper can order at once. Leave empty for no limit.">
+              <Field label="Most per order" hint="Most pieces one customer can order at once. Empty uses the default of 5. Type 0 for no limit.">
                 <input
                   type="number"
                   inputMode="numeric"
                   value={maxOrderQty}
                   onChange={(e) => setMaxOrderQty(e.target.value.replace(/\D/g, ''))}
-                  placeholder="e.g. 3"
-                  min={1}
+                  placeholder="5 (default)"
+                  min={0}
                   max={100000}
                   className={productInputClass}
                 />

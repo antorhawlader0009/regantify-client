@@ -23,7 +23,7 @@ const READY_SET: TrustStripItem[] = [
   { icon: 'genuine', title: 'Genuine products', text: '' },
 ];
 
-const BLANK: TrustStripSettings = { enabled: false, items: [], product: true, checkout: true, home: false };
+const BLANK: TrustStripSettings = { enabled: false, items: [], product: true, checkout: true, home: false, fastDelivery: true };
 
 /**
  * Store > Design > Trust Strip (TellMe idea 130): up to four icon + title + one-line promises shown under the Buy button, near the payment choice at
@@ -47,6 +47,26 @@ export default function TrustStripPage() {
         <DesignLoading />
       ) : (
         <div className="space-y-8">
+          <DesignSection
+            title="Under the Buy button"
+            hint="The small row right under Add to Cart and Buy Now on every product page."
+          >
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={strip.fastDelivery !== false}
+                onChange={(fastDelivery) => setStrip((s) => ({ ...s, fastDelivery }))}
+                label="Show “Fast delivery”"
+              />
+              <span className="text-sm">Show &ldquo;Fast delivery&rdquo; ({strip.fastDelivery !== false ? 'on' : 'off'})</span>
+            </div>
+            <p className="mt-2 text-xs text-regantify-text-muted">
+              On by default. Pre-order products say &ldquo;Delivery in 20–25 days&rdquo; instead. &ldquo;Cash on delivery&rdquo; shows by itself while
+              Cash on Delivery is on in Payment Gateway, so you don&apos;t set it here. Your own items below join this row when the strip is on and
+              &ldquo;Under the Buy button&rdquo; is ticked.
+            </p>
+            <SaveButton pending={save.isPending} onClick={() => save.mutate({ trustStrip: strip })} />
+          </DesignSection>
+
           <DesignSection title="Show the strip" hint="Only on the StorePal store. Off until you turn it on.">
             <div className="flex items-center gap-3">
               <Switch checked={strip.enabled} onChange={(enabled) => setStrip((s) => ({ ...s, enabled }))} label="Show the trust strip" />

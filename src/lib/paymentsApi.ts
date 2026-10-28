@@ -52,7 +52,17 @@ export interface PaymentTransaction {
   createdAt: string;
 }
 
+/** What paying for a plan now gives (server plan-purchase-term.ts): a renewal's new end date, or a switch's extra days. */
+export interface PlanTermPreview {
+  kind: 'NEW' | 'RENEW_EARLY' | 'RENEW_GRACE' | 'SWITCH';
+  expiresAt: string;
+  creditDays: number;
+  /** Already paid more than about a year ahead: the payment would be refused. */
+  tooFar: boolean;
+}
+
 export const paymentsApi = {
+  planTerms: () => api.get<Record<string, PlanTermPreview>>('/v1/payments/plan-terms').then((r) => r.data),
   // What a plan costs with a promo code (nothing is saved or counted until the payment goes through).
   promoCheck: (planCode: string, code: string) => api.post<PromoQuote>('/v1/payments/promo-check', { planCode, code }).then((r) => r.data),
 

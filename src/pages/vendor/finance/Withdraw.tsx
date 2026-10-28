@@ -147,6 +147,10 @@ export default function Withdraw() {
 
   const pendingRequest = requests.find((r) => r.status === 'PENDING');
   const balance = Number(wallet?.balance ?? 0);
+  // Money added by top-up can be spent but not withdrawn; the rest is what can be withdrawn.
+  const available = wallet?.withdrawable ?? Math.max(0, balance);
+  const spendOnly = wallet?.topupBalance ?? 0;
+  const held = wallet?.heldBalance ?? 0;
   const numericAmount = Number(amount);
   const phone = normalizeBdPhone(receiverNumber);
 
@@ -159,8 +163,10 @@ export default function Withdraw() {
           ? `The minimum is ${formatTaka(MINIMUM_WITHDRAW_AMOUNT)}.`
           : withdrawFee(numericAmount, feeRules) >= numericAmount
             ? 'The withdraw fee is more than this amount. Ask for more.'
-            : numericAmount > balance
-            ? `That’s more than your balance of ${formatTaka(balance)}.`
+            : numericAmount > available
+            ? spendOnly > 0 || held > 0
+              ? `You can withdraw up to ${formatTaka(available)}. The rest is held or from top-ups (see below).`
+              : `That’s more than your balance of ${formatTaka(balance)}.`
             : null,
     receiver: method === 'BANK' ? null : !receiverNumber.trim() ? `Enter your ${METHOD_LABEL[method]} number.` : !phone ? BD_PHONE_HINT : null,
     bank: method === 'BANK' && !bankDetails.trim() ? 'Enter the account name, account number, bank and branch.' : null,
@@ -216,7 +222,12 @@ export default function Withdraw() {
     <div>
       <div className="mb-4">
         <h1 className="text-[15px] font-semibold text-regantify-text">Withdraw</h1>
-        <p className="mt-0.5 text-sm text-neutral-500">Move money from your wallet to bKash, Nagad or your bank. There’s no fee.</p>
+        <p className="mt-0.5 text-sm text-neutral-500">
+          Move money from your wallet to bKash, Nagad or your bank.
+          {feeRules.feePercent > 0 || feeRules.feeFlat > 0
+            ? ` A withdraw fee of ${[feeRules.feePercent > 0 ? `${feeRules.feePercent}%` : null, feeRules.feeFlat > 0 ? formatTaka(feeRules.feeFlat) : null].filter(Boolean).join(' + ')} covers the cost of sending it.`
+            : ' There’s no fee.'}
+        </p>
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[400px_minmax(0,1fr)]">
@@ -228,7 +239,7 @@ export default function Withdraw() {
               {walletLoading ? (
                 <div className="mt-1 h-5 w-20 animate-pulse rounded bg-neutral-200" />
               ) : (
-                <p className="font-semibold tabular-nums text-regantify-text">{formatTaka(balance)}</p>
+                <p className="font-semibold tabular-nums text-regantify-text">{formatTaka(available)}</p>
               )}
             </div>
             <div>
@@ -236,6 +247,17 @@ export default function Withdraw() {
               <p className="font-semibold tabular-nums text-regantify-text">{formatTaka(MINIMUM_WITHDRAW_AMOUNT)}</p>
             </div>
           </div>
+          {held > 0 && (
+            <p className="mt-2 text-xs text-neutral-500">
+              {formatTaka(held)} is customers’ online payments for orders not delivered yet. It can be withdrawn once each order is Completed, or after you
+              record its refund in Orders &gt; Refunds to pay.
+            </p>
+          )}
+          {spendOnly > 0 && (
+            <p className="mt-2 text-xs text-neutral-500">
+              {formatTaka(spendOnly)} of your balance came from top-ups. It can pay for plans, SMS, AI Credits and fees, but can’t be withdrawn.
+            </p>
+          )}
 
           {pendingRequest ? (
             <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -245,9 +267,9 @@ export default function Withdraw() {
                 rejected.
               </p>
             </div>
-          ) : !walletLoading && balance < MINIMUM_WITHDRAW_AMOUNT ? (
+          ) : !walletLoading && available < MINIMUM_WITHDRAW_AMOUNT ? (
             <p className="mt-4 text-sm text-neutral-600">
-              You can withdraw once your balance reaches {formatTaka(MINIMUM_WITHDRAW_AMOUNT)}. Online orders add to it when they’re paid.
+              You can withdraw once you have {formatTaka(MINIMUM_WITHDRAW_AMOUNT)} to withdraw. Online orders add to it when they’re paid.
             </p>
           ) : (
             <form
@@ -262,8 +284,8 @@ export default function Withdraw() {
             >
               <Field label="Amount" required error={shown('amount')}>
                 <MoneyInput value={amount} onChange={(v) => setAmount(toLatinDigits(v))} placeholder={`At least ${MINIMUM_WITHDRAW_AMOUNT}`} ariaLabel="Amount" />
-                <button type="button" onClick={() => setAmount(String(Math.floor(balance * 100) / 100))} className="mt-1.5 text-xs font-medium text-brand hover:underline">
-                  Withdraw all ({formatTaka(balance)})
+                <button type="button" onClick={() => setAmount(String(Math.floor(available * 100) / 100))} className="mt-1.5 text-xs font-medium text-brand hover:underline">
+                  Withdraw all ({formatTaka(available)})
                 </button>
                 {numericAmount > 0 && withdrawFee(numericAmount, feeRules) > 0 && (
                   <p className="mt-1.5 text-xs text-neutral-600">

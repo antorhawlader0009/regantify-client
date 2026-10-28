@@ -148,6 +148,18 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
   const [payingPlan, setPayingPlan] = useState<PlanCode | null>(null);
   const [confirmRequest, setConfirmRequest] = useState<Plan | null>(null);
   const { data: requests = [] } = useQuery({ queryKey: ['own-plan-requests'], queryFn: getOwnPlanRequests });
+  // What paying for each plan gives right now (renewal end date, a switch's extra days); the payment uses the same rule.
+  const { data: terms } = useQuery({ queryKey: ['plan-terms'], queryFn: paymentsApi.planTerms, enabled: isOwner });
+  const termLine = (code: string): string | null => {
+    const t = terms?.[code];
+    if (!t) return null;
+    const until = new Date(t.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Dhaka' });
+    if (t.tooFar) return 'Already paid about a year ahead. You can renew again later.';
+    if (t.kind === 'RENEW_EARLY') return `Adds 30 days after your current end date: runs until ${until}. No days are lost.`;
+    if (t.kind === 'RENEW_GRACE') return `Continues your plan from its end date: runs until ${until}.`;
+    if (t.kind === 'SWITCH') return `Runs until ${until}, including ${t.creditDays} extra ${t.creditDays === 1 ? 'day' : 'days'} for the unused part of your current plan.`;
+    return `Runs for 30 days, until ${until}.`;
+  };
   const pendingRequest = requests.find((r) => r.status === 'PENDING');
 
   const requestMutation = useMutation({
@@ -300,13 +312,16 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
                   <div>
                     <button
                       type="button"
-                      disabled={payMutation.isPending}
+                      disabled={payMutation.isPending || !!terms?.[plan.code]?.tooFar}
                       onClick={() => payMutation.mutate(plan.code)}
                       className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
                     >
                       {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${payPrice(plan)}`}
                     </button>
-                    <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} className="mt-2" />
+                    {!terms?.[plan.code]?.tooFar && (
+                      <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} className="mt-2" />
+                    )}
+                    {termLine(plan.code) && <p className="mt-1.5 text-xs text-neutral-500">{termLine(plan.code)}</p>}
                   </div>
                 ) : isCurrent ? (
                   <p className="flex h-10 items-center justify-center rounded-lg bg-neutral-50 text-sm text-neutral-500">You’re on this plan</p>
@@ -327,6 +342,7 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
                     {!isFree && (
                       <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} />
                     )}
+                    {!isFree && termLine(plan.code) && <p className="text-xs text-neutral-500">{termLine(plan.code)}</p>}
                     <button
                       type="button"
                       disabled={requestMutation.isPending || Boolean(pendingRequest)}

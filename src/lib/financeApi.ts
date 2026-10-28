@@ -31,6 +31,12 @@ export interface TransactionsPage {
 
 export interface WalletSummary {
   balance: string;
+  /** The part of the balance added by top-ups: it can be spent (plans, SMS, AI Credits, fees) but not withdrawn. */
+  topupBalance?: number;
+  /** Shoppers' online payments held until their orders are delivered (or the refund is recorded): spendable, not withdrawable. */
+  heldBalance?: number;
+  /** What can be withdrawn: balance less the top-up part and the held part. */
+  withdrawable?: number;
   pendingWithdrawals: string;
   totalWithdrawn: string;
   /** COD the couriers collected for delivered parcels and haven't paid yet. They pay it to you directly, not into this wallet. */

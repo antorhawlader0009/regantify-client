@@ -83,6 +83,8 @@ export interface CodGuardSettings {
   confirmLinkEnabled: boolean;
   /** A confirmed Pending order moves to Processing by itself (never when its risk is HIGH). */
   confirmLinkAutoProcess: boolean;
+  /** One reminder text when the customer hasn't answered the link after 3 hours (off by default; one more SMS credit). */
+  confirmLinkReminder: boolean;
 }
 
 // Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.
@@ -115,6 +117,8 @@ export interface TrackingNotifyEvent {
 export interface TrackingNotifySettings {
   language: 'en' | 'bn';
   quietHours: boolean;
+  /** The Delivered text also carries the tracking link where the customer rates the delivery (on by default). */
+  deliveryRatingLink: boolean;
   /** Hours without courier movement before a parcel on its way is flagged as stalled. */
   stalledAfterHours: number;
   variables: string[];
@@ -125,6 +129,7 @@ export interface TrackingNotifySettings {
 export interface UpdateTrackingNotifySettings {
   language?: 'en' | 'bn';
   quietHours?: boolean;
+  deliveryRatingLink?: boolean;
   stalledAfterHours?: number;
   events?: Partial<Record<TrackingNotifyEventName, { enabled?: boolean; text?: string | null }>>;
 }

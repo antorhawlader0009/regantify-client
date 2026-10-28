@@ -24,6 +24,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Photos bigger than the store's plan allows are shrunk in the browser before any upload (lib/imageResize.ts; the server checks
+// again). Store dashboard only: Super Admin uploads, store backups and verification documents keep their own rules.
+const SKIP_SHRINK = /\/v1\/(admin|store-data|kyc)\b/;
+api.interceptors.request.use(async (config) => {
+  const role = useAuthStore.getState().user?.role;
+  if (!(config.data instanceof FormData) || (role !== 'VENDOR' && role !== 'STAFF') || SKIP_SHRINK.test(config.url ?? '')) return config;
+  const { shrinkFormDataImages } = await import('./imageResize');
+  config.data = await shrinkFormDataImages(config.data, () => api.get<{ maxPx: number; planName: string }>('/v1/plans/image-limit').then((r) => r.data));
+  return config;
+});
+
 // On a 401, try refreshing the access token once, then retry the request.
 // The refresh endpoint itself is explicitly excluded here — otherwise a
 // 401 from /auth/refresh (e.g. no/expired cookie) would trigger another

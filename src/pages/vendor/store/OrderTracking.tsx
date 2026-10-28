@@ -142,6 +142,7 @@ export default function OrderTracking() {
 
   const [language, setLanguage] = useState<'en' | 'bn'>('en');
   const [quietHours, setQuietHours] = useState(true);
+  const [ratingLink, setRatingLink] = useState(true);
   const { isSimple } = useDashboardView();
   const [stalledHours, setStalledHours] = useState('48');
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
@@ -149,6 +150,7 @@ export default function OrderTracking() {
   const load = (settings: TrackingNotifySettings) => {
     setLanguage(settings.language);
     setQuietHours(settings.quietHours);
+    setRatingLink(settings.deliveryRatingLink ?? true);
     setStalledHours(String(settings.stalledAfterHours));
     setDrafts(Object.fromEntries(settings.events.map((e) => [e.event, { enabled: e.enabled, text: e.custom ? e.text : null }])));
   };
@@ -161,6 +163,7 @@ export default function OrderTracking() {
       storeSettingsApi.updateTrackingNotify({
         language,
         quietHours,
+        deliveryRatingLink: ratingLink,
         stalledAfterHours: Math.min(336, Math.max(6, Math.round(Number(stalledHours)) || 48)),
         events: Object.fromEntries(Object.entries(drafts).map(([event, d]) => [event, { enabled: d.enabled, text: d.text }])) as Partial<
           Record<TrackingNotifyEventName, { enabled: boolean; text: string | null }>
@@ -221,6 +224,13 @@ export default function OrderTracking() {
               </div>
               <p className="mt-1.5 text-xs text-regantify-text-muted">Texts you have written yourself stay as you wrote them.</p>
             </div>
+
+            <Checkbox
+              checked={ratingLink}
+              onChange={setRatingLink}
+              label="Ask for a delivery rating in the Delivered text"
+              hint="On by default. When the Delivered text goes out, it ends with a link where the customer rates the delivery (stars). Your own text keeps its words; the link is added unless the text already has {link}. A longer text can use one more SMS credit."
+            />
 
             {/* Quiet hours and the stalled-parcel hours are Full mode (SIMPLE-VIEW-plan.md Step 8); their values stay in
                 this page's state and are saved unchanged. */}

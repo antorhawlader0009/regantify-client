@@ -187,10 +187,10 @@ const DeliveryTimes = lazy(() => import('./pages/admin/DeliveryTimes'));
 const HelpArticles = lazy(() => import('./pages/admin/HelpArticles'));
 const Changelog = lazy(() => import('./pages/admin/Changelog'));
 const FeatureRequests = lazy(() => import('./pages/admin/FeatureRequests'));
-const AdminReferrals = lazy(() => import('./pages/admin/Referrals'));
+
 const Approvals = lazy(() => import('./pages/admin/Approvals'));
 const AdminDomains = lazy(() => import('./pages/admin/Domains'));
-const VendorReferrals = lazy(() => import('./pages/vendor/finance/Referrals'));
+
 const ReceiptDetails = lazy(() => import('./pages/admin/ReceiptDetails'));
 const VendorTwoStep = lazy(() => import('./pages/auth/VendorTwoStep'));
 const GoogleCallback = lazy(() => import('./pages/auth/GoogleCallback'));
@@ -369,7 +369,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/finance/wallet' &&
     r.path !== '/vendor/finance/reseller-earnings' &&
     r.path !== '/vendor/finance/transactions' &&
-    r.path !== '/vendor/finance/referrals' &&
+
     r.path !== '/vendor/finance/withdraw' &&
     r.path !== '/vendor/finance/fee-summary' &&
     r.path !== '/vendor/finance/receipts' &&
@@ -420,7 +420,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/help' &&
     r.path !== '/admin/changelog' &&
     r.path !== '/admin/feature-requests' &&
-    r.path !== '/admin/referrals' &&
+
     r.path !== '/admin/approvals' &&
     r.path !== '/admin/domains' &&
     r.path !== '/admin/staff' &&
@@ -637,7 +637,7 @@ export default function App() {
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/reseller-earnings" element={<ResellerEarnings />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
-                <Route path="/vendor/finance/referrals" element={<VendorReferrals />} />
+
                 <Route path="/vendor/finance/receipts" element={<Receipts />} />
                 <Route path="/vendor/finance/withdraw" element={<Withdraw />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
@@ -739,7 +739,7 @@ export default function App() {
                 <Route path="/admin/help" element={<HelpArticles />} />
                 <Route path="/admin/changelog" element={<Changelog />} />
                 <Route path="/admin/feature-requests" element={<FeatureRequests />} />
-                <Route path="/admin/referrals" element={<AdminReferrals />} />
+
                 <Route path="/admin/approvals" element={<Approvals />} />
                 <Route path="/admin/domains" element={<AdminDomains />} />
                 <Route path="/admin/staff" element={<Team />} />

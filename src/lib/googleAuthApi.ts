@@ -30,8 +30,8 @@ export const googleAuthApi = {
     api
       .post<{ accountExists: boolean; phone: string; expiresInSeconds: number }>('/v1/auth/google/phone/send-otp', { googleToken, phone })
       .then((r) => r.data),
-  verifyPhone: (googleToken: string, phone: string, code: string, ref?: string) =>
-    api.post<GoogleSession>('/v1/auth/google/phone/verify', { googleToken, phone, code, ...(ref && { ref }) }).then((r) => r.data),
+  verifyPhone: (googleToken: string, phone: string, code: string) =>
+    api.post<GoogleSession>('/v1/auth/google/phone/verify', { googleToken, phone, code }).then((r) => r.data),
   linkStart: () => api.post<{ url: string }>('/v1/auth/google/link/start').then((r) => r.data),
   link: (code: string, state: string) => api.post<{ user: AuthUser }>('/v1/auth/google/link', { code, state }).then((r) => r.data),
   unlink: () => api.post<{ user: AuthUser }>('/v1/auth/google/unlink').then((r) => r.data),

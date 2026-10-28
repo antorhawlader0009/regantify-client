@@ -60,7 +60,7 @@ export function AddMoneyDialog({ open, onOpenChange, currentBalance }: AddMoneyD
           if (isValid) initiateMutation.mutate();
         }}
       >
-        <p className="mb-4 text-sm text-neutral-600">Pay with bKash, Nagad or a card through PayStation. It’s in your wallet as soon as the payment is confirmed.</p>
+        <p className="mb-4 text-sm text-neutral-600">Pay with bKash, Nagad or a card through PayStation. It’s in your wallet as soon as the payment is confirmed. Added money pays for plans, SMS, AI Credits and fees; it can’t be withdrawn.</p>
 
         <Field label="Amount" error={amount && !isValid ? `Add at least ${formatTaka(MIN_AMOUNT)}.` : null}>
           <MoneyInput value={amount} onChange={(v) => setAmount(toLatinDigits(v))} ariaLabel="Amount to add" />

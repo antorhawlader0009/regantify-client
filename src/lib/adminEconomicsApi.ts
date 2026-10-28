@@ -33,11 +33,10 @@ export interface EconomicsLoser {
   revenue: number;
   cost: number;
   margin: number;
-  biggestCost: 'AI' | 'SMS' | 'Gateway' | 'Referral' | null;
+  biggestCost: 'AI' | 'SMS' | 'Gateway' | null;
   costAi: number;
   costSms: number;
   costGateway: number;
-  costReferral: number;
 }
 
 export interface EconomicsOverview {
@@ -53,7 +52,6 @@ export interface EconomicsOverview {
     costAi: number;
     costSms: number;
     costGateway: number;
-    costReferral: number;
     revenue: number;
     cost: number;
     margin: number;

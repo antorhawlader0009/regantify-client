@@ -23,6 +23,8 @@ export interface TrustStripSettings {
   product: boolean;
   checkout: boolean;
   home: boolean;
+  /** "Fast delivery" under the product page's Buy button; on by default. Missing on older saves means on. */
+  fastDelivery?: boolean;
 }
 
 /** Store > Design > Store reputation (TellMe idea 147): which counted figures to show; the numbers themselves come from the server. */

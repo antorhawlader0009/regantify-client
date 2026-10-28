@@ -4,6 +4,7 @@ import { SetupDialog } from '../dashboard/SetupDialog';
 import { MaintenanceBar, TermsGate } from '../PlatformNotices';
 import { KycBanner } from '../KycBanner';
 import { ResaleMoneyBanner } from '../ResaleMoneyBanner';
+import { WalletDebtBanner } from '../WalletDebtBanner';
 import { PlanRenewalBar } from '../PlanRenewalBar';
 import { ChurnSurvey } from '../ChurnSurvey';
 import { NpsSurvey } from '../NpsSurvey';
@@ -72,6 +73,7 @@ export function VendorLayout() {
         <MaintenanceBar />
         {!isLms && <AnnouncementBanner />}
         {!isLms && <ResaleMoneyBanner />}
+        {!isLms && <WalletDebtBanner />}
         {/* "Set up your store" opens as a dialog once per page load until the required steps are done (owner only). */}
         {!isLms && <SetupDialog />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "vendor-cards p-3 sm:p-6"}`}>

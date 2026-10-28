@@ -33,6 +33,7 @@
     "@tiptap/starter-kit": "^3.31.3",
     "axios": "^1.7.4",
     "barcode-detector": "^3.2.2",
+    "browser-image-compression": "^2.0.2",
     "html-to-image": "^1.11.13",
     "jsbarcode": "^3.12.3",
     "lucide-react": "^0.436.0",

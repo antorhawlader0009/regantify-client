@@ -9,6 +9,8 @@ export type KycKind = 'NID_FRONT' | 'NID_BACK' | 'SELFIE' | 'TRADE_LICENSE';
 export interface MyKyc {
   /** PENDING = a new store waiting for Super Admin's approval (when that is switched on). */
   storeStatus?: string;
+  /** The wallet against the order limit (server finance/wallet-debt.ts): WARN below ৳0, OFF below `limit` (new orders stop). */
+  wallet?: { state: 'OK' | 'WARN' | 'OFF'; balance: number; limit: number };
   state: KycState;
   /** Past the deadline with documents still owed: no new orders and no new products. */
   restricted: boolean;

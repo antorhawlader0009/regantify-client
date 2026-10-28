@@ -320,7 +320,8 @@ export default function AddProduct() {
         : {}),
       quoteOnly,
       minOrderQuantity: Number(minOrderQuantity) > 1 ? Number(minOrderQuantity) : undefined,
-      maxOrderQuantity: Number(maxOrderQty) > 0 ? Number(maxOrderQty) : undefined,
+      // Empty = the default 5, 0 = no limit (server products/order-limit.ts).
+      maxOrderQuantity: maxOrderQty.trim() ? Number(maxOrderQty) : undefined,
       maxPerPhone24h: Number(maxPerPhone) > 0 ? Number(maxPerPhone) : undefined,
       lowStockThreshold: lowStockThreshold.trim() ? Number(lowStockThreshold) : undefined,
       sizeGuideId: sizeGuideId || undefined,
@@ -670,14 +671,14 @@ export default function AddProduct() {
                   className={productInputClass}
                 />
               </Field>
-              <Field label="Most per order" hint="Most pieces one shopper can order at once. Leave empty for no limit.">
+              <Field label="Most per order" hint="Most pieces one customer can order at once. Empty uses the default of 5. Type 0 for no limit.">
                 <input
                   type="number"
                   inputMode="numeric"
                   value={maxOrderQty}
                   onChange={(e) => setMaxOrderQty(e.target.value.replace(/\D/g, ''))}
-                  placeholder="e.g. 3"
-                  min={1}
+                  placeholder="5 (default)"
+                  min={0}
                   max={100000}
                   className={productInputClass}
                 />

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { captureReferralFromUrl } from '../../lib/referralCapture';
+
 import { GoogleButton } from '../../components/auth/GoogleButton';
 import { TWO_STEP_PATH } from '../../lib/twoStepApi';
 import { z } from 'zod';
@@ -562,8 +562,7 @@ function VendorPhoneEntryInner() {
 }
 
 export default function VendorPhoneEntry() {
-  // A /vendor/signup?ref=CODE link: keep the code for the OTP step (super-admin-new.md Step 6).
-  useEffect(() => captureReferralFromUrl(), []);
+
   return (
     <LangProvider>
       <VendorPhoneEntryInner />

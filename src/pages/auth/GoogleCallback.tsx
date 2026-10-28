@@ -6,7 +6,7 @@ import { GOOGLE_INTENT_KEY, GOOGLE_PENDING_KEY, googleAuthApi } from '../../lib/
 import { TWO_STEP_PATH } from '../../lib/twoStepApi';
 import { apiErrorMessage } from '../../lib/api';
 import { normalizeBdPhone, toLatinDigits } from '../../lib/bdPhone';
-import { clearReferralCode, savedReferralCode } from '../../lib/referralCapture';
+
 import { useAuthStore } from '../../store/authStore';
 import { toast } from '../../lib/toast';
 
@@ -166,13 +166,13 @@ export default function GoogleCallback() {
     setBusy(true);
     setError(null);
     try {
-      const r = await googleAuthApi.verifyPhone(pending.googleToken, sentTo.phone, otp.trim(), savedReferralCode());
+      const r = await googleAuthApi.verifyPhone(pending.googleToken, sentTo.phone, otp.trim());
       if ('challengeToken' in r) {
         savePending(null);
         navigate(TWO_STEP_PATH, { replace: true, state: { challengeToken: r.challengeToken } });
         return;
       }
-      if (r.isNewUser) clearReferralCode();
+
       finishSession(r.accessToken, r.user, r.isNewUser);
     } catch (err) {
       setError(apiErrorMessage(err, 'That code is not right.'));

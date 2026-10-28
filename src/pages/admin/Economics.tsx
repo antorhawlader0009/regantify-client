@@ -23,7 +23,7 @@ const pctOf = (part: number, whole: number) => (whole > 0 ? `${Math.round((part 
 
 /**
  * Super Admin > Economics (super-admin-new.md Step 10): what each store, plan and month brings the platform against what it costs us (AI, SMS, the
- * PayStation fee, referral payouts). The numbers come from a table rebuilt every night at 3:25 AM and right after a cost rate is changed.
+ * PayStation fee). The numbers come from a table rebuilt every night at 3:25 AM and right after a cost rate is changed.
  */
 export default function Economics() {
   const qc = useQueryClient();
@@ -59,8 +59,8 @@ export default function Economics() {
           <div>
             <h1 className="text-lg font-semibold text-regantify-text">Economics</h1>
             <p className="max-w-3xl text-sm text-regantify-text-muted">
-              What each store paid the platform in a month against what it cost us: AI, SMS sent from its credits, the PayStation fee on its payments and
-              referral rewards paid for bringing it in. Money is counted in the month it was paid.
+              What each store paid the platform in a month against what it cost us: AI, SMS sent from its credits and the PayStation fee on its payments.
+              Money is counted in the month it was paid.
             </p>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function Economics() {
               { key: 'ai', label: 'AI', value: t.costAi },
               { key: 'sms', label: 'SMS', value: t.costSms },
               { key: 'gw', label: 'PayStation fee', value: t.costGateway },
-              { key: 'ref', label: 'Referrals', value: t.costReferral },
+
             ]}
             format={formatTaka}
             centerValue={formatCompact(t.cost, 'money')}
@@ -153,7 +153,7 @@ export default function Economics() {
               [`AI ($${t.aiUsd.toFixed(2)} at ${r.aiUsdRate} taka)`, t.costAi],
               [`SMS (${t.smsSent.toLocaleString('en-US')} parts)`, t.costSms],
               [`PayStation fee (${r.gatewayFeePercent}%)`, t.costGateway],
-              ['Referral rewards and commissions', t.costReferral],
+
             ]}
             total={t.cost}
           />
@@ -222,7 +222,7 @@ export default function Economics() {
                   <th className={thR}>AI</th>
                   <th className={thR}>SMS</th>
                   <th className={thR}>Fee</th>
-                  <th className={thR}>Referral</th>
+
                   <th className={thR}>Margin</th>
                 </tr>
               </thead>
@@ -240,7 +240,7 @@ export default function Economics() {
                     <td className={`${tdR} ${s.biggestCost === 'AI' ? 'font-medium text-regantify-text' : ''}`}>{formatTaka(s.costAi)}</td>
                     <td className={`${tdR} ${s.biggestCost === 'SMS' ? 'font-medium text-regantify-text' : ''}`}>{formatTaka(s.costSms)}</td>
                     <td className={`${tdR} ${s.biggestCost === 'Gateway' ? 'font-medium text-regantify-text' : ''}`}>{formatTaka(s.costGateway)}</td>
-                    <td className={`${tdR} ${s.biggestCost === 'Referral' ? 'font-medium text-regantify-text' : ''}`}>{formatTaka(s.costReferral)}</td>
+
                     <td className={`${tdR} font-medium text-red-700`}>{formatTaka(s.margin)}</td>
                   </tr>
                 ))}

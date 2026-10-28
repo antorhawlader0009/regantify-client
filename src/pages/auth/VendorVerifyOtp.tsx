@@ -4,7 +4,7 @@ import { AuthShell } from '../../components/AuthShell';
 import { OtpInput } from '../../components/OtpInput';
 import { authApi } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
-import { clearReferralCode, savedReferralCode } from '../../lib/referralCapture';
+
 
 // Matches the server's per-phone resend cooldown (see
 // AuthService.enforceOtpCooldown) — kept in sync so the button re-enables
@@ -55,8 +55,7 @@ export default function VendorVerifyOtp() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await authApi.verifyOtp(state.phone, code, savedReferralCode());
-      if (res.isNewUser) clearReferralCode();
+      const res = await authApi.verifyOtp(state.phone, code);
 
       if (!res.isNewUser && res.mustSetPassword && res.setupToken) {
         // Existing vendor logging in via OTP again — no session was

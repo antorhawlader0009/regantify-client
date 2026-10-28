@@ -115,10 +115,9 @@ export const authApi = {
   sendOtp: (phone: string) =>
     api.post<SendOtpResponse>('/v1/auth/vendor/send-otp', { phone }).then((r) => r.data),
 
-  // `ref`: a referral code saved from a /vendor/signup?ref=CODE link (super-admin-new.md Step 6); the server uses it only for a new store.
-  verifyOtp: (phone: string, code: string, ref?: string) =>
+  verifyOtp: (phone: string, code: string) =>
     api
-      .post<VerifyOtpResponse>('/v1/auth/vendor/verify-otp', { phone, code, ...(ref && { ref }) })
+      .post<VerifyOtpResponse>('/v1/auth/vendor/verify-otp', { phone, code })
       .then((r) => r.data),
 
   // Alternative to OTP — password login using EITHER phone or email as the
