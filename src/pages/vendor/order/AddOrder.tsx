@@ -244,13 +244,13 @@ export default function AddOrder() {
     queryFn: getVendorDeliveryCharges,
   });
   const DELIVERY_CHARGE: Record<'DHAKA' | 'AROUND_DHAKA' | 'OUTSIDE_DHAKA', number> = {
-    DHAKA: Number(deliveryCharges?.insideDhakaCharge ?? 70),
+    DHAKA: Number(deliveryCharges?.insideDhakaCharge ?? 60),
     AROUND_DHAKA: Number(deliveryCharges?.aroundDhakaCharge ?? 100),
-    OUTSIDE_DHAKA: Number(deliveryCharges?.outsideDhakaCharge ?? 130),
+    OUTSIDE_DHAKA: Number(deliveryCharges?.outsideDhakaCharge ?? 120),
   };
   // Store > Delivery Charge > Around Dhaka: offered only while the vendor has it on.
   const aroundDhakaOn = deliveryCharges?.aroundDhakaEnabled === true;
-  const vatAmount = Number(deliveryCharges?.vatChargeBdt ?? 10);
+  const vatAmount = Number(deliveryCharges?.vatChargeBdt ?? 0);
 
   const addToCart = (product: Product) => {
     const price = Number(product.discountPrice ?? product.price);

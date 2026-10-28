@@ -28,6 +28,8 @@ interface Item {
   description: string;
   icon: LucideIcon;
   action: Action;
+  /** Shown with an "Optional" tag and left out of the count: the store already works without it. */
+  optional?: boolean;
 }
 
 const HIDE_KEY = 'regantify.setupChecklistHidden';
@@ -86,10 +88,11 @@ export function SetupChecklist({
     },
     {
       key: 'deliveryChargeSet',
-      title: 'Set your delivery charge',
-      description: 'What shoppers pay inside and outside Dhaka (now on the default 70 / 130).',
+      title: 'Check your delivery charge',
+      description: 'Your store uses the default delivery charge (৳60 inside Dhaka, ৳120 outside for new stores). You can change it if you like.',
       icon: Wallet,
-      action: { kind: 'link', to: '/vendor/store/delivery-charge', label: 'Set charge' },
+      action: { kind: 'link', to: '/vendor/store/delivery-charge', label: 'Change charge' },
+      optional: true,
     },
     {
       key: 'courierConnected',
@@ -116,14 +119,16 @@ export function SetupChecklist({
     },
   ];
 
-  const doneCount = items.filter((i) => setup[i.key]).length;
-  const allDone = doneCount === items.length;
+  // Optional steps never hold the card open and don't count in "N of M done".
+  const required = items.filter((i) => !i.optional);
+  const doneCount = required.filter((i) => setup[i.key]).length;
+  const allDone = doneCount === required.length;
   if (allDone || hidden) return null;
 
-  // The first step not done yet gets the green button; the rest stay quiet.
-  const todo = items.filter((i) => !setup[i.key]);
-  const nextKey = todo[0]?.key;
-  const pct = Math.round((doneCount / items.length) * 100);
+  // The first required step not done yet gets the green button; the rest (optional ones last) stay quiet.
+  const todo = [...required, ...items.filter((i) => i.optional)].filter((i) => !setup[i.key]);
+  const nextKey = todo.find((i) => !i.optional)?.key;
+  const pct = Math.round((doneCount / required.length) * 100);
 
   return (
     <section className="rounded-xl border border-line bg-white" aria-labelledby="setup-title">
@@ -136,14 +141,14 @@ export function SetupChecklist({
             Set up your store
           </h2>
           <p className="mt-0.5 text-sm text-neutral-500">
-            {doneCount} of {items.length} done. Finish these to start getting orders.
+            {doneCount} of {required.length} done. Finish these to start getting orders.
           </p>
           <div
             className="mt-2.5 h-2 w-full max-w-md overflow-hidden rounded-full bg-neutral-100"
             role="progressbar"
             aria-valuenow={doneCount}
             aria-valuemin={0}
-            aria-valuemax={items.length}
+            aria-valuemax={required.length}
             aria-label="Setup progress"
           >
             <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${pct}%` }} />
@@ -194,7 +199,12 @@ export function SetupChecklist({
                   </span>
                 )}
                 <div className={done ? 'opacity-50' : ''}>
-                  <p className="pr-8 text-[15px] font-semibold text-regantify-text">{item.title}</p>
+                  <p className="pr-8 text-[15px] font-semibold text-regantify-text">
+                    {item.title}
+                    {item.optional && (
+                      <span className="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 align-middle text-[11px] font-medium text-neutral-500">Optional</span>
+                    )}
+                  </p>
                   <p className="mt-1 text-sm leading-snug text-neutral-500">{item.description}</p>
                 </div>
                 <Illustration id={item.key} muted={done} />

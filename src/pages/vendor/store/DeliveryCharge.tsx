@@ -41,7 +41,7 @@ export default function DeliveryCharge() {
 
   const form = useForm<DeliveryChargeFormInput, unknown, DeliveryChargeFormValues>({
     resolver: zodResolver(deliveryChargeSchema),
-    defaultValues: { insideDhakaCharge: 70, outsideDhakaCharge: 130, vatChargeBdt: 10 },
+    defaultValues: { insideDhakaCharge: 60, outsideDhakaCharge: 120, vatChargeBdt: 0 },
   });
 
   useEffect(() => {
