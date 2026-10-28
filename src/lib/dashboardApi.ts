@@ -87,6 +87,8 @@ export interface DashboardSummary {
     courierConnected: boolean;
     storeVisited: boolean;
     hasOrder: boolean;
+    /** A WhatsApp link is set, so the store's floating chat button shows (an optional setup step). */
+    chatButtonReady: boolean;
   };
   /** "Today in store" (POS); null without the POS (plan or turned off). */
   pos: {

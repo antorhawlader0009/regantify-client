@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutTemplate, Loader2, Save } from 'lucide-react';
+import { LayoutTemplate, Loader2, Save, Sparkles } from 'lucide-react';
+import { designSettingsApi } from '../../../../lib/designSettingsApi';
+import { isUntouchedFooter, recommendedFooter } from '../../../../lib/footerRecommended';
 import { getFooterConfig, updateFooterConfig, type FooterConfig, type FooterConfigPayload } from '../../../../lib/footerApi';
 import { getVendorSocialLinks, getVendorBranding, getVendorSettings } from '../../../../lib/vendorApi';
 import { toast } from '../../../../lib/toast';
@@ -9,7 +11,7 @@ import { FOOTER_TEMPLATES, type FooterTemplateKey } from '../../../../lib/footer
 import { FooterPreview } from './FooterPreview';
 import { FooterTemplateModal } from './FooterTemplateModal';
 import { FooterItemSettings } from './FooterItemSettings';
-import { FooterExtras } from './FooterExtras';
+import { FooterCreditToggle, FooterExtras } from './FooterExtras';
 import { FullViewOnly } from '../../../../components/ui/FullViewOnly';
 
 type SelectedBlock = 'logo' | 'menu' | 'info' | 'about' | null;
@@ -33,11 +35,41 @@ export default function Footer() {
   const { data: config, isLoading } = useQuery({ queryKey: ['footer-config'], queryFn: getFooterConfig });
   const { data: socialLinks } = useQuery({ queryKey: ['vendor-social-links'], queryFn: getVendorSocialLinks });
   const { data: branding } = useQuery({ queryKey: ['vendor-branding'], queryFn: getVendorBranding });
-  const { data: settings } = useQuery({ queryKey: ['vendor-settings'], queryFn: getVendorSettings });
+  const { data: settings, isError: settingsFailed } = useQuery({ queryKey: ['vendor-settings'], queryFn: getVendorSettings });
 
+  const { data: design, isError: designFailed } = useQuery({ queryKey: ['design-settings'], queryFn: designSettingsApi.get });
+  const [prefilled, setPrefilled] = useState(false);
+
+  const recommended = (base: FooterConfig) =>
+    recommendedFooter(base, {
+      storeName: settings?.storeName ?? 'Our store',
+      phone: settings?.phone ?? null,
+      address: settings?.address ?? null,
+      lang: design?.storeLanguage === 'bn' ? 'bn' : 'en',
+    });
+
+  // A store that never saved a footer opens with the recommended one filled in (lib/footerRecommended.ts), ready to change
+  // and save; the store already shows the same layout until then.
   useEffect(() => {
-    if (config) setDraft(config);
-  }, [config]);
+    // The store name and language only shape the recommended text; if they can't load, English and "Our store" are used.
+    if (!config || draft || (!settings && !settingsFailed) || (!design && !designFailed)) return;
+    if (isUntouchedFooter(config)) {
+      setDraft(recommended(config));
+      setDirty(true);
+      setPrefilled(true);
+    } else {
+      setDraft(config);
+    }
+    // recommended() reads settings/design, which are in the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config, settings, design, draft, settingsFailed, designFailed]);
+
+  const useRecommended = () => {
+    if (!draft) return;
+    if (!window.confirm('Replace the footer links, titles, about text and contact details with the recommended footer?')) return;
+    setDraft(recommended(draft));
+    setDirty(true);
+  };
 
   const patchDraft = (patch: FooterConfigPayload) => {
     setDraft((d) => (d ? { ...d, ...patch } : d));
@@ -58,6 +90,7 @@ export default function Footer() {
       const updated = await updateFooterConfig(draft);
       setDraft(updated);
       setDirty(false);
+      setPrefilled(false);
       toast.success('Footer saved. Your storefront will reflect this shortly.');
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Could not save the footer. Please try again.');
@@ -97,7 +130,16 @@ export default function Footer() {
       <p className="text-xs text-regantify-text-muted mb-1">Design &gt; Footer Editor</p>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Footer Editor</h1>
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={useRecommended}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-black/10 text-sm font-medium
+              text-regantify-text hover:bg-regantify-search transition-colors"
+          >
+            <Sparkles size={15} />
+            Use the recommended footer
+          </button>
           <button
             onClick={() => setTemplateModalOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-black/10 text-sm font-medium
@@ -118,6 +160,14 @@ export default function Footer() {
         </div>
       </div>
 
+      {prefilled && (
+        <div className="mb-4 rounded-xl border border-black/5 bg-regantify-search px-4 py-3 text-sm text-regantify-text">
+          We filled in a recommended footer: help links (delivery, returns, contact), store pages (about, privacy, terms), a short
+          about text and your contact details. The page links open a demo text until you write your own in Store &gt; Pages.
+          Change anything here, then press Save.
+        </div>
+      )}
+
       <p className="text-sm font-medium text-regantify-text-muted mb-2">Preview</p>
       <FooterPreview
         config={draft}
@@ -136,6 +186,7 @@ export default function Footer() {
       <FullViewOnly>
         <FooterExtras config={draft} onChange={patchDraft} storeAddress={settings?.address} storePhone={settings?.phone} />
       </FullViewOnly>
+      <FooterCreditToggle config={draft} onChange={patchDraft} />
 
       {templateModalOpen && (
         <FooterTemplateModal

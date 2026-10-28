@@ -1,5 +1,6 @@
 import { ImpersonationBar } from '../ImpersonationBar';
 import { AnnouncementBanner } from '../AnnouncementBanner';
+import { SetupDialog } from '../dashboard/SetupDialog';
 import { MaintenanceBar, TermsGate } from '../PlatformNotices';
 import { KycBanner } from '../KycBanner';
 import { ResaleMoneyBanner } from '../ResaleMoneyBanner';
@@ -71,6 +72,8 @@ export function VendorLayout() {
         <MaintenanceBar />
         {!isLms && <AnnouncementBanner />}
         {!isLms && <ResaleMoneyBanner />}
+        {/* "Set up your store" opens as a dialog once per page load until the required steps are done (owner only). */}
+        {!isLms && <SetupDialog />}
         <main ref={mainRef} className={`isolate flex-1 overflow-y-auto ${isLms ? "" : "vendor-cards p-3 sm:p-6"}`}>
           <SectionTabs sections={nav} />
           {!isLms && <FullViewPageBar />}

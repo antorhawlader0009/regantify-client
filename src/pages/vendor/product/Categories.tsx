@@ -38,6 +38,19 @@ function getDescendants(categories: Category[], parentId: string): Category[] {
   return direct.flatMap((c) => [c, ...getDescendants(categories, c.id)]);
 }
 
+/** The three sample categories a new store starts with (server AuthService.seedStarterCategories), until renamed. */
+function isSampleCategory(name: string): boolean {
+  return /^Category [1-3]$/.test(name.trim());
+}
+
+function SampleTag() {
+  return (
+    <span className="shrink-0 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700" title="A sample category: rename or delete it">
+      Sample
+    </span>
+  );
+}
+
 function VisibilityBadge({ visibility }: { visibility: Category['visibility'] }) {
   return visibility === 'PUBLIC' ? (
     <span className="inline-block rounded border border-green-200 bg-green-50 px-2 py-0.5 text-sm text-green-700">Public</span>
@@ -235,6 +248,14 @@ export default function Categories() {
         }
       />
 
+      {categories.some((c) => isSampleCategory(c.name)) && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong className="font-semibold">Sample categories.</strong> “Category 1”, “Category 2” and “Category 3” were added to
+          show you how categories work. Click one to give it your own name (for example “Men’s shirts”), or delete it. Shoppers
+          only see a category once a product uses it.
+        </div>
+      )}
+
       {/* Wide screens: table with drag and drop */}
       <TableFrame minWidth="min-w-[760px]" className="hidden md:block">
         <thead>
@@ -290,6 +311,7 @@ export default function Categories() {
                       <button type="button" onClick={() => setEditingCategory(main)} className="font-medium text-brand hover:underline">
                         {main.name}
                       </button>
+                      {isSampleCategory(main.name) && <SampleTag />}
                     </div>
                   </td>
                   <td className={td}>
@@ -346,6 +368,7 @@ export default function Categories() {
                     <button type="button" onClick={() => setEditingCategory(main)} className="min-w-0 flex-1 truncate text-left text-sm font-medium text-brand">
                       {main.name}
                     </button>
+                    {isSampleCategory(main.name) && <SampleTag />}
                     <span className="text-xs text-neutral-500">{productCount(main)} products</span>
                     <ActionsMenu
                       onEdit={() => setEditingCategory(main)}

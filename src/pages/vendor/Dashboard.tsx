@@ -12,7 +12,6 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { LockedBadge, dailyLimitToast } from '../../components/ui/UpgradePrompt';
 import { DailyLimitBanner } from '../../components/DailyLimitBanner';
-import { SetupChecklist } from '../../components/dashboard/SetupChecklist';
 import { TodayKpis } from '../../components/dashboard/TodayKpis';
 import { GoalCard } from '../../components/dashboard/GoalCard';
 import { ShopListingCard } from '../../components/dashboard/ShopListingCard';
@@ -204,15 +203,7 @@ export default function VendorDashboard() {
 
       {dashboard.data && <DailyBrief data={dashboard.data} />}
 
-      {/* New stores: the setup steps, owner only (staff can't change most of these). */}
-      {dashboard.data && user?.role === 'VENDOR' && (
-        <SetupChecklist
-          setup={dashboard.data.setup}
-          storeKey={user.vendor?.subdomain ?? user.id}
-          storeUrl={storeUrl}
-          onShareStore={copyStoreLink}
-        />
-      )}
+      {/* The setup steps are no longer a card here: SetupDialog (in VendorLayout) opens them on every page load until done. */}
 
       {dashboard.isLoading ? (
         <DashboardSkeleton />

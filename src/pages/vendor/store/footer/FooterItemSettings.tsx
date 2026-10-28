@@ -111,19 +111,6 @@ export function FooterItemSettings({ block, config, onChange, onClose, hasSocial
                 placeholder="A short line about your store…"
               />
             </div>
-            <label className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-regantify-text">Show “We accept” payment methods</span>
-              <input
-                type="checkbox"
-                checked={config.showPaymentIcons}
-                onChange={(e) => onChange({ showPaymentIcons: e.target.checked })}
-                className="w-4 h-4"
-              />
-            </label>
-            <p className="text-xs text-regantify-text-muted -mt-2">
-              Filled in for you from the payment methods your checkout really offers (Store &gt; Payment Gateway), so it
-              is always true. It sits in its own row above the bottom bar.
-            </p>
           </>
         )}
       </div>

@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RichTextEditor } from '../../../components/editor/RichTextEditor';
 import { SectionCard, Field, inputClass } from '../../../components/product/ProductFormPieces';
@@ -9,6 +9,8 @@ import { getBusinessHours, getVendorDeliveryCharges, getVendorSettings } from '.
 import { storeSettingsApi } from '../../../lib/storeSettingsApi';
 import { POLICY_KINDS, policyHtml, policyTitle, type PolicyFacts, type PolicyKind, type PolicyLang } from '../../../lib/policyTemplates';
 import { BackLink } from '../../../components/ui/BackLink';
+import { designSettingsApi } from '../../../lib/designSettingsApi';
+import { demoPageByKind } from '../../../lib/demoPages';
 
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -34,8 +36,10 @@ export default function AddPage() {
   const [tplLang, setTplLang] = useState<PolicyLang>('en');
   const [tplBusy, setTplBusy] = useState(false);
 
-  async function useTemplate() {
-    if (content.trim() && !window.confirm('Replace what is in the editor with the ready text?')) return;
+  // fromDemo: opened from Store > Pages' "Ready pages" (lib/demoPages.ts). The page keeps the demo's address and stays
+  // Published, so saving replaces the demo the store already shows.
+  async function useTemplate(kind: PolicyKind = tplKind, lang: PolicyLang = tplLang, fromDemo = false) {
+    if (!fromDemo && content.trim() && !window.confirm('Replace what is in the editor with the ready text?')) return;
     setTplBusy(true);
     try {
       const [settings, charges, stock, hours] = await Promise.all([
@@ -62,8 +66,17 @@ export default function AddPage() {
         outsideDays: charges.outsideDhakaDays,
         hours: hoursText || null,
       };
-      setContent(policyHtml(tplKind, tplLang, facts));
-      if (!title.trim()) setTitle(policyTitle(tplKind, tplLang));
+      setContent(policyHtml(kind, lang, facts));
+      if (fromDemo) {
+        const demo = demoPageByKind(kind);
+        setTitle(policyTitle(kind, lang));
+        if (demo) setSlug(demo.slug);
+        setTplKind(kind);
+        setTplLang(lang);
+        toast.success('Your ready page is open. Fill in the [fill in] parts, change what does not fit, then save.');
+        return;
+      }
+      if (!title.trim()) setTitle(policyTitle(kind, lang));
       if (!isEdit) setStatus('DRAFT');
       toast.success('Ready text added. Read it, change what does not fit, then save.');
     } catch {
@@ -75,6 +88,22 @@ export default function AddPage() {
 
   const [formError, setFormError] = useState<string | null>(null);
   const populatedRef = useRef(false);
+
+  // ?demo=ABOUT|DELIVERY|RETURN|PRIVACY|TERMS: fill the ready text once, in the store's own language.
+  const [searchParams] = useSearchParams();
+  const demoKind = !isEdit ? demoPageByKind(searchParams.get('demo') ?? '')?.kind ?? null : null;
+  const demoStartedRef = useRef(false);
+  useEffect(() => {
+    if (!demoKind || demoStartedRef.current) return;
+    demoStartedRef.current = true;
+    designSettingsApi
+      .get()
+      .then((d) => d.storeLanguage)
+      .catch(() => 'en' as const)
+      .then((lang) => useTemplate(demoKind, lang === 'bn' ? 'bn' : 'en', true));
+    // useTemplate reads only the arguments it is given here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoKind]);
 
   // Populate the form once, when editing an existing page.
   if (isEdit && existing && !populatedRef.current) {
@@ -182,7 +211,7 @@ export default function AddPage() {
                 <option value="en">English</option>
                 <option value="bn">বাংলা</option>
               </select>
-              <button type="button" onClick={useTemplate} disabled={tplBusy} className="h-10 rounded-lg border border-line bg-white px-4 text-sm font-medium text-regantify-text hover:bg-neutral-50 disabled:opacity-60">
+              <button type="button" onClick={() => useTemplate()} disabled={tplBusy} className="h-10 rounded-lg border border-line bg-white px-4 text-sm font-medium text-regantify-text hover:bg-neutral-50 disabled:opacity-60">
                 {tplBusy ? 'Loading…' : 'Use this text'}
               </button>
             </div>

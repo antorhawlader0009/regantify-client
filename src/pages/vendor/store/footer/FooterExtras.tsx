@@ -82,13 +82,24 @@ export function FooterExtras({ config, onChange, storeAddress, storePhone }: { c
           </div>
         )}
       </section>
-
-      <section className="border-t border-black/5 pt-5">
-        <label className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium text-regantify-text">Show “System Design &amp; Developed By: Reganto IT Solution” in the bottom bar</span>
-          <input type="checkbox" checked={config.showCredit} onChange={(e) => onChange({ showCredit: e.target.checked })} className="h-4 w-4" />
-        </label>
-      </section>
     </div>
+  );
+}
+
+/**
+ * The "System Design & Developed By" line in the footer's bottom bar: on by default, and the store may hide it. Its own
+ * card, shown in Simple mode too (the rest of FooterExtras is Full mode), so every seller can find the switch.
+ */
+export function FooterCreditToggle({ config, onChange }: { config: FooterConfig; onChange: (patch: Partial<FooterConfig>) => void }) {
+  return (
+    <section className="mt-5 rounded-xl border border-line bg-white p-5">
+      <label className="flex items-center justify-between gap-3">
+        <span>
+          <span className="block text-sm font-medium text-regantify-text">Show “System Design &amp; Developed By: Reganto IT Solution”</span>
+          <span className="mt-0.5 block text-xs text-regantify-text-muted">A small line in the footer’s bottom bar. Untick to hide it, then press Save.</span>
+        </span>
+        <input type="checkbox" checked={config.showCredit} onChange={(e) => onChange({ showCredit: e.target.checked })} className="h-4 w-4 shrink-0" />
+      </label>
+    </section>
   );
 }

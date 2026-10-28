@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ExternalLink,
   ImageIcon,
+  MessageCircle,
   Package,
   Rocket,
   Share2,
@@ -50,25 +51,37 @@ function writeHidden(storeKey: string) {
   }
 }
 
+/** The steps that keep the setup dialog coming back (the optional delivery-charge step never does). */
+export function setupRequiredDone(setup: Setup): boolean {
+  return setup.hasProduct && setup.hasLogo && setup.courierConnected && setup.storeVisited && setup.hasOrder;
+}
+
 /**
- * Dashboard > setup checklist for a new store (dashboard-plan.md Step 3).
- * Each step is ticked from real data (`setup` in the dashboard summary),
- * never by the vendor. Gone once every step is done, or when the vendor
- * hides it (remembered per browser and store).
+ * The store's setup steps (dashboard-plan.md Step 3). Each step is ticked from real data (`setup` in the dashboard
+ * summary), never by the vendor. Since 2026-10-28 it is shown in SetupDialog (opened on every page load until the
+ * required steps are done) rather than on the Dashboard; without `onClose` it can still be hidden per browser and store.
  */
 export function SetupChecklist({
   setup,
   storeKey,
   storeUrl,
   onShareStore,
+  onClose,
+  whatsappPhone,
+  onUseWhatsApp,
 }: {
+  /** The owner's own mobile (01XXXXXXXXX), offered for the WhatsApp step; saved only when they tap the button. */
+  whatsappPhone?: string | null;
+  onUseWhatsApp?: () => void;
   setup: Setup;
   /** Keeps "Hide" per store on a shared browser (the subdomain). */
   storeKey: string;
   storeUrl: string | null;
   onShareStore: () => void;
+  /** Dialog mode (SetupDialog): X closes it for this visit only, and there is no collapse or permanent hide. */
+  onClose?: () => void;
 }) {
-  const [hidden, setHidden] = useState(() => readHidden(storeKey));
+  const [hidden, setHidden] = useState(() => (onClose ? false : readHidden(storeKey)));
   const [collapsed, setCollapsed] = useState(false);
 
   const items: Item[] = [
@@ -88,10 +101,24 @@ export function SetupChecklist({
     },
     {
       key: 'deliveryChargeSet',
-      title: 'Check your delivery charge',
-      description: 'Your store uses the default delivery charge (৳60 inside Dhaka, ৳120 outside for new stores). You can change it if you like.',
+      title: 'Check your delivery charge and time',
+      description:
+        'New stores start with ৳60 inside Dhaka and ৳120 outside, and about 2 days inside Dhaka, 3 around and 4 outside. Shoppers see these on every product. You can change them if you like.',
       icon: Wallet,
       action: { kind: 'link', to: '/vendor/store/delivery-charge', label: 'Change charge' },
+      optional: true,
+    },
+    {
+      key: 'chatButtonReady',
+      title: 'Add a WhatsApp chat button',
+      description: whatsappPhone
+        ? `Shoppers can message you from every page of your store. One tap uses your number ${whatsappPhone}.`
+        : 'Shoppers can message you from every page of your store. Add your WhatsApp number in Store > Social.',
+      icon: MessageCircle,
+      action:
+        whatsappPhone && onUseWhatsApp
+          ? { kind: 'button', onClick: onUseWhatsApp, label: `Use ${whatsappPhone}` }
+          : { kind: 'link', to: '/vendor/store/social', label: 'Add WhatsApp' },
       optional: true,
     },
     {
@@ -155,24 +182,27 @@ export function SetupChecklist({
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setCollapsed((c) => !c)}
-            aria-expanded={!collapsed}
-            aria-controls="setup-steps"
-            title={collapsed ? 'Show steps' : 'Hide steps'}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
-          >
-            <ChevronDown size={16} className={`transition-transform ${collapsed ? '' : 'rotate-180'}`} />
-          </button>
+          {!onClose && (
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              aria-expanded={!collapsed}
+              aria-controls="setup-steps"
+              title={collapsed ? 'Show steps' : 'Hide steps'}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
+            >
+              <ChevronDown size={16} className={`transition-transform ${collapsed ? '' : 'rotate-180'}`} />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
+              if (onClose) return onClose();
               writeHidden(storeKey);
               setHidden(true);
             }}
-            title="Hide this checklist"
-            aria-label="Hide this checklist"
+            title={onClose ? 'Close (it opens again next time until setup is done)' : 'Hide this checklist'}
+            aria-label={onClose ? 'Close' : 'Hide this checklist'}
             className="flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
           >
             <X size={16} />

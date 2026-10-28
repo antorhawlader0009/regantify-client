@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { pagesApi, type StorePage } from '../../../lib/pagesApi';
 import { toast } from '../../../lib/toast';
+import { demoPagesShowing } from '../../../lib/demoPages';
 
 interface PageRowProps {
   page: StorePage;
@@ -76,6 +77,7 @@ export default function Pages() {
     queryFn: () => pagesApi.list(search.trim() || undefined),
   });
 
+  const demoShowing = demoPagesShowing(allPages);
   const total = allPages.length;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const pages = allPages.slice((page - 1) * perPage, (page - 1) * perPage + perPage);
@@ -114,6 +116,34 @@ export default function Pages() {
           Add New
         </button>
       </div>
+
+      {/* Default pages (lib/demoPages.ts): shown on the store with a demo text until the owner saves their own. */}
+      {!isLoading && !search.trim() && demoShowing.length > 0 && (
+        <section className="mb-5 rounded-2xl border border-black/5 bg-white p-5">
+          <h2 className="text-[15px] font-semibold text-regantify-text">Ready pages on your store</h2>
+          <p className="mt-0.5 text-sm text-regantify-text-muted">
+            These pages show a demo text on your store and in its footer until you save your own. Open one, change what does not
+            fit, and press Save.
+          </p>
+          <ul className="mt-3 divide-y divide-black/5">
+            {demoShowing.map((d) => (
+              <li key={d.kind} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="truncate text-sm font-medium text-regantify-text">{d.title}</span>
+                  <span className="shrink-0 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Demo text</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/vendor/store/pages/add?demo=${d.kind}`)}
+                  className="shrink-0 rounded-lg border border-black/10 px-3 py-1.5 text-sm font-medium text-regantify-text hover:bg-regantify-content"
+                >
+                  Edit
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
         <div className="p-4 border-b border-black/5">
