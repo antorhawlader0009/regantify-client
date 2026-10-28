@@ -244,6 +244,9 @@ export default function EditProduct() {
 
   // Stock history: when this save changes a stock count, the person says why (kept with the change).
   const [loadedStockKey, setLoadedStockKey] = useState<string | null>(null);
+  // The stock the page showed, sent with each save so the server applies only what the seller changed on today's count
+  // (a sale made while this page was open is kept; server products/stock-edit.ts).
+  const [loadedStock, setLoadedStock] = useState<{ product: number | null; variants: { optionValues: Record<string, string>; stock: number }[] } | null>(null);
   const [stockReason, setStockReason] = useState<'' | 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER'>('');
   const [stockNote, setStockNote] = useState('');
   const [showStockHistory, setShowStockHistory] = useState(false);
@@ -478,6 +481,10 @@ export default function EditProduct() {
     setSizeGuideId(p.sizeGuideId ?? '');
     setStockQuantity(p.stockQuantity != null ? String(p.stockQuantity) : '');
     setLoadedStockKey(stockKeyOf(p.stockQuantity != null ? String(p.stockQuantity) : '', (p.variationOptions ?? []).length > 0 ? (p.variants ?? []) : []));
+    setLoadedStock({
+      product: p.stockQuantity ?? null,
+      variants: (p.variants ?? []).map((v) => ({ optionValues: v.optionValues as Record<string, string>, stock: v.stock ?? 0 })),
+    });
     setStockReason('');
     setStockNote('');
     setWeight(p.weight ?? '');
@@ -595,6 +602,7 @@ export default function EditProduct() {
         sizeGuideId: sizeGuideId || null,
         stockQuantity: !isBundle && variationOptions.length === 0 && stockQuantity.trim() ? Number(stockQuantity) : undefined,
         ...(stockChanged ? { stockReason: stockReason || undefined, stockNote: stockNote.trim() || undefined } : {}),
+        ...(loadedStock ? { stockLoaded: loadedStock } : {}),
         weight: weight.toString().trim() ? Number(weight) : undefined,
         weightUnit,
         variationOptions: variationOptions.filter((o) => o.values.length > 0),

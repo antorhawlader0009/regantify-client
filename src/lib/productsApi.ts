@@ -364,6 +364,8 @@ export interface UpdateProductPayload {
   /** Why stock was changed by hand in this save (kept in the stock history). */
   stockReason?: 'RECEIVED' | 'DAMAGED' | 'COUNT' | 'OTHER';
   stockNote?: string;
+  /** Edit only: the stock the page showed, so a save changes stock by what was typed, not to it (server products/stock-edit.ts). */
+  stockLoaded?: { product: number | null; variants: { optionValues: Record<string, string>; stock: number }[] };
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
   // When provided, REPLACES the product's full existing set — always

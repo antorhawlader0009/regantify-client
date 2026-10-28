@@ -311,7 +311,7 @@ function BannerVideoForm({ props, onChange }: { props: BannerVideoProps; onChang
 
   return (
     <div className="flex flex-col gap-3">
-      <Field label="Video URL" hint="A direct video file (.mp4) or a YouTube link.">
+      <Field label="Video URL" hint="A YouTube, Facebook, Instagram or TikTok video link, or a video file (.mp4).">
         <TextInput value={props.videoUrl ?? ''} onChange={(videoUrl) => set({ videoUrl })} placeholder="https://" />
       </Field>
       <ImageField

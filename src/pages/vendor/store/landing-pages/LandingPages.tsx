@@ -17,6 +17,7 @@ import { toast } from '../../../../lib/toast';
 import { useAuthStore } from '../../../../store/authStore';
 import { storefrontLandingPageUrl } from '../../../../lib/storefrontUrl';
 import { QrDialog } from '../../../../components/store/QrDialog';
+import { LandingTemplates } from '../../../../components/landing/LandingTemplates';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -273,6 +274,8 @@ export default function LandingPages() {
           {createMutation.isPending ? 'Creating…' : 'Add New'}
         </button>
       </div>
+
+      {!search.trim() && <LandingTemplates />}
 
       <div className="relative mb-5 w-full max-w-xs">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-regantify-text-muted" size={16} />
