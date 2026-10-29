@@ -155,12 +155,9 @@ export default function InvoiceSettings() {
           <div className="space-y-6">
             <section className="bg-white rounded-2xl border border-black/5 p-5 space-y-4">
               <h2 className="text-sm font-medium text-regantify-text">Header</h2>
-              <Checkbox
-                checked={form.showLogo}
-                onChange={(v) => set('showLogo', v)}
-                label="Show my logo at the top"
-                hint="The logo from Store > Branding."
-              />
+              <p className="text-xs text-regantify-text-muted">
+                Your shop name and logo (Store &gt; Branding) are always printed at the top of every invoice.
+              </p>
               <div>
                 <label className="block text-sm font-medium text-regantify-text mb-1.5">Address on the invoice</label>
                 <textarea

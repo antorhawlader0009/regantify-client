@@ -80,7 +80,6 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Your AI assistant', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'ai assistant name picture avatar photo greeting welcome message first message ready questions starters voice call opening voice speed chat button left right corner side সহকারীর নাম ছবি শুরুর বার্তা প্রশ্ন কণ্ঠ বাম ডান' },
   { title: 'AI photo search', where: 'AI Usages', path: '/vendor/ai-usage', keywords: 'photo search image search camera picture ai find product similar ছবি দিয়ে খোঁজা এআই' },
   { title: 'Confirm link by SMS (one tap)', where: 'Store > COD Guard', path: '/vendor/store/cod-guard', keywords: 'confirm order link sms one tap customer confirm yes no did not order verify call save calls কনফার্ম লিংক' },
-  { title: 'Prices in Bangla digits', where: 'Store > Design > Layout Settings', path: '/vendor/store/layout-settings', keywords: 'bangla digits numbers sonkha price taka ৳১২৩ বাংলা সংখ্যা দাম' },
   { title: 'Homepage sections and layout', where: 'Store > Design > Customize', path: '/vendor/store/customize', keywords: 'home page sections banner slider categories featured products reorder হোম পেজ' },
   { title: 'Menu and header', where: 'Store > Design > Header Editor', path: '/vendor/store/header-editor', keywords: 'navigation menu links header announcement top bar মেনু হেডার' },
   { title: 'Logo size and cart total in the header', where: 'Store > Design > Header Editor', path: '/vendor/store/header-editor', keywords: 'logo size bigger smaller header cart total price bag phone number call top links লোগো' },
@@ -116,7 +115,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
 
   // ------------------------------------------------------------------ Orders & couriers
   { title: 'Add an order by hand', where: 'Orders > Add Order', path: '/vendor/orders/add', keywords: 'manual order phone order facebook order whatsapp new order create অর্ডার যোগ' },
-  { title: 'Checkout links (instant checkout)', where: 'Checkout Links', path: '/vendor/orders/instant-checkout', keywords: 'instant checkout link order ready customer confirm one tap messenger whatsapp send link pay link checkout link অর্ডার লিংক চেকআউট লিংক' },
+  { title: 'Checkout links (instant checkout)', where: 'Orders > Instant Checkout', path: '/vendor/orders/instant-checkout', keywords: 'instant checkout link order ready customer confirm one tap messenger whatsapp send link pay link checkout link অর্ডার লিংক চেকআউট লিংক' },
   { title: 'Import orders from Excel / CSV', where: 'Orders > Import', path: '/vendor/orders/import', keywords: 'bulk upload spreadsheet excel csv many orders xlsx' },
   { title: 'Packing list and pick list (for packers)', where: 'Orders > select orders > Packing list', path: '/vendor/orders', keywords: 'pack packing slip pick list shelf print box items without price প্যাকিং লিস্ট' },
   { title: 'Profit on each order', where: 'Orders > Order detail / Show profit', path: '/vendor/orders', keywords: 'order profit margin loss making loss orders cost per order লাভ লোকসান' },

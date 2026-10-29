@@ -5,7 +5,6 @@ import { toast } from '../../lib/toast';
 import { ChevronRight } from 'lucide-react';
 import { Section } from '../ui/FormKit';
 import { RadioGroup, SaveButton, useDesignSettings } from '../../pages/vendor/store/design/designShared';
-import { BanglaDigitsCheckbox } from '../../pages/vendor/store/design/StoreLanguageCard';
 import { storeSettingsApi } from '../../lib/storeSettingsApi';
 import { apiErrorMessage } from '../../lib/api';
 import { useViewer } from '../../lib/useStaffAccess';
@@ -47,7 +46,7 @@ function StoreTextSection() {
   }, [settings]);
   if (!settings) return null;
   return (
-    <Section title="Store buttons and prices" description="The words on your store's buttons and labels (Add to Cart, Buy Now, Cart, Search...).">
+    <Section title="Store buttons and labels" description="The words on your store's buttons and labels (Add to Cart, Buy Now, Cart, Search...). Numbers and prices always stay in English digits.">
       <div className="space-y-4">
         <RadioGroup
           label="Language"
@@ -58,7 +57,6 @@ function StoreTextSection() {
             { value: 'bn', label: 'বাংলা (Bangla)' },
           ]}
         />
-        {storeLanguage === 'bn' && <BanglaDigitsCheckbox checked={banglaDigits} onChange={setBanglaDigits} />}
         <p className="text-xs text-regantify-text-muted">
           This is the default. Shoppers can switch between বাংলা and English from the header on StorePal, and their browser remembers their pick.
           Your product names and descriptions stay exactly as you wrote them.

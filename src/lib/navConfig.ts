@@ -12,7 +12,6 @@ import {
   Users,
   Truck,
   Plug,
-  Zap,
   Wallet,
   Megaphone,
   BarChart3,
@@ -135,8 +134,6 @@ export const vendorNav: NavSection[] = [
   { label: 'Analytics', icon: BarChart3, group: 'Main Menu', path: '/vendor/analytics' },
   // Abandoned carts are a tab on the Orders page, not a separate nav entry.
   { label: 'Orders', icon: ClipboardList, group: 'Main Menu', path: '/vendor/orders' },
-  // Instant checkout links (server/src/instant-checkout/): a link with the order ready, the customer only confirms.
-  { label: 'Checkout Links', icon: Zap, group: 'Main Menu', path: '/vendor/orders/instant-checkout' },
   { label: 'Customers', icon: Users, group: 'Main Menu', path: '/vendor/customers' },
   // LMS: a dashboard page with its own section tabs (LMS-plan.md Step 4). Its sections
   // (Leads, Call Desk, Tasks, Reports, Settings) are tabs at the top of the page.

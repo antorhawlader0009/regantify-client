@@ -174,7 +174,7 @@ function SettingsForm({ settings, readOnly }: { settings: PosSettings; readOnly:
             </Field>
           </div>
           <div className="mt-2 border-t border-pos-line">
-            <SwitchRow label="Print the store logo" checked={form.showLogo} onChange={(v) => set('showLogo', v)} disabled={readOnly} />
+            <p className="pt-3 text-xs text-pos-muted">Your shop name and logo (Store &gt; Branding) are always printed at the top of every receipt.</p>
           </div>
           <details className="mt-3 rounded-lg bg-pos-page px-4 py-3 text-sm">
             <summary className="cursor-pointer font-medium">Setting up a receipt printer</summary>

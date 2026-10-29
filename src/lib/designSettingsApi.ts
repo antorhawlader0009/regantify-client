@@ -164,7 +164,7 @@ export interface DesignSettings {
 
   /** StorePal's own buttons and labels: English or Bangla. Product names and descriptions stay as written. */
   storeLanguage: 'en' | 'bn';
-  /** Prices in Bangla digits (৳১,২৫০) while storeLanguage is "bn". */
+  /** Prices in Bangla digits (৳1,250) while storeLanguage is "bn". */
   storeBanglaDigits: boolean;
   /** The store AI chat's reply language (Settings > Language): Bangla, English, or the shopper's own. */
   aiChatLanguage: 'bn' | 'en' | 'auto';

@@ -80,7 +80,8 @@ export function InvoiceSheet({
     <div style={receipt ? { width: '72mm', fontSize: '12px' } : undefined}>
       <div className={`mb-8 flex items-start justify-between gap-6 ${receipt ? 'flex-col !gap-3' : ''}`}>
         <div className="min-w-0">
-          {s.showLogo && logoUrl && (
+          {/* The shop's logo and name always head the invoice (the owner's rule, 2026-10-29); `showLogo` is no longer read. */}
+          {logoUrl && (
             <img src={logoUrl} alt="" className="mb-2 h-12 max-w-[160px] object-contain" />
           )}
           {header?.storeName && <p className="text-lg font-semibold text-regantify-text">{header.storeName}</p>}

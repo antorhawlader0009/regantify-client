@@ -34,21 +34,7 @@ export function StoreLanguageCard() {
         Shows your store's buttons and labels (Add to Cart, Buy Now, Cart, Search...) in the chosen language. Your product names
         and descriptions stay exactly as you wrote them.
       </p>
-      {storeLanguage === 'bn' && <BanglaDigitsCheckbox checked={banglaDigits} onChange={setBanglaDigits} />}
       <SaveButton pending={save.isPending} onClick={() => save.mutate({ storeLanguage, storeBanglaDigits: banglaDigits })} />
     </div>
-  );
-}
-
-/** Prices in Bangla digits (IDEA-7); only offered while the store language is Bangla. Shared by this card and Layout Settings. */
-export function BanglaDigitsCheckbox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex items-start gap-2.5 text-sm text-regantify-text cursor-pointer">
-      <input type="checkbox" className="mt-0.5" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span>
-        Show prices in Bangla digits
-        <span className="block text-xs text-regantify-text-muted">৳১,২৫০ instead of ৳1,250. Phone numbers and order numbers stay in English digits.</span>
-      </span>
-    </label>
   );
 }

@@ -42,6 +42,8 @@ import {
   X,
   XCircle,
   CalendarDays,
+  Zap,
+  Link2,
 } from 'lucide-react';
 import { orderRef, ordersApi, paymentMethodLabel, vendorOrderTotal, type Order, type OrderStatus, type CourierProvider, type ListOrdersParams, type OrderViewFilters } from '../../../lib/ordersApi';
 import { lmsApi } from '../../../lib/lmsApi';
@@ -1340,6 +1342,18 @@ export default function Orders() {
             </button>
           )}
 
+          {/* Instant checkout (server/src/instant-checkout/): a link with the order ready; the customer only confirms. */}
+          {canCreate && activeTab !== 'ABANDONED' && !trashView && (
+            <button
+              type="button"
+              onClick={() => navigate('/vendor/orders/instant-checkout?new=1')}
+              className={toolbarBtn}
+              title="Make a link with the products and the customer's details: they confirm the order in one tap"
+            >
+              <Zap size={15} />
+              Instant Checkout
+            </button>
+          )}
 
           {canCreate && (
           <button
@@ -1414,11 +1428,6 @@ export default function Orders() {
               <button type="button" onClick={() => setCartLinkOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Make a link that fills a customer's cart">
                 Cart link
               </button>
-              {canCreate && (
-                <button type="button" onClick={() => navigate('/vendor/orders/instant-checkout?new=1')} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="A link with the products and the customer's details: they confirm the order in one tap">
-                  Instant checkout link
-                </button>
-              )}
               {isOwner && (
                 <button type="button" onClick={() => setAssignSettingsOpen(true)} className="h-9 rounded-lg border border-line bg-white px-2.5 text-xs text-neutral-600 hover:bg-neutral-50" title="Give new orders to staff in turn">
                   Share out orders
@@ -1501,6 +1510,14 @@ export default function Orders() {
             <button type="button" onClick={() => navigate('/vendor/orders/standing')} className={toolbarBtn} title="Regular customers whose same order is made again for you every week or month">
               <CalendarClock size={15} />
               Standing orders
+            </button>
+          )}
+
+          {/* The checkout links made so far (moved here from the sidebar, 2026-10-29); "Instant Checkout" makes a new one. */}
+          {canCreate && (
+            <button type="button" onClick={() => navigate('/vendor/orders/instant-checkout')} className={toolbarBtn} title="Instant checkout links you made: opened, ordered or expired">
+              <Link2 size={15} />
+              Checkout links
             </button>
           )}
 
