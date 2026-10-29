@@ -709,7 +709,7 @@ export function LimitOption({ checked, onChange, label, hint, children }: { chec
 // ------------------------------------------------------------------ offer sentence
 
 /**
- * "৳100 off orders over ৳1,000, until 30 Oct." — what the shopper gets,
+ * "৳100 off orders over ৳1,000, until 30 Oct." - what the shopper gets,
  * built from the form as it's filled in.
  */
 export function offerSentence(o: {

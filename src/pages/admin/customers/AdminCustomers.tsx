@@ -98,7 +98,7 @@ function Find() {
                     <td className="px-4 py-2.5 text-right tabular-nums">{s.cancelled}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums">{s.returned}</td>
                     <td className={`px-4 py-2.5 text-right tabular-nums ${s.blacklistedByStores ? 'font-semibold text-red-700' : ''}`}>{s.blacklistedByStores}</td>
-                    <td className="whitespace-nowrap px-4 py-2.5">{s.lastOrderAt ? formatDhakaDateTime(s.lastOrderAt) : '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-2.5">{s.lastOrderAt ? formatDhakaDateTime(s.lastOrderAt) : '-'}</td>
                   </tr>
                 ))}
               </tbody>

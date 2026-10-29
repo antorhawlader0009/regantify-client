@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { courierApi, type RedxArea } from '../../lib/courierApi';
 
 // RedX has ≈2,800 delivery areas; the list only ever shows this many
-// matches so the dropdown stays usable — typing narrows it down.
+// matches so the dropdown stays usable - typing narrows it down.
 const MAX_SHOWN = 300;
 
 function matches(area: RedxArea, term: string): boolean {

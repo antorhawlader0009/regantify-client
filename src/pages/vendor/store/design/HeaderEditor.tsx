@@ -26,7 +26,7 @@ const MENU_INFO: Record<MenuKey, { title: string; hint: string }> = {
 };
 
 /**
- * Store > Design > Header Editor — a clickable preview of StorePal's
+ * Store > Design > Header Editor - a clickable preview of StorePal's
  * header. Clicking a menu area opens its editor below; Save stores all
  * four menus at once.
  */

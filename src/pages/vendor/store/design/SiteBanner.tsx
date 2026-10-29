@@ -17,7 +17,7 @@ const NO_SCHEDULE: ScheduledBanner[] = [];
 // (keep in sync with storefront's themes/storepal/components/StoreHeader.tsx).
 const DEFAULT_TEXT = 'Cash On Delivery All Over Bangladesh · Guaranteed Pre-order Delivery in 20-25 Days';
 
-/** Store > Design > Site Banner — the announcement strip above StorePal's header. */
+/** Store > Design > Site Banner - the announcement strip above StorePal's header. */
 export default function SiteBanner() {
   const queryClient = useQueryClient();
   const { settings, isLoading, save } = useDesignSettings();

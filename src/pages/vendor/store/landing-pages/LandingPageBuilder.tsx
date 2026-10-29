@@ -168,7 +168,7 @@ export default function LandingPageBuilder() {
     });
   };
 
-  // Warn before losing unsaved edits — a landing page can represent a lot
+  // Warn before losing unsaved edits - a landing page can represent a lot
   // of typing, and the builder is a full-screen surface where an
   // accidental back-navigation is easy.
   useEffect(() => {
@@ -200,7 +200,7 @@ export default function LandingPageBuilder() {
     setAddOpen(false);
   };
 
-  // AI Generate (landing-plan.md §5, Step 10) — appends the drafted
+  // AI Generate (landing-plan.md §5, Step 10) - appends the drafted
   // sections to whatever's already on the page (rather than replacing
   // it), so running Generate on a partially-built page composes instead
   // of destroying existing work, and marks aiGenerated on the draft so
@@ -209,7 +209,7 @@ export default function LandingPageBuilder() {
   const handleGenerated = (generatedSections: LandingPageSection[]) => {
     setSections([...sections, ...generatedSections]);
     patchDraft({ aiGenerated: true });
-    toast.success('Draft generated — review the sections and Save when ready.');
+    toast.success('Draft generated - review the sections and Save when ready.');
   };
 
   const duplicateSection = (sectionId: string) => {
@@ -364,7 +364,7 @@ export default function LandingPageBuilder() {
           onClick={() => {
             // AI-drafted review placeholders (landing-page-sections.md
             // §4.1's own render note) must be visibly flagged as needing
-            // real reviews before publish — the preview badge (see
+            // real reviews before publish - the preview badge (see
             // SectionPreview's CustomerReviewsPreview) already shows
             // this while editing; this confirm is the last checkpoint
             // right before the page actually goes live, same
@@ -398,7 +398,7 @@ export default function LandingPageBuilder() {
         <aside className="w-[310px] shrink-0 overflow-y-auto border-r border-line p-3">
           {selectedSection ? (
             // Section settings replace the panel list while a section is
-            // selected — the rail is narrow, and showing both at once
+            // selected - the rail is narrow, and showing both at once
             // would mean scrolling past the panel list on every edit.
             <div>
               <button
@@ -428,7 +428,7 @@ export default function LandingPageBuilder() {
               >
                 {sections.length === 0 ? (
                   <p className="text-[12px] leading-relaxed text-neutral-400">
-                    This page is empty. Sections are the building blocks — a hero, your product, reviews,
+                    This page is empty. Sections are the building blocks - a hero, your product, reviews,
                     an order form.
                   </p>
                 ) : (

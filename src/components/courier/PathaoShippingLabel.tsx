@@ -25,7 +25,7 @@ export function Barcode({ value }: { value: string }) {
   return <svg ref={ref} className="block w-full h-[0.7in]" aria-label={`Barcode ${value}`} />;
 }
 
-/** QR code of `value` as inline SVG (generated locally — no network call). */
+/** QR code of `value` as inline SVG (generated locally - no network call). */
 export function QrCode({ value }: { value: string }) {
   const [svg, setSvg] = useState<string | null>(null);
   useEffect(() => {
@@ -94,7 +94,7 @@ export function PathaoShippingLabel({ label, from }: { label: PathaoLabel; from:
           ) : (
             <>
               <p className="text-[7pt] font-semibold uppercase tracking-wide">Payment</p>
-              <p className="text-[16pt] font-black leading-none">PAID — ৳0</p>
+              <p className="text-[16pt] font-black leading-none">PAID - ৳0</p>
             </>
           )}
         </div>

@@ -6,7 +6,7 @@ import { SteadfastParcelsTab } from './SteadfastParcelsTab';
 import { SteadfastDashboardTab } from './SteadfastDashboardTab';
 
 /**
- * Courier Integration > SteadFast — connection card, then Dashboard /
+ * Courier Integration > SteadFast - connection card, then Dashboard /
  * Parcels / Settings, the same shape as the Pathao and RedX pages. The
  * active tab lives in `?tab=`; connected vendors land on the Dashboard,
  * not-connected ones always on Settings (the other tabs have nothing to
@@ -37,7 +37,7 @@ export default function SteadfastPage() {
             details={
               overview.connected
                 ? [
-                    { label: 'API key', value: overview.apiKeyMasked ?? '—' },
+                    { label: 'API key', value: overview.apiKeyMasked ?? '-' },
                     { label: 'Last update from SteadFast', value: formatAgo(overview.lastWebhookAt) },
                   ]
                 : undefined

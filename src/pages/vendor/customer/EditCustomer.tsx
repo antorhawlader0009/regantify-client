@@ -30,11 +30,11 @@ function valuesOf(customer: VendorCustomerDetail): CustomerFormValues {
 }
 
 /**
- * Customers > a customer > "Edit" — the same sections as Add Customer,
+ * Customers > a customer > "Edit" - the same sections as Add Customer,
  * minus a couple of things that don't make sense once a customer
  * already exists: phone is shown read-only (it's the lookup key
- * everywhere — the URL, the vendor's note, the Customer account's own
- * unique key — so changing it isn't a simple field edit). There is no password here:
+ * everywhere - the URL, the vendor's note, the Customer account's own
+ * unique key - so changing it isn't a simple field edit). There is no password here:
  * the shopper's login is shared by every store, so only the shopper sets it,
  * with an OTP on the store (security-findings F-20).
  */
@@ -55,7 +55,7 @@ export default function EditCustomer() {
   const [formError, setFormError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  // Fills the form once the customer's current details arrive — a plain
+  // Fills the form once the customer's current details arrive - a plain
   // one-time fill, not a controlled sync, so it never fights the
   // vendor's own edits if this query happens to refetch in the background.
   const [filled, setFilled] = useState(false);

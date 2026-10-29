@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { OrderStatus } from './ordersApi';
 
-// Vendor dashboard > Analytics — mirrors server/src/analytics/analytics.service.ts.
+// Vendor dashboard > Analytics - mirrors server/src/analytics/analytics.service.ts.
 
 /** A picked date range: Dhaka days "YYYY-MM-DD", both ends included. */
 export interface DateRange {
@@ -113,7 +113,7 @@ export interface DeliveryOutcome {
   successRate: number | null;
 }
 
-/** Orders & Delivery tab's delivery half — mirrors server/src/analytics/delivery-analytics.service.ts. */
+/** Orders & Delivery tab's delivery half - mirrors server/src/analytics/delivery-analytics.service.ts. */
 export interface DeliveryAnalytics {
   period: AnalyticsPeriodInfo;
   kpis: {
@@ -181,7 +181,7 @@ export interface MarketingRow {
   conversionRate: number | null;
 }
 
-/** Marketing tab (analytics-plan.md Step 3) — mirrors AnalyticsService.marketing. */
+/** Marketing tab (analytics-plan.md Step 3) - mirrors AnalyticsService.marketing. */
 export interface MarketingAnalytics {
   period: AnalyticsPeriodInfo;
   bucket: AnalyticsBucket;
@@ -279,7 +279,7 @@ export interface TeamWorkAnalytics {
   waiting: { count: number; afterHours: number; oldestHours: number | null };
 }
 
-/** Monthly VAT report (TellMe idea 78) — mirrors VatReportService.report. */
+/** Monthly VAT report (TellMe idea 78) - mirrors VatReportService.report. */
 export interface VatReport {
   month: string;
   orders: number;
@@ -290,7 +290,7 @@ export interface VatReport {
   lines: Array<{ invoiceNumber: number; day: string; salesExVat: number; vat: number }>;
 }
 
-/** Not selling (TellMe idea 84) — mirrors DeadStockService.report. */
+/** Not selling (TellMe idea 84) - mirrors DeadStockService.report. */
 export interface DeadStockReport {
   days: number;
   count: number;
@@ -298,7 +298,7 @@ export interface DeadStockReport {
   products: Array<{ id: string; name: string; slug: string; image: string | null; stock: number; lastSoldAt: string | null; stuck: number | null; estimated: boolean }>;
 }
 
-/** Stock value (TellMe idea 133) — mirrors StockValueService.report. Money is null without the cost permission. */
+/** Stock value (TellMe idea 133) - mirrors StockValueService.report. Money is null without the cost permission. */
 export interface StockValueRow {
   name: string;
   products: number;
@@ -321,7 +321,7 @@ export interface StockValueReport {
   byBrand: StockValueRow[];
 }
 
-/** Where customers buy from, per district — mirrors OrderMapService.report. Keys match src/data/bdDistrictMap.json. */
+/** Where customers buy from, per district - mirrors OrderMapService.report. Keys match src/data/bdDistrictMap.json. */
 export interface OrderMapReport {
   from: string;
   to: string;
@@ -332,7 +332,7 @@ export interface OrderMapReport {
   reached: number;
 }
 
-/** How customers rated the delivery (TellMe idea 89) — mirrors DeliveryRatingsService.ratings. */
+/** How customers rated the delivery (TellMe idea 89) - mirrors DeliveryRatingsService.ratings. */
 export interface DeliveryRatings {
   count: number;
   average: number | null;
@@ -340,25 +340,25 @@ export interface DeliveryRatings {
   lowComments: Array<{ orderId: string; ref: string; customerName: string; rating: number | null; comment: string | null; at: string | null }>;
 }
 
-/** Hand-made orders by channel (TellMe idea 121) — mirrors ManualChannelReportService. */
+/** Hand-made orders by channel (TellMe idea 121) - mirrors ManualChannelReportService. */
 export interface ManualChannelReport {
   channels: Array<{ channel: string | null; orders: number; sales: number; averageOrder: number | null; returned: number; returnRate: number | null }>;
 }
 
-/** Coupon results (TellMe idea 93) — mirrors CouponPerformanceService.report. */
+/** Coupon results (TellMe idea 93) - mirrors CouponPerformanceService.report. */
 export interface CouponPerformance {
   coupons: Array<{ couponId: string; code: string; orders: number; sales: number; discount: number; averageOrder: number | null; newCustomers: number; returned: number; cancelled: number; profit: number | null }>;
   best: string | null;
   worst: string | null;
 }
 
-/** Profit by product (TellMe idea 94) — mirrors AnalyticsService.profitByProduct. */
+/** Profit by product (TellMe idea 94) - mirrors AnalyticsService.profitByProduct. */
 export interface ProfitByProduct {
   products: Array<{ productId: string | null; name: string; image: string | null; units: number; sales: number; cost: number | null; profit: number | null; margin: number | null; profitPerUnit: number | null }>;
   withoutCost: number;
 }
 
-/** Return rate by product (TellMe idea 96) — mirrors ReturnRateService. */
+/** Return rate by product (TellMe idea 96) - mirrors ReturnRateService. */
 export interface ReturnRates {
   minOrders: number;
   notRated: number;
@@ -385,7 +385,7 @@ export interface ProductReturnWarning {
   worstOption?: { options: string; sold: number; returned: number; rate: number } | null;
 }
 
-/** What customers say vs. tracked links (TellMe idea 100) — mirrors HeardFromService.report. */
+/** What customers say vs. tracked links (TellMe idea 100) - mirrors HeardFromService.report. */
 export interface HeardFromReport {
   enabled: boolean;
   total: number;

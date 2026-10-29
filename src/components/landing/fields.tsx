@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 /**
  * Small dark-theme form primitives shared by every section settings form
  * in the landing page builder. Kept separate from the dashboard's own
- * light-theme inputs on purpose — the builder is its own visual surface
+ * light-theme inputs on purpose - the builder is its own visual surface
  * (landing-plan.md §0).
  */
 

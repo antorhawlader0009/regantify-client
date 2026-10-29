@@ -22,7 +22,7 @@ const STATUS_TABS: { label: string; value: PlanUpgradeRequestStatus | 'ALL' }[] 
 ];
 
 /**
- * Super Admin > Plans > Plan Requests (PLAN.md Step 15) — the admin
+ * Super Admin > Plans > Plan Requests (PLAN.md Step 15) - the admin
  * side of Step 14's vendor "Request Upgrade" flow. Defaults to the
  * PENDING tab (the actual "needs action" queue); Approve calls the same
  * assignVendorPlan path a direct manual plan change on All Vendors
@@ -44,7 +44,7 @@ export default function PlanRequests() {
     onSuccess: (_, { decision }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-plan-requests'] });
       queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
-      toast.success(decision === 'APPROVED' ? 'Request approved — plan updated.' : 'Request rejected.');
+      toast.success(decision === 'APPROVED' ? 'Request approved - plan updated.' : 'Request rejected.');
     },
     onError: () => toast.error('Could not resolve this request. Please try again.'),
   });
@@ -102,7 +102,7 @@ export default function PlanRequests() {
                     <p className="text-xs text-regantify-text-muted">{r.vendor.subdomain}</p>
                   </td>
                   <td className="px-4 py-3 text-regantify-text">{r.requestedPlan.name}</td>
-                  <td className="px-4 py-3 text-regantify-text-muted max-w-[240px]">{r.note ?? '—'}</td>
+                  <td className="px-4 py-3 text-regantify-text-muted max-w-[240px]">{r.note ?? '-'}</td>
                   <td className="px-4 py-3 text-regantify-text-muted whitespace-nowrap">{formatDateTime(r.createdAt)}</td>
                   <td className="px-4 py-3">
                     <span

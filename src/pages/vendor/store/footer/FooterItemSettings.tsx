@@ -13,7 +13,7 @@ interface FooterItemSettingsProps {
 }
 
 /**
- * Store > Footer's "Item Settings" side panel (reference screenshot 3) —
+ * Store > Footer's "Item Settings" side panel (reference screenshot 3) -
  * clicking a footer block in the preview opens this panel scoped to
  * just that block's content, same interaction pattern as the Landing
  * Page builder's per-section SectionSettings panel.

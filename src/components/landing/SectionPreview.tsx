@@ -182,7 +182,7 @@ function ButtonPreview({ props }: { props: ButtonProps }) {
 // -- Hero ---------------------------------------------------------------
 
 function HeroSliderPreview({ props }: { props: HeroSliderProps }) {
-  // Preview always shows the first slide — the builder canvas is about
+  // Preview always shows the first slide - the builder canvas is about
   // layout/content review, not exercising autoplay timing.
   const slide = props.slides?.[0];
   if (!slide) return <EmptyImage className="h-56" />;
@@ -368,7 +368,7 @@ function CountdownTimerPreview({ props }: { props: CountdownTimerProps }) {
   if (remaining === 0 && (props.expiredBehavior ?? 'hide') === 'hide') {
     return (
       <div className="px-6 py-4 text-center text-xs text-regantify-text-muted">
-        Timer has expired — hidden on the live page.
+        Timer has expired - hidden on the live page.
       </div>
     );
   }
@@ -446,7 +446,7 @@ function CustomerReviewsPreview({
       {aiGenerated && (
         <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-[11.5px] font-medium text-amber-700">
           <span aria-hidden>&#9888;&#65039;</span>
-          AI-drafted placeholders — replace with real customer reviews before publishing.
+          AI-drafted placeholders - replace with real customer reviews before publishing.
         </div>
       )}
       {props.title && (

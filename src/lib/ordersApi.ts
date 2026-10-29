@@ -42,7 +42,7 @@ export interface OrderItem {
   preOrderDate?: string | null;
   /** A bundle line (TellMe idea 51): what one set held when the order was placed. Null on other lines. */
   bundleParts?: Array<{ productId: string; name: string; sku: string; quantity: number }> | null;
-  // Live product snapshot for the "view on storefront" link — null when
+  // Live product snapshot for the "view on storefront" link - null when
   // the product was since deleted, or DRAFT (no public page to link to).
   // See OrdersService.itemsInclude.
   product?: {
@@ -65,7 +65,7 @@ export interface AssignmentOverview {
 
 export type CourierProvider = 'NONE' | 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
 
-// Real-booking lifecycle for courierProvider — see COURIER-PLAN.md
+// Real-booking lifecycle for courierProvider - see COURIER-PLAN.md
 // §2.4/§3.4. Distinct from OrderStatus: courierProvider/
 // courierBookingStatus track the courier API side, OrderStatus is the
 // vendor-facing pipeline stage (which a successful courier sync can also
@@ -164,13 +164,13 @@ export interface Order {
   shippingZip?: string | null;
   shippingCity?: string | null;
   shippingDistrict?: string | null;
-  // Pathao-specific numeric location IDs, set via PathaoLocationPicker —
+  // Pathao-specific numeric location IDs, set via PathaoLocationPicker -
   // see COURIER-PLAN.md §3.2/§7 Phase 2. Independent of the free-text
   // shippingCity/shippingDistrict above.
   pathaoCityId?: number | null;
   pathaoZoneId?: number | null;
   pathaoAreaId?: number | null;
-  // RedX's single delivery-area id, set via RedxLocationPicker — RedX
+  // RedX's single delivery-area id, set via RedxLocationPicker - RedX
   // has only one location tier, unlike Pathao's city/zone/area cascade.
   redxAreaId?: number | null;
   deliveryZone: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA' | 'PICKUP';
@@ -181,24 +181,24 @@ export interface Order {
   expressCharge?: string;
   subtotal: string;
   deliveryCharge: string;
-  // Flat VAT fee, shown to shoppers as "VAT" (StorePal) — applied to
+  // Flat VAT fee, shown to shoppers as "VAT" (StorePal) - applied to
   // every order regardless of paymentMethod. See Vendor.vatChargeBdt /
   // Order.vatAmount in schema.prisma.
   vatAmount: string;
   /** True on a POS sale whose prices already include VAT: vatAmount is part of the subtotal, shown as "includes VAT", never added. */
   vatIncluded?: boolean;
-  // Store > Payment Gateway's per-gateway Platform Charge — independent
+  // Store > Payment Gateway's per-gateway Platform Charge - independent
   // of vatAmount above. See VendorPaymentGateway.platformChargeBdt /
   // Order.platformChargeAmount in schema.prisma. Always the real amount
   // charged, regardless of who actually paid it (see platformChargePayer)
   // or platformChargeHidden below (a storefront-display-only flag, only
   // meaningful when platformChargePayer is CUSTOMER).
   platformChargeAmount: string;
-  // "Fee From" — CUSTOMER (included in `total`, the shopper's own
+  // "Fee From" - CUSTOMER (included in `total`, the shopper's own
   // charge) or VENDOR (never shown to the shopper anywhere, comes out of
-  // this vendor's own payout instead at completion — see
+  // this vendor's own payout instead at completion - see
   // Order.platformChargePayer's own schema comment). For ONLINE_PAYMENT
-  // the fee is hidden from the vendor entirely — see vendorOrderTotal.
+  // the fee is hidden from the vendor entirely - see vendorOrderTotal.
   platformChargePayer: 'CUSTOMER' | 'VENDOR';
   platformChargeHidden: boolean;
   discountAmount: string;
@@ -371,7 +371,7 @@ export interface CustomerCourierStats {
   steadfastConnected: boolean;
   /** False = no courier connected at all, so no courier records are shown. */
   anyCourierConnected?: boolean;
-  /** Connected, but no backup email/password saved — Pathao's lookup may refuse the API token. */
+  /** Connected, but no backup email/password saved - Pathao's lookup may refuse the API token. */
   pathaoNeedsLogin: boolean;
   loginErrorCode: string;
   byPhone: Record<string, PhoneCourierStats>;
@@ -471,7 +471,7 @@ export interface CreateOrderPayload {
   shippingCity?: string;
   shippingDistrict?: string;
   deliveryZone?: 'DHAKA' | 'OUTSIDE_DHAKA' | 'AROUND_DHAKA';
-  // Optional Pathao location (Add Order) — City → Zone → Area, may stop early.
+  // Optional Pathao location (Add Order) - City → Zone → Area, may stop early.
   pathaoCityId?: number;
   pathaoZoneId?: number;
   pathaoAreaId?: number;
@@ -625,7 +625,7 @@ export const ordersApi = {
   getHistory: (id: string) =>
     api.get<OrderStatusHistoryEntry[]>(`/v1/orders/${id}/history`).then((r) => r.data),
 
-  // Customize Order Status Tabs — the four defaults come back even for a
+  // Customize Order Status Tabs - the four defaults come back even for a
   // vendor who's never customized anything (server-side fallback).
   getStatusTabs: () =>
     api.get<{ statuses: OrderStatus[] }>('/v1/orders/status-tabs').then((r) => r.data.statuses),
@@ -636,7 +636,7 @@ export const ordersApi = {
       .then((r) => r.data.statuses),
 
   // Courier delivery-history / success-rate lookup by phone number,
-  // platform-wide — powers the small "94% (105)" badges and "Check
+  // platform-wide - powers the small "94% (105)" badges and "Check
   // History" on the Orders list.
   getCustomerHistory: (phone: string) =>
     api.get<CustomerHistory>(`/v1/orders/customer-history/${encodeURIComponent(phone)}`).then((r) => r.data),

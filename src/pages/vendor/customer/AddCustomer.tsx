@@ -28,7 +28,7 @@ function useDebounced<T>(value: T, ms: number) {
 }
 
 /**
- * Customers > "+ Add New" — a vendor registering a customer directly,
+ * Customers > "+ Add New" - a vendor registering a customer directly,
  * with no order involved. Only Name and Phone are required.
  * See CustomersService.create on the backend for what actually happens
  * on submit: this creates the customer's platform-wide login account

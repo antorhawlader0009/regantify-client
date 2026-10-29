@@ -32,7 +32,7 @@ const DEFAULT_LABELS: Record<PaymentGatewayType, string> = {
 };
 
 /**
- * Store > Payment Gateway — every payment option this vendor's storefront
+ * Store > Payment Gateway - every payment option this vendor's storefront
  * accepts. COD/ONLINE_PAYMENT always exist (auto-provisioned server-side,
  * see PaymentGatewaysService.ensureBuiltins) and can be enabled/disabled +
  * given a Platform Charge, but never disconnected. Custom gateways
@@ -55,7 +55,7 @@ export default function PaymentGateway() {
     queryKey: ['payment-gateway-catalog'],
     queryFn: paymentGatewaysApi.getCatalog,
   });
-  // null while loading = "don't know yet" — never used to mean "not
+  // null while loading = "don't know yet" - never used to mean "not
   // allowed" so the page doesn't flash an upgrade prompt before the real
   // plan is known (same convention as Domain.tsx's customDomainAllowed).
   const { data: usage } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
@@ -116,7 +116,7 @@ export default function PaymentGateway() {
 
       <h2 className="text-lg font-medium text-regantify-text mb-1">Add a payment gateway</h2>
       <p className="text-sm text-regantify-text-muted mb-4">
-        Connect your own gateway with real API credentials — a per-transaction platform charge is optional and set by
+        Connect your own gateway with real API credentials - a per-transaction platform charge is optional and set by
         you.
       </p>
 
@@ -155,8 +155,8 @@ function formatCharge(gateway: VendorPaymentGateway) {
 }
 
 /**
- * COD/ONLINE_PAYMENT card — view-only label/fee (fully plan-driven, set
- * by Super Admin editing the plan itself, not per-vendor — see
+ * COD/ONLINE_PAYMENT card - view-only label/fee (fully plan-driven, set
+ * by Super Admin editing the plan itself, not per-vendor - see
  * AdminService.updatePlan), enable/disable toggle only, never
  * disconnected.
  */
@@ -199,18 +199,18 @@ function BuiltinGatewayCard({
               )}
             </p>
           )}
-          {/* Fee From: Vendor (Plan.codGatewayFeePayer) — the fee above is
+          {/* Fee From: Vendor (Plan.codGatewayFeePayer) - the fee above is
               never charged to the shopper at all; it comes out of THIS
               vendor's own payout at order completion instead. Worth
               surfacing here since it's real money either way, just from a
               different source than the default. */}
           {!hideFee && gateway.platformChargePayer === 'VENDOR' && (
             <p className="text-xs text-regantify-text-muted mt-0.5">
-              Paid by you — never charged to your customers, deducted from your payout instead.
+              Paid by you - never charged to your customers, deducted from your payout instead.
             </p>
           )}
           {platformHidden && (
-            <p className="text-xs text-amber-600 mt-1">Hidden by platform admin — not shown to shoppers regardless of this setting.</p>
+            <p className="text-xs text-amber-600 mt-1">Hidden by platform admin - not shown to shoppers regardless of this setting.</p>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -230,7 +230,7 @@ function BuiltinGatewayCard({
   );
 }
 
-/** SSLCommerz card — connect form when not connected, edit/disconnect controls once connected. */
+/** SSLCommerz card - connect form when not connected, edit/disconnect controls once connected. */
 function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway | undefined; onSaved: () => void; autoOpen?: boolean }) {
   const [showForm, setShowForm] = useState(!!autoOpen);
   const cardRef = useScrollIntoView(autoOpen);
@@ -290,7 +290,7 @@ function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPayment
           </p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
             {isConnected
-              ? `Connected — platform charge ${formatCharge(gateway!)}.`
+              ? `Connected - platform charge ${formatCharge(gateway!)}.`
               : 'Connect your own SSLCommerz merchant account.'}
           </p>
         </div>
@@ -585,7 +585,7 @@ function StoreGatewayCard({
             )}
           </p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
-            {isConnected ? `Connected — platform charge ${formatCharge(gateway!)}.` : def.about}
+            {isConnected ? `Connected - platform charge ${formatCharge(gateway!)}.` : def.about}
           </p>
         </div>
         {isConnected ? (
@@ -781,7 +781,7 @@ function ShurjopayCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentG
           </p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
             {isConnected
-              ? `Connected — platform charge ${formatCharge(gateway!)}.`
+              ? `Connected - platform charge ${formatCharge(gateway!)}.`
               : 'Cards, bKash, Nagad and other wallets through your own shurjoPay store.'}
           </p>
         </div>
@@ -980,7 +980,7 @@ function EpsCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway
           </p>
           <p className="text-sm text-regantify-text-muted mt-0.5">
             {isConnected
-              ? `Connected — platform charge ${formatCharge(gateway!)}.`
+              ? `Connected - platform charge ${formatCharge(gateway!)}.`
               : 'Cards, bKash, Nagad and other wallets through your own EPS merchant account.'}
           </p>
         </div>

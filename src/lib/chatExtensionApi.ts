@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Orders > Chat orders: the Chat order saver Chrome extension — mirrors server/src/chat-extension/chat-extension.service.ts.
+// Orders > Chat orders: the Chat order saver Chrome extension - mirrors server/src/chat-extension/chat-extension.service.ts.
 
 export interface ChatExtensionDevice {
   id: string;

@@ -18,13 +18,13 @@ export interface AuthUser {
   fullName?: string | null;
   avatarUrl?: string | null;
   // True until a Vendor either sets their own password or skips the
-  // prompt — always false/absent for Super Admin.
+  // prompt - always false/absent for Super Admin.
   mustSetPassword?: boolean;
   vendor?: {
     storeName: string;
     subdomain: string;
     // Serialized as a string by Prisma's Decimal JSON encoding (e.g.
-    // "1250.00") — parse with Number(...) before formatting/display.
+    // "1250.00") - parse with Number(...) before formatting/display.
     balance: string;
   } | null;
   // What they may do in the dashboard (rule-plan.md Step 3): sent with every
@@ -43,7 +43,7 @@ export interface AuthUser {
   // Missing on a session saved before the feature: treated as FULL (see useDashboardView).
   dashboardView?: DashboardView;
   simplePins?: string[];
-  // Note: Vendor.address is intentionally NOT included here — it's not
+  // Note: Vendor.address is intentionally NOT included here - it's not
   // part of the login/session payload, only fetched/edited directly on
   // the Settings page (see getVendorSettings/updateVendorSettings).
 }

@@ -41,7 +41,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 
 /** A retention or funnel share as a cell tinted by its size: one hue, light to dark (a sequential scale), with the number always written. */
 function HeatCell({ value }: { value: number | null }) {
-  if (value === null) return <td className={`${td} text-regantify-text-muted`}>—</td>;
+  if (value === null) return <td className={`${td} text-regantify-text-muted`}>-</td>;
   const a = Math.max(0.06, Math.min(1, value / 100) * 0.55);
   return (
     <td className={`${td} font-medium ${value >= 60 ? 'admin-heat-strong' : ''}`} style={{ background: `rgba(234, 88, 12, ${a})` }}>
@@ -53,8 +53,8 @@ function HeatCell({ value }: { value: number | null }) {
 const th = 'py-1.5 pr-3 text-left text-xs font-medium text-regantify-text-muted';
 const td = 'py-1.5 pr-3 tabular-nums text-regantify-text';
 const monthLong = (m: string) => bucketLabel(m, 'month', true);
-const pctText = (v: number | null) => (v === null ? '—' : `${v}%`);
-const signed = (n: number) => (n === 0 ? '—' : `${n > 0 ? '+' : '−'}${formatTaka(Math.abs(n))}`);
+const pctText = (v: number | null) => (v === null ? '-' : `${v}%`);
+const signed = (n: number) => (n === 0 ? '-' : `${n > 0 ? '+' : '−'}${formatTaka(Math.abs(n))}`);
 
 export default function AdminAnalytics() {
   const [tab, setTab] = useState<TabId>('revenue');
@@ -236,7 +236,7 @@ export default function AdminAnalytics() {
                         <td className={td}>{f.signups}</td>
                         <td className={td}>{f.withProduct} <span className="text-xs text-regantify-text-muted">{pctText(f.productPct)}</span></td>
                         <td className={td}>{f.withOrder} <span className="text-xs text-regantify-text-muted">{pctText(f.orderPct)}</span></td>
-                        <td className={td}>{f.medianDaysToFirstOrder === null ? '—' : `${f.medianDaysToFirstOrder} days`}</td>
+                        <td className={td}>{f.medianDaysToFirstOrder === null ? '-' : `${f.medianDaysToFirstOrder} days`}</td>
                       </tr>
                     ))}
                   </tbody>

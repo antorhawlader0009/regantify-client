@@ -12,15 +12,15 @@ interface ThemeInfo {
   description: string;
 }
 
-// Both themes are fully live — each is a complete, independent build of
+// Both themes are fully live - each is a complete, independent build of
 // every storefront route (home, product, cart, checkout, account,
 // order tracking) in the storefront/ (Next.js) app, not a preview or a
 // mockup. Selecting one here switches what every visitor to this
-// vendor's live store actually sees — see StoreTheme in schema.prisma
+// vendor's live store actually sees - see StoreTheme in schema.prisma
 // and storefront/src/lib/theme.ts, which branches every route on this
 // same value.
 // Listed in the server's unlock order (plan-limits.service.ts's
-// THEME_ORDER) — StorePal first, since it's the one theme Free includes.
+// THEME_ORDER) - StorePal first, since it's the one theme Free includes.
 const THEMES: ThemeInfo[] = [
   {
     id: 'STOREPAL',
@@ -32,17 +32,17 @@ const THEMES: ThemeInfo[] = [
     id: 'MEDIUM',
     name: 'Medium',
     description:
-      'Dense, deal-forward marketplace layout with gallery, variations, category filtering, search, and trust badges — modeled on established e-commerce conventions.',
+      'Dense, deal-forward marketplace layout with gallery, variations, category filtering, search, and trust badges - modeled on established e-commerce conventions.',
   },
   {
     id: 'MINIMAL',
     name: 'Minimal',
     description:
-      'A spacious, editorial storefront built for speed and a premium, boutique feel — generous whitespace, a quiet monochrome palette, and a fast, distraction-free checkout.',
+      'A spacious, editorial storefront built for speed and a premium, boutique feel - generous whitespace, a quiet monochrome palette, and a fast, distraction-free checkout.',
   },
 ];
 
-/** Small illustrative mockup of each theme's layout — real proportions
+/** Small illustrative mockup of each theme's layout - real proportions
  * and structure (header, hero, product grid) rendered as plain divs, not
  * a screenshot, so it never goes stale as either theme evolves. */
 function ThemePreview({ id }: { id: StoreTheme }) {
@@ -116,7 +116,7 @@ export default function Themes() {
 
   const [selected, setSelected] = useState<StoreTheme | null>(null);
   // null while loading = "don't know yet", never used to mean "nothing
-  // unlocked" — every real plan (including Free) unlocks at least 1
+  // unlocked" - every real plan (including Free) unlocks at least 1
   // theme, so an empty array only ever reflects a load-in-progress/error
   // state, not a real entitlement of zero.
   const [allowedThemes, setAllowedThemes] = useState<StoreTheme[] | null>(null);
@@ -142,8 +142,8 @@ export default function Themes() {
       toast.success(`${THEMES.find((t) => t.id === theme)?.name ?? theme} is now live on your store.`);
     } catch (err: unknown) {
       // A locked theme (PLAN.md Step 7) surfaces the server's own
-      // upgrade-prompt message here — same generic error.response.data.message
-      // read pattern used throughout client (see e.g. AddProduct.tsx) —
+      // upgrade-prompt message here - same generic error.response.data.message
+      // read pattern used throughout client (see e.g. AddProduct.tsx) -
       // rather than the flat "please try again" this used to always show.
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
@@ -168,7 +168,7 @@ export default function Themes() {
           const isSelected = theme.id === selected;
           const isSwitching = switching === theme.id;
           // Locked = this plan's allowedThemes doesn't include it (PLAN.md
-          // Step 7) — while allowedThemes is still loading (null), nothing
+          // Step 7) - while allowedThemes is still loading (null), nothing
           // is treated as locked yet, so the page doesn't flash a locked
           // state on every card during the initial load.
           const isLocked = allowedThemes !== null && !allowedThemes.includes(theme.id);

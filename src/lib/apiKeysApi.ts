@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Integrations > External API keys — mirrors the server's
+// Store > Integrations > External API keys - mirrors the server's
 // ApiKeysService (server/src/external-api/api-keys.service.ts). The key
 // itself is only ever returned by create(); the server keeps a hash.
 

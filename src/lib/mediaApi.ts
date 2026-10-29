@@ -6,19 +6,19 @@ export interface MediaAsset {
   url: string;
   publicId: string;
   // Which upload endpoint produced this file, e.g. "product-portrait",
-  // "brand-logo" — shown as the CONTEXT column.
+  // "brand-logo" - shown as the CONTEXT column.
   context: string;
   mimeType: string;
   sizeBytes: number;
   createdAt: string;
   // Resolved server-side (MediaService.withLinkedIds) by matching this
-  // row's url against Product/VariationValuePhoto photoUrls — only ever
+  // row's url against Product/VariationValuePhoto photoUrls - only ever
   // set for a "product-portrait" row, and null if the owning product
   // was since deleted or the photo removed from it. Drives the "Go to
   // Product" action.
   productId: string | null;
   // Same idea as productId, but matched against Category.coverPhotoUrl/
-  // squarePhotoUrl — only ever set for a "category-cover"/"category-
+  // squarePhotoUrl - only ever set for a "category-cover"/"category-
   // square" row. Drives the "Go to Category" action.
   categoryId: string | null;
 }
@@ -46,7 +46,7 @@ export const mediaApi = {
   bulkRemove: (ids: string[]) =>
     api.post<{ removed: number; failed: number }>('/v1/media/bulk-remove', { ids }).then((r) => r.data),
 
-  // Media page's own "+ Add New" button — uploads straight into the
+  // Media page's own "+ Add New" button - uploads straight into the
   // library with no product/brand/etc. attached, unlike every other
   // upload* function in this app's *Api.ts files (those are always a
   // step inside some other form).

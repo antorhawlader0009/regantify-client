@@ -30,13 +30,13 @@ export function ManualChannelsCard({ range }: { range: DateRange }) {
                 </thead>
                 <tbody>
                   {data.channels.map((c) => (
-                    <tr key={c.channel ?? '—'} className="border-t border-line">
+                    <tr key={c.channel ?? '-'} className="border-t border-line">
                       <td className="py-2 font-medium">{c.channel ?? <span className="text-neutral-500">Not set</span>}</td>
                       <td className="py-2 text-right tabular-nums">{c.orders}</td>
                       <td className="py-2 text-right tabular-nums">{formatTaka(c.sales)}</td>
-                      <td className="py-2 text-right tabular-nums">{c.averageOrder == null ? '—' : formatTaka(c.averageOrder)}</td>
+                      <td className="py-2 text-right tabular-nums">{c.averageOrder == null ? '-' : formatTaka(c.averageOrder)}</td>
                       <td className="py-2 text-right tabular-nums">{c.returned}</td>
-                      <td className="py-2 text-right tabular-nums">{c.returnRate == null ? '—' : `${c.returnRate}%`}</td>
+                      <td className="py-2 text-right tabular-nums">{c.returnRate == null ? '-' : `${c.returnRate}%`}</td>
                     </tr>
                   ))}
                 </tbody>

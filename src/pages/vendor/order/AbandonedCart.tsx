@@ -185,7 +185,7 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
         </button>
       </td>
       <td className="border-r border-line p-3 last:border-r-0 min-w-[140px]">
-        <p>{order.customerName || <span className="text-regantify-text-muted">—</span>}</p>
+        <p>{order.customerName || <span className="text-regantify-text-muted">-</span>}</p>
       </td>
       <td className="border-r border-line p-3 last:border-r-0 min-w-[150px]">
         {order.customerPhone ? (
@@ -196,11 +196,11 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
             </button>
           </span>
         ) : (
-          <span className="text-sm text-regantify-text-muted">—</span>
+          <span className="text-sm text-regantify-text-muted">-</span>
         )}
       </td>
       <td className="border-r border-line p-3 last:border-r-0 min-w-[140px]">
-        <p>{order.customerEmail || <span className="text-regantify-text-muted">—</span>}</p>
+        <p>{order.customerEmail || <span className="text-regantify-text-muted">-</span>}</p>
       </td>
       <td className="border-r border-line p-3 last:border-r-0 min-w-[220px]">
         {firstItem ? (
@@ -285,7 +285,7 @@ export default function AbandonedCart() {
   // Clear any bulk-selected ids whenever the visible result set changes
   // (new search or page). Without this, selected ids from a previous
   // page/search stay in `selectedIds` with nothing on screen to show
-  // for it — the header checkbox's checked state can end up wrong by
+  // for it - the header checkbox's checked state can end up wrong by
   // coincidence, and bulkRemoveMutation/bulkLabelMutation would act on
   // rows the vendor can no longer see and likely doesn't remember
   // selecting.

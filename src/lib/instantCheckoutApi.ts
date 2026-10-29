@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Instant checkout links — mirrors server/src/instant-checkout/instant-checkout.service.ts.
+// Instant checkout links - mirrors server/src/instant-checkout/instant-checkout.service.ts.
 
 export interface InstantProduct {
   id: string;

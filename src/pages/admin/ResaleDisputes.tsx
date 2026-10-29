@@ -12,7 +12,7 @@ const TABS: Array<{ id: DisputeStatus; label: string }> = [
   { id: 'DECIDED', label: 'Decided' },
   { id: 'WITHDRAWN', label: 'Taken back' },
 ];
-const money = (n: number | null | undefined) => (n == null ? '—' : `৳${n.toLocaleString('en-US')}`);
+const money = (n: number | null | undefined) => (n == null ? '-' : `৳${n.toLocaleString('en-US')}`);
 
 /**
  * Super Admin > Reseller problems (RESELLER-plan.md Step 14): the queue, oldest first. Each shows the reseller's report and the supplier's

@@ -4,15 +4,15 @@ import type { DailyCaps } from './dailyLimits';
 
 export type PlanCode = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
-// "Fee From" — who pays this fee. CUSTOMER (default): added to the
+// "Fee From" - who pays this fee. CUSTOMER (default): added to the
 // order total, the shopper pays it (shown/folded per codFeeHidden etc).
 // VENDOR: never added to the order total or shown to the shopper
-// anywhere — comes out of the vendor's own payout at completion instead,
+// anywhere - comes out of the vendor's own payout at completion instead,
 // shown only on the vendor's own invoice. Mirrors server's
 // PaymentFeePayer enum.
 export type PaymentFeePayer = 'CUSTOMER' | 'VENDOR';
 
-// "৳10 + 2%", "৳10", "2%" — a fee's flat and percentage parts as one
+// "৳10 + 2%", "৳10", "2%" - a fee's flat and percentage parts as one
 // label, dropping whichever part is 0 (a fully-zero fee shows "৳0").
 export function formatFeeParts(flat: string, percent: string): string {
   const flatValue = Number(flat);
@@ -45,7 +45,7 @@ export interface Plan {
   lmsEnabled: boolean;
   posEnabled: boolean;
   // Each fee = flat BDT part + percent (0-100) of the order total
-  // (incl. delivery, VAT and the flat part), both applied together — see server's Plan.codGatewayFeeBdt comment.
+  // (incl. delivery, VAT and the flat part), both applied together - see server's Plan.codGatewayFeeBdt comment.
   codGatewayFeeBdt: string;
   codGatewayFeePercent: string;
   codGatewayFeePayer: PaymentFeePayer;
@@ -59,7 +59,7 @@ export interface Plan {
   // payment page, never shown at checkout. Admin-only like the online fee above.
   codAdvanceFeeBdt?: string;
   codAdvanceFeePercent?: string;
-  /** Display-only — hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
+  /** Display-only - hides that fee from checkout's line items/total. The fee itself is still charged server-side regardless. */
   codFeeHidden: boolean;
   onlinePaymentFeeHidden: boolean;
   /** Billing marks this plan "Most popular" (Super Admin > Plans). */
@@ -108,13 +108,13 @@ export interface PlanUpgradeRequest {
   updatedAt: string;
 }
 
-/** All 4 tiers, public — see PlansController.findAll. */
+/** All 4 tiers, public - see PlansController.findAll. */
 export async function getPlans(): Promise<Plan[]> {
   const { data } = await api.get<Plan[]>('/v1/plans');
   return data;
 }
 
-/** The current vendor's plan + usage against every count-style limit — see PlansController.getUsage (PLAN.md Step 5). */
+/** The current vendor's plan + usage against every count-style limit - see PlansController.getUsage (PLAN.md Step 5). */
 export async function getVendorPlanUsage(): Promise<VendorPlanUsage> {
   const { data } = await api.get<VendorPlanUsage>('/v1/plans/usage');
   return data;
@@ -122,7 +122,7 @@ export async function getVendorPlanUsage(): Promise<VendorPlanUsage> {
 
 // -- Billing page's "Request Upgrade" flow (PLAN.md Step 14) --
 
-/** Creates a new pending upgrade request — see PlansController.createRequest. Throws (400) if a request is already pending, or the requested plan is the vendor's current one. */
+/** Creates a new pending upgrade request - see PlansController.createRequest. Throws (400) if a request is already pending, or the requested plan is the vendor's current one. */
 export async function requestPlanUpgrade(requestedPlanCode: PlanCode, note?: string): Promise<PlanUpgradeRequest> {
   const { data } = await api.post<PlanUpgradeRequest>('/v1/plans/requests', { requestedPlanCode, note });
   return data;

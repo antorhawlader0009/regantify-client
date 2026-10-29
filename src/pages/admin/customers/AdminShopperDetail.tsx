@@ -88,8 +88,8 @@ export default function AdminShopperDetail() {
           {p.account ? (
             <>
               <Row label="Name">{p.account.name}</Row>
-              <Row label="Email">{p.account.email ?? '—'}</Row>
-              <Row label="Saved address">{p.account.address ?? '—'}</Row>
+              <Row label="Email">{p.account.email ?? '-'}</Row>
+              <Row label="Saved address">{p.account.address ?? '-'}</Row>
               <Row label="Joined">{formatDhakaDateTime(p.account.since)}</Row>
               <Row label="Sign-in">{p.account.loginOffAt ? `off since ${formatDhakaDateTime(p.account.loginOffAt)}${p.account.loginOffReason ? `: ${p.account.loginOffReason}` : ''}` : 'on'}</Row>
               <div className="mt-3 flex flex-wrap gap-2">

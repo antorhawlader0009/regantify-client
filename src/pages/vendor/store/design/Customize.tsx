@@ -7,7 +7,7 @@ import { HighlightsEditor } from './HighlightsEditor';
 import { DesignLoading, DesignPageHeader, DesignSection, SaveButton, Switch, useDesignSettings } from './designShared';
 
 /**
- * Store > Design > Customize — the sections of the StorePal home page: which
+ * Store > Design > Customize - the sections of the StorePal home page: which
  * ones show, in what order, and the store highlights (up to 9 short points with
  * an icon, such as free delivery or easy returns), which every store used to
  * get as the same placeholder text. One Save button covers everything.

@@ -9,7 +9,7 @@ export interface IncompleteOrderItem {
   selectedOptions: Record<string, string>;
   quantity: number;
   // Resolved server-side by matching productSku against this vendor's
-  // live catalog — null if no matching product exists (e.g. the sku was
+  // live catalog - null if no matching product exists (e.g. the sku was
   // typed before the product was created, or the product was since
   // deleted) or the match is a DRAFT product with no public page.
   product?: { slug: string; visibility: 'PUBLIC' | 'DRAFT' } | null;

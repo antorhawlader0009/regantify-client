@@ -211,7 +211,7 @@ export default function Seo() {
           </div>
           <input id="seo-title" type="text" value={form.title} maxLength={70} onChange={(e) => set('title', e.target.value)} placeholder={store.storeName} className={inputClass} />
           <p className="text-xs text-regantify-text-muted mt-1">
-            Say what you sell and where, with your store name, e.g. “{store.storeName} — Mobile accessories in Dhaka”. Aim for {TITLE_IDEAL.min}-{TITLE_IDEAL.max} characters.
+            Say what you sell and where, with your store name, e.g. “{store.storeName} - Mobile accessories in Dhaka”. Aim for {TITLE_IDEAL.min}-{TITLE_IDEAL.max} characters.
           </p>
         </div>
 

@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Vendor dashboard > LMS — mirrors server/src/lms/.
+// Vendor dashboard > LMS - mirrors server/src/lms/.
 
 export type LmsStage = 'NEW' | 'TRYING' | 'IN_TALKS' | 'WON' | 'LOST';
 

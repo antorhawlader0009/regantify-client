@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Vendor dashboard top-bar search — mirrors server/src/search/.
+// Vendor dashboard top-bar search - mirrors server/src/search/.
 
 export interface SearchItem {
   id: string;

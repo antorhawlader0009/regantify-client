@@ -2,7 +2,7 @@ import { api } from './api';
 import type { PendingApproval } from './approvalsApi';
 import type { WithdrawMethod, WithdrawRequest, WithdrawRequestStatus } from './financeApi';
 
-// Mirrors server/src/admin/admin-withdraw-requests.controller.ts and admin-money.controller.ts — Super
+// Mirrors server/src/admin/admin-withdraw-requests.controller.ts and admin-money.controller.ts - Super
 // Admin > Finance > Payouts, Platform Revenue and Reconciliation (super-admin-plan.md Step 6).
 
 export interface AdminWithdrawRequest extends WithdrawRequest {

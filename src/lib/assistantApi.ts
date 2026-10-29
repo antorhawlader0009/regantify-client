@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Vendor dashboard > Ask AI — mirrors server/src/assistant/. The server keeps
+// Vendor dashboard > Ask AI - mirrors server/src/assistant/. The server keeps
 // no chats: the panel sends the recent messages with every question, plus the
 // dashboard pages and the open page's fields so the assistant can link and fill.
 

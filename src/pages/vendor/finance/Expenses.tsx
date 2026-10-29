@@ -122,7 +122,7 @@ export default function Expenses() {
                   <td className={`${td} whitespace-nowrap`}>{e.date.slice(0, 10)}</td>
                   <td className={td}>{e.category}</td>
                   <td className={td}>
-                    {e.note || <span className="text-neutral-400">—</span>}
+                    {e.note || <span className="text-neutral-400">-</span>}
                     {e.addedBy && <p className="text-xs text-neutral-400">by {e.addedBy}</p>}
                   </td>
                   <td className={`${td} text-right font-medium tabular-nums`}>{formatTaka(e.amount)}</td>

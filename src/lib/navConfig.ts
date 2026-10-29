@@ -111,7 +111,7 @@ export interface NavSection {
 
 /**
  * Mirrors Section 6 of the project brief exactly. Each child renders as a
- * placeholder page (just a heading) for now — see PlaceholderPage.tsx.
+ * placeholder page (just a heading) for now - see PlaceholderPage.tsx.
  */
 // The pages the Store > Design hub opens (see designPages.ts); kept highlighted under the "Design" link.
 const DESIGN_PAGE_PATHS = [
@@ -246,7 +246,7 @@ export const vendorNav: NavSection[] = [
     icon: Truck,
     group: 'Store',
     children: [
-      // Each courier has its own full page (Dashboard/Parcels/Settings —
+      // Each courier has its own full page (Dashboard/Parcels/Settings -
       // see pages/vendor/courier/{steadfast,pathao,redx}/); the shared
       // hub (CourierIntegrationPage) lists all three. Real API booking
       // is done from the Orders page's Actions menu.
@@ -255,7 +255,7 @@ export const vendorNav: NavSection[] = [
       { label: 'RedX', path: '/vendor/courier/redx' },
       { label: 'CarryBee', path: '/vendor/courier/carrybee' },
       { label: 'Courier Rules', path: '/vendor/courier/rules', advanced: true },
-      // The only other real standalone page in this group — see Tracking.tsx.
+      // The only other real standalone page in this group - see Tracking.tsx.
       { label: 'Tracking', path: '/vendor/shipping/tracking' },
     ],
   },

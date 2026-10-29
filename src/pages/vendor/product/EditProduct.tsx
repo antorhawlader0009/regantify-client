@@ -129,7 +129,7 @@ export default function EditProduct() {
     enabled: Boolean(id),
   });
 
-  // Store > Categories' real category tree — drives the Main/Sub Category
+  // Store > Categories' real category tree - drives the Main/Sub Category
   // selects below.
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ['categories'],
@@ -137,7 +137,7 @@ export default function EditProduct() {
     staleTime: 60_000,
   });
 
-  // Quick-create modals for Main Category / Sub Category / Brand — reuses
+  // Quick-create modals for Main Category / Sub Category / Brand - reuses
   // the same modals as the Categories/Brands pages, opened inline here so
   // a vendor doesn't have to leave the product form to add a missing one.
   const [showAddMainCategory, setShowAddMainCategory] = useState(false);
@@ -171,7 +171,7 @@ export default function EditProduct() {
   const [bundlePick, setBundlePick] = useState<number | null>(null);
   const [metaDescription, setMetaDescription] = useState('');
 
-  // Main/Sub Category are just two views onto the same `categoryId` FK —
+  // Main/Sub Category are just two views onto the same `categoryId` FK -
   // derived from it (and from `categoryOptions`) rather than tracked as
   // their own state, so there's only ever one source of truth.
   const mainCategoryOptions = categoryOptions.filter((c) => !c.parentId);
@@ -183,7 +183,7 @@ export default function EditProduct() {
   const subCategoryOptions = mainCategoryId ? categoryOptions.filter((c) => c.parentId === mainCategoryId) : [];
 
   // `category` (plain text) is the legacy field the storefront still reads
-  // for filtering/breadcrumbs — picking a Main/Sub Category keeps it in
+  // for filtering/breadcrumbs - picking a Main/Sub Category keeps it in
   // sync with the chosen name. Only touched by an actual pick here, so an
   // older product's free-typed category text is left alone until the
   // vendor deliberately changes it via these selects.
@@ -256,14 +256,14 @@ export default function EditProduct() {
   const displaySlug = slug.trim() || slugify(name) || 'your-product';
 
   // Snapshot of the form immediately after the product loads (or after a
-  // successful save) — compared against current field values to know
+  // successful save) - compared against current field values to know
   // whether "Update"/"Discard" should show. Kept as a JSON string so the
   // comparison is a single cheap equality check instead of tracking each
   // field's dirty state individually.
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
 
   /** Builds the same shape as buildSnapshot(), but straight from a Product
-   * record — used right after load/save so it never reads stale state
+   * record - used right after load/save so it never reads stale state
    * (state setters from applyProduct haven't necessarily committed yet
    * within the same effect). */
   const snapshotFromProduct = (p: NonNullable<typeof product>) =>
@@ -611,7 +611,7 @@ export default function EditProduct() {
           variationOptions.length > 0
             ? variationPhotos.filter((vp) => {
                 const option = variationOptions.find((o) => o.name === vp.optionName);
-                // Also drop entries with no actual photos — e.g. a stale
+                // Also drop entries with no actual photos - e.g. a stale
                 // leftover from switching "Photos by" from one option to
                 // another before uploading anything for the first one.
                 // An empty entry has no use once saved, and its presence

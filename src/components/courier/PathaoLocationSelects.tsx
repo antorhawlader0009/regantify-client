@@ -21,12 +21,12 @@ interface PathaoLocationSelectsProps {
   value: PathaoLocationValue;
   onChange: (next: PathaoLocationValue) => void;
   disabled?: boolean;
-  /** Tailwind classes for each picker — callers match their own form's input style. */
+  /** Tailwind classes for each picker - callers match their own form's input style. */
   selectClassName?: string;
   /**
    * When given, the address is matched to a Pathao location
    * (GET …/locations/suggest). A confident match is pre-selected while
-   * the picker is still empty — and keeps following the address as it's
+   * the picker is still empty - and keeps following the address as it's
    * edited, until the vendor picks or clears something themselves. A
    * weaker match is only offered ("Use it").
    */
@@ -65,7 +65,7 @@ function useDebounced<T>(value: T, delayMs: number): T {
 
 /**
  * Controlled City → Zone → Area cascade for Pathao's numeric location
- * ids — the one place these pickers live (booking popup, create-store
+ * ids - the one place these pickers live (booking popup, create-store
  * dialog, Order Detail's PathaoLocationPicker, Add Order). Each level is
  * a type-to-search SearchableSelect. Picking a parent clears its
  * children. Query keys are shared app-wide (['pathao-cities'],
@@ -177,7 +177,7 @@ export function PathaoLocationSelects({ value, onChange, disabled, selectClassNa
 
       {suggestFrom && followingSuggestion && !manual && (
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-neutral-500">
-          <Sparkles size={12} /> Suggested from the address — please check it.
+          <Sparkles size={12} /> Suggested from the address - please check it.
         </p>
       )}
       {suggestFrom && isEmpty && !manual && suggestion && suggestion.confidence < PATHAO_SUGGESTION_AUTO_APPLY && (

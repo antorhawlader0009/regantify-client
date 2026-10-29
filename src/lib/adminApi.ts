@@ -2,7 +2,7 @@ import { api } from './api';
 import type { PendingApproval } from './approvalsApi';
 import type { PlanCode } from './plansApi';
 
-// Mirrors server/src/admin — Super Admin > All Vendors.
+// Mirrors server/src/admin - Super Admin > All Vendors.
 export type VendorStatus = 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'CLOSED';
 
 // Super Admin > a store's own page (super-admin-plan.md Step 4), mirrors server/src/admin/admin-store.service.ts.
@@ -111,7 +111,7 @@ export interface AdminVendor {
   email: string | null;
   ownerName: string | null;
   address: string | null;
-  // Decimal serialized as a string by Prisma's JSON encoding (e.g. "1250.00") — parse with Number(...) before formatting.
+  // Decimal serialized as a string by Prisma's JSON encoding (e.g. "1250.00") - parse with Number(...) before formatting.
   balance: string;
   smsCredits: number;
   /** The store's AI Credit wallet. */
@@ -120,7 +120,7 @@ export interface AdminVendor {
   lastLoginAt: string | null;
   productCount: number;
   orderCount: number;
-  // PLAN.md Step 15 — 'FREE' for a vendor with no VendorSubscription row, same fallback the server applies for enforcement.
+  // PLAN.md Step 15 - 'FREE' for a vendor with no VendorSubscription row, same fallback the server applies for enforcement.
   planCode: PlanCode;
   planName: string;
   // Step 5 (super-admin-plan.md)
@@ -262,7 +262,7 @@ export const adminApi = {
       .post<{ vendorId: string; storeName: string; subdomain: string; phone: string; smsSent: boolean }>('/v1/admin/vendors', body)
       .then((r) => r.data),
 
-  // "Login as Vendor" — returns a one-time token, valid 24h if unused,
+  // "Login as Vendor" - returns a one-time token, valid 24h if unused,
   // that VendorImpersonateEntry exchanges for a 15-min vendor session in
   // a separate tab. See server/src/admin/admin.service.ts.
   impersonateVendor: (vendorId: string, reason: string, mode: ImpersonationMode) =>
@@ -272,7 +272,7 @@ export const adminApi = {
   auditLog: (params: AdminAuditQuery & { page?: number }) => api.get<AdminAuditPage>('/v1/admin/audit-log', { params }).then((r) => r.data),
   auditLogCsv: (params: AdminAuditQuery) => api.get<string>('/v1/admin/audit-log/export', { params, responseType: 'text' }).then((r) => r.data),
 
-  // Actions column — SUSPENDED blocks the vendor's dashboard login/session
+  // Actions column - SUSPENDED blocks the vendor's dashboard login/session
   // AND their public storefront; see AdminService.updateVendorStatus.
   // Suspending needs a reason: the owner is texted it.
   updateVendorStatus: (vendorId: string, status: VendorStatus, reason?: string) =>
@@ -315,7 +315,7 @@ export const adminApi = {
   transferStart: (id: string, body: { reason: string; storeName: string; code: string; newPhone: string }) => api.post<{ sentTo: string } | PendingApproval>(`/v1/admin/vendors/${id}/transfer/start`, body).then((r) => r.data),
   transferConfirm: (id: string, body: { reason: string; newPhone: string; otp: string }) => api.post<{ owner: string }>(`/v1/admin/vendors/${id}/transfer/confirm`, body).then((r) => r.data),
 
-  // All Vendors > Change Plan (PLAN.md Step 15) — direct manual
+  // All Vendors > Change Plan (PLAN.md Step 15) - direct manual
   // assignment, independent of the Plan Requests approve/reject flow
   // (see adminPlansApi.resolvePlanRequest).
   assignVendorPlan: (vendorId: string, planCode: PlanCode) =>

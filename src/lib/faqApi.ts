@@ -1,6 +1,6 @@
 import { api } from './api';
 
-/** Store FAQ (TellMe idea 122) — mirrors the server's FaqItem. */
+/** Store FAQ (TellMe idea 122) - mirrors the server's FaqItem. */
 export interface FaqItem {
   id: string;
   question: string;

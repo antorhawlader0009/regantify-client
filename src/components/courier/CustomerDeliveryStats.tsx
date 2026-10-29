@@ -27,7 +27,7 @@ const VOLUME_LABEL: Record<string, string> = {
   very_high: '200+ parcels',
 };
 
-/** "92% delivered · 21-200 parcels" — SteadFast's score, which has percents and a volume band but no counts. */
+/** "92% delivered · 21-200 parcels" - SteadFast's score, which has percents and a volume band but no counts. */
 export function steadfastScoreText(score: SteadfastScore): string {
   const volume = score.volumeBand ? VOLUME_LABEL[score.volumeBand] ?? score.volumeBand : null;
   if (score.deliveryRatio == null) return volume && score.volumeBand !== 'none' ? `Nothing delivered yet · ${volume}` : 'New number: no SteadFast history';
@@ -64,7 +64,7 @@ function Line({ mark, name, line, compact }: { mark: ReactNode; name: string; li
   );
 }
 
-/** One courier's line — its numbers once fetched, else why there are none yet. */
+/** One courier's line - its numbers once fetched, else why there are none yet. */
 function CourierLine({ mark, name, line, compact }: { mark: ReactNode; name: string; line: CourierCheckLine; compact?: boolean }) {
   if (!line.fetchedAt) {
     return (
@@ -145,7 +145,7 @@ const RING_STROKE: Record<string, string> = {
  * Hover for each source's line.
  */
 export function DeliverySuccessRing({ stats }: { stats: PhoneCourierStats | undefined }) {
-  if (!stats) return <span className="text-xs text-neutral-400">—</span>;
+  if (!stats) return <span className="text-xs text-neutral-400">-</span>;
   const { pathao, steadfast, storepal } = stats;
   const known = [pathao, steadfast].filter((line): line is CourierCheckLine => Boolean(line?.fetchedAt));
   const combined: CourierStatLine = known.reduce(
@@ -193,12 +193,12 @@ export function DeliverySuccessRing({ stats }: { stats: PhoneCourierStats | unde
       </div>
       <div className="text-[11px] leading-4 text-neutral-500">
         <p>
-          Success: <span className={`font-semibold tabular-nums ${color}`}>{percent == null ? '—' : `${percent}%`}</span>
+          Success: <span className={`font-semibold tabular-nums ${color}`}>{percent == null ? '-' : `${percent}%`}</span>
         </p>
         <p>
           Order:{' '}
           <span className={`font-semibold tabular-nums ${color}`}>
-            {sfOnly ? (sfScore!.volumeBand && sfScore!.volumeBand !== 'none' ? VOLUME_LABEL[sfScore!.volumeBand] ?? sfScore!.volumeBand : '—') : `${combined.successful}/${combined.total}`}
+            {sfOnly ? (sfScore!.volumeBand && sfScore!.volumeBand !== 'none' ? VOLUME_LABEL[sfScore!.volumeBand] ?? sfScore!.volumeBand : '-') : `${combined.successful}/${combined.total}`}
           </span>
         </p>
         {sfScore?.deliveryRatio != null && !sfOnly && (

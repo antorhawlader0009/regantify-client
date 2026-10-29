@@ -31,7 +31,7 @@ type VisibilityFilter = 'ALL' | 'PUBLIC' | 'PRIVATE';
 const MAIN_DRAG_TYPE = 'application/x-main-category-id';
 const SUB_DRAG_TYPE = 'application/x-sub-category-id';
 
-/** Every descendant of `parentId`, at any depth, flattened — so a deeper
+/** Every descendant of `parentId`, at any depth, flattened - so a deeper
  * category still shows as a chip on its top-level ancestor's row. */
 function getDescendants(categories: Category[], parentId: string): Category[] {
   const direct = categories.filter((c) => c.parentId === parentId);
@@ -91,7 +91,7 @@ export default function Categories() {
   const [deleting, setDeleting] = useState<Category | null>(null);
   const [dragOverMainId, setDragOverMainId] = useState<string | null>(null);
   // Optimistic main-category order while a drag's reorder request is in
-  // flight — cleared once the mutation settles and refetched data takes over.
+  // flight - cleared once the mutation settles and refetched data takes over.
   const [orderOverride, setOrderOverride] = useState<string[] | null>(null);
 
   const { data: categories = [], isLoading } = useQuery({

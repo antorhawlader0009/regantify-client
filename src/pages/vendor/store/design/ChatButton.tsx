@@ -22,7 +22,7 @@ const PAGE_OPTIONS: { value: ChatButtonPage; label: string; hint: string }[] = [
   { value: 'OTHER', label: 'Other pages', hint: 'Cart, order tracking, account, and your info pages.' },
 ];
 
-/** Store > Design > Chat Button — the WhatsApp or Messenger bubble that floats over the StorePal storefront. */
+/** Store > Design > Chat Button - the WhatsApp or Messenger bubble that floats over the StorePal storefront. */
 export default function ChatButton() {
   const { settings, isLoading, save } = useDesignSettings();
   const social = useQuery({ queryKey: ['vendor-social-links'], queryFn: getVendorSocialLinks });

@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Mirrors server/src/admin/admin-dashboard.controller.ts — Super Admin >
+// Mirrors server/src/admin/admin-dashboard.controller.ts - Super Admin >
 // Dashboard. `overview` is the whole page (admin-overview.service.ts has the
 // definitions of every number); `getPlatformRevenue` is the older all-time
 // platform fee list (see PlatformRevenue's schema comment for why it is

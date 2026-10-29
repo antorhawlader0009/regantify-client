@@ -61,7 +61,7 @@ export interface ReviewListResponse {
   counts: { all: number; pending: number; approved: number; ratings: Record<'1' | '2' | '3' | '4' | '5', number> };
 }
 
-/** Add/Edit Review form payload — matches the reference form field-for-field. */
+/** Add/Edit Review form payload - matches the reference form field-for-field. */
 export interface ReviewPayload {
   title: string;
   content?: string;

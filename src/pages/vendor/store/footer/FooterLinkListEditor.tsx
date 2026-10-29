@@ -29,10 +29,10 @@ interface FooterLinkListEditorProps {
 
 /**
  * Add/remove/reorder editor for one footer link column (Store > Footer's
- * "Menu"/"Information" columns — both share this exact component, same
+ * "Menu"/"Information" columns - both share this exact component, same
  * label+url shape). Reorder uses @dnd-kit, same pattern as the Landing
  * Page builder's SectionList (client/src/components/landing/
- * SectionList.tsx) — pointer sensor with a small activation distance so
+ * SectionList.tsx) - pointer sensor with a small activation distance so
  * a plain click on an input still works, keyboard sensor for
  * accessibility.
  */
@@ -42,7 +42,7 @@ export function FooterLinkListEditor({ links, onChange }: FooterLinkListEditorPr
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Stable per-row id for dnd-kit — links themselves have no id (just
+  // Stable per-row id for dnd-kit - links themselves have no id (just
   // label+url), so index-based keys would break dnd-kit's identity
   // tracking across a reorder. Generated once per row via a WeakMap-like
   // approach isn't possible for plain objects here, so this uses a

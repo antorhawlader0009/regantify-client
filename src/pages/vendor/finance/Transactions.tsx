@@ -25,7 +25,7 @@ import { SignedAmount, TransactionDescription, TransactionItem, formatTaka } fro
 type TypeFilter = 'ALL' | TransactionType;
 
 /**
- * Finance > Transactions — the wallet's ledger, newest first: money in
+ * Finance > Transactions - the wallet's ledger, newest first: money in
  * (green, "+") and money out ("−"), with the balance after each. Filter
  * by money in / out and by dates (server-side, see FinanceService
  * .listTransactions); "ORDER-…" in a description links to the order.

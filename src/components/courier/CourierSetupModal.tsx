@@ -12,7 +12,7 @@ const PROVIDER_LABELS: Record<CourierAccountProvider, string> = {
   CARRYBEE: 'CarryBee Courier',
 };
 
-// Copy shown above each provider's connect form — Pathao and RedX both
+// Copy shown above each provider's connect form - Pathao and RedX both
 // need a follow-up "pick a pickup store" step in Settings that this
 // modal can't do inline (needs a valid token first), so their copy
 // mentions it; SteadFast is connect-and-done.
@@ -25,7 +25,7 @@ const PROVIDER_INTRO: Record<CourierAccountProvider, string> = {
 };
 
 interface CourierSetupModalProps {
-  /** Which provider to show the connect form for — null closes the modal. Set either by the Courier Integration page's own "Connect" button, or by an Orders-page entry point (dropdown item, "Book with {Provider}") that discovered the vendor isn't connected yet — see COURIER-PLAN.md §5.2. */
+  /** Which provider to show the connect form for - null closes the modal. Set either by the Courier Integration page's own "Connect" button, or by an Orders-page entry point (dropdown item, "Book with {Provider}") that discovered the vendor isn't connected yet - see COURIER-PLAN.md §5.2. */
   provider: CourierAccountProvider | null;
   onOpenChange: (open: boolean) => void;
   /** Called once the account is connected. The Courier Integration page just closes the modal; an Orders-page caller also re-runs whatever action (courier selection, booking) triggered this popup, so the vendor never has to re-click. */
@@ -36,13 +36,13 @@ interface CourierSetupModalProps {
  * The one Courier Integration connect dialog, used from BOTH entry
  * points per COURIER-PLAN.md §5.2: the Courier Integration page's own
  * "Connect" button, and the Orders page's "not connected yet" popup.
- * Same dialog, same connect-form components inside it — never an inline
+ * Same dialog, same connect-form components inside it - never an inline
  * expanding form on the page, so the two entry points can never drift
  * into looking like different flows.
  *
  * Pathao and RedX each need one extra step this modal can't do inline:
  * picking a pickup store (the Pathao page's Pickup Store card / RedxStorePicker), which
- * needs a valid token and so can only happen AFTER connecting — this
+ * needs a valid token and so can only happen AFTER connecting - this
  * modal's onConnected still fires immediately (so an Orders-page retry
  * proceeds), but PROVIDER_INTRO's copy tells the vendor to finish store
  * selection in Settings.

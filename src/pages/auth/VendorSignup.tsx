@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
-// i18n — dictionary + provider, inlined here so this page is a single file
+// i18n - dictionary + provider, inlined here so this page is a single file
 // ---------------------------------------------------------------------------
 
 type Lang = 'en' | 'bn';
@@ -165,7 +165,7 @@ function useLang() {
 }
 
 // ---------------------------------------------------------------------------
-// Day / Night theme — flat, no blur/glow, same green accents.
+// Day / Night theme - flat, no blur/glow, same green accents.
 // ---------------------------------------------------------------------------
 
 type Mode = 'night' | 'day';
@@ -177,7 +177,7 @@ function readStoredMode(): Mode {
     const v = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (v === 'day' || v === 'night') return v;
   } catch {
-    /* storage blocked — fall through to default */
+    /* storage blocked - fall through to default */
   }
   return 'day';
 }
@@ -268,7 +268,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 /**
  * Small animated shop-icon loader shown only while an API call is in
  * flight (send-OTP / login). This is the one deliberate motion moment
- * on the page — everything else is static for fast, low-jank rendering
+ * on the page - everything else is static for fast, low-jank rendering
  * on low-end devices.
  */
 function ShopLoader({ className = '' }: { className?: string }) {
@@ -280,12 +280,12 @@ function ShopLoader({ className = '' }: { className?: string }) {
 }
 
 /**
- * Vendor Sign up — phone number, then OTP verification, then set a new
- * password (skippable — see VendorSetPassword). Reached via the "Sign up"
+ * Vendor Sign up - phone number, then OTP verification, then set a new
+ * password (skippable - see VendorSetPassword). Reached via the "Sign up"
  * button in the top-right corner of the auth header.
  *
  * If the phone number already belongs to a vendor, sendOtp doesn't send
- * an OTP at all (see AuthService.sendOtp) — instead this shows an
+ * an OTP at all (see AuthService.sendOtp) - instead this shows an
  * inline "this account already exists" state right here: a password
  * field to log in directly, or a link into the forgot-password flow.
  *
@@ -314,7 +314,7 @@ function VendorSignupInner() {
       try {
         window.localStorage.setItem(THEME_STORAGE_KEY, next);
       } catch {
-        /* storage blocked — theme still works for this session */
+        /* storage blocked - theme still works for this session */
       }
       return next;
     });
@@ -418,7 +418,7 @@ function VendorSignupInner() {
 
       {/* Content */}
       <main className="max-w-6xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left — pitch */}
+        {/* Left - pitch */}
         <section className="hidden lg:block">
           <span className={`inline-flex items-center text-sm font-medium px-3 py-1.5 rounded-full mb-6 ${th.tag}`}>
             {t('pitch_tag')}
@@ -448,7 +448,7 @@ function VendorSignupInner() {
           </ul>
         </section>
 
-        {/* Right — form card */}
+        {/* Right - form card */}
         <section className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
           <div className={`rounded-2xl p-7 sm:p-9 ${th.cardInner}`}>
             {existingPhone ? (

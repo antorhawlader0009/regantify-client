@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Public storefront endpoints — no auth token required (the interceptor in
+// Public storefront endpoints - no auth token required (the interceptor in
 // api.ts attaches one if present, but the server never requires it here).
 
 export interface StorefrontInfo {
@@ -28,7 +28,7 @@ export interface StorefrontVariant {
 }
 
 // Per-value photo set for ONE variation option (e.g. every "Color" value
-// gets its own photos) — mirrors the same field in the storefront app's
+// gets its own photos) - mirrors the same field in the storefront app's
 // copy of this file (see that file's header comment: both must stay in
 // lockstep since they read the same backend response).
 export interface StorefrontVariationValuePhoto {

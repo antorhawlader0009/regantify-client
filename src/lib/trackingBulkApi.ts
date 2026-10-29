@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { CloseReasonCode } from './closeReasons';
 
-// Orders > Bulk update by tracking ID (TellMe idea 129) — mirrors the server's TrackingBulkService
+// Orders > Bulk update by tracking ID (TellMe idea 129) - mirrors the server's TrackingBulkService
 // (server/src/orders/tracking-bulk.service.ts).
 
 export type TrackingBulkStatus = 'COMPLETED' | 'RETURN';

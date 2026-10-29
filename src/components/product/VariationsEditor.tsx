@@ -29,7 +29,7 @@ function slugify(input: string): string {
     .replace(/(^-|-$)+/g, '');
 }
 
-/** Every combination of each option's values, in option order — e.g. Color×Size → [{Color:Black,Size:36-37}, ...]. */
+/** Every combination of each option's values, in option order - e.g. Color×Size → [{Color:Black,Size:36-37}, ...]. */
 function cartesianCombinations(options: VariationOptionInput[]): Record<string, string>[] {
   if (options.length === 0) return [];
   return options.reduce<Record<string, string>[]>(
@@ -47,7 +47,7 @@ function cartesianCombinations(options: VariationOptionInput[]): Record<string, 
 }
 
 /**
- * Product Variations section — "Add Variation: Size | Color | Custom"
+ * Product Variations section - "Add Variation: Size | Color | Custom"
  * buttons, one row per variation option with its chip list of values,
  * and a "Variation Stocks" table auto-generated from every combination
  * of those values. Matches the reference Edit Product page.
@@ -69,11 +69,11 @@ export function VariationsEditor({
   const [customName, setCustomName] = useState('');
   const [valueInputs, setValueInputs] = useState<Record<string, string>>({});
   // Which single variation option currently has photos assigned (e.g.
-  // "Color") — null means "no photos section shown yet" or "none set".
+  // "Color") - null means "no photos section shown yet" or "none set".
   // Synced from variationPhotos whenever it's set from outside this
   // component (e.g. Edit Product loading an existing product's data,
   // which arrives after this component has already mounted with empty
-  // props) — but only auto-picks when nothing has been explicitly chosen
+  // props) - but only auto-picks when nothing has been explicitly chosen
   // yet, so it doesn't fight the vendor's own dropdown selection. Prefers
   // the first entry that actually has photos over just the array's first
   // entry, since a stale empty entry (e.g. switching "Photos by" away
@@ -91,7 +91,7 @@ export function VariationsEditor({
 
   const combinations = useMemo(() => cartesianCombinations(options), [options]);
 
-  // Keep the variants table in sync with the current combinations —
+  // Keep the variants table in sync with the current combinations -
   // preserves any existing row's stock/price/etc. by matching on
   // optionValues, adds new rows for new combinations, and drops rows
   // whose combination no longer exists (e.g. a value was removed).
@@ -225,7 +225,7 @@ export function VariationsEditor({
     setPhotosFor(photoTool.value, next.filter((u, i) => next.indexOf(u) === i));
   };
 
-  // Options that can have photos assigned — any variation option with at
+  // Options that can have photos assigned - any variation option with at
   // least one value. Most stores pick "Color" here, but any option works.
   const photoEligibleOptions = options.filter((o) => o.values.length > 0);
 
@@ -345,7 +345,7 @@ export function VariationsEditor({
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-regantify-text">Variation Photos</p>
-            <span className="text-xs text-regantify-text-muted">— give each value its own photos (e.g. per Color)</span>
+            <span className="text-xs text-regantify-text-muted">- give each value its own photos (e.g. per Color)</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -358,7 +358,7 @@ export function VariationsEditor({
               }}
               className="px-3 py-1.5 rounded-lg border border-line bg-white text-sm text-regantify-text"
             >
-              <option value="">— Select a variation —</option>
+              <option value="">- Select a variation -</option>
               {photoEligibleOptions.map((o) => (
                 <option key={o.name} value={o.name}>
                   {o.name}

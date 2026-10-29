@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Integrations > Facebook Pixel (Meta) — mirrors the server's
+// Store > Integrations > Facebook Pixel (Meta) - mirrors the server's
 // MetaPixelService (server/src/store-settings/meta-pixel.service.ts).
 // Owner-only routes on VendorController. The Conversions API token is
 // write-only: the server only ever reports whether one is saved.

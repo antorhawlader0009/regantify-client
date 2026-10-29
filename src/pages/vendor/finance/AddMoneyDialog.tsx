@@ -14,7 +14,7 @@ const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 interface AddMoneyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // Current wallet balance (see Wallet.tsx) — used only to show the
+  // Current wallet balance (see Wallet.tsx) - used only to show the
   // "this also clears your negative balance" note below before
   // submitting; the server always resolves the real deficit itself at
   // charge time (PaymentsService.initiate), this is display-only.
@@ -22,15 +22,15 @@ interface AddMoneyDialogProps {
 }
 
 /**
- * Finance > Wallet's "Add money" — a real top-up through PayStation.
+ * Finance > Wallet's "Add money" - a real top-up through PayStation.
  * Redirects the whole tab to PayStation's hosted checkout; PayStation
  * then redirects back to /vendor/finance/payment-callback once the
  * vendor finishes.
  *
  * If Vendor.balance is currently negative (e.g. a platform charge taken
- * with no balance floor — see OrdersService.applyStatusUpdate), the
+ * with no balance floor - see OrdersService.applyStatusUpdate), the
  * server adds that deficit on top of whatever amount is entered here
- * (PaymentsService.initiate) so completing this top-up also clears it —
+ * (PaymentsService.initiate) so completing this top-up also clears it -
  * there's no separate "pay down your negative balance" flow, this is it.
  */
 export function AddMoneyDialog({ open, onOpenChange, currentBalance }: AddMoneyDialogProps) {

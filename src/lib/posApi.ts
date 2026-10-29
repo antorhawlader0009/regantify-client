@@ -6,7 +6,7 @@ export const POS_HOME = '/vendor/pos/registers';
 /** The header that says who unlocked the counter with their PIN (server pos-cashier-token.ts). */
 const CASHIER_HEADER = 'X-Pos-Cashier';
 
-/** GET /v1/pos/me — the gate every POS page shares (plan first, then "turned on"). */
+/** GET /v1/pos/me - the gate every POS page shares (plan first, then "turned on"). */
 export interface PosMe {
   enabled: boolean;
   userId: string;

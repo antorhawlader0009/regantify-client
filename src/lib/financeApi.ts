@@ -101,7 +101,7 @@ export const financeApi = {
       })
       .then((r) => r.data),
 
-  // Finance > Withdraw's "Request Withdrawal" flow — see FinanceController.
+  // Finance > Withdraw's "Request Withdrawal" flow - see FinanceController.
   // Step 1 texts a code to the owner's phone; step 2 sends it with the request.
   sendWithdrawOtp: (payload: WithdrawDetailsPayload) =>
     api.post<WithdrawOtpSent>('/v1/finance/withdraw-requests/send-otp', payload).then((r) => r.data),

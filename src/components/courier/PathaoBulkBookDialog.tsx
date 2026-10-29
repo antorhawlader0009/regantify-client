@@ -26,7 +26,7 @@ interface PathaoBulkBookDialogProps {
   /** The selected orders; null closes the dialog. */
   orderIds: string[] | null;
   onClose: () => void;
-  /** After a real run — the parent clears its selection. */
+  /** After a real run - the parent clears its selection. */
   onDone: () => void;
 }
 
@@ -141,7 +141,7 @@ export function PathaoBulkBookDialog({ provider = 'PATHAO', orderIds, onClose, o
                   {draft.skipped.map((s) => (
                     <li key={s.orderId} className="px-3 py-1.5 text-xs">
                       <span className="font-medium text-regantify-text">{s.invoiceNumber ? `ORDER-${s.invoiceNumber}` : 'Unknown order'}</span>
-                      <span className="text-neutral-500"> — {s.reason}</span>
+                      <span className="text-neutral-500"> - {s.reason}</span>
                     </li>
                   ))}
                 </ul>

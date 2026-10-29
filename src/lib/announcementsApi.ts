@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Platform announcements (TellMe idea 131) — mirrors server/src/announcements.
+// Platform announcements (TellMe idea 131) - mirrors server/src/announcements.
 
 export type AnnouncementTone = 'INFO' | 'WARNING' | 'URGENT';
 export type AnnouncementFeature = 'POS' | 'LMS' | 'CUSTOM_DOMAIN';

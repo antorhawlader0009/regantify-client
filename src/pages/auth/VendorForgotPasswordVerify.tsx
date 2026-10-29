@@ -5,7 +5,7 @@ import { OtpInput } from '../../components/OtpInput';
 import { authApi } from '../../lib/authApi';
 
 // Matches the server's per-phone resend cooldown (see
-// AuthService.enforceOtpCooldown) — kept in sync so the button re-enables
+// AuthService.enforceOtpCooldown) - kept in sync so the button re-enables
 // right when a resend would actually succeed, not earlier.
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -64,7 +64,7 @@ export default function VendorForgotPasswordVerify() {
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setCode('');
     } catch (err: any) {
-      // 429 = still within the server's own cooldown — resync the local
+      // 429 = still within the server's own cooldown - resync the local
       // timer to the server's actual remaining time instead of leaving
       // the button enabled.
       const retryAfter = err?.response?.data?.retryAfterSeconds;

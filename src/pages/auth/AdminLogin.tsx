@@ -50,7 +50,7 @@ export default function AdminLogin() {
 
   if (stage.name === 'password') {
     return (
-      <AuthShell title="Super Admin login" subtitle="Restricted access — Regantify staff only">
+      <AuthShell title="Super Admin login" subtitle="Restricted access - Regantify staff only">
         <PasswordStep
           submitting={submitting}
           serverError={serverError}

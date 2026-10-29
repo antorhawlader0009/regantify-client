@@ -259,7 +259,7 @@ function Promos() {
                 <td className="px-4 py-2.5">{p.percentOff ? `${p.percentOff}%` : formatTaka(p.amountOff ?? 0)}</td>
                 <td className="px-4 py-2.5">{p.planCodes.length ? p.planCodes.map((c) => c.toLowerCase()).join(', ') : 'every paid plan'}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{p.usedCount}{p.maxUses ? ` / ${p.maxUses}` : ''}</td>
-                <td className="px-4 py-2.5">{p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                <td className="px-4 py-2.5">{p.expiresAt ? new Date(p.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
                 <td className="px-4 py-2.5"><input type="checkbox" checked={p.active} onChange={() => toggle.mutate(p)} disabled={toggle.isPending} aria-label={`${p.code} on`} /></td>
                 <td className="px-4 py-2.5 text-right"><button type="button" onClick={() => setEditing(p)} className="rounded-lg border border-black/10 px-3 py-1 text-xs hover:bg-regantify-content">Edit</button></td>
               </tr>

@@ -1,5 +1,5 @@
 /**
- * Client-side mirror of the shared section registry contract — see
+ * Client-side mirror of the shared section registry contract - see
  * `landing-page-sections.md` at the workspace root, which is the source
  * of truth both this file and the storefront renderer are built against.
  * Keep the two in sync by hand (same convention CLAUDE.md already
@@ -269,7 +269,7 @@ export const SECTION_REGISTRY: SectionTypeMeta[] = [
     type: 'feature-grid',
     label: 'Feature Grid',
     category: 'Basic',
-    description: 'Why customers should buy — icons and short copy.',
+    description: 'Why customers should buy - icons and short copy.',
     defaults: (): FeatureGridProps => ({
       title: 'কেন আমাদের প্রোডাক্ট নিবেন?',
       items: [
@@ -369,7 +369,7 @@ export const SECTION_REGISTRY: SectionTypeMeta[] = [
     type: 'countdown-timer',
     label: 'Countdown Timer',
     category: 'Offer',
-    description: 'Urgency — counts down to a deadline.',
+    description: 'Urgency - counts down to a deadline.',
     defaults: (): CountdownTimerProps => ({
       endsAt: in24Hours(),
       style_: 'boxes',
@@ -403,7 +403,7 @@ export const SECTION_REGISTRY: SectionTypeMeta[] = [
     type: 'stats',
     label: 'Stats',
     category: 'Reviews',
-    description: 'Numbers that build trust — customers, ratings.',
+    description: 'Numbers that build trust - customers, ratings.',
     defaults: (): StatsProps => ({
       stats: [
         { value: '0', label: 'Label' },

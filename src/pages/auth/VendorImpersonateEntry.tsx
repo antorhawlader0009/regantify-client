@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/authStore';
  * in a brand-new tab. AuthBootstrap deliberately skips its normal
  * cookie-based refresh for this exact path (see its own comment) so this
  * tab never picks up whichever admin/vendor session cookie already
- * exists in the browser — instead, this exchanges the one-time token in
+ * exists in the browser - instead, this exchanges the one-time token in
  * the URL for a fresh 15-min vendor session directly.
  */
 export default function VendorImpersonateEntry() {

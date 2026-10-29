@@ -9,7 +9,7 @@ import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
 
 function formatDateTime(iso: string | null) {
-  if (!iso) return '—';
+  if (!iso) return '-';
   return new Date(iso).toLocaleString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -97,7 +97,7 @@ export function AiCreditsAdjust({ vendor, onDone }: { vendor: AdminVendor; onDon
   );
 }
 
-/** Store name click target — full vendor details, including Joined/Last Login (moved out of the table). */
+/** Store name click target - full vendor details, including Joined/Last Login (moved out of the table). */
 export function VendorDetailsDialog({
   vendor,
   onOpenChange,
@@ -129,10 +129,10 @@ export function VendorDetailsDialog({
           />
           <Row label="Status" value={<StatusBadge status={vendor.status} />} />
           <Row label="Plan" value={vendor.planName} />
-          <Row label="Owner" value={vendor.ownerName ?? '—'} />
-          <Row label="Phone" value={vendor.phone ?? '—'} />
-          <Row label="Email" value={vendor.email ?? '—'} />
-          <Row label="Address" value={vendor.address ?? '—'} />
+          <Row label="Owner" value={vendor.ownerName ?? '-'} />
+          <Row label="Phone" value={vendor.phone ?? '-'} />
+          <Row label="Email" value={vendor.email ?? '-'} />
+          <Row label="Address" value={vendor.address ?? '-'} />
           <Row label="Balance" value={`৳${Number(vendor.balance).toLocaleString('en-US')}`} />
           <Row label="SMS Left" value={vendor.smsCredits} />
           <Row label="AI Credits" value={aiCredits.toLocaleString('en-US')} />

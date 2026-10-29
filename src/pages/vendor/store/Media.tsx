@@ -9,12 +9,12 @@ import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { DailyLimitBanner, UnlimitedBadge } from '../../../components/DailyLimitBanner';
 
 // CONTEXT values the app's own upload endpoints record (see
-// ImageStorageService's uploadXPhoto methods) — used only to label rows,
+// ImageStorageService's uploadXPhoto methods) - used only to label rows,
 // not to validate incoming data (a context is free-form server-side,
 // see MediaAsset.context's schema comment). Every "logo"/identity
 // upload (store logo, brand logo, profile picture) is deliberately
-// excluded from Store > Media by product decision — see
-// MediaService.EXCLUDED_CONTEXTS on the server — so no label exists
+// excluded from Store > Media by product decision - see
+// MediaService.EXCLUDED_CONTEXTS on the server - so no label exists
 // here for those contexts; they never reach this page.
 const CONTEXT_LABELS: Record<string, string> = {
   'product-portrait': 'Product Photo',
@@ -79,12 +79,12 @@ export default function Media() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Reset to page 1 whenever a filter changes — same reasoning as
+  // Reset to page 1 whenever a filter changes - same reasoning as
   // AllProducts.tsx: a stale page number from a larger result set could
   // land past the new total.
   useEffect(() => setPage(1), [search, type, perPage]);
 
-  // Clear bulk-selected ids whenever the visible result set changes —
+  // Clear bulk-selected ids whenever the visible result set changes -
   // same reasoning as AllProducts.tsx (stale "Delete Selected" count,
   // stale header-checkbox state).
   useEffect(() => setSelected(new Set()), [search, type, page, perPage]);
@@ -110,7 +110,7 @@ export default function Media() {
   const uploadMutation = useMutation({
     mutationFn: async (files: FileList) => {
       // Sequential, not Promise.all: mirrors how Add Product uploads
-      // photos one at a time — keeps a single upload's failure isolated
+      // photos one at a time - keeps a single upload's failure isolated
       // and avoids bursting past the endpoint's 30/min throttle on a
       // large multi-file selection.
       for (const file of Array.from(files)) {
@@ -168,7 +168,7 @@ export default function Media() {
         } else if (removed === 0) {
           toast.error('Could not delete the selected images. Please try again.');
         } else {
-          toast.error(`Deleted ${removed} of ${count} — ${failed} failed. Please try again for the rest.`);
+          toast.error(`Deleted ${removed} of ${count} - ${failed} failed. Please try again for the rest.`);
         }
       });
     }
@@ -314,7 +314,7 @@ export default function Media() {
                   {m.categoryId && (
                     // Categories have no dedicated edit route (Categories.tsx
                     // edits in-page via a modal, not a route like Edit
-                    // Product) — this goes to the Categories list, the
+                    // Product) - this goes to the Categories list, the
                     // closest "go to" destination that exists today.
                     <button
                       onClick={() => navigate('/vendor/product/categories')}

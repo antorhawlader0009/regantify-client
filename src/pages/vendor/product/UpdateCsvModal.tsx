@@ -168,7 +168,7 @@ export function UpdateCsvModal({ onClose, onBack }: { onClose: () => void; onBac
                     SKU <span className="text-red-500">*</span>
                   </p>
                   <select value={skuCol} onChange={(e) => setSkuCol(e.target.value)} className={selectClass}>
-                    <option value="">— Pick the SKU column —</option>
+                    <option value="">- Pick the SKU column -</option>
                     {headers.map((h) => (
                       <option key={h} value={h}>
                         {h}
@@ -183,7 +183,7 @@ export function UpdateCsvModal({ onClose, onBack }: { onClose: () => void; onBac
                       {f.hint && <p className="text-xs text-regantify-text-muted">{f.hint}</p>}
                     </div>
                     <select value={mapping[f.key] ?? ''} onChange={(e) => setMapping((m) => ({ ...m, [f.key]: e.target.value }))} className={selectClass}>
-                      <option value="">— Don’t change —</option>
+                      <option value="">- Don’t change -</option>
                       {headers.map((h) => (
                         <option key={h} value={h}>
                           {h}
@@ -238,7 +238,7 @@ export function UpdateCsvModal({ onClose, onBack }: { onClose: () => void; onBac
                       <tr key={it.rowNumber} className={`border-t border-line align-top ${it.status === 'CHANGE' ? '' : 'bg-neutral-50 text-neutral-500'}`}>
                         <td className="px-3 py-2">{it.rowNumber}</td>
                         <td className="px-3 py-2">
-                          <span className="block">{it.name ?? '—'}{it.label ? ` · ${it.label}` : ''}</span>
+                          <span className="block">{it.name ?? '-'}{it.label ? ` · ${it.label}` : ''}</span>
                           <span className="block font-mono text-xs text-neutral-500">{it.sku || '(no SKU)'}</span>
                         </td>
                         <td className="px-3 py-2">

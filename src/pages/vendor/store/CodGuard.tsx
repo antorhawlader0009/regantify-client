@@ -19,7 +19,7 @@ import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 
 const TYPES: { value: CodVerificationType; label: string; disabled?: boolean }[] = [
   { value: 'NONE', label: 'None' },
-  // No autocall integration yet — shown (like the reference) but not selectable.
+  // No autocall integration yet - shown (like the reference) but not selectable.
   { value: 'CALL', label: 'Call', disabled: true },
   { value: 'SMS', label: 'SMS' },
 ];

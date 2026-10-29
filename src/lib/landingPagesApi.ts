@@ -5,7 +5,7 @@ export type LandingPageDisplayMode = 'FULL_PAGE' | 'WITH_STORE_CHROME';
 
 /**
  * One entry in LandingPage.sections. Mirrors the server's
- * LandingPageSectionDto envelope — see landing-page-sections.md (the
+ * LandingPageSectionDto envelope - see landing-page-sections.md (the
  * shared section-registry contract) for `type`'s allowed values and each
  * type's own `props` shape. `props` is deliberately loose here for the
  * same reason it is server-side: the envelope is shared, the per-type
@@ -67,7 +67,7 @@ export interface LandingPagePayload {
   aiGenerated?: boolean;
 }
 
-// AI Generate (landing-plan.md §5, Step 10) — either a picked product
+// AI Generate (landing-plan.md §5, Step 10) - either a picked product
 // (productId, name/summary resolved server-side from it) or a free-typed
 // name/summary when there's no product yet. See
 // GenerateLandingPageDto on the backend for the exact same shape.
@@ -96,12 +96,12 @@ export const landingPagesApi = {
 
   remove: (id: string) => api.delete(`/v1/landing-pages/${id}`).then((r) => r.data),
 
-  /** Actions > Make a Copy — returns the new DRAFT copy. */
+  /** Actions > Make a Copy - returns the new DRAFT copy. */
   duplicate: (id: string) =>
     api.post<LandingPage>(`/v1/landing-pages/${id}/duplicate`).then((r) => r.data),
 
   /**
-   * AI Generate — does NOT persist anything (landing-plan.md §7's own
+   * AI Generate - does NOT persist anything (landing-plan.md §7's own
    * note); the builder is responsible for merging the returned sections
    * into the current draft and only saving on the vendor's own Save
    * click, same as every other builder edit.

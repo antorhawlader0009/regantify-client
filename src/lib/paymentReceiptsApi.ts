@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Finance > Receipts and Super Admin > Receipt Details (TellMe idea 157) — mirrors the server's PaymentReceiptsService.
+// Finance > Receipts and Super Admin > Receipt Details (TellMe idea 157) - mirrors the server's PaymentReceiptsService.
 
 export interface ReceiptRow {
   id: string;

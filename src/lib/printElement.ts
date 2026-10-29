@@ -9,7 +9,7 @@
  * page. An iframe has none of the app's layout, so what's printed is
  * exactly the element.
  *
- * `title` becomes the document title — Chrome uses it as the suggested
+ * `title` becomes the document title - Chrome uses it as the suggested
  * file name for "Save as PDF".
  *
  * `page` changes the paper (default A4 with 14 mm margins), e.g. a label

@@ -22,7 +22,7 @@ interface FeatureField {
   icon: typeof Sparkles;
 }
 
-// Every AI-powered feature the platform has a model picker for — add a
+// Every AI-powered feature the platform has a model picker for - add a
 // new entry here (and a matching AiFeature enum value on the server)
 // whenever a new AI feature is built. Order matches how they'll be
 // rolled out: Product Information Maker first, then the storefront chat
@@ -74,7 +74,7 @@ export default function AiSettings() {
 
   // Saved settings load automatically (so the page shows what's already
   // configured), but the model list itself is only ever pulled live from
-  // this Cloudflare account's own catalog — once up front here, and
+  // this Cloudflare account's own catalog - once up front here, and
   // again whenever "Fetch Models" below is clicked. Never
   // hardcoded/cached beyond this component's own state, per the point of
   // this page: a model Cloudflare adds/retires should show up (or
@@ -184,7 +184,7 @@ export default function AiSettings() {
         <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-6">
           {models.length === 0 ? (
             <p className="text-sm text-regantify-text-muted">
-              No models loaded yet — click <span className="font-medium">Fetch Models</span> above to pull the list of Claude models.
+              No models loaded yet - click <span className="font-medium">Fetch Models</span> above to pull the list of Claude models.
             </p>
           ) : (
             FEATURES.map((field) => {

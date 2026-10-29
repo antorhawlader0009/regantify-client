@@ -68,7 +68,7 @@ function PayoutsCard() {
               <div className="min-w-0">
                 <p className="text-regantify-text">Payout #{p.id}</p>
                 <p className="truncate text-xs text-neutral-500">
-                  {p.createdAt ? formatDhakaDate(p.createdAt.replace(' ', 'T')) : '—'}
+                  {p.createdAt ? formatDhakaDate(p.createdAt.replace(' ', 'T')) : '-'}
                   {p.method && <> · {p.method}</>}
                   {p.status && <> · {p.status}</>}
                 </p>
@@ -119,7 +119,7 @@ export function SteadfastDashboardTab({ onOpenParcels }: { onOpenParcels: () => 
             <StatTile label="Returned" value={data.returned} hint={data.returnRate == null ? 'No finished parcels yet' : `${data.returnRate}% came back`} />
             <StatTile
               label="SteadFast balance"
-              value={balance?.balance == null ? '—' : formatTaka(balance.balance)}
+              value={balance?.balance == null ? '-' : formatTaka(balance.balance)}
               hint={balance?.balance == null ? 'SteadFast didn’t answer just now' : 'What SteadFast owes you right now'}
             />
             <StatTile label="COD still with SteadFast" value={formatTaka(data.codPending.amount)} hint={`${data.codPending.count} delivered, not paid to you yet`} />

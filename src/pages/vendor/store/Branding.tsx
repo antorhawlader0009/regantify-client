@@ -18,7 +18,7 @@ import { StoreFontsCard } from '../../../components/store/StoreFontsCard';
 import { FullViewOnly, SimpleViewOnly } from '../../../components/ui/FullViewOnly';
 import { StoreLanguageCard } from './design/StoreLanguageCard';
 
-// Same upload guard as the old standalone Logo page (see git history) —
+// Same upload guard as the old standalone Logo page (see git history) -
 // the server resizes/recompresses regardless (see ImageStorageService's
 // uploadStoreLogo/uploadStoreFavicon/uploadStoreBrandCover), so this is
 // just an early rejection of an obviously-wrong file.
@@ -48,14 +48,14 @@ function validateHex(value: string, label: string): string | null {
 }
 
 /**
- * Store > Branding — consolidates what used to be the standalone Store >
+ * Store > Branding - consolidates what used to be the standalone Store >
  * Logo page (logo upload is still here, first) plus new favicon/accent-
  * color/background-color/heading-and-body-font/cover-photo/meta-title/
  * meta-description fields, all writing to the new Vendor branding
  * columns (see schema.prisma). One page, three save actions under the
  * hood (logo/favicon/cover are their own upload endpoints, same split
  * the old Logo page already had; colors/fonts/meta share one "Update
- * Branding" PATCH) — presented to the vendor as a single screen with
+ * Branding" PATCH) - presented to the vendor as a single screen with
  * one visible primary action per image field and one shared "Update
  * Branding" button for the rest, matching how the reference screenshot
  * groups them.
@@ -150,7 +150,7 @@ export default function Branding() {
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setError('Image is too large — please choose a file under 8MB.');
+      setError('Image is too large - please choose a file under 8MB.');
       return;
     }
     const localPreviewUrl = URL.createObjectURL(file);

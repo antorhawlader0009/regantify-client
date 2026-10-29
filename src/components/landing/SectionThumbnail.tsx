@@ -1,6 +1,6 @@
 /**
  * Tiny abstract previews of each section type's layout, drawn with plain
- * divs rather than screenshots — they stay correct when a section's real
+ * divs rather than screenshots - they stay correct when a section's real
  * styling changes, and cost nothing to ship. Used by the "Add Section"
  * picker (landing-plan.md §4.2) so vendors recognise a layout by shape
  * instead of by reading its name.

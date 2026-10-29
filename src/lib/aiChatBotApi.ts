@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// AI Usages — the store's AI Credit wallet
+// AI Usages - the store's AI Credit wallet
 // (ai-token-plan.md Step 7): balance, credit packs, and history. A call
 // takes credits by what it really cost on its model (server
 // ai-credits/ai-credit-pricing.ts). Not to be

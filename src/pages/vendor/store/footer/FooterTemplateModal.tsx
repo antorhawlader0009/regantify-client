@@ -9,10 +9,10 @@ interface FooterTemplateModalProps {
 
 /**
  * Store > Footer's "Browse Templates" modal (reference screenshots 2-3)
- * — a gallery of pre-built LAYOUT templates (structure only, see
+ * - a gallery of pre-built LAYOUT templates (structure only, see
  * footerTemplates.ts's own header comment). Clicking a card applies that
  * structural arrangement immediately (column count/arrangement + which
- * optional blocks are present) — content already entered (menu links,
+ * optional blocks are present) - content already entered (menu links,
  * about blurb, etc.) is preserved, only which slots/blocks are shown
  * changes, same "re-flowed into whichever template is selected"
  * behavior FooterConfig's own schema comment describes.

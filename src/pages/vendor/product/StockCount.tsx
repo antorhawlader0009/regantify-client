@@ -203,7 +203,7 @@ export default function StockCount() {
                             inputMode="numeric"
                             value={typed ?? ''}
                             onChange={(e) => setCount(p, row, e.target.value)}
-                            placeholder="—"
+                            placeholder="-"
                             aria-label={`Counted ${p.name}${row.variantLabel ? ` ${row.variantLabel}` : ''}`}
                             className={`${inputClass} w-24 text-right tabular-nums`}
                           />

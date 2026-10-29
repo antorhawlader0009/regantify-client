@@ -90,7 +90,7 @@ export function CustomersTab({ range }: TabProps) {
                                 </span>
                               </Link>
                             </td>
-                            <td className="px-3 py-2.5 text-neutral-500">{c.district || '—'}</td>
+                            <td className="px-3 py-2.5 text-neutral-500">{c.district || '-'}</td>
                             <td className="px-3 py-2.5 text-right tabular-nums">{c.orders}</td>
                             <td className="px-3 py-2.5 text-right tabular-nums font-semibold">{formatTaka(c.spent)}</td>
                             <td className="px-5 py-2.5 text-right text-neutral-500 whitespace-nowrap">

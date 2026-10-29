@@ -31,8 +31,8 @@ export function eventTitle(event: CourierEvent): string {
 /**
  * Order Detail's courier timeline (pathao-plan.md Step 6): every booking
  * attempt and every change in the courier's status, newest first. Rows
- * only exist for real changes — the server skips re-polls of the same
- * status — so this reads as the parcel's journey, not a polling log.
+ * only exist for real changes - the server skips re-polls of the same
+ * status - so this reads as the parcel's journey, not a polling log.
  */
 export function CourierTimeline({ orderId, showEmpty }: { orderId: string; /** Say so when there are no events, instead of rendering nothing. */ showEmpty?: boolean }) {
   const { data: events, isLoading } = useQuery({

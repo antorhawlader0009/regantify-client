@@ -98,7 +98,7 @@ export function PermissionMatrix({ value, onChange }: { value: StaffPermission[]
                     </>
                   ) : (
                     <span className="text-neutral-300" aria-hidden>
-                      —
+                      -
                     </span>
                   )}
                 </span>

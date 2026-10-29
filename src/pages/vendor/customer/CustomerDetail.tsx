@@ -164,7 +164,7 @@ function BlacklistCard({ customer }: { customer: VendorCustomerDetail }) {
 }
 
 /**
- * Customers > click a name — who they are, how they buy, and what to
+ * Customers > click a name - who they are, how they buy, and what to
  * do next: Call / WhatsApp / New order up top, three numbers (orders,
  * total spent, last order), this store's order history, their address,
  * their courier delivery record, and the blacklist switch with a reason

@@ -2,10 +2,10 @@ import { api } from './api';
 import type { Plan, PlanUpgradeRequest, PlanUpgradeRequestStatus, PaymentFeePayer } from './plansApi';
 
 // Mirrors server/src/admin/{admin-plans,admin-plan-requests}.controller.ts
-// — Super Admin > Plans + Plan Requests (PLAN.md Step 15).
+// - Super Admin > Plans + Plan Requests (PLAN.md Step 15).
 
 /**
- * Every field optional — a PATCH only sends what the admin actually
+ * Every field optional - a PATCH only sends what the admin actually
  * changed. An explicit `null` on a "*Limit"/"*Allowance" field means
  * "set to unlimited" (see server's UpdatePlanDto for the full
  * omitted-vs-null convention); `undefined`/omitted means "leave this
@@ -31,7 +31,7 @@ export interface UpdatePlanPayload {
   customPaymentGatewayAllowed?: boolean;
   lmsEnabled?: boolean;
   posEnabled?: boolean;
-  // Flat BDT part + percent (0-100) of the order total — see Plan in plansApi.ts.
+  // Flat BDT part + percent (0-100) of the order total - see Plan in plansApi.ts.
   codGatewayFeeBdt?: number;
   codGatewayFeePercent?: number;
   codGatewayFeePayer?: PaymentFeePayer;
@@ -56,7 +56,7 @@ export interface AdminPlanRequest extends PlanUpgradeRequest {
 }
 
 export const adminPlanRequestsApi = {
-  // Defaults to nothing (all statuses) — the page itself defaults its
+  // Defaults to nothing (all statuses) - the page itself defaults its
   // own filter to PENDING, same "server stays flexible, client picks a
   // sane default" split used elsewhere (e.g. Orders' status tabs).
   list: (status?: PlanUpgradeRequestStatus) =>

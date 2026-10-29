@@ -91,7 +91,7 @@ function ColumnSelect({ value, onChange, headers, label }: { value: string; onCh
  * Customers > "+ Add New" ▾ > Bulk Upload, as three steps
  * (theme-update-plan.md Step 4): 1. download the template, 2. upload a
  * file and match its columns, 3. check the rows with problems, then
- * import. Any CSV works — headers don't need to match our own, since
+ * import. Any CSV works - headers don't need to match our own, since
  * columns are matched in step 2. Every row with a problem says what to
  * fix, and those rows can be downloaded to fix in the spreadsheet. The
  * import itself is one Add Customer call per row (CustomersService.create),
@@ -414,7 +414,7 @@ export default function BulkUploadCustomers() {
                           <td className={`${td} text-neutral-500`}>{row.rowNumber}</td>
                           <td className={td}>{row.payload!.name}</td>
                           <td className={`${td} tabular-nums`}>{row.payload!.phone}</td>
-                          <td className={`${td} text-neutral-600`}>{row.payload!.district ?? '—'}</td>
+                          <td className={`${td} text-neutral-600`}>{row.payload!.district ?? '-'}</td>
                         </tr>
                       ))}
                     </tbody>

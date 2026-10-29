@@ -121,7 +121,7 @@ export function SavedNote({ text }: { text: string }) {
   );
 }
 
-/** Shows `text` for a moment, then clears it — for the "Saved" note next to a save button. */
+/** Shows `text` for a moment, then clears it - for the "Saved" note next to a save button. */
 export function flashFor(set: (v: string | null) => void, text: string, ms = 2500) {
   set(text);
   window.setTimeout(() => set(null), ms);

@@ -26,8 +26,8 @@ function Thumb({ src }: { src?: string }) {
 
 /**
  * Products about to run out, lowest stock first, so the vendor knows what to restock. Each product
- * is checked against its own low stock limit (Edit Product, else Stock Settings) — the same rule
- * as the bell's low stock alert — unless "Show stock under" sets one number for all.
+ * is checked against its own low stock limit (Edit Product, else Stock Settings) - the same rule
+ * as the bell's low stock alert - unless "Show stock under" sets one number for all.
  */
 export default function LowStock() {
   const [thresholdInput, setThresholdInput] = useState('');
@@ -137,7 +137,7 @@ export default function LowStock() {
                     </Link>
                   </div>
                 </td>
-                <td className={td}>{p.category ?? '—'}</td>
+                <td className={td}>{p.category ?? '-'}</td>
                 <td className={td}>{p.sku}</td>
                 <td className={td}>{p.lowStockLimit}</td>
                 <td className={td}>

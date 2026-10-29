@@ -30,7 +30,7 @@ export interface ManualMobileConfig {
   markReceived: boolean;
 }
 export type PaymentGatewayStatus = 'ACTIVE' | 'DISABLED' | 'COMING_SOON';
-// Who pays platformChargeBdt — CUSTOMER (default, added to the order
+// Who pays platformChargeBdt - CUSTOMER (default, added to the order
 // total) or VENDOR (never charged to the shopper, comes out of this
 // vendor's own payout instead). Mirrors server's PaymentFeePayer. For
 // COD/ONLINE_PAYMENT this is fully plan-driven; a custom gateway
@@ -71,16 +71,16 @@ export interface UpdateGatewayPayload {
 }
 
 export const paymentGatewaysApi = {
-  /** Store > Payment Gateway page's own list — every gateway this vendor has (built-in + custom, any status). */
+  /** Store > Payment Gateway page's own list - every gateway this vendor has (built-in + custom, any status). */
   listGateways: () => api.get<VendorPaymentGateway[]>('/v1/payment-gateways').then((r) => r.data),
 
-  /** Which gateway types are connectable at all right now — "Add a payment gateway" picker's own catalog view. */
+  /** Which gateway types are connectable at all right now - "Add a payment gateway" picker's own catalog view. */
   getCatalog: () => api.get<PaymentGatewayCatalogEntry[]>('/v1/payment-gateways/catalog').then((r) => r.data),
 
   /**
-   * COD/ONLINE_PAYMENT only — enable/disable, nothing else. Display
+   * COD/ONLINE_PAYMENT only - enable/disable, nothing else. Display
    * label + fee for these two are fully plan-driven now (edited at
-   * Admin > Plans > Manage Plans, never per-vendor) — the server DTO
+   * Admin > Plans > Manage Plans, never per-vendor) - the server DTO
    * backing this route (UpdateBuiltinStatusDto) rejects anything but
    * `status`, so the payload type here is narrowed to match.
    */
@@ -152,10 +152,10 @@ export const paymentGatewaysApi = {
   getConnection: (type: PaymentGatewayType) =>
     api.get<{ connection: GatewayConnection | null }>(`/v1/payment-gateways/${type}/connection`).then((r) => r.data.connection),
 
-  /** Any already-connected gateway's charge/label (built-in or custom) — no plan gate. */
+  /** Any already-connected gateway's charge/label (built-in or custom) - no plan gate. */
   updateCharge: (id: string, payload: UpdateGatewayPayload) =>
     api.patch<{ id: string; displayLabel: string | null; platformChargeBdt: string }>(`/v1/payment-gateways/${id}/charge`, payload).then((r) => r.data),
 
-  /** Custom gateways only — soft-disconnect. COD/ONLINE_PAYMENT reject this; use updateBuiltin's status field instead. */
+  /** Custom gateways only - soft-disconnect. COD/ONLINE_PAYMENT reject this; use updateBuiltin's status field instead. */
   disconnect: (id: string) => api.delete<{ disconnected: true }>(`/v1/payment-gateways/${id}`).then((r) => r.data),
 };

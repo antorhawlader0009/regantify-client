@@ -24,7 +24,7 @@ import { DailyBrief } from '../../components/dashboard/DailyBrief';
 import { SimpleViewIntro } from '../../components/dashboard/SimpleViewIntro';
 import { useDashboardView } from '../../lib/useDashboardView';
 
-// Vendor dashboard home (dashboard-plan.md). Step 2: the page shell —
+// Vendor dashboard home (dashboard-plan.md). Step 2: the page shell -
 // greeting, quick actions, loading and error states. The cards come in
 // later steps and all read the one ['dashboard'] query below.
 

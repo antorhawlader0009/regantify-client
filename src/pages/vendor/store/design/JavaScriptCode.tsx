@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuItem } from '../../../../components/ui/Dropdo
 const PER_PAGE_OPTIONS = [10, 25, 50];
 
 /**
- * Store > Design > JavaScript Code — the list of named snippets. The
+ * Store > Design > JavaScript Code - the list of named snippets. The
  * server returns them all (a vendor has a handful), so search and
  * pagination are client-side, same as Store > Pages.
  */

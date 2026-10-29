@@ -18,7 +18,7 @@ const DEFAULT_IN_STOCK = '##stock units in stock';
 const DEFAULT_OUT_OF_STOCK = 'Out of stock';
 const DEFAULT_PRE_ORDER = 'Available for pre-order';
 
-/** Store > Design > Product Display Options — product photo shape, gallery layout and stock wording. */
+/** Store > Design > Product Display Options - product photo shape, gallery layout and stock wording. */
 export default function ProductDisplay() {
   const { settings, isLoading, save } = useDesignSettings();
   const [shape, setShape] = useState<ProductImageShape>('SQUARE');

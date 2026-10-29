@@ -17,11 +17,11 @@ import { FullViewOnly } from '../../../../components/ui/FullViewOnly';
 type SelectedBlock = 'logo' | 'menu' | 'info' | 'about' | null;
 
 /**
- * Store > Footer — a drag-and-drop, template-based footer builder, same
+ * Store > Footer - a drag-and-drop, template-based footer builder, same
  * engineering approach as the Landing Page builder applied to a smaller,
  * fixed-slot surface (reference screenshots: eDokan's Footer Editor).
  * The whole config is edited locally as one draft object and committed
- * on "Save", same pattern LandingPageBuilder.tsx uses — every field
+ * on "Save", same pattern LandingPageBuilder.tsx uses - every field
  * edit/template swap flows through patchDraft so the preview always
  * shows exactly what would be saved.
  */
@@ -110,7 +110,7 @@ export default function Footer() {
   }
 
   // Bare host for the preview's "© {year} Copyright: {domain}" line
-  // (reference screenshot) — storefrontStoreUrl returns a full URL
+  // (reference screenshot) - storefrontStoreUrl returns a full URL
   // (path-based in local/LAN dev, subdomain-based in production, see
   // that helper's own comment), so this strips it down to just the host
   // for display purposes only; the actual live storefront always uses

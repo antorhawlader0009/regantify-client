@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Reviews > Questions (TellMe idea 35) — mirrors the server's ProductQuestionsService (server/src/reviews/product-questions.service.ts).
+// Reviews > Questions (TellMe idea 35) - mirrors the server's ProductQuestionsService (server/src/reviews/product-questions.service.ts).
 
 export interface ProductQuestion {
   id: string;

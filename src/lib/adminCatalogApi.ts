@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { PlanCode } from './plansApi';
 
-// Mirrors server/src/admin/admin-catalog.controller.ts — Super Admin > Plans > Packs & promos (super-admin-plan.md Step 10).
+// Mirrors server/src/admin/admin-catalog.controller.ts - Super Admin > Plans > Packs & promos (super-admin-plan.md Step 10).
 
 export interface AdminPack {
   id: string;

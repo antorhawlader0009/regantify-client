@@ -41,7 +41,7 @@ export interface Product {
   note?: string | null;
   creator?: string | null;
   category?: string | null;
-  // Optional link to a real Category row — see Product.categoryId's
+  // Optional link to a real Category row - see Product.categoryId's
   // own schema comment on why this is additive alongside `category`
   // (the free-text field above, which still drives the storefront's
   // category filter/nav). Mainly exists so Marketing > Coupons'
@@ -60,7 +60,7 @@ export interface Product {
   photoSize: 'SQUARE' | 'PORTRAIT';
   photoUrls: string[];
   videoUrl?: string | null;
-  price: string; // Decimal, serialized as string — see server schema notes
+  price: string; // Decimal, serialized as string - see server schema notes
   discountPrice?: string | null;
   cost?: string | null;
   // Shown as a read-only column on Marketing > Campaigns' product table.
@@ -153,7 +153,7 @@ export interface CreateProductPayload {
   summary?: string;
   metaTitle?: string;
   metaDescription?: string;
-  // Search engine listing — editable storefront URL slug. Auto-generated
+  // Search engine listing - editable storefront URL slug. Auto-generated
   // from `name` on the server when omitted/blank.
   slug?: string;
   visibility?: 'PUBLIC' | 'DRAFT';
@@ -280,7 +280,7 @@ export interface StockHistoryPage {
   totalPages: number;
 }
 
-// Every field optional — a PATCH can update just one section (e.g. only
+// Every field optional - a PATCH can update just one section (e.g. only
 // the variants table) without resending the whole form.
 export interface UpdateProductPayload {
   name?: string;
@@ -368,7 +368,7 @@ export interface UpdateProductPayload {
   stockLoaded?: { product: number | null; variants: { optionValues: Record<string, string>; stock: number }[] };
   weight?: number;
   weightUnit?: 'KG' | 'G' | 'LB';
-  // When provided, REPLACES the product's full existing set — always
+  // When provided, REPLACES the product's full existing set - always
   // send the complete current table, not a diff.
   variationOptions?: VariationOptionInput[];
   variants?: ProductVariantInput[];
@@ -523,7 +523,7 @@ export const productsApi = {
   list: (params: ListProductsParams = {}) =>
     api.get<ProductListResponse>('/v1/products', { params }).then((r) => r.data),
 
-  // Low Stock page — products with effective stock (variant stock summed,
+  // Low Stock page - products with effective stock (variant stock summed,
   // or stockQuantity when no variants) below `threshold`, or without it
   // below each product's own low stock limit.
   lowStock: (threshold?: number) =>
@@ -560,12 +560,12 @@ export const productsApi = {
   /** "Duplicate": a Draft copy named "<name> (copy)", stock 0, no barcodes. */
   duplicate: (id: string) => api.post<Product>(`/v1/products/${id}/duplicate`).then((r) => r.data),
 
-  // "Change Status" from the Actions menu — toggles Public/Draft.
+  // "Change Status" from the Actions menu - toggles Public/Draft.
   /** Change Status. `schedule`: ISO instants, null clears, absent leaves alone (the server drops one that no longer makes sense). */
   updateVisibility: (id: string, visibility: 'PUBLIC' | 'DRAFT', schedule: { publishAt?: string | null; unpublishAt?: string | null } = {}) =>
     api.patch<Product>(`/v1/products/${id}/visibility`, { visibility, ...schedule }).then((r) => r.data),
 
-  // "Create Stock Product" from the Actions menu — clones a pre-order
+  // "Create Stock Product" from the Actions menu - clones a pre-order
   // product into a new in-stock product with the given per-combination
   // stock quantities. `sku` overrides the default "stk_<source sku>".
   createStockProduct: (
@@ -577,7 +577,7 @@ export const productsApi = {
   bgRemoveFiles: () => api.get<{ base: string | null }>('/v1/products/bg-remove/files').then((r) => r.data),
 
   // Uploads one product photo and returns its picture URL. Called once
-  // per selected file — the Add/Edit Product form collects the resulting
+  // per selected file - the Add/Edit Product form collects the resulting
   // URLs and sends them together as photoUrls in the create()/update() call.
   uploadPhoto: (file: File) => {
     const formData = new FormData();

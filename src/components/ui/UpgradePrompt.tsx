@@ -3,13 +3,13 @@ import { toast } from '../../lib/toast';
 import { dailyCapMessage, type DailyKind } from '../../lib/dailyLimits';
 
 /**
- * Shared "you're locked out of this by your plan" UX — PLAN.md Step 16.
+ * Shared "you're locked out of this by your plan" UX - PLAN.md Step 16.
  * Consolidates what Steps 7/8/10/11/12 each built ad hoc (a locked
  * overlay on Themes.tsx, an upgrade card replacing Domain.tsx's connect
  * form, a locked Add Staff button, a locked courier option, a locked
  * Payment Gateway toggle) into one shared visual language + one shared
  * toast message, instead of N slightly different implementations.
- * Cleanup/consistency pass — every call site's actual gating behavior
+ * Cleanup/consistency pass - every call site's actual gating behavior
  * (which server call runs, what triggers "locked") is unchanged.
  *
  * Three shapes, matching the three ways a lock has shown up across
@@ -18,7 +18,7 @@ import { dailyCapMessage, type DailyKind } from '../../lib/dailyLimits';
  * (LockedBadge), and the toast shown when a locked action is attempted
  * anyway (upgradeToast). There's no single one-size-fits-all component
  * because the real UI contexts genuinely differ (a whole page section
- * vs. one dropdown item) — "consistent" here means the same lock icon,
+ * vs. one dropdown item) - "consistent" here means the same lock icon,
  * the same amber/muted color language, and the same toast wording
  * everywhere, not one component forced into every layout.
  */
@@ -30,11 +30,11 @@ export function upgradeToast(featureLabel: string) {
 
 /**
  * Full-width card that replaces a form/section when the current plan
- * doesn't allow a feature at all — same shape Domain.tsx (Step 8) and
+ * doesn't allow a feature at all - same shape Domain.tsx (Step 8) and
  * Settings.tsx's Payment Gateway section (Step 12) each built
  * separately. `action`, when given, renders a button (e.g. "Request
  * Setup" style calls-to-action still route through their own real
- * logic — this component only renders the shell).
+ * logic - this component only renders the shell).
  */
 export function LockedFeatureCard({
   title,
@@ -66,7 +66,7 @@ export function LockedFeatureCard({
   );
 }
 
-/** Small inline lock icon — for a button/dropdown item/card overlay that stays visible-but-locked rather than hidden (see e.g. Themes.tsx, Orders.tsx's Pathao option, Staff.tsx's Add New). Sizing matches the surrounding text via `size`; `className` overrides the default muted color for a badge sitting on a non-default background (e.g. Themes.tsx's dark overlay wants white, not muted-gray). */
+/** Small inline lock icon - for a button/dropdown item/card overlay that stays visible-but-locked rather than hidden (see e.g. Themes.tsx, Orders.tsx's Pathao option, Staff.tsx's Add New). Sizing matches the surrounding text via `size`; `className` overrides the default muted color for a badge sitting on a non-default background (e.g. Themes.tsx's dark overlay wants white, not muted-gray). */
 export function LockedBadge({ size = 12, className = 'text-regantify-text-muted' }: { size?: number; className?: string }) {
   return <Lock size={size} className={`shrink-0 ${className}`} />;
 }
@@ -79,13 +79,13 @@ export function dailyLimitToast(kind: DailyKind) {
   toast.error(dailyCapMessage(kind, { left: 0, reached: true }) ?? '');
 }
 
-/** "X / N used" line with amber highlight at the cap — same shape Staff.tsx (Step 10) built for its own usage line. `null` limit renders "∞" (unlimited), never treated as "at the limit". `atLimitText` replaces the upgrade hint (daily caps point to support). */
+/** "X / N used" line with amber highlight at the cap - same shape Staff.tsx (Step 10) built for its own usage line. `null` limit renders "∞" (unlimited), never treated as "at the limit". `atLimitText` replaces the upgrade hint (daily caps point to support). */
 export function UsageLine({ label, used, limit, atLimitText = 'upgrade your plan to add more' }: { label: string; used: number; limit: number | null; atLimitText?: string }) {
   const atLimit = limit !== null && used >= limit;
   return (
     <p className="text-sm text-regantify-text-muted">
       {used} / {limit ?? '∞'} {label}
-      {atLimit && <span className="text-amber-600"> — {atLimitText}</span>}
+      {atLimit && <span className="text-amber-600"> - {atLimitText}</span>}
     </p>
   );
 }

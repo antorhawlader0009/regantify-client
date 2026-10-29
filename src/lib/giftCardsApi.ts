@@ -40,7 +40,7 @@ export interface GiftCardListResponse {
   perPage: number;
 }
 
-/** New Gift Card form payload — blank optional fields are left out. */
+/** New Gift Card form payload - blank optional fields are left out. */
 export interface CreateGiftCardPayload {
   amount: number;
   code?: string;
@@ -50,7 +50,7 @@ export interface CreateGiftCardPayload {
   note?: string;
 }
 
-/** Edit payload — null clears an optional field. */
+/** Edit payload - null clears an optional field. */
 export interface UpdateGiftCardPayload {
   expiresAt?: string | null;
   recipientName?: string | null;
@@ -84,7 +84,7 @@ export function giftCardStatus(card: GiftCard): { label: 'Active' | 'Off' | 'Exp
   return { label: 'Active', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' };
 }
 
-/** Gift cards sold on the store (TellMe idea 135) — mirrors the server's GiftCardSalesService. */
+/** Gift cards sold on the store (TellMe idea 135) - mirrors the server's GiftCardSalesService. */
 export interface GiftCardSaleSettings {
   giftCardSaleEnabled: boolean;
   giftCardSaleAmounts: number[];

@@ -36,7 +36,7 @@ function discountLabel(c: Coupon): string {
   return `${taka(c.amount)} off`;
 }
 
-/** "Orders over ৳1,000 · 3 products · first-time customers" — empty when it works on everything. */
+/** "Orders over ৳1,000 · 3 products · first-time customers" - empty when it works on everything. */
 function conditionsLabel(c: Coupon): string {
   const parts: string[] = [];
   if (c.minCartAmount && Number(c.minCartAmount) > 0) parts.push(`Orders over ${taka(c.minCartAmount)}`);
@@ -179,7 +179,7 @@ function CouponItem({ coupon, subdomain }: { coupon: Coupon; subdomain?: string 
 }
 
 /**
- * Marketing > Coupons — every coupon with its status (Active /
+ * Marketing > Coupons - every coupon with its status (Active /
  * Scheduled / Ended / Off / Used up), what it gives, how often it's
  * been used and until when. Tap a code to copy it. The ⋮ menu edits,
  * turns it on or off, copies the share link and deletes.

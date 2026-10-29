@@ -13,7 +13,7 @@ interface ImageFieldProps {
 /**
  * Image input for the landing page builder's section forms: either
  * upload a new file or pick one already in the vendor's Media library
- * (landing-plan.md §4.3 — reuse the existing media flow rather than
+ * (landing-plan.md §4.3 - reuse the existing media flow rather than
  * inventing a second upload UI). Styled for the builder's dark panel,
  * unlike the light-theme upload controls elsewhere in the dashboard.
  */
@@ -120,7 +120,7 @@ function MediaLibraryPicker({ onClose, onPick }: { onClose: () => void; onPick: 
           {isLoading && <p className="py-10 text-center text-[13px] text-neutral-400">Loading…</p>}
           {!isLoading && (data?.items.length ?? 0) === 0 && (
             <p className="py-10 text-center text-[13px] text-neutral-400">
-              Nothing in your media library yet — upload an image instead.
+              Nothing in your media library yet - upload an image instead.
             </p>
           )}
           <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6">

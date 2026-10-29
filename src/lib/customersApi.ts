@@ -93,7 +93,7 @@ export interface CustomerListResponse {
   groupSettings: CustomerGroupSettings;
 }
 
-/** "+ Add New" (Add Customer page) and Bulk Upload both post this shape — one call per customer. */
+/** "+ Add New" (Add Customer page) and Bulk Upload both post this shape - one call per customer. */
 export interface CreateCustomerPayload {
   name: string;
   phone: string;
@@ -104,7 +104,7 @@ export interface CreateCustomerPayload {
   zip?: string;
 }
 
-/** "Edit Customer" page — same shape minus phone (not editable, see UpdateCustomerDto). No password: only the shopper sets that (F-20). */
+/** "Edit Customer" page - same shape minus phone (not editable, see UpdateCustomerDto). No password: only the shopper sets that (F-20). */
 export interface UpdateCustomerPayload {
   name: string;
   email?: string;
@@ -114,7 +114,7 @@ export interface UpdateCustomerPayload {
   zip?: string;
 }
 
-/** Customers > Details tab — summary cards + order-status breakdown. */
+/** Customers > Details tab - summary cards + order-status breakdown. */
 export interface CustomerStats {
   contacts30Days: number;
   contactsAllTime: number;
@@ -132,7 +132,7 @@ export interface ExportCsvParams {
   dueOnly?: boolean;
   tag?: string;
   group?: CustomerGroup;
-  /** When given, only these phones are exported — the "select rows, then Export CSV" flow. */
+  /** When given, only these phones are exported - the "select rows, then Export CSV" flow. */
   phones?: string[];
 }
 

@@ -1,7 +1,7 @@
 import type { CreateProductPayload } from './productsApi';
 
 /**
- * One importable product field — shown as a row in the Column Mapping
+ * One importable product field - shown as a row in the Column Mapping
  * step, matched against the user's own CSV headers (auto-matched by
  * `aliases`, but always changeable via dropdown). `required` fields must
  * be mapped to a CSV column before Preview/Import can proceed.

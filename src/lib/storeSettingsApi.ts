@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Stock Settings / GDPR Prompt / COD Guard — mirrors the server's
+// Store > Stock Settings / GDPR Prompt / COD Guard - mirrors the server's
 // StoreSettingsService (server/src/store-settings/). All three are owner-
 // only routes on VendorController.
 
@@ -89,7 +89,7 @@ export interface CodGuardSettings {
   confirmLinkReminder: boolean;
 }
 
-// Store > Store Away (holiday mode) — mirrors StoreSettingsService.getStoreAwaySettings.
+// Store > Store Away (holiday mode) - mirrors StoreSettingsService.getStoreAwaySettings.
 export type StoreAwayMode = 'TAKE_ORDERS' | 'BROWSE_ONLY';
 
 export interface StoreAwaySettings {
@@ -102,7 +102,7 @@ export interface StoreAwaySettings {
   active: boolean;
 }
 
-// Store > Order Tracking (tracking-plan.md Step 5) — mirrors StoreSettingsService's
+// Store > Order Tracking (tracking-plan.md Step 5) - mirrors StoreSettingsService's
 // getTrackingNotifySettings. Owner-only, on VendorController.
 export type TrackingNotifyEventName = 'confirmed' | 'shipped' | 'out_for_delivery' | 'delivered' | 'delivery_failed' | 'returned' | 'cancelled';
 

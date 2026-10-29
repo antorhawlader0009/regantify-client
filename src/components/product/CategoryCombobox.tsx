@@ -13,7 +13,7 @@ interface CategoryComboboxProps {
   maxLength?: number;
   /**
    * When provided, Enter (or clicking a suggestion) calls this with the
-   * chosen name instead of leaving it in the input — used for "add to a
+   * chosen name instead of leaving it in the input - used for "add to a
    * chip list" fields like Secondary Categories, where the input should
    * clear after each pick. Without it, Enter/click just fills `value` in
    * place (the single-category field's behavior).
@@ -23,10 +23,10 @@ interface CategoryComboboxProps {
 
 /**
  * Type-to-search category picker, backed by the vendor's real categories
- * (the same list shown on the Categories page — see categoriesApi.list).
+ * (the same list shown on the Categories page - see categoriesApi.list).
  * Category is still a plain-text field on Product (see schema notes: "a
  * real Category relation now exists but Product isn't linked to it yet"),
- * so this intentionally still allows freely typing a brand-new name —
+ * so this intentionally still allows freely typing a brand-new name -
  * it's a fast way to reuse an existing category, not a hard foreign key
  * picker. Matching is case-insensitive substring, capped at 8 suggestions.
  */
@@ -91,7 +91,7 @@ export function CategoryCombobox({ value, onChange, placeholder, exclude = [], m
             if (open && suggestions.length > 0) {
               choose(suggestions[highlighted]);
             } else if (onSubmit && value.trim()) {
-              // No matching suggestion (or dropdown closed) — still let a
+              // No matching suggestion (or dropdown closed) - still let a
               // freely-typed new category name be added, since Category
               // isn't a strict foreign key (see component doc comment).
               choose(value.trim());

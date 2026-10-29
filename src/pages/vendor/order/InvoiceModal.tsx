@@ -184,7 +184,7 @@ export function InvoiceSheet({
               <span className="tabular-nums">{formatPrice(order.vatAmount)}</span>
             </div>
           )}
-          {/* Platform Charge — shown regardless of "Fee From"
+          {/* Platform Charge - shown regardless of "Fee From"
               (order.platformChargePayer). Never for ONLINE_PAYMENT:
               its fee (Payment Gateway Fee) is hidden from the vendor
               entirely, and vendorOrderTotal takes it out of Total. */}
@@ -220,7 +220,7 @@ export function InvoiceSheet({
       {order.isGift && (order.giftMessage || order.giftSenderName) && (
         <div className="avoid-break mt-8 rounded border border-neutral-300 px-4 py-3 text-center text-sm italic text-neutral-700">
           {order.giftMessage && <>“{order.giftMessage}”</>}
-          {order.giftSenderName && <p className="m-0 mt-1 not-italic font-medium">{order.giftMessage ? '— ' : 'A gift from '}{order.giftSenderName}</p>}
+          {order.giftSenderName && <p className="m-0 mt-1 not-italic font-medium">{order.giftMessage ? '- ' : 'A gift from '}{order.giftSenderName}</p>}
         </div>
       )}
 
@@ -259,7 +259,7 @@ export function InvoiceSheet({
  * "Download Invoice" / "Print Invoice" from the Actions menu. Rather
  * than generate a PDF on the server (a new dependency + template to
  * maintain), this renders a clean, print-ready invoice and hands off to
- * the browser's own Print dialog — "Save as PDF" there covers "Download"
+ * the browser's own Print dialog - "Save as PDF" there covers "Download"
  * too, which is the standard pattern for this kind of one-page document.
  * Only the invoice itself is printed (printElement), never the page or
  * the dialog around it.

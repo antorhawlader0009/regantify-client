@@ -21,14 +21,14 @@ const inputClass = `w-full px-4 py-2.5 rounded-xl bg-regantify-search text-regan
   focus:outline-none focus:ring-2 focus:ring-regantify-black`;
 
 /**
- * Store > Delivery Charge (moved here from Settings) — vendor-editable
+ * Store > Delivery Charge (moved here from Settings) - vendor-editable
  * Inside Dhaka / Outside Dhaka shipping charges plus a flat VAT fee applied
  * to every order regardless of payment method (see Vendor.insideDhakaCharge/
  * vatChargeBdt in schema.prisma). These are the exact numbers checkout uses
- * to price an order — see OrdersService.create and
+ * to price an order - see OrdersService.create and
  * storefront/src/lib/useCheckout.ts, both of which read the vendor's own
  * saved values. A gateway's own Platform Charge is a separate, independent
- * setting — see Store > Payment Gateway (PaymentGateway.tsx), not this form.
+ * setting - see Store > Payment Gateway (PaymentGateway.tsx), not this form.
  */
 export default function DeliveryCharge() {
   const queryClient = useQueryClient();

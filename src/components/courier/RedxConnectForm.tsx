@@ -10,9 +10,9 @@ interface RedxConnectFormProps {
 }
 
 /**
- * RedX's connect form — a single OpenAPI access token, no OAuth and no
+ * RedX's connect form - a single OpenAPI access token, no OAuth and no
  * separate app-level credential. Same "one shared component, two entry
- * points" pattern as the other connect forms — used by both the RedX
+ * points" pattern as the other connect forms - used by both the RedX
  * page's Settings tab and CourierSetupModal. The server checks the token
  * with RedX before saving and picks the pickup store itself when the
  * merchant has only one.
@@ -30,7 +30,7 @@ export function RedxConnectForm({ onConnected, footer }: RedxConnectFormProps) {
       queryClient.invalidateQueries({ queryKey: ['redx-stores'] });
       toast.success(
         account.redxStoreName
-          ? `RedX connected — booking from "${account.redxStoreName}".`
+          ? `RedX connected - booking from "${account.redxStoreName}".`
           : 'RedX connected. Choose a pickup store on the RedX page to finish setup.',
       );
       setAccessToken('');

@@ -20,7 +20,7 @@ interface CoverPhotoState {
   error?: string;
 }
 
-/** One row in the campaign's product list — a product's own base row (variantId undefined) or one specific variant's row. */
+/** One row in the campaign's product list - a product's own base row (variantId undefined) or one specific variant's row. */
 interface CampaignRow {
   productId: string;
   variantId?: string;
@@ -29,7 +29,7 @@ interface CampaignRow {
   photoUrl?: string;
   freeShipping: boolean;
   listPrice: string; // display only
-  discountPrice: string; // editable — '' means not set
+  discountPrice: string; // editable - '' means not set
 }
 
 function productToRows(product: {
@@ -126,7 +126,7 @@ export default function AddCampaign() {
     if (existing.coverPhotoUrl) {
       setCoverPhoto({ previewUrl: existing.coverPhotoUrl, uploadedUrl: existing.coverPhotoUrl, uploading: false });
     }
-    // Group the campaign's flat CampaignItem list back into rows — one
+    // Group the campaign's flat CampaignItem list back into rows - one
     // base row per product (from the variantId: null item, if any) plus
     // one row per variant item, matching productToRows' own shape.
     const byProduct = new Map<string, typeof existing.items>();
@@ -140,7 +140,7 @@ export default function AddCampaign() {
       const baseItem = items.find((i) => !i.variantId);
       const product = items[0].product;
       // Only show/re-save a base product row if the campaign actually
-      // has one — a vendor can add just a specific variant without its
+      // has one - a vendor can add just a specific variant without its
       // base product row, and reloading must not invent one.
       if (baseItem) {
         loadedRows.push({
@@ -234,7 +234,7 @@ export default function AddCampaign() {
 
   const addProduct = async (product: Product) => {
     setProductQuery('');
-    // The search results don't include variants — fetch the full product
+    // The search results don't include variants - fetch the full product
     // once it's picked so its variant rows can be added too.
     try {
       const full = await productsApi.findOne(product.id);
@@ -246,7 +246,7 @@ export default function AddCampaign() {
 
   const handleAddAll = async () => {
     try {
-      // The server caps perPage at 100 — page through the whole catalog.
+      // The server caps perPage at 100 - page through the whole catalog.
       const allProducts: Product[] = [];
       let page = 1;
       // eslint-disable-next-line no-constant-condition
@@ -271,7 +271,7 @@ export default function AddCampaign() {
   const updateRowDiscount = (productId: string, variantId: string | undefined, value: string) =>
     setRows((prev) => prev.map((r) => (r.productId === productId && r.variantId === variantId ? { ...r, discountPrice: value } : r)));
 
-  // "Set prices for all" — the same % off (worked out per row from its
+  // "Set prices for all" - the same % off (worked out per row from its
   // list price) or the same price on every row at once.
   const [bulkMode, setBulkMode] = useState<'percent' | 'price'>('percent');
   const [bulkValue, setBulkValue] = useState('');

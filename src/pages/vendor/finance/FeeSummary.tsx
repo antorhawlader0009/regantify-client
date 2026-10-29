@@ -27,7 +27,7 @@ function CurrentBadge() {
 }
 
 /**
- * Finance > Fee Summary — PLAN.md Step 12. The per-order platform charge
+ * Finance > Fee Summary - PLAN.md Step 12. The per-order platform charge
  * on cash-on-delivery orders for each plan (Plan.codGatewayFee*; the
  * Online Payment fee is hidden from vendors, so it's never shown here),
  * with an example order so the number means something, and who pays it.

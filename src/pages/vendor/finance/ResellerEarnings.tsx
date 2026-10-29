@@ -32,7 +32,7 @@ interface EarningsPage {
 }
 
 const money = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric' }) : '-');
 const STATUS: Record<Status, { label: string; className: string }> = {
   PAID: { label: 'Paid', className: 'bg-emerald-50 text-emerald-700' },
   HELD: { label: 'On its way', className: 'bg-sky-50 text-sky-700' },
@@ -131,7 +131,7 @@ export default function ResellerEarnings() {
                   <td className="px-3 py-2">{r.supplier}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{day(r.deliveredAt)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{money(r.earning)}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-neutral-600">{r.fee > 0 ? `${money(r.fee)} (${r.feePercent}%)` : '—'}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-neutral-600">{r.fee > 0 ? `${money(r.fee)} (${r.feePercent}%)` : '-'}</td>
                   <td className="px-3 py-2 text-right font-medium tabular-nums">{money(r.net)}</td>
                   <td className="px-3 py-2">
                     <span className={`rounded px-1.5 py-0.5 text-xs ${STATUS[r.status].className}`}>{STATUS[r.status].label}</span>

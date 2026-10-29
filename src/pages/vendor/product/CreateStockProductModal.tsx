@@ -20,10 +20,10 @@ function slugify(input: string): string {
 }
 
 /**
- * "Create Stock Product" — clones a pre-order product into a new
+ * "Create Stock Product" - clones a pre-order product into a new
  * in-stock product. Only asks for a stock quantity per variant
  * combination (a grid when there are exactly two variation options,
- * like the reference's Color × Size; a flat list otherwise) — everything
+ * like the reference's Color × Size; a flat list otherwise) - everything
  * else is copied from the source product automatically.
  */
 export function CreateStockProductModal({ open, onOpenChange, product }: CreateStockProductModalProps) {
@@ -34,7 +34,7 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
   const newSku = `stk_${product.sku}`;
   const newSlugPreview = `${slugify(product.name)}-stk`;
 
-  // Every combination of the two axes, for the grid layout — only used
+  // Every combination of the two axes, for the grid layout - only used
   // when there are exactly two variation options (matches the reference
   // "Color \ Size" grid). Any other number of options falls back to a
   // flat list of combinations instead of trying to force a 2D grid.
@@ -102,7 +102,7 @@ export function CreateStockProductModal({ open, onOpenChange, product }: CreateS
 
         {options.length === 0 ? (
           <p className="text-sm text-regantify-text-muted">
-            This product has no variations — the new stock product will be created with no stock set.
+            This product has no variations - the new stock product will be created with no stock set.
           </p>
         ) : isTwoAxisGrid ? (
           <div className="overflow-x-auto">

@@ -10,21 +10,21 @@ interface PathaoLocationPickerProps {
   currentCityId: number | null | undefined;
   currentZoneId: number | null | undefined;
   currentAreaId: number | null | undefined;
-  /** The order's address — suggests a location when none is saved yet. */
+  /** The order's address - suggests a location when none is saved yet. */
   shippingAddress?: string | null;
   shippingCity?: string | null;
   shippingDistrict?: string | null;
 }
 
 /**
- * Order Detail's "Pathao Delivery Location" — saves Pathao's numeric
+ * Order Detail's "Pathao Delivery Location" - saves Pathao's numeric
  * city/zone/area onto an existing order (the dropdowns themselves are
  * the shared PathaoLocationSelects). Optional: Pathao can work the
  * location out from the address, and the booking popup can set it too;
  * this is for vendors who want it fixed on the order ahead of booking.
  *
  * Requires the vendor to have a connected Pathao account (the location
- * endpoints need a valid OAuth token) — shows a plain notice instead of
+ * endpoints need a valid OAuth token) - shows a plain notice instead of
  * the picker if not connected yet, rather than a confusing empty
  * dropdown or a 404.
  */

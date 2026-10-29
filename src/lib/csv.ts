@@ -1,5 +1,5 @@
 /**
- * Minimal RFC4180-style CSV parser/serializer — no external dependency.
+ * Minimal RFC4180-style CSV parser/serializer - no external dependency.
  * Handles quoted fields, escaped quotes ("") inside quotes, commas and
  * newlines inside quoted fields, and both \n and \r\n line endings.
  * Good enough for a simple "Product Name, Price, SKU, ..." import file;

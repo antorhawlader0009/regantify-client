@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { GaConsentMode } from './googleAnalyticsApi';
 
-// Store > Integrations > Google Tag Manager — mirrors the server's
+// Store > Integrations > Google Tag Manager - mirrors the server's
 // GoogleTagManagerService (server/src/store-settings/google-tag-manager.service.ts).
 // Owner-only routes on VendorController.
 

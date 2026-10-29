@@ -89,7 +89,7 @@ function DetailsBody({ member }: { member: StaffMember }) {
           <div key={label} className="flex items-center justify-between gap-3 px-3 py-2.5">
             <dt className="shrink-0 text-neutral-500">{label}</dt>
             <dd className="flex min-w-0 items-center gap-2">
-              <span className="min-w-0 break-all text-right">{value ?? '—'}</span>
+              <span className="min-w-0 break-all text-right">{value ?? '-'}</span>
               {value && label !== 'Role' && (
                 <button type="button" onClick={() => copy(value, label)} aria-label={`Copy ${label.toLowerCase()}`} className="shrink-0 rounded p-1 text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text">
                   <Copy size={14} aria-hidden />

@@ -11,11 +11,11 @@ interface EditGatewayCatalogModalProps {
 }
 
 /**
- * Super Admin > Payment Gateway > Edit — display name/description for one
+ * Super Admin > Payment Gateway > Edit - display name/description for one
  * catalog row. The platform-wide enable/disable switch lives directly in
  * the table (PaymentGatewayManagement.tsx) instead, so this modal only
  * ever edits copy, never `isEnabledPlatformWide`. COD/ONLINE_PAYMENT's
- * fee isn't edited here at all — it's fully plan-driven (Admin > Plans >
+ * fee isn't edited here at all - it's fully plan-driven (Admin > Plans >
  * Manage Plans), there is no "platform charge" concept separate from a
  * plan's own fee anywhere in the product.
  */

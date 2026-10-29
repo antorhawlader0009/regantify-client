@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Integrations > Google Analytics 4 — mirrors the server's
+// Store > Integrations > Google Analytics 4 - mirrors the server's
 // GoogleAnalyticsService (server/src/store-settings/google-analytics.service.ts).
 // Owner-only routes on VendorController. The Measurement Protocol API
 // secret is write-only: the server only ever reports whether one is saved.

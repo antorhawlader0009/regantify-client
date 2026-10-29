@@ -4,7 +4,7 @@ import { toast } from '../../../../lib/toast';
 import { MenuEditor } from './MenuEditor';
 import { DesignLoading, DesignPageHeader, DesignSection, RadioGroup, SaveButton, menuError, useDesignSettings } from './designShared';
 
-/** Store > Design > Layout Settings — page width and the desktop site menu of the StorePal storefront. */
+/** Store > Design > Layout Settings - page width and the desktop site menu of the StorePal storefront. */
 export default function LayoutSettings() {
   const { settings, isLoading, save } = useDesignSettings();
   const [layoutType, setLayoutType] = useState<StoreLayoutType>('COMPACT');

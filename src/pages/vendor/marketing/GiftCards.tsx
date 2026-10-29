@@ -45,7 +45,7 @@ function GiftCardMenu({ item }: { item: GiftCard }) {
 }
 
 /**
- * Marketing > Gift Cards — prepaid cards with a balance that shoppers
+ * Marketing > Gift Cards - prepaid cards with a balance that shoppers
  * pay with at checkout (or that you redeem by hand), with status, what's
  * left of each, who it's for and when it expires.
  */
@@ -89,11 +89,11 @@ export default function GiftCards() {
           cell: (g) =>
             g.recipientName || g.recipientPhone ? (
               <>
-                <p>{g.recipientName ?? '—'}</p>
+                <p>{g.recipientName ?? '-'}</p>
                 {g.recipientPhone && <p className="text-xs text-neutral-500">{g.recipientPhone}</p>}
               </>
             ) : (
-              <span className="text-neutral-400">—</span>
+              <span className="text-neutral-400">-</span>
             ),
         },
         { header: 'Expires', cell: (g) => <span className="text-neutral-600">{g.expiresAt ? formatDhakaDate(g.expiresAt) : 'Never'}</span>, className: 'whitespace-nowrap' },

@@ -51,8 +51,8 @@ function Inner({ range }: { range: DateRange }) {
                       <td className="py-2 text-right tabular-nums">{p.sold}</td>
                       <td className="py-2 text-right tabular-nums">{p.returned}</td>
                       <td className={`py-2 text-right tabular-nums font-semibold ${p.rate >= 25 ? 'text-red-700' : p.rate >= 15 ? 'text-amber-700' : ''}`}>{p.rate.toFixed(1)}%</td>
-                      <td className="py-2 pl-4 text-neutral-600">{p.topReason ?? '—'}</td>
-                      <td className="py-2 pl-4 text-xs text-neutral-500">{p.good + p.damaged + p.missing === 0 ? '—' : `${p.good} good · ${p.damaged} damaged · ${p.missing} missing`}</td>
+                      <td className="py-2 pl-4 text-neutral-600">{p.topReason ?? '-'}</td>
+                      <td className="py-2 pl-4 text-xs text-neutral-500">{p.good + p.damaged + p.missing === 0 ? '-' : `${p.good} good · ${p.damaged} damaged · ${p.missing} missing`}</td>
                     </tr>
                   ))}
                 </tbody>

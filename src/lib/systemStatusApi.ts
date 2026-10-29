@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Super Admin > System status (TellMe idea 154) — mirrors the server's SystemHealthService.status().
+// Super Admin > System status (TellMe idea 154) - mirrors the server's SystemHealthService.status().
 
 export interface JobStatus {
   name: string;
@@ -40,7 +40,7 @@ export const systemStatusApi = {
   get: () => api.get<SystemStatus>('/v1/admin/system-status').then((r) => r.data),
 };
 
-// Integrations and the error log (super-admin-new.md Step 2) — mirrors server/src/system-health/integration-health.service.ts.
+// Integrations and the error log (super-admin-new.md Step 2) - mirrors server/src/system-health/integration-health.service.ts.
 
 export type IntegrationState = 'ok' | 'shaky' | 'down' | 'idle';
 export interface IntegrationCard {
@@ -75,7 +75,7 @@ export interface AppErrorRow {
   resolvedBy: string | null;
 }
 
-// Speed (PERFORMANCE-PLAN.md Step 1) — mirrors server/src/perf/perf-context.ts and system-health/web-vitals.service.ts.
+// Speed (PERFORMANCE-PLAN.md Step 1) - mirrors server/src/perf/perf-context.ts and system-health/web-vitals.service.ts.
 
 export interface RouteTiming {
   route: string;

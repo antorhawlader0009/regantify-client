@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Integrations > Webhooks — mirrors the server's WebhooksService
+// Store > Integrations > Webhooks - mirrors the server's WebhooksService
 // (server/src/webhooks/webhooks.service.ts), through the owner-only
 // routes on VendorIntegrationsController.
 

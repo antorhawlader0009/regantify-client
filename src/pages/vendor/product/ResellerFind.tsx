@@ -523,7 +523,7 @@ function AddListingDialog({ item, onClose }: { item: CatalogItem; onClose: () =>
 
 /** Step 13: how the supplier really does on resale orders (last 180 days), worked out from the orders, never typed in. */
 function ScoreBlock({ score }: { score: SupplierScore }) {
-  const pct = (n: number | null) => (n === null ? '—' : `${n}%`);
+  const pct = (n: number | null) => (n === null ? '-' : `${n}%`);
   return (
     <div>
       <p className="mb-1 flex items-center gap-2 text-sm font-medium text-regantify-text">
@@ -537,7 +537,7 @@ function ScoreBlock({ score }: { score: SupplierScore }) {
         <Stat label="Cancelled" value={String(score.cancelled)} hint={`${score.stockOutCancels} of them as out of stock; ${score.disputesLost} problem${score.disputesLost === 1 ? '' : 's'} decided against it`} />
         <Stat
           label="Rating"
-          value={score.rating ? `${score.rating.average} ★` : '—'}
+          value={score.rating ? `${score.rating.average} ★` : '-'}
           hint={score.rating ? `${score.rating.count} reseller${score.rating.count === 1 ? '' : 's'}` : 'No ratings yet'}
         />
       </dl>

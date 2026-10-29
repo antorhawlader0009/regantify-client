@@ -26,7 +26,7 @@ function FlashSaleMenu({ item }: { item: FlashSale }) {
 }
 
 /**
- * Marketing > Flash Sale — time-boxed sales on chosen products, with
+ * Marketing > Flash Sale - time-boxed sales on chosen products, with
  * status, the discount, how many products, how many orders came in
  * while it ran (server-side count, see FlashSalesService.countOrders)
  * and its start and end.
@@ -61,7 +61,7 @@ export default function FlashSales() {
         },
         {
           header: 'Orders',
-          cell: (s) => <span className="tabular-nums" title="Orders placed during the sale with one of its products">{s.orderCount ?? '—'}</span>,
+          cell: (s) => <span className="tabular-nums" title="Orders placed during the sale with one of its products">{s.orderCount ?? '-'}</span>,
           className: 'whitespace-nowrap',
         },
         {

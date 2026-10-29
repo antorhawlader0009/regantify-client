@@ -13,7 +13,7 @@ const dict = {
     nav_start: 'Start free',
 
     hero_title: 'Sell anything. Run it from one screen.',
-    hero_sub: 'Regantify gives you a shop, an order list, and a way to get paid — all in one simple app.',
+    hero_sub: 'Regantify gives you a shop, an order list, and a way to get paid - all in one simple app.',
     hero_cta: 'Start free',
     hero_cta_2: 'See pricing',
     hero_note: 'No card needed · Free 14-day trial',
@@ -34,14 +34,14 @@ const dict = {
 
     f1_eyebrow: 'Orders & delivery',
     f1_title: 'Run the whole business from one screen',
-    f1_detail: 'See every order, every payment, and every delivery in one place. Print a label, mark a parcel picked up, watch the payment come in — no more switching between apps.',
+    f1_detail: 'See every order, every payment, and every delivery in one place. Print a label, mark a parcel picked up, watch the payment come in - no more switching between apps.',
     f1_b1: 'Order and delivery, always in sync',
     f1_b2: 'See when each payment lands',
     f1_b3: 'Find any past order by customer name',
 
     f2_eyebrow: 'Payments',
     f2_title: 'A wallet that already speaks mobile banking',
-    f2_detail: 'Regantify comes with one wallet built in. Customers pay with mobile banking, a card or QR — it all lands in the same place. No merchant account. No paperwork. Start taking payments today.',
+    f2_detail: 'Regantify comes with one wallet built in. Customers pay with mobile banking, a card or QR - it all lands in the same place. No merchant account. No paperwork. Start taking payments today.',
     f2_b1: 'Mobile banking payments from day one',
     f2_b2: 'No merchant account needed',
     f2_b3: 'No developer or setup required',
@@ -55,9 +55,9 @@ const dict = {
 
     feat_title: 'Everything to run your shop, nothing extra',
     feat1_title: 'One screen for everything',
-    feat1_detail: 'Orders, payments, and stock — all in one place. No more spreadsheets.',
+    feat1_detail: 'Orders, payments, and stock - all in one place. No more spreadsheets.',
     feat2_title: 'Options that fit what you sell',
-    feat2_detail: 'Size, color, weight — set up only what makes sense for your shop.',
+    feat2_detail: 'Size, color, weight - set up only what makes sense for your shop.',
     feat3_title: 'A shop page, ready to go',
     feat3_detail: 'The moment you add your first product, your shop is live. No website needed.',
     feat4_title: 'Made for Bangladesh',
@@ -121,7 +121,7 @@ const dict = {
     faq3_q: 'Can I change plans later?',
     faq3_a: 'Yes, any time, from Settings. The change starts on your next billing date. You keep everything you had.',
     faq4_q: 'What kind of shops is this for?',
-    faq4_a: 'Any shop selling real products — gadgets, clothes, food, and more. The product options change to fit what you sell.',
+    faq4_a: 'Any shop selling real products - gadgets, clothes, food, and more. The product options change to fit what you sell.',
     faq5_q: 'How does the free trial work?',
     faq5_a: 'Growth and Business plans include a 14-day free trial. No card needed to start, and we remind you before it ends.',
 
@@ -142,7 +142,7 @@ const dict = {
     nav_start: 'ফ্রি শুরু করুন',
 
     hero_title: 'যেকোনো কিছু বিক্রি করুন। এক স্ক্রিন থেকেই সব চালান।',
-    hero_sub: 'Regantify দিচ্ছে একটা দোকান, অর্ডার লিস্ট, আর টাকা নেওয়ার সহজ উপায় — সব এক অ্যাপে।',
+    hero_sub: 'Regantify দিচ্ছে একটা দোকান, অর্ডার লিস্ট, আর টাকা নেওয়ার সহজ উপায় - সব এক অ্যাপে।',
     hero_cta: 'ফ্রি শুরু করুন',
     hero_cta_2: 'মূল্য দেখুন',
     hero_note: 'কার্ড লাগবে না · 14 দিন ফ্রি ট্রায়াল',
@@ -159,18 +159,18 @@ const dict = {
     cat3_detail: 'ওজন, প্যাক সাইজ, আর মেয়াদ তারিখ',
 
     run_title: 'নতুন দোকানের সব দরকার, একসাথে',
-    run_sub: 'পেমেন্ট, ডেলিভারি, আর প্রোডাক্ট লিস্টিং — আগে তিনটা আলাদা ঝামেলা ছিল। এখন সব এক অ্যাপেই আছে।',
+    run_sub: 'পেমেন্ট, ডেলিভারি, আর প্রোডাক্ট লিস্টিং - আগে তিনটা আলাদা ঝামেলা ছিল। এখন সব এক অ্যাপেই আছে।',
 
     f1_eyebrow: 'অর্ডার ও ডেলিভারি',
     f1_title: 'পুরো ব্যবসা চালান এক স্ক্রিন থেকে',
-    f1_detail: 'সব অর্ডার, সব পেমেন্ট, আর সব ডেলিভারি — এক জায়গায় দেখুন। লেবেল প্রিন্ট করুন, পার্সেল পিকআপ মার্ক করুন, পেমেন্ট আসা দেখুন — আলাদা আলাদা অ্যাপে যাওয়ার দরকার নেই।',
+    f1_detail: 'সব অর্ডার, সব পেমেন্ট, আর সব ডেলিভারি - এক জায়গায় দেখুন। লেবেল প্রিন্ট করুন, পার্সেল পিকআপ মার্ক করুন, পেমেন্ট আসা দেখুন - আলাদা আলাদা অ্যাপে যাওয়ার দরকার নেই।',
     f1_b1: 'অর্ডার আর ডেলিভারি সবসময় মিলে থাকে',
     f1_b2: 'কখন পেমেন্ট এলো দেখুন',
     f1_b3: 'কাস্টমারের নাম দিয়ে পুরনো অর্ডার খুঁজুন',
 
     f2_eyebrow: 'পেমেন্ট',
     f2_title: 'একটা ওয়ালেট, যা মোবাইল ব্যাংকিং বোঝে',
-    f2_detail: 'Regantify তে একটা ওয়ালেট আগে থেকেই আছে। কাস্টমার মোবাইল ব্যাংকিং, কার্ড বা QR দিয়ে পে করুক — সব একই জায়গায় জমা হবে। মার্চেন্ট অ্যাকাউন্ট লাগবে না। কাগজপত্র লাগবে না। আজই টাকা নেওয়া শুরু করুন।',
+    f2_detail: 'Regantify তে একটা ওয়ালেট আগে থেকেই আছে। কাস্টমার মোবাইল ব্যাংকিং, কার্ড বা QR দিয়ে পে করুক - সব একই জায়গায় জমা হবে। মার্চেন্ট অ্যাকাউন্ট লাগবে না। কাগজপত্র লাগবে না। আজই টাকা নেওয়া শুরু করুন।',
     f2_b1: 'প্রথম দিন থেকেই মোবাইল ব্যাংকিং পেমেন্ট',
     f2_b2: 'মার্চেন্ট অ্যাকাউন্ট লাগে না',
     f2_b3: 'ডেভেলপার বা সেটআপ লাগে না',
@@ -184,13 +184,13 @@ const dict = {
 
     feat_title: 'দোকান চালানোর সব কিছু, বাড়তি কিছু না',
     feat1_title: 'সব কিছুর জন্য এক স্ক্রিন',
-    feat1_detail: 'অর্ডার, পেমেন্ট, স্টক — সব এক জায়গায়। আর স্প্রেডশিট লাগবে না।',
+    feat1_detail: 'অর্ডার, পেমেন্ট, স্টক - সব এক জায়গায়। আর স্প্রেডশিট লাগবে না।',
     feat2_title: 'যা বিক্রি করেন তার সাথে মেলে এমন অপশন',
-    feat2_detail: 'সাইজ, রং, ওজন — শুধু যেটা আপনার দোকানের জন্য দরকার সেটাই সেট করুন।',
+    feat2_detail: 'সাইজ, রং, ওজন - শুধু যেটা আপনার দোকানের জন্য দরকার সেটাই সেট করুন।',
     feat3_title: 'দোকানের পেজ, রেডি',
     feat3_detail: 'প্রথম প্রোডাক্ট যোগ করার সাথে সাথেই দোকান লাইভ হয়ে যায়। ওয়েবসাইট লাগে না।',
     feat4_title: 'বাংলাদেশের জন্য তৈরি',
-    feat4_detail: 'মোবাইল পেমেন্ট আর কুরিয়ার হ্যান্ডঅফ — শুরু থেকেই রেডি।',
+    feat4_detail: 'মোবাইল পেমেন্ট আর কুরিয়ার হ্যান্ডঅফ - শুরু থেকেই রেডি।',
 
     pricing_title: 'সহজ মূল্য',
     pricing_sub: 'ফ্রি শুরু করুন। দোকান বড় হলে তখন দিন।',
@@ -250,7 +250,7 @@ const dict = {
     faq3_q: 'পরে প্ল্যান বদলাতে পারব?',
     faq3_a: 'হ্যাঁ, যেকোনো সময়, সেটিংস থেকে। পরের বিলিং তারিখ থেকে বদল শুরু হবে। আগের সব কিছু থেকে যাবে।',
     faq4_q: 'এটা কোন ধরনের দোকানের জন্য?',
-    faq4_a: 'যেকোনো দোকান যারা আসল পণ্য বিক্রি করে — গ্যাজেট, পোশাক, খাবার, আরও অনেক কিছু। প্রোডাক্ট অপশন আপনার পণ্য অনুযায়ী বদলে যায়।',
+    faq4_a: 'যেকোনো দোকান যারা আসল পণ্য বিক্রি করে - গ্যাজেট, পোশাক, খাবার, আরও অনেক কিছু। প্রোডাক্ট অপশন আপনার পণ্য অনুযায়ী বদলে যায়।',
     faq5_q: 'ফ্রি ট্রায়াল কীভাবে কাজ করে?',
     faq5_a: 'গ্রোথ আর বিজনেস প্ল্যানে 14 দিনের ফ্রি ট্রায়াল আছে। শুরু করতে কার্ড লাগে না, আর শেষ হওয়ার আগে আমরা মনে করিয়ে দেব।',
 

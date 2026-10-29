@@ -466,7 +466,7 @@ export default function App() {
             <Route path="/legal/chat-extension-privacy" element={<ChatExtensionPrivacy />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
 
-            {/* Public storefront now lives in its own app — see storefront/
+            {/* Public storefront now lives in its own app - see storefront/
                 (Next.js, server-rendered for SEO/speed). "Visit site" and
                 Store > Themes link out to it directly (storefrontUrl.ts)
                 instead of routing through this dashboard. */}
@@ -487,7 +487,7 @@ export default function App() {
             {/* Super Admin auth flow */}
             <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Super Admin > All Vendors > "Login as Vendor" landing tab — see VendorImpersonateEntry.tsx */}
+            {/* Super Admin > All Vendors > "Login as Vendor" landing tab - see VendorImpersonateEntry.tsx */}
             <Route path="/vendor-impersonate" element={<VendorImpersonateEntry />} />
 
             <Route path="/unauthorized" element={<Unauthorized />} />
@@ -498,8 +498,8 @@ export default function App() {
               <Route path="/vendor/complete-profile" element={<VendorCompleteProfile />} />
             </Route>
 
-            {/* Vendor dashboard — protected, VENDOR or STAFF (a team
-                member under a vendor's store — see StaffMember model;
+            {/* Vendor dashboard - protected, VENDOR or STAFF (a team
+                member under a vendor's store - see StaffMember model;
                 every route here is scoped identically either way via
                 VendorService.findVendorIdByUserId) */}
             <Route element={<ProtectedRoute allowedRoles={['VENDOR', 'STAFF']} />}>
@@ -686,7 +686,7 @@ export default function App() {
               {/* The full-screen vendor pages below sit outside <VendorLayout>, so they get the
                   role check (rule-plan.md Step 7) from this gate instead of the layout's. */}
               <Route element={<VendorPageGate />}>
-              {/* Landing page builder — deliberately OUTSIDE <VendorLayout>
+              {/* Landing page builder - deliberately OUTSIDE <VendorLayout>
                   so it renders full-screen with no dashboard sidebar/topbar
                   (landing-plan.md §4.2), while still sitting inside the same
                   VENDOR/STAFF ProtectedRoute as every other vendor route. */}
@@ -694,7 +694,7 @@ export default function App() {
               {/* Marketing > Campaigns > Popup builder: full screen like the landing page builder. */}
               <Route path="/vendor/marketing/campaigns/popup/new" element={<PopupCampaignBuilder />} />
               <Route path="/vendor/marketing/campaigns/popup/:id/edit" element={<PopupCampaignBuilder />} />
-              {/* Pathao shipping labels (pathao-plan.md Step 12) — also
+              {/* Pathao shipping labels (pathao-plan.md Step 12) - also
                   outside <VendorLayout>, so only the labels print. */}
               <Route path="/vendor/courier/pathao/labels" element={<PathaoLabelsPrintPage />} />
               {/* Courier handover sheet (TellMe idea 18): also outside <VendorLayout>, so only the sheet prints. */}
@@ -706,7 +706,7 @@ export default function App() {
               </Route>
             </Route>
 
-            {/* Super Admin dashboard — protected, SUPER_ADMIN role only */}
+            {/* Super Admin dashboard - protected, SUPER_ADMIN role only */}
             <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
               <Route element={<AdminLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />

@@ -15,7 +15,7 @@ interface CustomCodePageProps {
 }
 
 /**
- * Store > Design > Custom CSS and Custom Head Scripts — one code editor +
+ * Store > Design > Custom CSS and Custom Head Scripts - one code editor +
  * Save each, backed by the same StoreCustomCode row. Each page only
  * sends its own field, so saving one never overwrites the other.
  */

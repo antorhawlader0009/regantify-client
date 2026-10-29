@@ -7,7 +7,7 @@ import { toast } from '../../../lib/toast';
 
 interface AddBrandModalProps {
   onClose: () => void;
-  /** Called with the newly created brand right before the modal closes —
+  /** Called with the newly created brand right before the modal closes -
    * lets a caller (e.g. the product form's quick-create "+" button)
    * auto-select it without needing its own success signal. */
   onCreated?: (brand: Brand) => void;
@@ -59,7 +59,7 @@ export function AddBrandModal({ onClose, onCreated }: AddBrandModalProps) {
   const handleNameChange = (value: string) => {
     setName(value.slice(0, 100));
     // Slug follows the name automatically until the vendor edits it
-    // themselves — same "auto-fill until touched" pattern as most
+    // themselves - same "auto-fill until touched" pattern as most
     // name→slug fields.
     if (!slugTouched) setSlug(slugify(value).slice(0, 100));
   };

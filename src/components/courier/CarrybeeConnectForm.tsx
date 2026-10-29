@@ -24,7 +24,7 @@ export function CarrybeeConnectForm({ onConnected, footer }: { onConnected: () =
     onSuccess: (o) => {
       qc.invalidateQueries({ queryKey: ['courier-accounts'] });
       qc.invalidateQueries({ queryKey: ['carrybee-overview'] });
-      toast.success(o.pickupStore ? `CarryBee connected — booking from "${o.pickupStore.name}".` : 'CarryBee connected. Choose a pickup store on the CarryBee page to finish setup.');
+      toast.success(o.pickupStore ? `CarryBee connected - booking from "${o.pickupStore.name}".` : 'CarryBee connected. Choose a pickup store on the CarryBee page to finish setup.');
       setClientSecret('');
       setError(null);
       onConnected();

@@ -189,7 +189,7 @@ function Reconciliation() {
             <div key={p.id} className="border-t border-black/5 py-2.5 text-sm">
               <Link to={`/admin/vendors/${p.vendorId}`} className="font-medium text-regantify-cta hover:underline">{p.storeName}</Link>
               <p className="text-xs text-regantify-text-muted">
-                Order {p.orderNumber ?? '—'} ({p.orderStatus?.replace(/_/g, ' ').toLowerCase()}) · {p.invoiceNumber} · {formatTaka(p.amount)} · paid {p.paidAt ? formatDhakaDateTime(p.paidAt) : ''}
+                Order {p.orderNumber ?? '-'} ({p.orderStatus?.replace(/_/g, ' ').toLowerCase()}) · {p.invoiceNumber} · {formatTaka(p.amount)} · paid {p.paidAt ? formatDhakaDateTime(p.paidAt) : ''}
               </p>
             </div>
           ))}
@@ -203,7 +203,7 @@ function Reconciliation() {
             <div key={d.orderId} className="border-t border-black/5 py-2.5 text-sm">
               {d.vendorId ? <Link to={`/admin/vendors/${d.vendorId}`} className="font-medium text-regantify-cta hover:underline">{d.storeName}</Link> : d.storeName}
               <p className="text-xs text-regantify-text-muted">
-                Order {d.orderNumber ?? '—'} ({d.orderStatus?.replace(/_/g, ' ').toLowerCase()}) · {d.payments} payments · {formatTaka(d.total)} in all
+                Order {d.orderNumber ?? '-'} ({d.orderStatus?.replace(/_/g, ' ').toLowerCase()}) · {d.payments} payments · {formatTaka(d.total)} in all
               </p>
             </div>
           ))}

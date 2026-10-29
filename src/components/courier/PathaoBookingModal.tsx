@@ -15,14 +15,14 @@ function formatTaka(value: number) {
   return `৳${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
-/** Pathao wants 01XXXXXXXXX — same normalization the server applies (toPathaoPhone), so the popup can flag a bad number before booking. */
+/** Pathao wants 01XXXXXXXXX - same normalization the server applies (toPathaoPhone), so the popup can flag a bad number before booking. */
 function toPathaoPhone(raw: string): string | null {
   const digits = raw.replace(/\D/g, '');
   const local = digits.startsWith('880') ? `0${digits.slice(3)}` : digits.startsWith('1') && digits.length === 10 ? `0${digits}` : digits;
   return /^01\d{9}$/.test(local) ? local : null;
 }
 
-/** Client-side mirror of PathaoProvider.bookOrder's checks — the server re-checks everything, this just catches mistakes without a round-trip. */
+/** Client-side mirror of PathaoProvider.bookOrder's checks - the server re-checks everything, this just catches mistakes without a round-trip. */
 function validate(form: PathaoBookingDraft): string | null {
   if (!form.storeId) return 'Select a pickup store.';
   const name = form.recipientName.trim();
@@ -40,7 +40,7 @@ function validate(form: PathaoBookingDraft): string | null {
   return null;
 }
 
-/** `value`, but only after it has stopped changing for `delayMs` — keeps the price estimate from firing on every keystroke in the weight field. */
+/** `value`, but only after it has stopped changing for `delayMs` - keeps the price estimate from firing on every keystroke in the weight field. */
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -60,7 +60,7 @@ function Field({ label, hint, children }: { label: string; hint?: ReactNode; chi
   );
 }
 
-/** Live "what will Pathao charge" box — needs a store, city and zone (Pathao's price API requires all three). */
+/** Live "what will Pathao charge" box - needs a store, city and zone (Pathao's price API requires all three). */
 function PriceEstimate({ form }: { form: PathaoBookingDraft }) {
   const priceInput = useDebouncedValue(
     {
@@ -185,7 +185,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
     onSuccess: (order: { courierConsignmentId?: string | null }) => {
       invalidateOrder();
       toast.success(
-        order?.courierConsignmentId ? `Booked with Pathao — consignment ${order.courierConsignmentId}.` : 'Booked with Pathao.',
+        order?.courierConsignmentId ? `Booked with Pathao - consignment ${order.courierConsignmentId}.` : 'Booked with Pathao.',
       );
       onBooked();
     },
@@ -283,7 +283,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
               onClick={() => setForm((prev) => ({ ...prev, cityId: null, zoneId: null, areaId: null }))}
               className="text-xs text-neutral-500 hover:text-regantify-text underline"
             >
-              Clear — let Pathao detect it
+              Clear - let Pathao detect it
             </button>
           )}
         </div>
@@ -295,7 +295,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
         />
         {selectedArea?.homeDeliveryAvailable === false && (
           <p className="mt-1.5 flex items-center gap-1.5 text-xs text-amber-700">
-            <AlertTriangle size={12} /> Pathao doesn’t offer home delivery in {selectedArea.name} — the customer may need to collect it.
+            <AlertTriangle size={12} /> Pathao doesn’t offer home delivery in {selectedArea.name} - the customer may need to collect it.
           </p>
         )}
       </div>
@@ -340,7 +340,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
         label="Amount to collect (৳)"
         hint={
           isCod
-            ? `Cash on delivery — order total ${formatTaka(Number(data.order.total))}.`
+            ? `Cash on delivery - order total ${formatTaka(Number(data.order.total))}.`
             : 'This order is paid online, so Pathao should collect nothing.'
         }
       >
@@ -396,7 +396,7 @@ function BookingForm({ data, onCancel, onBooked }: BookingFormProps) {
 }
 
 interface PathaoBookingModalProps {
-  /** The order to book — null closes the popup. */
+  /** The order to book - null closes the popup. */
   orderId: string | null;
   onOpenChange: (open: boolean) => void;
 }
@@ -426,7 +426,7 @@ export function PathaoBookingModal({ orderId, onOpenChange }: PathaoBookingModal
     <Dialog
       open={orderId != null}
       onOpenChange={onOpenChange}
-      title={data ? `Book with Pathao — ORDER-${data.order.invoiceNumber}` : 'Book with Pathao'}
+      title={data ? `Book with Pathao - ORDER-${data.order.invoiceNumber}` : 'Book with Pathao'}
       maxWidth="max-w-2xl"
     >
       {isLoading ? (

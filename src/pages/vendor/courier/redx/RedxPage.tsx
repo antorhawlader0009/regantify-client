@@ -6,7 +6,7 @@ import { RedxParcelsTab } from './RedxParcelsTab';
 import { RedxDashboardTab } from './RedxDashboardTab';
 
 /**
- * Courier Integration > RedX — connection card, then Dashboard / Parcels
+ * Courier Integration > RedX - connection card, then Dashboard / Parcels
  * / Settings, the same shape as the Pathao and SteadFast pages. The
  * active tab lives in `?tab=`; connected vendors land on the Dashboard,
  * not-connected ones always on Settings. RedX is a paid-plan courier.
@@ -49,7 +49,7 @@ export default function RedxPage() {
             details={
               connected
                 ? [
-                    { label: 'Access token', value: connected.tokenMasked ?? '—' },
+                    { label: 'Access token', value: connected.tokenMasked ?? '-' },
                     { label: 'Pickup store', value: connected.pickupStore?.name ?? 'Not chosen' },
                     { label: 'Last update from RedX', value: formatAgo(connected.lastWebhookAt) },
                   ]

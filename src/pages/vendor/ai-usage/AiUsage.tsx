@@ -404,7 +404,7 @@ function Mini({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="min-w-0">
       <dt className="truncate text-[11px] text-neutral-500">{label}</dt>
-      <dd className="mt-0.5 text-sm font-semibold tabular-nums text-regantify-text">{value ?? '—'}</dd>
+      <dd className="mt-0.5 text-sm font-semibold tabular-nums text-regantify-text">{value ?? '-'}</dd>
     </div>
   );
 }
@@ -624,7 +624,7 @@ function ToolsCard({ report }: { report: AiUsageReport | undefined }) {
                   </p>
                 </div>
                 <div className="w-24 shrink-0 text-right">
-                  <p className="text-xs tabular-nums text-neutral-600">{t.uses > 0 ? `${n(Math.round(t.credits / t.uses))} a use` : '—'}</p>
+                  <p className="text-xs tabular-nums text-neutral-600">{t.uses > 0 ? `${n(Math.round(t.credits / t.uses))} a use` : '-'}</p>
                   <ChangeBadge value={{ current: t.credits, previous: t.previousCredits }} kind="count" lowerIsBetter />
                 </div>
               </li>

@@ -74,8 +74,8 @@ function Inner({ range }: { range: DateRange }) {
                           <td className="py-2 text-right tabular-nums">{r.units}</td>
                           <td className="py-2 text-right tabular-nums">{formatTaka(r.sales)}</td>
                           <td className="py-2 text-right tabular-nums">{r.cost == null ? <span className="text-neutral-500">No cost</span> : formatTaka(r.cost)}</td>
-                          <td className={`py-2 text-right tabular-nums font-semibold ${r.profit != null && r.profit < 0 ? 'text-red-700' : ''}`}>{r.profit == null ? '—' : formatTaka(r.profit)}</td>
-                          <td className="py-2 text-right tabular-nums text-neutral-500">{r.margin == null ? '—' : `${r.margin.toFixed(0)}%`}</td>
+                          <td className={`py-2 text-right tabular-nums font-semibold ${r.profit != null && r.profit < 0 ? 'text-red-700' : ''}`}>{r.profit == null ? '-' : formatTaka(r.profit)}</td>
+                          <td className="py-2 text-right tabular-nums text-neutral-500">{r.margin == null ? '-' : `${r.margin.toFixed(0)}%`}</td>
                         </tr>
                       ))}
                     </tbody>

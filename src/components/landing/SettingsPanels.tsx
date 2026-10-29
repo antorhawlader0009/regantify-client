@@ -3,7 +3,7 @@ import { Field, Select, TextArea, TextInput, Toggle } from './fields';
 import type { LandingPage, LandingPagePayload } from '../../lib/landingPagesApi';
 
 /**
- * The non-section configuration panels in the builder's left rail —
+ * The non-section configuration panels in the builder's left rail -
  * Page Display, Chat Button, Fonts, and Advanced (SEO/meta, cover image,
  * custom CSS, tracking pixels). Each takes the whole page and a patch
  * callback, matching how the section forms work.
@@ -29,14 +29,14 @@ export function PageDisplayPanel({ page, onChange }: PanelProps) {
         hint={
           page.displayMode === 'WITH_STORE_CHROME'
             ? "Shows your store's normal header and footer."
-            : 'A focused page with nothing to click away to — best for ad traffic.'
+            : 'A focused page with nothing to click away to - best for ad traffic.'
         }
       >
         <Select
           value={page.displayMode ?? 'FULL_PAGE'}
           onChange={(displayMode) => onChange({ displayMode })}
           options={[
-            { value: 'FULL_PAGE', label: 'Full page — no header/footer' },
+            { value: 'FULL_PAGE', label: 'Full page - no header/footer' },
             { value: 'WITH_STORE_CHROME', label: 'With store header & footer' },
           ]}
         />
@@ -77,7 +77,7 @@ export function ChatButtonPanel({ page, onChange }: PanelProps) {
   );
 }
 
-// A short list of fonts that render Bangla and Latin well — the vendor
+// A short list of fonts that render Bangla and Latin well - the vendor
 // base here is Bangladeshi, so a font that can't render Bangla is a
 // broken page, not a style choice. Free-text is still allowed for anyone
 // who wants a specific Google Font.
@@ -137,14 +137,14 @@ export function AdvancedPanel({ page, onChange }: PanelProps) {
 
       <Field
         label="Page title (SEO)"
-        hint={`${metaTitle.length}/70 — shown as the headline in Google results.`}
+        hint={`${metaTitle.length}/70 - shown as the headline in Google results.`}
       >
         <TextInput value={metaTitle} onChange={(v) => onChange({ metaTitle: v })} />
       </Field>
 
       <Field
         label="Meta description"
-        hint={`${metaDescription.length}/160 — the grey text under the headline in Google results.`}
+        hint={`${metaDescription.length}/160 - the grey text under the headline in Google results.`}
       >
         <TextArea value={metaDescription} onChange={(v) => onChange({ metaDescription: v })} rows={3} />
       </Field>

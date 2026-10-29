@@ -20,7 +20,7 @@ export interface CourierAccount {
 /**
  * The prefix CourierBookingService throws as a BadRequestException
  * message when a vendor tries to book/refresh a courier they haven't
- * connected yet (see server/src/courier/courier-booking.service.ts) —
+ * connected yet (see server/src/courier/courier-booking.service.ts) -
  * matching on this (rather than just showing the raw error) is what lets
  * Orders.tsx open the setup popup instead of a plain error toast, per
  * COURIER-PLAN.md §5.2.
@@ -43,7 +43,7 @@ export interface PathaoConnectInput {
   password?: string;
 }
 
-/** GET /v1/courier/pathao/overview — the Pathao page's connection state. */
+/** GET /v1/courier/pathao/overview - the Pathao page's connection state. */
 export type PathaoOverview =
   | { connected: false; planAllowed: boolean }
   | {
@@ -51,7 +51,7 @@ export type PathaoOverview =
       planAllowed: boolean;
       merchantName: string | null;
       clientIdMasked: string | null;
-      /** Connected before per-merchant Client ID/Secret — must reconnect to keep booking. */
+      /** Connected before per-merchant Client ID/Secret - must reconnect to keep booking. */
       needsReconnect: boolean;
       hasBackupLogin: boolean;
       pickupStore: { id: number; name: string | null } | null;
@@ -60,12 +60,12 @@ export type PathaoOverview =
       updatedAt: string;
     };
 
-/** GET /v1/courier/pathao/webhook — what the vendor pastes into Pathao's panel. */
+/** GET /v1/courier/pathao/webhook - what the vendor pastes into Pathao's panel. */
 export interface PathaoWebhookInfo {
   url: string;
   secret: string;
   lastWebhookAt: string | null;
-  /** False when the API isn't on a public HTTPS address yet — Pathao can't reach it. */
+  /** False when the API isn't on a public HTTPS address yet - Pathao can't reach it. */
   reachable: boolean;
 }
 
@@ -91,10 +91,10 @@ export interface CreatePathaoStoreInput {
   areaId: number;
 }
 
-/** What a Pathao status may move an order to — mirrors server PATHAO_STATUS_TARGETS. */
+/** What a Pathao status may move an order to - mirrors server PATHAO_STATUS_TARGETS. */
 export type PathaoStatusTarget = 'SHIPPING' | 'COMPLETED' | 'ON_HOLD' | 'RETURN' | 'CANCELLED' | 'NO_CHANGE';
 
-/** GET /v1/courier/pathao/statuses — one row of the Auto Status Update table. */
+/** GET /v1/courier/pathao/statuses - one row of the Auto Status Update table. */
 export interface PathaoStatusRow {
   key: string;
   label: string;
@@ -103,7 +103,7 @@ export interface PathaoStatusRow {
   paid: boolean;
 }
 
-/** Settings tab > Automation card — mirrors server PathaoAutoBookSettings (pathao-plan.md Step 14). */
+/** Settings tab > Automation card - mirrors server PathaoAutoBookSettings (pathao-plan.md Step 14). */
 export interface PathaoAutoBookSettings {
   enabled: boolean;
   onStatus: 'PROCESSING';
@@ -112,7 +112,7 @@ export interface PathaoAutoBookSettings {
   requireLocation: boolean;
 }
 
-/** Pathao's Settings tab > Default Values card — mirrors server/src/courier/providers/pathao-settings.ts's PathaoSettings. */
+/** Pathao's Settings tab > Default Values card - mirrors server/src/courier/providers/pathao-settings.ts's PathaoSettings. */
 export interface PathaoSettings {
   defaultBookingStatus: 'SHIPPING' | 'NO_CHANGE';
   deliveryType: 48 | 12;
@@ -133,12 +133,12 @@ export interface PathaoSettings {
 export interface PathaoLocation {
   id: number;
   name: string;
-  /** Areas only — Pathao marks some areas pickup-only (no home delivery). */
+  /** Areas only - Pathao marks some areas pickup-only (no home delivery). */
   homeDeliveryAvailable?: boolean;
   pickupAvailable?: boolean;
 }
 
-/** GET /v1/courier/pathao/locations/suggest — mirrors server LocationSuggestion (pathao-location-match.ts). */
+/** GET /v1/courier/pathao/locations/suggest - mirrors server LocationSuggestion (pathao-location-match.ts). */
 export interface PathaoLocationSuggestion {
   cityId: number;
   cityName: string;
@@ -153,7 +153,7 @@ export interface PathaoLocationSuggestion {
 /** Mirrors server SUGGESTION_AUTO_APPLY. */
 export const PATHAO_SUGGESTION_AUTO_APPLY = 0.6;
 
-/** One Pathao booking in our own field names — mirrors server PathaoBookingDraft. The booking popup pre-fills from it and sends edits back in the same shape. */
+/** One Pathao booking in our own field names - mirrors server PathaoBookingDraft. The booking popup pre-fills from it and sends edits back in the same shape. */
 export interface PathaoBookingDraft {
   storeId: number | null;
   recipientName: string;
@@ -199,7 +199,7 @@ export interface PathaoPriceInput {
   zoneId: number;
 }
 
-/** POST /v1/courier/pathao/price — `finalPrice` is the delivery charge; the COD fee is `codPercentage` (a fraction) of the amount collected, on top. */
+/** POST /v1/courier/pathao/price - `finalPrice` is the delivery charge; the COD fee is `codPercentage` (a fraction) of the amount collected, on top. */
 export interface PathaoPriceResult {
   price: number;
   discount: number;
@@ -212,7 +212,7 @@ export interface PathaoPriceResult {
 
 export type CourierBookingStatus = 'NOT_BOOKED' | 'BOOKING' | 'BOOKED' | 'FAILED' | 'CANCELLED';
 
-/** One row on the "Tracking" page — see CourierTrackingController. */
+/** One row on the "Tracking" page - see CourierTrackingController. */
 export interface CourierTrackingRow {
   id: string;
   invoiceNumber: number;
@@ -230,7 +230,7 @@ export interface CourierTrackingRow {
   createdAt: string;
 }
 
-/** The Parcels tab's filter groups — mirrors server PARCEL_GROUPS. */
+/** The Parcels tab's filter groups - mirrors server PARCEL_GROUPS. */
 export type ParcelGroup = 'in_progress' | 'delivered' | 'returned' | 'attention' | 'cancelled';
 
 /** One row of GET /v1/courier/pathao/parcels. Money fields are decimal strings. */
@@ -275,7 +275,7 @@ export interface PathaoParcelsResponse {
 
 export type PathaoStatsRange = '7d' | '30d' | '90d';
 
-/** GET /v1/courier/pathao/stats — the Dashboard tab (pathao-plan.md Step 10). */
+/** GET /v1/courier/pathao/stats - the Dashboard tab (pathao-plan.md Step 10). */
 export interface PathaoStats {
   range: PathaoStatsRange;
   bookingsToday: number;
@@ -311,7 +311,7 @@ export interface PathaoStats {
 /** Couriers with a bulk "Send to …" on the Orders list. */
 export type BulkCourierProvider = 'PATHAO' | 'STEADFAST' | 'REDX' | 'CARRYBEE';
 
-/** POST /v1/courier/{pathao|steadfast|redx}/book-bulk — the dry run (confirm dialog) or the real run (pathao-plan.md Step 11). */
+/** POST /v1/courier/{pathao|steadfast|redx}/book-bulk - the dry run (confirm dialog) or the real run (pathao-plan.md Step 11). */
 export type PathaoBulkResult =
   | {
       dryRun: true;
@@ -333,7 +333,7 @@ export type PathaoBulkResult =
       summary: { booked: number; failed: number; skipped: number };
     };
 
-/** One printable label — GET /v1/courier/pathao/labels (pathao-plan.md Step 12). */
+/** One printable label - GET /v1/courier/pathao/labels (pathao-plan.md Step 12). */
 export interface PathaoLabel {
   orderId: string;
   invoiceNumber: number;
@@ -358,7 +358,7 @@ export function openPathaoLabels(orderIds: string[]) {
   window.open(`/vendor/courier/pathao/labels?ids=${orderIds.join(',')}`, '_blank', 'noopener');
 }
 
-/** One row of Order Detail's courier timeline — GET /v1/courier/tracking/orders/:orderId/events. */
+/** One row of Order Detail's courier timeline - GET /v1/courier/tracking/orders/:orderId/events. */
 export interface CourierEvent {
   id: string;
   provider: CourierAccountProvider;
@@ -372,18 +372,18 @@ export interface CourierEvent {
   createdAt: string;
 }
 
-/** GET /v1/courier/steadfast/overview — the SteadFast page's connection state. */
+/** GET /v1/courier/steadfast/overview - the SteadFast page's connection state. */
 export type SteadfastOverview =
   | { connected: false }
   | { connected: true; apiKeyMasked: string | null; lastWebhookAt: string | null; connectedAt: string; updatedAt: string };
 
-/** GET /v1/courier/steadfast/webhook — what the vendor pastes into SteadFast's panel (URL + Bearer token). */
+/** GET /v1/courier/steadfast/webhook - what the vendor pastes into SteadFast's panel (URL + Bearer token). */
 export type SteadfastWebhookInfo = PathaoWebhookInfo;
 
-/** What a SteadFast status may move an order to — same list as Pathao's. */
+/** What a SteadFast status may move an order to - same list as Pathao's. */
 export type SteadfastStatusTarget = PathaoStatusTarget;
 
-/** GET /v1/courier/steadfast/statuses — one row of the Auto Status Update table. */
+/** GET /v1/courier/steadfast/statuses - one row of the Auto Status Update table. */
 export interface SteadfastStatusRow {
   key: string;
   label: string;
@@ -438,13 +438,13 @@ export interface SteadfastParcelsResponse {
   counts: Record<SteadfastParcelGroup | 'all', number>;
 }
 
-/** GET /v1/courier/steadfast/stats — the Dashboard tab. */
+/** GET /v1/courier/steadfast/stats - the Dashboard tab. */
 export type SteadfastStats = Omit<PathaoStats, 'bookingsToday' | 'active'> & {
   bookingsToday: { count: number; cod: number };
   active: { count: number; cod: number };
 };
 
-/** One SteadFast payout — GET /v1/courier/steadfast/payouts. */
+/** One SteadFast payout - GET /v1/courier/steadfast/payouts. */
 export interface SteadfastPayout {
   id: string;
   amount: number | null;
@@ -453,14 +453,14 @@ export interface SteadfastPayout {
   createdAt: string | null;
 }
 
-/** GET /v1/courier/steadfast/orders/:orderId/tracking — SteadFast's own step-by-step history. */
+/** GET /v1/courier/steadfast/orders/:orderId/tracking - SteadFast's own step-by-step history. */
 export interface SteadfastTracking {
   trackingCode: string | null;
   trackingUrl: string | null;
   steps: Array<{ message: string; status: string | null; at: string | null }>;
 }
 
-/** GET /v1/courier/redx/overview — the RedX page's connection state. */
+/** GET /v1/courier/redx/overview - the RedX page's connection state. */
 export type RedxOverview =
   | { connected: false; planAllowed: boolean }
   | {
@@ -475,12 +475,12 @@ export type RedxOverview =
       updatedAt: string;
     };
 
-/** GET /v1/courier/redx/webhook — the one callback URL (token included) the vendor pastes into RedX. */
+/** GET /v1/courier/redx/webhook - the one callback URL (token included) the vendor pastes into RedX. */
 export type RedxWebhookInfo = PathaoWebhookInfo;
 
 export type RedxStatusTarget = PathaoStatusTarget;
 
-/** GET /v1/courier/redx/statuses — one row of the Auto Status Update table. */
+/** GET /v1/courier/redx/statuses - one row of the Auto Status Update table. */
 export interface RedxStatusRow {
   key: string;
   label: string;
@@ -543,7 +543,7 @@ export interface RedxAreaSuggestion {
   autoApply: boolean;
 }
 
-/** GET /v1/courier/redx/orders/:orderId/quote — what booking this order would send, and RedX's price for it. */
+/** GET /v1/courier/redx/orders/:orderId/quote - what booking this order would send, and RedX's price for it. */
 export interface RedxQuote {
   area: { id: number; name: string; detected: boolean } | null;
   areaError: string | null;
@@ -576,10 +576,10 @@ export interface RedxParcelsResponse {
   counts: Record<RedxParcelGroup | 'all', number>;
 }
 
-/** GET /v1/courier/redx/stats — the Dashboard tab (same shape as SteadFast's). */
+/** GET /v1/courier/redx/stats - the Dashboard tab (same shape as SteadFast's). */
 export type RedxStats = SteadfastStats;
 
-/** GET /v1/courier/redx/orders/:orderId/tracking — RedX's own step-by-step history. */
+/** GET /v1/courier/redx/orders/:orderId/tracking - RedX's own step-by-step history. */
 export interface RedxTracking {
   trackingId: string | null;
   trackingUrl: string | null;
@@ -591,7 +591,7 @@ export function redxTrackingUrl(trackingId: string) {
   return `https://redx.com.bd/track-parcel/?trackingId=${encodeURIComponent(trackingId)}`;
 }
 
-/** Statuses a RedX parcel can still be cancelled in (RedX hasn't picked it up) — mirrors server REDX_CANCELLABLE_STATUSES. */
+/** Statuses a RedX parcel can still be cancelled in (RedX hasn't picked it up) - mirrors server REDX_CANCELLABLE_STATUSES. */
 export function redxCancellable(courierStatus: string | null | undefined): boolean {
   if (!courierStatus) return true;
   const key = courierStatus.trim().toLowerCase().replace(/[\s\-.]+/g, '_');
@@ -599,7 +599,7 @@ export function redxCancellable(courierStatus: string | null | undefined): boole
 }
 
 export const courierApi = {
-  /** All of the vendor's courier accounts (active or disconnected) — Settings' card states + the setup-popup's "already connected?" check. */
+  /** All of the vendor's courier accounts (active or disconnected) - Settings' card states + the setup-popup's "already connected?" check. */
   getAccounts: () => api.get<CourierAccount[]>('/v1/courier/accounts').then((r) => r.data),
 
   // The server checks the keys with SteadFast before saving; `balance` is
@@ -661,13 +661,13 @@ export const courierApi = {
   selectPathaoStore: (storeId: number, storeName: string) =>
     api.post<{ pathaoStoreId: number; pathaoStoreName: string }>('/v1/courier/accounts/pathao/store', { storeId, storeName }).then((r) => r.data),
 
-  // RedX's own single access token — no OAuth, no separate app-level
+  // RedX's own single access token - no OAuth, no separate app-level
   // credential (unlike Pathao). The server checks it with RedX first and
   // picks the pickup store itself when the merchant has only one.
   connectRedx: (accessToken: string) =>
     api.post<CourierAccount & { storeCount: number }>('/v1/courier/accounts/redx', { accessToken }).then((r) => r.data),
 
-  /** Settings' RedX store picker — only callable once connected. */
+  /** Settings' RedX store picker - only callable once connected. */
   getRedxStores: () => api.get<RedxPickupStore[]>('/v1/courier/accounts/redx/stores').then((r) => r.data),
 
   selectRedxStore: (storeId: number, storeName: string) =>
@@ -676,7 +676,7 @@ export const courierApi = {
   disconnect: (provider: CourierAccountProvider) =>
     api.delete<{ disconnected: true }>(`/v1/courier/accounts/${provider}`).then((r) => r.data),
 
-  // "Book with {Provider}" / "Refresh Status" — see ordersApi.ts's Order
+  // "Book with {Provider}" / "Refresh Status" - see ordersApi.ts's Order
   // type for the courierBookingStatus/courierConsignmentId/etc fields
   // these calls update.
   // `overrides` = the Pathao booking popup's edits (Pathao only); omit
@@ -692,7 +692,7 @@ export const courierApi = {
 
   refreshStatus: (orderId: string) => api.post(`/v1/orders/${orderId}/courier/refresh-status`).then((r) => r.data),
 
-  // PathaoLocationPicker (Add Order / Order Detail) — see
+  // PathaoLocationPicker (Add Order / Order Detail) - see
   // COURIER-PLAN.md §3.2/§7 Phase 2. Each level requires the previous
   // one's id.
   getPathaoCities: () => api.get<PathaoLocation[]>('/v1/courier/pathao/locations/cities').then((r) => r.data),
@@ -731,7 +731,7 @@ export const courierApi = {
   updateOrderRedxLocation: (orderId: string, areaId: number) =>
     api.patch(`/v1/orders/${orderId}/redx-location`, { areaId }).then((r) => r.data),
 
-  /** Courier Integration > Tracking — every order with a real courier booking, across all providers. */
+  /** Courier Integration > Tracking - every order with a real courier booking, across all providers. */
   getTracking: () => api.get<CourierTrackingRow[]>('/v1/courier/tracking').then((r) => r.data),
   getOrderCourierEvents: (orderId: string) =>
     api.get<CourierEvent[]>(`/v1/courier/tracking/orders/${orderId}/events`).then((r) => r.data),

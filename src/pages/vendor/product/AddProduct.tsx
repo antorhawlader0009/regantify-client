@@ -182,7 +182,7 @@ export default function AddProduct() {
   const [saved, setSaved] = useState(false);
   useUnsavedChangesWarning(dirty && !saved);
 
-  // Store > Categories' real category tree — drives the Main/Sub Category selects.
+  // Store > Categories' real category tree - drives the Main/Sub Category selects.
   const { data: categoryOptions = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => categoriesApi.list(),
@@ -197,7 +197,7 @@ export default function AddProduct() {
   const subCategoryOptions = mainCategoryId ? categoryOptions.filter((c) => c.parentId === mainCategoryId) : [];
 
   // `category` (plain text) is the legacy field the storefront still reads
-  // for filtering/breadcrumbs — picking a Main/Sub Category keeps it in sync.
+  // for filtering/breadcrumbs - picking a Main/Sub Category keeps it in sync.
   const handleMainCategoryChange = (id: string) => {
     setCategoryId(id);
     setCategory(categoryOptions.find((c) => c.id === id)?.name ?? '');

@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { DeferredPurchaseStatus } from './metaPixelApi';
 
-// Store > Integrations > TikTok Pixel — mirrors the server's
+// Store > Integrations > TikTok Pixel - mirrors the server's
 // TiktokPixelService (server/src/store-settings/tiktok-pixel.service.ts).
 // Owner-only routes on VendorController. The Events API access token is
 // write-only: the server only ever reports whether one is saved.

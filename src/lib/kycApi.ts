@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Seller verification (TellMe idea 160) — mirrors the server's KycService.
+// Seller verification (TellMe idea 160) - mirrors the server's KycService.
 
 export type KycState = 'NONE' | 'REQUESTED' | 'SUBMITTED' | 'REJECTED' | 'APPROVED';
 export type KycKind = 'NID_FRONT' | 'NID_BACK' | 'SELFIE' | 'TRADE_LICENSE';

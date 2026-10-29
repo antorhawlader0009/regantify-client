@@ -16,7 +16,7 @@ import { lmsApi, type LmsCompared, type LmsReport } from '../../lib/lmsApi';
 
 /** "45 sec", "12 min", "3 h 5 min", "2 days". */
 export function formatMinutes(min: number | null): string {
-  if (min == null) return '—';
+  if (min == null) return '-';
   if (min < 1) return `${Math.max(1, Math.round(min * 60))} sec`;
   if (min < 60) return `${Math.round(min)} min`;
   const hours = Math.floor(min / 60);
@@ -29,7 +29,7 @@ export function formatMinutes(min: number | null): string {
 }
 
 export function formatPct(value: number | null): string {
-  return value == null ? '—' : `${Math.round(value)}%`;
+  return value == null ? '-' : `${Math.round(value)}%`;
 }
 
 /** The Call Desk's "My day": what the caller did today, and what's still due. */
@@ -84,7 +84,7 @@ export function StripCell({
 }) {
   const Icon = kpiIconFor(label);
   const current = typeof value === 'number' ? value : value.current;
-  const text = current == null ? '—' : display ? display(current) : formatValue(current, kind ?? 'count');
+  const text = current == null ? '-' : display ? display(current) : formatValue(current, kind ?? 'count');
   return (
     <div className="min-w-0 rounded-[10px] border border-lms-line bg-lms-surface px-4 py-3">
       <div className="flex items-center gap-2">

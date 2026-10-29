@@ -11,7 +11,7 @@ import { apiKeysApi } from '../../../../lib/apiKeysApi';
 import { useDashboardView } from '../../../../lib/useDashboardView';
 
 /**
- * Store > Integrations — one card per marketing/analytics integration.
+ * Store > Integrations - one card per marketing/analytics integration.
  * Every card is live; IntegrationCard still renders a "Coming soon" card
  * (no link) for any future integration added before it's built.
  */

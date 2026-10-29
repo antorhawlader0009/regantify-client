@@ -510,11 +510,11 @@ function RecordDialog({ id, onClose }: { id: string; onClose: () => void }) {
               <dt className="text-neutral-500">Customer</dt>
               <dd className="text-regantify-text">{data.customerName}</dd>
               <dt className="text-neutral-500">Phone</dt>
-              <dd className="text-regantify-text">{data.phone ?? '—'}</dd>
+              <dd className="text-regantify-text">{data.phone ?? '-'}</dd>
               <dt className="text-neutral-500">Address</dt>
-              <dd className="whitespace-pre-wrap text-regantify-text">{[data.address, data.district].filter(Boolean).join(', ') || '—'}</dd>
+              <dd className="whitespace-pre-wrap text-regantify-text">{[data.address, data.district].filter(Boolean).join(', ') || '-'}</dd>
               <dt className="text-neutral-500">Items</dt>
-              <dd className="whitespace-pre-wrap text-regantify-text">{data.items ?? '—'}</dd>
+              <dd className="whitespace-pre-wrap text-regantify-text">{data.items ?? '-'}</dd>
               {data.note && (
                 <>
                   <dt className="text-neutral-500">Note</dt>

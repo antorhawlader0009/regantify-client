@@ -718,7 +718,7 @@ function CategoriesTab() {
                         <option value="">Pick a category</option>
                         {flat.map((c) => (
                           <option key={c.id} value={c.id}>
-                            {c.parentId ? '— ' : ''}
+                            {c.parentId ? '- ' : ''}
                             {c.nameEn}
                           </option>
                         ))}

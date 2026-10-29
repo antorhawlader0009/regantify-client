@@ -24,7 +24,7 @@ function hourLabel(hour: number) {
 }
 
 function days(value: number | null) {
-  return value == null ? '—' : `${value} day${value === 1 ? '' : 's'}`;
+  return value == null ? '-' : `${value} day${value === 1 ? '' : 's'}`;
 }
 
 /**
@@ -32,7 +32,7 @@ function days(value: number | null) {
  * the only signal. Bangladesh benchmark: 80-85% is normal, 90%+ is good.
  */
 function SuccessRate({ value }: { value: number | null }) {
-  if (value == null) return <span className="text-neutral-500">—</span>;
+  if (value == null) return <span className="text-neutral-500">-</span>;
   const [label, cls] = value >= 90 ? ['Good', 'bg-emerald-50 text-emerald-700'] : value >= 80 ? ['Normal', 'bg-amber-50 text-amber-700'] : ['Low', 'bg-red-50 text-red-700'];
   return (
     <span className="inline-flex items-center gap-1.5">
@@ -360,7 +360,7 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
           rows={data.couriers.map((c) => ({
             key: c.courier,
             title: COURIERS[c.courier].label,
-            value: c.successRate == null ? '—' : `${c.successRate.toFixed(0)}%`,
+            value: c.successRate == null ? '-' : `${c.successRate.toFixed(0)}%`,
             detail: `${c.booked} booked · ${c.delivered} delivered · ${c.returned} returned · ${c.inProgress} on the way · fees ${formatTaka(c.deliveryFees)}`,
             to: COURIERS[c.courier].path,
           }))}
@@ -421,7 +421,7 @@ function DeliverySection({ data, compareLabel }: { data: DeliveryAnalytics; comp
 
 /** "12 min", "3.5 h", "2 days"; a dash when there is nothing to average. */
 function minutesText(value: number | null) {
-  if (value == null) return '—';
+  if (value == null) return '-';
   if (value < 60) return `${value} min`;
   if (value < 24 * 60) return `${Math.round((value / 60) * 10) / 10} h`;
   return `${Math.round((value / (24 * 60)) * 10) / 10} days`;

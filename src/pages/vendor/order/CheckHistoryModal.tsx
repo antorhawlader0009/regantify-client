@@ -14,7 +14,7 @@ function formatPrice(value: string) {
 }
 
 /**
- * "Check History" — a customer's delivery track record across the whole
+ * "Check History" - a customer's delivery track record across the whole
  * Regantify platform (not just this vendor's own orders), by phone
  * number. See server/src/courier/customer-history.service.ts for what
  * counts as a successful vs. failed delivery.
@@ -47,7 +47,7 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
             {pathao.fetchedAt ? (
               <>
                 <p className="text-sm text-regantify-text tabular-nums">
-                  {pathao.total > 0 ? `${Math.round((pathao.successful / pathao.total) * 100)}%` : '—'} · {pathao.successful} delivered,{' '}
+                  {pathao.total > 0 ? `${Math.round((pathao.successful / pathao.total) * 100)}%` : '-'} · {pathao.successful} delivered,{' '}
                   {pathao.returned} returned of {pathao.total}
                 </p>
                 <p className="text-xs text-neutral-500">checked on {new Date(pathao.fetchedAt).toLocaleDateString()}</p>
@@ -102,7 +102,7 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
               <div>
                 <p className="text-xs text-neutral-500">Delivered</p>
                 <p className="text-lg font-semibold text-regantify-text">
-                  {data.successRate === null ? '—' : `${data.successRate}%`}
+                  {data.successRate === null ? '-' : `${data.successRate}%`}
                 </p>
               </div>
               <div>

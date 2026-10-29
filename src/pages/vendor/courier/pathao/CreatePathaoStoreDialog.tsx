@@ -145,7 +145,7 @@ export function CreatePathaoStoreDialog({ open, onOpenChange }: CreatePathaoStor
             onChange={(e) => setAddress(e.target.value)}
             maxLength={120}
             rows={2}
-            placeholder="House, road, area — at least 15 characters"
+            placeholder="House, road, area - at least 15 characters"
             className={inputClass}
           />
           <p className="text-xs text-neutral-500 mt-1">{address.trim().length}/120</p>

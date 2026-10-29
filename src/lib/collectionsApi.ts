@@ -73,7 +73,7 @@ export const collectionsApi = {
 
   remove: (id: string) => api.delete(`/v1/collections/${id}`).then((r) => r.data),
 
-  // Uploads the collection cover photo and returns its picture URL —
+  // Uploads the collection cover photo and returns its picture URL -
   // called before Create/Update Collection is submitted.
   uploadCoverPhoto: (file: File) => {
     const formData = new FormData();

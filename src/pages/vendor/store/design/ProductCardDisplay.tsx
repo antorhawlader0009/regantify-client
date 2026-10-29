@@ -33,7 +33,7 @@ const ITEMS: { key: CardKey; label: string; hint: string }[] = [
   { key: 'cardShowWishlist', label: 'Show Wishlist Button', hint: 'Show a wishlist (heart) button on product cards.' },
 ];
 
-/** Store > Design > Product Card Display Options — what each StorePal product card shows. */
+/** Store > Design > Product Card Display Options - what each StorePal product card shows. */
 export default function ProductCardDisplay() {
   const { settings, isLoading, save } = useDesignSettings();
   const [form, setForm] = useState<Pick<DesignSettings, CardKey> | null>(null);

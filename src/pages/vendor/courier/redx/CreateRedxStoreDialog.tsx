@@ -10,7 +10,7 @@ const inputClass =
   'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 /**
- * "Add pickup store" — creates a pickup store on the vendor's RedX account
+ * "Add pickup store" - creates a pickup store on the vendor's RedX account
  * (RedX: POST /pickup/store). When no store was chosen yet, the new one
  * becomes the store every booking picks up from.
  */

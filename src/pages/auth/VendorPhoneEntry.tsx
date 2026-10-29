@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
-// i18n — dictionary + provider, inlined here so this page is a single file
+// i18n - dictionary + provider, inlined here so this page is a single file
 // ---------------------------------------------------------------------------
 
 type Lang = 'en' | 'bn';
@@ -89,7 +89,7 @@ const dict = {
     pitch_sub: 'লগইন করে নতুন অর্ডার দেখুন, পেমেন্ট চেক করুন, আর এক স্ক্রিন থেকেই দোকান চালান।',
 
     perk1_title: 'সব কিছুর জন্য এক স্ক্রিন',
-    perk1_detail: 'অর্ডার, পেমেন্ট, স্টক — সব এক জায়গায়।',
+    perk1_detail: 'অর্ডার, পেমেন্ট, স্টক - সব এক জায়গায়।',
     perk2_title: 'অর্ডার আর ডেলিভারি মিলে থাকে',
     perk2_detail: 'লেবেল প্রিন্ট করুন, প্রতিটা পার্সেল ট্র্যাক করুন।',
     perk3_title: 'পেমেন্ট আসা দেখুন',
@@ -154,7 +154,7 @@ function useLang() {
 }
 
 // ---------------------------------------------------------------------------
-// Day / Night theme — flat, no blur/glow, same green accents.
+// Day / Night theme - flat, no blur/glow, same green accents.
 // ---------------------------------------------------------------------------
 
 type Mode = 'night' | 'day';
@@ -166,7 +166,7 @@ function readStoredMode(): Mode {
     const v = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (v === 'day' || v === 'night') return v;
   } catch {
-    /* storage blocked — fall through to default */
+    /* storage blocked - fall through to default */
   }
   return 'day';
 }
@@ -257,7 +257,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 /**
  * Small animated shop-icon loader shown only while an API call is in
  * flight (sign-in). This is the one deliberate motion moment on the
- * page — everything else is static for fast, low-jank rendering on
+ * page - everything else is static for fast, low-jank rendering on
  * low-end devices.
  */
 function ShopLoader({ className = '' }: { className?: string }) {
@@ -269,7 +269,7 @@ function ShopLoader({ className = '' }: { className?: string }) {
 }
 
 /**
- * Vendor Login — phone number or email + password. Reached via the "Login"
+ * Vendor Login - phone number or email + password. Reached via the "Login"
  * button in the top-right corner of the auth header. New vendors use the
  * "Sign up" button instead, which starts the phone + OTP flow in
  * VendorSignup.
@@ -295,7 +295,7 @@ function VendorPhoneEntryInner() {
       try {
         window.localStorage.setItem(THEME_STORAGE_KEY, next);
       } catch {
-        /* storage blocked — theme still works for this session */
+        /* storage blocked - theme still works for this session */
       }
       return next;
     });
@@ -320,7 +320,7 @@ function VendorPhoneEntryInner() {
       }
 
       if (res.mustSetPassword) {
-        // Still on the temporary password — no real session was issued.
+        // Still on the temporary password - no real session was issued.
         // Setting a real password is mandatory here (unlike right after
         // signup), so send them to the non-skippable setup screen.
         navigate('/vendor/complete-setup', { replace: true, state: { setupToken: res.setupToken } });
@@ -390,7 +390,7 @@ function VendorPhoneEntryInner() {
 
       {/* Content */}
       <main className="max-w-6xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left — pitch */}
+        {/* Left - pitch */}
         <section className="hidden lg:block">
           <span className={`inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full mb-6 ${th.tag}`}>
             <Store size={14} />
@@ -418,7 +418,7 @@ function VendorPhoneEntryInner() {
           </ul>
         </section>
 
-        {/* Right — form card */}
+        {/* Right - form card */}
         <section className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
           <div className={`rounded-2xl p-7 sm:p-9 ${th.cardInner}`}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${th.iconChip}`}>
@@ -440,7 +440,7 @@ function VendorPhoneEntryInner() {
                       flex items-center justify-between gap-3 ${th.input}`}
                   >
                     <span className="min-w-0">
-                      <span className="block font-semibold truncate">{a.storeName || '—'}</span>
+                      <span className="block font-semibold truncate">{a.storeName || '-'}</span>
                       <span className={`block text-sm ${th.muted}`}>
                         {a.roleName}
                         {a.turnedOff && ` · ${t('account_turned_off')}`}

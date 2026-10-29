@@ -116,10 +116,10 @@ function SuspendedBadge() {
 }
 
 /**
- * Staff — see StaffMember model's schema comment for the overall shape.
+ * Staff - see StaffMember model's schema comment for the overall shape.
  * The owner's own account always shows first as a non-deletable "Owner"
  * row (see StaffService.findAllForVendor); everyone else is a real
- * StaffMember. Adding and removing are owner-only — hidden here for a
+ * StaffMember. Adding and removing are owner-only - hidden here for a
  * logged-in staff member, matching what the backend would 403 on anyway
  * (see StaffController.requireOwner). The access note says plainly what
  * staff can do, since the role is a label and not a permission.
@@ -299,7 +299,7 @@ function TeamTab() {
                       <RoleChip member={m} />
                     </td>
                     <td className={td}>
-                      <p className="tabular-nums">{m.phone ?? '—'}</p>
+                      <p className="tabular-nums">{m.phone ?? '-'}</p>
                       {m.email && <p className="text-xs text-neutral-500">{m.email}</p>}
                     </td>
                     <td className={`${td} text-neutral-600`}>
@@ -339,7 +339,7 @@ function TeamTab() {
                       <RoleChip member={m} />
                       {m.status === 'SUSPENDED' && <SuspendedBadge />}
                     </div>
-                    <p className="text-xs tabular-nums text-neutral-600">{m.phone ?? '—'}</p>
+                    <p className="text-xs tabular-nums text-neutral-600">{m.phone ?? '-'}</p>
                     <p className="text-xs text-neutral-500">{lastLoginText(m)}</p>
                   </div>
                   {menuFor(m)}

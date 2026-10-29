@@ -21,7 +21,7 @@ export function ProductPickerField({ value, onChange, multiple = true, label }: 
   const [pickerOpen, setPickerOpen] = useState(false);
 
   // One list fetch covers both resolving the selected ids to display rows
-  // and populating the picker — a vendor's catalog is small enough
+  // and populating the picker - a vendor's catalog is small enough
   // (plan-capped) that a separate by-ids endpoint isn't worth it.
   const { data } = useQuery({
     queryKey: ['products', 'landing-picker'],

@@ -11,12 +11,12 @@ const TYPE_ORDER: PaymentGatewayType[] = ['COD', 'ONLINE_PAYMENT', 'SSLCOMMERZ',
 
 
 /**
- * Super Admin > Payment Gateway — the 5-row platform-wide catalog
+ * Super Admin > Payment Gateway - the 5-row platform-wide catalog
  * (COD, Online Payment, SSLCommerz, bKash Merchant, Vendor PayStation)
  * with an enable/disable toggle + edit per row, plus a read-only
  * oversight table of every vendor's connected gateways below it. A
  * vendor's COD/ONLINE_PAYMENT fee is fully plan-driven and NOT editable
- * from this page at all (per-vendor or bulk) — editing a plan's fee at
+ * from this page at all (per-vendor or bulk) - editing a plan's fee at
  * Admin > Plans > Manage Plans is the only action that changes it, and
  * takes effect immediately for every vendor on that plan (see
  * AdminService.updatePlan). Shape mirrors PlanManagement.tsx (catalog
@@ -45,7 +45,7 @@ export default function PaymentGatewayManagement() {
     onSuccess: (_data, { isEnabledPlatformWide }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-payment-gateway-catalog'] });
       // Vendors' own Store > Payment Gateway page reads this same catalog
-      // to decide whether to show the "hidden by platform admin" notice —
+      // to decide whether to show the "hidden by platform admin" notice -
       // invalidate it too so the change is visible without a hard refresh.
       queryClient.invalidateQueries({ queryKey: ['payment-gateway-catalog'] });
       toast.success(isEnabledPlatformWide ? 'Gateway enabled platform-wide.' : 'Gateway disabled platform-wide.');
@@ -94,7 +94,7 @@ export default function PaymentGatewayManagement() {
                 {sortedCatalog.map((entry) => (
                   <tr key={entry.type} className="border-t border-black/5">
                     <td className="px-4 py-3 font-medium text-regantify-text">{entry.displayName}</td>
-                    <td className="px-4 py-3 text-regantify-text-muted max-w-xs truncate">{entry.description || '—'}</td>
+                    <td className="px-4 py-3 text-regantify-text-muted max-w-xs truncate">{entry.description || '-'}</td>
                     <td className="px-4 py-3">
                       {entry.isImplemented ? (
                         <span
@@ -145,8 +145,8 @@ export default function PaymentGatewayManagement() {
 
       <h2 className="text-lg font-medium text-regantify-text mb-1">Vendor gateways</h2>
       <p className="text-sm text-regantify-text-muted mb-4">
-        Read-only — every vendor's connected/enabled payment gateways, across every store. Cash On Delivery and
-        Online Payment fees follow each vendor's plan automatically — edit a plan's fee at Plans &gt;
+        Read-only - every vendor's connected/enabled payment gateways, across every store. Cash On Delivery and
+        Online Payment fees follow each vendor's plan automatically - edit a plan's fee at Plans &gt;
         Manage Plans to change them.
       </p>
 

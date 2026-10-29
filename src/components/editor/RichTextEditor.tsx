@@ -34,7 +34,7 @@ interface RichTextEditorProps {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
-  /** Max plain-text length (HTML tags don't count) — typing past it is blocked and a counter is shown. */
+  /** Max plain-text length (HTML tags don't count) - typing past it is blocked and a counter is shown. */
   maxLength?: number;
 }
 
@@ -46,7 +46,7 @@ const FONT_SIZES = [
   { label: '5', px: '24px' },
 ];
 
-// TextStyle doesn't carry a fontSize attribute out of the box — this adds
+// TextStyle doesn't carry a fontSize attribute out of the box - this adds
 // one (as an inline style on the existing <span> mark TextStyle already
 // wraps text in) so the toolbar's font-size <select> has something real
 // to set/read. Kept local to this file since nothing else needs it.
@@ -107,7 +107,7 @@ function ToolbarButton({
 }
 
 /**
- * Tiptap-based rich text editor for the product description field —
+ * Tiptap-based rich text editor for the product description field -
  * mirrors the reference toolbar: bold/italic/underline/strike, alignment,
  * lists, font size, text/highlight color, link, image, divider, clear
  * formatting, embedded video, and an HTML source view toggle.
@@ -139,7 +139,7 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
     onCreate: ({ editor }) => setCharCount(editor.getText().length),
     onUpdate: ({ editor }) => {
       // Counts visible text only (getText() strips tags/attributes), so
-      // formatting marks (bold, links, colors) never eat into the limit —
+      // formatting marks (bold, links, colors) never eat into the limit -
       // only what the vendor actually sees as characters does. A paste or
       // keystroke that pushes past maxLength is rolled back right away
       // (undo + skip this onChange) rather than silently truncating mid-

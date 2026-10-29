@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Mirrors server/src/admin/admin-shoppers.controller.ts — Super Admin > Customers (super-admin-plan.md Step 8).
+// Mirrors server/src/admin/admin-shoppers.controller.ts - Super Admin > Customers (super-admin-plan.md Step 8).
 
 export interface ShopperSummary {
   phone: string;

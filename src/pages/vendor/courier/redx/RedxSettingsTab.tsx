@@ -16,7 +16,7 @@ import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 
 const REDX_PANEL_URL = 'https://redx.com.bd/developer-api/';
 
-/** Your RedX account — connect form when not connected; token summary + change/disconnect when connected. */
+/** Your RedX account - connect form when not connected; token summary + change/disconnect when connected. */
 function AccountCard({ overview }: { overview: RedxOverview }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -68,7 +68,7 @@ function AccountCard({ overview }: { overview: RedxOverview }) {
           <dl className="flex-1 space-y-1.5 text-sm">
             <div className="flex gap-1.5">
               <dt className="text-neutral-500">Access token:</dt>
-              <dd className="text-regantify-text">{overview.tokenMasked ?? '—'}</dd>
+              <dd className="text-regantify-text">{overview.tokenMasked ?? '-'}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-neutral-500">Last changed:</dt>
@@ -100,7 +100,7 @@ function AccountCard({ overview }: { overview: RedxOverview }) {
   );
 }
 
-/** Pickup store — where RedX collects every parcel from. Pick one of the account's stores, or add a new one. */
+/** Pickup store - where RedX collects every parcel from. Pick one of the account's stores, or add a new one. */
 function PickupStoreCard({ overview }: { overview: Extract<RedxOverview, { connected: true }> }) {
   const [creating, setCreating] = useState(false);
   return (
@@ -121,7 +121,7 @@ function PickupStoreCard({ overview }: { overview: Extract<RedxOverview, { conne
   );
 }
 
-/** Booking defaults — what every booking sends to RedX. Only sent to the server on Save. */
+/** Booking defaults - what every booking sends to RedX. Only sent to the server on Save. */
 function BookingDefaultsCard() {
   const queryClient = useQueryClient();
   const [saved, flashSaved] = useSavedFlash();
@@ -155,7 +155,7 @@ function BookingDefaultsCard() {
         onSubmit={(e) => {
           e.preventDefault();
           if (categoryMissing) return;
-          // statusMap / autoBook belong to their own cards — sending this
+          // statusMap / autoBook belong to their own cards - sending this
           // form's (possibly older) copy would undo that card's save.
           const { statusMap: _statusMap, autoBook: _autoBook, ...defaults } = form;
           mutation.mutate(defaults);

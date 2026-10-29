@@ -1,4 +1,4 @@
-// Builds a link to the public storefront app (storefront/ — a separate
+// Builds a link to the public storefront app (storefront/ - a separate
 // Next.js app, its own origin/port, not this dashboard). Same
 // auto-detect-from-current-host pattern as api.ts, so the SAME running
 // dashboard works unmodified from http://localhost:5173 and from a
@@ -7,7 +7,7 @@
 // host in dev.
 //
 // If VITE_ROOT_DOMAIN is set (e.g. gadgetdepobd.com), that's the real
-// production case — the storefront's own middleware.ts rewrites
+// production case - the storefront's own middleware.ts rewrites
 // {subdomain}.VITE_ROOT_DOMAIN to /store/:subdomain, so links point
 // straight at the subdomain host instead of the path, matching how a
 // shopper would actually reach the store. Falls back to
@@ -28,7 +28,7 @@ export function storefrontStoreUrl(subdomain: string): string {
   return storefrontOrigin(subdomain);
 }
 
-/** Link to one product's public storefront page — used by the small "view on storefront" icon wherever a product name is shown in the vendor dashboard. */
+/** Link to one product's public storefront page - used by the small "view on storefront" icon wherever a product name is shown in the vendor dashboard. */
 export function storefrontProductUrl(subdomain: string, slug: string): string {
   // The short public address (2026-10-16): /p/<slug>; the storefront still opens /product/<slug> and redirects it.
   return `${storefrontOrigin(subdomain)}/p/${slug}`;
@@ -37,7 +37,7 @@ export function storefrontProductUrl(subdomain: string, slug: string): string {
 /**
  * Link to one landing page's public URL (Store > Landing Pages' "Visit"
  * column). Landing pages live under /l/:slug, except the single reserved
- * slug "/" which means "this page IS the store's homepage" — see
+ * slug "/" which means "this page IS the store's homepage" - see
  * LandingPage.slug's schema comment and landing-plan.md §6.
  */
 export function storefrontLandingPageUrl(subdomain: string, slug: string): string {

@@ -31,11 +31,11 @@ const INVALIDATE_KEYS: Record<string, string[][]> = {
 
 /**
  * Finance > Wallet top-up / SMS Buy / AI Chat Bot Buy / plan upgrade's
- * shared landing page — PayStation's `callback_url` (see
+ * shared landing page - PayStation's `callback_url` (see
  * PaymentsController.initiate) always points back here with
  * `?invoice=...`. Never trusts a query-param "it worked" signal from
  * the redirect itself (PayStation's own hosted checkout doesn't send
- * one anyway, just a bare redirect) — always calls the server's
+ * one anyway, just a bare redirect) - always calls the server's
  * reconcile endpoint, which re-verifies with PayStation server-to-
  * server before crediting anything (see PaymentsService.reconcile).
  * Polls a few times since the IPN and this page's own reconcile call

@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Mirrors server/src/admin/admin-orders.controller.ts — Super Admin > Orders (super-admin-plan.md Step 7).
+// Mirrors server/src/admin/admin-orders.controller.ts - Super Admin > Orders (super-admin-plan.md Step 7).
 
 export interface AdminOrderQuery {
   q?: string;

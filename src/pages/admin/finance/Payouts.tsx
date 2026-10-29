@@ -82,8 +82,8 @@ function PaidDialog({ rows, onClose, onDone }: { rows: AdminWithdrawRequest[]; o
 }
 
 /**
- * Super Admin > Finance > Payouts — the admin side of Finance > Withdraw's vendor request flow. Defaults to the PENDING tab. Approve/Reject resolve a pending
- * request (Reject restores the vendor's reserved balance — see AdminService.resolveWithdrawRequest); an Approved one gets "Mark as paid" once the money
+ * Super Admin > Finance > Payouts - the admin side of Finance > Withdraw's vendor request flow. Defaults to the PENDING tab. Approve/Reject resolve a pending
+ * request (Reject restores the vendor's reserved balance - see AdminService.resolveWithdrawRequest); an Approved one gets "Mark as paid" once the money
  * was really sent (alone or ticked in a batch, with the bKash/bank reference). Filters by method, dates and store; CSV for the batch to send.
  */
 export default function Payouts() {
@@ -110,7 +110,7 @@ export default function Payouts() {
     onSuccess: (r, { decision }) => {
       refresh();
       if (isPendingApproval(r)) return toastPendingApproval();
-      toast.success(decision === 'APPROVED' ? 'Request approved.' : 'Request rejected — balance restored.');
+      toast.success(decision === 'APPROVED' ? 'Request approved.' : 'Request rejected - balance restored.');
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not resolve this request. Please try again.')),
   });
@@ -236,7 +236,7 @@ export default function Payouts() {
                   </td>
                   <td className="px-4 py-3 text-regantify-text">{METHOD_LABEL[r.method]}</td>
                   <td className="max-w-[220px] whitespace-pre-wrap px-4 py-3 text-regantify-text-muted">{r.method === 'BANK' ? r.bankDetails : r.receiverNumber}</td>
-                  <td className="max-w-[200px] px-4 py-3 text-regantify-text-muted">{r.note ?? '—'}</td>
+                  <td className="max-w-[200px] px-4 py-3 text-regantify-text-muted">{r.note ?? '-'}</td>
                   <td className="whitespace-nowrap px-4 py-3 text-regantify-text-muted">{formatDateTime(r.createdAt)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[r.status]}`}>{r.status.charAt(0) + r.status.slice(1).toLowerCase()}</span>

@@ -8,7 +8,7 @@ interface RedxStorePickerProps {
 }
 
 /**
- * The RedX page's pickup store picker (Settings › Pickup Store) — same
+ * The RedX page's pickup store picker (Settings › Pickup Store) - same
  * "pick a pickup store once, reuse on every booking" shape as the Pathao
  * page's Pickup Store card. Picking a store here is what
  * RedxProvider.bookOrder reads as the pickup point for every booking.
@@ -38,7 +38,7 @@ export function RedxStorePicker({ currentStoreId }: RedxStorePickerProps) {
     return <p className="text-sm text-red-600">Could not load your RedX stores. Please try again.</p>;
   }
   if (stores.length === 0) {
-    return <p className="text-sm text-neutral-500">No pickup stores on your RedX account yet — add one below.</p>;
+    return <p className="text-sm text-neutral-500">No pickup stores on your RedX account yet - add one below.</p>;
   }
 
   return (
@@ -59,7 +59,7 @@ export function RedxStorePicker({ currentStoreId }: RedxStorePickerProps) {
         {stores.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}
-            {s.areaName ? ` — ${s.areaName}` : ''}
+            {s.areaName ? ` - ${s.areaName}` : ''}
           </option>
         ))}
       </select>

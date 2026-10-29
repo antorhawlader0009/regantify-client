@@ -29,10 +29,10 @@ import type {
 /**
  * Renders the settings form for whichever section is selected in the
  * builder's left rail. One component per section type, dispatched by
- * `type` — the editor half of the shared section registry contract
+ * `type` - the editor half of the shared section registry contract
  * (landing-page-sections.md).
  *
- * Every form is "controlled by props, commits through onChange" — it
+ * Every form is "controlled by props, commits through onChange" - it
  * never holds its own copy of the section state, so the live preview
  * updates as the vendor types.
  */
@@ -127,9 +127,9 @@ function HeadingForm({ props, onChange }: { props: HeadingProps; onChange: (p: R
           value={props.level ?? 'h2'}
           onChange={(level) => set({ level })}
           options={[
-            { value: 'h1', label: 'H1 — Main headline' },
-            { value: 'h2', label: 'H2 — Section title' },
-            { value: 'h3', label: 'H3 — Sub-heading' },
+            { value: 'h1', label: 'H1 - Main headline' },
+            { value: 'h2', label: 'H2 - Section title' },
+            { value: 'h3', label: 'H3 - Sub-heading' },
           ]}
         />
       </Field>
@@ -174,8 +174,8 @@ function ImageForm({ props, onChange }: { props: ImageProps; onChange: (p: Recor
           value={props.fit ?? 'cover'}
           onChange={(fit) => set({ fit })}
           options={[
-            { value: 'cover', label: 'Cover — fill the space, may crop' },
-            { value: 'contain', label: 'Contain — show the whole image' },
+            { value: 'cover', label: 'Cover - fill the space, may crop' },
+            { value: 'contain', label: 'Contain - show the whole image' },
           ]}
         />
       </Field>
@@ -416,7 +416,7 @@ function SelectProductsForm({
           value={layout}
           onChange={(l) => set({ layout: l })}
           options={[
-            { value: 'single', label: 'Single — one large card' },
+            { value: 'single', label: 'Single - one large card' },
             { value: 'grid', label: 'Grid' },
             { value: 'carousel', label: 'Carousel' },
           ]}
@@ -622,7 +622,7 @@ function CustomerReviewsForm({
       <AddRowButton label="+ Add review" onClick={() => set({ reviews: [...reviews, { name: '', text: '' }] })} />
 
       <p className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10.5px] leading-relaxed text-amber-800">
-        These are testimonials you write yourself — they are not your store's verified customer reviews.
+        These are testimonials you write yourself - they are not your store's verified customer reviews.
         Only publish what real customers actually said.
       </p>
     </div>

@@ -74,7 +74,7 @@ export function canMoveOrderStatus(from: OrderStatus, to: OrderStatus, zone?: st
 }
 
 // PAYMENT_INITIATED included by default (mirrors OrdersService's own
-// DEFAULT_TABS server-side) — a storefront order stuck awaiting a
+// DEFAULT_TABS server-side) - a storefront order stuck awaiting a
 // gateway redirect the shopper abandoned/never completed otherwise only
 // ever shows under "All", with no dedicated tab a vendor would think to
 // check.
@@ -86,7 +86,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   SHIPPING: 'Shipping',
   COMPLETED: 'Completed',
   ON_HOLD: 'On Hold',
-  // Shown as its own Orders-page tab (see DEFAULT_TABS) — "Incomplete
+  // Shown as its own Orders-page tab (see DEFAULT_TABS) - "Incomplete
   // Payment" reads clearer to a vendor than "Payment Initiated" (which
   // sounds like something still actively in progress, not abandoned).
   PAYMENT_INITIATED: 'Incomplete Payment',

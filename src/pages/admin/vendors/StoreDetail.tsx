@@ -39,8 +39,8 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
-const when = (iso: string | null) => (iso ? formatDhakaDateTime(iso) : '—');
-const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+const when = (iso: string | null) => (iso ? formatDhakaDateTime(iso) : '-');
+const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-');
 
 function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
   return (
@@ -255,9 +255,9 @@ function Overview({ d }: { d: StoreDetail }) {
     <div className="grid gap-4 lg:grid-cols-2">
       <HealthAndTags id={d.id} />
       <Card title="Owner">
-        <Row label="Name">{d.owner.name ?? '—'}</Row>
-        <Row label="Phone">{d.owner.phone ?? '—'}</Row>
-        <Row label="Email">{d.owner.email ?? '—'}</Row>
+        <Row label="Name">{d.owner.name ?? '-'}</Row>
+        <Row label="Phone">{d.owner.phone ?? '-'}</Row>
+        <Row label="Email">{d.owner.email ?? '-'}</Row>
         <Row label="Last sign-in">{when(d.owner.lastLoginAt)}</Row>
       </Card>
       <Card title="Store">
@@ -266,9 +266,9 @@ function Overview({ d }: { d: StoreDetail }) {
             {d.subdomain} <ExternalLink size={12} />
           </a>
         </Row>
-        <Row label="Own domain">{d.customDomain ?? '—'}</Row>
+        <Row label="Own domain">{d.customDomain ?? '-'}</Row>
         <Row label="Theme">{d.theme}</Row>
-        <Row label="Address">{d.address ?? '—'}</Row>
+        <Row label="Address">{d.address ?? '-'}</Row>
         <Row label="Created">{when(d.createdAt)}</Row>
       </Card>
       <Card title="Plan">
@@ -430,7 +430,7 @@ function Money({ id }: { id: string }) {
                   <tr key={p.id} className="border-t border-black/5">
                     <td className="px-4 py-2 whitespace-nowrap">{when(p.createdAt)}</td>
                     <td className="px-4 py-2">{p.purpose.replace(/_/g, ' ').toLowerCase()}{p.packageId ? ` (${p.packageId})` : ''}</td>
-                    <td className="px-4 py-2">{p.receiptNumber ? `RCPT-${String(p.receiptNumber).padStart(6, '0')}` : '—'}</td>
+                    <td className="px-4 py-2">{p.receiptNumber ? `RCPT-${String(p.receiptNumber).padStart(6, '0')}` : '-'}</td>
                     <td className="px-4 py-2">{p.status.toLowerCase()}{p.status === 'SUCCESS' && !p.fulfilledAt ? ' (not applied!)' : ''}</td>
                     <td className="px-4 py-2 text-right tabular-nums">{formatTaka(p.amount)}</td>
                   </tr>
@@ -905,7 +905,7 @@ export default function StoreDetailPage() {
             { head: 'Product', cell: (p) => p.name },
             { head: 'SKU', cell: (p) => p.sku },
             { head: 'Shown', cell: (p) => p.visibility.toLowerCase() },
-            { head: 'Stock', right: true, cell: (p) => (p.stockQuantity === null ? '—' : p.stockQuantity) },
+            { head: 'Stock', right: true, cell: (p) => (p.stockQuantity === null ? '-' : p.stockQuantity) },
             { head: 'Price', right: true, cell: (p) => formatTaka(p.discountPrice ?? p.price) },
           ]} />
         )}

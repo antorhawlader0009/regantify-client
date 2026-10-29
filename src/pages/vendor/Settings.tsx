@@ -252,7 +252,7 @@ function GeneralTab() {
                 <p className="break-all">{storefrontStoreUrl(subdomain || '…')}</p>
                 {subdomainChanged && (
                   <p className="mt-1 text-amber-600">
-                    Changing this immediately moves your live store — old links to your current URL will stop working.
+                    Changing this immediately moves your live store - old links to your current URL will stop working.
                   </p>
                 )}
               </>
@@ -420,7 +420,7 @@ function SecurityTab() {
   return (
     <>
       <Section title="Login" description="The phone number you sign in with.">
-        <Field label="Phone number" hint="This is how you log in — it can't be changed here.">
+        <Field label="Phone number" hint="This is how you log in - it can't be changed here.">
           <IconInput icon={Phone} type="text" value={user?.phone ?? ''} readOnly disabled />
         </Field>
       </Section>

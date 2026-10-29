@@ -4,7 +4,7 @@ export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL';
 
 export interface VendorThemeInfo {
   theme: StoreTheme;
-  // Which themes the vendor's current plan unlocks (PLAN.md Step 7) —
+  // Which themes the vendor's current plan unlocks (PLAN.md Step 7) -
   // Themes.tsx uses this to show locked cards with an "Upgrade to
   // unlock" badge instead of a plain Select button.
   allowedThemes: StoreTheme[];
@@ -20,7 +20,7 @@ export async function updateVendorTheme(theme: StoreTheme): Promise<StoreTheme> 
   return data.theme;
 }
 
-// Store > Social — every field optional/nullable; a vendor only fills
+// Store > Social - every field optional/nullable; a vendor only fills
 // in the platforms they actually use. See Vendor.facebookUrl etc in
 // schema.prisma for the full field set this mirrors one-to-one.
 export interface SocialLinks {
@@ -44,7 +44,7 @@ export async function updateVendorSocialLinks(links: Partial<SocialLinks>): Prom
 }
 
 // Settings > Store name / Store URL / Address. Store name and Store URL
-// (subdomain) are deliberately separate fields — changing the name is
+// (subdomain) are deliberately separate fields - changing the name is
 // just a display-label edit, while changing the URL immediately moves
 // where the live storefront is reachable (see VendorController.updateSettings).
 export interface VendorSettings {
@@ -68,10 +68,10 @@ export async function updateVendorSettings(
 }
 
 // Store > Delivery Charge / VAT.
-// Values are BDT amounts — insideDhakaCharge/outsideDhakaCharge drive the
+// Values are BDT amounts - insideDhakaCharge/outsideDhakaCharge drive the
 // storefront checkout's zone-based shipping charge, vatChargeBdt is a
 // flat fee added to EVERY order regardless of payment method (see
-// Vendor.vatChargeBdt in schema.prisma / OrdersService.create) — a
+// Vendor.vatChargeBdt in schema.prisma / OrdersService.create) - a
 // gateway's own Platform Charge (Store > Payment Gateway,
 // paymentGatewaysApi) is a separate, independent setting. All three ship
 // as strings from the API (Prisma Decimal), same convention as
@@ -206,7 +206,7 @@ export async function getVendorLogo(): Promise<string | null> {
   return data.logoUrl;
 }
 
-// Store > Logo's upload action — same pattern as Settings' own
+// Store > Logo's upload action - same pattern as Settings' own
 // profile-picture upload (see authApi.uploadAvatar): the server
 // resizes/recompresses the file itself, so it's sent as picked with no
 // client-side processing first.
@@ -219,7 +219,7 @@ export async function uploadVendorLogo(file: File): Promise<string | null> {
   return data.logoUrl;
 }
 
-// Store > Branding — see Vendor.accentColor etc in schema.prisma for the
+// Store > Branding - see Vendor.accentColor etc in schema.prisma for the
 // full field set this mirrors one-to-one. logoUrl is included read-only
 // (saved via the separate uploadVendorLogo action above) so the
 // Branding page can preview it without a second fetch.
@@ -245,7 +245,7 @@ export async function getVendorBranding(): Promise<Branding> {
   return data;
 }
 
-// Store > Branding's "Update Branding" action — colors/fonts/meta only.
+// Store > Branding's "Update Branding" action - colors/fonts/meta only.
 // logoUrl/faviconUrl/brandCoverImageUrl are excluded from the request
 // shape (they're read-only here, saved via their own upload actions
 // below), same split Store > Logo already has.
@@ -256,7 +256,7 @@ export async function updateVendorBranding(
   return data;
 }
 
-// Store > Branding's favicon upload action — same multipart pattern as uploadVendorLogo.
+// Store > Branding's favicon upload action - same multipart pattern as uploadVendorLogo.
 export async function uploadVendorFavicon(file: File): Promise<string | null> {
   const formData = new FormData();
   formData.append('favicon', file);
@@ -266,7 +266,7 @@ export async function uploadVendorFavicon(file: File): Promise<string | null> {
   return data.faviconUrl;
 }
 
-// Store > Branding's cover-photo upload action — same multipart pattern as uploadVendorLogo.
+// Store > Branding's cover-photo upload action - same multipart pattern as uploadVendorLogo.
 export async function uploadVendorBrandCover(file: File): Promise<string | null> {
   const formData = new FormData();
   formData.append('cover', file);
@@ -276,7 +276,7 @@ export async function uploadVendorBrandCover(file: File): Promise<string | null>
   return data.brandCoverImageUrl;
 }
 
-// Store > Domain — a bare hostname, no protocol/path. null = no custom
+// Store > Domain - a bare hostname, no protocol/path. null = no custom
 // domain connected yet (the store is still reachable at its subdomain
 // either way).
 export async function getVendorDomain(): Promise<string | null> {

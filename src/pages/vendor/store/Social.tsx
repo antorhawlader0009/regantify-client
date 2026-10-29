@@ -84,7 +84,7 @@ export default function Social() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Social</h1>
         <p className="text-sm text-regantify-text-muted mt-1">
-          Add links to your store&apos;s social profiles — they&apos;ll show as icons in your storefront footer. Leave a
+          Add links to your store&apos;s social profiles - they&apos;ll show as icons in your storefront footer. Leave a
           field blank to hide that icon.
         </p>
       </div>

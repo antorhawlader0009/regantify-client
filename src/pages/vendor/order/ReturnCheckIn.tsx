@@ -90,7 +90,7 @@ function ParcelCard({
               </p>
             </div>
             {done ? (
-              <span className="text-sm text-neutral-600">{l.outcome ? RETURN_OUTCOME_LABELS[l.outcome] : '—'}</span>
+              <span className="text-sm text-neutral-600">{l.outcome ? RETURN_OUTCOME_LABELS[l.outcome] : '-'}</span>
             ) : (
               <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={`What happened to ${l.productName}`}>
                 {OUTCOMES.map((o) => (

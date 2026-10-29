@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Orders > Standing orders (TellMe idea 149) — mirrors the server's StandingOrdersService (server/src/orders/standing-orders.service.ts).
+// Orders > Standing orders (TellMe idea 149) - mirrors the server's StandingOrdersService (server/src/orders/standing-orders.service.ts).
 
 export interface StandingLine {
   productId: string;

@@ -14,7 +14,7 @@ import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 
 const STEADFAST_PANEL_URL = 'https://steadfast.com.bd/login';
 
-/** Your SteadFast account — connect form when not connected; key summary + change/disconnect when connected. */
+/** Your SteadFast account - connect form when not connected; key summary + change/disconnect when connected. */
 function AccountCard({ overview }: { overview: SteadfastOverview }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -69,7 +69,7 @@ function AccountCard({ overview }: { overview: SteadfastOverview }) {
           <dl className="flex-1 space-y-1.5 text-sm">
             <div className="flex gap-1.5">
               <dt className="text-neutral-500">API key:</dt>
-              <dd className="text-regantify-text">{overview.apiKeyMasked ?? '—'}</dd>
+              <dd className="text-regantify-text">{overview.apiKeyMasked ?? '-'}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-neutral-500">Last changed:</dt>
@@ -101,7 +101,7 @@ function AccountCard({ overview }: { overview: SteadfastOverview }) {
   );
 }
 
-/** Booking defaults — what every booking sends to SteadFast. Only sent to the server on Save. */
+/** Booking defaults - what every booking sends to SteadFast. Only sent to the server on Save. */
 function BookingDefaultsCard() {
   const queryClient = useQueryClient();
   const [saved, flashSaved] = useSavedFlash();
@@ -133,7 +133,7 @@ function BookingDefaultsCard() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          // statusMap / autoBook belong to their own cards — sending this
+          // statusMap / autoBook belong to their own cards - sending this
           // form's (possibly older) copy would undo that card's save.
           const { statusMap: _statusMap, autoBook: _autoBook, ...defaults } = form;
           mutation.mutate(defaults);
@@ -203,7 +203,7 @@ function BookingDefaultsCard() {
   );
 }
 
-/** Customer delivery check — SteadFast's fraud check under each phone on the Orders page. */
+/** Customer delivery check - SteadFast's fraud check under each phone on the Orders page. */
 function DeliveryCheckCard({ overview }: { overview: SteadfastOverview }) {
   return (
     <CourierCard

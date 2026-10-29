@@ -1,7 +1,7 @@
 import { toast as sonnerToast } from 'sonner';
 
 /**
- * Thin wrapper around sonner — components import this instead of sonner
+ * Thin wrapper around sonner - components import this instead of sonner
  * directly, so if we ever swap toast libraries or want to change default
  * behavior (duration, icons, etc.) app-wide, it's one place to edit.
  */

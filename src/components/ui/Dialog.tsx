@@ -6,13 +6,13 @@ interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
-  /** Optional — omit for a modal with no visible header (matches the existing Add Category/Brand modals). */
+  /** Optional - omit for a modal with no visible header (matches the existing Add Category/Brand modals). */
   title?: string;
   maxWidth?: string; // Tailwind max-w-* class, e.g. "max-w-lg"
 }
 
 /**
- * Radix-backed modal — handles focus trap, Escape-to-close, and
+ * Radix-backed modal - handles focus trap, Escape-to-close, and
  * click-outside-to-close for free. Dashboard theme: white panel with a
  * hairline border, 15px title, a square close button. Callers add their
  * own body padding, as before.

@@ -21,7 +21,7 @@ type FormValues = z.infer<typeof schema>;
 
 /**
  * Shown right after a brand-new vendor account is auto-created. No SMS
- * has been sent yet at this point — the vendor chooses here: set their
+ * has been sent yet at this point - the vendor chooses here: set their
  * own password now (sends a welcome confirmation SMS), or skip and get a
  * system-generated temporary password texted to them instead. Either way
  * (set or skip), the vendor is then sent to the mandatory "complete your
@@ -58,7 +58,7 @@ export default function VendorSetPassword() {
     try {
       await authApi.skipSetPassword();
     } catch {
-      // Non-fatal — a temporary password was still saved server-side even
+      // Non-fatal - a temporary password was still saved server-side even
       // if this particular SMS notification failed, so don't block
       // navigation on this call failing.
     } finally {

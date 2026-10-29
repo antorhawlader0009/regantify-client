@@ -58,7 +58,7 @@ export function normalizeCourierStatus(raw: string | null | undefined): string {
 
 // Client mirror of server/src/courier/providers/steadfast-status.ts's
 // STEADFAST_STATUSES. Anything ending "approval pending" is only the
-// rider's word — neutral until SteadFast confirms it.
+// rider's word - neutral until SteadFast confirms it.
 const STEADFAST_STATUSES: Record<string, StatusInfo> = {
   in_review: { label: 'In review', tone: 'neutral' },
   pending: { label: 'Pending', tone: 'progress' },

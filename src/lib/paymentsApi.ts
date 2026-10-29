@@ -1,10 +1,10 @@
 import { api } from './api';
 
-// PayStation — the one payment rail Finance > Wallet's Add Money,
+// PayStation - the one payment rail Finance > Wallet's Add Money,
 // SMS > Buy SMS, AI Chat Bot > Buy, and Billing > Pay with PayStation
 // all go through. Mirrors the server's PaymentPurpose/PaymentStatus
 // enums exactly (STOREFRONT_ORDER isn't listed here since it's
-// initiated from storefront/, not this dashboard — see
+// initiated from storefront/, not this dashboard - see
 // storefront/src/lib/checkoutApi.ts's own copy).
 export type PaymentPurpose = 'WALLET_TOPUP' | 'SMS_PACKAGE' | 'CHATBOT_PACKAGE' | 'PLAN_UPGRADE';
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
@@ -27,12 +27,12 @@ export interface PromoQuote {
 export interface InitiatePaymentResult {
   invoiceNumber: string;
   paymentUrl: string;
-  // The real payable total actually sent to PayStation — includes
+  // The real payable total actually sent to PayStation - includes
   // deficitCleared below on top of whatever's being bought (see
   // PaymentsService.initiate's own comment on why).
   amount: number;
   // How much of `amount` is this vendor's own negative Vendor.balance
-  // being paid off as a side effect of this purchase — 0 in the normal
+  // being paid off as a side effect of this purchase - 0 in the normal
   // case (balance already >= 0). See PaymentTransaction.deficitCleared.
   deficitCleared: number;
 }
@@ -66,7 +66,7 @@ export const paymentsApi = {
   // What a plan costs with a promo code (nothing is saved or counted until the payment goes through).
   promoCheck: (planCode: string, code: string) => api.post<PromoQuote>('/v1/payments/promo-check', { planCode, code }).then((r) => r.data),
 
-  // Starts a PayStation checkout session — redirect the browser to the
+  // Starts a PayStation checkout session - redirect the browser to the
   // returned paymentUrl (see Wallet.tsx / BuySmsDialog / BuyChatBotDialog).
   initiate: (payload: InitiatePaymentPayload) =>
     api.post<InitiatePaymentResult>('/v1/payments/initiate', payload).then((r) => r.data),
@@ -76,7 +76,7 @@ export const paymentsApi = {
   walletPay: (payload: { purpose: 'SMS_PACKAGE' | 'CHATBOT_PACKAGE' | 'PLAN_UPGRADE'; packageId: string; promoCode?: string }) =>
     api.post<{ invoiceNumber: string; amount: number; balance: number }>('/v1/payments/wallet-pay', payload).then((r) => r.data),
 
-  // Payment-callback page's own re-verification — never trust the
+  // Payment-callback page's own re-verification - never trust the
   // redirect's own query params, always ask the server to confirm with
   // PayStation itself.
   reconcile: (invoiceNumber: string) =>

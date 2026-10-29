@@ -15,7 +15,7 @@ const GOALS: Array<{ value: Goal; label: string; description: string }> = [
 
 /**
  * Store > Landing Pages > AI Generate (landing-plan.md §5, Step 10).
- * Deliberately does NOT persist anything itself — `onGenerated` hands the
+ * Deliberately does NOT persist anything itself - `onGenerated` hands the
  * drafted sections back to LandingPageBuilder, which appends them to the
  * current local draft (same "commit on Save" flow every other builder
  * edit already goes through). This is what makes AI Generate compose
@@ -112,7 +112,7 @@ export function AiGenerateModal({
                 className="w-full rounded-lg border border-line bg-white px-2.5 py-2 text-[12.5px]
                   text-regantify-text [&>option]:bg-white focus:border-violet-400 focus:outline-none"
               >
-                <option value="">No product selected — type name/offer below</option>
+                <option value="">No product selected - type name/offer below</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -127,7 +127,7 @@ export function AiGenerateModal({
               <Field label="Product name or offer">
                 <TextInput value={productName} onChange={setProductName} placeholder="e.g. Wireless Bluetooth Earbuds" />
               </Field>
-              <Field label="Short summary (optional)" hint="A sentence or two — helps the draft be more specific.">
+              <Field label="Short summary (optional)" hint="A sentence or two - helps the draft be more specific.">
                 <TextArea value={productSummary} onChange={setProductSummary} rows={2} placeholder="e.g. Noise-cancelling, 30h battery, waterproof" />
               </Field>
             </>

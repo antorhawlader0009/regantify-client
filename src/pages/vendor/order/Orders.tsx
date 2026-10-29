@@ -188,7 +188,7 @@ const COURIER_SEND_HINT: Record<BookableCourier, string> = {
 async function copyTrackingId(id: string) {
   try {
     await navigator.clipboard.writeText(id);
-    toast.success('Tracking ID copied — share it with the customer.');
+    toast.success('Tracking ID copied - share it with the customer.');
   } catch {
     toast.error('Could not copy. Open the order and copy the ID yourself.');
   }
@@ -219,25 +219,25 @@ interface OrderRowProps {
   onCheckHistory: (phone: string) => void;
   onChangeLabel: (order: Order) => void;
   onShowInvoice: (order: Order) => void;
-  // PLAN.md Step 11 — Free: Steadfast only, paid tiers: also Pathao.
+  // PLAN.md Step 11 - Free: Steadfast only, paid tiers: also Pathao.
   // Undefined while the vendor's plan hasn't loaded yet, treated the
   // same as false (locked) so the picker never briefly shows Pathao as
   // selectable before the real plan is known.
   otherCouriersAllowed: boolean | undefined;
-  // COURIER-PLAN.md §5.2 — which providers this vendor already has an
+  // COURIER-PLAN.md §5.2 - which providers this vendor already has an
   // active account for. Undefined while still loading, treated the same
   // as "not connected" so a click never sneaks past the setup popup
   // before the real connection state is known.
   connectedProviders: Set<CourierAccountProvider> | undefined;
   // Called instead of proceeding when the vendor picks/books a provider
-  // they haven't connected yet — the parent owns the actual modal since
+  // they haven't connected yet - the parent owns the actual modal since
   // it's shared across every row (see COURIER-PLAN.md §5.2).
   onRequestSetup: (provider: CourierAccountProvider, retry: () => void) => void;
   // "Book with Pathao" opens the shared booking popup (pathao-plan.md
   // Step 4) instead of booking blind; the parent owns it, like the
   // setup popup above.
   onBookPathao: (order: Order) => void;
-  // Courier timeline / SteadFast return / RedX cancel popups — parent-owned, shared by every row.
+  // Courier timeline / SteadFast return / RedX cancel popups - parent-owned, shared by every row.
   onShowTimeline: (order: Order) => void;
   onRequestReturn: (order: Order) => void;
   onCancelRedx: (order: Order) => void;
@@ -320,7 +320,7 @@ function OrderRow({
     return provider !== 'STEADFAST' && !otherCouriersAllowed;
   }
 
-  // "Only mark as sent to {Provider}" — the plain label (for vendors who
+  // "Only mark as sent to {Provider}" - the plain label (for vendors who
   // book in the courier's own panel), still gated behind the "connected?"
   // check (COURIER-PLAN.md §5.2) so it can be booked from here later.
   function selectCourier(provider: BookableCourier) {
@@ -335,7 +335,7 @@ function OrderRow({
     courierMutation.mutate(provider);
   }
 
-  // "Send to SteadFast / RedX" — assign (when needed) and book in one go,
+  // "Send to SteadFast / RedX" - assign (when needed) and book in one go,
   // the real API call. A FAILED order can be sent again (retry); a
   // BOOKED one can't.
   const sendMutation = useMutation({
@@ -532,7 +532,7 @@ function OrderRow({
         {order.courierProvider !== 'NONE' && (
           <>
             <p className="mt-1.5 text-xs text-neutral-500">{COURIER_LABELS[order.courierProvider]}</p>
-            {/* Real booking state — COURIER-PLAN.md §5.3. NOT_BOOKED shows
+            {/* Real booking state - COURIER-PLAN.md §5.3. NOT_BOOKED shows
                 nothing extra here (the provider label above already says
                 which courier is chosen; "Book with..." lives in Actions). */}
             {order.courierBookingStatus === 'BOOKED' && (
@@ -928,7 +928,7 @@ export default function Orders() {
   const [cancelRedxOrder, setCancelRedxOrder] = useState<Order | null>(null);
   const [cancelCarrybeeOrder, setCancelCarrybeeOrder] = useState<Order | null>(null);
   const [carrybeePlaceOrder, setCarrybeePlaceOrder] = useState<Order | null>(null);
-  // COURIER-PLAN.md §5.2 — the "not connected → setup popup" flow.
+  // COURIER-PLAN.md §5.2 - the "not connected → setup popup" flow.
   // setupPending holds the action (courier selection or booking) that
   // triggered the popup, so it can run automatically once the vendor
   // connects instead of making them re-click. null closes the modal.
@@ -959,7 +959,7 @@ export default function Orders() {
   const [cartLinkOpen, setCartLinkOpen] = useState(false);
   const isOwner = useCan('owner');
   const assignment = useAssignment();
-  // Bulk "Send to Pathao / SteadFast / RedX" — which courier and which orders; null = dialog closed.
+  // Bulk "Send to Pathao / SteadFast / RedX" - which courier and which orders; null = dialog closed.
   const [bulkBooking, setBulkBooking] = useState<{ provider: BulkCourierProvider; ids: string[] } | null>(null);
   useEffect(() => setSelectedIds(new Set()), [search, activeTab, perPage, dateFrom, dateTo, trashView, page, courierBooking]);
   function toggleSelected(orderId: string) {
@@ -976,7 +976,7 @@ export default function Orders() {
     queryFn: () => ordersApi.getStatusTabs(),
   });
 
-  // Which providers this vendor has already connected — every OrderRow's
+  // Which providers this vendor has already connected - every OrderRow's
   // courier picker/booking action checks this before proceeding (see
   // COURIER-PLAN.md §5.2). One shared query for the whole list rather
   // than each row fetching its own copy.
@@ -988,9 +988,9 @@ export default function Orders() {
     ? new Set(courierAccounts.filter((a) => a.isActive).map((a) => a.provider))
     : undefined;
 
-  // PLAN.md Step 11 — Free: Steadfast only, paid tiers: also Pathao. No
+  // PLAN.md Step 11 - Free: Steadfast only, paid tiers: also Pathao. No
   // dedicated Plan column for this (the source-of-truth table shows the
-  // same ✓ for every paid tier, undifferentiated) — plan.code !== 'FREE'
+  // same ✓ for every paid tier, undifferentiated) - plan.code !== 'FREE'
   // is the exact match for "paid tier unlocks more courier options".
   const { data: planUsage } = useQuery({
     queryKey: ['vendor-plan-usage'],
@@ -1000,7 +1000,7 @@ export default function Orders() {
 
   // Orders are unlimited in total; the plan caps one Dhaka day (Free 1,000 ... Advance 30,000). Server
   // already hard-blocks both STOREFRONT and MANUAL orders at the cap
-  // (OrdersService.create) — this is purely so a Free vendor at the cap
+  // (OrdersService.create) - this is purely so a Free vendor at the cap
   // doesn't click through to the Add Order form only to fail on submit,
   // same "surface value before the vendor hits the wall" precedent as
   // Staff.tsx's Add New button (Step 10) and AllProducts.tsx's Add New
@@ -1826,7 +1826,7 @@ export default function Orders() {
         onOpenChange={(open) => !open && setSetupPending(null)}
         onConnected={() => {
           // Re-run whatever action (courier selection or booking)
-          // triggered the popup — the vendor shouldn't have to re-click
+          // triggered the popup - the vendor shouldn't have to re-click
           // after connecting (COURIER-PLAN.md §5.2).
           setupPending?.retry();
           setSetupPending(null);

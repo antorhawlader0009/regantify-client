@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { StockMovement } from './productsApi';
 
-// Product > Stock count and Stock history — mirrors the server's StockCountService (server/src/products/stock-count.service.ts).
+// Product > Stock count and Stock history - mirrors the server's StockCountService (server/src/products/stock-count.service.ts).
 
 /** One thing to count: a product, or one option (variant) of it. */
 export interface CountRow {

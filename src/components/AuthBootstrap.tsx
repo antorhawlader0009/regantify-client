@@ -4,7 +4,7 @@ import { useAuthStore, type AuthUser } from '../store/authStore';
 import { isNetworkError, offlineUser } from '../lib/posOffline';
 
 // /vendor-impersonate is opened in a brand-new tab from Super Admin's
-// "Login as Vendor" (see VendorImpersonateEntry.tsx) — it must NEVER run
+// "Login as Vendor" (see VendorImpersonateEntry.tsx) - it must NEVER run
 // the cookie-based refresh below. That tab is in the SAME browser as the
 // admin's own session, so a normal refresh() there would silently log
 // the tab in as the ADMIN (whoever's httpOnly refresh cookie is present),
@@ -13,14 +13,14 @@ import { isNetworkError, offlineUser } from '../lib/posOffline';
 const SKIP_COOKIE_REFRESH_PATHS = ['/vendor-impersonate'];
 
 /**
- * The access token and user object only ever live in memory (Zustand) —
+ * The access token and user object only ever live in memory (Zustand) -
  * that's fine for normal navigation, but a hard page reload wipes them,
  * even though the httpOnly refresh-token cookie is still valid. Without
  * this, ProtectedRoute would see accessToken === null right after reload
  * and immediately bounce a still-logged-in vendor/admin back to login.
  *
  * This component runs once on mount, tries a silent refresh, and only
- * then lets the rest of the app (and ProtectedRoute) render — a missing
+ * then lets the rest of the app (and ProtectedRoute) render - a missing
  * or expired cookie is a normal, expected outcome here, not an error.
  */
 export function AuthBootstrap({ children }: { children: React.ReactNode }) {
@@ -43,7 +43,7 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
       })
       .catch((err: unknown) => {
         // No valid refresh cookie (never logged in, logged out, or
-        // expired) — this is the normal "not logged in" case, not a
+        // expired) - this is the normal "not logged in" case, not a
         // failure to surface to the user.
         //
         // POS offline (POS-system-plan.md Step 13): no answer at all on the

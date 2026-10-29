@@ -1,7 +1,7 @@
 import { api } from './api';
 
 // Store > Design > Product Display / Product Card / Site Banner / Header
-// Editor / Layout Settings — mirrors the server's DesignSettingsService
+// Editor / Layout Settings - mirrors the server's DesignSettingsService
 // (server/src/store-settings/). One owner-only row per vendor; each page
 // PATCHes only its own fields. Only the StorePal storefront reads it.
 

@@ -54,7 +54,7 @@ function copy(text: string, what: string) {
 }
 
 /**
- * Store > Integrations > External API — API keys for /v1/external/*
+ * Store > Integrations > External API - API keys for /v1/external/*
  * (server/src/external-api/).
  */
 export default function ExternalApi() {

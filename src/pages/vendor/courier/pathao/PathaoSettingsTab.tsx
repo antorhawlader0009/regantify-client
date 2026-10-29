@@ -15,7 +15,7 @@ import { AdvancedPanel } from '../../../../components/ui/AdvancedToggle';
 
 type ConnectedOverview = Extract<PathaoOverview, { connected: true }>;
 
-/** Your Pathao account — connect form when not connected; keys summary + change/disconnect when connected. */
+/** Your Pathao account - connect form when not connected; keys summary + change/disconnect when connected. */
 function AccountCard({ overview }: { overview: PathaoOverview }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -88,7 +88,7 @@ function AccountCard({ overview }: { overview: PathaoOverview }) {
             </div>
             <div className="flex gap-1.5">
               <dt className="text-neutral-500">Client ID:</dt>
-              <dd className="text-regantify-text">{overview.clientIdMasked ?? '—'}</dd>
+              <dd className="text-regantify-text">{overview.clientIdMasked ?? '-'}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-neutral-500">Email and password:</dt>
@@ -124,7 +124,7 @@ function AccountCard({ overview }: { overview: PathaoOverview }) {
   );
 }
 
-/** Pickup store — which Pathao store parcels are picked up from, plus making a new one. */
+/** Pickup store - which Pathao store parcels are picked up from, plus making a new one. */
 function PickupStoreCard({ overview }: { overview: ConnectedOverview }) {
   const queryClient = useQueryClient();
   const [creating, setCreating] = useState(false);
@@ -210,7 +210,7 @@ function PickupStoreCard({ overview }: { overview: ConnectedOverview }) {
 }
 
 /**
- * Booking defaults — pathao-plan.md Step 3's vendor-editable defaults
+ * Booking defaults - pathao-plan.md Step 3's vendor-editable defaults
  * (after-booking status, delivery type, weight fallback, description
  * template, instructions). Local form state is seeded from the loaded
  * settings and only sent to the server on Save.
@@ -248,7 +248,7 @@ function BookingDefaultsCard() {
         onSubmit={(e) => {
           e.preventDefault();
           if (!weightOk) return;
-          // statusMap / autoBook belong to their own cards — sending
+          // statusMap / autoBook belong to their own cards - sending
           // this form's (possibly older) copy would undo that card's save.
           const { statusMap: _statusMap, autoBook: _autoBook, ...defaults } = form;
           mutation.mutate(defaults);
@@ -330,7 +330,7 @@ function BookingDefaultsCard() {
   );
 }
 
-/** Customer delivery check (pathao-plan.md Step 15) — free on every plan once Pathao is connected. */
+/** Customer delivery check (pathao-plan.md Step 15) - free on every plan once Pathao is connected. */
 function DeliveryCheckCard({ overview }: { overview: PathaoOverview }) {
   return (
     <CourierCard

@@ -34,17 +34,17 @@ interface RowResult {
 }
 
 /**
- * "Import Products from CSV" — Add Product page.
+ * "Import Products from CSV" - Add Product page.
  *
  * Any CSV works: we don't require exact header names. Step order is
  * Upload -> Map Columns (dropdown per field, auto-matched where
  * possible) -> Preview (row-by-row validation before anything is
  * created) -> Import (sequential creates with progress + a per-row
- * result summary, since a partial failure — e.g. a duplicate SKU —
+ * result summary, since a partial failure - e.g. a duplicate SKU -
  * shouldn't silently lose the rest of the batch).
  *
  * Variations (Size/Color/Custom + per-variant stock) are out of scope
- * for CSV import — those still get added on the Add/Edit Product page
+ * for CSV import - those still get added on the Add/Edit Product page
  * after import, since a flat CSV row doesn't map cleanly onto that table.
  */
 /** Import products from a CSV: new products (this modal), or "Update existing products" by SKU (UpdateCsvModal, TellMe idea 124). */
@@ -208,7 +208,7 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
           {step === 'upload' && (
             <div className="space-y-5">
               <p className="text-sm text-regantify-text-muted">
-                Upload a CSV of your products. Any spreadsheet works — you'll match your own column headers to our
+                Upload a CSV of your products. Any spreadsheet works - you'll match your own column headers to our
                 fields in the next step, so there's no fixed format to follow.
               </p>
 
@@ -256,7 +256,7 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
             <div className="space-y-4">
               <p className="text-sm text-regantify-text-muted">
                 Match each field to a column from <span className="font-medium text-regantify-text">{fileName}</span>
-                . We've guessed a few based on your headers — check them and adjust anything that's wrong.
+                . We've guessed a few based on your headers - check them and adjust anything that's wrong.
               </p>
 
               <div className="rounded-lg border border-line divide-y divide-line">
@@ -274,7 +274,7 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
                       onChange={(e) => setMapping((prev) => ({ ...prev, [field.key]: e.target.value }))}
                       className={selectClass}
                     >
-                      <option value="">— Don't import —</option>
+                      <option value="">- Don't import -</option>
                       {csvHeaders.map((h) => (
                         <option key={h} value={h}>
                           {h}
@@ -324,10 +324,10 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
                     {parsedRows.map((row) => (
                       <tr key={row.rowNumber} className="border-t border-line align-top">
                         <td className="px-3 py-2 text-regantify-text-muted">{row.rowNumber}</td>
-                        <td className="px-3 py-2 text-regantify-text">{row.payload?.name || row.raw[mapping.name] || '—'}</td>
-                        <td className="px-3 py-2 text-regantify-text">{row.payload?.sku || row.raw[mapping.sku] || '—'}</td>
+                        <td className="px-3 py-2 text-regantify-text">{row.payload?.name || row.raw[mapping.name] || '-'}</td>
+                        <td className="px-3 py-2 text-regantify-text">{row.payload?.sku || row.raw[mapping.sku] || '-'}</td>
                         <td className="px-3 py-2 text-regantify-text">
-                          {row.payload?.price !== undefined ? `৳${row.payload.price}` : '—'}
+                          {row.payload?.price !== undefined ? `৳${row.payload.price}` : '-'}
                         </td>
                         <td className="px-3 py-2">
                           {row.errors.length === 0 ? (
@@ -348,7 +348,7 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
               </div>
 
               {validRows.length === 0 && (
-                <p className="text-red-500 text-sm">No valid rows to import — fix the errors above or go back and remap columns.</p>
+                <p className="text-red-500 text-sm">No valid rows to import - fix the errors above or go back and remap columns.</p>
               )}
             </div>
           )}
@@ -393,7 +393,7 @@ function ImportNewCsvModal({ onClose, onUpdateMode }: ImportCsvModalProps & { on
                     )}
                     <div>
                       <p className="text-regantify-text">
-                        Row {r.rowNumber} — {r.name}
+                        Row {r.rowNumber} - {r.name}
                       </p>
                       {r.message && <p className="text-red-500 text-xs mt-0.5">{r.message}</p>}
                     </div>

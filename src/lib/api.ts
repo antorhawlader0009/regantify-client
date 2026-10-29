@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/authStore';
 import { toastDailyLimitHeader } from './dailyLimits';
 
 // If VITE_API_URL is set, always use it. Otherwise, derive the API host
-// from whatever host the browser used to load the app itself — this is
+// from whatever host the browser used to load the app itself - this is
 // what makes the SAME build work unmodified from http://localhost:5173,
 // http://192.168.x.x:5173 (a tester's PC on the LAN), etc., without each
 // person needing their own .env. The API is assumed to run on port 4000
@@ -36,7 +36,7 @@ api.interceptors.request.use(async (config) => {
 });
 
 // On a 401, try refreshing the access token once, then retry the request.
-// The refresh endpoint itself is explicitly excluded here — otherwise a
+// The refresh endpoint itself is explicitly excluded here - otherwise a
 // 401 from /auth/refresh (e.g. no/expired cookie) would trigger another
 // call to /auth/refresh through this same interceptor, which recurses
 // into itself and never resolves instead of just failing cleanly.
@@ -72,7 +72,7 @@ api.interceptors.response.use(
       isRefreshing = true;
       try {
         const { data } = await api.post(REFRESH_URL);
-        // /auth/refresh now returns the user profile too, not just tokens —
+        // /auth/refresh now returns the user profile too, not just tokens -
         // use it directly instead of trusting whatever (possibly stale, or
         // on a hard reload, null) user is already sitting in the store.
         useAuthStore.getState().setAuth(data.accessToken, data.user);
@@ -93,12 +93,12 @@ api.interceptors.response.use(
 
 /**
  * Extracts a backend error's own `message` (see NestJS's default
- * exception body shape — every thrown HttpException, including
+ * exception body shape - every thrown HttpException, including
  * PlanLimitsService's 402 PLAN_LIMIT_EXCEEDED errors, lands here) with a
  * caller-supplied fallback for anything that isn't a recognizable API
  * error (a network failure, a CORS issue, etc). class-validator
  * ValidationPipe errors return `message` as a string[] rather than a
- * string — this takes the first one in that case, same convention
+ * string - this takes the first one in that case, same convention
  * already used ad hoc in a few places (e.g. Domain.tsx's handleConnect).
  * Centralized here so every upload/mutation call site shows the real
  * "you're at your plan's limit, upgrade to continue" message instead of

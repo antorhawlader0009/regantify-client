@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Product > Size Guides — mirrors the server's SizeGuidesService (server/src/size-guides/). A guide is a
+// Store > Product > Size Guides - mirrors the server's SizeGuidesService (server/src/size-guides/). A guide is a
 // TABLE (column headings and rows of short text cells) or one IMAGE, made once and used by many products and
 // categories. A product's own choice is Product.sizeGuideId; a category's guide is set from the guide itself.
 

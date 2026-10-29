@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { ImportSheet } from './lmsImport';
 
-// Orders > Import orders (TellMe idea 22) — mirrors the server's OrderImportService (server/src/orders/order-import*.ts).
+// Orders > Import orders (TellMe idea 22) - mirrors the server's OrderImportService (server/src/orders/order-import*.ts).
 // The dashboard reads the spreadsheet; the server checks every row and makes the orders.
 
 export interface ImportRow {

@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { PlanCode } from './plansApi';
 
-// Mirrors server/src/admin/admin-messages.controller.ts — Super Admin > Messages (super-admin-plan.md Step 11).
+// Mirrors server/src/admin/admin-messages.controller.ts - Super Admin > Messages (super-admin-plan.md Step 11).
 
 export interface MessageAudience {
   vendorIds?: string[];

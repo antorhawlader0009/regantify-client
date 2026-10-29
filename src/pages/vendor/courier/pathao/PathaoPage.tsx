@@ -6,7 +6,7 @@ import { PathaoParcelsTab } from './PathaoParcelsTab';
 import { PathaoDashboardTab } from './PathaoDashboardTab';
 
 /**
- * Courier Integration > Pathao (pathao-plan.md §3) — connection card,
+ * Courier Integration > Pathao (pathao-plan.md §3) - connection card,
  * then Dashboard / Parcels / Settings, the same shape as the SteadFast
  * and RedX pages. The active tab lives in `?tab=` so a link can open a
  * specific one. Not-connected vendors always land on Settings; on a plan
@@ -47,7 +47,7 @@ export default function PathaoPage() {
               connected
                 ? [
                     ...(connected.merchantName ? [{ label: 'Account', value: connected.merchantName }] : []),
-                    { label: 'Client ID', value: connected.clientIdMasked ?? '—' },
+                    { label: 'Client ID', value: connected.clientIdMasked ?? '-' },
                     { label: 'Pickup store', value: connected.pickupStore?.name ?? 'Not chosen' },
                     { label: 'Last update from Pathao', value: formatAgo(connected.lastWebhookAt) },
                   ]

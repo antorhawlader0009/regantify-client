@@ -8,7 +8,7 @@ RUN npm ci
 COPY . .
 
 # Vite bakes VITE_* vars into the bundle at build time, not read at
-# runtime — so they have to arrive as build args (docker-compose.yml
+# runtime - so they have to arrive as build args (docker-compose.yml
 # passes these via the client service's `build.args`), not env_file.
 ARG VITE_API_URL
 ARG VITE_STOREFRONT_URL

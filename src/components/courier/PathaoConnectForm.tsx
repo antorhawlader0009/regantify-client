@@ -5,9 +5,9 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 
 interface PathaoConnectFormProps {
-  /** Called once the account is successfully connected — the caller (Settings card or CourierSetupModal) decides what happens next. */
+  /** Called once the account is successfully connected - the caller (Settings card or CourierSetupModal) decides what happens next. */
   onConnected: () => void;
-  /** Rendered under the fields, e.g. a Cancel button — kept caller-defined since the modal and the Settings card want different footer layouts. */
+  /** Rendered under the fields, e.g. a Cancel button - kept caller-defined since the modal and the Settings card want different footer layouts. */
   footer?: (submitting: boolean) => React.ReactNode;
 }
 
@@ -15,12 +15,12 @@ const inputClass =
   'w-full rounded-lg border border-line bg-white px-3.5 py-2.5 text-sm text-regantify-text outline-none transition placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-500';
 
 /**
- * Pathao's connect form — the VENDOR's own merchant Client ID/Secret
+ * Pathao's connect form - the VENDOR's own merchant Client ID/Secret
  * (Pathao issues these per merchant), plus an optional email/password
  * the server falls back to if the Client ID/Secret login is ever
  * refused. The server verifies everything with Pathao before saving.
  * Same "one shared component, two entry points" pattern as
- * SteadfastConnectForm — used by both the Courier Integration page and
+ * SteadfastConnectForm - used by both the Courier Integration page and
  * CourierSetupModal.
  */
 export function PathaoConnectForm({ onConnected, footer }: PathaoConnectFormProps) {

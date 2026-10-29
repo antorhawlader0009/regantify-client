@@ -50,11 +50,11 @@ import { BackLink } from '../ui/BackLink';
 
 /** ৳1,250 (or ৳1,250.50). Money from the API comes as numbers or decimal strings. */
 export function formatTaka(value: number | string | null | undefined): string {
-  if (value == null) return '—';
+  if (value == null) return '-';
   return `৳${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
-/** "5 min ago" / "3 h ago" / a date — how fresh a courier status is. */
+/** "5 min ago" / "3 h ago" / a date - how fresh a courier status is. */
 export function formatAgo(iso: string | null | undefined): string {
   if (!iso) return 'Never';
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -398,7 +398,7 @@ export function DashboardError({ courier }: { courier: string }) {
 
 /** A monospace ID that copies itself on tap. */
 export function CopyId({ value, what }: { value: string | null; what: string }) {
-  if (!value) return <span className="text-neutral-400">—</span>;
+  if (!value) return <span className="text-neutral-400">-</span>;
   return (
     <button
       type="button"

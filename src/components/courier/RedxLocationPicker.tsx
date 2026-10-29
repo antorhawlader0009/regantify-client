@@ -13,12 +13,12 @@ interface RedxLocationPickerProps {
   shippingCity?: string | null;
   shippingDistrict?: string | null;
   shippingZip?: string | null;
-  /** Read-only once the parcel is booked — the area can't change on RedX's side from here. */
+  /** Read-only once the parcel is booked - the area can't change on RedX's side from here. */
   locked?: boolean;
 }
 
 /**
- * The order's RedX delivery area (Order.redxAreaId, Order Detail) —
+ * The order's RedX delivery area (Order.redxAreaId, Order Detail) -
  * RedX has only ONE location tier, unlike PathaoLocationPicker's City →
  * Zone → Area cascade. With no area saved yet, it suggests one from the
  * order's ZIP and address (the same match booking uses when "detect the
@@ -73,7 +73,7 @@ export function RedxLocationPicker({
           <Sparkles size={13} className="mt-0.5 shrink-0 text-brand" />
           <span>
             From the address: <span className="text-regantify-text">{suggestion.areaName}</span>
-            {suggestion.autoApply ? ' (pre-selected — save to keep it).' : ' — not sure, please check.'}
+            {suggestion.autoApply ? ' (pre-selected - save to keep it).' : ' - not sure, please check.'}
             {!suggestion.autoApply && (
               <button type="button" onClick={() => setAreaId(suggestion.areaId)} className="ml-1 underline hover:text-regantify-text">
                 Use it

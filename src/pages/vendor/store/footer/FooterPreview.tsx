@@ -16,10 +16,10 @@ interface FooterPreviewProps {
 const SOCIAL_ICONS = [Facebook, Instagram, Twitter, Youtube, Linkedin, MessageCircle];
 
 /**
- * Store > Footer's "Preview" panel (reference screenshot 1) — a rough,
+ * Store > Footer's "Preview" panel (reference screenshot 1) - a rough,
  * non-interactive-styling approximation of how the applied template will
  * render on the live storefront, built from plain dashboard styling
- * (not the actual storefront theme CSS — same "close approximation, not
+ * (not the actual storefront theme CSS - same "close approximation, not
  * pixel-perfect" spirit as the Landing Page builder's own SectionPreview).
  * Clicking a block calls onSelectBlock so the parent can open that
  * block's "Item Settings" panel (reference screenshot 3).
@@ -66,7 +66,7 @@ export function FooterPreview({
         )}
         {def.logoCarriesAbout && (
           <p className="text-xs text-regantify-text-muted mt-3 line-clamp-2">
-            {config.aboutBlurb ? config.aboutBlurb.replace(/<[^>]+>/g, '') : `${storeName} — welcome to our store.`}
+            {config.aboutBlurb ? config.aboutBlurb.replace(/<[^>]+>/g, '') : `${storeName} - welcome to our store.`}
           </p>
         )}
       </div>
@@ -106,7 +106,7 @@ export function FooterPreview({
     about: (
       <div key="about" className={blockClass('about')} onClick={() => onSelectBlock('about')}>
         <p className="text-xs text-regantify-text-muted line-clamp-3 mb-3">
-          {config.aboutBlurb ? config.aboutBlurb.replace(/<[^>]+>/g, '') : `${storeName} — welcome to our store.`}
+          {config.aboutBlurb ? config.aboutBlurb.replace(/<[^>]+>/g, '') : `${storeName} - welcome to our store.`}
         </p>
       </div>
     ),

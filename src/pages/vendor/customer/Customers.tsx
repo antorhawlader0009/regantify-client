@@ -167,16 +167,16 @@ function CustomerRow({ customer, selected, onToggleSelect }: CustomerRowProps) {
           </div>
         </div>
       </td>
-      <td className={`${td} text-neutral-600`}>{customer.email ?? '—'}</td>
+      <td className={`${td} text-neutral-600`}>{customer.email ?? '-'}</td>
       <td className={`${td} min-w-[220px]`}>
         <p>{customer.address}</p>
         {customer.city && <p className="mt-0.5 text-xs text-neutral-500">City: {customer.city}</p>}
-        <p className="text-xs text-neutral-500">Zip: {customer.zip ?? '—'}</p>
+        <p className="text-xs text-neutral-500">Zip: {customer.zip ?? '-'}</p>
       </td>
       <td className={`${td} whitespace-nowrap`}>{customer.orderCount}</td>
       <td className={`${td} whitespace-nowrap font-medium`}>{formatMoney(customer.totalSpent)}</td>
       <td className={`${td} whitespace-nowrap`}>
-        {customer.dueBalance > 0 ? <span className="font-medium text-amber-700">{formatMoney(customer.dueBalance)}</span> : <span className="text-neutral-400">—</span>}
+        {customer.dueBalance > 0 ? <span className="font-medium text-amber-700">{formatMoney(customer.dueBalance)}</span> : <span className="text-neutral-400">-</span>}
       </td>
       <td className={`${td} whitespace-nowrap text-neutral-600`}>{formatDate(customer.lastOrderAt)}</td>
       <td className={td}>
@@ -315,7 +315,7 @@ export default function Customers() {
 
   // With nothing selected, exports every customer matching the current
   // search/filter (not just the current page); with a selection, only
-  // those rows — see CustomersService.exportCsv.
+  // those rows - see CustomersService.exportCsv.
   const handleExportCsv = async () => {
     setExporting(true);
     try {

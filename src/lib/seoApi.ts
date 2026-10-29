@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > SEO — mirrors server/src/seo/ (SeoService). The home page title, description and share picture are the Store > Branding
+// Store > SEO - mirrors server/src/seo/ (SeoService). The home page title, description and share picture are the Store > Branding
 // fields (brandMetaTitle / brandMetaDescription / brandCoverImageUrl), so they are read and saved through vendorApi's branding calls.
 
 export interface SeoSettings {

@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Orders > Return check-in — mirrors the server's ReturnCheckInService (server/src/orders/return-check-in.service.ts).
+// Orders > Return check-in - mirrors the server's ReturnCheckInService (server/src/orders/return-check-in.service.ts).
 // A parcel the courier sent back is counted in at the shop: per product line it is good, damaged, or never came.
 
 export type ReturnOutcome = 'GOOD' | 'DAMAGED' | 'MISSING';

@@ -55,7 +55,7 @@ export default function Profile() {
     // The server resizes to max 720px anyway; this just stops an obviously
     // wrong file from being uploaded for nothing.
     if (file.size > 8 * 1024 * 1024) {
-      setAvatarError('Image is too large — please choose a file under 8MB.');
+      setAvatarError('Image is too large - please choose a file under 8MB.');
       return;
     }
 

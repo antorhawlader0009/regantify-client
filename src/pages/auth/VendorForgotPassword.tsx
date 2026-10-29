@@ -26,7 +26,7 @@ interface LocationState {
  * Step 1 of forgot-password: enter the phone number to receive a reset
  * code. Prefills from location state when reached via the "Reset
  * password" link on the "account already exists" step of Sign up (see
- * VendorSignup) — the vendor already typed their number once there.
+ * VendorSignup) - the vendor already typed their number once there.
  */
 export default function VendorForgotPassword() {
   const navigate = useNavigate();

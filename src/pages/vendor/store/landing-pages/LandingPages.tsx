@@ -35,7 +35,7 @@ interface CardProps {
 }
 
 /**
- * One landing page, as a card rather than a table row — a landing page is
+ * One landing page, as a card rather than a table row - a landing page is
  * a visual artifact, so a cover thumbnail carries more signal at a glance
  * than another line of text in a table (which is all the reference
  * competitor's own list gives you). Falls back to a generated gradient
@@ -237,7 +237,7 @@ export default function LandingPages() {
   });
 
   // "Add New" creates a DRAFT immediately and drops the vendor straight
-  // into the builder — a landing page has nothing meaningful to fill in
+  // into the builder - a landing page has nothing meaningful to fill in
   // on a separate "create" form (unlike Store > Pages, whose whole
   // content IS one form field), so an intermediate step would just be a
   // speed bump before the actual work.
@@ -261,7 +261,7 @@ export default function LandingPages() {
         <div>
           <h1 className="text-2xl font-semibold text-regantify-text">Landing Pages</h1>
           <p className="mt-0.5 text-sm text-regantify-text-muted">
-            Build high-converting pages for your ad campaigns — no code needed.
+            Build high-converting pages for your ad campaigns - no code needed.
           </p>
         </div>
         <button

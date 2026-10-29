@@ -16,7 +16,7 @@ export interface VerifyOtpResponse {
   //    frontend shows the SKIPPABLE "set your password" screen, and
   //    accessToken/refreshToken are already present.
   //  - isNewUser: false -> an existing vendor logged in via OTP again;
-  //    this is NOT skippable — no tokens are issued, only a setupToken,
+  //    this is NOT skippable - no tokens are issued, only a setupToken,
   //    and the frontend must route to vendor/complete-setup to force a
   //    new password before a real session is granted.
   mustSetPassword?: boolean;
@@ -55,7 +55,7 @@ export interface AdminSecurityResponse {
   signIns: Array<{ id: string; at: string; via: string; browser: string; ip: string | null; newDevice: boolean }>;
 }
 
-// Response of POST /auth/refresh — now includes the user profile (not just
+// Response of POST /auth/refresh - now includes the user profile (not just
 // tokens) so the app can rehydrate its in-memory auth store after a hard
 // page reload, using only the httpOnly refresh cookie.
 export interface RefreshResponse {
@@ -65,7 +65,7 @@ export interface RefreshResponse {
 }
 
 // Response of vendor/login: either a real session (mustSetPassword: false)
-// or — if the vendor is still on the temporary SMS'd password — a
+// or - if the vendor is still on the temporary SMS'd password - a
 // setupToken that only authorizes vendor/complete-setup, with no tokens.
 export type VendorLoginResponse =
   | {
@@ -120,10 +120,10 @@ export const authApi = {
       .post<VerifyOtpResponse>('/v1/auth/vendor/verify-otp', { phone, code })
       .then((r) => r.data),
 
-  // Alternative to OTP — password login using EITHER phone or email as the
+  // Alternative to OTP - password login using EITHER phone or email as the
   // identifier (backend detects which). If the vendor is still on the
   // temporary password, this comes back as { mustSetPassword: true,
-  // setupToken } instead of real tokens — see VendorLoginResponse.
+  // setupToken } instead of real tokens - see VendorLoginResponse.
   vendorLogin: (identifier: string, password: string, accountId?: string) =>
     api
       .post<VendorLoginResponse>('/v1/auth/vendor/login', { identifier, password, ...(accountId ? { accountId } : {}) })
@@ -131,7 +131,7 @@ export const authApi = {
 
   // Sets the vendor's own password in place of the SMS'd temporary one,
   // right after OTP signup. Requires an authenticated session (called
-  // right after verify-otp). Skippable at this point — see skipSetPassword.
+  // right after verify-otp). Skippable at this point - see skipSetPassword.
   setPassword: (password: string) =>
     api.post('/v1/auth/vendor/set-password', { password }).then((r) => r.data),
 
@@ -147,14 +147,14 @@ export const authApi = {
       .then((r) => r.data),
 
   // Settings page: update full name and/or email (either can be omitted
-  // to leave it unchanged). Email is not verified — no confirmation link.
+  // to leave it unchanged). Email is not verified - no confirmation link.
   updateSettingsProfile: (fields: { fullName?: string; email?: string }) =>
     api
       .post<{ user: AuthUser }>('/v1/auth/vendor/settings/profile', fields)
       .then((r) => r.data),
 
   // Settings page: upload/replace the profile picture. The server resizes
-  // it down to a max of 720px and recompresses it — no need to do that
+  // it down to a max of 720px and recompresses it - no need to do that
   // client-side first, just send the file as picked.
   uploadAvatar: (file: File) => {
     const formData = new FormData();
@@ -229,7 +229,7 @@ export const authApi = {
   adminSignOutEverywhere: () => api.post('/v1/auth/admin/sign-out-all'),
 
   // Silently restores a session on app boot using the httpOnly refresh
-  // cookie. Rejects (no cookie / expired) if there's nothing to restore —
+  // cookie. Rejects (no cookie / expired) if there's nothing to restore -
   // callers should treat that as "not logged in", not an error to surface.
   refresh: () => api.post<RefreshResponse>('/v1/auth/refresh').then((r) => r.data),
 
@@ -242,7 +242,7 @@ export const authApi = {
   /** Signs this account out everywhere: the refresh token is dropped, so no device can renew its session (an open one lasts at most 15 minutes). */
   signOutEverywhere: () => api.post('/v1/auth/vendor/sign-out-all'),
 
-  // Super Admin > All Vendors > "Login as Vendor" — exchanges the
+  // Super Admin > All Vendors > "Login as Vendor" - exchanges the
   // one-time token from adminApi.impersonateVendor for a 15-min vendor
   // access token. No refresh token/cookie involved; see
   // VendorImpersonateEntry.tsx for why this must run before the normal

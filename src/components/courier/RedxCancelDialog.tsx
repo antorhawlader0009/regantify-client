@@ -12,7 +12,7 @@ interface RedxCancelDialogProps {
 }
 
 /**
- * "Cancel parcel" — tells RedX to drop a parcel it hasn't picked up yet
+ * "Cancel parcel" - tells RedX to drop a parcel it hasn't picked up yet
  * (POST /v1/courier/redx/orders/:id/cancel). Used by the Orders list, the
  * RedX Parcels tab and Order Detail. The booking becomes "cancelled", so
  * the order can be booked again (with RedX or another courier); the

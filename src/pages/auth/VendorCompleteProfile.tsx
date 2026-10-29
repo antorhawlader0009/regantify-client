@@ -18,7 +18,7 @@ type FormValues = z.infer<typeof schema>;
 /**
  * One-time onboarding step shown right after signup, following either
  * VendorSetPassword's "set password" or "skip for now". Full name is
- * mandatory — there's no "Skip" button for it. Store name is optional:
+ * mandatory - there's no "Skip" button for it. Store name is optional:
  * leaving it blank keeps the auto-generated default ("Store XXXX") from
  * signup. This screen is only ever shown once and isn't re-enforced later
  * (ProtectedRoute doesn't check for a missing fullName on later visits).
@@ -45,7 +45,7 @@ export default function VendorCompleteProfile() {
       const storeName = values.storeName?.trim() ? values.storeName.trim() : undefined;
       const res = await authApi.completeProfile(values.fullName.trim(), storeName);
 
-      // Merge the updated profile into the in-memory session — accessToken
+      // Merge the updated profile into the in-memory session - accessToken
       // doesn't change here, only the user object (fullName/storeName).
       if (accessToken) {
         setAuth(accessToken, res.user);
@@ -61,7 +61,7 @@ export default function VendorCompleteProfile() {
   return (
     <AuthShell
       title="Complete your profile"
-      subtitle="Just your name to finish up — the store name is optional."
+      subtitle="Just your name to finish up - the store name is optional."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
@@ -109,7 +109,7 @@ export default function VendorCompleteProfile() {
             <p className="text-red-500 text-sm mt-1.5">{errors.storeName.message}</p>
           )}
           <p className="text-xs text-regantify-text-muted mt-1.5">
-            Leave this blank to keep "{user?.vendor?.storeName ?? 'your current store name'}" — you
+            Leave this blank to keep "{user?.vendor?.storeName ?? 'your current store name'}" - you
             can always change it later from Settings.
           </p>
         </div>

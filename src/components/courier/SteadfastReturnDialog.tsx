@@ -22,7 +22,7 @@ interface SteadfastReturnDialogProps {
 }
 
 /**
- * "Request return" — asks SteadFast to stop delivering a parcel and bring
+ * "Request return" - asks SteadFast to stop delivering a parcel and bring
  * it back (POST /v1/courier/steadfast/orders/:id/return-request). Used by
  * the SteadFast Parcels tab and Order Detail. The order's status isn't
  * touched here; it moves when SteadFast reports the return.

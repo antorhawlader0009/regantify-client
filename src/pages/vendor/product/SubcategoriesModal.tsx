@@ -9,7 +9,7 @@ interface SubcategoriesModalProps {
   onClose: () => void;
 }
 
-/** Opened from the "+" on a main category's Sub Categories cell — the
+/** Opened from the "+" on a main category's Sub Categories cell - the
  * normal Add Category form, with Parent Category pre-filled (but still
  * editable) to this main category. */
 export function SubcategoriesModal({ mainCategory, categories, onClose }: SubcategoriesModalProps) {

@@ -23,7 +23,7 @@ function Figure({ label, value, hint, loading }: { label: string; value: ReactNo
 }
 
 /**
- * Finance > Wallet — the balance block from the Dashboard's Money card
+ * Finance > Wallet - the balance block from the Dashboard's Money card
  * (green, eye toggle), where that money comes from, what's on its way
  * (withdrawals in progress, COD the couriers still hold) and the last
  * few transactions. Add money / Withdraw are the two actions.

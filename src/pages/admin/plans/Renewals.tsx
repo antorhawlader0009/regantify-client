@@ -12,7 +12,7 @@ import { Dialog } from '../../../components/ui/Dialog';
 import { ReasonNeed } from '../../../components/admin/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
-const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-');
 
 type Pick = { kind: 'remind' | 'extend'; vendorId: string; storeName: string };
 

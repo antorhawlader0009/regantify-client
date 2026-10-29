@@ -37,7 +37,7 @@ function toForm(s: MetaPixelSettings): FormState {
 }
 
 /**
- * Store > Integrations > Meta Conversions API — server-to-server copies of
+ * Store > Integrations > Meta Conversions API - server-to-server copies of
  * the Facebook Pixel's events, plus Deferred Purchase Events (see
  * server/src/store-settings/meta-capi.service.ts). Its own page, but the
  * same MetaPixelSettings row and routes as the Facebook Pixel page, since

@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { PlanCode } from './plansApi';
 
-// Mirrors server/src/admin/admin-fees.controller.ts — Super Admin > Commission Settings (super-admin-plan.md Step 12).
+// Mirrors server/src/admin/admin-fees.controller.ts - Super Admin > Commission Settings (super-admin-plan.md Step 12).
 
 export type FeeDealType = 'COD' | 'ONLINE_PAYMENT' | 'ADVANCE';
 export type FeePayer = 'CUSTOMER' | 'VENDOR';

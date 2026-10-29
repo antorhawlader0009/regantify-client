@@ -120,7 +120,7 @@ export function KpiCard({
   compareLabel,
 }: {
   label: string;
-  /** A null current value (e.g. a rate with nothing to divide) shows as "—". */
+  /** A null current value (e.g. a rate with nothing to divide) shows as "-". */
   value: Compared | NullableCompared;
   kind: ValueKind;
   hint?: string;
@@ -132,7 +132,7 @@ export function KpiCard({
     <Cell
       label={label}
       aside={<ChangeBadge value={value} kind={kind} lowerIsBetter={lowerIsBetter} />}
-      value={value.current == null ? '—' : formatValue(value.current, kind)}
+      value={value.current == null ? '-' : formatValue(value.current, kind)}
       hint={hint ?? `${previousText} ${compareLabel.replace(/^vs /, 'in the ')}`}
     />
   );

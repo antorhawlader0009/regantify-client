@@ -227,7 +227,7 @@ export default function OrderDetail() {
   const { data: planUsage } = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage });
   const paidCouriersAllowed = planUsage ? planUsage.plan.code !== 'FREE' : false;
 
-  // Same query (and cache) as the timeline — used to tell whether a
+  // Same query (and cache) as the timeline - used to tell whether a
   // SteadFast return was already requested for this parcel.
   const steadfastBooked = order?.courierProvider === 'STEADFAST' && order.courierBookingStatus === 'BOOKED';
   const { data: courierEvents } = useQuery({
@@ -270,7 +270,7 @@ export default function OrderDetail() {
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not refresh the delivery status. Please try again.')),
   });
 
-  // "Book with SteadFast" / "Book with RedX" — one click, with the
+  // "Book with SteadFast" / "Book with RedX" - one click, with the
   // vendor's default values (no popup: SteadFast needs no location or
   // weight, RedX takes the area set below or the one matched from the address).
   const bookOneClickMutation = useMutation({

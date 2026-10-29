@@ -31,7 +31,7 @@ interface LocationState {
 
 /**
  * Reached two ways, both MANDATORY (no "Skip for now" here) and both
- * without a real session yet — only the short-lived setupToken passed in
+ * without a real session yet - only the short-lived setupToken passed in
  * via navigation state, so this page is intentionally reachable without
  * ProtectedRoute:
  *  - 'temp-password' (default): vendor logged in with their temporary
@@ -66,8 +66,8 @@ export default function VendorCompleteSetup() {
   const reason = state.reason ?? 'temp-password';
   const subtitle =
     reason === 'otp-relogin'
-      ? "You logged in with a code instead of your password. Set a new password to continue — this step can't be skipped."
-      : "You're still using the temporary password we texted you. Set your own password to continue — this step can't be skipped.";
+      ? "You logged in with a code instead of your password. Set a new password to continue - this step can't be skipped."
+      : "You're still using the temporary password we texted you. Set your own password to continue - this step can't be skipped.";
 
   const onSubmit = async (values: FormValues) => {
     setServerError(null);

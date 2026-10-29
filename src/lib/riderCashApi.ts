@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Orders > Rider cash (TellMe idea 38) — mirrors the server's RiderCashService (server/src/orders/rider-cash.service.ts).
+// Orders > Rider cash (TellMe idea 38) - mirrors the server's RiderCashService (server/src/orders/rider-cash.service.ts).
 
 export interface RiderSummary {
   name: string;

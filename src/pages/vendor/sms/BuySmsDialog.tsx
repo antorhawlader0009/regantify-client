@@ -14,7 +14,7 @@ interface BuySmsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** "৳0.41" — what one SMS costs in a package. */
+/** "৳0.41" - what one SMS costs in a package. */
 export function perSms(pkg: Pick<SmsPackage, 'price' | 'smsCount'>) {
   return `৳${(pkg.price / pkg.smsCount).toFixed(2)}`;
 }
@@ -31,7 +31,7 @@ export function SmsPackBuyer({ onDone }: { onDone?: () => void }) {
 
   const { data: packages, isLoading } = useQuery({ queryKey: ['sms-packages'], queryFn: () => smsApi.getPackages() });
 
-  // Only fetched to show the deficit-clearing note before charging — the
+  // Only fetched to show the deficit-clearing note before charging - the
   // server resolves the real deficit itself at initiate time
   // (PaymentsService.initiate) regardless of what this reads.
   const { data: wallet } = useQuery({ queryKey: ['finance', 'wallet'], queryFn: () => financeApi.getWallet() });

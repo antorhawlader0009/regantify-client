@@ -1,6 +1,6 @@
 import { api } from './api';
 
-/** Store backup and restore (TellMe idea 87) — mirrors StoreBackupService.list. */
+/** Store backup and restore (TellMe idea 87) - mirrors StoreBackupService.list. */
 export interface StoreDataJob {
   id: string;
   kind: 'BACKUP' | 'RESTORE';

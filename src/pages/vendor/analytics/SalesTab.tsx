@@ -256,9 +256,9 @@ function ProductProfitTable({ products, showProfit }: { products: SalesAnalytics
                     )}
                   </td>
                   <td className={`px-3 py-2.5 text-right tabular-nums font-semibold ${p.profit != null && p.profit < 0 ? 'text-red-700' : ''}`}>
-                    {p.profit == null ? <span className="font-normal text-neutral-500">—</span> : formatTaka(p.profit)}
+                    {p.profit == null ? <span className="font-normal text-neutral-500">-</span> : formatTaka(p.profit)}
                   </td>
-                  <td className="px-5 py-2.5 text-right tabular-nums text-neutral-500">{p.margin == null ? '—' : `${p.margin.toFixed(0)}%`}</td>
+                  <td className="px-5 py-2.5 text-right tabular-nums text-neutral-500">{p.margin == null ? '-' : `${p.margin.toFixed(0)}%`}</td>
                 </>
               )}
             </tr>

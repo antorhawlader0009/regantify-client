@@ -28,7 +28,7 @@ const CHANNEL_NOTES: Record<string, string> = {
 };
 
 function rate(value: number | null) {
-  return value == null ? '—' : `${value.toFixed(1)}%`;
+  return value == null ? '-' : `${value.toFixed(1)}%`;
 }
 
 export function MarketingTab({ range }: TabProps) {

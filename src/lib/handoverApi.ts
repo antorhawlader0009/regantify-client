@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Orders > Courier Handover — mirrors the server's HandoverService (server/src/orders/handover.service.ts).
+// Orders > Courier Handover - mirrors the server's HandoverService (server/src/orders/handover.service.ts).
 // A sheet is the list of parcels given to a courier's pickup person in one go, frozen when it is made.
 
 export interface HandoverRow {

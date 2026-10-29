@@ -97,7 +97,7 @@ export function BulkStatusMenu({ ids, canCancel, className, onDone }: { ids: str
             <ul className="max-h-64 space-y-1.5 overflow-y-auto rounded-lg border border-line p-3">
               {result.skipped.map((s) => (
                 <li key={s.id}>
-                  <span className="font-medium">{s.ref}</span> <span className="text-neutral-600">— {s.reason}</span>
+                  <span className="font-medium">{s.ref}</span> <span className="text-neutral-600">- {s.reason}</span>
                 </li>
               ))}
             </ul>

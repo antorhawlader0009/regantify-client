@@ -1,10 +1,10 @@
 import { api } from './api';
 import type { PaymentGatewayCatalogEntry, PaymentGatewayStatus, PaymentGatewayType, PaymentFeePayer } from './paymentGatewaysApi';
 
-// Mirrors server/src/admin/admin-payment-gateways.controller.ts — Super
+// Mirrors server/src/admin/admin-payment-gateways.controller.ts - Super
 // Admin > Payment Gateway (platform-wide catalog switches + oversight).
 // COD/ONLINE_PAYMENT's per-vendor fee is NOT settable through this API
-// at all — it's fully plan-driven, see adminPlansApi.updatePlan.
+// at all - it's fully plan-driven, see adminPlansApi.updatePlan.
 
 export interface UpdateGatewayCatalogPayload {
   isEnabledPlatformWide?: boolean;

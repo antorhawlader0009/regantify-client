@@ -28,7 +28,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-const money = (n: number | null) => (n === null ? '—' : formatTaka(n));
+const money = (n: number | null) => (n === null ? '-' : formatTaka(n));
 
 /** Super Admin > one order, read only (super-admin-plan.md Step 7): items, money, history, payments at both gateways, courier events and Super Admin's notes. */
 export default function AdminOrderDetail() {
@@ -141,7 +141,7 @@ export default function AdminOrderDetail() {
                       <td className="px-3 py-2">PayStation{p.paymentMethod ? ` (${p.paymentMethod})` : ''}</td>
                       <td className="px-3 py-2 font-mono text-xs">{p.invoiceNumber}{p.trxId && <div>trx {p.trxId}</div>}</td>
                       <td className="px-3 py-2">{p.status.toLowerCase()}</td>
-                      <td className="px-3 py-2">{p.fulfilledAt ? formatDhakaDateTime(p.fulfilledAt) : p.status === 'SUCCESS' ? 'NOT APPLIED' : '—'}</td>
+                      <td className="px-3 py-2">{p.fulfilledAt ? formatDhakaDateTime(p.fulfilledAt) : p.status === 'SUCCESS' ? 'NOT APPLIED' : '-'}</td>
                       <td className="whitespace-nowrap px-3 py-2">{formatDhakaDateTime(p.createdAt)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{formatTaka(p.amount)}</td>
                     </tr>
@@ -151,7 +151,7 @@ export default function AdminOrderDetail() {
                       <td className="px-3 py-2">SSLCommerz{g.cardType ? ` (${g.cardType})` : ''}</td>
                       <td className="px-3 py-2 font-mono text-xs">{g.invoiceNumber}{g.valId && <div>val {g.valId}</div>}</td>
                       <td className="px-3 py-2">{g.status.toLowerCase()}</td>
-                      <td className="px-3 py-2">{g.fulfilledAt ? formatDhakaDateTime(g.fulfilledAt) : g.status === 'SUCCESS' ? 'NOT APPLIED' : '—'}</td>
+                      <td className="px-3 py-2">{g.fulfilledAt ? formatDhakaDateTime(g.fulfilledAt) : g.status === 'SUCCESS' ? 'NOT APPLIED' : '-'}</td>
                       <td className="whitespace-nowrap px-3 py-2">{formatDhakaDateTime(g.createdAt)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{formatTaka(g.amount)}</td>
                     </tr>

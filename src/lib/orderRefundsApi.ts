@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Orders > Refunds to pay (TellMe idea 145) — mirrors the server's OrderRefundsService (server/src/orders/order-refunds.service.ts).
+// Orders > Refunds to pay (TellMe idea 145) - mirrors the server's OrderRefundsService (server/src/orders/order-refunds.service.ts).
 
 /** GATEWAY: sent back through the store's own payment gateway (Order detail > "Refund to customer"), never picked by hand. */
 export type RefundMethod = 'BKASH' | 'NAGAD' | 'ROCKET' | 'BANK' | 'CASH' | 'OTHER' | 'WAIVED' | 'GATEWAY';

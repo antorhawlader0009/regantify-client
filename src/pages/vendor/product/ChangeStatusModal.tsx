@@ -10,7 +10,7 @@ interface ChangeStatusModalProps {
   submitting?: boolean;
 }
 
-/** Matches the reference "Change Status of <product>" modal — a dropdown plus an explicit confirm button, not an instant toggle. */
+/** Matches the reference "Change Status of <product>" modal - a dropdown plus an explicit confirm button, not an instant toggle. */
 export function ChangeStatusModal({
   open,
   onOpenChange,

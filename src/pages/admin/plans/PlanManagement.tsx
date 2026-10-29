@@ -26,11 +26,11 @@ function formatFee(flat: string, percent: string, payer: PaymentFeePayer) {
 }
 
 /**
- * Super Admin > Plans > Manage Plans (PLAN.md Step 15) — view/edit the 4
+ * Super Admin > Plans > Manage Plans (PLAN.md Step 15) - view/edit the 4
  * Plan rows' limits and pricing so Super Admin can tune numbers without
  * a code deploy, per Step 1's original design intent. Always exactly 4
  * rows (Plan is seeded once via prisma:seed-plans, never created/
- * deleted from the UI) — this page only ever edits, never adds/removes.
+ * deleted from the UI) - this page only ever edits, never adds/removes.
  */
 export default function PlanManagement() {
   const queryClient = useQueryClient();
@@ -46,7 +46,7 @@ export default function PlanManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
       // Every vendor's Billing page / usage reads embed the Plan row
-      // they're on — invalidate that cache key too so a Super Admin's
+      // they're on - invalidate that cache key too so a Super Admin's
       // edit shows up immediately for anyone with the app open, not just
       // on their next hard refresh.
       queryClient.invalidateQueries({ queryKey: ['plans'] });

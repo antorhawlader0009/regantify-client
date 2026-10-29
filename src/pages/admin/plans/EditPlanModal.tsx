@@ -56,7 +56,7 @@ function ToggleField({ label, checked, onChange }: { label: string; checked: boo
   );
 }
 
-// A small number input with a fixed ৳/% suffix — the flat and percentage
+// A small number input with a fixed ৳/% suffix - the flat and percentage
 // parts of FeeInputField below.
 function FeePartInput({
   value,
@@ -87,13 +87,13 @@ function FeePartInput({
   );
 }
 
-// Cash On Delivery fee / Online Payment fee — a flat ৳ part AND a % part
+// Cash On Delivery fee / Online Payment fee - a flat ৳ part AND a % part
 // side by side, both charged together (fee = flat + (order total + flat) × %; either
-// can be 0 — see server's Plan.codGatewayFeeBdt/codGatewayFeePercent),
+// can be 0 - see server's Plan.codGatewayFeeBdt/codGatewayFeePercent),
 // plus a "Fee From" dropdown (see PaymentFeePayer) choosing who actually
-// pays it: Customer (default — added to the order total, shown/folded per
+// pays it: Customer (default - added to the order total, shown/folded per
 // "Hide from checkout") or Vendor (never added to the order total or
-// shown to the shopper anywhere — comes out of the vendor's own payout
+// shown to the shopper anywhere - comes out of the vendor's own payout
 // instead, shown only on the vendor's own invoice). "Hide from checkout"
 // is hidden entirely when Fee From is Vendor since it's meaningless then.
 // The % part is capped at 100 (mirrors UpdatePlanDto's own @Max(100)).
@@ -144,7 +144,7 @@ function FeeInputField({
         </label>
       ) : (
         <p className="mt-1.5 text-[11px] text-regantify-text-muted">
-          Added to the vendor's product price — customer never sees this fee.
+          Added to the vendor's product price - customer never sees this fee.
         </p>
       )}
     </div>
@@ -152,9 +152,9 @@ function FeeInputField({
 }
 
 /**
- * Super Admin > Plans > Edit — every field from the Plan model (PLAN.md
+ * Super Admin > Plans > Edit - every field from the Plan model (PLAN.md
  * Step 15). Initialized from the plan prop each time it opens (via
- * `key={plan.id}` on the caller's usage — see PlanManagement.tsx), so
+ * `key={plan.id}` on the caller's usage - see PlanManagement.tsx), so
  * switching which plan is being edited always starts from that plan's
  * own current values, not stale state left over from a previous edit.
  */
@@ -277,7 +277,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
           </div>
           <p className="text-xs text-regantify-text-muted -mt-3">
             Fee = flat ৳ + % of (product + delivery + VAT + the flat ৳). E.g. ৳100 + ৳50 delivery + ৳10 flat = ৳160,
-            2% = ৳3.2, customer pays ৳163.2. Leave either at 0 to use only the other. Fee From Customer adds it to what the shopper pays (hidden fees are still charged —
+            2% = ৳3.2, customer pays ৳163.2. Leave either at 0 to use only the other. Fee From Customer adds it to what the shopper pays (hidden fees are still charged -
             just folded into the total silently); Fee From Vendor never charges the shopper at all and comes out of
             the vendor's own payout instead.
           </p>

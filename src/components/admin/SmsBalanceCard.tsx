@@ -64,7 +64,7 @@ export function SmsBalanceCard() {
       ) : (
         <>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <p className="text-3xl font-semibold tabular-nums text-regantify-text">{data.balance === null ? '—' : formatTaka(data.balance)}</p>
+            <p className="text-3xl font-semibold tabular-nums text-regantify-text">{data.balance === null ? '-' : formatTaka(data.balance)}</p>
             <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${level.cls}`}>
               <level.Icon size={13} /> {level.label}
             </span>

@@ -125,7 +125,7 @@ function CourierCard({
 }
 
 /**
- * Courier Integration — the sidebar section's landing page: one card per
+ * Courier Integration - the sidebar section's landing page: one card per
  * courier saying whether it's connected, who can use it and the one
  * button that matters (Connect, or Open). Each courier has its own page
  * (connection card + Dashboard / Parcels / Settings, see

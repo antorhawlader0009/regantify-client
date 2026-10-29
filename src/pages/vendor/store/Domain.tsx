@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { domainsApi } from '../../../lib/domainsApi';
 import { DomainStatusCard } from '../../../components/DomainStatusCard';
 
-// Same IP shown to every vendor, regardless of domain — resolution for a
+// Same IP shown to every vendor, regardless of domain - resolution for a
 // connected domain isn't per-vendor, it's the storefront app's own
 // middleware (see storefront/src/middleware.ts) that looks up the Host
 // header against Vendor.customDomain once the domain's registrar points
@@ -22,7 +22,7 @@ export default function Domain() {
   // The address the server checks the record against (PLATFORM_PUBLIC_IPS), when it is set.
   const serverIps = useQuery({ queryKey: ['vendor-domain-ips'], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data?.aRecords;
   const [customDomain, setCustomDomain] = useState<string | null>(null);
-  // null while loading = "don't know yet" — never used to mean "not
+  // null while loading = "don't know yet" - never used to mean "not
   // allowed" so the page doesn't flash an upgrade prompt before the
   // real plan is known (same convention as Themes.tsx's allowedThemes).
   const [customDomainAllowed, setCustomDomainAllowed] = useState<boolean | null>(null);
@@ -95,22 +95,22 @@ export default function Domain() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Domain Settings</h1>
         <p className="text-regantify-text-muted mt-1">
-          Connect a custom domain to your store — your subdomain keeps working either way.
+          Connect a custom domain to your store - your subdomain keeps working either way.
         </p>
       </div>
 
       {!customDomain ? (
         <>
           {customDomainAllowed === false ? (
-            // PLAN.md Step 8 — Free tier: upgrade prompt instead of the
+            // PLAN.md Step 8 - Free tier: upgrade prompt instead of the
             // connect form, not just a raw 402 after clicking through
-            // (the server still enforces this regardless — see
-            // VendorService.updateDomain — this is purely a better
+            // (the server still enforces this regardless - see
+            // VendorService.updateDomain - this is purely a better
             // up-front UX for a vendor who's clearly on Free). Shared
-            // shell component — see Step 16's UpgradePrompt.tsx.
+            // shell component - see Step 16's UpgradePrompt.tsx.
             <LockedFeatureCard
               title="Custom domains aren't available on your plan"
-              message="Connecting your own domain is a paid-plan feature. Upgrade your plan to connect one — your free subdomain keeps working either way."
+              message="Connecting your own domain is a paid-plan feature. Upgrade your plan to connect one - your free subdomain keeps working either way."
             />
           ) : (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-6 mb-6">
@@ -210,7 +210,7 @@ export default function Domain() {
               Login to your domain registrar panel (ie. where you bought your domain from)
             </p>
             <p className="text-sm text-regantify-text-muted mb-4">
-              Add the following A record for your domain (and for "www") —
+              Add the following A record for your domain (and for "www") -
             </p>
             <div className="space-y-2">
               <div className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono flex items-center justify-between gap-3">

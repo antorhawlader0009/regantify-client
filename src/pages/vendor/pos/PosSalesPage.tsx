@@ -189,7 +189,7 @@ function SalesBody() {
                     </td>
                     <td className="whitespace-nowrap px-4 py-2.5">{dhaka(s.createdAt)}</td>
                     <td className="px-4 py-2.5">
-                      {s.registerName ?? '—'} <span className="text-pos-muted">· {s.cashierName ?? '—'}</span>
+                      {s.registerName ?? '-'} <span className="text-pos-muted">· {s.cashierName ?? '-'}</span>
                     </td>
                     <td className="px-4 py-2.5">
                       {s.customerName}

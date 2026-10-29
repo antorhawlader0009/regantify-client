@@ -43,7 +43,7 @@ export default function CarrybeePage() {
             details={
               connected
                 ? [
-                    { label: 'Client ID', value: connected.clientIdMasked ?? '—' },
+                    { label: 'Client ID', value: connected.clientIdMasked ?? '-' },
                     { label: 'Pickup store', value: connected.pickupStore?.name ?? 'Not chosen' },
                     { label: 'Last update from CarryBee', value: formatAgo(connected.lastWebhookAt) },
                   ]

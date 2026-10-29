@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Account > Activity log (TellMe idea 158) — mirrors the server's AuditService.list().
+// Account > Activity log (TellMe idea 158) - mirrors the server's AuditService.list().
 
 export interface AuditChange {
   field: string;

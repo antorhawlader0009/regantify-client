@@ -19,10 +19,10 @@ const PLAN_OPTIONS: { value: PlanCode; label: string }[] = [
 ];
 
 /**
- * Super Admin > All Vendors > Change Plan (PLAN.md Step 15) — direct
+ * Super Admin > All Vendors > Change Plan (PLAN.md Step 15) - direct
  * manual assignment, same "select + explicit confirm" shape as
  * ChangeVendorStatusModal. Independent of the Plan Requests approve/
- * reject flow (Step 14/15's request-to-admin stopgap) — an admin can
+ * reject flow (Step 14/15's request-to-admin stopgap) - an admin can
  * always just set a vendor's plan directly, whether or not that vendor
  * ever asked.
  */

@@ -18,7 +18,7 @@ const COLLISION_PADDING = 12;
 const panelClass = 'bg-white rounded-lg shadow-lg border border-line py-1.5 z-30 focus:outline-none';
 
 /**
- * Radix-backed dropdown — handles keyboard navigation, click-outside,
+ * Radix-backed dropdown - handles keyboard navigation, click-outside,
  * Escape-to-close and viewport collisions for free. Styling matches the
  * hand-rolled dropdowns already in the app (Topbar account menu, All
  * Products Actions menu), so swapping those over is a drop-in visual match.
@@ -47,7 +47,7 @@ interface DropdownMenuItemProps {
   icon?: ReactNode;
   /** Small muted text under the label (clamped to two lines). */
   hint?: ReactNode;
-  /** Native tooltip — e.g. the full text of a clamped hint. */
+  /** Native tooltip - e.g. the full text of a clamped hint. */
   title?: string;
   /** Shown at the right edge (e.g. an unread count). */
   badge?: ReactNode;

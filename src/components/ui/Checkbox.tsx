@@ -1,5 +1,5 @@
 /**
- * Plain labeled checkbox with an optional hint line — the light-dashboard
+ * Plain labeled checkbox with an optional hint line - the light-dashboard
  * counterpart of components/landing/fields.tsx's dark-canvas Toggle.
  */
 export function Checkbox({

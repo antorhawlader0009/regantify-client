@@ -53,7 +53,7 @@ export function CouponResultsCard({ range }: { range: DateRange }) {
                         <td className="py-2 text-right tabular-nums">{c.orders}</td>
                         <td className="py-2 text-right tabular-nums">{formatTaka(c.sales)}</td>
                         <td className="py-2 text-right tabular-nums">{formatTaka(c.discount)}</td>
-                        <td className="py-2 text-right tabular-nums">{c.averageOrder == null ? '—' : formatTaka(c.averageOrder)}</td>
+                        <td className="py-2 text-right tabular-nums">{c.averageOrder == null ? '-' : formatTaka(c.averageOrder)}</td>
                         <td className="py-2 text-right tabular-nums">{c.newCustomers}</td>
                         <td className="py-2 text-right tabular-nums">{c.returned}</td>
                         <td className="py-2 text-right tabular-nums">{c.cancelled}</td>

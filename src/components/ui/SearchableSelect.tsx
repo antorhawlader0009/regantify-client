@@ -16,7 +16,7 @@ interface SearchableSelectProps {
   placeholder: string;
   loading?: boolean;
   disabled?: boolean;
-  /** Tailwind classes for the trigger button — callers match their own form's input style. */
+  /** Tailwind classes for the trigger button - callers match their own form's input style. */
   className?: string;
   ariaLabel?: string;
 }
@@ -36,7 +36,7 @@ function normalize(text: string): string {
 }
 
 /**
- * A select you can type into — click, type "mirpur 10", Enter. Every word
+ * A select you can type into - click, type "mirpur 10", Enter. Every word
  * typed must appear somewhere in the option (any order), and options
  * starting with the query sort first. Keyboard: ↑/↓ to move, Enter to
  * pick, Esc to close. Portalled (Radix Popover), so it isn't clipped when

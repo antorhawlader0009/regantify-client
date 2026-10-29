@@ -15,7 +15,7 @@ import { fraudCategoriesText } from './CustomerDeliveryStats';
 const VOLUME: Record<string, string> = { none: '0', low: '1-5', medium: '6-20', high: '21-200', very_high: '200+' };
 
 /** Shown on a card whose courier gives us nothing for this number. */
-const EMPTY = '—';
+const EMPTY = '-';
 
 function rate(line: CourierStatLine): number | null {
   return line.total > 0 ? Math.round((line.successful / line.total) * 100) : null;

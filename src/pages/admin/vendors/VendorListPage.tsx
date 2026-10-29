@@ -393,7 +393,7 @@ export function VendorListPage({
                     {v.planName}
                     {v.planEndsAt && <div className="text-xs text-regantify-text-muted">ends {new Date(v.planEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>}
                   </td>
-                  <td className="px-4 py-3 text-regantify-text">{v.phone ?? '—'}</td>
+                  <td className="px-4 py-3 text-regantify-text">{v.phone ?? '-'}</td>
                   <td className="px-4 py-3"><HealthChip health={v.health} /></td>
                   <td className="px-4 py-3 tabular-nums text-regantify-text">{v.orders30d}</td>
                   <td className="px-4 py-3 tabular-nums text-regantify-text">{formatTaka(v.gmv30d)}</td>

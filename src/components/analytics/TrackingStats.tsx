@@ -30,7 +30,7 @@ export function TrackingStats() {
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
           <StatCard
             label="Customers who opened tracking"
-            value={data.openedPercent == null ? '—' : `${data.openedPercent}%`}
+            value={data.openedPercent == null ? '-' : `${data.openedPercent}%`}
             hint={`${data.ordersOpened} of ${data.orders} orders`}
           />
           <StatCard label="Tracking page opens" value={String(data.totalOpens)} hint="Includes link previews" />

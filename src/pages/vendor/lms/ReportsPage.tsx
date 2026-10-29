@@ -168,7 +168,7 @@ function ReportBody({ me, data }: { me: LmsMe; data: LmsReport }) {
                       <Td className="pl-5">{s.form ? FORM_WORDS[s.form] : LMS_SOURCE_LABELS[s.source]}</Td>
                       <Td className="text-right">{s.leads.toLocaleString('en-US')}</Td>
                       <Td className="text-right">{formatPct(s.winRate)}</Td>
-                      <Td className="pr-5 text-right">{s.valueWon ? formatMoney(s.valueWon) : '—'}</Td>
+                      <Td className="pr-5 text-right">{s.valueWon ? formatMoney(s.valueWon) : '-'}</Td>
                     </tr>
                   ))}
                 </tbody>
@@ -282,7 +282,7 @@ function AgentTable({ rows }: { rows: LmsReport['agents'] }) {
               <Td className={`text-right ${r.overdueTasks ? 'font-medium text-lms-alert' : ''}`}>{r.overdueTasks}</Td>
               <Td className="pr-5 text-right">
                 {r.deliveredRate == null ? (
-                  <span className="text-lms-muted">{r.confirmedOrders ? `${r.confirmedOrders} not finished` : '—'}</span>
+                  <span className="text-lms-muted">{r.confirmedOrders ? `${r.confirmedOrders} not finished` : '-'}</span>
                 ) : (
                   <>
                     {formatPct(r.deliveredRate)}

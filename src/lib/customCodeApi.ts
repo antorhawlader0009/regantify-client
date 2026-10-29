@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Store > Design > Custom CSS / Custom Head Scripts / JavaScript Code —
+// Store > Design > Custom CSS / Custom Head Scripts / JavaScript Code -
 // mirrors the server's CustomCodeService (server/src/store-settings/).
 // Owner-only routes on VendorController. Only the StorePal storefront
 // injects any of this.

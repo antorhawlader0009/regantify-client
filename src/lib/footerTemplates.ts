@@ -1,5 +1,5 @@
 /**
- * Client (dashboard) mirror of the shared footer template registry —
+ * Client (dashboard) mirror of the shared footer template registry -
  * canonical copy lives at server/src/vendor/footer-templates.ts. Keep
  * the two in sync by hand (same convention CLAUDE.md documents for
  * storefrontApi.ts across repos). This copy additionally carries the

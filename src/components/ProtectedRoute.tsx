@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
  * Relies on AuthBootstrap having already run (it wraps the whole app in
  * App.tsx and blocks rendering until the boot-time session-restore attempt
  * finishes), so by the time this component ever renders, accessToken/user
- * reflect the real session state — not just whatever was left in memory
+ * reflect the real session state - not just whatever was left in memory
  * before a page reload.
  */
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {

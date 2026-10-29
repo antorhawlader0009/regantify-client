@@ -1,7 +1,7 @@
 import { api } from './api';
 import type { AdminRoleKey } from './adminPermissions';
 
-// Mirrors server/src/admin/admin-team.controller.ts — Super Admin > Staff (super-admin-plan.md Step 13).
+// Mirrors server/src/admin/admin-team.controller.ts - Super Admin > Staff (super-admin-plan.md Step 13).
 
 export interface TeamMember {
   userId: string;

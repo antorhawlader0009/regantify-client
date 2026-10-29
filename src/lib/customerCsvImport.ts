@@ -2,11 +2,11 @@ import type { CreateCustomerPayload } from './customersApi';
 import { normalizeBdPhone } from './bdPhone';
 
 /**
- * One importable customer field — shown as a row in the "Select which
+ * One importable customer field - shown as a row in the "Select which
  * values to include" mapping step, matched against the vendor's own
  * CSV/Excel headers (auto-matched by `aliases`, but always changeable
  * via dropdown). Only `required` fields must be mapped before the
- * upload can begin — mirrors productCsvImport.ts's shape exactly, just
+ * upload can begin - mirrors productCsvImport.ts's shape exactly, just
  * for customer fields instead of product fields.
  */
 export interface ImportField {
@@ -57,7 +57,7 @@ const SAMPLE_ROWS: string[][] = [
 ];
 
 /**
- * Template CSV — a helpful starting point with our suggested headers,
+ * Template CSV - a helpful starting point with our suggested headers,
  * but NOT a required format. Any CSV/Excel file works, since columns
  * are mapped by the vendor in the next step regardless of header names.
  */

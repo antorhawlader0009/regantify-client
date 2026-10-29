@@ -29,7 +29,7 @@ interface CartLine extends OrderItemInput {
 }
 
 // State shape passed via navigate(path, { state }) from the Orders page's
-// Abandoned Cart tab's "Create Order" action — see AbandonedCart.tsx. Kept
+// Abandoned Cart tab's "Create Order" action - see AbandonedCart.tsx. Kept
 // intentionally light: IncompleteOrderItem has no pricing (a shopper's
 // in-progress cart is never treated as a priced snapshot the way a real
 // Order's items are), so cart lines are surfaced as a note for the
@@ -89,7 +89,7 @@ export default function AddOrder() {
   const { data: courierAccounts } = useQuery({ queryKey: ['courier-accounts'], queryFn: courierApi.getAccounts });
   const pathaoConnected = courierAccounts?.some((a) => a.provider === 'PATHAO' && a.isActive) ?? false;
 
-  // Prefill from "Create Order" on the Orders page's Abandoned Cart tab — runs
+  // Prefill from "Create Order" on the Orders page's Abandoned Cart tab - runs
   // once on mount only (empty deps), since this page's own field state
   // should win over the handoff the moment the vendor starts editing.
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function AddOrder() {
     if (state.staffNote) setStaffNote(state.staffNote);
     if (state.items?.length) setCart(state.items.map((item) => ({ ...item, key: `${item.productId}:${item.variantId ?? ''}` })));
     if (state.itemsSummary) {
-      setStaffNote(`Cart from incomplete checkout — please re-add these items with current pricing:\n${state.itemsSummary}`);
+      setStaffNote(`Cart from incomplete checkout - please re-add these items with current pricing:\n${state.itemsSummary}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -232,12 +232,12 @@ export default function AddOrder() {
     enabled: searchTerm.length > 0,
   });
 
-  // Store > Delivery Charge / VAT —
+  // Store > Delivery Charge / VAT -
   // same values the server actually falls back to below when no custom
   // charge is typed (OrdersService.create). Add Order always creates a
   // COD order (see that method's own comment on why ONLINE_PAYMENT is
   // storefront-only), and VAT applies regardless of payment method, so
-  // it's always added server-side too — shown here as a preview so the
+  // it's always added server-side too - shown here as a preview so the
   // total matches what's actually created.
   const { data: deliveryCharges } = useQuery({
     queryKey: ['vendor-delivery-charges'],

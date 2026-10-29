@@ -9,7 +9,7 @@ interface AddSectionModalProps {
 }
 
 /**
- * "Add Section" picker — category tabs plus a live-rendered thumbnail per
+ * "Add Section" picker - category tabs plus a live-rendered thumbnail per
  * section type, so a vendor can tell sections apart at a glance rather
  * than reading a list of names (landing-plan.md §4.2).
  */

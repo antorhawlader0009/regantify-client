@@ -11,7 +11,7 @@ function discountLabel(d: Discount): string {
   return `${taka(d.amount)} off`;
 }
 
-/** What a cart needs for it — "Every order" when nothing. */
+/** What a cart needs for it - "Every order" when nothing. */
 function conditionsLabel(d: Discount): string {
   const parts: string[] = [];
   if (d.minCartAmount && Number(d.minCartAmount) > 0) parts.push(`Orders over ${taka(d.minCartAmount)}`);
@@ -39,7 +39,7 @@ function DiscountMenu({ item }: { item: Discount }) {
 }
 
 /**
- * Marketing > Discounts — automatic cart discounts (no code to type),
+ * Marketing > Discounts - automatic cart discounts (no code to type),
  * with their status, what they give, the conditions, how many orders
  * used them and the schedule.
  */

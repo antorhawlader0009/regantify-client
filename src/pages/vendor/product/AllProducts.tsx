@@ -86,7 +86,7 @@ const DEFAULT_COLUMNS: Record<ColumnKey, boolean> = {
 
 const PREFS_KEY = 'regantify:all-products-table';
 
-// Column / density choice is a per-browser convenience — always wrapped in
+// Column / density choice is a per-browser convenience - always wrapped in
 // try/catch so a blocked or full localStorage never breaks the page.
 function loadPrefs(): { columns: Record<ColumnKey, boolean>; density: Density } {
   try {
@@ -435,7 +435,7 @@ export default function AllProducts() {
   // Clear any bulk-selected product IDs whenever the visible result set
   // changes (new filter, new page). Without this, selecting products on
   // one page/filter and then navigating away leaves their ids sitting in
-  // `selected` with nothing on screen to show for it — the "Delete
+  // `selected` with nothing on screen to show for it - the "Delete
   // Selected (N)" bar keeps showing a stale count, the header checkbox's
   // checked state can end up wrong by coincidence (e.g. 3 selected
   // earlier + the new page also has exactly 3 products), and a vendor
@@ -480,7 +480,7 @@ export default function AllProducts() {
 
   // Products are unlimited in total; the plan caps NEW products per Dhaka day (Free 50 ... Advance 500). Server already
   // hard-blocks both ProductsService.create and createStockProduct at
-  // the cap — this is purely so a Free vendor at the cap doesn't click
+  // the cap - this is purely so a Free vendor at the cap doesn't click
   // through to the Add Product form (or Create Stock Product action)
   // only to fail on submit, same precedent as Staff.tsx's Add New
   // button (Step 10).
@@ -491,7 +491,7 @@ export default function AllProducts() {
   // Products are unlimited; only today's hidden cap on new products can lock Add (lib/dailyLimits.ts).
   const atProductLimit = !!planUsage?.daily.products.reached;
 
-  // The list rows are lightweight (no variationOptions) — fetch the full
+  // The list rows are lightweight (no variationOptions) - fetch the full
   // record only when the Create Stock Product modal actually needs it.
   const { data: stockProductSource } = useQuery({
     queryKey: ['products', stockProductModalId],
@@ -1083,7 +1083,7 @@ export default function AllProducts() {
                       {p.visibility === 'PUBLIC' && <ViewProductOnStorefront slug={p.slug} />}
                     </div>
                   </td>
-                  {columns.category && <td className={`${td} ${cellY} whitespace-nowrap`}>{categoryPath(p) ?? '—'}</td>}
+                  {columns.category && <td className={`${td} ${cellY} whitespace-nowrap`}>{categoryPath(p) ?? '-'}</td>}
                   {columns.sku && (
                     <td className={`${td} ${cellY}`}>
                       <span className="block max-w-[220px] truncate" title={p.sku}>

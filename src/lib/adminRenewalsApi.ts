@@ -1,6 +1,6 @@
 import { api } from './api';
 
-// Mirrors server/src/admin/plan-renewal.controller.ts — Super Admin > Plans > Renewals (super-admin-plan.md Step 9).
+// Mirrors server/src/admin/plan-renewal.controller.ts - Super Admin > Plans > Renewals (super-admin-plan.md Step 9).
 
 export interface RenewalRow {
   vendorId: string;

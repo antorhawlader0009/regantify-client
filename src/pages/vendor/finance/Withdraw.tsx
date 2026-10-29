@@ -87,7 +87,7 @@ function RequestItem({ r }: { r: WithdrawRequest }) {
 }
 
 /**
- * Finance > Withdraw — request a payout from the wallet balance. No
+ * Finance > Withdraw - request a payout from the wallet balance. No
  * payout gateway exists yet, so a Super Admin reviews each request and
  * pays outside the platform (see server's WithdrawRequestsService: the
  * amount is set aside from the balance right away, and given back if the

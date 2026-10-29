@@ -5,14 +5,14 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 
 interface SteadfastConnectFormProps {
-  /** Called once the account is successfully connected — the caller (Settings card or CourierSetupModal) decides what happens next (close the modal, just refresh the card, etc). */
+  /** Called once the account is successfully connected - the caller (Settings card or CourierSetupModal) decides what happens next (close the modal, just refresh the card, etc). */
   onConnected: () => void;
-  /** Rendered under the fields, e.g. a Cancel button — kept caller-defined since the modal and the Settings card want different footer layouts. */
+  /** Rendered under the fields, e.g. a Cancel button - kept caller-defined since the modal and the Settings card want different footer layouts. */
   footer?: (submitting: boolean) => React.ReactNode;
 }
 
 /**
- * SteadFast's connect form (API Key + Secret Key) — the ONE place this
+ * SteadFast's connect form (API Key + Secret Key) - the ONE place this
  * field list/validation lives, per COURIER-PLAN.md §5.2. Used both by
  * the Courier Integration page (inline) and by CourierSetupModal (in a
  * dialog), so the two never drift out of sync with each other.

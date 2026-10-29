@@ -130,7 +130,7 @@ export default function TrackingBulk() {
             <ul className="mt-2 space-y-1 text-sm">
               {result.failed.map((f) => (
                 <li key={f.code}>
-                  <span className="font-medium">{f.ref}</span> <span className="text-neutral-600">— {f.reason}</span>
+                  <span className="font-medium">{f.ref}</span> <span className="text-neutral-600">- {f.reason}</span>
                 </li>
               ))}
             </ul>

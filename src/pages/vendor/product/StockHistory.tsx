@@ -119,7 +119,7 @@ export default function StockHistory() {
                   <td className={`${td} whitespace-nowrap tabular-nums text-neutral-600`}>
                     {m.stockBefore} → {m.stockAfter}
                   </td>
-                  <td className={`${td} text-neutral-600`}>{m.actor ?? '—'}</td>
+                  <td className={`${td} text-neutral-600`}>{m.actor ?? '-'}</td>
                 </tr>
               );
             })

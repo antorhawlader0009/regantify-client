@@ -32,7 +32,7 @@ import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 
 type StatusTab = 'all' | 'pending' | 'approved';
 
-/** Plain-text preview of the rich-text content — tags stripped, not rendered. */
+/** Plain-text preview of the rich-text content - tags stripped, not rendered. */
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -193,7 +193,7 @@ function ReviewRow({ review }: { review: Review }) {
         )}
       </td>
       <td className={`${td} min-w-[150px]`}>
-        <p>{review.customerName || '—'}</p>
+        <p>{review.customerName || '-'}</p>
         {review.customerPhone && <p className="text-xs text-neutral-500">{review.customerPhone}</p>}
         {review.order && (
           <Link to={`/vendor/orders/${review.order.id}`} className="text-xs text-brand hover:underline">
@@ -241,7 +241,7 @@ function ReviewItem({ review }: { review: Review }) {
 }
 
 /**
- * Reviews — what shoppers (and you) wrote. Reviews from the store come
+ * Reviews - what shoppers (and you) wrote. Reviews from the store come
  * in not shown until you turn "Shown" on (see Review model); ones you add
  * show straight away. Tabs and the star filter are server-side
  * (ReviewsService.findAllForVendor), with counts on each.

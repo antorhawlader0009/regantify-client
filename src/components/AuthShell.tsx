@@ -24,14 +24,14 @@ export function AuthShell({ children, title, subtitle, activeAuthTab }: AuthShel
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
-      {/* Topbar — mirrors the dashboard topbar exactly */}
+      {/* Topbar - mirrors the dashboard topbar exactly */}
       <header className="bg-white border-b border-line h-[60px] flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-900 font-bold text-brand-lime">R</div>
           <span className="text-xl font-semibold leading-none text-regantify-text">Regantify</span>
         </div>
 
-        {/* Login / Sign up — top right corner, only on the vendor entry pages */}
+        {/* Login / Sign up - top right corner, only on the vendor entry pages */}
         {activeAuthTab && (
           <div className="flex items-center gap-2">
             <button

@@ -10,18 +10,18 @@ interface AddCategoryModalProps {
   onClose: () => void;
   /** When set, the modal edits this category instead of creating a new one. */
   editingCategory?: Category;
-  /** Prefills the Parent Category field — used when adding a subcategory
+  /** Prefills the Parent Category field - used when adding a subcategory
    * from a specific main category's row (see Categories.tsx's "+" button).
    * Ignored once `editingCategory` is set, which already carries its own
    * real parent. */
   initialParentId?: string;
   initialParentName?: string;
-  /** Hides the Parent Category field entirely — used when creating/editing
+  /** Hides the Parent Category field entirely - used when creating/editing
    * a Main Category, which by definition has no parent. Subcategory
    * add/edit flows always show it (see `SubcategoriesModal`). */
   hideParentField?: boolean;
   /** Called with the newly created/updated category right before the modal
-   * closes — lets a caller (e.g. the product form's quick-create "+"
+   * closes - lets a caller (e.g. the product form's quick-create "+"
    * button) auto-select it without needing its own success signal. */
   onCreated?: (category: Category) => void;
 }
@@ -68,7 +68,7 @@ function SearchSelect({
         onBlur={() =>
           setTimeout(() => {
             setFocused(false);
-            // Only a clicked suggestion may end up in the box — anything
+            // Only a clicked suggestion may end up in the box - anything
             // typed that wasn't picked from the list gets discarded once
             // the user moves on, so free text can never masquerade as a match.
             if (!options.some((o) => o.label === query)) onQueryChange('');
@@ -99,16 +99,16 @@ interface CategoryFormProps {
   categories: Category[];
   /** When set, the form edits this category instead of creating a new one. */
   editingCategory?: Category;
-  /** Prefills the Parent Category field for a brand-new category — e.g.
+  /** Prefills the Parent Category field for a brand-new category - e.g.
    * adding a subcategory from a specific main category's row. Ignored
    * once `editingCategory` is set, which already carries its own real
    * parent. */
   initialParentId?: string;
   initialParentName?: string;
-  /** Hides the Parent Category field entirely — used when creating/editing
+  /** Hides the Parent Category field entirely - used when creating/editing
    * a Main Category, which by definition has no parent. */
   hideParentField?: boolean;
-  /** Hides this form's own top-right close (X) button — for when it's
+  /** Hides this form's own top-right close (X) button - for when it's
    * embedded in a bigger dialog that already has its own close button
    * (see `SubcategoriesModal`), so there's only ever one. */
   hideCloseButton?: boolean;
@@ -118,7 +118,7 @@ interface CategoryFormProps {
   onCreated?: (category: Category) => void;
 }
 
-/** The Add/Edit Category form itself — no overlay/backdrop of its own, so
+/** The Add/Edit Category form itself - no overlay/backdrop of its own, so
  * `AddCategoryModal` below can wrap it in a normal dialog. */
 export function CategoryForm({
   categories,
@@ -141,7 +141,7 @@ export function CategoryForm({
 
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>(editingCategory?.visibility ?? 'PUBLIC');
 
-  // Not wired up to any API yet — just captured for when the catalog feed
+  // Not wired up to any API yet - just captured for when the catalog feed
   // integration exists. These are plain text for now too (no real
   // Facebook/Google taxonomy lookup behind them), but styled the same as
   // the searchable Parent Category field to match the reference.
@@ -159,7 +159,7 @@ export function CategoryForm({
 
   const [formError, setFormError] = useState<string | null>(null);
 
-  // A subcategory's parent is always a Main Category — restricting the
+  // A subcategory's parent is always a Main Category - restricting the
   // options keeps the hierarchy exactly two levels deep, matching how the
   // Categories table always displays (and lets you drag-and-drop) it.
   const parentOptions = useMemo(
@@ -428,7 +428,7 @@ export function CategoryForm({
   );
 }
 
-/** Thin overlay wrapper around `CategoryForm` — used both for the plain
+/** Thin overlay wrapper around `CategoryForm` - used both for the plain
  * "+ Add New" / row "Edit" flows, and for adding a subcategory from a
  * specific main category's row (`initialParentId`/`hideParentField`). */
 export function AddCategoryModal({

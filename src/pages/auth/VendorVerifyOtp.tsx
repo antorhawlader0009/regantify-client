@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 
 
 // Matches the server's per-phone resend cooldown (see
-// AuthService.enforceOtpCooldown) — kept in sync so the button re-enables
+// AuthService.enforceOtpCooldown) - kept in sync so the button re-enables
 // right when a resend would actually succeed, not earlier.
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -25,7 +25,7 @@ export default function VendorVerifyOtp() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
-  // Separate from `cooldown` (a once-a-second timer) — guards against a
+  // Separate from `cooldown` (a once-a-second timer) - guards against a
   // double-click/double-tap firing two resend requests before `cooldown`
   // state has actually re-rendered the button as disabled. The server's
   // own per-phone cooldown (AuthService.enforceOtpCooldown) has a race
@@ -58,7 +58,7 @@ export default function VendorVerifyOtp() {
       const res = await authApi.verifyOtp(state.phone, code);
 
       if (!res.isNewUser && res.mustSetPassword && res.setupToken) {
-        // Existing vendor logging in via OTP again — no session was
+        // Existing vendor logging in via OTP again - no session was
         // issued. They must set a brand-new password (their old one still
         // works for vendor/login in the meantime) before continuing; this
         // step can't be skipped.
@@ -73,7 +73,7 @@ export default function VendorVerifyOtp() {
         setAuth(res.accessToken, res.user);
 
         if (res.isNewUser && res.mustSetPassword) {
-          // Brand-new phone — the account was just auto-created, but no
+          // Brand-new phone - the account was just auto-created, but no
           // SMS has been sent yet. Offer to set a real password (sends a
           // welcome confirmation), or skip (texts a temp password instead)
           // on the next screen.
@@ -99,7 +99,7 @@ export default function VendorVerifyOtp() {
       setCode('');
     } catch (err: any) {
       // 429 = still within the server's own cooldown (e.g. another tab
-      // just requested one) — resync the local timer to the server's
+      // just requested one) - resync the local timer to the server's
       // actual remaining time instead of leaving the button enabled.
       const retryAfter = err?.response?.data?.retryAfterSeconds;
       if (typeof retryAfter === 'number') {

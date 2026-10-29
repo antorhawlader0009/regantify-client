@@ -137,7 +137,7 @@ type CourierFilter = 'ALL' | CourierAccountProvider;
 const PER_PAGE = 20;
 
 /**
- * Shipping > Tracking — every order that has a courier, across Pathao /
+ * Shipping > Tracking - every order that has a courier, across Pathao /
  * SteadFast / RedX, sorted so anything needing attention (not sent yet,
  * or failed) comes first. See CourierTrackingController for the query.
  * Distinct from the Orders page: that's for running orders day to day,

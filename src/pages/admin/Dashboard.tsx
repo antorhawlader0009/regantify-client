@@ -338,8 +338,8 @@ export default function AdminDashboard() {
                 <tbody>
                   {fees.data.recent.map((row) => (
                     <tr key={row.id}>
-                      <td className="console-id text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '—'}</td>
-                      <td className="text-regantify-text">{row.vendorName ?? '—'}</td>
+                      <td className="console-id text-regantify-text">{row.invoiceNumber ? `ORDER-${row.invoiceNumber}` : '-'}</td>
+                      <td className="text-regantify-text">{row.vendorName ?? '-'}</td>
                       <td className="text-right font-medium text-regantify-text">{formatAmount(row.amount)}</td>
                       <td className="text-regantify-text-muted">{new Date(row.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                     </tr>

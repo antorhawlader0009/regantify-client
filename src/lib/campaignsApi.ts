@@ -40,7 +40,7 @@ export interface Campaign {
   updatedAt: string;
 }
 
-/** List row — items is lean here (just ids, for a product count), not the full CampaignItem shape findOne returns. */
+/** List row - items is lean here (just ids, for a product count), not the full CampaignItem shape findOne returns. */
 export interface CampaignListRow extends Omit<Campaign, 'items'> {
   items: { id: string }[];
 }
@@ -58,7 +58,7 @@ export interface CampaignPayload {
   items?: CampaignItemInput[];
 }
 
-/** One match from "Add Products by SKU" — a product, with its variants (if any) alongside for the frontend to match the specific SKU(s) typed in. */
+/** One match from "Add Products by SKU" - a product, with its variants (if any) alongside for the frontend to match the specific SKU(s) typed in. */
 export interface SkuLookupProduct {
   id: string;
   name: string;
@@ -86,7 +86,7 @@ export const campaignsApi = {
 
   remove: (id: string) => api.delete(`/v1/campaigns/${id}`).then((r) => r.data),
 
-  // Uploads the campaign cover photo and returns its picture URL —
+  // Uploads the campaign cover photo and returns its picture URL -
   // called before Create/Update Campaign is submitted.
   uploadCoverPhoto: (file: File) => {
     const formData = new FormData();
@@ -98,7 +98,7 @@ export const campaignsApi = {
       .then((r) => r.data);
   },
 
-  // "Add Products by SKU" — comma-separated SKUs, matched against
+  // "Add Products by SKU" - comma-separated SKUs, matched against
   // product AND variant SKUs.
   lookupBySkus: (skus: string[]) =>
     api

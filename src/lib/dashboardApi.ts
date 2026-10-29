@@ -3,7 +3,7 @@ import type { OrderStatus } from './ordersApi';
 import type { Compared, TopProduct } from './analyticsApi';
 import type { PlanCode } from './plansApi';
 
-// Vendor dashboard home — mirrors server/src/dashboard/dashboard.service.ts (dashboard-plan.md Step 1).
+// Vendor dashboard home - mirrors server/src/dashboard/dashboard.service.ts (dashboard-plan.md Step 1).
 
 export interface DashboardTodo {
   pendingOrders: number;
