@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HandCoins, Trash2 } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, PillTabs, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
+import { SendSmsChoiceDialog } from '../../../components/ui/SendSmsChoiceDialog';
 import { orderRefundsApi, REFUND_METHOD_LABEL, type RefundItem, type RefundMethod } from '../../../lib/orderRefundsApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { apiErrorMessage } from '../../../lib/api';
@@ -21,13 +22,17 @@ function RecordForm({ item, onDone }: { item: RefundItem; onDone: () => void }) 
   const [method, setMethod] = useState<RefundMethod>('BKASH');
   const [reference, setReference] = useState('');
   const [note, setNote] = useState('');
-  const [sms, setSms] = useState(false);
+  // "Tell the customer by SMS?" is asked in a popup when Save is pressed.
+  const [askSms, setAskSms] = useState(false);
 
   const record = useMutation({
-    mutationFn: (m: RefundMethod) => orderRefundsApi.record(item.orderId, { amount: m === 'WAIVED' ? item.remaining : Number(amount), method: m, reference, note, sms: sms && m !== 'WAIVED' }),
-    onSuccess: (res, m) => {
+    mutationFn: (v: { m: RefundMethod; sms: boolean }) =>
+      orderRefundsApi.record(item.orderId, { amount: v.m === 'WAIVED' ? item.remaining : Number(amount), method: v.m, reference, note, sms: v.sms && v.m !== 'WAIVED' }),
+    onSuccess: (res, { m }) => {
       toast.success(m === 'WAIVED' ? 'Marked as kept.' : res.remaining > 0 ? `Saved. ${taka(res.remaining)} is still to pay back.` : 'Saved. This refund is settled.');
-      if (sms && m !== 'WAIVED' && !res.smsSent) toast.error('The text to the customer could not be sent (check your SMS credits).');
+      if (res.smsSent) toast.success('The customer was told by SMS.');
+      if (res.smsError) toast.error(`The SMS was not sent: ${res.smsError}`);
+      setAskSms(false);
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       onDone();
     },
@@ -58,12 +63,8 @@ function RecordForm({ item, onDone }: { item: RefundItem; onDone: () => void }) 
         </label>
       </div>
       <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Note (optional)" className={`${inputClass} block w-full`} />
-      <label className="flex items-center gap-2 text-sm text-neutral-700">
-        <input type="checkbox" checked={sms} onChange={(e) => setSms(e.target.checked)} className="h-4 w-4 accent-brand" />
-        Tell the customer by SMS (uses 1 SMS credit)
-      </label>
       <div className="flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => record.mutate(method)} disabled={!amountOk || record.isPending} className={primaryBtn}>
+        <button type="button" onClick={() => setAskSms(true)} disabled={!amountOk || record.isPending} className={primaryBtn}>
           {record.isPending ? 'Saving…' : 'Save'}
         </button>
         <button type="button" onClick={onDone} className={outlineBtn}>
@@ -71,7 +72,7 @@ function RecordForm({ item, onDone }: { item: RefundItem; onDone: () => void }) 
         </button>
         <button
           type="button"
-          onClick={() => record.mutate('WAIVED')}
+          onClick={() => record.mutate({ m: 'WAIVED', sms: false })}
           disabled={record.isPending}
           title="You keep the money on purpose, for example a refused parcel's advance. Nothing is paid back."
           className="ml-auto text-sm text-neutral-500 underline underline-offset-2 hover:text-neutral-700"
@@ -79,6 +80,18 @@ function RecordForm({ item, onDone }: { item: RefundItem; onDone: () => void }) 
           Keep {taka(item.remaining)} (no refund)
         </button>
       </div>
+      <SendSmsChoiceDialog
+        open={askSms}
+        onOpenChange={setAskSms}
+        title="Tell the customer by SMS?"
+        busy={record.isPending}
+        onSkip={() => record.mutate({ m: method, sms: false })}
+        onSend={() => record.mutate({ m: method, sms: true })}
+        message={<>
+              <p>The customer also sees this refund on their order tracking page. You can text them too.</p>
+              <p className="mt-2">It uses about 1 SMS credit from your store.</p>
+            </>}
+      />
     </div>
   );
 }

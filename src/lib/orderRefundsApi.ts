@@ -71,11 +71,11 @@ export const orderRefundsApi = {
   list: (tab: 'PENDING' | 'DONE', page: number) => api.get<RefundList>('/v1/order-refunds', { params: { tab, page } }).then((r) => r.data),
   forOrder: (orderId: string) => api.get<RefundItem | null>(`/v1/order-refunds/order/${orderId}`).then((r) => r.data),
   record: (orderId: string, input: RecordRefundInput) =>
-    api.post<{ id: string; remaining: number; smsSent: boolean }>(`/v1/order-refunds/order/${orderId}`, input).then((r) => r.data),
+    api.post<{ id: string; remaining: number; smsSent: boolean; smsError: string | null }>(`/v1/order-refunds/order/${orderId}`, input).then((r) => r.data),
   /** Sends the money back through the bKash or PortWallet payment, then records it. `pending`: the gateway pays it out later. */
   refundThroughGateway: (orderId: string, input: { amount: number; reason?: string; sms?: boolean }) =>
     api
-      .post<{ id: string; remaining: number; reference: string; pending: boolean; smsSent: boolean }>(`/v1/order-refunds/order/${orderId}/gateway`, input)
+      .post<{ id: string; remaining: number; reference: string; pending: boolean; smsSent: boolean; smsError: string | null }>(`/v1/order-refunds/order/${orderId}/gateway`, input)
       .then((r) => r.data),
   remove: (id: string) => api.delete<{ success: true }>(`/v1/order-refunds/entry/${id}`).then((r) => r.data),
 };

@@ -4,7 +4,8 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { Eye, EyeOff, MessageCircleQuestion, Sparkles, Trash2 } from 'lucide-react';
 import { EmptyState, PageHeader, PageSection, PillTabs, TableFooter, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
-import { productQuestionsApi, type ProductQuestion, type QuestionStatus } from '../../../lib/productQuestionsApi';
+import { SendSmsChoiceDialog } from '../../../components/ui/SendSmsChoiceDialog';
+import { productQuestionsApi, type AnswerSmsCost, type ProductQuestion, type QuestionStatus } from '../../../lib/productQuestionsApi';
 import { formatDhakaDateTime } from '../../../lib/dhakaDate';
 import { useCan } from '../../../lib/useStaffAccess';
 import { apiErrorMessage } from '../../../lib/api';
@@ -19,17 +20,32 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
   const [text, setText] = useState(q.answer ?? '');
   const [editing, setEditing] = useState(q.answer === null);
   const [deleting, setDeleting] = useState(false);
+  // "Send this answer by SMS too?" (asked only when the shopper left a phone).
+  const [smsAsk, setSmsAsk] = useState<AnswerSmsCost | null>(null);
   const refresh = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
 
   const answer = useMutation({
-    mutationFn: (value: string) => productQuestionsApi.answer(q.id, value),
-    onSuccess: (saved) => {
-      toast.success(saved.answer ? 'Answer saved. It shows on the product page.' : 'Answer removed. The question is no longer on the page.');
-      setEditing(!saved.answer);
+    mutationFn: (v: { value: string; sendSms: boolean }) => productQuestionsApi.answer(q.id, v.value, v.sendSms),
+    onSuccess: (saved, v) => {
+      const hasAnswer = !!v.value.trim();
+      toast.success(hasAnswer ? 'Answer saved. It shows on the product page.' : 'Answer removed. The question is no longer on the page.');
+      if (saved.smsSent) toast.success('The answer was sent to the shopper by SMS.');
+      if (saved.smsError) toast.error(`The SMS was not sent: ${saved.smsError}`);
+      setSmsAsk(null);
+      setEditing(!hasAnswer);
       void refresh();
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Couldn’t save the answer.')),
   });
+  // Before saving an answer for a shopper who left a phone: what a text would cost, then the popup asks.
+  const smsCost = useMutation({
+    mutationFn: () => productQuestionsApi.answerSmsCost(q.id, text),
+    onSuccess: (cost) => (cost.hasPhone ? setSmsAsk(cost) : answer.mutate({ value: text, sendSms: false })),
+    onError: () => answer.mutate({ value: text, sendSms: false }),
+  });
+  const save = () => (q.hasPhone && text.trim() ? smsCost.mutate() : answer.mutate({ value: text, sendSms: false }));
+  const tooFew = !!smsAsk && !smsAsk.ownGateway && smsAsk.creditsLeft < smsAsk.credits;
+
   // The AI only fills the box; the store reads and edits it, then saves (TellMe idea 137).
   const draft = useMutation({
     mutationFn: () => productQuestionsApi.aiDraft(q.id),
@@ -113,8 +129,8 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
                     Cancel
                   </button>
                 )}
-                <button type="button" onClick={() => answer.mutate(text)} disabled={!text.trim() || answer.isPending} className={primaryBtn}>
-                  {answer.isPending ? 'Saving…' : q.answer === null ? 'Answer and show' : 'Save answer'}
+                <button type="button" onClick={save} disabled={!text.trim() || answer.isPending || smsCost.isPending} className={primaryBtn}>
+                  {answer.isPending || smsCost.isPending ? 'Saving…' : q.answer === null ? 'Answer and show' : 'Save answer'}
                 </button>
               </div>
             </div>
@@ -127,6 +143,7 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
             <p className="mt-1 text-xs text-neutral-500">
               {q.answeredBy ? `${q.answeredBy}` : ''}
               {q.answeredAt ? `${q.answeredBy ? ' · ' : ''}${formatDhakaDateTime(q.answeredAt)}` : ''}
+              {q.answerSmsAt ? ` · SMS sent ${formatDhakaDateTime(q.answerSmsAt)}` : ''}
               {canEdit && (
                 <button type="button" onClick={() => setEditing(true)} className="ml-2 text-brand hover:underline">
                   Edit answer
@@ -136,6 +153,30 @@ function QuestionCard({ q, canEdit }: { q: ProductQuestion; canEdit: boolean }) 
           </div>
         ) : null}
       </div>
+
+      <SendSmsChoiceDialog
+        open={!!smsAsk}
+        onOpenChange={(o) => !o && setSmsAsk(null)}
+        title="Send this answer by SMS too?"
+        busy={answer.isPending}
+        sendDisabled={tooFew}
+        onSkip={() => answer.mutate({ value: text, sendSms: false })}
+        onSend={() => answer.mutate({ value: text, sendSms: true })}
+        message={
+          smsAsk && (
+            <>
+              <p>{q.customerName} left a phone number. The answer is saved on the product page either way; you can also text it to them.</p>
+              <p className="mt-2">
+                {smsAsk.ownGateway
+                  ? 'It goes through your own SMS gateway (no Regantify credits).'
+                  : `It uses ${smsAsk.credits} SMS credit${smsAsk.credits === 1 ? '' : 's'}. You have ${smsAsk.creditsLeft}.`}
+              </p>
+              {tooFew && <p className="mt-2 font-medium text-red-600">Not enough SMS credits. Buy more in Billing, or save without SMS.</p>}
+              {smsAsk.sentBefore && <p className="mt-2 text-xs text-neutral-500">An answer was already texted on {formatDhakaDateTime(smsAsk.sentBefore)}.</p>}
+            </>
+          )
+        }
+      />
 
       <ConfirmDialog
         open={deleting}

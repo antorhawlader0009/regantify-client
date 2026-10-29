@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HandCoins, Loader2, Undo2 } from 'lucide-react';
 import { orderRefundsApi } from '../../lib/orderRefundsApi';
+import { SendSmsChoiceDialog } from '../ui/SendSmsChoiceDialog';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
@@ -26,21 +27,27 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
-  const [sms, setSms] = useState(true);
+  // "Text the customer?" is asked in a popup when Refund is pressed.
+  const [askSms, setAskSms] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refund = useMutation({
-    mutationFn: () => orderRefundsApi.refundThroughGateway(orderId, { amount: Number(amount), reason: reason.trim() || undefined, sms }),
+    mutationFn: (sms: boolean) => orderRefundsApi.refundThroughGateway(orderId, { amount: Number(amount), reason: reason.trim() || undefined, sms }),
     onSuccess: (res) => {
       const via = data?.gatewayRefund?.label ?? 'the gateway';
       toast.success(res.pending ? `${via} accepted the refund and will pay it out.` : `Refunded through ${via} (ref ${res.reference}).`);
-      if (sms && !res.smsSent) toast.error('The refund went through, but the text to the customer was not sent.');
+      if (res.smsSent) toast.success('The customer was told by SMS.');
+      if (res.smsError) toast.error(`The refund went through, but the SMS was not sent: ${res.smsError}`);
+      setAskSms(false);
       setOpen(false);
       setError(null);
       queryClient.invalidateQueries({ queryKey: ['order-refunds'] });
       queryClient.invalidateQueries({ queryKey: ['order-history'] });
     },
-    onError: (err) => setError(apiErrorMessage(err, 'The refund did not go through.')),
+    onError: (err) => {
+      setAskSms(false);
+      setError(apiErrorMessage(err, 'The refund did not go through.'));
+    },
   });
 
   if (!relevant || !data || data.remaining <= 0.004) return null;
@@ -85,7 +92,7 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
               setError(`Enter an amount between ৳1 and ${taka(via.max)}.`);
               return;
             }
-            refund.mutate();
+            setAskSms(true);
           }}
         >
           <p className="text-xs text-amber-900">
@@ -117,10 +124,6 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
               />
             </label>
           </div>
-          <label className="flex items-center gap-2 text-sm text-amber-900">
-            <input type="checkbox" checked={sms} onChange={(e) => setSms(e.target.checked)} />
-            Text the customer that the money was sent back (uses SMS credits)
-          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setOpen(false)} className="rounded-lg px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100">
@@ -137,6 +140,22 @@ export function OrderRefundNote({ orderId, status }: { orderId: string; status: 
           </div>
         </form>
       )}
+      <SendSmsChoiceDialog
+        open={askSms}
+        onOpenChange={setAskSms}
+        title="Tell the customer by SMS?"
+        busy={refund.isPending}
+        skipLabel="Refund without SMS"
+        sendLabel="Refund and send SMS"
+        onSkip={() => refund.mutate(false)}
+        onSend={() => refund.mutate(true)}
+        message={
+          <>
+            <p>The customer also sees this refund on their order tracking page. You can text them too.</p>
+            <p className="mt-2">It uses about 1 SMS credit from your store.</p>
+          </>
+        }
+      />
     </div>
   );
 }

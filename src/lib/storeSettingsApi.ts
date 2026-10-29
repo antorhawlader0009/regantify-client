@@ -20,6 +20,8 @@ export interface StockSettings {
   lowStockMessageLimit: number;
   /** Hide the exact count while stock is above the limit. */
   hideStockCount: boolean;
+  /** "Tell me when it is back" phone form on sold-out products (StorePal); off by default. */
+  restockNotifyEnabled: boolean;
   /** What StorePal's lists do with sold-out products (TellMe idea 70). */
   soldOutDisplay: 'KEEP' | 'LAST' | 'HIDE';
   /** The customer tag that earns the wholesale price (TellMe idea 79). */

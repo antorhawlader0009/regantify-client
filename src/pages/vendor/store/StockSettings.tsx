@@ -79,6 +79,12 @@ export default function StockSettings() {
                 label='Show "Out of Stock" badge on product cards'
                 hint="Off: sold-out products look like any other product card, without the faded image and label."
               />
+              <Checkbox
+                checked={form.restockNotifyEnabled ?? false}
+                onChange={(v) => set('restockNotifyEnabled', v)}
+                label='Show "Tell me when it is back" on sold-out products'
+                hint="Shoppers leave their phone number, and get one SMS from your SMS credits when the product (or that size or colour) is back in stock. Off by default."
+              />
             </div>
           </section>
 

@@ -59,7 +59,10 @@ function StoreTextSection() {
           ]}
         />
         {storeLanguage === 'bn' && <BanglaDigitsCheckbox checked={banglaDigits} onChange={setBanglaDigits} />}
-        <p className="text-xs text-regantify-text-muted">Your product names and descriptions stay exactly as you wrote them.</p>
+        <p className="text-xs text-regantify-text-muted">
+          This is the default. Shoppers can switch between বাংলা and English from the header on StorePal, and their browser remembers their pick.
+          Your product names and descriptions stay exactly as you wrote them.
+        </p>
         <SaveButton pending={save.isPending} onClick={() => save.mutate({ storeLanguage, storeBanglaDigits: banglaDigits })} />
       </div>
     </Section>
