@@ -153,7 +153,7 @@ export default function CodGuard() {
 
   // Advanced settings that are switched on (the panel then starts open).
   const advancedInUse = form
-    ? [Boolean(form.preOrderAdvancePercent), form.duplicateOrderHold, form.autoConfirmTrusted, !form.customerCancelEnabled, !form.customerEditEnabled, form.confirmLinkEnabled].filter(Boolean).length
+    ? [Boolean(form.preOrderAdvancePercent), form.duplicateOrderHold, form.autoConfirmTrusted, form.confirmLinkEnabled].filter(Boolean).length
     : 0;
 
   return (
@@ -484,34 +484,6 @@ export default function CodGuard() {
                 </label>
               </div>
             )}
-          </section>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-5">
-            <Checkbox
-              checked={form.customerCancelEnabled}
-              onChange={(v) => set('customerCancelEnabled', v)}
-              label="Let customers cancel their own order"
-            />
-            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
-              Shows a <b>Cancel order</b> button on the order tracking page and the thank-you page (StorePal theme) while the order is
-              <b> Pending</b> or <b>On Hold</b>. The customer picks a reason, the order is cancelled, its stock and gift card go back, and
-              you get a notice (bell, phone and Telegram). It never shows once you move the order to Processing, for an order that has a
-              payment on it (online or advance), or one already booked with a courier. Those say &ldquo;call the store&rdquo;.
-            </p>
-          </section>
-
-          <section className="bg-white rounded-2xl border border-black/5 p-5">
-            <Checkbox
-              checked={form.customerEditEnabled}
-              onChange={(v) => set('customerEditEnabled', v)}
-              label="Let customers fix their delivery address"
-            />
-            <p className="text-xs text-regantify-text-muted mt-1.5 ml-7">
-              Shows a <b>Fix my address</b> button on the order tracking page and the thank-you page (StorePal theme) while the order is
-              <b> Pending</b> or <b>On Hold</b> and not yet booked with a courier. The customer can correct the street address, the thana
-              or area and a second phone. The main phone and the district stay as ordered. You get a notice, and the order&apos;s history
-              keeps the old and the new address. Fewer parcels come back for a wrong address.
-            </p>
           </section>
 
           <section className="bg-white rounded-2xl border border-black/5 p-5">

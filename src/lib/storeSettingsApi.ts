@@ -77,10 +77,6 @@ export interface CodGuardSettings {
   verificationExpiryHours: number | null;
   // false = the order is cancelled (stock goes back); true = it stays On Hold and the store is told to call.
   verificationExpiryHold: boolean;
-  // "Cancel my order" on the shopper's tracking and thank-you pages, while the order is Pending or On Hold.
-  customerCancelEnabled: boolean;
-  // "Fix my address" on the same pages: the shopper corrects the street address, thana and a second phone.
-  customerEditEnabled: boolean;
   /** "Confirm my order" link by SMS (IDEA-24): off by default; costs one SMS credit per new Cash on Delivery order. */
   confirmLinkEnabled: boolean;
   /** A confirmed Pending order moves to Processing by itself (never when its risk is HIGH). */
