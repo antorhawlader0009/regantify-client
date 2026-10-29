@@ -20,6 +20,7 @@ export const HOOKS: { name: string; what: string; where: string }[] = [
   { name: 'logo', what: 'Logo picture and store name (a link to home)', where: 'every page' },
   { name: 'search', what: 'The search box (one for computers, one for phones)', where: 'every page' },
   { name: 'cart-button', what: 'The bag icon that opens the cart', where: 'every page' },
+  { name: 'side-cart', what: 'The cart tab on the right edge (item count and total) that opens the cart', where: 'every page on a computer, while the cart has items' },
   { name: 'language-switch', what: 'The shopper’s Bangla / English switch in the header', where: 'every page' },
   { name: 'menu', what: 'The site menu row under the header', where: 'every page, when the store set one' },
   { name: 'hero', what: 'The big picture slider at the top of the home page', where: 'home' },
