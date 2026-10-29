@@ -17,6 +17,8 @@ export default function CheckoutFormFields() {
   const [email, setEmail] = useState<OptionalRule>('HIDDEN');
   const [thana, setThana] = useState<ThanaRule>('OPTIONAL');
   const [note, setNote] = useState<NoteRule>('SHOWN');
+  // Shopper sign-up asks for an SMS code: off by default (the owner's rule, 2026-10-29).
+  const [signupOtp, setSignupOtp] = useState<'OFF' | 'ON'>('OFF');
 
   useEffect(() => {
     if (!settings) return;
@@ -24,6 +26,7 @@ export default function CheckoutFormFields() {
     setEmail(settings.checkoutEmail ?? 'HIDDEN');
     setThana(settings.checkoutThana ?? 'OPTIONAL');
     setNote(settings.checkoutNote ?? 'SHOWN');
+    setSignupOtp(settings.customerSignupOtp ? 'ON' : 'OFF');
   }, [settings]);
 
   return (
@@ -84,6 +87,23 @@ export default function CheckoutFormFields() {
               pending={save.isPending}
               onClick={() => save.mutate({ checkoutAltPhone: alt, checkoutEmail: email, checkoutThana: thana, checkoutNote: note })}
             />
+          </DesignSection>
+
+          <DesignSection
+            title="Customer accounts"
+            hint="When a shopper creates an account on your store. Logging in with a password never asks for a code."
+          >
+            <RadioGroup
+              label="Verify the phone with an SMS code at sign-up"
+              value={signupOtp}
+              onChange={setSignupOtp}
+              options={[
+                { value: 'OFF', label: 'Off (sign up at once)' },
+                { value: 'ON', label: 'On (send a code first)' },
+              ]}
+              hint="Off: the account is ready right away. Reward points, wholesale prices and personal coupons only work after the shopper proves the phone with a code once (for example with OTP login). On: the shopper types a code sent by SMS before the account is made. The code is sent by Regantify, not from your SMS credits."
+            />
+            <SaveButton pending={save.isPending} onClick={() => save.mutate({ customerSignupOtp: signupOtp === 'ON' })} />
           </DesignSection>
         </div>
       )}

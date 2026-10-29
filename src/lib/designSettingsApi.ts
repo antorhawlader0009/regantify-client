@@ -208,6 +208,8 @@ export interface DesignSettings {
   checkoutEmail: 'HIDDEN' | 'OPTIONAL' | 'REQUIRED';
   checkoutThana: 'OPTIONAL' | 'REQUIRED';
   checkoutNote: 'SHOWN' | 'HIDDEN';
+  /** Shopper sign-up asks for an SMS code (off by default). */
+  customerSignupOtp?: boolean;
   recentBuyersEnabled: boolean;
   recentBuyersPosition: 'LEFT' | 'RIGHT';
   recentBuyersSeconds: number;
