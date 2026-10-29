@@ -32,6 +32,16 @@ export interface FooterConfig {
   playStoreUrl: string | null;
   appStoreUrl: string | null;
   showCredit: boolean;
+  /** A third column of links (e.g. "Help Center"). */
+  extraTitle: string;
+  extraLinks: FooterLink[];
+  /** The "Got a question?" bar across the top of the footer, with Call and WhatsApp buttons. */
+  showCallBar: boolean;
+  callBarTitle: string;
+  callBarText: string | null;
+  callBarPhone: string | null;
+  /** A WhatsApp number or link; empty = the store's WhatsApp link from Store > Social. */
+  callBarWhatsapp: string | null;
 }
 
 export type FooterConfigPayload = Partial<FooterConfig>;

@@ -1,4 +1,5 @@
 import type { FooterConfig } from '../../../../lib/footerApi';
+import { FooterLinkListEditor } from './FooterLinkListEditor';
 
 const inputClass = 'w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta';
 
@@ -81,6 +82,73 @@ export function FooterExtras({ config, onChange, storeAddress, storePhone }: { c
             <p className="text-xs text-regantify-text-muted">A badge shows only when its link is filled in.</p>
           </div>
         )}
+      </section>
+
+      {/* The "Got a question?" bar across the top of the footer (2026-10-29). */}
+      <section className="space-y-3 border-t border-black/5 pt-5">
+        <label className="flex items-center justify-between gap-3">
+          <span className="text-sm font-medium text-regantify-text">Show a call bar at the top of the footer</span>
+          <input type="checkbox" checked={config.showCallBar} onChange={(e) => onChange({ showCallBar: e.target.checked })} className="h-4 w-4" />
+        </label>
+        {config.showCallBar && (
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-regantify-text-muted">Heading</label>
+                <input type="text" maxLength={60} value={config.callBarTitle} onChange={(e) => onChange({ callBarTitle: e.target.value })} className={inputClass} />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-regantify-text-muted">Line under it (optional)</label>
+                <input
+                  type="text"
+                  maxLength={140}
+                  placeholder="Orders, products or delivery: ask us anything"
+                  value={config.callBarText ?? ''}
+                  onChange={(e) => onChange({ callBarText: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-regantify-text-muted">Call button number</label>
+                <input
+                  type="tel"
+                  maxLength={30}
+                  placeholder={storePhone ?? '01XXXXXXXXX'}
+                  value={config.callBarPhone ?? ''}
+                  onChange={(e) => onChange({ callBarPhone: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-regantify-text-muted">WhatsApp number or link</label>
+                <input
+                  type="text"
+                  maxLength={300}
+                  placeholder="Empty = your WhatsApp from Store > Social"
+                  value={config.callBarWhatsapp ?? ''}
+                  onChange={(e) => onChange({ callBarWhatsapp: e.target.value })}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-regantify-text-muted">A button shows only when it has a number. With no call number the bar uses your contact phone.</p>
+          </div>
+        )}
+      </section>
+
+      {/* A third column of links (2026-10-29), like "Help Center": order tracking, how to order, complaints. */}
+      <section className="space-y-3 border-t border-black/5 pt-5">
+        <div>
+          <span className="text-sm font-medium text-regantify-text">Third link column</span>
+          <p className="mt-0.5 text-xs text-regantify-text-muted">Shown next to your other link columns when it has at least one link.</p>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-regantify-text-muted">Heading</label>
+          <input type="text" maxLength={60} value={config.extraTitle} onChange={(e) => onChange({ extraTitle: e.target.value })} className={inputClass} />
+        </div>
+        <FooterLinkListEditor links={config.extraLinks} onChange={(extraLinks) => onChange({ extraLinks })} />
       </section>
     </div>
   );
