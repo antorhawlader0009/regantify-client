@@ -230,6 +230,8 @@ export interface Branding {
   bodyBackgroundColor: string | null;
   brandHeadingFont: string | null;
   brandBodyFont: string | null;
+  /** The font for Bangla letters; null = the default, Hind Siliguri. */
+  brandBanglaFont: string | null;
   brandCoverImageUrl: string | null;
   /** The website's own cover picture (first slide of the home page hero), separate from the link-preview cover above. */
   brandSiteCoverUrl: string | null;

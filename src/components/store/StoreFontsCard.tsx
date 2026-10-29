@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { STORE_FONTS, isSafeFontName, previewFontsHref } from '../../lib/storeFonts';
+import { STORE_FONTS, DEFAULT_BANGLA_FONT, isSafeFontName, previewFontsHref, type StoreFontChoice } from '../../lib/storeFonts';
 
 const OTHER = '__other';
 const DEFAULT = '';
@@ -7,13 +7,33 @@ const DEFAULT = '';
 const selectClass =
   'w-full px-3.5 py-2.5 rounded-xl border border-black/10 bg-white text-sm text-regantify-text focus:outline-none focus:border-regantify-cta transition-colors';
 
-/** One font picker: the theme's own font, a font from the list, or a Google Fonts name typed by hand. */
-function FontPicker({ label, hint, value, onChange }: { label: string; hint: string; value: string | null; onChange: (v: string | null) => void }) {
-  const listed = !value || STORE_FONTS.some((f) => f.name === value);
+const ENGLISH_FONTS = STORE_FONTS.filter((f) => !f.bangla);
+// The default (Hind Siliguri) is the empty choice, so it isn't listed twice.
+const BANGLA_FONTS = STORE_FONTS.filter((f) => f.bangla && f.name !== DEFAULT_BANGLA_FONT);
+
+/** One font picker: the default, a font from the list, or a Google Fonts name typed by hand. */
+function FontPicker({
+  label,
+  hint,
+  value,
+  onChange,
+  choices,
+  defaultLabel,
+  placeholder,
+}: {
+  label: string;
+  hint: string;
+  value: string | null;
+  onChange: (v: string | null) => void;
+  choices: StoreFontChoice[];
+  defaultLabel: string;
+  placeholder: string;
+}) {
+  const listed = !value || choices.some((f) => f.name === value);
   const [other, setOther] = useState(!listed);
   useEffect(() => {
-    if (value && !STORE_FONTS.some((f) => f.name === value)) setOther(true);
-  }, [value]);
+    if (value && !choices.some((f) => f.name === value)) setOther(true);
+  }, [value, choices]);
   const typedBad = other && !!value && !isSafeFontName(value);
 
   return (
@@ -31,21 +51,12 @@ function FontPicker({ label, hint, value, onChange }: { label: string; hint: str
         }}
         className={selectClass}
       >
-        <option value={DEFAULT}>The theme&apos;s own font</option>
-        <optgroup label="With Bangla letters">
-          {STORE_FONTS.filter((f) => f.bangla).map((f) => (
-            <option key={f.name} value={f.name}>
-              {f.name}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label="English letters (Bangla shows in Noto Sans Bengali)">
-          {STORE_FONTS.filter((f) => !f.bangla).map((f) => (
-            <option key={f.name} value={f.name}>
-              {f.name}
-            </option>
-          ))}
-        </optgroup>
+        <option value={DEFAULT}>{defaultLabel}</option>
+        {choices.map((f) => (
+          <option key={f.name} value={f.name}>
+            {f.name}
+          </option>
+        ))}
         <option value={OTHER}>Another Google font (type its name)…</option>
       </select>
       {other && (
@@ -53,7 +64,7 @@ function FontPicker({ label, hint, value, onChange }: { label: string; hint: str
           type="text"
           value={value ?? ''}
           onChange={(e) => onChange(e.target.value || null)}
-          placeholder="e.g. Kalam"
+          placeholder={placeholder}
           className={`${selectClass} mt-2`}
         />
       )}
@@ -67,22 +78,28 @@ function FontPicker({ label, hint, value, onChange }: { label: string; hint: str
 }
 
 /**
- * Store > Branding > Fonts: the heading font (store name and page headings) and the body font (everything else) of the
- * store, with a live preview in both. The storefront always keeps Noto Sans Bengali behind the chosen font, so Bangla
- * text never shows as boxes. Saved with "Update Branding".
+ * Store > Branding > Fonts (2026-10-29: English and Bangla chosen apart): the English heading font (store name and page
+ * headings), the English body font (everything else), and the font for Bangla letters (default Hind Siliguri). A browser takes
+ * each letter from the first font that has it, so English text uses the English font and Bangla text the Bangla font, with a
+ * live preview of both. Saved with "Update Branding".
  */
 export function StoreFontsCard({
   heading,
   body,
+  bangla,
   onHeading,
   onBody,
+  onBangla,
 }: {
   heading: string | null;
   body: string | null;
+  bangla: string | null;
   onHeading: (v: string | null) => void;
   onBody: (v: string | null) => void;
+  onBangla: (v: string | null) => void;
 }) {
-  const href = previewFontsHref([heading ?? '', body ?? '']);
+  const banglaName = bangla && isSafeFontName(bangla) ? bangla.trim() : DEFAULT_BANGLA_FONT;
+  const href = previewFontsHref([heading ?? '', body ?? '', banglaName]);
   // The preview loads the chosen fonts into the dashboard page itself.
   useEffect(() => {
     if (!href) return;
@@ -92,17 +109,45 @@ export function StoreFontsCard({
     document.head.appendChild(link);
     return () => link.remove();
   }, [href]);
-  const family = (name: string | null) => (name && isSafeFontName(name) ? `"${name.trim()}", "Noto Sans Bengali", sans-serif` : undefined);
+  const family = (english: string | null) =>
+    english && isSafeFontName(english) ? `"${english.trim()}", "${banglaName}", sans-serif` : `"${banglaName}", sans-serif`;
 
   return (
     <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-4 mt-6">
       <div>
         <h2 className="text-sm font-semibold text-regantify-text">Fonts</h2>
-        <p className="text-xs text-regantify-text-muted mt-1">Pick the letters your store is written in. Bangla text always shows correctly, whichever font you pick.</p>
+        <p className="text-xs text-regantify-text-muted mt-1">
+          Pick one font for English letters and one for Bangla letters. Each language is written in its own font, on every page of your store.
+        </p>
       </div>
-      <div className="grid sm:grid-cols-2 gap-4">
-        <FontPicker label="Heading font" hint="Your store name and page headings." value={heading} onChange={onHeading} />
-        <FontPicker label="Body font" hint="Everything else: product names, prices, buttons." value={body} onChange={onBody} />
+      <div className="grid sm:grid-cols-3 gap-4">
+        <FontPicker
+          label="English heading font"
+          hint="Your store name and page headings."
+          value={heading}
+          onChange={onHeading}
+          choices={ENGLISH_FONTS}
+          defaultLabel="The theme's own font"
+          placeholder="e.g. Kalam"
+        />
+        <FontPicker
+          label="English body font"
+          hint="Product names, prices, buttons."
+          value={body}
+          onChange={onBody}
+          choices={ENGLISH_FONTS}
+          defaultLabel="The theme's own font"
+          placeholder="e.g. Kalam"
+        />
+        <FontPicker
+          label="Bangla font"
+          hint="Every Bangla letter on your store."
+          value={bangla}
+          onChange={onBangla}
+          choices={BANGLA_FONTS}
+          defaultLabel={`${DEFAULT_BANGLA_FONT} (default)`}
+          placeholder="e.g. Hind Siliguri"
+        />
       </div>
       <div className="rounded-xl border border-black/5 bg-regantify-search p-4">
         <p className="text-[11px] uppercase tracking-wide text-regantify-text-muted mb-2">Preview</p>

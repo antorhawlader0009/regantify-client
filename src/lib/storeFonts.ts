@@ -1,13 +1,16 @@
 /**
- * Fonts a store can pick in Store > Branding (Vendor.brandHeadingFont / brandBodyFont), all on Google Fonts. The storefront
+ * Fonts a store can pick in Store > Branding (Vendor.brandHeadingFont / brandBodyFont for English, brandBanglaFont for Bangla), all on Google Fonts. The storefront
  * keeps the weights of the same list (storefront lib/storeFonts.ts) so its font address never asks for a weight a font
- * doesn't have; change both when a font is added. Bangla fonts first: a Latin-only font shows Bangla text in Noto Sans Bengali.
+ * doesn't have; change both when a font is added. Bangla letters use the Bangla font (default Hind Siliguri, DEFAULT_BANGLA_FONT).
  */
 export interface StoreFontChoice {
   name: string;
   /** Has Bangla letters of its own. */
   bangla: boolean;
 }
+
+/** The Bangla font a store gets when it picks none (the storefront self-hosts it). */
+export const DEFAULT_BANGLA_FONT = 'Hind Siliguri';
 
 export const STORE_FONTS: StoreFontChoice[] = [
   { name: 'Hind Siliguri', bangla: true },

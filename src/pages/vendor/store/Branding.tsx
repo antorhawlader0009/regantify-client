@@ -32,6 +32,7 @@ const EMPTY_BRANDING: BrandingState = {
   bodyBackgroundColor: null,
   brandHeadingFont: null,
   brandBodyFont: null,
+  brandBanglaFont: null,
   brandCoverImageUrl: null,
   brandSiteCoverUrl: null,
   brandSiteCoverOnly: false,
@@ -184,6 +185,7 @@ export default function Branding() {
         bodyBackgroundColor: branding.bodyBackgroundColor ?? '',
         brandHeadingFont: branding.brandHeadingFont ?? '',
         brandBodyFont: branding.brandBodyFont ?? '',
+        brandBanglaFont: branding.brandBanglaFont ?? '',
         brandMetaTitle: branding.brandMetaTitle ?? '',
         brandMetaDescription: branding.brandMetaDescription ?? '',
       });
@@ -391,8 +393,10 @@ export default function Branding() {
       <StoreFontsCard
         heading={branding.brandHeadingFont}
         body={branding.brandBodyFont}
+        bangla={branding.brandBanglaFont}
         onHeading={(v) => handleField('brandHeadingFont', v)}
         onBody={(v) => handleField('brandBodyFont', v)}
+        onBangla={(v) => handleField('brandBanglaFont', v)}
       />
 
       <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-3 mt-6">
