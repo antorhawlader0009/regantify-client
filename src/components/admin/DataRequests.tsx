@@ -8,7 +8,7 @@ import { toast } from '../../lib/toast';
 import { ReasonNeed } from './/ReasonNeed';
 
 const field = 'w-full rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
-const KIND_LABEL = { STORE_EXPORT: 'Store export', SHOPPER_EXPORT: 'Shopper export', SHOPPER_ERASE: 'Shopper erased' } as const;
+const KIND_LABEL = { STORE_EXPORT: 'Store export', SHOPPER_EXPORT: 'Shopper export', SHOPPER_ERASE: 'Shopper erased', SHOPPER_SELF_DELETE: 'Shopper deleted own account' } as const;
 
 function Card({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
   return (

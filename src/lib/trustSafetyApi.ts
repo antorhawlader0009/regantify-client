@@ -75,4 +75,9 @@ export const trustSafetyApi = {
   scanStatus: () => api.get<ScanState>('/v1/admin/trust-safety/scan').then((r) => r.data),
   scan: () => api.post<ScanState>('/v1/admin/trust-safety/scan').then((r) => r.data),
   risk: () => api.get<StoreRiskRow[]>('/v1/admin/trust-safety/risk').then((r) => r.data),
+  /** What shoppers reported on shop pages (reviews, answered questions, AI answers): counts only, the stores handle them. */
+  contentReports: () =>
+    api
+      .get<{ open: number; lastWeek: number; byKind: Record<string, number>; stores: { vendorId: string; storeName: string; subdomain: string; open: number }[] }>('/v1/admin/trust-safety/content-reports')
+      .then((r) => r.data),
 };

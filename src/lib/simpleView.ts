@@ -19,6 +19,7 @@ const EXTRA_FULL_VIEW_PATHS = [
   '/vendor/orders/handover',
   // Reviews: questions and adding a review by hand.
   '/vendor/reviews/questions',
+  '/vendor/reviews/reports',
   '/vendor/reviews/add',
 ];
 

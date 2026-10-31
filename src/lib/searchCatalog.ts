@@ -159,6 +159,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Monthly sales goal', where: 'Dashboard > Monthly goal', path: '/vendor/dashboard', keywords: 'target sales goal month progress orders target projection pace লক্ষ্য টার্গেট' },
   { title: 'Export products to CSV / Excel', where: 'Product > All Products > Export', path: '/vendor/product/all', keywords: 'download products csv excel backup export list accountant স্টক তালিকা' },
   { title: 'Product questions and answers', where: 'Reviews > Questions', path: '/vendor/reviews/questions', keywords: 'customer questions answer qna ask question product page reply প্রশ্ন উত্তর' },
+  { title: 'Reported reviews, questions and assistant answers', where: 'Reviews > Reports', path: '/vendor/reviews/reports', keywords: 'report reported flag abuse spam offensive hide fake review complaint assistant answer ai রিপোর্ট অভিযোগ' },
   { title: 'Product badges (New, Hot)', where: 'Add/Edit Product > Badge, All Products > Set badge', path: '/vendor/product/all', keywords: 'badge label tag new hot sale eid offer ribbon product card colour ব্যাজ' },
   { title: 'Merge two orders of one customer', where: 'Order detail > Merge order', path: '/vendor/orders', keywords: 'combine join merge orders same customer same phone one parcel delivery charge once অর্ডার এক করা' },
   { title: 'Courier rules by delivery zone', where: 'Courier Integration > Courier Rules', path: '/vendor/courier/rules', keywords: 'automatic courier choose pathao steadfast redx inside dhaka outside dhaka zone rule default courier কুরিয়ার নিয়ম' },

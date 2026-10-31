@@ -116,6 +116,7 @@ const AppsPage = lazy(() => import('./pages/vendor/AppsPage'));
 const ChatExtensionPrivacy = lazy(() => import('./pages/marketing/ChatExtensionPrivacy'));
 const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
 const Questions = lazy(() => import('./pages/vendor/review/Questions'));
+const ReviewReports = lazy(() => import('./pages/vendor/review/Reports'));
 const CourierRules = lazy(() => import('./pages/vendor/courier/CourierRules'));
 const StockHistory = lazy(() => import('./pages/vendor/product/StockHistory'));
 const ResellerSupply = lazy(() => import('./pages/vendor/product/ResellerSupply'));
@@ -606,6 +607,7 @@ export default function App() {
                 <Route path="/vendor/reviews" element={<Reviews />} />
                 <Route path="/vendor/reviews/add" element={<AddReview />} />
                 <Route path="/vendor/reviews/questions" element={<Questions />} />
+                <Route path="/vendor/reviews/reports" element={<ReviewReports />} />
                 <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
                 <Route path="/vendor/staff" element={<Staff />} />
                 <Route path="/vendor/activity" element={<ActivityLog />} />

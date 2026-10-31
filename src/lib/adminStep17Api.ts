@@ -53,7 +53,7 @@ export interface MarketingStore {
 
 export interface DataRequestRow {
   id: string;
-  kind: 'STORE_EXPORT' | 'SHOPPER_EXPORT' | 'SHOPPER_ERASE';
+  kind: 'STORE_EXPORT' | 'SHOPPER_EXPORT' | 'SHOPPER_ERASE' | 'SHOPPER_SELF_DELETE';
   subject: string;
   subjectLabel: string;
   reason: string;

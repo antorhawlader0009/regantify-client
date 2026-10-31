@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageCircleQuestion, MessageSquareQuote, MoreVertical, Plus, Star } from 'lucide-react';
+import { Flag, MessageCircleQuestion, MessageSquareQuote, MoreVertical, Plus, Star } from 'lucide-react';
 import { reviewsApi, type Review } from '../../../lib/reviewsApi';
+import { contentReportsApi } from '../../../lib/contentReportsApi';
 import { ViewProductOnStorefront } from '../../../components/product/ViewProductOnStorefront';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
@@ -271,6 +272,8 @@ export default function Reviews() {
   const reviews = data?.reviews ?? [];
   const total = data?.total ?? 0;
   const counts = data?.counts;
+  // How many shopper reports are waiting (the Reports button shows it).
+  const { data: reportsOpen } = useQuery({ queryKey: ['content-reports', 'count'], queryFn: contentReportsApi.count });
   const filtered = Boolean(search.trim() || status !== 'all' || rating);
   const COLS = 5;
 
@@ -300,6 +303,10 @@ export default function Reviews() {
             <Link to="/vendor/reviews/questions" className={outlineBtn}>
               <MessageCircleQuestion size={15} aria-hidden />
               Questions
+            </Link>
+            <Link to="/vendor/reviews/reports" className={outlineBtn}>
+              <Flag size={15} aria-hidden />
+              Reports{reportsOpen && reportsOpen.open > 0 ? ` (${reportsOpen.open})` : ''}
             </Link>
             {addButton}
           </FullViewOnly>

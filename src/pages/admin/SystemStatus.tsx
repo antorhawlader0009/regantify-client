@@ -127,6 +127,29 @@ export default function SystemStatus() {
         </div>
       </section>
 
+      {data.push && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-regantify-text">App push notifications</h2>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-black/5 bg-white p-4">
+              <p className="text-xs text-regantify-text-muted">Firebase push</p>
+              <p className={`text-lg font-semibold ${data.push.enabled ? (data.push.pausedNow ? 'text-red-700' : 'text-green-700') : 'text-regantify-text-muted'}`}>
+                {data.push.enabled ? (data.push.pausedNow ? 'Paused (429)' : 'On') : 'Off'}
+              </p>
+              <p className="text-xs text-regantify-text-muted">{data.push.enabled ? 'one shared quota for every shop' : 'set the Firebase key in server/.env'}</p>
+            </div>
+            <Count label="Sent, last 10 minutes" value={data.push.last10Minutes.sent} hint={`${data.push.thisMinute.sent} this minute`} />
+            <Count
+              label="Failed or throttled, last 10 minutes"
+              value={data.push.last10Minutes.failed + data.push.last10Minutes.throttled}
+              hint={`${data.push.last10Minutes.throttled} throttled (429), ${data.push.last10Minutes.failed} failed, ${data.push.last10Minutes.dead} dead tokens removed`}
+              bad
+            />
+            <Count label="Waiting to send" value={data.push.queued.high + data.push.queued.promo} hint={`${data.push.queued.high} order news first, ${data.push.queued.promo} promotions`} />
+          </div>
+        </section>
+      )}
+
       <IntegrationsSection />
 
       <ErrorLogSection />

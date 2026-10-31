@@ -30,6 +30,14 @@ export interface SystemStatus {
     eventLoop?: { lastMinute: { at: number; p50Ms: number; p99Ms: number; maxMs: number } | null; worstP99LastHourMs: number | null };
   };
   database: { ok: boolean; latencyMs: number | null };
+  /** Push in the Regantify app (STORE-APP-plan.md Step 5), for the server process that answered. Missing on an older server. */
+  push?: {
+    enabled: boolean;
+    thisMinute: { sent: number; failed: number; throttled: number; dead: number };
+    last10Minutes: { sent: number; failed: number; throttled: number; dead: number };
+    queued: { high: number; promo: number };
+    pausedNow: boolean;
+  };
   jobs: JobStatus[];
   lateCount: number;
   last24h: { failedWebhooks: number; webhooksRetrying: number; courierBookingsFailed: number; paymentsPaidButNotApplied: number };

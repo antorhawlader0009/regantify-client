@@ -18,6 +18,7 @@ const TABS = [
   { id: 'flags', label: 'Flagged products' },
   { id: 'products', label: 'All products' },
   { id: 'risk', label: 'Store risk' },
+  { id: 'reports', label: 'Shopper reports' },
   { id: 'words', label: 'Prohibited words' },
 ] as const;
 type Tab = (typeof TABS)[number]['id'];
@@ -66,6 +67,7 @@ export default function TrustSafety() {
       {tab === 'flags' && <FlagQueue canEdit={canEdit} focusId={params.get('flag')} />}
       {tab === 'products' && <ProductSearch canEdit={canEdit} initial={params.get('q') ?? ''} />}
       {tab === 'risk' && <RiskList />}
+      {tab === 'reports' && <ReportCounts />}
       {tab === 'words' && <Words canEdit={canEdit} />}
     </div>
   );
@@ -403,6 +405,70 @@ function ProductSearch({ canEdit, initial }: { canEdit: boolean; initial: string
         onHide={(reason, warn) => trustSafetyApi.hide(hiding!.id, { reason, warn })}
         invalidate={['ts-products', 'ts-flags']}
       />
+    </section>
+  );
+}
+
+// ---- Shopper reports ----------------------------------------------------------------------------------------------------------
+
+const REPORT_KIND_LABEL: Record<string, string> = { REVIEW: 'Reviews', QUESTION: 'Questions', AI_ANSWER: 'Assistant answers' };
+
+/**
+ * What shoppers reported with the Report button on shop pages (Google Play's user-generated and AI-generated content rules). The stores read and
+ * handle them in Reviews > Reports; here only the counts show, and which stores let them pile up. No shopper details are kept with a report.
+ */
+function ReportCounts() {
+  const { data, isLoading } = useQuery({ queryKey: ['ts-content-reports'], queryFn: trustSafetyApi.contentReports });
+  if (isLoading || !data) return <Loader2 className="mx-auto animate-spin text-neutral-400" />;
+  return (
+    <section className="space-y-3">
+      <p className="text-xs text-regantify-text-muted">
+        Shoppers can report a review, an answered question or an answer of a shop's AI assistant. Each shop handles its own reports (hide the item or close the report).
+        A shop with many open ones is worth a look.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-4">
+        <div className="rounded-xl border border-black/5 bg-white px-4 py-3">
+          <p className="text-xs text-regantify-text-muted">Waiting for the shops</p>
+          <p className="text-2xl font-semibold text-regantify-text">{data.open}</p>
+        </div>
+        <div className="rounded-xl border border-black/5 bg-white px-4 py-3">
+          <p className="text-xs text-regantify-text-muted">New in the last 7 days</p>
+          <p className="text-2xl font-semibold text-regantify-text">{data.lastWeek}</p>
+        </div>
+        {(['REVIEW', 'QUESTION', 'AI_ANSWER'] as const).slice(0, 2).map((k) => (
+          <div key={k} className="rounded-xl border border-black/5 bg-white px-4 py-3">
+            <p className="text-xs text-regantify-text-muted">Waiting: {REPORT_KIND_LABEL[k].toLowerCase()}</p>
+            <p className="text-2xl font-semibold text-regantify-text">{data.byKind[k] ?? 0}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-regantify-text-muted">Waiting: assistant answers {data.byKind.AI_ANSWER ?? 0}</p>
+      {data.stores.length === 0 ? (
+        <p className="rounded-xl border border-black/5 bg-white px-4 py-8 text-center text-sm text-regantify-text-muted">No shop has an open report right now.</p>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-black/5 bg-white">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs text-regantify-text-muted">
+                <th className="px-4 py-2 font-medium">Shop</th>
+                <th className="px-4 py-2 text-right font-medium">Open reports</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.stores.map((s) => (
+                <tr key={s.vendorId} className="border-t border-black/5">
+                  <td className="px-4 py-2">
+                    <Link to={`/admin/vendors/${s.vendorId}`} className="text-regantify-text hover:underline">
+                      {s.storeName || s.subdomain}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2 text-right text-regantify-text">{s.open}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }

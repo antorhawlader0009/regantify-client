@@ -112,6 +112,8 @@ export function policyHtml(kind: PolicyKind, lang: PolicyLang, f: PolicyFacts): 
 <p>ডেলিভারির জন্য কুরিয়ার ও পেমেন্টের জন্য পেমেন্ট গেটওয়ের সাথে প্রয়োজনীয় তথ্য ভাগ করি। এর বাইরে আপনার তথ্য কারও কাছে বিক্রি করি না।</p>
 <h3>আপনার অধিকার</h3>
 <p>আপনার তথ্য দেখতে, ঠিক করতে বা মুছে ফেলতে চাইলে আমাদের জানান।</p>
+<h3>অ্যাকাউন্ট মুছে ফেলা</h3>
+<p>আপনি নিজেই আপনার Regantify অ্যাকাউন্ট মুছে ফেলতে পারেন: দোকানের সাইটে অ্যাকাউন্ট মেনুর "অ্যাকাউন্ট মুছুন" থেকে, বা সরাসরি এই ঠিকানায়: <code>/account/delete</code>। Regantify অ্যাপ থেকেও পারবেন। মুছলে আপনার লগইন, সংরক্ষিত ঠিকানা, কার্ট, উইশলিস্ট ও Google সংযোগ সব দোকান থেকে চলে যায়। যে অর্ডার আগেই দিয়েছেন তা দোকানের বিক্রি ও ডেলিভারির হিসাব হিসেবে থেকে যায় (নাম, ফোন, ঠিকানা, টাকার অঙ্ক ও পণ্যসহ), দোকানের নিজের নোট এবং আপনার ফোন নম্বরের সাথে জড়ানো পয়েন্ট, কুপন ব্যবহার ও পাঠানো SMS-ও থাকে। আপনার লেখা রিভিউ ও প্রশ্ন দোকানের পাতায় থাকে, তবে আপনার নাম ও যোগাযোগের তথ্য ছাড়া।</p>
 <h3>যোগাযোগ</h3>${contact(f, lang)}`
       : `<h2>Privacy Policy</h2>
 <p>${name} takes your privacy seriously.</p>
@@ -123,16 +125,18 @@ export function policyHtml(kind: PolicyKind, lang: PolicyLang, f: PolicyFacts): 
 <p>We share what is needed with the courier (to deliver) and the payment gateway (to take payment). We do not sell your information.</p>
 <h3>Your rights</h3>
 <p>Ask us if you want to see, correct or delete your information.</p>
+<h3>Deleting your account</h3>
+<p>You can delete your Regantify account yourself: from the account menu on our store ("Delete my account"), at <code>/account/delete</code>, or in the Regantify app. Deleting removes your sign-ins, saved addresses, carts, wishlist and Google link from every shop. Orders you already placed stay with the shop as its sales and delivery records (with your name, phone, address, the amounts and the items), and so do the shop's own notes, the points and coupon uses tied to your phone number, and the texts it sent you. Reviews and questions you wrote stay on the shop's page without your name or contact details.</p>
 <h3>Contact</h3>${contact(f, lang)}`;
   } else if (kind === 'TERMS') {
     body = bn
       ? `<h2>শর্তাবলী</h2>
 <p>${name}-এর ওয়েবসাইট ব্যবহার করে বা অর্ডার করে আপনি নিচের শর্তে রাজি হচ্ছেন।</p>
-<ul><li>পণ্যের দাম ও স্টক বদলাতে পারে। অর্ডার নিশ্চিত হওয়ার সময়ের দামই প্রযোজ্য।</li><li>ভুল দাম বা স্টক না থাকার কারণে আমরা অর্ডার বাতিল করার অধিকার রাখি, এ ক্ষেত্রে আপনাকে জানানো হবে।</li><li>অর্ডারের সময় সঠিক নাম, ফোন ও ঠিকানা দিতে হবে।</li><li>ভুয়া বা বারবার ফেরত দেওয়া অর্ডারের ক্ষেত্রে আমরা পরবর্তী অর্ডার সীমিত করতে পারি।</li><li>রিটার্ন ও ডেলিভারির নিয়ম আমাদের রিটার্ন ও ডেলিভারি নীতিতে দেওয়া আছে।</li></ul>
+<ul><li>পণ্যের দাম ও স্টক বদলাতে পারে। অর্ডার নিশ্চিত হওয়ার সময়ের দামই প্রযোজ্য।</li><li>ভুল দাম বা স্টক না থাকার কারণে আমরা অর্ডার বাতিল করার অধিকার রাখি, এ ক্ষেত্রে আপনাকে জানানো হবে।</li><li>অর্ডারের সময় সঠিক নাম, ফোন ও ঠিকানা দিতে হবে।</li><li>ভুয়া বা বারবার ফেরত দেওয়া অর্ডারের ক্ষেত্রে আমরা পরবর্তী অর্ডার সীমিত করতে পারি।</li><li>রিটার্ন ও ডেলিভারির নিয়ম আমাদের রিটার্ন ও ডেলিভারি নীতিতে দেওয়া আছে।</li><li>আপনার লেখা রিভিউ ও প্রশ্ন সৎ ও ভদ্র হতে হবে। স্প্যাম, আপত্তিকর, মিথ্যা বা অন্যের ব্যক্তিগত তথ্য থাকলে আমরা তা লুকিয়ে ফেলতে পারি, আর যে কেউ "রিপোর্ট" বাটন দিয়ে জানাতে পারে।</li></ul>
 <h3>যোগাযোগ</h3>${contact(f, lang)}`
       : `<h2>Terms and Conditions</h2>
 <p>By using the ${name} website or placing an order, you agree to these terms.</p>
-<ul><li>Prices and stock can change. The price when your order is confirmed applies.</li><li>We may cancel an order for a wrong price or an item out of stock, and we will tell you.</li><li>Give a correct name, phone number and address when you order.</li><li>We may limit later orders from customers with fake orders or many refused parcels.</li><li>Returns and delivery follow our Return and Delivery policies.</li></ul>
+<ul><li>Prices and stock can change. The price when your order is confirmed applies.</li><li>We may cancel an order for a wrong price or an item out of stock, and we will tell you.</li><li>Give a correct name, phone number and address when you order.</li><li>We may limit later orders from customers with fake orders or many refused parcels.</li><li>Returns and delivery follow our Return and Delivery policies.</li><li>Reviews and questions you post must be honest and respectful. We may hide anything that is spam, offensive, false or shows someone's private details, and anyone can report it with the Report button.</li></ul>
 <h3>Contact</h3>${contact(f, lang)}`;
   } else {
     body = bn
