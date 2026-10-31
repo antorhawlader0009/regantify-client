@@ -31,6 +31,8 @@ export interface UpdatePlanPayload {
   customPaymentGatewayAllowed?: boolean;
   lmsEnabled?: boolean;
   posEnabled?: boolean;
+  /** The store may build its own Android app (Mobile App page; STORE-APP-plan.md). */
+  storeAppEnabled?: boolean;
   // Flat BDT part + percent (0-100) of the order total - see Plan in plansApi.ts.
   codGatewayFeeBdt?: number;
   codGatewayFeePercent?: number;

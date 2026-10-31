@@ -44,6 +44,7 @@ export interface Plan {
   customPaymentGatewayAllowed: boolean;
   lmsEnabled: boolean;
   posEnabled: boolean;
+  storeAppEnabled?: boolean;
   // Each fee = flat BDT part + percent (0-100) of the order total
   // (incl. delivery, VAT and the flat part), both applied together - see server's Plan.codGatewayFeeBdt comment.
   codGatewayFeeBdt: string;
