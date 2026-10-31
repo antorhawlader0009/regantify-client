@@ -114,6 +114,9 @@ const StandingOrders = lazy(() => import('./pages/vendor/order/StandingOrders'))
 const ConnectExtension = lazy(() => import('./pages/vendor/store/ConnectExtension'));
 const AppsPage = lazy(() => import('./pages/vendor/AppsPage'));
 const ChatExtensionPrivacy = lazy(() => import('./pages/marketing/ChatExtensionPrivacy'));
+// The Regantify app's pages Google Play asks for (STORE-APP-plan.md Step 10).
+const AppPrivacy = lazy(() => import('./pages/marketing/AppLegal').then((m) => ({ default: m.AppPrivacy })));
+const AppDeleteAccount = lazy(() => import('./pages/marketing/AppLegal').then((m) => ({ default: m.AppDeleteAccount })));
 const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
 const Questions = lazy(() => import('./pages/vendor/review/Questions'));
 const ReviewReports = lazy(() => import('./pages/vendor/review/Reports'));
@@ -150,6 +153,8 @@ const PopupCampaignBuilder = lazy(() => import('./pages/vendor/marketing/PopupCa
 const Discounts = lazy(() => import('./pages/vendor/marketing/Discounts'));
 const GiftOffers = lazy(() => import('./pages/vendor/marketing/GiftOffers'));
 const RewardPoints = lazy(() => import('./pages/vendor/marketing/RewardPoints'));
+const AppNotifications = lazy(() => import('./pages/vendor/marketing/AppNotifications'));
+const MobileApp = lazy(() => import('./pages/vendor/store/MobileApp'));
 const AddDiscount = lazy(() => import('./pages/vendor/marketing/AddDiscount'));
 const FlashSales = lazy(() => import('./pages/vendor/marketing/FlashSales'));
 const AddFlashSale = lazy(() => import('./pages/vendor/marketing/AddFlashSale'));
@@ -201,6 +206,7 @@ const AdminReports = lazy(() => import('./pages/admin/Reports'));
 const AdminMarketing = lazy(() => import('./pages/admin/Marketing'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
 const AdminAddons = lazy(() => import('./pages/admin/Addons'));
+const AdminStoreApps = lazy(() => import('./pages/admin/StoreApps'));
 const Receipts = lazy(() => import('./pages/vendor/finance/Receipts'));
 const AllVendors = lazy(() => import('./pages/admin/vendors/AllVendors'));
 const StoreDetailPage = lazy(() => import('./pages/admin/vendors/StoreDetail'));
@@ -365,6 +371,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/flash-sale' &&
     r.path !== '/vendor/marketing/gift-cards' &&
     r.path !== '/vendor/marketing/rewards' &&
+    r.path !== '/vendor/marketing/app-notifications' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/ai-usage' &&
     r.path !== '/vendor/finance/wallet' &&
@@ -406,6 +413,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/marketing' &&
     r.path !== '/admin/settings' &&
     r.path !== '/admin/addons' &&
+    r.path !== '/admin/store-apps' &&
     r.path !== '/admin/vendors/all' &&
     r.path !== '/admin/customers' &&
     r.path !== '/admin/packs' &&
@@ -465,6 +473,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/legal/chat-extension-privacy" element={<ChatExtensionPrivacy />} />
+            <Route path="/legal/app-privacy" element={<AppPrivacy />} />
+            <Route path="/legal/delete-account" element={<AppDeleteAccount />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
 
             {/* Public storefront now lives in its own app - see storefront/
@@ -596,6 +606,7 @@ export default function App() {
                 <Route path="/vendor/orders/chats" element={<Navigate to="/vendor/store/extension?tab=chats" replace />} />
                 <Route path="/vendor/store/extension" element={<ConnectExtension />} />
                 <Route path="/vendor/app" element={<AppsPage />} />
+                <Route path="/vendor/app/customers" element={<MobileApp />} />
                 <Route path="/vendor/orders/:id" element={<OrderDetail />} />
                 <Route path="/vendor/customers" element={<Customers />} />
                 <Route path="/vendor/customers/details" element={<CustomerDetails />} />
@@ -624,6 +635,7 @@ export default function App() {
                 <Route path="/vendor/marketing/discounts" element={<Discounts />} />
                 <Route path="/vendor/marketing/discounts/gifts" element={<GiftOffers />} />
                 <Route path="/vendor/marketing/rewards" element={<RewardPoints />} />
+                <Route path="/vendor/marketing/app-notifications" element={<AppNotifications />} />
                 <Route path="/vendor/marketing/discounts/add" element={<AddDiscount />} />
                 <Route path="/vendor/marketing/discounts/:id/edit" element={<AddDiscount />} />
                 <Route path="/vendor/marketing/flash-sale" element={<FlashSales />} />
@@ -726,6 +738,7 @@ export default function App() {
                 <Route path="/admin/marketing" element={<AdminMarketing />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/addons" element={<AdminAddons />} />
+                <Route path="/admin/store-apps" element={<AdminStoreApps />} />
                 <Route path="/admin/vendors/all" element={<AllVendors />} />
                 <Route path="/admin/renewals" element={<Renewals />} />
                 <Route path="/admin/packs" element={<PacksAndPromos />} />

@@ -1,3 +1,4 @@
+import { SendAppMessageButton } from '../../../components/app/SendAppMessageButton';
 import { useState, type ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -301,6 +302,7 @@ export default function CustomerDetail() {
               <MessageCircle size={14} aria-hidden />
               WhatsApp
             </a>
+            <SendAppMessageButton phone={customer.phone} className={`${outlineBtn} h-10 flex-1 sm:h-9 sm:flex-none`} />
             {canEdit && (
               <Link to={editPath} className={`${outlineBtn} h-10 flex-1 sm:h-9 sm:flex-none`}>
                 <Pencil size={14} aria-hidden />

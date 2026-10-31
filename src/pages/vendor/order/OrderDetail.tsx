@@ -48,6 +48,7 @@ import { SplitOrderDialog, canSplitOrder } from '../../../components/order/Split
 import { AssignCard } from '../../../components/order/OrderAssign';
 import { SendSmsDialog } from '../../../components/sms/SendSmsDialog';
 import { OrderMessageDialog } from '../../../components/order/OrderMessageDialog';
+import { SendAppMessageButton } from '../../../components/app/SendAppMessageButton';
 import { CustomerRecordStrip } from '../../../components/courier/CustomerRecordStrip';
 import { OrderCallLine } from '../../../components/lms/OrderCallLine';
 import { CustomerGroupChip, CustomerTagChips } from '../customer/CustomerNoteCard';
@@ -819,6 +820,7 @@ export default function OrderDetail() {
                       SMS
                     </button>
                   )}
+                  <SendAppMessageButton phone={order.customerPhone} orderId={order.id} className={outlineBtn} />
                   <button type="button" onClick={() => setHistoryPhone(order.customerPhone)} className={outlineBtn}>
                     Order history
                   </button>

@@ -54,6 +54,7 @@ const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/shop', 'shop.manage'],
   ['/admin/feature-flags', 'flags.manage'],
   ['/admin/addons', 'settings.manage'],
+  ['/admin/store-apps', 'stores.view'],
   ['/admin/approvals', null],
   ['/admin/verification', 'kyc.manage'],
   ['/admin/resale-disputes', 'orders.view'],

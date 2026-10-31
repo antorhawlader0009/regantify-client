@@ -17,6 +17,8 @@ const EXTRA_FULL_VIEW_PATHS = [
   '/vendor/orders/tracking-bulk',
   '/vendor/orders/import',
   '/vendor/orders/handover',
+  // Main Menu > App > the app for your customers (STORE-APP-plan.md Step 14): keys, Firebase and builds are Full mode.
+  '/vendor/app/customers',
   // Reviews: questions and adding a review by hand.
   '/vendor/reviews/questions',
   '/vendor/reviews/reports',

@@ -1,10 +1,12 @@
 import { Smartphone, Store } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/ui/PageKit';
 
 /*
  * Main Menu > App (2026-10-23): the two mobile apps Regantify is planning. Neither is built yet, so the page only says
  * what each will do and that it is coming. Nothing here is a promise of a date.
+ * 2026-10-31 (STORE-APP-plan.md Step 14): "An app for your store" is real now and opens Mobile App (/vendor/app/customers).
  */
 
 interface PlannedApp {
@@ -12,6 +14,8 @@ interface PlannedApp {
   title: string;
   who: string;
   points: string[];
+  /** Set when the app exists: the card opens this page instead of saying "Coming soon". */
+  to?: string;
 }
 
 const APPS: PlannedApp[] = [
@@ -25,7 +29,8 @@ const APPS: PlannedApp[] = [
     icon: Store,
     title: 'An app for your store',
     who: 'For your customers',
-    points: ['Your own shop app with your name and logo', 'Customers browse and order from their phone', 'Order updates and offers sent straight to them'],
+    points: ['The Regantify app is already on for your shoppers, free', 'Or build your own app with your name, logo and colours', 'Order updates and offers sent straight to them'],
+    to: '/vendor/app/customers',
   },
 ];
 
@@ -44,7 +49,7 @@ export default function AppsPage() {
                 <h2 className="text-[15px] font-semibold text-regantify-text">{app.title}</h2>
                 <p className="text-xs text-neutral-500">{app.who}</p>
               </div>
-              <span className="shrink-0 rounded-full border border-line bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-600">Coming soon</span>
+              <span className="shrink-0 rounded-full border border-line bg-neutral-50 px-2.5 py-0.5 text-xs font-medium text-neutral-600">{app.to ? 'Ready' : 'Coming soon'}</span>
             </div>
             <ul className="mt-4 space-y-2 text-sm text-neutral-700">
               {app.points.map((p) => (
@@ -54,7 +59,13 @@ export default function AppsPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-auto pt-4 text-xs text-neutral-500">We are building it. You will see it here as soon as it is ready.</p>
+            {app.to ? (
+              <Link to={app.to} className="mt-auto inline-flex h-9 w-fit items-center rounded-lg bg-neutral-900 px-4 text-sm font-medium text-white hover:bg-neutral-800" style={{ marginTop: 'auto' }}>
+                Open
+              </Link>
+            ) : (
+              <p className="mt-auto pt-4 text-xs text-neutral-500">We are building it. You will see it here as soon as it is ready.</p>
+            )}
           </section>
         ))}
       </div>

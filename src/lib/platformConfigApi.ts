@@ -13,6 +13,8 @@ export interface PlatformConfig {
     withdrawFeePercent: number;
     planGraceDays: number;
     smsLowBalance: number;
+    /** Most app promotions one store may send per Dhaka day. */
+    appPromoPerDay: number;
     trialPlanCode: string;
     trialDays: number;
     /** Who may pay for plans, SMS and AI Credit packs from the wallet: nobody, verified stores, every store. A store's own setting beats it. */

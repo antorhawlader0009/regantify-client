@@ -181,6 +181,8 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Pinned products', where: 'Product > All Products > Pinned', path: '/vendor/product/all', keywords: 'pin product top first home page featured order sort উপরে আটকে রাখা' },
   { title: 'Show with this (cart suggestions)', where: 'Product > Add/Edit Product', path: '/vendor/product/all', keywords: 'add-on cross sell upsell cart suggestion also like accessories এটাও নিতে পারেন' },
   { title: 'Birthday wishes SMS', where: 'SMS > Birthday wishes', path: '/vendor/sms', keywords: 'birthday anniversary special day wish sms greeting coupon জন্মদিন শুভেচ্ছা' },
+  { title: 'My own mobile app', where: 'App > App for your customers', path: '/vendor/app/customers', keywords: 'own app android apk google play build my app logo name colour keys firebase signing aab mobile app for my store অ্যাপ আমার নিজের অ্যাপ বিল্ড' },
+  { title: 'App notifications', where: 'Marketing > App Notifications', path: '/vendor/marketing/app-notifications', keywords: 'app notification push offer promotion regantify app followers send schedule free অ্যাপ নোটিফিকেশন পুশ' },
   { title: 'Reward points', where: 'Marketing > Reward Points', path: '/vendor/marketing/rewards', keywords: 'reward points loyalty earn spend repeat customers retention পয়েন্ট পুরস্কার' },
   { title: 'Free gifts (buy X get Y)', where: 'Marketing > Discounts > Free gifts', path: '/vendor/marketing/discounts/gifts', keywords: 'free gift buy one get one bogo buy 2 get 1 free product free spend get gift offer উপহার ফ্রি' },
   { title: 'Discounts (automatic)', where: 'Marketing > Discounts', path: '/vendor/marketing/discounts', keywords: 'automatic discount percent off buy more minimum cart free shipping ডিসকাউন্ট ছাড়' },

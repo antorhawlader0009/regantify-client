@@ -56,6 +56,8 @@ interface Draft {
   enabled: boolean;
   /** The vendor's own wording; null means the built-in text for the chosen language. */
   text: string | null;
+  /** Also send this as a Regantify app notification. */
+  app: boolean;
 }
 
 const inputClass =
@@ -95,6 +97,15 @@ function EventCard({
             Use the built-in text
           </button>
         )}
+      </div>
+
+      <div className="mt-2">
+        <Checkbox
+          checked={draft.app}
+          onChange={(app) => onChange({ ...draft, app })}
+          label="App notification"
+          hint="Free. Also sent as a notification to customers who have the Regantify app and ordered while signed in."
+        />
       </div>
 
       <div className={`mt-3 ${draft.enabled ? '' : 'opacity-60'}`}>
@@ -146,13 +157,17 @@ export default function OrderTracking() {
   const { isSimple } = useDashboardView();
   const [stalledHours, setStalledHours] = useState('48');
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [smsOnlyWithoutApp, setSmsOnlyWithoutApp] = useState(false);
+  const [appOnly, setAppOnly] = useState<Record<string, boolean>>({});
 
   const load = (settings: TrackingNotifySettings) => {
+    setSmsOnlyWithoutApp(settings.smsOnlyWithoutApp ?? false);
+    setAppOnly(Object.fromEntries((settings.appOnlyEvents ?? []).map((e) => [e.event, e.app])));
     setLanguage(settings.language);
     setQuietHours(settings.quietHours);
     setRatingLink(settings.deliveryRatingLink ?? true);
     setStalledHours(String(settings.stalledAfterHours));
-    setDrafts(Object.fromEntries(settings.events.map((e) => [e.event, { enabled: e.enabled, text: e.custom ? e.text : null }])));
+    setDrafts(Object.fromEntries(settings.events.map((e) => [e.event, { enabled: e.enabled, text: e.custom ? e.text : null, app: e.app ?? true }])));
   };
   useEffect(() => {
     if (data) load(data);
@@ -165,9 +180,15 @@ export default function OrderTracking() {
         quietHours,
         deliveryRatingLink: ratingLink,
         stalledAfterHours: Math.min(336, Math.max(6, Math.round(Number(stalledHours)) || 48)),
-        events: Object.fromEntries(Object.entries(drafts).map(([event, d]) => [event, { enabled: d.enabled, text: d.text }])) as Partial<
-          Record<TrackingNotifyEventName, { enabled: boolean; text: string | null }>
-        >,
+        smsOnlyWithoutApp,
+        events: {
+          ...(Object.fromEntries(Object.entries(drafts).map(([event, d]) => [event, { enabled: d.enabled, text: d.text, app: d.app }])) as Partial<
+            Record<TrackingNotifyEventName, { enabled: boolean; text: string | null; app: boolean }>
+          >),
+          ...(Object.fromEntries(Object.entries(appOnly).map(([event, app]) => [event, { app }])) as Partial<
+            Record<'placed' | 'ready_for_pickup', { app: boolean }>
+          >),
+        },
       }),
     onSuccess: (updated) => {
       queryClient.setQueryData(['tracking-notify-settings'], updated);
@@ -276,13 +297,39 @@ export default function OrderTracking() {
                 key={event.event}
                 event={event}
                 language={language}
-                draft={drafts[event.event] ?? { enabled: event.enabled, text: null }}
+                draft={drafts[event.event] ?? { enabled: event.enabled, text: null, app: event.app ?? true }}
                 variables={data.variables}
                 maxLength={data.maxTextLength}
                 onChange={(next) => setDrafts((prev) => ({ ...prev, [event.event]: next }))}
               />
             ))}
           </section>
+
+          {/* STORE-APP-plan.md Step 6: the Regantify app notifications. Per-event switches sit on each card above; these are the
+              app-only events and the "SMS only without the app" choice. Both are Full mode; their values stay in state and are saved. */}
+          <FullViewOnly>
+            <section className="space-y-3 rounded-2xl border border-black/5 bg-white p-5">
+              <h2 className="text-sm font-semibold text-regantify-text">Regantify app notifications</h2>
+              <p className="text-xs text-regantify-text-muted">
+                Customers who have the Regantify app and ordered while signed in get a free notification as their order moves. Tapping it opens
+                their tracking page. Guest orders get SMS only.
+              </p>
+              {data.appOnlyEvents.map((e) => (
+                <Checkbox
+                  key={e.event}
+                  checked={appOnly[e.event] ?? e.app}
+                  onChange={(app) => setAppOnly((prev) => ({ ...prev, [e.event]: app }))}
+                  label={`${e.label} (app only, no SMS)`}
+                />
+              ))}
+              <Checkbox
+                checked={smsOnlyWithoutApp}
+                onChange={setSmsOnlyWithoutApp}
+                label="Send SMS only to customers without the app"
+                hint="Saves SMS credits. A customer whose phone got the app notification is not also texted for that event."
+              />
+            </section>
+          </FullViewOnly>
 
           <p className="text-xs text-regantify-text-muted">
             Each text is sent once per order, even if the courier repeats an update. The &ldquo;Handed to the courier&rdquo; text also

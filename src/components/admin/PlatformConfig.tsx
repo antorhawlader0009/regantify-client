@@ -147,22 +147,22 @@ export function SignupSection() {
 
 export function MoneySection() {
   const { data } = usePlatformConfig();
-  const [f, setF] = useState({ minWithdraw: '100', fee: '0', feePct: '0', grace: '3', smsLow: '500', trialPlan: '', trialDays: '14', walletPurchaseMode: 'OFF' as 'OFF' | 'VERIFIED' | 'ALL' });
+  const [f, setF] = useState({ minWithdraw: '100', fee: '0', feePct: '0', grace: '3', smsLow: '500', appPromo: '2', trialPlan: '', trialDays: '14', walletPurchaseMode: 'OFF' as 'OFF' | 'VERIFIED' | 'ALL' });
   useEffect(() => {
     if (!data) return;
     const m = data.money;
-    setF({ minWithdraw: String(m.minWithdraw), fee: String(m.withdrawFeeFlat), feePct: String(m.withdrawFeePercent), grace: String(m.planGraceDays), smsLow: String(m.smsLowBalance), trialPlan: m.trialPlanCode, trialDays: String(m.trialDays), walletPurchaseMode: m.walletPurchaseMode });
+    setF({ minWithdraw: String(m.minWithdraw), fee: String(m.withdrawFeeFlat), feePct: String(m.withdrawFeePercent), grace: String(m.planGraceDays), smsLow: String(m.smsLowBalance), appPromo: String(m.appPromoPerDay ?? 2), trialPlan: m.trialPlanCode, trialDays: String(m.trialDays), walletPurchaseMode: m.walletPurchaseMode });
   }, [data]);
   if (!data) return <p className="text-sm text-regantify-text-muted">Loading…</p>;
   const n = (v: string) => Number(v);
-  const valid = n(f.minWithdraw) >= 1 && n(f.fee) >= 0 && n(f.feePct) >= 0 && n(f.feePct) <= 30 && Number.isInteger(n(f.grace)) && n(f.grace) <= 14 && Number.isInteger(n(f.smsLow)) && (f.trialPlan === '' || (Number.isInteger(n(f.trialDays)) && n(f.trialDays) >= 1 && n(f.trialDays) <= 90));
+  const valid = n(f.minWithdraw) >= 1 && n(f.fee) >= 0 && n(f.feePct) >= 0 && n(f.feePct) <= 30 && Number.isInteger(n(f.grace)) && n(f.grace) <= 14 && Number.isInteger(n(f.smsLow)) && Number.isInteger(n(f.appPromo)) && n(f.appPromo) >= 1 && n(f.appPromo) <= 10 && (f.trialPlan === '' || (Number.isInteger(n(f.trialDays)) && n(f.trialDays) >= 1 && n(f.trialDays) <= 90));
   return (
     <Section
       title="Money"
       hint="Changes apply to the next request, renewal or sign-up; nothing already done is touched."
       section="money"
       valid={valid}
-      body={() => ({ minWithdraw: n(f.minWithdraw), withdrawFeeFlat: n(f.fee), withdrawFeePercent: n(f.feePct), planGraceDays: n(f.grace), smsLowBalance: n(f.smsLow), trialPlanCode: f.trialPlan, ...(f.trialPlan && { trialDays: n(f.trialDays) }), walletPurchaseMode: f.walletPurchaseMode })}
+      body={() => ({ minWithdraw: n(f.minWithdraw), withdrawFeeFlat: n(f.fee), withdrawFeePercent: n(f.feePct), planGraceDays: n(f.grace), smsLowBalance: n(f.smsLow), appPromoPerDay: n(f.appPromo), trialPlanCode: f.trialPlan, ...(f.trialPlan && { trialDays: n(f.trialDays) }), walletPurchaseMode: f.walletPurchaseMode })}
     >
       <div className="grid gap-4 sm:grid-cols-3">
         <Label text="Smallest withdrawal (৳)">
@@ -182,6 +182,11 @@ export function MoneySection() {
         </Label>
         <Label text="SMS low-balance alert (৳)" hint="You are texted when the platform SMS balance falls under this.">
           <input className={field} inputMode="numeric" value={f.smsLow} onChange={(e) => setF({ ...f, smsLow: digits(e.target.value) })} />
+        </Label>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Label text="App notifications per store per day (1 to 10)" hint="Marketing > App notifications in the Regantify app. Order updates are never counted.">
+          <input className={field} inputMode="numeric" value={f.appPromo} onChange={(e) => setF({ ...f, appPromo: digits(e.target.value) })} />
         </Label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

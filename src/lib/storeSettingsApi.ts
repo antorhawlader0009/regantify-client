@@ -110,9 +110,21 @@ export interface TrackingNotifyEvent {
   text: string;
   custom: boolean;
   defaultText: { en: string; bn: string };
+  /** The Regantify app notification for this event (on unless the store turned it off). */
+  app: boolean;
+}
+
+/** An event only the Regantify app is told about (no SMS exists for it). */
+export interface TrackingAppOnlyEvent {
+  event: 'placed' | 'ready_for_pickup';
+  label: string;
+  app: boolean;
 }
 
 export interface TrackingNotifySettings {
+  /** Send an order text by SMS only to a customer who has no Regantify app (saves SMS credits). */
+  smsOnlyWithoutApp: boolean;
+  appOnlyEvents: TrackingAppOnlyEvent[];
   language: 'en' | 'bn';
   quietHours: boolean;
   /** The Delivered text also carries the tracking link where the customer rates the delivery (on by default). */
@@ -129,7 +141,8 @@ export interface UpdateTrackingNotifySettings {
   quietHours?: boolean;
   deliveryRatingLink?: boolean;
   stalledAfterHours?: number;
-  events?: Partial<Record<TrackingNotifyEventName, { enabled?: boolean; text?: string | null }>>;
+  smsOnlyWithoutApp?: boolean;
+  events?: Partial<Record<TrackingNotifyEventName | 'placed' | 'ready_for_pickup', { enabled?: boolean; text?: string | null; app?: boolean }>>;
 }
 
 export const storeSettingsApi = {
