@@ -135,12 +135,15 @@ export default function VendorSettings() {
             <h1 className="text-[15px] font-semibold text-regantify-text">Settings</h1>
             <p className="text-xs text-neutral-500">Manage your store details and account security.</p>
           </div>
+          <div className="ml-auto flex items-center gap-2">
+            <SettingsSearch tabs={tabs} links={moreLinks} onTab={selectTab} />
           <DialogClose
             aria-label="Close"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
           >
             <X size={17} />
           </DialogClose>
+          </div>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -179,6 +182,85 @@ export default function VendorSettings() {
         </div>
       </div>
     </Dialog>
+  );
+}
+
+/** Words people type for each tab, on top of its label. */
+const TAB_KEYWORDS: Record<TabKey, string> = {
+  general: 'store name url subdomain address dashboard mode simple full beta',
+  language: 'bangla english bhasha store text ai chat sms',
+  security: 'password login history google two step 2fa otp',
+  more: 'pages settings',
+};
+
+/** Search box in the modal header: jumps to a tab, or opens one of the "More settings" pages. */
+function SettingsSearch({
+  tabs,
+  links,
+  onTab,
+}: {
+  tabs: typeof TABS;
+  links: typeof MORE_SETTINGS;
+  onTab: (key: TabKey) => void;
+}) {
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+  const term = q.trim().toLowerCase();
+  const results = term
+    ? [
+        ...tabs
+          .filter((t) => `${t.label} ${TAB_KEYWORDS[t.key]}`.toLowerCase().includes(term))
+          .map((t) => ({ key: `tab-${t.key}`, label: t.label, hint: 'Settings tab', icon: t.icon, go: () => onTab(t.key) })),
+        ...links
+          .filter((l) => `${l.label} ${l.description}`.toLowerCase().includes(term))
+          .map((l) => ({ key: l.path, label: l.label, hint: l.description, icon: l.icon, go: () => navigate(l.path) })),
+      ].slice(0, 8)
+    : [];
+
+  return (
+    <div className="relative">
+      <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && results[0]) {
+            results[0].go();
+            setQ('');
+          }
+        }}
+        placeholder="Search settings"
+        aria-label="Search settings"
+        className="h-8 w-40 rounded-md border border-line bg-white pl-8 pr-2 text-sm outline-none focus:border-neutral-400 sm:w-56"
+      />
+      {term && (
+        <div className="absolute right-0 top-9 z-10 w-72 overflow-hidden rounded-lg border border-line bg-white py-1 shadow-lg">
+          {results.length === 0 ? (
+            <p className="px-3 py-2 text-sm text-neutral-500">No settings found</p>
+          ) : (
+            results.map((r) => {
+              const Icon = r.icon;
+              return (
+                <button
+                  key={r.key}
+                  onClick={() => {
+                    r.go();
+                    setQ('');
+                  }}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-left hover:bg-neutral-100"
+                >
+                  <Icon size={15} strokeWidth={1.8} className="shrink-0 text-neutral-500" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm text-regantify-text">{r.label}</span>
+                    <span className="block truncate text-xs text-neutral-500">{r.hint}</span>
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
