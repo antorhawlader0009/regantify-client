@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,7 @@ import {
   Truck,
   UsersRound,
   Wallet,
+  X,
   Palmtree,
   Languages,
   type LucideIcon,
@@ -37,7 +38,8 @@ import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import { useAuthStore, type DashboardView } from '../../store/authStore';
 import { useDashboardView } from '../../lib/useDashboardView';
 import { isFullViewPath } from '../../lib/simpleView';
-import { FullViewOnly, MoreInFullView } from '../../components/ui/FullViewOnly';
+import { Dialog, DialogClose } from '../../components/ui/Dialog';
+import { FullViewOnly,MoreInFullView } from '../../components/ui/FullViewOnly';
 import { Field, IconInput, IconTextarea, SaveButton, Section, flashFor } from '../../components/ui/FormKit';
 import { GoogleSignInSection, TwoStepSection } from '../../components/settings/SignInSecurity';
 import { LanguageSettings, canUseLanguageSettings } from '../../components/settings/LanguageSettings';
@@ -97,6 +99,7 @@ const isTab = (v: string | null): v is TabKey => v === 'general' || v === 'langu
 
 export default function VendorSettings() {
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   // A staff role only gets the tabs it can use (rule-plan.md Step 7): store details need
   // store.settings, "More settings" only lists pages the role can open; Security is everyone's.
   const viewer = useViewer();
@@ -118,39 +121,64 @@ export default function VendorSettings() {
   const tab: TabKey = isTab(asked) && tabs.some((t) => t.key === asked) ? (asked as TabKey) : tabs[0].key;
   const selectTab = (key: TabKey) => setParams(key === 'general' ? {} : { tab: key }, { replace: true });
 
+  // Settings opens as a modal over the dashboard; closing goes back to where the vendor came from.
+  const close = () => {
+    if (typeof window.history.state?.idx === 'number' && window.history.state.idx > 0) navigate(-1);
+    else navigate('/vendor/dashboard', { replace: true });
+  };
+
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <div className="mb-1">
-        <h1 className="text-xl font-semibold text-regantify-text">Settings</h1>
-        <p className="text-sm text-neutral-500">Manage your store details and account security.</p>
-      </div>
+    <Dialog open onOpenChange={(o) => !o && close()} maxWidth="max-w-4xl">
+      <div className="flex h-[min(85vh,720px)] flex-col">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-5 py-3.5">
+          <div>
+            <h1 className="text-[15px] font-semibold text-regantify-text">Settings</h1>
+            <p className="text-xs text-neutral-500">Manage your store details and account security.</p>
+          </div>
+          <DialogClose
+            aria-label="Close"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-regantify-text"
+          >
+            <X size={17} />
+          </DialogClose>
+        </div>
 
-      <div role="tablist" aria-label="Settings sections" className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-white p-1">
-        {tabs.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              role="tab"
-              aria-selected={active}
-              onClick={() => selectTab(t.key)}
-              className={`flex h-9 shrink-0 items-center gap-2 rounded-lg px-3.5 text-sm transition-colors ${
-                active ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-100'
-              }`}
-            >
-              <Icon size={15} strokeWidth={1.8} />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+          <div
+            role="tablist"
+            aria-label="Settings sections"
+            aria-orientation="vertical"
+            className="flex shrink-0 gap-1 overflow-x-auto border-b border-line bg-white p-2 md:w-56 md:flex-col md:overflow-y-auto md:border-b-0 md:border-r"
+          >
+            {tabs.map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => selectTab(t.key)}
+                  className={`flex h-10 shrink-0 items-center gap-2.5 rounded-lg px-3 text-left text-sm transition-colors ${
+                    active ? 'bg-brand-lime font-medium text-regantify-text' : 'text-neutral-600 hover:bg-neutral-100'
+                  }`}
+                >
+                  <Icon size={16} strokeWidth={1.8} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
 
-      {tab === 'general' && <GeneralTab />}
-      {tab === 'language' && <LanguageSettings />}
-      {tab === 'security' && <SecurityTab />}
-      {tab === 'more' && <MoreTab links={moreLinks} hidden={hiddenMore} />}
-    </div>
+          <div className="min-w-0 flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-4 md:p-5">
+            {tab === 'general' && <GeneralTab />}
+            {tab === 'language' && <LanguageSettings />}
+            {tab === 'security' && <SecurityTab />}
+            {tab === 'more' && <MoreTab links={moreLinks} hidden={hiddenMore} />}
+          </div>
+        </div>
+      </div>
+    </Dialog>
   );
 }
 
