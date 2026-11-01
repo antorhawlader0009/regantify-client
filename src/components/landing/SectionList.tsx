@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Copy, GripVertical, MoreHorizontal, Monitor, Smartphone, Trash2 } from 'lucide-react';
 import type { LandingPageSection } from '../../lib/landingPagesApi';
 import { sectionLabel } from '../../lib/landingSections';
@@ -103,15 +104,42 @@ function SortableSectionRow({
     id: section.id,
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  // The menu is portalled to <body> with fixed coordinates: the Sections card clips overflow,
+  // so an absolutely positioned menu got cut off at the card's bottom edge.
+  const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; right: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const toggleMenu = () => {
+    if (menuOpen) return setMenuOpen(false);
+    const r = triggerRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const MENU_HEIGHT = 180;
+    const right = window.innerWidth - r.right;
+    setMenuPos(
+      window.innerHeight - r.bottom >= MENU_HEIGHT
+        ? { top: r.bottom + 4, right }
+        : { bottom: window.innerHeight - r.top + 4, right },
+    );
+    setMenuOpen(true);
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
     const onClickAway = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+      const t = e.target as Node;
+      if (menuRef.current?.contains(t) || triggerRef.current?.contains(t)) return;
+      close();
     };
     document.addEventListener('mousedown', onClickAway);
-    return () => document.removeEventListener('mousedown', onClickAway);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      document.removeEventListener('mousedown', onClickAway);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
   }, [menuOpen]);
 
   const hiddenDesktop = section.visibility?.desktop === false;
@@ -149,9 +177,10 @@ function SortableSectionRow({
         </span>
       )}
 
-      <div className="relative shrink-0" ref={menuRef}>
+      <div className="relative shrink-0">
         <button
-          onClick={() => setMenuOpen((o) => !o)}
+          ref={triggerRef}
+          onClick={toggleMenu}
           className="rounded p-0.5 text-neutral-400 opacity-0 transition-opacity hover:text-regantify-text
             focus:opacity-100 group-hover:opacity-100"
           aria-label="Section actions"
@@ -159,8 +188,12 @@ function SortableSectionRow({
           <MoreHorizontal size={15} />
         </button>
 
-        {menuOpen && (
-          <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl shadow-black/10">
+        {menuOpen && menuPos && createPortal(
+          <div
+            ref={menuRef}
+            style={{ position: 'fixed', ...menuPos }}
+            className="z-[100] w-44 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-xl shadow-black/10"
+          >
             <button
               onClick={() => {
                 setMenuOpen(false);
@@ -201,7 +234,8 @@ function SortableSectionRow({
               <Trash2 size={13} />
               Delete
             </button>
-          </div>
+          </div>,
+          document.body,
         )}
       </div>
     </li>
