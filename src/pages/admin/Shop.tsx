@@ -23,6 +23,7 @@ import {
 } from '../../lib/shopAdminApi';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
+import AppPushTab from './AppPushTab';
 
 // A box without a width, for the narrow number boxes and selects (`field` is full width; adding w-24 to it loses to w-full).
 const fieldBox = 'rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
@@ -39,6 +40,7 @@ const TABS = [
   ['categories', 'Categories'],
   ['search', 'Search'],
   ['home', 'Home page'],
+  ['apppush', 'App push'],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
@@ -112,6 +114,7 @@ export default function AdminShop() {
           {tab === 'categories' && <CategoriesTab />}
           {tab === 'search' && <SearchTab data={overview.data} />}
           {tab === 'home' && <HomeTab />}
+          {tab === 'apppush' && <AppPushTab />}
         </>
       )}
     </div>
