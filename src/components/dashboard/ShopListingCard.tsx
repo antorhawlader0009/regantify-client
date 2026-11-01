@@ -17,6 +17,8 @@ type ShopListing = {
   indexedProducts: number;
   shopUrl: string;
   last30Days: { visits: number; orders: number; sales: number };
+  /** The Regantify app's marketplace (MARKETPLACE-APP-plan.md Step 14). */
+  app: { on: boolean; planAllows: boolean; last30Days: { orders: number; sales: number } };
 };
 
 /**
@@ -57,6 +59,13 @@ export function ShopListingCard({ isOwner }: { isOwner: boolean }) {
         <h2 className="text-sm font-semibold text-regantify-text">Regantify Shop</h2>
       </div>
       <p className="text-sm text-neutral-600">{status}</p>
+      {data.listed && data.eligible && !data.blocked && data.app.on && (
+        <p className="mt-2 text-sm text-neutral-600">
+          {data.app.planAllows
+            ? `Also shown in the Regantify app. Last 30 days from the app: ${data.app.last30Days.orders} orders, ${formatValue(data.app.last30Days.sales, 'money')}.`
+            : 'Your plan does not show your products in the Regantify app.'}
+        </p>
+      )}
       {data.listed && (
         <p className="mt-2 text-xs text-neutral-500">
           Last 30 days from the Shop: {data.last30Days.visits} visits, {data.last30Days.orders} orders, {formatValue(data.last30Days.sales, 'money')}.

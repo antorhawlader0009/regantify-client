@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
  * DRAFT: the parts marked [LEGAL REVIEW] must be checked by a lawyer before the Play listing goes live (STORE-APP-plan.md, lawyer check).
  */
 
-const UPDATED = '31 October 2026';
+const UPDATED = '2 November 2026';
 const CONTACT = '[LEGAL REVIEW: support email and address]';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -43,10 +43,11 @@ export function AppPrivacy() {
           <p><strong>Orders and delivery:</strong> when you order from a shop, your name, phone number, delivery address and what you ordered go to that shop and to Regantify, to deliver the order and show its status. Shops see only their own customers.</p>
           <p><strong>Notifications:</strong> a notification token for your phone, which we use only to send you order updates and, if you did not turn them off for a shop, that shop&rsquo;s offers.</p>
           <p><strong>Voice call with the AI assistant:</strong> only when you start a call. Your phone&rsquo;s speech service turns what you say into text. <strong>The app does not record or upload audio.</strong> Only that text is sent to the shop&rsquo;s AI assistant, like a typed message. The speech service is provided by your phone (usually Google) under its own terms.</p>
-          <p><strong>Shops you open</strong> are kept on your phone only, as a short list of recent shops.</p>
+          <p><strong>Shopping in the app:</strong> the products you put in your cart, your wishlist, the products you looked at recently (the last 50), the shops you follow, the delivery addresses you save, and the reviews you write. They are kept on our server against your account so they follow you to a new phone, and are used only to run the app (for example to tell you a wishlist product dropped in price, if notifications are on).</p>
+          <p><strong>Shops you open</strong> are kept on your phone only, as a short list of recent shops, together with your recent searches.</p>
         </Section>
         <Section title="3. Who receives it">
-          <p>The shop you order from, our delivery and payment partners that the shop chooses, our SMS provider (for codes), Google (sign-in, notifications) and Anthropic (the shop&rsquo;s AI assistant writes its answers from your typed or spoken text). We do not sell your data and we do not show ads. [LEGAL REVIEW: processors list and data-processing terms.]</p>
+          <p>The shop you order from (only for your order), our delivery and payment partners that the shop chooses, our SMS provider (for codes), Google (sign-in, notifications) and Anthropic (the shop&rsquo;s AI assistant writes its answers from your typed or spoken text). We do not sell your data and we do not show ads. [LEGAL REVIEW: processors list and data-processing terms.]</p>
         </Section>
         <Section title="4. Keeping and deleting your data">
           <p>You can delete your account in the app (Home, then &ldquo;Delete my account&rdquo;) or without the app at <a className="underline" href="/legal/delete-account">/legal/delete-account</a>. See that page for what is removed and what stays.</p>
@@ -77,7 +78,7 @@ export function AppDeleteAccount() {
           <p>Cannot do either? Contact us: {CONTACT}. We will check it is you before deleting.</p>
         </Section>
         <Section title="What is deleted">
-          <p>Your sign-ins on every shop and in the app, your saved addresses, carts, wishlist, per-shop profiles, notification devices and the link to your Google account. This happens right away.</p>
+          <p>Your sign-ins on every shop and in the app, your saved addresses (also those saved in the app), carts (also the app cart), wishlist (also the app wishlist), recently viewed products, followed shops, per-shop profiles, notification devices and the link to your Google account. This happens right away.</p>
         </Section>
         <Section title="What stays, and why">
           <p>Orders you already placed stay with the shop that took them (your name, phone and address, kept as the shop&rsquo;s sales and delivery records, with the amounts and items). So do the shop&rsquo;s own notes, the points and coupon uses tied to your phone number, and the texts it sent you. Reviews and questions you wrote stay on the shop&rsquo;s page without your name or contact details. We keep one count-only record that an account was deleted.</p>

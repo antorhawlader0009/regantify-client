@@ -44,6 +44,8 @@ export interface Plan {
   customPaymentGatewayAllowed: boolean;
   lmsEnabled: boolean;
   posEnabled: boolean;
+  /** Stores on this plan show in the Regantify app marketplace (default true; Super Admin can switch it off per plan). */
+  appMarketAllowed?: boolean;
   storeAppEnabled?: boolean;
   // Each fee = flat BDT part + percent (0-100) of the order total
   // (incl. delivery, VAT and the flat part), both applied together - see server's Plan.codGatewayFeeBdt comment.

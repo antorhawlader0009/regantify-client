@@ -31,6 +31,8 @@ export interface UpdatePlanPayload {
   customPaymentGatewayAllowed?: boolean;
   lmsEnabled?: boolean;
   posEnabled?: boolean;
+  /** Stores on this plan are shown in the Regantify app's marketplace (on for every plan by default). */
+  appMarketAllowed?: boolean;
   /** The store may build its own Android app (Mobile App page; STORE-APP-plan.md). */
   storeAppEnabled?: boolean;
   // Flat BDT part + percent (0-100) of the order total - see Plan in plansApi.ts.

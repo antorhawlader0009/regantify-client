@@ -21,7 +21,19 @@ export interface PlatformPushOverview {
   history: PlatformPushRow[];
 }
 
+export interface AppMarketStats {
+  /** The APP_MARKET kill switch (changed in Settings > Switches by the owner). */
+  marketOn: boolean;
+  last7: { orders: number; sales: number };
+  last30: { orders: number; sales: number };
+  shoppersWithApp: number;
+  shoppersWithCart: number;
+  storesListed: number;
+  storesBlockedByPlan: number;
+}
+
 export const appPushAdminApi = {
+  stats: async () => (await api.get<AppMarketStats>('/v1/admin/app-push/stats')).data,
   overview: async () => (await api.get<PlatformPushOverview>('/v1/admin/app-push')).data,
   send: async (input: { kind: PlatformPushKind; title: string; body: string }) => (await api.post<{ id: string; queued: number }>('/v1/admin/app-push/send', input)).data,
 };

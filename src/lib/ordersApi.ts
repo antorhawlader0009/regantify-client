@@ -114,6 +114,8 @@ export interface Order {
   publicCode?: string | null;
   /** POS = sold over the counter (POS-system-plan.md). RESELLER = a supplier's order for a shopper's order in a reseller's store (RESELLER-plan.md Step 6). */
   source: 'STOREFRONT' | 'MANUAL' | 'POS' | 'RESELLER';
+  /** Placed through the Regantify app's checkout (Orders list only). */
+  fromApp?: boolean;
   /** Reseller system: set on this store's order of a product it resells; the supplier ships it and its status follows theirs (read-only here). */
   resaleSupplierVendorId?: string | null;
   /** Reseller system: on a supplier's order (source RESELLER), the reseller's order it is for. */

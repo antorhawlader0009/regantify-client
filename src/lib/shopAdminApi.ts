@@ -93,12 +93,16 @@ export interface ShopWordRow {
 }
 
 export type ShopBannerTone = 'GREEN' | 'DARK' | 'AMBER';
+/** Where a banner or collection shows: both, the Shop on the web, or the Regantify app's home. */
+export type ShopSurface = 'BOTH' | 'WEBSITE' | 'APP';
+export const SURFACE_LABEL: Record<ShopSurface, string> = { BOTH: 'Website and app', WEBSITE: 'Website only', APP: 'App only' };
 export interface ShopBanner {
   id: string;
   title: string;
   text: string | null;
   linkUrl: string | null;
   tone: ShopBannerTone;
+  surface: ShopSurface;
   startsAt: string | null;
   endsAt: string | null;
   position: number;
@@ -115,6 +119,7 @@ export interface ShopCollection {
   productIds: string[];
   active: boolean;
   showOnHome: boolean;
+  surface: ShopSurface;
   endsAt: string | null;
   position: number;
   createdBy: string | null;

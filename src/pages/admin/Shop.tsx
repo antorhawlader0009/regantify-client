@@ -19,11 +19,13 @@ import {
   type ShopOverview,
   type ShopRanking,
   type ShopRules,
+  type ShopSurface,
   type ShopWeightKey,
+  SURFACE_LABEL,
 } from '../../lib/shopAdminApi';
 import { toast } from '../../lib/toast';
 import { Dialog } from '../../components/ui/Dialog';
-import AppPushTab from './AppPushTab';
+import AppMarketTab from './AppMarketTab';
 
 // A box without a width, for the narrow number boxes and selects (`field` is full width; adding w-24 to it loses to w-full).
 const fieldBox = 'rounded-xl bg-regantify-search px-3.5 py-2.5 text-sm text-regantify-text focus:outline-none';
@@ -40,7 +42,7 @@ const TABS = [
   ['categories', 'Categories'],
   ['search', 'Search'],
   ['home', 'Home page'],
-  ['apppush', 'App push'],
+  ['app', 'App'],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
@@ -114,7 +116,7 @@ export default function AdminShop() {
           {tab === 'categories' && <CategoriesTab />}
           {tab === 'search' && <SearchTab data={overview.data} />}
           {tab === 'home' && <HomeTab />}
-          {tab === 'apppush' && <AppPushTab />}
+          {tab === 'app' && <AppMarketTab />}
         </>
       )}
     </div>
@@ -955,7 +957,9 @@ function HomeTab() {
               {banners.data.map((b) => (
                 <tr key={b.id}>
                   <td className="px-4">
-                    <p className="text-regantify-text">{b.title}</p>
+                    <p className="text-regantify-text">
+                      {b.title} <span className="ml-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-regantify-text-muted">{SURFACE_LABEL[b.surface ?? 'BOTH']}</span>
+                    </p>
                     {b.text && <p className="text-xs text-regantify-text-muted">{b.text}</p>}
                   </td>
                   <td className="px-4 text-xs">{b.active ? span(b.startsAt, b.endsAt) : <span className="text-regantify-text-muted">Off</span>}</td>
@@ -994,7 +998,9 @@ function HomeTab() {
               {collections.data.map((c) => (
                 <tr key={c.id}>
                   <td className="px-4">
-                    <p className="text-regantify-text">{c.title}</p>
+                    <p className="text-regantify-text">
+                      {c.title} <span className="ml-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-regantify-text-muted">{SURFACE_LABEL[c.surface ?? 'BOTH']}</span>
+                    </p>
                     <p className="console-id text-xs text-regantify-text-muted">/shop/collections/{c.slug}</p>
                   </td>
                   <td className="px-4 text-right tabular-nums">{c.productIds.length}</td>
@@ -1020,6 +1026,22 @@ function HomeTab() {
   );
 }
 
+/** Where a banner or collection is shown (MARKETPLACE-APP-plan.md Step 14): both places, the web Shop only, or the Regantify app only. */
+function SurfaceSelect({ value, onChange }: { value: ShopSurface; onChange: (v: ShopSurface) => void }) {
+  return (
+    <label className="block text-sm text-regantify-text">
+      Shown in
+      <select className={`${field} mt-1`} value={value} onChange={(e) => onChange(e.target.value as ShopSurface)}>
+        {(Object.keys(SURFACE_LABEL) as ShopSurface[]).map((k) => (
+          <option key={k} value={k}>
+            {SURFACE_LABEL[k]}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function BannerDialog({ target, onClose }: { target: ShopBanner | 'new'; onClose: () => void }) {
   const qc = useQueryClient();
   const row = target === 'new' ? null : target;
@@ -1028,6 +1050,7 @@ function BannerDialog({ target, onClose }: { target: ShopBanner | 'new'; onClose
     text: row?.text ?? '',
     linkUrl: row?.linkUrl ?? '',
     tone: row?.tone ?? 'GREEN',
+    surface: (row?.surface ?? 'BOTH') as ShopSurface,
     startsAt: isoToDhakaInput(row?.startsAt),
     endsAt: isoToDhakaInput(row?.endsAt),
     position: row?.position ?? 0,
@@ -1039,6 +1062,7 @@ function BannerDialog({ target, onClose }: { target: ShopBanner | 'new'; onClose
     text: f.text.trim() || null,
     linkUrl: f.linkUrl.trim() || null,
     tone: f.tone,
+    surface: f.surface,
     startsAt: f.startsAt ? dhakaInputToIso(f.startsAt) : null,
     endsAt: f.endsAt ? dhakaInputToIso(f.endsAt) : null,
     position: f.position,
@@ -1059,6 +1083,7 @@ function BannerDialog({ target, onClose }: { target: ShopBanner | 'new'; onClose
           <option value="DARK">Dark</option>
           <option value="AMBER">Amber</option>
         </select>
+        <SurfaceSelect value={f.surface} onChange={(surface) => setF({ ...f, surface })} />
         <label className="block text-sm text-regantify-text">
           From (Dhaka time, empty = now)
           <input type="datetime-local" className={`${field} mt-1`} value={f.startsAt} onChange={(e) => setF({ ...f, startsAt: e.target.value })} />
@@ -1098,6 +1123,7 @@ function CollectionDialog({ target, onClose }: { target: ShopCollection | 'new';
     description: row?.description ?? '',
     active: row?.active ?? true,
     showOnHome: row?.showOnHome ?? false,
+    surface: (row?.surface ?? 'BOTH') as ShopSurface,
     endsAt: isoToDhakaInput(row?.endsAt),
     position: row?.position ?? 0,
   });
@@ -1114,6 +1140,7 @@ function CollectionDialog({ target, onClose }: { target: ShopCollection | 'new';
     productIds: ids,
     active: f.active,
     showOnHome: f.showOnHome,
+    surface: f.surface,
     endsAt: f.endsAt ? dhakaInputToIso(f.endsAt) : null,
     position: f.position,
   });
@@ -1138,6 +1165,7 @@ function CollectionDialog({ target, onClose }: { target: ShopCollection | 'new';
         <input className={field} maxLength={120} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Title" />
         <input className={field} maxLength={60} value={f.slug} onChange={(e) => setF({ ...f, slug: e.target.value })} placeholder="Web address (empty = made from the title)" />
         <textarea className={field} rows={2} maxLength={500} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="A short line (optional)" />
+        <SurfaceSelect value={f.surface} onChange={(surface) => setF({ ...f, surface })} />
 
         <div className="rounded-xl border border-line p-3">
           <p className="mb-2 text-sm font-medium text-regantify-text">Products ({ids.length} of 60)</p>

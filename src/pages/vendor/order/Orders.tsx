@@ -445,6 +445,11 @@ function OrderRow({
             Sold for {order.resalePartner ?? 'a supplier'}
           </span>
         )}
+        {order.fromApp && (
+          <span className="ml-1.5 rounded border border-rose-200 bg-rose-50 px-1 py-0.5 align-middle text-[10px] font-semibold text-rose-700" title="The customer ordered from the Regantify app">
+            Regantify app
+          </span>
+        )}
         {order.source === 'RESELLER' && (
           <span className="ml-1.5 rounded border border-violet-200 bg-violet-50 px-1 py-0.5 align-middle text-[10px] font-semibold text-violet-700" title="Sold by a reseller: ship it with your connected courier, under their name">
             Reseller: {order.resalePartner ?? 'a store'}
@@ -1413,6 +1418,7 @@ export default function Orders() {
                   <option value="whatsapp">WhatsApp</option>
                   <option value="qr">QR code</option>
                   <option value="shop">Regantify Shop</option>
+                  <option value="app">Regantify app</option>
                   <option value="other">Other websites</option>
                   <option value="untracked">Not tracked</option>
                   <optgroup label="Orders you entered">
