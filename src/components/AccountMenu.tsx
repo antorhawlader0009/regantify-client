@@ -1,5 +1,4 @@
-import { Bell, Headphones, LayoutGrid, LogOut, Rows3, Settings, User } from 'lucide-react';
-import { useDashboardView } from '../lib/useDashboardView';
+import { Bell, Headphones, LogOut, Settings, User } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -48,7 +47,6 @@ export function AccountMenu() {
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
   const isVendor = user?.role === 'VENDOR';
-  const dashboardView = useDashboardView();
   const isAdmin = user?.role === 'SUPER_ADMIN';
 
   // Same query keys as the sidebar and the bell, so these come from the cache.
@@ -123,15 +121,6 @@ export function AccountMenu() {
               Settings
             </DropdownMenuItem>
           </>
-        )}
-        {dashboardView.inDashboard && (
-          <DropdownMenuItem
-            onSelect={() => dashboardView.setView(dashboardView.isSimple ? 'FULL' : 'SIMPLE')}
-            icon={<Tile>{dashboardView.isSimple ? <LayoutGrid size={16} /> : <Rows3 size={16} />}</Tile>}
-            hint={dashboardView.isSimple ? 'Show every page and option' : 'Only what you need every day'}
-          >
-            {dashboardView.isSimple ? 'Switch to Full mode' : 'Switch to Simple mode'}
-          </DropdownMenuItem>
         )}
         {isAdmin && (
           <>

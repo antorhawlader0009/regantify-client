@@ -6,7 +6,6 @@ import { useAssistantUi } from '../store/assistantStore';
 import { isNavGroup, type NavSection } from '../lib/navConfig';
 import { storefrontStoreUrl } from '../lib/storefrontUrl';
 import { AccountMenu } from './AccountMenu';
-import { ViewSwitch } from './ViewSwitch';
 import { NotificationBell } from './NotificationBell';
 import { BalanceButton } from './BalanceButton';
 import { HelpButton } from './help/HelpButton';
@@ -106,9 +105,6 @@ export function Topbar({ sections, onMenuClick }: TopbarProps) {
           <ExternalLink size={13} className="text-neutral-400" />
         </a>
       )}
-
-      {/* Simple mode / Full mode: always shows the current view (SIMPLE-VIEW-plan.md); owner and staff. */}
-      <ViewSwitch />
 
       {/* Help, What's new and Ideas (super-admin-new.md Step 11); a red dot when What's new has unseen entries. */}
       {isVendor && <HelpButton />}

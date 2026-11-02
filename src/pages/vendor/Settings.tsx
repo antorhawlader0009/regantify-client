@@ -35,7 +35,7 @@ import { useViewer } from '../../lib/useStaffAccess';
 import { useSetBeta, useVendorFeatures } from '../../lib/features';
 import { canAccess, canOpenPath } from '../../lib/staffPermissions';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
-import { useAuthStore, type DashboardView } from '../../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { useDashboardView } from '../../lib/useDashboardView';
 import { isFullViewPath } from '../../lib/simpleView';
 import { Dialog, DialogClose } from '../../components/ui/Dialog';
@@ -381,7 +381,6 @@ function GeneralTab() {
         </form>
       </Section>
 
-      <DashboardViewSection />
 
       {/* Full mode (SIMPLE-VIEW-plan.md Step 9); a store already in the beta stays in it. */}
       {isOwner && (
@@ -390,37 +389,6 @@ function GeneralTab() {
         </FullViewOnly>
       )}
     </>
-  );
-}
-
-/** Settings > General > Dashboard mode (SIMPLE-VIEW-plan.md): the same choice as the top-bar pill, with what each one means. */
-function DashboardViewSection() {
-  const { view, setView } = useDashboardView();
-  const options: { key: DashboardView; label: string; text: string }[] = [
-    { key: 'SIMPLE', label: 'Simple mode', text: 'Only the pages and options an everyday seller needs. Less to look through, nothing is lost.' },
-    { key: 'FULL', label: 'Full mode', text: 'Every page, option and tool the dashboard has.' },
-  ];
-  return (
-    <Section title="Dashboard mode" description="Choose how much of the dashboard you see. This is just for you; your team chooses their own.">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {options.map((o) => {
-          const active = view === o.key;
-          return (
-            <button
-              key={o.key}
-              type="button"
-              onClick={() => setView(o.key)}
-              aria-pressed={active}
-              className={`rounded-lg border p-3 text-left transition ${active ? 'border-brand bg-brand/5' : 'border-line hover:border-neutral-300 hover:bg-neutral-50'}`}
-            >
-              <span className="block text-sm font-medium text-regantify-text">{o.label}{active ? ' (on)' : ''}</span>
-              <span className="mt-0.5 block text-xs text-neutral-500">{o.text}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-3 text-xs text-neutral-500">Switching never deletes or turns off anything. A hidden setting keeps working, and search (Ctrl K) finds every page in both modes.</p>
-    </Section>
   );
 }
 

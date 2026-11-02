@@ -87,11 +87,6 @@ const MODES: Array<{ id: SignupMode; label: string; text: string }> = [
   { id: 'CLOSED', label: 'Closed', text: 'No new store can sign up. Existing stores are not affected.' },
 ];
 const words = (v: string) => v.split(/[\n,]/).map((w) => w.trim()).filter(Boolean);
-const NEW_STORE_VIEWS: { id: 'SIMPLE' | 'FULL'; label: string; text: string }[] = [
-  { id: 'SIMPLE', label: 'Simple mode', text: 'Only the pages and options an everyday seller needs (recommended for new sellers).' },
-  { id: 'FULL', label: 'Full mode', text: 'Every page and option from the first day.' },
-];
-
 export function SignupSection() {
   const { data } = usePlatformConfig();
   const [mode, setMode] = useState<SignupMode>('OPEN');
@@ -125,22 +120,6 @@ export function SignupSection() {
       <Label text="Blocked words in store names" hint="One per line. A store name containing any of these is refused (not case sensitive).">
         <textarea className={field} rows={4} value={blocked} onChange={(e) => setBlocked(e.target.value)} />
       </Label>
-      {/* SIMPLE-VIEW-plan.md: only new owners from now on; existing accounts and staff are not changed. */}
-      <div>
-        <p className="text-sm font-medium text-regantify-text">Dashboard mode for new stores</p>
-        <p className="mb-2 text-xs text-regantify-text-muted">The mode a new store owner starts in. They can switch any time; existing stores and staff accounts are not changed (staff start in Full mode).</p>
-        <div className="space-y-2">
-          {NEW_STORE_VIEWS.map((v) => (
-            <label key={v.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 ${newStoreView === v.id ? 'border-regantify-cta bg-regantify-cta/5' : 'border-black/10'}`}>
-              <input type="radio" name="new-store-view" checked={newStoreView === v.id} onChange={() => setNewStoreView(v.id)} className="mt-1" />
-              <span>
-                <span className="block text-sm font-medium text-regantify-text">{v.label}</span>
-                <span className="block text-xs text-regantify-text-muted">{v.text}</span>
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
     </Section>
   );
 }

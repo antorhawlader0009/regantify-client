@@ -77,9 +77,10 @@ export function useDashboardView() {
   const session = useSessionView();
 
   const inDashboard = user?.role === 'VENDOR' || user?.role === 'STAFF';
-  // A session saved before the feature has no value: Full mode, which is exactly the old panel.
-  const saved: DashboardView = user?.dashboardView ?? 'FULL';
-  const view: DashboardView = !inDashboard ? 'FULL' : impersonated && session.view ? session.view : saved;
+  // Simple mode was removed on 2026-11-02 (the owner's rule): the dashboard is always Full mode, whatever
+  // User.dashboardView holds. The column, the routes and the Simple-mode code paths stay, unused, so this one
+  // line is all it takes to bring it back.
+  const view = 'FULL' as DashboardView;
   const pins: string[] = (impersonated && session.pins) || user?.simplePins || [];
 
   /** `from` = the page a "Switch to Full mode" note was pressed on (counted for Super Admin, Step 12). */
