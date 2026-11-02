@@ -1,28 +1,31 @@
 name: Deploy
 
+# GitHub only hands the deploy to the VPS and leaves (a few seconds, about 1 billed minute). The VPS builds in the
+# background with its own CPU, RAM and 30 GB cache limits, health-checks the new version, rolls back on failure and
+# reports the result as the commit status "vps-deploy". Scripts: ~/regantify/deploy/ on the VPS (copy in the workspace
+# z-others/vps/deploy/).
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-client
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
-      - name: SSH and redeploy client
+      - name: Hand the client deploy to the VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          # A full Docker build (npm ci + build) takes longer than the action's 10-minute default; 2026-10-16 the first
-          # Node 24 build was cut off at 10 minutes and the old container kept running.
-          command_timeout: 30m
-          script: |
-            set -e
-            cd ~/regantify/client
-            git pull origin main
-            cd ~/regantify
-            docker compose build --pull client
-            docker compose up -d --no-deps client
-            docker image prune -f
+          command_timeout: 2m
+          script: ~/regantify/deploy/deploy.sh client ${{ github.sha }}
