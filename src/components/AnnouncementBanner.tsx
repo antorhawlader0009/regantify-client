@@ -7,8 +7,8 @@ export const ANNOUNCEMENTS_KEY = ['announcements'];
 
 const TONE: Record<AnnouncementTone, { box: string; Icon: typeof Info }> = {
   INFO: { box: 'border-sky-200 bg-sky-50 text-sky-900', Icon: Info },
-  WARNING: { box: 'border-amber-300 bg-amber-50 text-amber-900', Icon: AlertTriangle },
-  URGENT: { box: 'border-red-300 bg-red-50 text-red-900', Icon: Megaphone },
+  WARNING: { box: 'border-red-700 bg-red-600 text-white', Icon: AlertTriangle },
+  URGENT: { box: 'border-red-700 bg-red-600 text-white', Icon: Megaphone },
 };
 
 /** The announcement's button: an in-app path stays in the app, a full address opens in a new tab. */

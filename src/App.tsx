@@ -455,6 +455,8 @@ export default function App() {
             borderRadius: '12px',
             fontSize: '14px',
           },
+          // Every error is red with white text (the owner's rule, 2026-11-03).
+          classNames: { error: '!bg-red-600 !text-white [&_[data-icon]]:!text-white' },
         }}
       />
       {/* Auth restoration bootstrap */}

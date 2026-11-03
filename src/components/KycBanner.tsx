@@ -11,7 +11,7 @@ export function KycBanner() {
   const { data } = useQuery({ queryKey: ['kyc-me'], queryFn: kycApi.mine, refetchInterval: 5 * 60_000, staleTime: 60_000, retry: false });
   if (data?.storeStatus === 'PENDING') {
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-red-700 bg-red-600 text-white px-4 py-2 text-sm">
         <ShieldAlert size={16} className="shrink-0" aria-hidden />
         <p className="min-w-0 flex-1">Your store is being reviewed by the Regantify team. You can set it up now. Your store page and new orders open as soon as it is approved.</p>
       </div>
@@ -28,7 +28,7 @@ export function KycBanner() {
 
   const calm = data.state === 'SUBMITTED';
   return (
-    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2 text-sm ${late ? 'border-red-300 bg-red-50 text-red-800' : calm ? 'border-blue-200 bg-blue-50 text-blue-900' : 'border-amber-300 bg-amber-50 text-amber-900'}`}>
+    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2 text-sm ${calm ? 'border-blue-200 bg-blue-50 text-blue-900' : 'border-red-700 bg-red-600 text-white'}`}>
       <ShieldAlert size={16} className="shrink-0" aria-hidden />
       <p className="min-w-0 flex-1">{text}</p>
       <Link to="/vendor/verification" className="shrink-0 font-medium underline underline-offset-2">
