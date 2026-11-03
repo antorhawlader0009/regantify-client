@@ -6,15 +6,12 @@ import { EmptyState, PageHeader, PageSection, PillTabs, SearchBox, outlineBtn, p
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { ResaleOfferDialog, dhakaDate } from '../../../components/product/ResaleOfferDialogs';
 import { ResellerPartnersPanel } from '../../../components/product/ResellerPartnersPanel';
-import { ResaleProblemsList } from '../../../components/resale/ResaleProblems';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
-import { FeatureGate } from '../../../lib/features';
 import {
   RESALE_SUPPLY_KEY,
   commissionLabel,
   resaleSupplyApi,
-  type ResaleApproval,
   type ResaleOfferItem,
   type ResaleSupplierSettings,
 } from '../../../lib/resaleSupplyApi';
@@ -22,38 +19,18 @@ import {
 const fieldClass =
   'block w-full rounded-lg border border-line bg-white px-3 text-sm font-normal text-regantify-text focus:outline-none focus:border-brand';
 
-const APPROVAL_CHOICES: Array<{ id: ResaleApproval; label: string; hint: string }> = [
-  { id: 'APPROVAL', label: 'I approve each reseller', hint: 'A store asks, you say yes or no.' },
-  { id: 'OPEN', label: 'Any allowed store', hint: 'Stores Regantify allows can start at once.' },
-  { id: 'INVITE', label: 'Only stores I invite', hint: 'Nobody can ask; you invite stores yourself.' },
-];
-
 const money = (n: number) => `৳${n.toLocaleString()}`;
 
 /**
- * Products > Sell through resellers (RESELLER-plan.md Step 2): the supplier side of the reseller system. The store turns it on, says how
- * resellers join and writes its terms, then picks which products resellers may sell and for what commission. Shown only to stores the
- * RESALE_SUPPLY flag is on for; the server decides the rest (verified, not blocked) and its sentence is shown here when it says no.
+ * Marketing > Reseller > "Let others sell my products": the supplier side of the reseller system, open to every store since 2026-11-03.
+ * The store turns it on, gives the phone resellers call, writes its terms, then picks which products resellers may sell and the
+ * commission it agrees to pay them. Every reseller needs its approval, and the store pays resellers directly (Regantify holds no money).
+ * The server's sentence is shown here when it says no (blocked by Regantify, store not open).
  */
 export default function ResellerSupply() {
-  return (
-    <FeatureGate
-      flag="RESALE_SUPPLY"
-      fallback={
-        <PageSection>
-          <EmptyState icon={Handshake} title="Selling through resellers is not open for your store yet" hint="Regantify opens it for stores step by step." />
-        </PageSection>
-      }
-    >
-      <ResellerSupplyPage />
-    </FeatureGate>
-  );
-}
-
-function ResellerSupplyPage() {
   const settingsQuery = useQuery({ queryKey: [...RESALE_SUPPLY_KEY, 'settings'], queryFn: resaleSupplyApi.settings, retry: false });
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'resellers' ? 'resellers' : params.get('tab') === 'problems' ? 'problems' : 'products';
+  const tab = params.get('tab') === 'resellers' ? 'resellers' : 'products';
 
   if (settingsQuery.isLoading) return <PageSection><p className="py-6 text-center text-sm text-neutral-500">Loading…</p></PageSection>;
   if (settingsQuery.isError || !settingsQuery.data)
@@ -71,19 +48,26 @@ function ResellerSupplyPage() {
         tabs={[
           { id: 'products', label: 'Settings and products' },
           { id: 'resellers', label: 'Resellers' },
-          { id: 'problems', label: 'Problems' },
         ]}
         value={tab}
-        onChange={(t) => setParams(t === 'products' ? {} : { tab: t }, { replace: true })}
+        onChange={(t) =>
+          setParams(
+            (prev) => {
+              const next = new URLSearchParams(prev);
+              if (t === 'products') next.delete('tab');
+              else next.set('tab', t);
+              return next;
+            },
+            { replace: true },
+          )
+        }
       />
-      {tab === 'problems' ? (
+      {tab === 'resellers' ? (
         <PageSection>
-          <PageHeader title="Problems with your parcels" description="What resellers reported about delivered or returned orders. Answer with your packing photos; Regantify decides." />
-          <ResaleProblemsList side="supplier" />
-        </PageSection>
-      ) : tab === 'resellers' ? (
-        <PageSection>
-          <PageHeader title="Resellers" description="Stores that sell your products, requests waiting for you, and invitations you sent." />
+          <PageHeader
+            title="Resellers"
+            description="Stores that sell your products, requests waiting for you, and invitations you sent. Call a store before you approve it, and agree how you will pay its earnings."
+          />
           <ResellerPartnersPanel />
         </PageSection>
       ) : (
@@ -104,7 +88,7 @@ function SettingsCard({ data }: { data: Awaited<ReturnType<typeof resaleSupplyAp
 
   const save = useMutation({
     mutationFn: (next: ResaleSupplierSettings) => {
-      const { saved: _saved, ...body } = next;
+      const { saved: _saved, ownerPhone: _ownerPhone, ...body } = next;
       return resaleSupplyApi.saveSettings(body);
     },
     onSuccess: (r) => {
@@ -118,8 +102,11 @@ function SettingsCard({ data }: { data: Awaited<ReturnType<typeof resaleSupplyAp
     <PageSection>
       <PageHeader
         title="Sell through resellers"
-        description="Let other Regantify stores sell your products. You ship every order with your courier; the reseller earns the commission you set when the parcel is delivered."
+        description="Let other Regantify stores sell your products. Every store needs your approval first. You ship every order with your courier, and you pay the reseller its commission yourself after delivery."
       />
+      <div className="mb-3 rounded-lg border border-line bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+        Money is settled between you and the reseller (bKash, Nagad, bank or cash, as you agree by phone). Regantify does not hold, pay or take any part of it, and is not responsible for it. Marketing &gt; Reseller &gt; Money record shows what you owe.
+      </div>
 
       {data.paused && (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -147,18 +134,26 @@ function SettingsCard({ data }: { data: Awaited<ReturnType<typeof resaleSupplyAp
           </span>
         </label>
 
-        <fieldset>
-          <legend className="mb-1 text-sm text-regantify-text">Who may sell your products</legend>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {APPROVAL_CHOICES.map((c) => (
-              <label key={c.id} className={`cursor-pointer rounded-lg border px-3 py-2 text-sm ${form.approval === c.id ? 'border-brand bg-brand-lime/30' : 'border-line'}`}>
-                <input type="radio" name="approval" className="sr-only" checked={form.approval === c.id} onChange={() => set('approval', c.id)} />
-                <span className="font-medium text-regantify-text">{c.label}</span>
-                <span className="block text-xs text-neutral-500">{c.hint}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+<div className="rounded-lg border border-line px-3 py-2 text-sm">
+          <p className="font-medium text-regantify-text">Who may sell your products: only stores you approve</p>
+          <p className="text-xs text-neutral-500">
+            Every Regantify store can see your offered products in Marketing &gt; Reseller and send you a request with its phone number. Nobody can add them to a store until you approve. You can also invite a store yourself.
+          </p>
+        </div>
+
+        <label className="block text-sm text-regantify-text">
+          Phone resellers can call or WhatsApp
+          <input
+            type="tel"
+            inputMode="tel"
+            maxLength={16}
+            value={form.contactPhone}
+            placeholder={form.ownerPhone ?? '01XXXXXXXXX'}
+            onChange={(e) => set('contactPhone', e.target.value)}
+            className={`${fieldClass} mt-1 h-10`}
+          />
+          <span className="mt-1 block text-xs text-neutral-500">Empty = your account phone. Resellers see it before asking, so they can talk to you about terms and payment.</span>
+        </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm text-regantify-text">

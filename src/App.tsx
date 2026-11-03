@@ -122,8 +122,8 @@ const Questions = lazy(() => import('./pages/vendor/review/Questions'));
 const ReviewReports = lazy(() => import('./pages/vendor/review/Reports'));
 const CourierRules = lazy(() => import('./pages/vendor/courier/CourierRules'));
 const StockHistory = lazy(() => import('./pages/vendor/product/StockHistory'));
-const ResellerSupply = lazy(() => import('./pages/vendor/product/ResellerSupply'));
-const ResellerFind = lazy(() => import('./pages/vendor/product/ResellerFind'));
+const Reseller = lazy(() => import('./pages/vendor/marketing/Reseller'));
+const ResellerRedirect = lazy(() => import('./pages/vendor/marketing/ResellerRedirect'));
 const ImportOrders = lazy(() => import('./pages/vendor/order/ImportOrders'));
 const HandoverSheetPrintPage = lazy(() => import('./pages/vendor/order/HandoverSheetPrintPage'));
 const AddOrder = lazy(() => import('./pages/vendor/order/AddOrder'));
@@ -141,7 +141,6 @@ const Staff = lazy(() => import('./pages/vendor/staff/Staff'));
 const ActivityLog = lazy(() => import('./pages/vendor/account/ActivityLog'));
 const Verification = lazy(() => import('./pages/vendor/Verification'));
 const AdminVerification = lazy(() => import('./pages/admin/Verification'));
-const AdminResaleDisputes = lazy(() => import('./pages/admin/ResaleDisputes'));
 const AddStaffMember = lazy(() => import('./pages/vendor/staff/AddStaffMember'));
 const Billing = lazy(() => import('./pages/vendor/Billing'));
 const Notifications = lazy(() => import('./pages/vendor/Notifications'));
@@ -164,7 +163,6 @@ const GiftCardDetail = lazy(() => import('./pages/vendor/marketing/GiftCardDetai
 const Sms = lazy(() => import('./pages/vendor/sms/Sms'));
 const AiUsage = lazy(() => import('./pages/vendor/ai-usage/AiUsage'));
 const Wallet = lazy(() => import('./pages/vendor/finance/Wallet'));
-const ResellerEarnings = lazy(() => import('./pages/vendor/finance/ResellerEarnings'));
 const Transactions = lazy(() => import('./pages/vendor/finance/Transactions'));
 const Withdraw = lazy(() => import('./pages/vendor/finance/Withdraw'));
 const FeeSummary = lazy(() => import('./pages/vendor/finance/FeeSummary'));
@@ -321,8 +319,6 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/low-stock' &&
     r.path !== '/vendor/product/stock-count' &&
     r.path !== '/vendor/product/stock-history' &&
-    r.path !== '/vendor/product/resellers' &&
-    r.path !== '/vendor/product/resell' &&
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/magazine' &&
@@ -372,10 +368,10 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/marketing/gift-cards' &&
     r.path !== '/vendor/marketing/rewards' &&
     r.path !== '/vendor/marketing/app-notifications' &&
+    r.path !== '/vendor/marketing/reseller' &&
     r.path !== '/vendor/sms' &&
     r.path !== '/vendor/ai-usage' &&
     r.path !== '/vendor/finance/wallet' &&
-    r.path !== '/vendor/finance/reseller-earnings' &&
     r.path !== '/vendor/finance/transactions' &&
 
     r.path !== '/vendor/finance/withdraw' &&
@@ -403,7 +399,6 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/shop' &&
     r.path !== '/admin/trust-safety' &&
     r.path !== '/admin/verification' &&
-    r.path !== '/admin/resale-disputes' &&
     r.path !== '/admin/receipt-details' &&
     r.path !== '/admin/dashboard' &&
     r.path !== '/admin/renewals' &&
@@ -530,8 +525,9 @@ export default function App() {
                 <Route path="/vendor/product/low-stock" element={<LowStock />} />
                 <Route path="/vendor/product/stock-count" element={<StockCount />} />
                 <Route path="/vendor/product/stock-history" element={<StockHistory />} />
-                <Route path="/vendor/product/resellers" element={<ResellerSupply />} />
-                <Route path="/vendor/product/resell" element={<ResellerFind />} />
+                {/* The reseller pages moved to Marketing > Reseller on 2026-11-03. */}
+                <Route path="/vendor/product/resellers" element={<ResellerRedirect view="supply" />} />
+                <Route path="/vendor/product/resell" element={<ResellerRedirect view="sell" />} />
                 <Route path="/vendor/product/categories" element={<Categories />} />
                 <Route path="/vendor/product/brands" element={<Brands />} />
                 <Route path="/vendor/product/size-guides" element={<SizeGuides />} />
@@ -627,6 +623,7 @@ export default function App() {
                 <Route path="/vendor/staff/:id/edit" element={<AddStaffMember />} />
                 <Route path="/vendor/billing" element={<Billing />} />
                 <Route path="/vendor/marketing/coupons" element={<Coupons />} />
+                <Route path="/vendor/marketing/reseller" element={<Reseller />} />
                 <Route path="/vendor/marketing/coupons/add" element={<AddCoupon />} />
                 <Route path="/vendor/marketing/coupons/:id/edit" element={<AddCoupon />} />
                 <Route path="/vendor/marketing/campaigns" element={<Campaigns />} />
@@ -649,7 +646,7 @@ export default function App() {
                 {/* The old AI & Automation pages (AI Chat Bot, the n8n placeholder) are now AI Usages. */}
                 <Route path="/vendor/ai-automation/*" element={<Navigate to="/vendor/ai-usage" replace />} />
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
-                <Route path="/vendor/finance/reseller-earnings" element={<ResellerEarnings />} />
+                <Route path="/vendor/finance/reseller-earnings" element={<ResellerRedirect view="money" />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
 
                 <Route path="/vendor/finance/receipts" element={<Receipts />} />
@@ -730,7 +727,6 @@ export default function App() {
                 <Route path="/admin/shop" element={<AdminShop />} />
                 <Route path="/admin/trust-safety" element={<TrustSafety />} />
                 <Route path="/admin/verification" element={<AdminVerification />} />
-                <Route path="/admin/resale-disputes" element={<AdminResaleDisputes />} />
                 <Route path="/admin/receipt-details" element={<ReceiptDetails />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
                 <Route path="/admin/reviews" element={<AdminReviews />} />

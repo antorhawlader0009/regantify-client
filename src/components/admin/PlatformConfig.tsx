@@ -213,83 +213,42 @@ export function MoneySection() {
   );
 }
 
-const FLAG_TEXT: Record<string, string> = { MISSING: 'not created yet (off)', OFF: 'off', LIST: 'on for listed stores', PERCENT: 'on for a share of stores', PLANS: 'on for some plans', ALL: 'on for every store' };
-
-/** Reseller system (RESELLER-plan.md Step 1): the verification rule, the platform's share and the limits. Who is invited is the two feature flags. */
+/**
+ * Reseller system. Since 2026-11-03 (the owner's rule) it is on for every store; a store can use another store's products only with that
+ * store's approval, and the two settle money directly, so there is no platform share, no hold and no online payment to set here. What is
+ * left: the limits. One store can still be blocked on its own page.
+ */
 export function ResaleSection() {
   const { data } = usePlatformConfig();
-  const [f, setF] = useState({ verifiedSuppliers: true, verifiedResellers: false, fee: '5', hold: '0', maxListings: '500', autoCancel: '7', pauseRate: '40', onlinePayment: false });
+  const [f, setF] = useState({ maxListings: '500', autoCancel: '7', pauseRate: '40' });
   useEffect(() => {
     if (!data) return;
     const r = data.resale;
-    setF({ verifiedSuppliers: r.verifiedSuppliers, verifiedResellers: r.verifiedResellers, fee: String(r.feePercent), hold: String(r.holdDays), maxListings: String(r.maxListings), autoCancel: String(r.autoCancelDays), pauseRate: String(r.returnPauseRate), onlinePayment: r.onlinePayment });
+    setF({ maxListings: String(r.maxListings), autoCancel: String(r.autoCancelDays), pauseRate: String(r.returnPauseRate) });
   }, [data]);
   if (!data) return <p className="text-sm text-regantify-text-muted">Loading…</p>;
   const n = (v: string) => Number(v);
   const int = (v: string, min: number, max: number) => v !== '' && Number.isInteger(n(v)) && n(v) >= min && n(v) <= max;
-  const valid = f.fee !== '' && n(f.fee) >= 0 && n(f.fee) <= 50 && int(f.hold, 0, 30) && int(f.maxListings, 1, 10_000) && int(f.autoCancel, 2, 10) && int(f.pauseRate, 10, 100);
+  const valid = int(f.maxListings, 1, 10_000) && int(f.autoCancel, 2, 10) && int(f.pauseRate, 10, 100);
   return (
     <Section
       title="Reseller system"
-      hint="Stores selling each other’s products. Off for every store until you switch on the feature flags below."
+      hint="Stores selling each other’s products (Marketing > Reseller in every store’s dashboard)."
       section="resale"
       valid={valid}
       body={() => ({
-        resaleVerifiedSuppliers: f.verifiedSuppliers,
-        resaleVerifiedResellers: f.verifiedResellers,
-        resaleFeePercent: n(f.fee),
-        resaleHoldDays: n(f.hold),
         resaleMaxListings: n(f.maxListings),
         resaleAutoCancelDays: n(f.autoCancel),
         resaleReturnPauseRate: n(f.pauseRate),
-        resaleOnlinePayment: f.onlinePayment,
       })}
     >
       <div className="rounded-xl bg-regantify-search px-4 py-3 text-sm text-regantify-text">
-        <p>
-          Supply (RESALE_SUPPLY): <b>{FLAG_TEXT[data.resale.flags.supply] ?? data.resale.flags.supply}</b>
-        </p>
-        <p>
-          Resell (RESALE_SELL): <b>{FLAG_TEXT[data.resale.flags.sell] ?? data.resale.flags.sell}</b>
-        </p>
+        <p>On for every store. A store sells another store’s products only after that store approves it; they find each other’s phone number in the dashboard.</p>
         <p className="mt-1 text-xs text-regantify-text-muted">
-          Turn these on for every store, chosen stores or chosen plans in{' '}
-          <Link to="/admin/feature-flags" className="text-regantify-cta hover:underline">
-            Feature flags
-          </Link>
-          . One store can be blocked or given its own share on its page.
+          Reseller money is settled directly between the two stores. Regantify takes no share, holds nothing and moves nothing between wallets; reseller orders are cash on delivery only. One store can be blocked on its own page; the kill switch RESALE pauses everything.
         </p>
       </div>
-      <label className="flex items-start gap-2 text-sm text-regantify-text">
-        <input type="checkbox" checked={f.verifiedSuppliers} onChange={(e) => setF({ ...f, verifiedSuppliers: e.target.checked })} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
-        <span>
-          Only verified stores can supply
-          <span className="block text-xs text-regantify-text-muted">A supplier ships other stores’ orders, so it should have finished Verification. On by default.</span>
-        </span>
-      </label>
-      <label className="flex items-start gap-2 text-sm text-regantify-text">
-        <input type="checkbox" checked={f.verifiedResellers} onChange={(e) => setF({ ...f, verifiedResellers: e.target.checked })} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
-        <span>
-          Only verified stores can resell
-          <span className="block text-xs text-regantify-text-muted">Off by default, so any invited store can start reselling.</span>
-        </span>
-      </label>
-      <label className="flex items-start gap-2 text-sm text-regantify-text">
-        <input type="checkbox" checked={f.onlinePayment} onChange={(e) => setF({ ...f, onlinePayment: e.target.checked })} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
-        <span>
-          Shoppers may pay reseller orders online
-          <span className="block text-xs text-regantify-text-muted">
-            Full payment or the supplier’s COD advance, through the platform’s PayStation. The money stays with the platform until the parcel is delivered, then goes to the supplier. Check the escrow rules before turning it on. Off by default.
-          </span>
-        </span>
-      </label>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Label text="Platform share of reseller earnings (%)" hint="Taken from the reseller’s commission when it is paid. 5 by default.">
-          <input className={field} inputMode="decimal" value={f.fee} onChange={(e) => setF({ ...f, fee: digits(e.target.value) })} />
-        </Label>
-        <Label text="Days before an earning can be spent (0 to 30)" hint="0 = at once when the order is completed.">
-          <input className={field} inputMode="numeric" value={f.hold} onChange={(e) => setF({ ...f, hold: digits(e.target.value) })} />
-        </Label>
         <Label text="Products one reseller store may add" hint="Separate from the plan’s product limit.">
           <input className={field} inputMode="numeric" value={f.maxListings} onChange={(e) => setF({ ...f, maxListings: digits(e.target.value) })} />
         </Label>

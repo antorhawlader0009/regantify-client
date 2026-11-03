@@ -4,23 +4,25 @@ import { OrderComments } from '../../../components/order/OrderComments';
 import { OrderTimeline } from '../../../components/order/OrderTimeline';
 import { orderRef, type Order, type OrderStatusHistoryEntry, type ResaleOrderInfo } from '../../../lib/ordersApi';
 import { OrderStatusBadge } from './orderStatus';
-import { ReportProblemCard } from '../../../components/resale/ResaleProblems';
+import { ContactLinks } from '../../../components/resale/ContactLinks';
 import { BackLink } from '../../../components/ui/BackLink';
 
 const money = (n: number) => `৳${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
 const SETTLEMENT_TEXT: Record<NonNullable<ResaleOrderInfo['settlement']>['status'], string> = {
-  AWAITING_SUPPLIER: 'Waiting for the supplier’s wallet',
-  HELD: 'Paid by the supplier, reaches the wallet on',
-  PAID: 'Paid to the wallet on',
-  REVERSED: 'Taken back: the parcel was returned',
+  DUE: 'Owed: the supplier pays it directly',
+  AWAITING_SUPPLIER: 'Owed: the supplier pays it directly',
+  SETTLED: 'Marked paid by the supplier on',
+  HELD: 'Paid through Regantify (old) on',
+  PAID: 'Paid through Regantify (old) on',
+  REVERSED: 'Nothing owed: the parcel was returned',
 };
 
 /**
- * The resale card on Order detail (RESELLER-plan.md Steps 10-11). On a supplier's order: who sold it, the reseller's earning on it and how
- * it was settled (the supplier's wallet pays it when the courier reports it delivered). On a reseller's order: the supplier, the earning,
- * what reaches the wallet after Regantify's share, and how it was settled.
+ * The resale card on Order detail. On a supplier's order: who sold it and the reseller's earning, which the supplier pays directly after
+ * delivery and then marks paid in Marketing > Reseller > Money record. On a reseller's order: the supplier and the earning it owes.
+ * Since 2026-11-03 no reseller money passes through Regantify; this card only shows the record and the other store's phone.
  */
 export function ResaleCard({ info }: { info: ResaleOrderInfo }) {
   const st = info.settlement;
@@ -32,24 +34,16 @@ export function ResaleCard({ info }: { info: ResaleOrderInfo }) {
       </h2>
       <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
         <div className="flex justify-between gap-3">
-          <dt className="text-neutral-600">{info.role === 'SUPPLIER' ? 'Reseller’s earning (you pay it on delivery)' : 'Your earning'}</dt>
+          <dt className="text-neutral-600">{info.role === 'SUPPLIER' ? 'Reseller’s earning (you pay it directly after delivery)' : 'Your earning (the supplier pays you directly)'}</dt>
           <dd className="font-medium tabular-nums">{money(info.earning)}</dd>
         </div>
-        {info.role === 'RESELLER' && info.expectedNet !== undefined && !st && (
-          <div className="flex justify-between gap-3">
-            <dt className="text-neutral-600">Reaches your wallet (after Regantify’s share)</dt>
-            <dd className="font-medium tabular-nums">{money(info.expectedNet)}</dd>
-          </div>
-        )}
         {st && (
           <div className="flex justify-between gap-3 sm:col-span-2">
             <dt className="text-neutral-600">
-              {SETTLEMENT_TEXT[st.status]} {st.status === 'PAID' ? day(st.paidAt) : st.status === 'HELD' ? day(st.releaseAt) : ''}
+              {SETTLEMENT_TEXT[st.status]} {st.status === 'SETTLED' ? day(st.settledAt ?? null) : st.status === 'PAID' || st.status === 'HELD' ? day(st.paidAt) : ''}
+              {st.status === 'SETTLED' && st.settledNote ? <span className="text-xs"> ({st.settledNote})</span> : null}
             </dt>
-            <dd className="font-medium tabular-nums">
-              {info.role === 'RESELLER' ? money(st.net) : money(st.earning)}
-              {info.role === 'RESELLER' && st.fee > 0 ? <span className="ml-1 text-xs font-normal text-neutral-500">(Regantify {money(st.fee)})</span> : null}
-            </dd>
+            <dd className="font-medium tabular-nums">{info.role === 'RESELLER' ? money(st.net) : money(st.earning)}</dd>
           </div>
         )}
       </dl>
@@ -65,12 +59,18 @@ export function ResaleCard({ info }: { info: ResaleOrderInfo }) {
             : `The shopper paid ${money(info.onlineHeld.amount)} online. Regantify holds it and adds it to your wallet when the courier reports the parcel delivered.`}
         </p>
       )}
-      {info.role === 'SUPPLIER' && st?.status === 'AWAITING_SUPPLIER' && (
-        <p className="mt-2 text-xs text-red-700">
-          Your wallet could not pay this earning, so your store takes no new orders.{' '}
-          <Link to="/vendor/billing?tab=wallet" className="font-medium underline">
-            Add money
+      {info.partner?.phone && (
+        <div className="mt-2">
+          <ContactLinks phone={info.partner.phone} label={info.role === 'SUPPLIER' ? 'Reseller' : 'Supplier'} />
+        </div>
+      )}
+      {st && (st.status === 'DUE' || st.status === 'AWAITING_SUPPLIER') && (
+        <p className="mt-2 text-xs text-neutral-600">
+          {info.role === 'SUPPLIER' ? 'Pay the reseller directly, then mark it paid in ' : 'If it is late, call the supplier. See all in '}
+          <Link to={`/vendor/marketing/reseller?view=money${info.role === 'SUPPLIER' ? '&side=supplier' : ''}`} className="font-medium underline">
+            Money record
           </Link>
+          .
         </p>
       )}
     </section>
@@ -99,8 +99,6 @@ export function ResaleOrderView({ order, history }: { order: Order; history: Ord
       </div>
 
       {order.resale && <ResaleCard info={order.resale} />}
-      {/* Step 14: a problem with the parcel (wrong item, damaged, missing, late). */}
-      <ReportProblemCard orderId={order.id} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="min-w-0 space-y-4 lg:col-span-2">

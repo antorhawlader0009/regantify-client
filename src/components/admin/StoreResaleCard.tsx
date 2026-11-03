@@ -77,10 +77,6 @@ export function StoreResaleCard({ vendorId }: { vendorId: string }) {
       </div>
       <AccessLine label="Can supply resellers" access={data.supply} />
       <AccessLine label="Can resell others’ products" access={data.sell} />
-      <div className="flex items-start justify-between gap-4 border-b border-black/5 py-2.5">
-        <span className="text-sm text-regantify-text-muted">Platform share of its earnings</span>
-        <span className="text-right text-sm text-regantify-text">{data.feePercent === null ? `${data.platformFeePercent}% (platform default)` : `${data.feePercent}% (own deal)`}</span>
-      </div>
       {/* Steps 13 and 15: the automatic guards. */}
       {data.returnRate !== null && (
         <p className={`text-sm ${data.returnPausedAt ? 'text-red-700' : 'text-neutral-600'}`}>
@@ -105,23 +101,18 @@ export function StoreResaleCard({ vendorId }: { vendorId: string }) {
         </p>
       )}
       <p className="mt-2 text-xs text-regantify-text-muted">
-        Which stores are invited is set in <Link to="/admin/feature-flags" className="text-regantify-cta hover:underline">Feature flags</Link> (RESALE_SUPPLY, RESALE_SELL); the verification rule and the default share are in{' '}
+        On for every store; reseller money is settled directly between the stores. The limits are in{' '}
         <Link to="/admin/settings?tab=resale" className="text-regantify-cta hover:underline">Settings</Link>.
       </p>
 
       <Dialog open={open} onOpenChange={setOpen} maxWidth="max-w-md">
         <div className="space-y-4 p-6">
           <h2 className="font-semibold text-regantify-text">Reseller system for this store</h2>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-regantify-text">Platform share of its earnings (%)</label>
-            <input inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value.replace(/[^\d.]/g, ''))} placeholder={`Empty = platform default (${data.platformFeePercent}%)`} className={field} />
-            {!feeValid && <p className="mt-1 text-xs text-red-600">Use a number from 0 to 50.</p>}
-          </div>
           <label className="flex items-start gap-2 text-sm text-regantify-text">
             <input type="checkbox" checked={blocked} onChange={(e) => setBlocked(e.target.checked)} className="mt-0.5 h-4 w-4 accent-regantify-cta" />
             <span>
               Block this store
-              <span className="block text-xs text-regantify-text-muted">It can neither supply nor resell, whatever the feature flags say.</span>
+              <span className="block text-xs text-regantify-text-muted">It can neither supply nor resell.</span>
             </span>
           </label>
           <div>

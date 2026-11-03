@@ -158,8 +158,6 @@ export const vendorNav: NavSection[] = [
       { label: 'Low Stock', path: '/vendor/product/low-stock' },
       { label: 'Stock Count', path: '/vendor/product/stock-count', advanced: true },
       { label: 'Stock History', path: '/vendor/product/stock-history', advanced: true },
-      { label: 'Sell through resellers', path: '/vendor/product/resellers', flag: 'RESALE_SUPPLY' },
-      { label: 'Find products to sell', path: '/vendor/product/resell', flag: 'RESALE_SELL' },
     ],
   },
   { label: 'Reviews', icon: Star, group: 'Product', path: '/vendor/reviews' },
@@ -266,6 +264,8 @@ export const vendorNav: NavSection[] = [
     tabs: true,
     children: [
       { label: 'Coupons', path: '/vendor/marketing/coupons' },
+      // Every store, since 2026-11-03 (the owner's rule): sell other stores' products with their approval, or let them sell yours.
+      { label: 'Reseller', path: '/vendor/marketing/reseller' },
       { label: 'Campaigns', path: '/vendor/marketing/campaigns', advanced: true },
       { label: 'Discounts', path: '/vendor/marketing/discounts' },
       { label: 'Flash Sale', path: '/vendor/marketing/flash-sale', advanced: true },
@@ -284,7 +284,6 @@ export const vendorNav: NavSection[] = [
     group: 'Account',
     children: [
       { label: 'Wallet', path: '/vendor/finance/wallet' },
-      { label: 'Reseller earnings', path: '/vendor/finance/reseller-earnings', flag: 'RESALE_SELL' },
       { label: 'Transactions', path: '/vendor/finance/transactions' },
       { label: 'Expenses', path: '/vendor/finance/expenses', advanced: true },
       { label: 'Withdraw', path: '/vendor/finance/withdraw' },
@@ -320,7 +319,6 @@ export const adminNav: NavSection[] = [
   { label: 'Apps', icon: Smartphone, group: 'Stores', path: '/admin/store-apps' },
   { label: 'Verification', icon: ShieldCheck, group: 'Stores', path: '/admin/verification' },
   { label: 'Store reports', icon: Flag, group: 'Stores', path: '/admin/reports' },
-  { label: 'Reseller problems', icon: Flag, group: 'Stores', path: '/admin/resale-disputes' },
   { label: 'Trust and safety', icon: ShieldAlert, group: 'Stores', path: '/admin/trust-safety' },
   { label: 'Domains', icon: Globe, group: 'Stores', path: '/admin/domains' },
   { label: 'Delivery times', icon: Timer, group: 'Stores', path: '/admin/delivery-times' },

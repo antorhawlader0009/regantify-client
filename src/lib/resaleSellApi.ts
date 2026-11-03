@@ -12,6 +12,8 @@ export interface PartnerStore {
   subdomain: string;
   logoUrl: string | null;
   verified: boolean;
+  /** Call or WhatsApp to agree on terms and settle money (2026-11-03): the supplier's contact phone, or the number the reseller gave. */
+  phone: string | null;
 }
 
 export interface Partnership {
@@ -70,12 +72,13 @@ export interface SupplierScore {
   returned: number;
   cancelled: number;
   stockOutCancels: number;
-  /** Problems Regantify decided against the supplier (Step 14). */
-  disputesLost: number;
   deliveredRate: number | null;
   returnRate: number | null;
   onTimeRate: number | null;
-  avgEarningWaitDays: number | null;
+  /** Average days from delivery to the supplier marking the earning paid (settled directly). */
+  avgSettleDays: number | null;
+  /** Earnings still owed more than 7 days after delivery. */
+  lateEarnings: number;
   rating: { average: number; count: number } | null;
   badge: 'NEW' | 'RELIABLE' | null;
 }
@@ -100,6 +103,7 @@ export interface SupplierCard {
   shipWithinDays: number;
   returnWindowDays: number;
   approval: ResaleApproval;
+  phone: string | null;
   termsBn: string | null;
   termsEn: string | null;
   pickupNote: string | null;
@@ -153,7 +157,8 @@ export const resaleSellApi = {
   catalog: (params: { q?: string; category?: string; supplierId?: string; offerId?: string; sort?: CatalogSort; page?: number }) =>
     api.get<{ total: number; page: number; perPage: number; items: CatalogItem[]; categories: string[] }>('/v1/resale/sell/catalog', { params }).then((r) => r.data),
   supplier: (supplierId: string) => api.get<SupplierCard>(`/v1/resale/sell/suppliers/${supplierId}`).then((r) => r.data),
-  request: (supplierId: string, message?: string) => api.post<Partnership>(`/v1/resale/sell/suppliers/${supplierId}/request`, { message }).then((r) => r.data),
+  request: (supplierId: string, message?: string, phone?: string) =>
+    api.post<Partnership>(`/v1/resale/sell/suppliers/${supplierId}/request`, { message, phone }).then((r) => r.data),
   partnerships: () => api.get<Partnership[]>('/v1/resale/sell/partnerships').then((r) => r.data),
   rate: (supplierId: string, stars: number, comment?: string) => api.post<MyRating>(`/v1/resale/sell/suppliers/${supplierId}/rating`, { stars, comment }).then((r) => r.data),
   accept: (id: string) => api.post<Partnership>(`/v1/resale/sell/partnerships/${id}/accept`).then((r) => r.data),

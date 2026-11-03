@@ -6,11 +6,10 @@ import { Dialog } from '../../../components/ui/Dialog';
 import { EmptyState, PageHeader, PageSection, PillTabs, SearchBox, SelectBox, outlineBtn, primaryBtn } from '../../../components/ui/PageKit';
 import { ResaleNoteDialog } from '../../../components/product/ResaleNoteDialog';
 import { ResaleListingsPanel } from '../../../components/product/ResaleListingsPanel';
-import { ResaleProblemsList } from '../../../components/resale/ResaleProblems';
+import { ContactLinks } from '../../../components/resale/ContactLinks';
 import { dhakaDate } from '../../../components/product/ResaleOfferDialogs';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
-import { FeatureGate } from '../../../lib/features';
 import { imageThumb } from '../../../lib/imageThumb';
 import { commissionLabel } from '../../../lib/resaleSupplyApi';
 import {
@@ -25,31 +24,20 @@ import {
 } from '../../../lib/resaleSellApi';
 
 const money = (n: number) => `৳${n.toLocaleString()}`;
-type Tab = 'catalog' | 'listings' | 'suppliers' | 'problems';
+type Tab = 'catalog' | 'listings' | 'suppliers';
 
 /**
  * Products > Find products to sell (RESELLER-plan.md Step 3): the reseller side. Browse what suppliers offer, read a supplier's card and
  * Bangla terms, ask to sell; "My suppliers" lists requests, invitations and partners. Adding a product to the store comes in Step 4.
  */
+/**
+ * Marketing > Reseller > "Sell others' products" (open to every store since 2026-11-03). Find a supplier's products, call the supplier,
+ * ask to sell (it must approve you), then add its products to your store. The supplier ships; it pays your earning directly.
+ */
 export default function ResellerFind() {
-  return (
-    <FeatureGate
-      flag="RESALE_SELL"
-      fallback={
-        <PageSection>
-          <EmptyState icon={Handshake} title="Reselling is not open for your store yet" hint="Regantify opens it for stores step by step." />
-        </PageSection>
-      }
-    >
-      <ResellerFindPage />
-    </FeatureGate>
-  );
-}
-
-function ResellerFindPage() {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab');
-  const tab: Tab = raw === 'suppliers' || raw === 'listings' || raw === 'problems' ? raw : 'catalog';
+  const tab: Tab = raw === 'suppliers' || raw === 'listings' ? raw : 'catalog';
   const [supplierOpen, setSupplierOpen] = useState<string | null>(null);
   const partnerships = useQuery({ queryKey: [...RESALE_SELL_KEY, 'partnerships'], queryFn: resaleSellApi.partnerships, retry: false });
   const invitations = (partnerships.data ?? []).filter((p) => p.status === 'PENDING' && p.invited).length;
@@ -64,25 +52,32 @@ function ResellerFindPage() {
   return (
     <PageSection>
       <PageHeader
-        title="Find products to sell"
-        description="Sell other stores' products in your own store without keeping stock. The supplier ships every order; you earn the commission when the parcel is delivered."
+        title="Sell other stores' products"
+        description="Sell other stores' products in your own store without keeping stock. Ask the supplier first (call them, then send a request); once it approves, add its products. The supplier ships every order and pays your commission directly after delivery."
       />
       <PillTabs
         tabs={[
           { id: 'catalog', label: 'Products' },
           { id: 'listings', label: 'My listings' },
           { id: 'suppliers', label: 'My suppliers', count: invitations || undefined },
-          { id: 'problems', label: 'Problems' },
         ]}
         value={tab}
-        onChange={(t) => setParams(t === 'catalog' ? {} : { tab: t }, { replace: true })}
+        onChange={(t) =>
+          setParams(
+            (prev) => {
+              const next = new URLSearchParams(prev);
+              if (t === 'catalog') next.delete('tab');
+              else next.set('tab', t);
+              return next;
+            },
+            { replace: true },
+          )
+        }
       />
       {tab === 'catalog' ? (
         <CatalogTab onSupplier={setSupplierOpen} />
       ) : tab === 'listings' ? (
         <ResaleListingsPanel />
-      ) : tab === 'problems' ? (
-        <ResaleProblemsList side="reseller" />
       ) : (
         <SuppliersTab rows={partnerships.data ?? []} loading={partnerships.isLoading} onSupplier={setSupplierOpen} />
       )}
@@ -273,8 +268,8 @@ function SupplierDialog({ supplierId, onClose }: { supplierId: string; onClose: 
     setAsking(false);
   };
   const request = useMutation({
-    mutationFn: (message: string) => resaleSellApi.request(supplierId, message || undefined),
-    onSuccess: (p) => done(p.status === 'APPROVED' ? 'You can now sell this supplier’s products.' : 'Request sent. You will get a note when the supplier answers.'),
+    mutationFn: ({ message, phone }: { message: string; phone?: string }) => resaleSellApi.request(supplierId, message || undefined, phone),
+    onSuccess: (p) => done(p.status === 'APPROVED' ? 'You can now sell this supplier’s products.' : 'Request sent. The supplier may call you; you get a note when it answers.'),
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not send the request.')),
   });
   const accept = useMutation({
@@ -322,6 +317,13 @@ function SupplierDialog({ supplierId, onClose }: { supplierId: string; onClose: 
             <Stat label="Products" value={String(data.offered)} />
           </dl>
 
+          <div className="rounded-lg border border-line bg-neutral-50 px-3 py-2">
+            <ContactLinks phone={data.phone} label="Talk to the supplier first" />
+            <p className="mt-1 text-xs text-neutral-600">
+              Agree on the commission and how it will be paid (bKash, Nagad, bank). The supplier pays you directly; Regantify does not hold this money.
+            </p>
+          </div>
+
           <ScoreBlock score={data.score} />
           <RatingBlock supplierId={data.id} mine={data.myRating} />
 
@@ -348,7 +350,7 @@ function SupplierDialog({ supplierId, onClose }: { supplierId: string; onClose: 
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             {p?.status === 'APPROVED' ? (
-              <span className="text-sm text-emerald-700">You can sell this supplier's products. Adding them to your store comes next.</span>
+              <span className="text-sm text-emerald-700">Approved. Add this supplier's products to your store from the Products tab.</span>
             ) : p?.status === 'PENDING' && p.invited ? (
               <button type="button" disabled={accept.isPending} onClick={() => accept.mutate(p.id)} className={primaryBtn}>
                 Accept invitation
@@ -357,7 +359,7 @@ function SupplierDialog({ supplierId, onClose }: { supplierId: string; onClose: 
               <span className="text-sm text-neutral-600">Request sent. Waiting for the supplier.</span>
             ) : (
               <button type="button" onClick={() => setAsking(true)} className={primaryBtn}>
-                {data.approval === 'OPEN' ? 'Start selling' : 'Request to sell'}
+                Request to sell
               </button>
             )}
           </div>
@@ -365,17 +367,14 @@ function SupplierDialog({ supplierId, onClose }: { supplierId: string; onClose: 
       )}
       {asking && data && (
         <ResaleNoteDialog
-          title={data.approval === 'OPEN' ? 'Start selling' : 'Request to sell'}
-          message={
-            data.approval === 'OPEN'
-              ? `${data.storeName} takes any allowed store. By going on you agree to their terms.`
-              : `${data.storeName} approves each reseller. By asking you agree to their terms.`
-          }
+          title="Request to sell"
+          message={`${data.storeName} approves each reseller. By asking you agree to their terms. Money is settled between you and the supplier.`}
           label="A note for the supplier"
-          placeholder="Tell them about your store and your customers"
-          confirmLabel={data.approval === 'OPEN' ? 'Start selling' : 'Send request'}
+          placeholder="Tell them about your store, your customers and how you want to be paid"
+          confirmLabel="Send request"
+          askPhone={{ label: 'Your phone (the supplier calls you before approving)', hint: 'Only this supplier sees it.' }}
           busy={request.isPending}
-          onConfirm={(note) => request.mutate(note)}
+          onConfirm={(note, phone) => request.mutate({ message: note, phone })}
           onClose={() => setAsking(false)}
         />
       )}
@@ -431,6 +430,11 @@ function SuppliersTab({ rows, loading, onSupplier }: { rows: Partnership[]; load
                   {p.decidedAt ? ` · ${dhakaDate(p.decidedAt)}` : ` · ${dhakaDate(p.requestedAt)}`}
                 </p>
                 {p.message && invitation && <p className="mt-0.5 text-xs text-neutral-700">“{p.message}”</p>}
+                {p.status !== 'BLOCKED' && p.status !== 'REJECTED' && (
+                  <div className="mt-1">
+                    <ContactLinks phone={p.supplier.phone} compact />
+                  </div>
+                )}
                 {p.reason && (p.status === 'REJECTED' || p.status === 'BLOCKED' || p.status === 'ENDED') && <p className="mt-0.5 text-xs text-neutral-600">Reason: {p.reason}</p>}
               </div>
               <div className="flex shrink-0 gap-2">
@@ -457,7 +461,7 @@ function SuppliersTab({ rows, loading, onSupplier }: { rows: Partnership[]; load
       {ending && (
         <ResaleNoteDialog
           title={ending.status === 'APPROVED' ? `Stop selling for ${ending.supplier.storeName}?` : 'Take back your request?'}
-          message={ending.status === 'APPROVED' ? 'Their products stop selling in your store. Money you already earned is still paid.' : undefined}
+          message={ending.status === 'APPROVED' ? 'Their products stop selling in your store. Earnings already owed to you are still the supplier’s to pay.' : undefined}
           label="Why (the supplier sees this)"
           confirmLabel={ending.status === 'APPROVED' ? 'Stop selling' : 'Take back'}
           danger={ending.status === 'APPROVED'}
@@ -504,7 +508,7 @@ function AddListingDialog({ item, onClose }: { item: CatalogItem; onClose: () =>
         ) : (
           <p className="text-neutral-600">It sells at the supplier's price, {money(t.priceFrom)}{t.priceTo !== t.priceFrom ? ` to ${money(t.priceTo)}` : ''}.</p>
         )}
-        {!outside && <p className="text-emerald-700">You earn about {money(earn)} a piece when a parcel is delivered (Regantify's small share comes out of it).</p>}
+        {!outside && <p className="text-emerald-700">You earn about {money(earn)} a piece when a parcel is delivered. The supplier pays it to you directly.</p>}
         <p className="text-xs text-neutral-500">
           It shows in your store with the supplier's photos, description, options and live stock. You can change its name, photos, description and category later in My listings. The supplier ships every order.
         </p>
@@ -534,15 +538,18 @@ function ScoreBlock({ score }: { score: SupplierScore }) {
       <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         <Stat label="Delivered" value={pct(score.deliveredRate)} hint={`${score.delivered} delivered, ${score.returned} returned`} />
         <Stat label="Sent on time" value={pct(score.onTimeRate)} hint="Handed to the courier within the days it promised" />
-        <Stat label="Cancelled" value={String(score.cancelled)} hint={`${score.stockOutCancels} of them as out of stock; ${score.disputesLost} problem${score.disputesLost === 1 ? '' : 's'} decided against it`} />
+        <Stat label="Cancelled" value={String(score.cancelled)} hint={`${score.stockOutCancels} of them as out of stock`} />
         <Stat
           label="Rating"
           value={score.rating ? `${score.rating.average} ★` : '-'}
           hint={score.rating ? `${score.rating.count} reseller${score.rating.count === 1 ? '' : 's'}` : 'No ratings yet'}
         />
       </dl>
-      {score.avgEarningWaitDays !== null && (
-        <p className="mt-1 text-xs text-amber-700">Earnings sometimes waited for this supplier’s wallet: {score.avgEarningWaitDays} days on average.</p>
+      {score.avgSettleDays !== null && <p className="mt-1 text-xs text-neutral-600">Marks resellers' earnings paid in about {score.avgSettleDays} days after delivery.</p>}
+      {score.lateEarnings > 0 && (
+        <p className="mt-1 text-xs text-red-700">
+          {score.lateEarnings} earning{score.lateEarnings === 1 ? ' is' : 's are'} still unpaid more than a week after delivery.
+        </p>
       )}
     </div>
   );

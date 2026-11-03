@@ -168,7 +168,7 @@ function MoneyLedger({ breakdown: b, missingCost }: { breakdown: SalesAnalytics[
       {/* Finance > Expenses (ads, rent, salaries...) for the same days. */}
       <dl className="mt-2 text-sm">
         {(b.resellingEarnings ?? 0) > 0 && (
-          <LedgerRow label="Earnings from reselling" title="What you earned selling other stores’ products, after Regantify’s share" amount={`+ ${formatTaka(b.resellingEarnings ?? 0)}`} />
+          <LedgerRow label="Earnings from reselling" title="What you earned selling other stores’ products on delivered orders (the suppliers pay you directly)" amount={`+ ${formatTaka(b.resellingEarnings ?? 0)}`} />
         )}
         <LedgerRow label="Expenses" title="Ads, packaging, rent and other costs from Finance > Expenses" amount={`− ${formatTaka(b.expenses)}`} />
       </dl>

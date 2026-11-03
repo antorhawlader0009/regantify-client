@@ -55,7 +55,6 @@ import { SearchBox, TableFooter, outlineBtn, th } from '../../../components/ui/P
 import { AdvancedToggle } from '../../../components/ui/AdvancedToggle';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { imageThumb } from '../../../lib/imageThumb';
-import { useFeature } from '../../../lib/features';
 import { BulkResaleOfferDialog } from '../../../components/product/ResaleOfferDialogs';
 
 type VisibilityFilter = 'ALL' | 'PUBLIC' | 'DRAFT';
@@ -390,7 +389,7 @@ export default function AllProducts() {
   const canEditPrice = canEditProducts && canChangePrices;
   // Reseller system (RESELLER-plan.md Step 2): "Allow resellers" on the selected products; the server checks the store may supply.
   const canResaleSupply = useCan('resale.supply');
-  const resaleSupplyOn = useFeature('RESALE_SUPPLY');
+  const resaleSupplyOn = true; // The reseller system is on for every store since 2026-11-03.
   const canOfferToResellers = canResaleSupply && resaleSupplyOn;
 
   const [search, setSearch] = useState('');

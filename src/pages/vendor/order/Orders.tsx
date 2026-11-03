@@ -1,4 +1,3 @@
-import { useFeature } from '../../../lib/features';
 import { useEffect, useState } from 'react';
 import { useDashboardView } from '../../../lib/useDashboardView';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
@@ -885,8 +884,8 @@ export default function Orders() {
   // LMS "Call status" filter (LMS-plan.md Step 14), only offered when the store uses the LMS.
   const [callStatus, setCallStatus] = useState<ListOrdersParams['callStatus'] | ''>('');
   // POS-system-plan.md D9: online / added by hand / sold at the counter.
-  const resaleSupplyOn = useFeature('RESALE_SUPPLY');
-  const resaleSellOn = useFeature('RESALE_SELL');
+  const resaleSupplyOn = true; // The reseller system is on for every store since 2026-11-03.
+  const resaleSellOn = true;
   // Also the reseller filters (RESELLER-plan.md Steps 10-11): RESALE_SUPPLIED / RESALE_RESOLD are sent as `resale`, not `source`.
   const [source, setSource] = useState<ListOrdersParams['source'] | 'RESALE_SUPPLIED' | 'RESALE_RESOLD' | ''>('');
   // "Possible duplicates": storefront orders that look like a second copy of an open one (same phone and product

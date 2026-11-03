@@ -737,7 +737,7 @@ export default function EditProduct() {
           <p className="mt-1 max-w-md text-xs text-neutral-500">
             Its options, stock and price follow the supplier. You can change its name, description, photos, category and (when the supplier allows) its price in My listings.
           </p>
-          <Link to="/vendor/product/resell?tab=listings" className={`${primaryBtn} mt-4`}>
+          <Link to="/vendor/marketing/reseller?tab=listings" className={`${primaryBtn} mt-4`}>
             Open My listings
           </Link>
         </div>

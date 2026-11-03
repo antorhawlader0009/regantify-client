@@ -94,14 +94,27 @@ export interface PaymentLinkInfo {
 export interface ResaleOrderInfo {
   /** SUPPLIER = you ship this for a reseller; RESELLER = your shopper's order, shipped by the supplier. */
   role: 'SUPPLIER' | 'RESELLER';
-  partner: { storeName: string; subdomain: string | null } | null;
+  /** The other store, with the phone to call (2026-11-03: the two stores settle money directly). */
+  partner: { storeName: string; subdomain: string | null; phone?: string | null } | null;
   /** On a supplier's order: what the invoice and parcel sticker print instead of your store (the reseller's name). */
   whiteLabel: { storeName: string; phone: string | null; logoUrl: string | null } | null;
-  /** The reseller's earning on this order (before Regantify's share). */
+  /** The reseller's earning on this order; the supplier pays it directly (Regantify takes no share). */
   earning: number;
-  /** On a reseller's order: what reaches the wallet when it is delivered. */
+  /** On a reseller's order: the same as earning (kept for older answers). */
   expectedNet?: number;
-  settlement: { status: 'AWAITING_SUPPLIER' | 'HELD' | 'PAID' | 'REVERSED'; earning: number; fee: number; net: number; paidAt: string | null; releaseAt: string | null; reversedAt: string | null } | null;
+  /** DUE = owed, SETTLED = the supplier marked it paid, REVERSED = returned; PAID / HELD / AWAITING_SUPPLIER are from before 2026-11-03. */
+  settlement: {
+    id?: string;
+    status: 'DUE' | 'SETTLED' | 'AWAITING_SUPPLIER' | 'HELD' | 'PAID' | 'REVERSED';
+    earning: number;
+    fee: number;
+    net: number;
+    paidAt: string | null;
+    releaseAt: string | null;
+    reversedAt: string | null;
+    settledAt?: string | null;
+    settledNote?: string | null;
+  } | null;
   /** On a supplier's order the shopper paid online (Step 18): the amount the platform holds, and when it reached your wallet. */
   onlineHeld?: { amount: number; releasedAt: string | null } | null;
 }

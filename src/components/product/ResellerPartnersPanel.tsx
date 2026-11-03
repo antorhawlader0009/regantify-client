@@ -4,6 +4,7 @@ import { BadgeCheck, UserPlus, Users } from 'lucide-react';
 import { Dialog } from '../ui/Dialog';
 import { EmptyState, PillTabs, outlineBtn, primaryBtn } from '../ui/PageKit';
 import { ResaleNoteDialog } from './ResaleNoteDialog';
+import { ContactLinks } from '../resale/ContactLinks';
 import { dhakaDate } from './ResaleOfferDialogs';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
@@ -15,7 +16,7 @@ type Action = { kind: 'reject' | 'end' | 'block'; row: Partnership } | null;
 
 /**
  * Products > Sell through resellers > Resellers (RESELLER-plan.md Step 3): requests to approve or reject, partners to end or block,
- * invitations by store address. Ending or blocking stops the reseller's listings (Step 4); money already earned is still paid.
+ * invitations by store address. Ending or blocking stops the reseller's listings (Step 4); earnings already owed are still paid by the supplier.
  */
 export function ResellerPartnersPanel() {
   const queryClient = useQueryClient();
@@ -90,6 +91,11 @@ export function ResellerPartnersPanel() {
                     {` · ${dhakaDate(r.decidedAt ?? r.requestedAt)}`}
                   </p>
                   {r.message && request && <p className="mt-0.5 text-xs text-neutral-700">“{r.message}”</p>}
+                  {r.status !== 'BLOCKED' && r.status !== 'REJECTED' && (
+                    <div className="mt-1">
+                      <ContactLinks phone={r.reseller.phone} label={request ? 'Call before you approve' : 'Contact'} />
+                    </div>
+                  )}
                   {request && r.overall && r.overall.finished > 0 && (
                     <p className={`mt-0.5 text-xs ${(r.overall.returnRate ?? 0) >= 30 ? 'text-red-700' : 'text-neutral-600'}`}>
                       With all suppliers: {r.overall.finished} finished resale orders, {r.overall.returnRate ?? 0}% came back
@@ -99,8 +105,8 @@ export function ResellerPartnersPanel() {
                     <p className="mt-0.5 text-xs text-neutral-600">
                       {r.stats.orders} order{r.stats.orders === 1 ? '' : 's'} · {r.stats.delivered} delivered
                       {r.stats.returnRate !== null ? ` · ${r.stats.returnRate}% returned` : ''} · sales ৳{r.stats.sales.toLocaleString('en-US')}
-                      {' · '}earnings paid ৳{r.stats.paid.toLocaleString('en-US')}
-                      {r.stats.owed > 0 && <span className="text-red-700"> · ৳{r.stats.owed.toLocaleString('en-US')} waiting for your wallet</span>}
+                      {' · '}earnings marked paid ৳{r.stats.paid.toLocaleString('en-US')}
+                      {r.stats.owed > 0 && <span className="text-red-700"> · ৳{r.stats.owed.toLocaleString('en-US')} you still owe them</span>}
                     </p>
                   )}
                   {r.reason && <p className="mt-0.5 text-xs text-neutral-600">Reason: {r.reason}</p>}
@@ -148,9 +154,9 @@ export function ResellerPartnersPanel() {
           }
           message={
             action.kind === 'block'
-              ? 'They stop selling your products and cannot ask again until you unblock them. Money they already earned is still paid.'
+              ? 'They stop selling your products and cannot ask again until you unblock them. Earnings already owed to them are still yours to pay.'
               : action.kind === 'end'
-                ? 'Your products stop selling in their store. They may ask again later. Money they already earned is still paid.'
+                ? 'Your products stop selling in their store. They may ask again later. Earnings already owed to them are still yours to pay.'
                 : undefined
           }
           label="Reason (they see it)"

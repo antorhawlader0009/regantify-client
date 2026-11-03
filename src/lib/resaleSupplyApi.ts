@@ -9,6 +9,9 @@ export type CommissionType = 'FLAT' | 'PERCENT';
 export interface ResaleSupplierSettings {
   enabled: boolean;
   approval: ResaleApproval;
+  /** The number resellers call; empty = the owner's phone (ownerPhone). */
+  contactPhone: string;
+  ownerPhone: string | null;
   termsBn: string;
   termsEn: string;
   shipWithinDays: number;
@@ -73,7 +76,7 @@ export const RESALE_SUPPLY_KEY = ['resale-supply'] as const;
 
 export const resaleSupplyApi = {
   settings: () => api.get<ResaleSettingsAnswer>('/v1/resale/supply/settings').then((r) => r.data),
-  saveSettings: (body: Omit<ResaleSupplierSettings, 'saved'>) => api.put<ResaleSettingsAnswer>('/v1/resale/supply/settings', body).then((r) => r.data),
+  saveSettings: (body: Omit<ResaleSupplierSettings, 'saved' | 'ownerPhone'>) => api.put<ResaleSettingsAnswer>('/v1/resale/supply/settings', body).then((r) => r.data),
   offers: (params: { q?: string; show?: 'all' | 'offered'; page?: number }) =>
     api.get<{ total: number; page: number; perPage: number; items: ResaleOfferItem[] }>('/v1/resale/supply/offers', { params }).then((r) => r.data),
   saveOffer: (productId: string, body: SaveOfferInput) => api.put<ResaleOfferItem>(`/v1/resale/supply/offers/${productId}`, body).then((r) => r.data),

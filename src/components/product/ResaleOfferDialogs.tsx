@@ -95,7 +95,7 @@ export function ResaleOfferDialog({ item, onClose }: { item: ResaleOfferItem; on
         <CommissionInput type={type} value={value} onType={setType} onValue={setValue} />
         {perPiece !== null && perPiece >= 0 && (
           <p className="-mt-2 text-xs text-neutral-500">
-            A reseller earns ৳{perPiece.toLocaleString()} per piece at your price{item.priceFrom !== item.priceTo ? ' (cheapest option)' : ''}; you get the rest. Regantify's small share (5% by default) comes out of the reseller's earning, not yours.
+            A reseller earns ৳{perPiece.toLocaleString()} per piece at your price{item.priceFrom !== item.priceTo ? ' (cheapest option)' : ''}; you get the rest. You pay the reseller directly after delivery (Regantify takes no share and holds no money).
           </p>
         )}
 

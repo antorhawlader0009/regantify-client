@@ -329,6 +329,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/product/stock-history': 'products.view',
   '/vendor/product/resellers': 'resale.supply',
   '/vendor/product/resell': 'resale.sell',
+  '/vendor/marketing/reseller': ['resale.sell', 'resale.supply'],
   '/vendor/reviews': 'reviews.view',
   '/vendor/marketing/coupons': 'marketing.view',
   '/vendor/marketing/campaigns': 'marketing.view',
@@ -386,7 +387,7 @@ export const NAV_ACCESS: Record<string, NavAccess> = {
   '/vendor/app': 'any', // Main Menu > App: the coming mobile apps (info only)
   '/vendor/shipping/tracking': 'orders.view',
   '/vendor/finance/wallet': 'finance.view',
-  '/vendor/finance/reseller-earnings': 'finance.view',
+  '/vendor/finance/reseller-earnings': ['resale.sell', 'resale.supply'],
   '/vendor/finance/transactions': 'finance.view',
   '/vendor/finance/expenses': 'finance.view',
   '/vendor/finance/withdraw': 'owner',
