@@ -28,17 +28,12 @@ const THEMES: ThemeInfo[] = [
     description:
       'A full-featured marketplace layout with a scrolling announcement bar, sidebar-navigation account pages, customer coupons, and a Top Selling/category-grid homepage.',
   },
+  // Medium and Minimal are no longer offered (2026-11-03, the owner's rule); their code stays in the storefront.
   {
-    id: 'MEDIUM',
-    name: 'Medium',
+    id: 'PLAYMATE',
+    name: 'PlayMate',
     description:
-      'Dense, deal-forward marketplace layout with gallery, variations, category filtering, search, and trust badges - modeled on established e-commerce conventions.',
-  },
-  {
-    id: 'MINIMAL',
-    name: 'Minimal',
-    description:
-      'A spacious, editorial storefront built for speed and a premium, boutique feel - generous whitespace, a quiet monochrome palette, and a fast, distraction-free checkout.',
+      'A bright, playful look in purple and yellow: rounded cards, a friendly script logo, a hero slider and a brand strip. Every StorePal feature works the same.',
   },
 ];
 
@@ -46,6 +41,26 @@ const THEMES: ThemeInfo[] = [
  * and structure (header, hero, product grid) rendered as plain divs, not
  * a screenshot, so it never goes stale as either theme evolves. */
 function ThemePreview({ id }: { id: StoreTheme }) {
+  if (id === 'PLAYMATE') {
+    return (
+      <div className="w-full h-full bg-[#f4f0fb] flex flex-col">
+        <div className="h-1.5 bg-[#6c4fc4]" />
+        <div className="h-3.5 bg-white flex items-center px-2 gap-1.5">
+          <div className="w-10 h-1.5 rounded-full bg-[#6c4fc4]" />
+          <div className="flex-1 h-1.5 rounded-full bg-[#ece6f7]" />
+          <div className="w-2 h-2 rounded-full bg-[#ffd028]" />
+        </div>
+        <div className="mx-2 mt-1.5 h-8 rounded-lg bg-gradient-to-r from-[#6c4fc4] to-[#9b7fe6] flex items-center px-2">
+          <div className="w-10 h-1.5 rounded-full bg-[#ffd028]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-white rounded-lg border border-[#ece6f7]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (id === 'MINIMAL') {
     return (
       <div className="w-full h-full bg-[#faf9f7] flex flex-col p-3 gap-3">
