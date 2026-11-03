@@ -37,6 +37,11 @@ const THEMES: ThemeInfo[] = [
   },
 ];
 
+/** Templates with a demo store on the storefront (sample products and pictures), opened by "View" while not selected. */
+const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
+  PLAYMATE: '/template-demo/playmate',
+};
+
 /** Small illustrative mockup of each theme's layout - real proportions
  * and structure (header, hero, product grid) rendered as plain divs, not
  * a screenshot, so it never goes stale as either theme evolves. */
@@ -242,7 +247,10 @@ export default function Themes() {
 
                   {storeUrl && (
                     <a
-                      href={storeUrl}
+                      // A template the store isn't using opens its demo store (sample products and pictures, every plan);
+                      // the selected one opens the store itself.
+                      href={!isSelected && DEMO_PATHS[theme.id] ? `${storeUrl.replace(/\/$/, '')}${DEMO_PATHS[theme.id]}` : storeUrl}
+                      title={!isSelected && DEMO_PATHS[theme.id] ? `See a sample store in ${theme.name}` : undefined}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 hover:bg-regantify-content
