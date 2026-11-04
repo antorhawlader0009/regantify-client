@@ -259,82 +259,82 @@ export default function Themes() {
           )}
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {shown.map((theme) => {
             const isSelected = theme.id === selected;
             const isSwitching = switching === theme.id;
             // Locked = this plan doesn't include it; nothing counts as locked while the plan is still loading.
             const isLocked = allowedThemes !== null && !allowedThemes.includes(theme.id);
-            // "Live demo": a template the store isn't using opens its sample store (every plan); the one in use opens the store itself.
-            const demoHref = storeUrl
-              ? !isSelected && DEMO_PATHS[theme.id]
-                ? `${storeUrl.replace(/\/$/, '')}${DEMO_PATHS[theme.id]}`
-                : isSelected
-                  ? storeUrl
-                  : null
-              : null;
             return (
-              <div key={theme.id} className="flex flex-col">
-                <div
-                  className={`relative aspect-[4/3] overflow-hidden rounded-2xl border bg-white transition-shadow hover:shadow-lg ${
-                    isSelected ? 'border-regantify-cta ring-2 ring-regantify-cta/40' : 'border-black/10'
-                  }`}
-                >
+              <div
+                key={theme.id}
+                className={`bg-white rounded-2xl border overflow-hidden flex flex-col ${
+                  isSelected ? 'border-regantify-cta ring-1 ring-regantify-cta' : 'border-black/5'
+                }`}
+              >
+                <div className="aspect-[16/9] relative">
                   <ThemePreview id={theme.id} />
-                  {isSelected && (
-                    <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-regantify-cta px-2.5 py-1 text-xs font-semibold text-white shadow">
-                      <Check size={12} />
-                      Current template
-                    </span>
-                  )}
                   {isLocked && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/35">
-                      <span className="flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white">
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-white bg-black/50 px-3 py-1.5 rounded-full">
                         <LockedBadge size={12} className="text-white" />
-                        Needs a higher plan
+                        Locked
                       </span>
                     </div>
                   )}
                 </div>
 
-                <h3 className="mt-4 text-base font-semibold text-regantify-text">{theme.name}</h3>
-                <p className="mt-1 line-clamp-2 text-sm text-regantify-text-muted" title={theme.description}>
-                  {theme.description}
-                </p>
+                <div className="p-3 flex flex-col flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-regantify-text">{theme.name}</h3>
+                    {isSelected && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
+                        <Check size={12} />
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed text-regantify-text-muted flex-1 line-clamp-3" title={theme.description}>
+                    {theme.description}
+                  </p>
 
-                <div className="mt-3 flex items-center gap-4">
-                  <button
-                    type="button"
-                    disabled={loading || isSelected || switching !== null}
-                    onClick={() => handleSelect(theme.id)}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-                      isSelected
-                        ? 'cursor-default bg-regantify-content text-regantify-text-muted'
-                        : isLocked
-                          ? 'bg-regantify-content text-regantify-text hover:bg-regantify-content/70 disabled:cursor-not-allowed disabled:opacity-60'
-                          : 'bg-regantify-cta text-white hover:bg-regantify-cta-dark disabled:cursor-not-allowed disabled:opacity-60'
-                    }`}
-                  >
-                    {isSwitching ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : isSelected ? (
-                      <Check size={16} />
-                    ) : isLocked ? (
-                      <LockedBadge size={14} className="text-regantify-text" />
-                    ) : null}
-                    {isSwitching ? 'Switching…' : isSelected ? 'In use' : isLocked ? 'Upgrade to unlock' : 'Use this template'}
-                  </button>
-                  {demoHref && (
-                    <a
-                      href={demoHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm font-medium text-regantify-cta hover:underline"
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      disabled={loading || isSelected || switching !== null}
+                      onClick={() => handleSelect(theme.id)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        isSelected
+                          ? 'bg-regantify-content text-regantify-text-muted cursor-default'
+                          : isLocked
+                            ? 'bg-regantify-content text-regantify-text hover:bg-regantify-content/70 disabled:opacity-60 disabled:cursor-not-allowed'
+                            : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed'
+                      }`}
                     >
-                      {isSelected ? 'View my store' : 'Live demo'}
-                      <ExternalLink size={14} aria-hidden />
-                    </a>
-                  )}
+                      {isSwitching ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : isSelected ? (
+                        <Check size={16} />
+                      ) : isLocked ? (
+                        <LockedBadge size={14} className="text-regantify-text" />
+                      ) : null}
+                      {isSwitching ? 'Switching…' : isSelected ? 'Selected' : isLocked ? 'Upgrade to unlock' : 'Select'}
+                    </button>
+
+                    {storeUrl && (
+                      <a
+                        // A template the store isn't using opens its demo store (sample products and pictures, every plan);
+                        // the selected one opens the store itself.
+                        href={!isSelected && DEMO_PATHS[theme.id] ? `${storeUrl.replace(/\/$/, '')}${DEMO_PATHS[theme.id]}` : storeUrl}
+                        title={!isSelected && DEMO_PATHS[theme.id] ? `See a sample store in ${theme.name}` : undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 hover:bg-regantify-content text-regantify-text text-sm font-medium transition-colors"
+                      >
+                        <ExternalLink size={16} />
+                        View
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             );
