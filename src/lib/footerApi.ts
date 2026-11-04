@@ -42,6 +42,21 @@ export interface FooterConfig {
   callBarPhone: string | null;
   /** A WhatsApp number or link; empty = the store's WhatsApp link from Store > Social. */
   callBarWhatsapp: string | null;
+  /** The bar's own design; null (or a missing key) = the store template's look. Server: vendor/call-bar-style.ts. */
+  callBarStyle?: CallBarStyle | null;
+}
+
+export interface CallBarStyle {
+  background?: string;
+  textColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  layout?: 'SPLIT' | 'CENTER';
+  buttonShape?: 'SQUARE' | 'ROUNDED' | 'PILL';
+  showCall?: boolean;
+  showWhatsapp?: boolean;
+  callLabel?: string;
+  whatsappLabel?: string;
 }
 
 export type FooterConfigPayload = Partial<FooterConfig>;

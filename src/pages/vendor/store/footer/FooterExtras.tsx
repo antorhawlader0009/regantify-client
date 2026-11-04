@@ -1,5 +1,6 @@
 import type { FooterConfig } from '../../../../lib/footerApi';
 import { FooterLinkListEditor } from './FooterLinkListEditor';
+import { CallBarDesign } from './CallBarDesign';
 
 const inputClass = 'w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta';
 
@@ -134,6 +135,7 @@ export function FooterExtras({ config, onChange, storeAddress, storePhone }: { c
               </div>
             </div>
             <p className="text-xs text-regantify-text-muted">A button shows only when it has a number. With no call number the bar uses your contact phone.</p>
+            <CallBarDesign config={config} onChange={onChange} />
           </div>
         )}
       </section>
