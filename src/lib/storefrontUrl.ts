@@ -6,7 +6,7 @@
 // config. The storefront app is assumed to run on port 3000 on that same
 // host in dev.
 //
-// If VITE_ROOT_DOMAIN is set (e.g. gadgetdepobd.com), that's the real
+// If VITE_ROOT_DOMAIN is set (e.g. regantify.com), that's the real
 // production case - the storefront's own middleware.ts rewrites
 // {subdomain}.VITE_ROOT_DOMAIN to /store/:subdomain, so links point
 // straight at the subdomain host instead of the path, matching how a
