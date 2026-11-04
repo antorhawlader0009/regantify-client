@@ -190,6 +190,8 @@ const dict = {
     closing_sub: 'Start free. No card needed.',
     closing_cta: 'Start free trial',
 
+    footer_privacy: 'Privacy Policy',
+    footer_terms: 'Terms of Service',
     footer_vendor: 'Vendor login',
     footer_admin: 'Admin login',
   },
@@ -354,6 +356,8 @@ const dict = {
     closing_sub: 'ফ্রি শুরু করুন। কার্ড লাগবে না।',
     closing_cta: 'ফ্রি ট্রায়াল শুরু করুন',
 
+    footer_privacy: 'গোপনীয়তা নীতি',
+    footer_terms: 'ব্যবহারের শর্তাবলি',
     footer_vendor: 'ভেন্ডর লগইন',
     footer_admin: 'অ্যাডমিন লগইন',
   },
@@ -1317,7 +1321,13 @@ function HomeInner() {
           <Store size={18} />
           <span>Regantify</span>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-6">
+          <a href="/legal/privacy" className="hover:text-[#1A1A1A] dark:hover:text-white">
+            {t('footer_privacy')}
+          </a>
+          <a href="/legal/terms" className="hover:text-[#1A1A1A] dark:hover:text-white">
+            {t('footer_terms')}
+          </a>
           <button onClick={() => navigate('/vendor/login')} className="hover:text-[#1A1A1A] dark:hover:text-white">
             {t('footer_vendor')}
           </button>

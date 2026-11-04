@@ -7,9 +7,9 @@ import type { ReactNode } from 'react';
  */
 
 const UPDATED = '2 November 2026';
-const CONTACT = '[LEGAL REVIEW: support email and address]';
+export const CONTACT = '[LEGAL REVIEW: support email and address]';
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-6">
       <h2 className="text-base font-semibold text-neutral-900">{title}</h2>
@@ -18,7 +18,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Shell({ title, children }: { title: string; children: ReactNode }) {
+export function Shell({ title, children }: { title: string; children: ReactNode }) {
   return (
     <main className="min-h-screen bg-white">
       <div className="mx-auto max-w-3xl px-4 py-10">

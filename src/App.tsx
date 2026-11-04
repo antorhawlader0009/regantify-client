@@ -117,6 +117,8 @@ const ChatExtensionPrivacy = lazy(() => import('./pages/marketing/ChatExtensionP
 // The Regantify app's pages Google Play asks for (STORE-APP-plan.md Step 10).
 const AppPrivacy = lazy(() => import('./pages/marketing/AppLegal').then((m) => ({ default: m.AppPrivacy })));
 const AppDeleteAccount = lazy(() => import('./pages/marketing/AppLegal').then((m) => ({ default: m.AppDeleteAccount })));
+const PlatformPrivacy = lazy(() => import('./pages/marketing/PlatformLegal').then((m) => ({ default: m.PlatformPrivacy })));
+const PlatformTerms = lazy(() => import('./pages/marketing/PlatformLegal').then((m) => ({ default: m.PlatformTerms })));
 const StockCount = lazy(() => import('./pages/vendor/product/StockCount'));
 const Questions = lazy(() => import('./pages/vendor/review/Questions'));
 const ReviewReports = lazy(() => import('./pages/vendor/review/Reports'));
@@ -471,6 +473,8 @@ export default function App() {
             <Route path="/blog" element={<Blog />} />
             <Route path="/legal/chat-extension-privacy" element={<ChatExtensionPrivacy />} />
             <Route path="/legal/app-privacy" element={<AppPrivacy />} />
+            <Route path="/legal/privacy" element={<PlatformPrivacy />} />
+            <Route path="/legal/terms" element={<PlatformTerms />} />
             <Route path="/legal/delete-account" element={<AppDeleteAccount />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
 
