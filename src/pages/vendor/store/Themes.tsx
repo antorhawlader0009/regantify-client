@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ExternalLink, Check, Loader2 } from 'lucide-react';
+import { ExternalLink, Check, Loader2, Search } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
 import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { getVendorTheme, updateVendorTheme, type StoreTheme } from '../../../lib/vendorApi';
@@ -130,6 +130,27 @@ function ThemePreview({ id }: { id: StoreTheme }) {
   );
 }
 
+/** The shop types a seller picks from, in the order of the tabs. A template can suit several. */
+const CATEGORIES = [
+  'Fashion',
+  'Watches & Accessories',
+  'Grocery & Food',
+  'Technology & Gadgets',
+  'Furniture & Home',
+  'Beauty & Health',
+  'Kids & Pets',
+  'Stationery & Education',
+  'Construction Materials',
+  'Others',
+] as const;
+type Category = (typeof CATEGORIES)[number];
+
+const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
+  // StorePal is the all-purpose layout: a store of any kind can start with it.
+  STOREPAL: ['Fashion', 'Watches & Accessories', 'Grocery & Food', 'Technology & Gadgets', 'Furniture & Home', 'Beauty & Health', 'Stationery & Education', 'Others'],
+  PLAYMATE: ['Kids & Pets'],
+};
+
 export default function Themes() {
   const subdomain = useAuthStore((s) => s.user?.vendor?.subdomain);
   const storeUrl = subdomain ? storefrontStoreUrl(subdomain) : null;
@@ -142,6 +163,8 @@ export default function Themes() {
   const [allowedThemes, setAllowedThemes] = useState<StoreTheme[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [switching, setSwitching] = useState<StoreTheme | null>(null);
+  const [tab, setTab] = useState<Category | 'ALL'>('ALL');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     getVendorTheme()
@@ -161,78 +184,135 @@ export default function Themes() {
       setSelected(updated);
       toast.success(`${THEMES.find((t) => t.id === theme)?.name ?? theme} is now live on your store.`);
     } catch (err: unknown) {
-      // A locked theme (PLAN.md Step 7) surfaces the server's own
-      // upgrade-prompt message here - same generic error.response.data.message
-      // read pattern used throughout client (see e.g. AddProduct.tsx) -
-      // rather than the flat "please try again" this used to always show.
+      // A locked theme surfaces the server's own upgrade-prompt message here.
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Could not switch themes. Please try again.';
+        'Could not switch templates. Please try again.';
       toast.error(message);
     } finally {
       setSwitching(null);
     }
   };
 
+  const needle = query.trim().toLowerCase();
+  const matches = (t: ThemeInfo) =>
+    !needle || `${t.name} ${t.description} ${(THEME_CATEGORIES[t.id] ?? []).join(' ')}`.toLowerCase().includes(needle);
+  const inTab = (t: ThemeInfo, c: Category | 'ALL') => c === 'ALL' || (THEME_CATEGORIES[t.id] ?? ['Others']).includes(c);
+  const countFor = (c: Category | 'ALL') => THEMES.filter((t) => inTab(t, c) && matches(t)).length;
+  const shown = THEMES.filter((t) => inTab(t, tab) && matches(t));
+  const tabLabel = tab === 'ALL' ? 'All templates' : tab;
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-regantify-text">Templates</h1>
-        <p className="text-sm text-regantify-text-muted mt-1">
-          Choose how your storefront looks to customers. Switching takes effect on your live store immediately.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-[28px] font-bold leading-tight tracking-tight text-regantify-text sm:text-[32px]">Browse templates</h1>
+          <p className="mt-1 text-sm text-regantify-text-muted">Pick a design for your store. Look at the live demo before you use it; the switch is instant.</p>
+        </div>
+        <label className="flex w-full items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-2.5 sm:w-64">
+          <Search size={16} className="shrink-0 text-regantify-text-muted" aria-hidden />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search templates"
+            aria-label="Search templates"
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-regantify-text-muted"
+          />
+        </label>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {THEMES.map((theme) => {
-          const isSelected = theme.id === selected;
-          const isSwitching = switching === theme.id;
-          // Locked = this plan's allowedThemes doesn't include it (PLAN.md
-          // Step 7) - while allowedThemes is still loading (null), nothing
-          // is treated as locked yet, so the page doesn't flash a locked
-          // state on every card during the initial load.
-          const isLocked = allowedThemes !== null && !allowedThemes.includes(theme.id);
-          return (
-            <div
-              key={theme.id}
-              className={`bg-white rounded-2xl border overflow-hidden flex flex-col ${
-                isSelected ? 'border-regantify-cta ring-1 ring-regantify-cta' : 'border-black/5'
-              }`}
-            >
-              <div className="aspect-[16/9] relative">
-                <ThemePreview id={theme.id} />
-                {isLocked && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <span className="flex items-center gap-1.5 text-xs font-medium text-white bg-black/50 px-3 py-1.5 rounded-full">
-                      <LockedBadge size={12} className="text-white" />
-                      Locked
-                    </span>
-                  </div>
-                )}
-              </div>
+      {/* Category tabs with how many templates each has (a template can be in several). */}
+      <div className="mt-6 -mx-1 overflow-x-auto border-b border-black/10">
+        <div className="flex min-w-max gap-6 px-1">
+          {(['ALL', ...CATEGORIES] as const).map((c) => {
+            const on = tab === c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setTab(c)}
+                aria-pressed={on}
+                className={`-mb-px whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition-colors ${
+                  on ? 'border-regantify-cta text-regantify-cta' : 'border-transparent text-regantify-text-muted hover:text-regantify-text'
+                }`}
+              >
+                {c === 'ALL' ? 'All' : c} <span className="ml-0.5 text-xs opacity-70">{countFor(c)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-              <div className="p-3 flex flex-col flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-sm font-semibold text-regantify-text">{theme.name}</h2>
+      <div className="mt-8 flex items-baseline gap-2 border-b border-black/5 pb-3">
+        <h2 className="text-xl font-semibold text-regantify-text">{tabLabel}</h2>
+        <span className="text-sm text-regantify-text-muted">{shown.length}</span>
+      </div>
+
+      {shown.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white px-6 py-14 text-center">
+          <p className="text-sm font-medium text-regantify-text">No templates here yet.</p>
+          <p className="mt-1 text-sm text-regantify-text-muted">New designs are added regularly. StorePal works for every kind of shop in the meantime.</p>
+          {tab !== 'ALL' && (
+            <button type="button" onClick={() => setTab('ALL')} className="mt-4 text-sm font-medium text-regantify-cta hover:underline">
+              See all templates
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {shown.map((theme) => {
+            const isSelected = theme.id === selected;
+            const isSwitching = switching === theme.id;
+            // Locked = this plan doesn't include it; nothing counts as locked while the plan is still loading.
+            const isLocked = allowedThemes !== null && !allowedThemes.includes(theme.id);
+            // "Live demo": a template the store isn't using opens its sample store (every plan); the one in use opens the store itself.
+            const demoHref = storeUrl
+              ? !isSelected && DEMO_PATHS[theme.id]
+                ? `${storeUrl.replace(/\/$/, '')}${DEMO_PATHS[theme.id]}`
+                : isSelected
+                  ? storeUrl
+                  : null
+              : null;
+            return (
+              <div key={theme.id} className="flex flex-col">
+                <div
+                  className={`relative aspect-[4/3] overflow-hidden rounded-2xl border bg-white transition-shadow hover:shadow-lg ${
+                    isSelected ? 'border-regantify-cta ring-2 ring-regantify-cta/40' : 'border-black/10'
+                  }`}
+                >
+                  <ThemePreview id={theme.id} />
                   {isSelected && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-regantify-cta bg-regantify-cta/10 px-2 py-0.5 rounded-full">
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-regantify-cta px-2.5 py-1 text-xs font-semibold text-white shadow">
                       <Check size={12} />
-                      Selected
+                      Current template
                     </span>
                   )}
+                  {isLocked && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/35">
+                      <span className="flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white">
+                        <LockedBadge size={12} className="text-white" />
+                        Needs a higher plan
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs leading-relaxed text-regantify-text-muted flex-1 line-clamp-3" title={theme.description}>{theme.description}</p>
 
-                <div className="mt-3 flex items-center gap-2">
+                <h3 className="mt-4 text-base font-semibold text-regantify-text">{theme.name}</h3>
+                <p className="mt-1 line-clamp-2 text-sm text-regantify-text-muted" title={theme.description}>
+                  {theme.description}
+                </p>
+
+                <div className="mt-3 flex items-center gap-4">
                   <button
+                    type="button"
                     disabled={loading || isSelected || switching !== null}
                     onClick={() => handleSelect(theme.id)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                       isSelected
-                        ? 'bg-regantify-content text-regantify-text-muted cursor-default'
+                        ? 'cursor-default bg-regantify-content text-regantify-text-muted'
                         : isLocked
-                          ? 'bg-regantify-content text-regantify-text hover:bg-regantify-content/70 disabled:opacity-60 disabled:cursor-not-allowed'
-                          : 'bg-regantify-cta hover:bg-regantify-cta-dark text-white disabled:opacity-60 disabled:cursor-not-allowed'
+                          ? 'bg-regantify-content text-regantify-text hover:bg-regantify-content/70 disabled:cursor-not-allowed disabled:opacity-60'
+                          : 'bg-regantify-cta text-white hover:bg-regantify-cta-dark disabled:cursor-not-allowed disabled:opacity-60'
                     }`}
                   >
                     {isSwitching ? (
@@ -242,30 +322,25 @@ export default function Themes() {
                     ) : isLocked ? (
                       <LockedBadge size={14} className="text-regantify-text" />
                     ) : null}
-                    {isSwitching ? 'Switching…' : isSelected ? 'Selected' : isLocked ? 'Upgrade to unlock' : 'Select'}
+                    {isSwitching ? 'Switching…' : isSelected ? 'In use' : isLocked ? 'Upgrade to unlock' : 'Use this template'}
                   </button>
-
-                  {storeUrl && (
+                  {demoHref && (
                     <a
-                      // A template the store isn't using opens its demo store (sample products and pictures, every plan);
-                      // the selected one opens the store itself.
-                      href={!isSelected && DEMO_PATHS[theme.id] ? `${storeUrl.replace(/\/$/, '')}${DEMO_PATHS[theme.id]}` : storeUrl}
-                      title={!isSelected && DEMO_PATHS[theme.id] ? `See a sample store in ${theme.name}` : undefined}
+                      href={demoHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 hover:bg-regantify-content
-                        text-regantify-text text-sm font-medium transition-colors"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-regantify-cta hover:underline"
                     >
-                      <ExternalLink size={16} />
-                      View
+                      {isSelected ? 'View my store' : 'Live demo'}
+                      <ExternalLink size={14} aria-hidden />
                     </a>
                   )}
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
