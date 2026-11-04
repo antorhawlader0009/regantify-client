@@ -251,7 +251,7 @@ function History() {
 // ---------------------------------------------------------------- hero
 
 function chatLine(credits: AiCreditSummary, theme: string | undefined, switchedOff: 'ALL' | 'CHAT' | null): { on: boolean; text: ReactNode } {
-  const onStorePal = theme === 'STOREPAL' || theme === 'PLAYMATE';
+  const onStorePal = theme === 'STOREPAL' || theme === 'PLAYMATE' || theme === 'SOLEVO';
   const on = onStorePal && credits.canReply && !switchedOff;
   if (switchedOff) return { on, text: switchedOff === 'ALL' ? 'All AI is turned off' : 'Store chat is turned off' };
   if (theme === undefined) return { on, text: 'Checking your store…' };
@@ -681,7 +681,7 @@ function VoiceCallLinkCard({ theme }: { theme: string | undefined }) {
   const [copied, setCopied] = useState(false);
   const link = subdomain ? `${storefrontStoreUrl(subdomain)}/#call` : '';
   const off = !!switches && (switches.aiOff || switches.storeChatOff || switches.voiceOff);
-  const notStorePal = theme !== undefined && theme !== 'STOREPAL' && theme !== 'PLAYMATE';
+  const notStorePal = theme !== undefined && theme !== 'STOREPAL' && theme !== 'PLAYMATE' && theme !== 'SOLEVO';
 
   const copy = async () => {
     try {

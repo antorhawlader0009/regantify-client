@@ -35,17 +35,48 @@ const THEMES: ThemeInfo[] = [
     description:
       'A bright, playful look in purple and yellow: rounded cards, a friendly script logo, a hero slider and a brand strip. Every StorePal feature works the same.',
   },
+  {
+    id: 'SOLEVO',
+    name: 'Solevo',
+    description:
+      'A clean, premium shoe-store look: black and copper on cream, serif headings, a full-width hero slider, sharp-cornered buttons and a scrolling brand strip. Every StorePal feature works the same.',
+  },
 ];
 
 /** Templates with a demo store on the storefront (sample products and pictures), opened by "View" while not selected. */
 const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   PLAYMATE: '/template-demo/playmate',
+  SOLEVO: '/template-demo/solevo',
 };
 
 /** Small illustrative mockup of each theme's layout - real proportions
  * and structure (header, hero, product grid) rendered as plain divs, not
  * a screenshot, so it never goes stale as either theme evolves. */
 function ThemePreview({ id }: { id: StoreTheme }) {
+  if (id === 'SOLEVO') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#111111]" />
+        <div className="h-3.5 bg-white border-b border-black/5 flex items-center px-2 gap-1.5">
+          <div className="w-9 h-1.5 bg-[#111111]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+          <div className="w-2 h-2 rounded-full bg-[#B87333]" />
+        </div>
+        <div className="h-9 bg-[#e9ddd2] flex items-center px-2">
+          <div className="w-12 h-1.5 bg-[#111111]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1 bg-white">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-[#f4f4f4] rounded-sm border border-black/5" />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (id === 'PLAYMATE') {
     return (
       <div className="w-full h-full bg-[#f4f0fb] flex flex-col">
@@ -149,6 +180,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   // StorePal is the all-purpose layout: a store of any kind can start with it.
   STOREPAL: ['Fashion', 'Watches & Accessories', 'Grocery & Food', 'Technology & Gadgets', 'Furniture & Home', 'Beauty & Health', 'Stationery & Education', 'Others'],
   PLAYMATE: ['Kids & Pets'],
+  SOLEVO: ['Fashion'],
 };
 
 export default function Themes() {

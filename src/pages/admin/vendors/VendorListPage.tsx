@@ -306,6 +306,7 @@ export function VendorListPage({
               <option value="">Any theme</option>
               <option value="STOREPAL">StorePal</option>
               <option value="PLAYMATE">PlayMate</option>
+              <option value="SOLEVO">Solevo</option>
               <option value="MEDIUM">Medium</option>
               <option value="MINIMAL">Minimal</option>
             </select>
