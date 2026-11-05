@@ -33,6 +33,7 @@ import { PosLayout } from './components/pos/PosLayout';
 import { POS_HOME } from './lib/posApi';
 import { startIdleWatch } from './lib/idlePolling';
 import { PageLoading } from './components/PageLoading';
+import { SectionDialog } from './components/layout/SectionDialog';
 
 // PERFORMANCE-PLAN.md Step 7: every page is its own file, downloaded the first time it is opened (the sign-in screens
 // and the two dashboard home pages stay in the first file). Each layout shows a small loader in its content area
@@ -628,6 +629,8 @@ export default function App() {
                 <Route path="/vendor/staff/add" element={<AddStaffMember />} />
                 <Route path="/vendor/staff/:id/edit" element={<AddStaffMember />} />
                 <Route path="/vendor/billing" element={<Billing />} />
+                {/* Marketing opens like Settings: its pages inside a dialog with a tab list (SectionDialog). */}
+                <Route element={<SectionDialog section="Marketing" />}>
                 <Route path="/vendor/marketing/coupons" element={<Coupons />} />
                 <Route path="/vendor/marketing/reseller" element={<Reseller />} />
                 <Route path="/vendor/marketing/coupons/add" element={<AddCoupon />} />
@@ -647,6 +650,7 @@ export default function App() {
                 <Route path="/vendor/marketing/gift-cards" element={<GiftCards />} />
                 <Route path="/vendor/marketing/gift-cards/add" element={<AddGiftCard />} />
                 <Route path="/vendor/marketing/gift-cards/:id" element={<GiftCardDetail />} />
+                </Route>
                 <Route path="/vendor/sms" element={<Sms />} />
                 <Route path="/vendor/ai-usage" element={<AiUsage />} />
                 {/* The old AI & Automation pages (AI Chat Bot, the n8n placeholder) are now AI Usages. */}
@@ -660,6 +664,8 @@ export default function App() {
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
                 <Route path="/vendor/finance/expenses" element={<Expenses />} />
                 <Route path="/vendor/finance/payment-callback" element={<PaymentCallback />} />
+                {/* Courier Integration opens like Settings: its pages inside a dialog with a tab list (SectionDialog). */}
+                <Route element={<SectionDialog section="Courier Integration" />}>
                 <Route path="/vendor/shipping/tracking" element={<Tracking />} />
                 <Route path="/vendor/courier" element={<CourierIntegrationPage />} />
                 <Route path="/vendor/courier/pathao" element={<PathaoPage />} />
@@ -667,6 +673,7 @@ export default function App() {
                 <Route path="/vendor/courier/redx" element={<RedxPage />} />
                 <Route path="/vendor/courier/carrybee" element={<CarrybeePage />} />
                 <Route path="/vendor/courier/rules" element={<CourierRules />} />
+                </Route>
                 <Route path="/vendor/analytics" element={<AnalyticsPage />} />
                 <Route path="/vendor/analytics/:tab" element={<AnalyticsLegacyRedirect />} />
                 {/* LMS: a dashboard page with its own shell (LmsLayout: section tabs, lead

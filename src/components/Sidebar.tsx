@@ -318,6 +318,16 @@ export function Sidebar({ sections, mobileOpen = false, onMobileClose }: Sidebar
       );
     }
 
+    // A dialog section (Courier Integration, Marketing) is one row that opens its dialog at the first page.
+    if (section.dialog && links.length) {
+      return (
+        <Link key={section.label} to={links[0].path} title={title} className={rowClass(active, collapsed)}>
+          {icon}
+          {label}
+        </Link>
+      );
+    }
+
     // Collapsed: icon-only, jumps to the section's first page.
     if (collapsed) {
       return (

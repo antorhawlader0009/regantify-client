@@ -103,6 +103,11 @@ export interface NavSection {
   advanced?: boolean;
   /** Its pages (all plain links) also show as a tab bar above each page, so they can be switched without the sidebar. */
   tabs?: boolean;
+  /**
+   * Opens like Settings: one sidebar row, and its pages show inside a dialog with a tab list on the left
+   * (components/layout/SectionDialog.tsx, its routes wrapped in App.tsx). The text is the dialog's subtitle.
+   */
+  dialog?: string;
   /** Plain page links marked `pair` that sit next to each other share one row in the expanded sidebar (LMS | POS). */
   pair?: boolean;
   /** Opening this section in the sidebar also opens its first page (Product -> All Products). */
@@ -243,6 +248,7 @@ export const vendorNav: NavSection[] = [
     label: 'Courier Integration',
     icon: Truck,
     group: 'Store',
+    dialog: 'Connect couriers, book parcels and track deliveries.',
     children: [
       // Each courier has its own full page (Dashboard/Parcels/Settings -
       // see pages/vendor/courier/{steadfast,pathao,redx}/); the shared
@@ -261,7 +267,7 @@ export const vendorNav: NavSection[] = [
     label: 'Marketing',
     icon: Megaphone,
     group: 'Store',
-    tabs: true,
+    dialog: 'Coupons, discounts, offers and reselling.',
     children: [
       { label: 'Coupons', path: '/vendor/marketing/coupons' },
       // Every store, since 2026-11-03 (the owner's rule): sell other stores' products with their approval, or let them sell yours.

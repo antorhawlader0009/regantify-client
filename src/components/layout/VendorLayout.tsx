@@ -79,7 +79,8 @@ export function VendorLayout() {
           {!isLms && <FullViewPageBar />}
           <VendorPageGate>
             <Suspense fallback={<PageLoading />}>
-              <Outlet />
+              {/* SectionDialog reads the filtered nav from here for its tab list. */}
+              <Outlet context={{ nav }} />
             </Suspense>
           </VendorPageGate>
         </main>
