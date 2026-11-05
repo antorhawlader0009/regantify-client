@@ -113,7 +113,7 @@ export default function SystemStatus() {
         <div className="rounded-xl border border-black/5 bg-white p-4">
           <p className="text-xs text-regantify-text-muted">Text when a job stops</p>
           <p className={`text-lg font-semibold ${data.alertPhoneSet ? 'text-green-700' : 'text-red-700'}`}>{data.alertPhoneSet ? 'On' : 'Off'}</p>
-          <p className="text-xs text-regantify-text-muted">{data.alertPhoneSet ? 'to ADMIN_ALERT_PHONE' : 'set ADMIN_ALERT_PHONE in server/.env'}</p>
+          <p className="text-xs text-regantify-text-muted">{data.alertPhoneSet ? 'to the alert phones' : 'set alert phones in Settings'}</p>
         </div>
       </div>
 

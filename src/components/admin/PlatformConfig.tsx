@@ -72,10 +72,10 @@ export function ContactSection() {
         <input className={field} value={f.supportWhatsapp} onChange={(e) => setF({ ...f, supportWhatsapp: e.target.value })} placeholder="01XXXXXXXXX" maxLength={30} />
       </Label>
       <Label
-        text="Alert phone"
-        hint={data.contact.alertPhone ? 'Texted when a background job is late, the SMS balance is low, a new admin device signs in or a verification arrives.' : data.contact.alertPhoneFromEnv ? 'Not set here, so the ADMIN_ALERT_PHONE from the server .env is used.' : 'Not set anywhere, so no alert is texted.'}
+        text="Alert phones"
+        hint={data.contact.alertPhone ? 'Up to 5 numbers, separated by commas. Each one is texted when a background job is late, the SMS balance is low, a new admin device signs in or a verification arrives.' : data.contact.alertPhoneFromEnv ? 'Not set here, so the ADMIN_ALERT_PHONE from the server .env is used.' : 'Not set anywhere, so no alert is texted.'}
       >
-        <input className={field} value={f.alertPhone} onChange={(e) => setF({ ...f, alertPhone: e.target.value })} placeholder="01XXXXXXXXX" maxLength={30} />
+        <input className={field} value={f.alertPhone} onChange={(e) => setF({ ...f, alertPhone: e.target.value })} placeholder="01XXXXXXXXX, 01XXXXXXXXX" maxLength={120} />
       </Label>
     </Section>
   );
