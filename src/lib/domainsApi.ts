@@ -9,8 +9,7 @@ export interface DomainState {
   status: DomainStatus | null;
   checkedAt: string | null;
   error: string | null;
-  /** The address(es) an A record must point to; empty until the server is set up. */
-  aRecords: string[];
+  /** The host the store's CNAME must point at (the server's IP is never sent to a store). */
   cnameTarget: string | null;
   ready: boolean;
 }

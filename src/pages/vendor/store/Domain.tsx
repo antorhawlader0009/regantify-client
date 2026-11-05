@@ -8,19 +8,14 @@ import { useQuery } from '@tanstack/react-query';
 import { domainsApi } from '../../../lib/domainsApi';
 import { DomainStatusCard } from '../../../components/DomainStatusCard';
 
-// Same IP shown to every vendor, regardless of domain - resolution for a
-// connected domain isn't per-vendor, it's the storefront app's own
-// middleware (see storefront/src/middleware.ts) that looks up the Host
-// header against Vendor.customDomain once the domain's registrar points
-// an A record here. Falls back to a placeholder if the platform hasn't
-// set VITE_PLATFORM_IP yet (see client/.env's own comment on it).
-const PLATFORM_IP = import.meta.env.VITE_PLATFORM_IP ?? 'YOUR_SERVER_IP';
+// Stores point their domain at one CNAME target (domains.<root>), never at the server's IP (the owner's rule,
+// 2026-11-05): the server answers with `cnameTarget`; the storefront's middleware then finds the store by its Host.
 
 const domainRegex = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
 
 export default function Domain() {
-  // The address the server checks the record against (PLATFORM_PUBLIC_IPS), when it is set.
-  const serverIps = useQuery({ queryKey: ['vendor-domain-ips'], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data?.aRecords;
+  // The host the store's CNAME record must point at.
+  const cnameTarget = useQuery({ queryKey: ['vendor-domain-target'], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data?.cnameTarget;
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   // null while loading = "don't know yet" - never used to mean "not
   // allowed" so the page doesn't flash an upgrade prompt before the
@@ -210,15 +205,20 @@ export default function Domain() {
               Login to your domain registrar panel (ie. where you bought your domain from)
             </p>
             <p className="text-sm text-regantify-text-muted mb-4">
-              Add the following A record for your domain (and for "www") -
+              Add this CNAME record for your domain:
             </p>
             <div className="space-y-2">
-              <div className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono flex items-center justify-between gap-3">
-                <span>Type: A</span>
-                <span>Host: @ (and www)</span>
-                <span>Value: {serverIps?.join(', ') || PLATFORM_IP}</span>
+              <div className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono flex flex-wrap items-center justify-between gap-3">
+                <span>Type: CNAME</span>
+                <span>Host: {customDomain?.startsWith('www.') ? 'www' : '@'}</span>
+                <span>Value: {cnameTarget ?? 'loading…'}</span>
               </div>
             </div>
+            <p className="text-sm text-regantify-text-muted mt-4">
+              Some domain sellers don't allow a CNAME on the main domain (mystore.com). Then either use the type they offer
+              instead (ALIAS, ANAME or "CNAME flattening") with the same value, or connect <span className="font-mono">www.</span>your
+              domain here and set your seller to forward the main domain to it. If none of these work, contact support.
+            </p>
             <p className="text-xs text-amber-600 mt-4">
               DNS changes can take up to 24–48 hours to fully propagate.
             </p>

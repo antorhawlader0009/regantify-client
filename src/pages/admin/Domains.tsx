@@ -45,13 +45,8 @@ export default function Domains() {
         <div>
           <h1 className="text-lg font-semibold text-regantify-text">Domains</h1>
           <p className="max-w-3xl text-sm text-regantify-text-muted">
-            Stores point an A record at {data.aRecords.length ? <span className="font-mono">{data.aRecords.join(', ')}</span> : 'the platform address'}
-            {data.cnameTarget ? (
-              <>
-                {' '}
-                (or a CNAME at <span className="font-mono">{data.cnameTarget}</span>)
-              </>
-            ) : null}
+            Stores point a CNAME at {data.cnameTarget ? <span className="font-mono">{data.cnameTarget}</span> : 'the platform target'} (stores are never shown
+            the server address; it is {data.aRecords.length ? <span className="font-mono">{data.aRecords.join(', ')}</span> : 'not set'}, and older A records at it still count)
             . The server checks every 30 minutes. A store can press Check now on its Domain page.
           </p>
         </div>
