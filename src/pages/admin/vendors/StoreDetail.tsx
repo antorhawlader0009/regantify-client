@@ -299,7 +299,7 @@ function Usage({ d }: { d: StoreDetail }) {
         <Limit label="Visits this month" {...u.visitsThisMonth} />
         <Row label="New products per day allowed">{u.dailyProductLimit === null ? 'No limit' : u.dailyProductLimit.toLocaleString('en-US')}</Row>
         <Row label="Image uploads per day allowed">{u.dailyImageLimit === null ? 'No limit' : u.dailyImageLimit.toLocaleString('en-US')}</Row>
-        <Row label="Orders per day allowed">{u.dailyOrderLimit === null ? 'No limit' : u.dailyOrderLimit.toLocaleString('en-US')}</Row>
+        <Row label="Orders per month allowed">{u.dailyOrderLimit === null ? 'No limit' : u.dailyOrderLimit.toLocaleString('en-US')}</Row>
         {u.ownLimits && (
           <p className="mt-2 text-xs text-regantify-text-muted">
             This store has limits of its own{u.ownLimits.until ? ` until ${day(u.ownLimits.until)}` : ''} ({u.ownLimits.reason}). Change them under Actions.

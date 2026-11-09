@@ -18,7 +18,7 @@ export const LIMIT_FIELDS = ['productLimitPerDay', 'orderLimitPerDay', 'staffLim
 export type LimitField = (typeof LIMIT_FIELDS)[number];
 export const LIMIT_LABEL: Record<LimitField, string> = {
   productLimitPerDay: 'New products per day',
-  orderLimitPerDay: 'Orders per day',
+  orderLimitPerDay: 'Orders per month',
   staffLimit: 'Staff',
   imageUploadLimitPerDay: 'Image uploads per day',
   landingPageLimit: 'Landing pages',

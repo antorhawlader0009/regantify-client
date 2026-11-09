@@ -76,7 +76,7 @@ export default function PlanManagement() {
                   <th className="px-4 py-3 font-medium">Plan</th>
                   <th className="px-4 py-3 font-medium">Price/mo</th>
                   <th className="px-4 py-3 font-medium">New products/day</th>
-                  <th className="px-4 py-3 font-medium">Orders/day</th>
+                  <th className="px-4 py-3 font-medium">Orders/month</th>
                   <th className="px-4 py-3 font-medium">Images/day</th>
                   <th className="px-4 py-3 font-medium">Visits/mo</th>
                   <th className="px-4 py-3 font-medium">Themes</th>

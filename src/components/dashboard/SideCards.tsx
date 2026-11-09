@@ -260,7 +260,7 @@ export function AiCreditsLine({ credits, showBuy }: { credits: AiCreditSummary; 
 export function PlanCard({ usage, isOwner }: { usage: VendorPlanUsage; isOwner: boolean }) {
   const rows = [
     { label: 'Products', ...usage.usage.products },
-    { label: 'Orders today', ...usage.usage.ordersToday },
+    { label: 'Orders this month', ...(usage.usage.ordersThisMonth ?? usage.usage.ordersToday) },
     { label: 'Staff', ...usage.usage.staff },
   ];
   const nearLimit = rows.some((r) => r.limit != null && r.used >= r.limit * 0.8);

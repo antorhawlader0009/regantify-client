@@ -87,6 +87,9 @@ export interface VendorPlanUsage {
     products: UsageStat;
     staff: UsageStat;
     /** Orders today (limit always null: unlimited; the daily cap is in `daily`). */
+    /** Orders this Dhaka month (the order cap is monthly). */
+    ordersThisMonth?: UsageStat;
+    /** Same number under its old name, for an older server answer. */
     ordersToday: UsageStat;
     monthlyVisits: UsageStat;
   };

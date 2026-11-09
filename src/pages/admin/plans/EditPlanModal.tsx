@@ -301,11 +301,11 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
           </div>
 
           <p className="text-xs text-regantify-text-muted -mb-2">
-            Leave a limit field blank for unlimited. Products, orders and image uploads are unlimited in total; the three "per day" numbers cap a single day (Dhaka time). Stores never see these numbers; they get a warning once 5 or fewer are left.
+            Leave a limit field blank for unlimited. Products, orders and image uploads are unlimited in total; the "per day" numbers (new products, image uploads) cap a single day and "Orders / month" caps one calendar month (Dhaka time). Stores never see these numbers; they get a warning once 5 or fewer are left.
           </p>
           <div className="grid grid-cols-2 gap-3">
             <LimitField label="New products / day" value={productLimitPerDay} onChange={setProductLimitPerDay} />
-            <LimitField label="Orders / day" value={orderLimitPerDay} onChange={setOrderLimitPerDay} />
+            <LimitField label="Orders / month" value={orderLimitPerDay} onChange={setOrderLimitPerDay} />
             <LimitField label="Monthly visits" value={monthlyVisitLimit} onChange={setMonthlyVisitLimit} />
             <LimitField label="Theme allowance" value={themeAllowance} onChange={setThemeAllowance} />
             <LimitField label="Image uploads / day" value={imageUploadLimitPerDay} onChange={setImageUploadLimitPerDay} />

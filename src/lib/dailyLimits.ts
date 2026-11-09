@@ -25,6 +25,12 @@ const NOUN: Record<DailyKind, [string, string]> = {
 /** The sentence for a cap that is close or used up; null while there is nothing to warn about. */
 export function dailyCapMessage(kind: DailyKind, state: Pick<DailyCapState, 'left' | 'reached'>): string | null {
   const [one, many] = NOUN[kind];
+  // Orders are capped per calendar month (since 2026-11-09), new products and image uploads per day.
+  if (kind === 'orders') {
+    if (state.reached || state.left === 0) return "This month's limit for orders is used up. It starts again next month. Please talk to support to raise it.";
+    if (state.left === null) return null;
+    return `Only ${state.left} more ${state.left === 1 ? one : many} left for this month. Please talk to support to raise the limit.`;
+  }
   if (state.reached || state.left === 0) return `Today's limit for ${many} is used up. It starts again after midnight. Please talk to support to raise it.`;
   if (state.left === null) return null;
   return `Only ${state.left} more ${state.left === 1 ? one : many} left for today. Please talk to support to raise the limit.`;

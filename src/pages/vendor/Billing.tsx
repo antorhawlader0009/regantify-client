@@ -234,7 +234,7 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
           </p>
           <div className="mt-4 grid gap-x-8 gap-y-3 md:grid-cols-2">
             <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
-            <UsageBar label="Orders today" used={usage.usage.ordersToday.used} limit={usage.usage.ordersToday.limit} />
+            <UsageBar label="Orders this month" used={(usage.usage.ordersThisMonth ?? usage.usage.ordersToday).used} limit={(usage.usage.ordersThisMonth ?? usage.usage.ordersToday).limit} />
             <UsageBar label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
             <div>
               <UsageBar label="Store visits this month" used={usage.usage.monthlyVisits.used} limit={usage.usage.monthlyVisits.limit} />
