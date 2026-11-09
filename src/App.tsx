@@ -623,12 +623,17 @@ export default function App() {
                 <Route path="/vendor/reviews/questions" element={<Questions />} />
                 <Route path="/vendor/reviews/reports" element={<ReviewReports />} />
                 <Route path="/vendor/reviews/:id/edit" element={<AddReview />} />
+                {/* Staff and Billing open like Marketing: inside a dialog (SectionDialog), each with its own tabs. */}
+                <Route element={<SectionDialog section="Staff" />}>
                 <Route path="/vendor/staff" element={<Staff />} />
-                <Route path="/vendor/activity" element={<ActivityLog />} />
-                <Route path="/vendor/verification" element={<Verification />} />
                 <Route path="/vendor/staff/add" element={<AddStaffMember />} />
                 <Route path="/vendor/staff/:id/edit" element={<AddStaffMember />} />
+                </Route>
+                <Route path="/vendor/activity" element={<ActivityLog />} />
+                <Route path="/vendor/verification" element={<Verification />} />
+                <Route element={<SectionDialog section="Billing" />}>
                 <Route path="/vendor/billing" element={<Billing />} />
+                </Route>
                 {/* Marketing opens like Settings: its pages inside a dialog with a tab list (SectionDialog). */}
                 <Route element={<SectionDialog section="Marketing" />}>
                 <Route path="/vendor/marketing/coupons" element={<Coupons />} />
@@ -655,6 +660,8 @@ export default function App() {
                 <Route path="/vendor/ai-usage" element={<AiUsage />} />
                 {/* The old AI & Automation pages (AI Chat Bot, the n8n placeholder) are now AI Usages. */}
                 <Route path="/vendor/ai-automation/*" element={<Navigate to="/vendor/ai-usage" replace />} />
+                {/* Finance opens like Marketing: its pages inside a dialog with a tab list (SectionDialog). */}
+                <Route element={<SectionDialog section="Finance" />}>
                 <Route path="/vendor/finance/wallet" element={<Wallet />} />
                 <Route path="/vendor/finance/reseller-earnings" element={<ResellerRedirect view="money" />} />
                 <Route path="/vendor/finance/transactions" element={<Transactions />} />
@@ -663,6 +670,7 @@ export default function App() {
                 <Route path="/vendor/finance/withdraw" element={<Withdraw />} />
                 <Route path="/vendor/finance/fee-summary" element={<FeeSummary />} />
                 <Route path="/vendor/finance/expenses" element={<Expenses />} />
+                </Route>
                 <Route path="/vendor/finance/payment-callback" element={<PaymentCallback />} />
                 {/* Courier Integration opens like Settings: its pages inside a dialog with a tab list (SectionDialog). */}
                 <Route element={<SectionDialog section="Courier Integration" />}>
