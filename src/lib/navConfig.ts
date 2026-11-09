@@ -288,6 +288,7 @@ export const vendorNav: NavSection[] = [
     label: 'Finance',
     icon: Wallet,
     group: 'Account',
+    dialog: 'Wallet, transactions, withdrawals, expenses and receipts.',
     children: [
       { label: 'Wallet', path: '/vendor/finance/wallet' },
       { label: 'Transactions', path: '/vendor/finance/transactions' },
