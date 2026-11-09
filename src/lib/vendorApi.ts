@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO';
+export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'CHICWOVE' | 'CHRONICS';
 
 export interface VendorThemeInfo {
   theme: StoreTheme;

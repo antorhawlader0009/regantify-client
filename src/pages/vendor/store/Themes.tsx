@@ -41,18 +41,81 @@ const THEMES: ThemeInfo[] = [
     description:
       'A clean, premium shoe-store look: black and copper on cream, serif headings, a full-width hero slider, sharp-cornered buttons and a scrolling brand strip. Every StorePal feature works the same.',
   },
+  {
+    id: 'CHICWOVE',
+    name: 'Chicwove',
+    description:
+      "A warm women's-fashion look: coral on cream, serif headings, rounded white product cards, a peach hero and a coral offer banner over a deep brown footer. Every StorePal feature works the same.",
+  },
+  {
+    id: 'CHRONICS',
+    name: 'Chronics',
+    description:
+      'A bright, playful fashion look: pink on white with a deep indigo ink and a violet top bar, pastel category cards, a lavender hero with dotted accents and white product cards. Every StorePal feature works the same.',
+  },
 ];
 
 /** Templates with a demo store on the storefront (sample products and pictures), opened by "View" while not selected. */
 const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   PLAYMATE: '/template-demo/playmate',
   SOLEVO: '/template-demo/solevo',
+  CHICWOVE: '/template-demo/chicwove',
+  CHRONICS: '/template-demo/chronics',
 };
 
 /** Small illustrative mockup of each theme's layout - real proportions
  * and structure (header, hero, product grid) rendered as plain divs, not
  * a screenshot, so it never goes stale as either theme evolves. */
 function ThemePreview({ id }: { id: StoreTheme }) {
+  if (id === 'CHRONICS') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#6A4DBF]" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-gray-100">
+          <div className="w-2.5 h-2.5 rounded bg-[#F23D7F]" />
+          <div className="w-8 h-1.5 rounded bg-[#1B1442]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-[#F23D7F]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-gradient-to-br from-[#EADFFC] to-[#B9A3F1] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 rounded bg-[#1B1442]" />
+          <div className="w-9 h-1.5 rounded bg-[#F23D7F]" />
+        </div>
+        <div className="p-2 grid grid-cols-5 gap-1.5 flex-1">
+          {['#FFD3E2', '#C9E2FB', '#FFD9CC', '#FFE79A', '#FFD3E8'].map((bg) => (
+            <div key={bg} className="rounded-md" style={{ background: bg }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (id === 'CHICWOVE') {
+    return (
+      <div className="w-full h-full bg-[#FDF7F0] flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-[#EE4B46]" />
+          <div className="w-8 h-1.5 rounded bg-[#1B1B1B]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-[#EE4B46]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-gradient-to-r from-[#FFEEE2] to-[#FFD2BA] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 rounded bg-[#1B1B1B]" />
+          <div className="w-9 h-1.5 rounded bg-[#EE4B46]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-white rounded-md shadow-sm" />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (id === 'SOLEVO') {
     return (
       <div className="w-full h-full bg-white flex flex-col">
@@ -181,6 +244,8 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   STOREPAL: ['Fashion', 'Watches & Accessories', 'Grocery & Food', 'Technology & Gadgets', 'Furniture & Home', 'Beauty & Health', 'Stationery & Education', 'Others'],
   PLAYMATE: ['Kids & Pets'],
   SOLEVO: ['Fashion'],
+  CHICWOVE: ['Fashion'],
+  CHRONICS: ['Fashion'],
 };
 
 export default function Themes() {
