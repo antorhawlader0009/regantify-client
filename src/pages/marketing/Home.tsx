@@ -565,6 +565,14 @@ function HomeInner() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [chartOpen, setChartOpen] = useState(false);
 
+  // Monthly prices come from Admin > Plans (GET v1/public/marketing planPrices); the numbers here are only the
+  // defaults shown until that answer arrives. The yearly per-month rate is about 8% less, rounded to ৳10.
+  const monthlyOf = (code: 'BASIC' | 'STARTER' | 'ADVANCE', fallback: number) => marketing?.planPrices?.[code] ?? fallback;
+  const yearlyOf = (monthly: number) => Math.round((monthly * 0.92) / 10) * 10;
+  const basicPrice = monthlyOf('BASIC', 490);
+  const starterPrice = monthlyOf('STARTER', 1190);
+  const advancePrice = monthlyOf('ADVANCE', 2190);
+
   const plans = [
     {
       key: 'free',
@@ -583,8 +591,8 @@ function HomeInner() {
       cta: t('plan2_cta'),
       highlighted: false,
       badge: undefined as string | undefined,
-      monthlyPrice: 490,
-      yearlyPrice: 450,
+      monthlyPrice: basicPrice,
+      yearlyPrice: yearlyOf(basicPrice),
     },
     {
       key: 'starter',
@@ -593,8 +601,8 @@ function HomeInner() {
       cta: t('plan3_cta'),
       highlighted: true,
       badge: t('plan3_badge') as string | undefined,
-      monthlyPrice: 850,
-      yearlyPrice: 800,
+      monthlyPrice: starterPrice,
+      yearlyPrice: yearlyOf(starterPrice),
     },
     {
       key: 'advance',
@@ -603,8 +611,8 @@ function HomeInner() {
       cta: t('plan4_cta'),
       highlighted: false,
       badge: undefined as string | undefined,
-      monthlyPrice: 1350,
-      yearlyPrice: 1300,
+      monthlyPrice: advancePrice,
+      yearlyPrice: yearlyOf(advancePrice),
     },
   ];
 

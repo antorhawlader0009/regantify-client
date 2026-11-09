@@ -74,6 +74,8 @@ export interface PublicMarketing {
   banner: { text: string; link: string | null } | null;
   featured: Array<{ name: string; subdomain: string; logoUrl: string | null }>;
   content?: MarketingContent;
+  /** Monthly price in BDT per plan code (FREE, BASIC, STARTER, ADVANCE), from Admin > Plans. */
+  planPrices?: Partial<Record<'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE', number>>;
 }
 
 export const marketingCmsApi = {
