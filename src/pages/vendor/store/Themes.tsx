@@ -42,6 +42,24 @@ const THEMES: ThemeInfo[] = [
       'A clean, premium shoe-store look: black and copper on cream, serif headings, a full-width hero slider, sharp-cornered buttons and a scrolling brand strip. Every StorePal feature works the same.',
   },
   {
+    id: 'TECHZONE',
+    name: 'TechZone',
+    description:
+      'A crisp electronics-store look: navy and electric blue, rounded cards with a grey photo area, a dark full-screen hero slider and a navy footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'VAELORA',
+    name: 'Vaelora',
+    description:
+      'A quiet-luxury watch-store look: white, near-black and brass, condensed capitals with serif accents, a full-screen hero and a trust strip. Every StorePal feature works the same.',
+  },
+  {
+    id: 'STRIDE',
+    name: 'Stride',
+    description:
+      'A bold sneaker-store look: black and lime on light grey, big condensed capitals, a split hero with the photo on the right, grey product cards and a black footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -59,6 +77,9 @@ const THEMES: ThemeInfo[] = [
 const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   PLAYMATE: '/template-demo/playmate',
   SOLEVO: '/template-demo/solevo',
+  TECHZONE: '/template-demo/techzone',
+  VAELORA: '/template-demo/vaelora',
+  STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
   CHRONICS: '/template-demo/chronics',
 };
@@ -111,6 +132,79 @@ function ThemePreview({ id }: { id: StoreTheme }) {
         <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div key={i} className="bg-white rounded-md shadow-sm" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (id === 'STRIDE') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#0b0b0b]" />
+        <div className="h-3.5 bg-white border-b border-neutral-100 flex items-center px-2 gap-1.5">
+          <div className="w-8 h-1.5 bg-[#0b0b0b]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+          <div className="w-5 h-1.5 rounded-full border border-neutral-300" />
+        </div>
+        <div className="h-9 bg-[#f1f0ec] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-[#0b0b0b]" />
+          <div className="w-9 h-1.5 bg-[#b4cf14]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1 bg-white">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-[#f7f7f7] rounded-sm border border-neutral-200" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (id === 'TECHZONE') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#0a1c3a]" />
+        <div className="h-3.5 bg-white border-b border-slate-100 flex items-center px-2 gap-1.5">
+          <div className="w-9 h-1.5 rounded-full bg-[#0a1c3a]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-slate-300" />
+            <div className="w-3 h-0.5 bg-slate-300" />
+            <div className="w-3 h-0.5 bg-slate-300" />
+          </div>
+          <div className="w-6 h-1.5 rounded-full bg-[#eef5fc] border border-blue-200" />
+        </div>
+        <div className="h-9 bg-[#050f22] flex items-center px-2 gap-2">
+          <div className="w-10 h-1.5 rounded-full bg-[#2f6bff]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1 bg-white">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-gradient-to-b from-slate-100 to-slate-200 rounded-md border border-slate-200" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (id === 'VAELORA') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#0a0a0a]" />
+        <div className="h-3.5 bg-white border-b border-black/10 flex items-center px-2 gap-1.5">
+          <div className="w-9 h-1.5 bg-[#0a0a0a]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+          <div className="w-2 h-2 rounded-full bg-[#b8935a]" />
+        </div>
+        <div className="h-9 bg-[#111] flex items-center px-2">
+          <div className="w-12 h-1.5 bg-[#b8935a]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1 bg-white">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-[#f5f3ef] border border-black/5" />
           ))}
         </div>
       </div>
@@ -244,6 +338,9 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   STOREPAL: ['Fashion', 'Watches & Accessories', 'Grocery & Food', 'Technology & Gadgets', 'Furniture & Home', 'Beauty & Health', 'Stationery & Education', 'Others'],
   PLAYMATE: ['Kids & Pets'],
   SOLEVO: ['Fashion'],
+  TECHZONE: ['Technology & Gadgets'],
+  VAELORA: ['Watches & Accessories'],
+  STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
   CHRONICS: ['Fashion'],
 };

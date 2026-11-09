@@ -7,7 +7,7 @@ export interface StorefrontInfo {
   id: string;
   storeName: string;
   subdomain: string;
-  theme: 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'CHICWOVE' | 'CHRONICS';
+  theme: 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'TECHZONE' | 'VAELORA' | 'STRIDE' | 'CHICWOVE' | 'CHRONICS';
   /** LMS store forms (Step 9), StorePal only; null when off. Same shape as the storefront app's copy. */
   lmsForms?: { notifyMe: boolean; callMeBack: boolean } | null;
 }

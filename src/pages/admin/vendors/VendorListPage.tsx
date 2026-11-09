@@ -307,6 +307,9 @@ export function VendorListPage({
               <option value="STOREPAL">StorePal</option>
               <option value="PLAYMATE">PlayMate</option>
               <option value="SOLEVO">Solevo</option>
+              <option value="TECHZONE">TechZone</option>
+              <option value="VAELORA">Vaelora</option>
+              <option value="STRIDE">Stride</option>
               <option value="CHICWOVE">Chicwove</option>
               <option value="CHRONICS">Chronics</option>
               <option value="MEDIUM">Medium</option>
