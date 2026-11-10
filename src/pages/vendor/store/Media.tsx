@@ -71,7 +71,6 @@ function ActionsMenu({
 export default function Media() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [search, setSearch] = useState('');
   const [type, setType] = useState<'' | 'image'>('image');
@@ -107,22 +106,8 @@ export default function Media() {
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
-  const uploadMutation = useMutation({
-    mutationFn: async (files: FileList) => {
-      // Sequential, not Promise.all: mirrors how Add Product uploads
-      // photos one at a time - keeps a single upload's failure isolated
-      // and avoids bursting past the endpoint's 30/min throttle on a
-      // large multi-file selection.
-      for (const file of Array.from(files)) {
-        await mediaApi.upload(file);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['media'] });
-      toast.success('Uploaded.');
-    },
-    onError: () => toast.error('Could not upload one or more files. Please try again.'),
-  });
+  // No "Add New" upload here (the owner's rule, 2026-11-10: a free library upload was easy to abuse). Pictures come in through
+  // the place that uses them (a product, a banner, a landing page...), each counted in the daily image limit.
 
   const deleteMutation = useMutation({
     mutationFn: mediaApi.remove,
@@ -185,28 +170,6 @@ export default function Media() {
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">Media</h1>
         {planUsage && <UnlimitedBadge label="Unlimited image uploads" />}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          multiple
-          hidden
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              uploadMutation.mutate(e.target.files);
-            }
-            e.target.value = '';
-          }}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadMutation.isPending}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-regantify-cta hover:bg-regantify-cta-dark
-            text-white text-sm font-medium transition-colors disabled:opacity-60"
-        >
-          <Plus size={16} />
-          {uploadMutation.isPending ? 'Uploading…' : 'Add New'}
-        </button>
       </div>
 
       <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
