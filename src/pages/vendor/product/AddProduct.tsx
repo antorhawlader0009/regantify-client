@@ -20,6 +20,8 @@ import {
   htmlToText,
   moveItem,
   useUnsavedChangesWarning,
+  fitPhotos,
+  useProductPhotoLimit,
 } from '../../../components/product/ProductFormKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { ComingSoonField } from '../../../components/product/ComingSoonField';
@@ -124,6 +126,7 @@ export default function AddProduct() {
   // Photos / video
   const [photoSize, setPhotoSize] = useState<PhotoSize>('SQUARE');
   const [photos, setPhotos] = useState<PendingPhoto[]>([]);
+  const photoLimit = useProductPhotoLimit();
   const [videoUrl, setVideoUrl] = useState('');
 
   // Price
@@ -445,7 +448,11 @@ export default function AddProduct() {
           <SectionCard title="Photos" id="photos" description="Clear photos sell better. The first photo is the one shoppers see first.">
             <PageFileDrop
               onFiles={(files) => {
-                handlePhotoFiles(files);
+                const kept = fitPhotos(Array.from(files), photos.length, photoLimit);
+                if (!kept.length) return;
+                const dt = new DataTransfer();
+                kept.forEach((f) => dt.items.add(f));
+                handlePhotoFiles(dt.files);
                 document.getElementById('photos')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
             />

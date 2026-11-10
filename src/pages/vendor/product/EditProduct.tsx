@@ -20,6 +20,8 @@ import {
   htmlToText,
   moveItem,
   useUnsavedChangesWarning,
+  fitPhotos,
+  useProductPhotoLimit,
 } from '../../../components/product/ProductFormKit';
 import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { BarcodeInput } from '../../../components/product/BarcodeField';
@@ -200,6 +202,7 @@ export default function EditProduct() {
   // Photos / Video
   const [photoSize, setPhotoSize] = useState<PhotoSize>('SQUARE');
   const [photos, setPhotos] = useState<PendingPhoto[]>([]);
+  const photoLimit = useProductPhotoLimit();
   const [videoUrl, setVideoUrl] = useState('');
 
   // Pricing
@@ -870,7 +873,11 @@ export default function EditProduct() {
           <SectionCard title="Photos" id="photos" description="Clear photos sell better. The first photo is the one shoppers see first.">
             <PageFileDrop
               onFiles={(files) => {
-                handlePhotoFiles(files);
+                const kept = fitPhotos(Array.from(files), photos.length, photoLimit);
+                if (!kept.length) return;
+                const dt = new DataTransfer();
+                kept.forEach((f) => dt.items.add(f));
+                handlePhotoFiles(dt.files);
                 document.getElementById('photos')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
             />

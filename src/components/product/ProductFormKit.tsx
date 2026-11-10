@@ -5,6 +5,35 @@ import { useCan } from '../../lib/useStaffAccess';
 import { dhakaInputToIso, isoToDhakaInput, nowDhakaInput } from '../../lib/dhakaInput';
 import { PhotoHoverActions, PhotoLightbox, PhotoPickerDialog } from './PhotoPicker';
 import { RemoveBackgroundDialog } from './RemoveBackgroundDialog';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/api';
+import { toast } from '../../lib/toast';
+
+/** Photos one product may have on the store's plan (Free 3, Basic 5, Starter 7, Advance 10; the server checks it again). */
+export function useProductPhotoLimit(): number | null {
+  const { data } = useQuery({
+    queryKey: ['plan-image-limit'],
+    queryFn: () => api.get<{ photosPerProduct?: number }>('/v1/plans/image-limit').then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+  return data?.photosPerProduct ?? null;
+}
+
+/** Keeps only as many new files / urls as still fit, and says so when some were left out. */
+export function fitPhotos<T>(items: T[], have: number, limit: number | null): T[] {
+  if (limit === null) return items;
+  const room = Math.max(0, limit - have);
+  if (items.length > room) {
+    toast.error(room === 0 ? `Your plan allows ${limit} photos per product.` : `Your plan allows ${limit} photos per product, so only ${room} more were added.`);
+  }
+  return items.slice(0, room);
+}
+
+function fileListOf(files: File[]): FileList {
+  const dt = new DataTransfer();
+  files.forEach((f) => dt.items.add(f));
+  return dt.files;
+}
 
 // Pieces shared by Add Product and Edit Product (theme-update-plan.md
 // Step 2), so both forms get the same photos, price, status, search
@@ -167,6 +196,20 @@ export function PhotoManager<P extends PhotoItem>({
   // The photo whose background is being cleaned (RemoveBackgroundDialog).
   const [cleaning, setCleaning] = useState<{ id: string; url: string } | null>(null);
 
+  // The plan's photo limit: new files and picked photos are cut to what still fits.
+  const limit = useProductPhotoLimit();
+  const full = limit !== null && photos.length >= limit;
+  const rawOnFiles = onFiles;
+  const rawOnAddUrls = onAddUrls;
+  onFiles = (files: FileList) => {
+    const kept = fitPhotos(Array.from(files), photos.length, limit);
+    if (kept.length) rawOnFiles(kept.length === files.length ? files : fileListOf(kept));
+  };
+  onAddUrls = (urls: string[]) => {
+    const kept = fitPhotos(urls, photos.length, limit);
+    if (kept.length) rawOnAddUrls(kept);
+  };
+
   const isFileDrag = (e: DragEvent) => Array.from(e.dataTransfer.types).includes('Files');
   // Photos that can be previewed (uploaded, no error), with their place in `photos`.
   const shown = photos
@@ -277,6 +320,11 @@ export function PhotoManager<P extends PhotoItem>({
         </>
       )}
 
+      {full ? (
+        <p className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-4 text-center text-sm text-neutral-600">
+          {limit} of {limit} photos. Your plan allows {limit} photos per product; remove one to add another.
+        </p>
+      ) : (
       <button
         type="button"
         onClick={() => setPicker({ mode: 'MULTI' })}
@@ -293,8 +341,11 @@ export function PhotoManager<P extends PhotoItem>({
       >
         {photos.length > 0 ? <Camera size={20} className="text-neutral-500" /> : <UploadCloud size={26} className="text-neutral-500" />}
         <span className="text-sm font-medium text-regantify-text">{photos.length > 0 ? 'Add more photos' : 'Upload photos'}</span>
-        <span className="text-xs text-neutral-500">Drag and drop here, or click to upload or pick from Media</span>
+        <span className="text-xs text-neutral-500">
+          Drag and drop here, or click to upload or pick from Media{limit !== null ? ` (${photos.length} of ${limit})` : ''}
+        </span>
       </button>
+      )}
       <PhotoLightbox
         urls={shown.map((p) => p.url)}
         index={preview === null ? null : Math.max(0, shown.findIndex((p) => p.index === preview))}
