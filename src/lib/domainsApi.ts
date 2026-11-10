@@ -12,7 +12,13 @@ export interface DomainState {
   /** The host the store's CNAME must point at (the server's IP is never sent to a store). */
   cnameTarget: string | null;
   ready: boolean;
+  /** The record host to type: '@' for the main domain, else www / shop... (null with no domain). */
+  recordHost?: string | null;
+  /** The company running the domain's DNS, guessed from its nameservers (null when it has none yet). */
+  dnsHost?: DnsHost | null;
 }
+
+export type DnsHost = 'cloudflare' | 'namecheap' | 'hostinger' | 'godaddy' | 'porkbun' | 'other';
 
 export interface AdminDomainRow {
   id: string;

@@ -4,7 +4,8 @@ import { getVendorDomain, connectVendorDomain, removeVendorDomain } from '../../
 import { getVendorPlanUsage } from '../../../lib/plansApi';
 import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DomainDnsGuide } from '../../../components/store/DomainDnsGuide';
 import { domainsApi } from '../../../lib/domainsApi';
 import { DomainStatusCard } from '../../../components/DomainStatusCard';
 
@@ -15,8 +16,11 @@ const domainRegex = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9
 
 export default function Domain() {
   // The host the store's CNAME record must point at.
-  const cnameTarget = useQuery({ queryKey: ['vendor-domain-target'], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data?.cnameTarget;
   const [customDomain, setCustomDomain] = useState<string | null>(null);
+  // Also carries the record host and the DNS company guess for the guide; refetched when the domain changes.
+  const qc = useQueryClient();
+  const domainState = useQuery({ queryKey: ['vendor-domain-target', customDomain], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data;
+  const cnameTarget = domainState?.cnameTarget;
   // null while loading = "don't know yet" - never used to mean "not
   // allowed" so the page doesn't flash an upgrade prompt before the
   // real plan is known (same convention as Themes.tsx's allowedThemes).
@@ -56,11 +60,24 @@ export default function Domain() {
       setCustomDomain(updated);
       setDomainInput('');
       setShowConnectForm(false);
-      toast.success('Domain connected. Update your nameservers to finish setup.');
+      toast.success('Domain connected. Add the DNS record shown below to finish setup.');
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not connect this domain. Please try again.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // For DNS companies that can't point the main domain: connect www.<domain> instead (the guide then shows the www steps).
+  const handleUseWww = async () => {
+    if (!customDomain) return;
+    try {
+      const updated = await connectVendorDomain(`www.${customDomain}`);
+      setCustomDomain(updated);
+      void qc.invalidateQueries({ queryKey: ['vendor-domain-status'] });
+      toast.success(`Now using ${updated}. Follow the steps below.`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Could not switch to www. Please try again.');
     }
   };
 
@@ -199,30 +216,13 @@ export default function Domain() {
 
           <DomainStatusCard domain={customDomain} />
 
-          <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6">
-            <h2 className="text-lg font-medium text-regantify-text mb-4">Update DNS Record</h2>
-            <p className="text-sm text-regantify-text-muted mb-1">
-              Login to your domain registrar panel (ie. where you bought your domain from)
-            </p>
-            <p className="text-sm text-regantify-text-muted mb-4">
-              Add this CNAME record for your domain:
-            </p>
-            <div className="space-y-2">
-              <div className="px-3.5 py-2.5 rounded-xl bg-regantify-search text-sm text-regantify-text font-mono flex flex-wrap items-center justify-between gap-3">
-                <span>Type: CNAME</span>
-                <span>Host: {customDomain?.startsWith('www.') ? 'www' : '@'}</span>
-                <span>Value: {cnameTarget ?? 'loading…'}</span>
-              </div>
-            </div>
-            <p className="text-sm text-regantify-text-muted mt-4">
-              Some domain sellers don't allow a CNAME on the main domain (mystore.com). Then either use the type they offer
-              instead (ALIAS, ANAME or "CNAME flattening") with the same value, or connect <span className="font-mono">www.</span>your
-              domain here and set your seller to forward the main domain to it. If none of these work, contact support.
-            </p>
-            <p className="text-xs text-amber-600 mt-4">
-              DNS changes can take up to 24–48 hours to fully propagate.
-            </p>
-          </div>
+          <DomainDnsGuide
+            domain={customDomain}
+            recordHost={domainState?.recordHost ?? (customDomain.startsWith('www.') ? 'www' : '@')}
+            target={cnameTarget ?? 'loading…'}
+            detected={domainState?.dnsHost ?? null}
+            onUseWww={handleUseWww}
+          />
         </>
       )}
     </div>
