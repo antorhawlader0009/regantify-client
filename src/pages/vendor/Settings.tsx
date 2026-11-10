@@ -89,7 +89,6 @@ const MORE_SETTINGS: { label: string; description: string; path: string; icon: L
   { label: 'Invoice', description: 'Thank-you note, terms, signature and paper size', path: '/vendor/store/invoice', icon: FileText },
   { label: 'COD Guard', description: 'Blacklist and SMS check for COD orders', path: '/vendor/store/cod-guard', icon: BadgeCheck },
   { label: 'Store Away', description: 'Close the store for a holiday', path: '/vendor/store/store-away', icon: Palmtree },
-  { label: 'Backup', description: 'Download a copy of your store, or restore one', path: '/vendor/store/backup', icon: Package },
   { label: 'Integrations', description: 'Pixels, analytics and webhooks', path: '/vendor/store/integrations', icon: Plug },
   { label: 'Staff', description: 'Team members and their access', path: '/vendor/staff', icon: UsersRound },
   { label: 'Billing', description: 'Your plan, usage and upgrades', path: '/vendor/billing', icon: Wallet },

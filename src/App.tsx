@@ -91,7 +91,6 @@ const ReputationPage = lazy(() => import('./pages/vendor/store/design/Reputation
 const ProductCardDisplay = lazy(() => import('./pages/vendor/store/design/ProductCardDisplay'));
 const EditJavaScript = lazy(() => import('./pages/vendor/store/design/EditJavaScript'));
 const CodGuard = lazy(() => import('./pages/vendor/store/CodGuard'));
-const StoreBackup = lazy(() => import('./pages/vendor/store/StoreBackup'));
 const StoreAway = lazy(() => import('./pages/vendor/store/StoreAway'));
 const Seo = lazy(() => import('./pages/vendor/store/Seo'));
 const Integrations = lazy(() => import('./pages/vendor/store/integrations/Integrations'));
@@ -567,7 +566,6 @@ export default function App() {
                 <Route path="/vendor/store/design" element={<DesignHub />} />
                 <Route path="/vendor/store/gdpr" element={<GdprPrompt />} />
                 <Route path="/vendor/store/cod-guard" element={<CodGuard />} />
-                <Route path="/vendor/store/backup" element={<StoreBackup />} />
                 <Route path="/vendor/store/store-away" element={<StoreAway />} />
                 <Route path="/vendor/store/seo" element={<Seo />} />
                 <Route path="/vendor/store/integrations" element={<Integrations />} />

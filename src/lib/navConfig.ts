@@ -213,7 +213,6 @@ export const vendorNav: NavSection[] = [
           { label: 'COD Guard', path: '/vendor/store/cod-guard' },
           { label: 'Form Fields', path: '/vendor/store/checkout-form', advanced: true },
           { label: 'Store Away', path: '/vendor/store/store-away', advanced: true },
-          { label: 'Backup', path: '/vendor/store/backup', advanced: true },
           { label: 'Order Tracking', path: '/vendor/store/order-tracking' },
         ],
       },
