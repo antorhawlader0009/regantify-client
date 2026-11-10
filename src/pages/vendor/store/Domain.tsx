@@ -127,7 +127,7 @@ export default function Domain() {
               <h2 className="text-lg font-medium text-regantify-text mb-1">Setup Guide</h2>
               <ol className="text-sm text-regantify-text-muted list-decimal list-inside space-y-1 mb-6">
                 <li>Search your domain name and connect domain. (Use the form below)</li>
-                <li>Add an A record in your domain registrar panel (ie. GoDaddy, NameCheap, etc) pointing to our server IP</li>
+                <li>Add the CNAME record shown on the next screen in your domain registrar panel (ie. GoDaddy, NameCheap, etc)</li>
               </ol>
 
               <h2 className="text-lg font-medium text-regantify-text mb-3">Search Domain</h2>
