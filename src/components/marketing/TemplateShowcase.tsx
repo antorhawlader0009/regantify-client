@@ -11,14 +11,14 @@ import { ArrowRight } from 'lucide-react';
 // something to blur: Home puts soft colour blobs there. The look follows the
 // `dark` class on the page root (day / night).
 //
-// The screenshots are our own: drop them in public/templates/ (see Home.tsx).
+// The screenshots are our own, on the CDN (lib/siteAssets.ts, uploaded by server/prisma/upload-site-images.ts).
 // A card whose picture is missing shows a neutral placeholder instead of a
 // broken image.
 // ---------------------------------------------------------------------------
 
 export type ShowcaseTemplate = {
   name: string;
-  /** A tall (full-page) screenshot, e.g. /templates/fashion.png */
+  /** A tall (full-page) screenshot, e.g. siteAsset('templates/fashion.webp') */
   image: string;
 };
 

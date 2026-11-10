@@ -1,3 +1,4 @@
+import { siteAsset } from '../../lib/siteAssets';
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SiteNav, { readStoredLang, storeLang, readStoredNight, storeNight } from '../../components/marketing/SiteNav';
@@ -497,17 +498,17 @@ function HomeInner() {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
   }, [hash]);
 
-  // Our own store screenshots (tall, full-page), kept in public/templates/.
+  // Our own store screenshots (tall, full-page), kept on the CDN (lib/siteAssets.ts).
   // Eight cards = two rows of four.
   const templates = [
-    { name: t('tpl1'), image: '/templates/fashion.png' },
-    { name: t('tpl2'), image: '/templates/grocery.png' },
-    { name: t('tpl3'), image: '/templates/baby-care.png' },
-    { name: t('tpl4'), image: '/templates/furniture.png' },
-    { name: t('tpl5'), image: '/templates/books.png' },
-    { name: t('tpl6'), image: '/templates/pets.png' },
-    { name: t('tpl7'), image: '/templates/medical.png' },
-    { name: t('tpl8'), image: '/templates/gadgets.png' },
+    { name: t('tpl1'), image: siteAsset('templates/fashion.webp') },
+    { name: t('tpl2'), image: siteAsset('templates/grocery.webp') },
+    { name: t('tpl3'), image: siteAsset('templates/baby-care.webp') },
+    { name: t('tpl4'), image: siteAsset('templates/furniture.webp') },
+    { name: t('tpl5'), image: siteAsset('templates/books.webp') },
+    { name: t('tpl6'), image: siteAsset('templates/pets.webp') },
+    { name: t('tpl7'), image: siteAsset('templates/medical.webp') },
+    { name: t('tpl8'), image: siteAsset('templates/gadgets.webp') },
   ];
 
   const features = [
@@ -519,10 +520,10 @@ function HomeInner() {
 
   // The four pictures of the hero rail, in the order they should be met.
   const builtInSlides = [
-    { image: '/site/hero-1.jpg', alt: 'A seller showing the Regantify dashboard on two phones, with delivery and payment icons around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
-    { image: '/site/hero-2.jpg', alt: 'A delivery rider with parcels ready to send', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
-    { image: '/site/hero-3.jpg', alt: 'A shopkeeper holding a phone with mobile payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
-    { image: '/site/hero-4.jpg', alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
+    { image: siteAsset('site/hero-1.webp'), alt: 'A seller showing the Regantify dashboard on two phones, with delivery and payment icons around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
+    { image: siteAsset('site/hero-2.webp'), alt: 'A delivery rider with parcels ready to send', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
+    { image: siteAsset('site/hero-3.webp'), alt: 'A shopkeeper holding a phone with mobile payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
+    { image: siteAsset('site/hero-4.webp'), alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
   ];
 
   const heroSlides = cms?.hero.slides.length
@@ -535,7 +536,7 @@ function HomeInner() {
       title: t('f1_title'),
       detail: t('f1_detail'),
       bullets: [t('f1_b1'), t('f1_b2'), t('f1_b3')],
-      image: '/site/feature-courier.jpg',
+      image: siteAsset('site/feature-courier.webp'),
       alt: 'Vendor managing orders and courier pickup from one screen',
     },
     {
@@ -543,7 +544,7 @@ function HomeInner() {
       title: t('f2_title'),
       detail: t('f2_detail'),
       bullets: [t('f2_b1'), t('f2_b2'), t('f2_b3')],
-      image: '/site/feature-payments.jpg',
+      image: siteAsset('site/feature-payments.webp'),
       alt: 'Built-in wallet accepting mobile payments',
     },
     {
@@ -551,7 +552,7 @@ function HomeInner() {
       title: t('f3_title'),
       detail: t('f3_detail'),
       bullets: [t('f3_b1'), t('f3_b2'), t('f3_b3')],
-      image: '/site/feature-photo.jpg',
+      image: siteAsset('site/feature-photo.webp'),
       alt: 'Product photo turning into a finished listing automatically',
     },
   ];
@@ -1301,10 +1302,10 @@ function HomeInner() {
         </div>
       </section>
 
-      {/* Closing CTA - full section bg uses /site/closing.jpg */}
+      {/* Closing CTA - full section bg uses the CDN's site/closing.webp */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/site/closing.jpg" alt="" className="w-full h-full object-cover" />
+          <img src={siteAsset('site/closing.webp')} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[#1A1A1A]/90" />
         </div>
         <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
