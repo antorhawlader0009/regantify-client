@@ -8,6 +8,8 @@ import { ConfirmDialog } from '../../../components/ui/ConfirmDialog';
 import { socialFeedApi, type SocialFeedSettings, type SocialFeedState } from '../../../lib/socialFeedApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
+import { getVendorPlanUsage } from '../../../lib/plansApi';
+import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
 
 const inputClass = 'h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-regantify-text focus:outline-none focus:ring-2 focus:ring-regantify-cta/30';
 const MAX_PINNED = 6;
@@ -21,6 +23,8 @@ const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString('en-GB'
  * TikTok come later (they need the platforms' app approval).
  */
 export default function SocialFeed() {
+  // Not on the Free plan (2026-11-10; the server refuses too).
+  const planCode = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage, staleTime: 60_000 }).data?.plan.code;
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['social-feed'], queryFn: socialFeedApi.state });
   const [form, setForm] = useState<SocialFeedSettings | null>(null);
@@ -80,6 +84,18 @@ export default function SocialFeed() {
     onSuccess: apply,
     onError: onError('Could not change the video. Please try again.'),
   });
+
+  if (planCode === 'FREE') {
+    return (
+      <div className="max-w-4xl">
+        <h1 className="mb-4 text-2xl font-semibold text-regantify-text">Social Feed</h1>
+        <LockedFeatureCard
+          title="Social Feed isn't on the Free plan"
+          message="Upgrade your plan to show your newest YouTube videos on your store's home page."
+        />
+      </div>
+    );
+  }
 
   if (isLoading || !data || !form) {
     return (
