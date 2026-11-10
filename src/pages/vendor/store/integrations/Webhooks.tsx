@@ -22,6 +22,10 @@ import { toast } from '../../../../lib/toast';
 import { Dialog } from '../../../../components/ui/Dialog';
 import { Checkbox } from '../../../../components/ui/Checkbox';
 import { inputClass, LoadError, Notice } from './IntegrationForm';
+import { getVendorPlanUsage } from '../../../../lib/plansApi';
+import { LockedFeatureCard } from '../../../../components/ui/UpgradePrompt';
+
+const WEBHOOK_PLANS: string[] = ['STARTER', 'ADVANCE'];
 
 const buttonClass =
   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-black/10 text-xs text-regantify-text hover:bg-black/[0.03] transition-colors disabled:opacity-50';
@@ -74,6 +78,9 @@ export default function Webhooks() {
     queryFn: webhooksApi.list,
   });
   const { data: events } = useQuery({ queryKey: ['webhook-events'], queryFn: webhooksApi.events, staleTime: Infinity });
+  // Webhooks are a Starter / Advance feature (2026-11-10, checked again by the server). A lower plan still sees and can delete old ones.
+  const planCode = useQuery({ queryKey: ['vendor-plan-usage'], queryFn: getVendorPlanUsage, staleTime: 60_000 }).data?.plan.code;
+  const webhooksLocked = planCode !== undefined && !WEBHOOK_PLANS.includes(planCode);
   // null = closed, 'new' = add, otherwise the endpoint being edited.
   const [editing, setEditing] = useState<'new' | WebhookEndpoint | null>(null);
   // A secret to show (just created, revealed or rotated).
@@ -131,7 +138,20 @@ export default function Webhooks() {
         </p>
       </div>
 
-      {isError && !endpoints ? (
+      {webhooksLocked && (
+        <div className="mb-6">
+          <LockedFeatureCard
+            title="Webhooks are on the Starter and Advance plans"
+            message={
+              endpoints && endpoints.length > 0
+                ? 'Your plan does not include webhooks, so nothing is sent to the webhooks below. Upgrade to Starter or Advance to use them again, or delete the ones you no longer need.'
+                : 'Upgrade to Starter or Advance to send new orders, status changes, product changes and leads to your own apps.'
+            }
+          />
+        </div>
+      )}
+
+      {webhooksLocked && endpoints && endpoints.length === 0 ? null : isError && !endpoints ? (
         <LoadError
           message={apiErrorMessage(error, 'Could not load your webhooks. Please try again.')}
           onRetry={() => void refetch()}
