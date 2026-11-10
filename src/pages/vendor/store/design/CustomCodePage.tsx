@@ -1,3 +1,4 @@
+import { CustomScriptsNotice } from '../../../../components/store/CustomScriptsNotice';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Save } from 'lucide-react';
@@ -43,6 +44,7 @@ function CustomCodePage({ field, title, description, language }: CustomCodePageP
         <h1 className="text-2xl font-semibold text-regantify-text">{title}</h1>
         <p className="text-sm text-regantify-text-muted mt-1">{description}</p>
       </div>
+      {field === 'headScripts' && <CustomScriptsNotice />}
 
       {isLoading || value === null ? (
         <div className="bg-white rounded-2xl border border-black/5 p-8 flex items-center justify-center">

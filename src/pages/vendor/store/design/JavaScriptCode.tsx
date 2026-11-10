@@ -1,3 +1,4 @@
+import { CustomScriptsNotice } from '../../../../components/store/CustomScriptsNotice';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -76,6 +77,7 @@ export default function JavaScriptCode() {
 
   return (
     <div>
+      <CustomScriptsNotice />
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-regantify-text">JavaScript Code</h1>
         <button

@@ -1,3 +1,4 @@
+import { CustomScriptsNotice } from '../../../../components/store/CustomScriptsNotice';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -54,6 +55,7 @@ export default function EditJavaScript() {
 
   return (
     <div>
+      <CustomScriptsNotice />
       <div className="mb-6">
         <BackLink to="/vendor/store/javascript" label="JavaScript code" />
         <h1 className="text-2xl font-semibold text-regantify-text">{isEdit ? 'Edit JavaScript' : 'Add JavaScript'}</h1>
