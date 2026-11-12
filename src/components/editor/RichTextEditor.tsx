@@ -154,7 +154,10 @@ export function RichTextEditor({ value, onChange, placeholder, maxLength }: Rich
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm max-w-none min-h-[110px] px-4 py-3 focus:outline-none text-regantify-text',
+          // No typography plugin is installed, so `prose` adds nothing and
+          // Tailwind's reset hides list markers: give lists their bullets
+          // and numbers back here.
+          'prose prose-sm max-w-none min-h-[110px] px-4 py-3 focus:outline-none text-regantify-text [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_ul]:my-1 [&_ol]:my-1 [&_li>p]:my-0',
       },
     },
   });
