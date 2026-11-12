@@ -312,6 +312,7 @@ export function VendorListPage({
               <option value="STRIDE">Stride</option>
               <option value="CHICWOVE">Chicwove</option>
               <option value="CHRONICS">Chronics</option>
+              <option value="MAHABESH">Mahabesh</option>
               <option value="MEDIUM">Medium</option>
               <option value="MINIMAL">Minimal</option>
             </select>

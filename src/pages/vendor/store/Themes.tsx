@@ -71,6 +71,12 @@ const THEMES: ThemeInfo[] = [
     description:
       'A bright, playful fashion look: pink on white with a deep indigo ink and a violet top bar, pastel category cards, a lavender hero with dotted accents and white product cards. Every StorePal feature works the same.',
   },
+  {
+    id: 'MAHABESH',
+    name: 'Mahabesh',
+    description:
+      'A clean home-and-kitchen look: black and white with a blue dot, a rounded hero, tall 4:5 product cards with black pill buttons, a scrolling category row and a black footer. Every StorePal feature works the same.',
+  },
 ];
 
 /** Templates with a demo store on the storefront (sample products and pictures), opened by "View" while not selected. */
@@ -82,12 +88,34 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
   CHRONICS: '/template-demo/chronics',
+  MAHABESH: '/template-demo/mahabesh',
 };
 
 /** Small illustrative mockup of each theme's layout - real proportions
  * and structure (header, hero, product grid) rendered as plain divs, not
  * a screenshot, so it never goes stale as either theme evolves. */
 function ThemePreview({ id }: { id: StoreTheme }) {
+  if (id === 'MAHABESH') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-black" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-gray-100">
+          <div className="w-8 h-1.5 rounded bg-black" />
+          <div className="flex-1 h-2 rounded-full bg-[#F1F2F4]" />
+          <div className="w-2 h-2 rounded-full bg-[#1E54F5]" />
+        </div>
+        <div className="mx-2 mt-1.5 h-8 rounded-lg bg-gradient-to-br from-[#E8ECF4] to-[#C9D3E8] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 rounded bg-black" />
+          <div className="w-8 h-1.5 rounded bg-[#1E54F5]" />
+        </div>
+        <div className="p-2 grid grid-cols-5 gap-1.5 flex-1">
+          {['#E8E4DC', '#DDE3EA', '#EADFD2', '#E3E7DD', '#E9E2E6'].map((bg) => (
+            <div key={bg} className="rounded-md" style={{ background: bg }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (id === 'CHRONICS') {
     return (
       <div className="w-full h-full bg-white flex flex-col">
@@ -343,6 +371,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
   CHRONICS: ['Fashion'],
+  MAHABESH: ['Furniture & Home'],
 };
 
 export default function Themes() {
