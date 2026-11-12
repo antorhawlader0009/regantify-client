@@ -103,15 +103,19 @@ function emptyReviews(): LandingPageSection {
   return section('customer-reviews', { title: 'আমাদের ক্রেতারা যা বলছেন', reviews: [{ name: '', text: '' }, { name: '', text: '' }, { name: '', text: '' }] });
 }
 
-function whyUs(images: string[]): LandingPageSection {
+/**
+ * Text-only cards: the landing page draws a tick badge on each. Product photos used to fill these cards, which put a
+ * cropped picture of the product above "Pay when it arrives" and looked like a mistake.
+ */
+function whyUs(): LandingPageSection {
   return section('feature-grid', {
     title: 'কেন আমাদের থেকে নেবেন?',
     columns: 3,
     hoverReveal: false,
     items: [
-      { imageUrl: images[0] ?? '', title: 'পণ্য হাতে পেয়ে টাকা', description: 'আগে কোনো টাকা দিতে হবে না।' },
-      { imageUrl: images[1] ?? '', title: 'সহজে অর্ডার', description: 'শুধু নাম, ফোন নম্বর আর ঠিকানা।' },
-      { imageUrl: images[2] ?? '', title: 'ফোনে নিশ্চিত করা', description: 'অর্ডারের পর আমরা ফোন করে কথা বলে নিই।' },
+      { imageUrl: '', title: 'পণ্য হাতে পেয়ে টাকা', description: 'আগে কোনো টাকা দিতে হবে না।' },
+      { imageUrl: '', title: 'সহজে অর্ডার', description: 'শুধু নাম, ফোন নম্বর আর ঠিকানা।' },
+      { imageUrl: '', title: 'ফোনে নিশ্চিত করা', description: 'অর্ডারের পর আমরা ফোন করে কথা বলে নিই।' },
     ],
   });
 }
@@ -136,7 +140,7 @@ export function buildLandingTemplate(id: LandingTemplateId, products: Product[])
           },
           stackOnMobile: true,
         }),
-        whyUs(photos.slice(1)),
+        whyUs(),
         section('price-offer', { productId: main?.id, wasPrice: 0, nowPrice: 0, ctaLabel: 'এখনই অর্ডার করুন', ctaLink: '#checkout' }),
         ...(photos.length > 1 ? [section('carousel', { items: photos.map((url) => ({ imageUrl: url })), autoplayMs: 0 })] : []),
         emptyReviews(),
@@ -164,7 +168,7 @@ export function buildLandingTemplate(id: LandingTemplateId, products: Product[])
         }),
         section('heading', { text: 'আমাদের পণ্যগুলো', level: 'h2', align: 'center' }),
         section('select-products', { productIds: list.map((p) => p.id), layout: 'grid', showPrice: true, showStock: false, columns: list.length >= 3 ? 3 : 2 }),
-        whyUs(list.slice(1).map((p) => p.photoUrls[0]).filter((u): u is string => !!u)),
+        whyUs(),
         emptyReviews(),
         commonFaq(),
         section('heading', { text: 'যা নিতে চান তাতে টিক দিন', level: 'h2', align: 'center' }),
@@ -192,7 +196,7 @@ export function buildLandingTemplate(id: LandingTemplateId, products: Product[])
         autoplayMs: 0,
       }),
       section('price-offer', { productId: main?.id, wasPrice: 0, nowPrice: 0, ctaLabel: 'অর্ডার করুন', ctaLink: '#checkout' }),
-      whyUs(photos.slice(1)),
+      whyUs(),
       ...(photos.length > 1 ? [section('carousel', { items: photos.map((url) => ({ imageUrl: url })), autoplayMs: 0 })] : []),
       ...(main?.videoUrl ? [section('banner-video', { videoUrl: main.videoUrl, posterImageUrl: photos[0], autoplay: false, muted: true, loop: false })] : []),
       emptyReviews(),

@@ -21,6 +21,9 @@ export function ImageField({ value, onChange, label }: ImageFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  // The picked picture's real size: under 600 px wide it looks blurry on a phone (shoppers zoom product photos), so say so.
+  const [size, setSize] = useState<{ url: string; w: number; h: number } | null>(null);
+  const small = size && size.url === value && size.w < 600 ? size : null;
 
   const handleFile = async (file: File) => {
     setUploading(true);
@@ -41,7 +44,13 @@ export function ImageField({ value, onChange, label }: ImageFieldProps) {
 
       {value ? (
         <div className="group relative overflow-hidden rounded-lg border border-line">
-          <img src={value} alt="" className="h-28 w-full object-cover" />
+          {/* Whole picture, as the published page shows it (never cropped there). */}
+          <img
+            src={value}
+            alt=""
+            className="h-28 w-full bg-neutral-50 object-contain"
+            onLoad={(e) => setSize({ url: value, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
+          />
           <button
             onClick={() => onChange('')}
             className="absolute right-1.5 top-1.5 rounded-md bg-black/60 p-1.5 text-neutral-700 opacity-0
@@ -71,6 +80,12 @@ export function ImageField({ value, onChange, label }: ImageFieldProps) {
             Library
           </button>
         </div>
+      )}
+
+      {small && (
+        <p className="mt-1.5 rounded-md bg-red-600 px-2 py-1.5 text-[11.5px] text-white">
+          This photo is small ({small.w} x {small.h} px) and will look blurry on phones. Use one at least 800 px wide.
+        </p>
       )}
 
       <input

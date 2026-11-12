@@ -86,14 +86,16 @@ function UseTemplateDialog({ template, onClose }: { template: LandingTemplate; o
 
   const chosen = (ids ?? []).map((id) => products.find((p) => p.id === id)).filter((p): p is NonNullable<typeof p> => !!p);
 
+  // "Create and publish" gives a live link in one step (most stores just want a link for their Facebook ad); every part
+  // comes from the product, so nothing is made up. "Create as draft" keeps the old check-first path.
   const create = useMutation({
-    mutationFn: () => {
+    mutationFn: (publish: boolean) => {
       const built = buildLandingTemplate(template.id, chosen);
-      return landingPagesApi.create({ title: built.title, sections: built.sections });
+      return landingPagesApi.create({ title: built.title, sections: built.sections, ...(publish ? { status: 'PUBLISHED' as const } : {}) });
     },
-    onSuccess: (page) => {
+    onSuccess: (page, publish) => {
       queryClient.invalidateQueries({ queryKey: ['landing-pages'] });
-      toast.success('Page made as a draft. Check it, then publish.');
+      toast.success(publish ? 'Page is live. Copy its link from the builder and use it in your ad.' : 'Page made as a draft. Check it, then publish.');
       navigate(`/vendor/store/landing-pages/${page.id}/builder`);
     },
     onError: (err: unknown) => {
@@ -132,7 +134,7 @@ function UseTemplateDialog({ template, onClose }: { template: LandingTemplate; o
             />
           )}
           <p className="text-[12.5px] text-regantify-text-muted">
-            The page is saved as a draft and opens in the builder. Its photos, name and price come from the product. Add your customers&apos; real reviews in the
+            Its photos, name and price come from the product, and it opens in the builder after. Publish now to get a live link at once, or keep it as a draft to check first. Add your customers&apos; real reviews in the
             reviews part; it stays hidden until you do.
           </p>
         </div>
@@ -142,11 +144,19 @@ function UseTemplateDialog({ template, onClose }: { template: LandingTemplate; o
             Cancel
           </button>
           <button
-            onClick={() => create.mutate()}
+            onClick={() => create.mutate(false)}
             disabled={create.isPending || isLoading}
+            className="rounded-xl border border-line px-4 py-2 text-[13px] font-medium text-regantify-text transition-colors hover:bg-neutral-50 disabled:opacity-60"
+          >
+            Create as draft
+          </button>
+          <button
+            onClick={() => create.mutate(true)}
+            disabled={create.isPending || isLoading || chosen.length === 0}
+            title={chosen.length === 0 ? 'Pick a product first' : undefined}
             className="rounded-xl bg-regantify-cta px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-regantify-cta-dark disabled:opacity-60"
           >
-            {create.isPending ? 'Making the page…' : 'Create page'}
+            {create.isPending ? 'Making the page…' : 'Create and publish'}
           </button>
         </div>
       </div>

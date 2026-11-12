@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Package, Star } from 'lucide-react';
+import { BadgeCheck, ChevronDown, Package, Star } from 'lucide-react';
 import { productsApi, type Product } from '../../lib/productsApi';
 import type { LandingPageSection } from '../../lib/landingPagesApi';
 import type {
@@ -187,28 +187,30 @@ function HeroSliderPreview({ props }: { props: HeroSliderProps }) {
   const slide = props.slides?.[0];
   if (!slide) return <EmptyImage className="h-56" />;
 
+  // Same layout as the published page (storefront landing/sections/Hero.tsx): the whole photo beside the text, never
+  // cropped or darkened behind it.
   return (
-    <div className="relative">
-      {slide.imageUrl ? (
-        <img src={slide.imageUrl} alt="" className="h-56 w-full object-cover" />
-      ) : (
-        <EmptyImage className="h-56" />
-      )}
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 px-6 text-center">
-        {slide.headline && <span className="text-2xl font-bold text-white">{slide.headline}</span>}
-        {slide.subheadline && <span className="text-sm text-white/90">{slide.subheadline}</span>}
-        {slide.ctaLabel && (
-          <span className="mt-1 rounded-lg bg-regantify-cta px-5 py-2 text-sm font-semibold text-white">
-            {slide.ctaLabel}
-          </span>
+    <div className="bg-gradient-to-b from-orange-50 to-white">
+      <div className="grid grid-cols-2 items-center gap-4 px-5 py-5">
+        <div className="flex flex-col gap-2">
+          {slide.headline && <span className="text-xl font-extrabold leading-tight text-neutral-900">{slide.headline}</span>}
+          {slide.subheadline && <span className="text-[12.5px] text-neutral-600">{slide.subheadline}</span>}
+          {slide.ctaLabel && (
+            <span className="mt-1 w-fit rounded-lg bg-orange-600 px-5 py-2 text-sm font-bold text-white">{slide.ctaLabel}</span>
+          )}
+        </div>
+        {slide.imageUrl ? (
+          <img src={slide.imageUrl} alt="" className="aspect-square w-full rounded-xl bg-white object-contain ring-1 ring-black/5" />
+        ) : (
+          <EmptyImage className="aspect-square w-full rounded-xl" />
         )}
       </div>
       {(props.slides?.length ?? 0) > 1 && (
-        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+        <div className="flex justify-center gap-1.5 pb-3">
           {props.slides.map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 w-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'}`}
+              className={`h-1.5 rounded-full ${i === 0 ? 'w-4 bg-orange-600' : 'w-1.5 bg-neutral-300'}`}
             />
           ))}
         </div>
@@ -240,7 +242,7 @@ function SidePreview({ side }: { side: TwoColumnSide }) {
   if (!side) return <EmptyImage className="h-36 rounded-lg" />;
   if (side.kind === 'image') {
     return side.imageUrl ? (
-      <img src={side.imageUrl} alt={side.alt ?? ''} className="h-36 w-full rounded-lg object-cover" />
+      <img src={side.imageUrl} alt={side.alt ?? ''} className="aspect-square w-full rounded-lg bg-neutral-50 object-contain" />
     ) : (
       <EmptyImage className="h-36 rounded-lg" />
     );
@@ -282,7 +284,7 @@ function ProductCard({ product, showPrice, showStock }: { product: Product; show
   return (
     <div className="overflow-hidden rounded-lg border border-black/5">
       {product.photoUrls?.[0] ? (
-        <img src={product.photoUrls[0]} alt="" className="aspect-square w-full object-cover" />
+        <img src={product.photoUrls[0]} alt="" className="aspect-square w-full bg-neutral-50 object-contain" />
       ) : (
         <EmptyImage className="aspect-square w-full" />
       )}
@@ -567,7 +569,10 @@ function FeatureGridPreview({ props, device }: { props: FeatureGridProps; device
             {item.imageUrl ? (
               <img src={item.imageUrl} alt="" className="aspect-video w-full object-cover" />
             ) : (
-              <EmptyImage className="aspect-video w-full" />
+              // Same as the published page: no picture = a tick badge, not an empty box.
+              <span className="mx-auto mt-3 flex h-9 w-9 items-center justify-center rounded-full bg-orange-50 text-orange-600" aria-hidden>
+                <BadgeCheck size={18} />
+              </span>
             )}
             <div className="p-2.5">
               <span className="block text-[12.5px] font-semibold text-regantify-text">
@@ -598,7 +603,7 @@ function CarouselPreview({ props }: { props: CarouselProps }) {
       {items.slice(0, 3).map((item, i) => (
         <div key={i} className="min-w-0 flex-1">
           {item.imageUrl ? (
-            <img src={item.imageUrl} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+            <img src={item.imageUrl} alt="" className="aspect-square w-full rounded-lg bg-neutral-50 object-contain" />
           ) : (
             <EmptyImage className="aspect-[4/3] w-full rounded-lg" />
           )}
