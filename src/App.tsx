@@ -1,5 +1,6 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, type ReactNode } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { isAdminOnlyHost, isAdminPath, isPublicDashboardHost } from './lib/adminHost';
 import { NavTrail } from './components/ui/BackLink';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
@@ -443,6 +444,18 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/finance/payouts',
 );
 
+/**
+ * The admin panel opens only at its private address (lib/adminHost.ts): on the public dashboard address every /admin
+ * page goes to the homepage (not the vendor login, which sends a signed-in admin back to /admin and would loop), and
+ * the private address's home page goes to the admin sign-in.
+ */
+function AdminHostGate({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  if (isAdminPath(pathname) && isPublicDashboardHost()) return <Navigate to="/" replace />;
+  if (pathname === '/' && isAdminOnlyHost()) return <Navigate to="/admin/login" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -467,6 +480,7 @@ export default function App() {
           {/* The in-tab history the "‹ Back" links read (components/ui/BackLink.tsx). */}
           <NavTrail />
           <Suspense fallback={<PageLoading />}>
+          <AdminHostGate>
           <Routes>
             {/* Root → marketing landing page */}
             <Route path="/" element={<Home />} />
@@ -798,6 +812,7 @@ export default function App() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/vendor/login" replace />} />
           </Routes>
+          </AdminHostGate>
           </Suspense>
         </BrowserRouter>
       </AuthBootstrap>
