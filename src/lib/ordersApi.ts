@@ -332,14 +332,16 @@ export interface CustomerHistoryOrder {
   status: OrderStatus;
   total: string;
   createdAt: string;
-  storeName: string;
 }
 
+/** The success rate counts every store; `orders` lists only this store's; other stores come back as counts only. */
 export interface CustomerHistory {
   phone: string;
   totalResolved: number;
   successRate: number | null;
+  totalOrders: number;
   orders: CustomerHistoryOrder[];
+  otherStores: { orders: number; delivered: number; failed: number };
 }
 
 /** One source's delivery record for a phone (pathao-plan.md Step 15). */

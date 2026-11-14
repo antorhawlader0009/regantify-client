@@ -91,7 +91,7 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
 
         {isLoading ? (
           <div className="space-y-2 py-2">{[0, 1, 2].map((i) => <div key={i} className="h-10 animate-pulse rounded-lg bg-neutral-100" />)}</div>
-        ) : !data || data.orders.length === 0 ? (
+        ) : !data || data.totalOrders === 0 ? (
           <p className="rounded-lg border border-dashed border-line py-6 text-center text-sm text-neutral-500">No orders on StorePal for this number yet.</p>
         ) : (
           <>
@@ -111,16 +111,26 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
               </div>
               <div>
                 <p className="text-xs text-neutral-500">All orders</p>
-                <p className="text-lg font-semibold text-regantify-text">{data.orders.length}</p>
+                <p className="text-lg font-semibold text-regantify-text">{data.totalOrders}</p>
               </div>
             </div>
 
+            {data.otherStores.orders > 0 && (
+              <p className="mb-3 text-sm text-neutral-600">
+                Other stores: {data.otherStores.orders} order{data.otherStores.orders === 1 ? '' : 's'}, {data.otherStores.delivered} delivered,{' '}
+                {data.otherStores.failed} cancelled or returned.
+              </p>
+            )}
+
+            {data.orders.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-line py-6 text-center text-sm text-neutral-500">No orders from this number in your store yet.</p>
+            ) : (
             <div className="max-h-80 divide-y divide-line overflow-y-auto rounded-lg border border-line">
               {data.orders.map((o) => (
                 <div key={o.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
                   <div>
                     <p className="text-sm font-medium text-regantify-text">
-                      ORDER-{o.invoiceNumber} · {o.storeName}
+                      ORDER-{o.invoiceNumber}
                     </p>
                     <p className="text-xs text-neutral-500">
                       {new Date(o.createdAt).toLocaleDateString()}
@@ -133,6 +143,7 @@ export function CheckHistoryModal({ phone, onOpenChange }: CheckHistoryModalProp
                 </div>
               ))}
             </div>
+            )}
           </>
         )}
       </div>
