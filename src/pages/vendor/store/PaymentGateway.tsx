@@ -284,7 +284,7 @@ function SslcommerzCard({ gateway, onSaved, autoOpen }: { gateway: VendorPayment
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
               >
-                {connection.sandbox ? 'Sandbox' : 'Live'}
+                {connection.sandbox ? 'Sandbox: shoppers don’t see it' : 'Live'}
               </span>
             )}
           </p>
@@ -580,7 +580,7 @@ function StoreGatewayCard({
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
               >
-                {connection.sandbox ? 'Sandbox' : 'Live'}
+                {connection.sandbox ? 'Sandbox: shoppers don’t see it' : 'Live'}
               </span>
             )}
           </p>
@@ -775,7 +775,7 @@ function ShurjopayCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentG
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
               >
-                {connection.sandbox ? 'Sandbox' : 'Live'}
+                {connection.sandbox ? 'Sandbox: shoppers don’t see it' : 'Live'}
               </span>
             )}
           </p>
@@ -974,7 +974,7 @@ function EpsCard({ gateway, onSaved, autoOpen }: { gateway: VendorPaymentGateway
               <span
                 className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${connection.sandbox ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}
               >
-                {connection.sandbox ? 'Sandbox' : 'Live'}
+                {connection.sandbox ? 'Sandbox: shoppers don’t see it' : 'Live'}
               </span>
             )}
           </p>

@@ -111,7 +111,7 @@ const EVENTS = [
   ['begin_checkout', 'the checkout form opened'],
   ['add_shipping_info', '{ shipping_tier }: the delivery details were filled in at "Place order"'],
   ['add_payment_info', 'a payment method was chosen'],
-  ['order_place', '{ transaction_id, order_id, order_code, value, shipping, tax, discount, coupon, payment_type, items, customer { name, first_name, last_name, phone, phone_e164, email, address, city, district, delivery_zone, country } }: the moment an order is placed at checkout (every template), once per order; also on the dataLayer'],
+  ['order_place', '{ transaction_id, order_id, order_code, value, shipping, tax, discount, coupon, payment_type, items, customer { city, district, delivery_zone, country } }: the moment an order is placed at checkout (every template), once per order; also on the dataLayer. The shopper\'s name, phone, email and address are never sent (those keys are always null).'],
   ['purchase', '{ transaction_id, value, shipping, tax, items, customer }: on the thank-you page, once per order (on templates without one, when the order is placed)'],
   ['sign_up', 'a shopper made an account'],
   ['login', '{ method }: a shopper signed in'],
