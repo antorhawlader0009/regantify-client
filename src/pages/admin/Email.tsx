@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { EmailSuppressions } from './EmailSuppressions';
 import { AlertTriangle, CheckCircle2, Loader2, Mail } from 'lucide-react';
 import { emailApi } from '../../lib/emailApi';
 import { adminCan, useAdminViewer } from '../../lib/adminPermissions';
@@ -9,6 +10,7 @@ import { toast } from '../../lib/toast';
 
 const field = 'rounded-lg border border-line bg-white px-3 py-2 text-sm text-regantify-text focus:outline-none';
 const STATUS_CLASS = { SENT: 'text-emerald-700', FAILED: 'text-red-700', SKIPPED: 'text-regantify-text-muted' } as const;
+const providerName = (p: string) => (p === 'RESEND' ? 'Resend' : p === 'SES' ? 'Amazon SES' : p);
 const KIND_LABEL: Record<string, string> = { RECEIPT: 'Receipt', NUDGE: 'Automation', TEST: 'Test', VERIFY_EMAIL: 'Email verification' };
 
 /**
@@ -64,7 +66,8 @@ export default function AdminEmail() {
       <section className="space-y-3 rounded-xl border border-line bg-white p-5">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           {s.configured ? <CheckCircle2 size={16} className="text-emerald-600" /> : <AlertTriangle size={16} className="text-red-600" />}
-          <span className="font-medium text-regantify-text">{s.configured ? `${s.provider === 'RESEND' ? 'Resend' : s.provider} is set up` : 'Not set up: no Resend API key on the server'}</span>
+          <span className="font-medium text-regantify-text">{s.configured ? `${providerName(s.provider)} is set up` : `Not set up: no ${providerName(s.provider)} keys on the server`}</span>
+          {s.fallback && <span className="text-regantify-text-muted">· fallback {providerName(s.fallback)} (used only when {providerName(s.provider)} fails)</span>}
           <span className="text-regantify-text-muted">· sender {s.from}</span>
           {s.replyTo && <span className="text-regantify-text-muted">· replies to {s.replyTo}</span>}
         </div>
@@ -90,6 +93,8 @@ export default function AdminEmail() {
           </div>
         )}
       </section>
+
+      <EmailSuppressions canEdit={canTest} />
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">

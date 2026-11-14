@@ -5,6 +5,8 @@ import { api } from './api';
 export interface EmailStatus {
   provider: string;
   configured: boolean;
+  /** The other service, tried when the main one fails (SES main, Resend fallback). Null when it has no keys. */
+  fallback?: string | null;
   from: string;
   /** Still on Resend's test sender: only the Resend account owner's own address receives. */
   testSender: boolean;
@@ -35,7 +37,18 @@ export interface EmailLogPage {
   items: EmailLogRow[];
 }
 
+export interface EmailSuppressionRow {
+  email: string;
+  reason: 'BOUNCE' | 'COMPLAINT';
+  detail: string | null;
+  count: number;
+  createdAt: string;
+  lastAt: string;
+}
+
 export const emailApi = {
   log: (params: { status?: string; kind?: string; search?: string; page?: number }) => api.get<EmailLogPage>('/v1/admin/email', { params }).then((r) => r.data),
+  suppressions: (search?: string) => api.get<{ rows: EmailSuppressionRow[]; total: number }>('/v1/admin/email/suppressions', { params: { search: search || undefined } }).then((r) => r.data),
+  removeSuppression: (email: string) => api.post<{ ok: boolean }>('/v1/admin/email/suppressions/remove', { email }).then((r) => r.data),
   test: (to: string) => api.post<{ ok: boolean; error: string | null }>('/v1/admin/email/test', { to }).then((r) => r.data),
 };
