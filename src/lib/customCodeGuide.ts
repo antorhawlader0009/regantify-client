@@ -32,6 +32,7 @@ export const HOOKS: { name: string; what: string; where: string }[] = [
   { name: 'product-gallery', what: 'Photos of the product', where: 'product page' },
   { name: 'breadcrumb', what: 'The "Shop › Category › Product" line above the photos', where: 'product page' },
   { name: 'product-title', what: 'Product name (the h1)', where: 'product page' },
+  { name: 'product-sku', what: 'The SKU code line under the stock line', where: 'product page' },
   { name: 'product-price', what: 'The price box', where: 'product page' },
   { name: 'product-buttons', what: 'The row with Add to Cart and Buy Now', where: 'product page' },
   { name: 'add-to-cart', what: '"Add to Cart" button', where: 'product page' },
