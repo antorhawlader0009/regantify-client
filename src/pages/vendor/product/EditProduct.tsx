@@ -1008,8 +1008,15 @@ export default function EditProduct() {
             <div className="space-y-3">
               <Field label="Main category">
                 <div className="flex items-center gap-2">
-                  <select value={mainCategoryId} onChange={(e) => handleMainCategoryChange(e.target.value)} className={productInputClass}>
+                  {/* An older product can carry a category name with no linked category: it is shown as its own line, so the box
+                      doesn't claim "No category" while the store still lists it there, and picking "No category" really clears it. */}
+                  <select
+                    value={mainCategoryId || (category.trim() ? '__unlinked__' : '')}
+                    onChange={(e) => e.target.value !== '__unlinked__' && handleMainCategoryChange(e.target.value)}
+                    className={productInputClass}
+                  >
                     <option value="">No category</option>
+                    {!mainCategoryId && category.trim() && <option value="__unlinked__">{category.trim()} (not linked)</option>}
                     {mainCategoryOptions.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
