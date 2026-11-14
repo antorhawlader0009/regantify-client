@@ -426,23 +426,25 @@ export function PriceFields({
   const hasDiscount = discountPrice.toString().trim() !== '' && d > 0;
   const selling = hasDiscount ? d : p;
 
-  let discountNote: ReactNode = 'Leave empty if the product isn’t on sale.';
-  if (hasPrice && hasDiscount) {
+  let discountNote: ReactNode = 'Leave empty if there is no discount.';
+  if (discountPrice.toString().trim() !== '' && !hasDiscount) {
+    discountNote = <span className="text-red-600">0 is not a discount. Leave it empty, or press Remove.</span>;
+  } else if (hasPrice && hasDiscount) {
     discountNote =
       d >= p ? (
-        <span className="text-red-600">The sale price should be lower than the price.</span>
+        <span className="text-red-600">The discount price must be lower than the price.</span>
       ) : (
-        <span className="font-medium text-emerald-700">{Math.round(((p - d) / p) * 100)}% off · shoppers save ৳{(p - d).toLocaleString('en-US')}</span>
+        <span className="font-medium text-emerald-700">Shoppers pay ৳{d.toLocaleString('en-US')} · {Math.round(((p - d) / p) * 100)}% off, they save ৳{(p - d).toLocaleString('en-US')}</span>
       );
   }
 
-  let costNote: ReactNode = 'Only you see this. It’s used for the profit in your reports.';
+  let costNote: ReactNode = 'This field is private and will only be used to calculate stock and sales reports.';
   if (cost.toString().trim() !== '' && hasPrice) {
     const profit = selling - c;
     costNote = (
       <span className={profit < 0 ? 'text-red-600' : 'text-neutral-600'}>
         Profit per sale: <strong className="font-semibold">৳{profit.toLocaleString('en-US')}</strong>
-        {selling > 0 && ` (${Math.round((profit / selling) * 100)}%)`}. Only you see the cost.
+        {selling > 0 && ` (${Math.round((profit / selling) * 100)}%)`}. Private, only for your reports.
       </span>
     );
   }
@@ -450,33 +452,43 @@ export function PriceFields({
   const showMain = part !== 'cost';
   const showCost = canCost && part !== 'main';
   if (!showMain && !showCost) return null;
+  const canRemove = !priceLocked && discountPrice.toString().trim() !== '';
 
   return (
-    <div className={`grid gap-4 ${showMain && showCost ? 'sm:grid-cols-3' : showMain ? 'sm:grid-cols-2' : 'sm:max-w-xs'}`}>
+    <div className={`grid gap-4 ${showMain ? 'sm:grid-cols-2' : 'sm:max-w-sm'}`}>
       {showMain && (
       <>
       <div>
-        <label className="mb-1.5 flex items-center gap-1 text-sm font-medium text-regantify-text">
+        <label className="mb-1.5 flex items-center gap-1 text-sm font-semibold text-regantify-text">
           Price <span className="text-red-500" aria-hidden>*</span>
         </label>
         <div className={priceError ? '[&_input]:border-red-400' : undefined}>
-          <MoneyInput value={price} onChange={onPrice} placeholder="0" ariaLabel="Price" disabled={priceLocked} />
+          <MoneyInput value={price} onChange={onPrice} placeholder="Selling price" ariaLabel="Price" disabled={priceLocked} />
         </div>
         <p className={`mt-1.5 text-xs ${priceError ? 'text-red-600' : 'text-neutral-500'}`}>
-          {priceError ?? (priceLocked ? 'Your role can’t change prices. Ask the store owner.' : 'What shoppers pay.')}
+          {priceError ?? (priceLocked ? 'Your role can’t change prices. Ask the store owner.' : 'The regular price of the product.')}
         </p>
       </div>
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-regantify-text">Sale price</label>
-        <MoneyInput value={discountPrice} onChange={onDiscountPrice} placeholder="Optional" ariaLabel="Sale price" disabled={priceLocked} />
+        <label className="mb-1.5 block text-sm font-semibold text-regantify-text">Discount Price</label>
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <MoneyInput value={discountPrice} onChange={onDiscountPrice} placeholder="Discount price" ariaLabel="Discount price" disabled={priceLocked} />
+          </div>
+          {canRemove && (
+            <button type="button" onClick={() => onDiscountPrice('')} className="shrink-0 text-sm font-medium text-red-600 hover:underline">
+              Remove
+            </button>
+          )}
+        </div>
         <p className="mt-1.5 text-xs text-neutral-500">{discountNote}</p>
       </div>
       </>
       )}
       {showCost && (
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-regantify-text">Cost</label>
-          <MoneyInput value={cost} onChange={onCost} placeholder="Optional" ariaLabel="Cost" />
+        <div className="sm:col-start-1">
+          <label className="mb-1.5 block text-sm font-semibold text-regantify-text">Cost</label>
+          <MoneyInput value={cost} onChange={onCost} placeholder="Purchase cost" ariaLabel="Cost" />
           <p className="mt-1.5 text-xs text-neutral-500">{costNote}</p>
         </div>
       )}

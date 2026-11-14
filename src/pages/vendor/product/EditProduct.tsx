@@ -33,6 +33,7 @@ import { ComingSoonField } from '../../../components/product/ComingSoonField';
 import { PackSizeField } from '../../../components/product/PackSizeField';
 import { RestockDateField } from '../../../components/product/RestockDateField';
 import { ExtraDeliveryField } from '../../../components/product/ExtraDeliveryField';
+import { DeliveryTimeField } from '../../../components/product/DeliveryTimeField';
 import { PaymentRuleField } from '../../../components/product/PaymentRuleField';
 import { InfoTabsField, type InfoTabRow } from '../../../components/product/InfoTabsField';
 import { ReorderDaysField } from '../../../components/product/ReorderDaysField';
@@ -226,6 +227,8 @@ export default function EditProduct() {
   const [restockDate, setRestockDate] = useState('');
   const [extraDelivery, setExtraDelivery] = useState('');
   const [extraPerPiece, setExtraPerPiece] = useState(false);
+  const [daysDhaka, setDaysDhaka] = useState('');
+  const [daysOutside, setDaysOutside] = useState('');
   const [infoTabs, setInfoTabs] = useState<InfoTabRow[]>([]);
   const [paymentRule, setPaymentRule] = useState<'ANY' | 'ONLINE_ONLY'>('ANY');
   const [comingSoon, setComingSoon] = useState(false);
@@ -301,7 +304,7 @@ export default function EditProduct() {
       photoUrls: p.photoUrls,
       videoUrl: p.videoUrl ?? '',
       price: p.price.toString(),
-      discountPrice: (p.discountPrice ?? '').toString(),
+      discountPrice: p.discountPrice != null && Number(p.discountPrice) > 0 ? p.discountPrice.toString() : '',
       cost: (p.cost ?? '').toString(),
       sku: p.sku,
       barcode: p.barcode ?? '',
@@ -317,6 +320,8 @@ export default function EditProduct() {
       restockDate: p.restockDate ? p.restockDate.slice(0, 10) : '',
       extraDelivery: p.extraDeliveryCharge ? String(Number(p.extraDeliveryCharge)) : '',
       extraPerPiece: p.extraDeliveryPerPiece ?? false,
+      daysDhaka: p.deliveryDaysDhaka != null ? String(p.deliveryDaysDhaka) : '',
+      daysOutside: p.deliveryDaysOutside != null ? String(p.deliveryDaysOutside) : '',
       infoTabs: (p.infoTabs ?? []) as InfoTabRow[],
       paymentRule: (p.paymentRule ?? 'ANY') as string,
       comingSoon: p.comingSoon ?? false,
@@ -393,6 +398,8 @@ export default function EditProduct() {
       restockDate,
       extraDelivery,
       extraPerPiece,
+      daysDhaka,
+      daysOutside,
       infoTabs,
       paymentRule,
       comingSoon,
@@ -458,7 +465,7 @@ export default function EditProduct() {
     );
     setVideoUrl(p.videoUrl ?? '');
     setPrice(p.price);
-    setDiscountPrice(p.discountPrice ?? '');
+    setDiscountPrice(p.discountPrice != null && Number(p.discountPrice) > 0 ? p.discountPrice : '');
     setCost(p.cost ?? '');
     setSku(p.sku);
     setBarcode(p.barcode ?? '');
@@ -474,6 +481,8 @@ export default function EditProduct() {
     setRestockDate(p.restockDate ? p.restockDate.slice(0, 10) : '');
     setExtraDelivery(p.extraDeliveryCharge ? String(Number(p.extraDeliveryCharge)) : '');
     setExtraPerPiece(p.extraDeliveryPerPiece ?? false);
+    setDaysDhaka(p.deliveryDaysDhaka != null ? String(p.deliveryDaysDhaka) : '');
+    setDaysOutside(p.deliveryDaysOutside != null ? String(p.deliveryDaysOutside) : '');
     setInfoTabs((p.infoTabs ?? []) as InfoTabRow[]);
     setPaymentRule(p.paymentRule === 'ONLINE_ONLY' ? 'ONLINE_ONLY' : 'ANY');
     setComingSoon(p.comingSoon ?? false);
@@ -569,7 +578,8 @@ export default function EditProduct() {
         // Empty = remove the video (the server stores null).
         videoUrl: videoUrl.trim(),
         price: Number(price),
-        discountPrice: discountPrice.toString().trim() ? Number(discountPrice) : undefined,
+        // Empty or 0 = not on sale: send null so a cleared sale price is really removed.
+        discountPrice: Number(discountPrice.toString().trim() || 0) > 0 ? Number(discountPrice) : null,
         cost: cost.toString().trim() ? Number(cost) : undefined,
         sku: sku.trim(),
         // Always sent: an empty field removes the barcode.
@@ -589,6 +599,8 @@ export default function EditProduct() {
         restockDate: restockDate || null,
         extraDeliveryCharge: Number(extraDelivery) > 0 ? Number(extraDelivery) : null,
         extraDeliveryPerPiece: extraPerPiece,
+        deliveryDaysDhaka: daysDhaka.trim() !== '' ? Number(daysDhaka) : null,
+        deliveryDaysOutside: daysOutside.trim() !== '' ? Number(daysOutside) : null,
         infoTabs: infoTabs.filter((t) => t.title.trim() && t.text.trim()),
         paymentRule,
         comingSoon,
@@ -760,13 +772,14 @@ export default function EditProduct() {
     filled(badge.text),
     JSON.stringify(policy) !== JSON.stringify(EMPTY_POLICY),
     isBundle,
-    filled(cost),
     breakRows.length > 0,
     filled(wholesalePrice),
     filled(reorderDays),
     filled(quantityStep) || filled(unitLabel),
     filled(restockDate),
     filled(extraDelivery),
+    filled(daysDhaka),
+    filled(daysOutside),
     paymentRule !== 'ANY',
     infoTabs.length > 0,
     comingSoon,
@@ -893,9 +906,9 @@ export default function EditProduct() {
             />
           </SectionCard>
 
-          <SectionCard title="Price" id="price">
+          <SectionCard title="Pricing information" id="price">
             <PriceFields
-              part="main"
+              part="all"
               price={price}
               onPrice={setPrice}
               discountPrice={discountPrice}
@@ -1085,19 +1098,11 @@ export default function EditProduct() {
 
           <SectionCard title="Pricing extras">
             <div className="space-y-4">
-              <PriceFields
-                part="cost"
-                price={price}
-                onPrice={setPrice}
-                discountPrice={discountPrice}
-                onDiscountPrice={setDiscountPrice}
-                cost={cost}
-                onCost={setCost}
-              />
               <PriceBreaksField rows={breakRows} onChange={setBreakRows} price={discountPrice.toString().trim() || price.toString()} cost={cost.toString()} />
               <WholesalePriceField value={wholesalePrice} onChange={setWholesalePrice} price={discountPrice.toString().trim() || price.toString()} />
               <PackSizeField step={quantityStep} onStep={setQuantityStep} unit={unitLabel} onUnit={setUnitLabel} />
               <ExtraDeliveryField amount={extraDelivery} onAmount={setExtraDelivery} perPiece={extraPerPiece} onPerPiece={setExtraPerPiece} />
+              <DeliveryTimeField dhaka={daysDhaka} onDhaka={setDaysDhaka} outside={daysOutside} onOutside={setDaysOutside} />
               <PaymentRuleField value={paymentRule} onChange={setPaymentRule} />
             </div>
           </SectionCard>

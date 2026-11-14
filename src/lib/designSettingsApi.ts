@@ -207,6 +207,8 @@ export interface DesignSettings {
   checkoutAltPhone: 'HIDDEN' | 'OPTIONAL' | 'REQUIRED';
   checkoutEmail: 'HIDDEN' | 'OPTIONAL' | 'REQUIRED';
   checkoutThana: 'OPTIONAL' | 'REQUIRED';
+  /** "District, Thana & Area" picker at checkout; off by default (2026-11-14). Off: the shopper ticks Inside / Outside Dhaka. */
+  checkoutLocation?: boolean;
   checkoutNote: 'SHOWN' | 'HIDDEN';
   /** Shopper sign-up asks for an SMS code (off by default). */
   customerSignupOtp?: boolean;

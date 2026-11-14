@@ -17,6 +17,8 @@ export default function CheckoutFormFields() {
   const [email, setEmail] = useState<OptionalRule>('HIDDEN');
   const [thana, setThana] = useState<ThanaRule>('OPTIONAL');
   const [note, setNote] = useState<NoteRule>('SHOWN');
+  // District, Thana & Area picker: off by default for every store (the owner's rule, 2026-11-14).
+  const [location, setLocation] = useState<'OFF' | 'ON'>('OFF');
   // Shopper sign-up asks for an SMS code: off by default (the owner's rule, 2026-10-29).
   const [signupOtp, setSignupOtp] = useState<'OFF' | 'ON'>('OFF');
 
@@ -26,6 +28,7 @@ export default function CheckoutFormFields() {
     setEmail(settings.checkoutEmail ?? 'HIDDEN');
     setThana(settings.checkoutThana ?? 'OPTIONAL');
     setNote(settings.checkoutNote ?? 'SHOWN');
+    setLocation(settings.checkoutLocation ? 'ON' : 'OFF');
     setSignupOtp(settings.customerSignupOtp ? 'ON' : 'OFF');
   }, [settings]);
 
@@ -36,11 +39,25 @@ export default function CheckoutFormFields() {
         <DesignLoading />
       ) : (
         <div className="space-y-8">
-          <DesignSection title="Always asked" hint="Name, phone, district and address are needed to deliver, to work out the delivery charge and to spot duplicate orders, so they can’t be turned off.">
-            <p className="text-sm text-regantify-text-muted">Name · Phone · District · Address (not for a pickup order)</p>
+          <DesignSection title="Always asked" hint="Name, phone and address are needed to deliver and to spot duplicate orders, so they can’t be turned off.">
+            <p className="text-sm text-regantify-text-muted">Name · Phone · Address (not for a pickup order)</p>
           </DesignSection>
 
           <DesignSection title="Extra boxes">
+            <RadioGroup
+              label="District, Thana & Area"
+              value={location}
+              onChange={setLocation}
+              options={[
+                { value: 'OFF', label: 'Not asked' },
+                { value: 'ON', label: 'Asked' },
+              ]}
+              hint={
+                location === 'ON'
+                  ? 'The shopper picks district, thana and area from a list. The district is required and sets the delivery charge. Needed for “Where we deliver” (delivery area control).'
+                  : 'The shopper just ticks Inside Dhaka or Outside Dhaka (and Around Dhaka if you offer it) and the charge follows. “Where we deliver” is not applied while this is off.'
+              }
+            />
             <RadioGroup
               label="Second phone number"
               value={alt}
@@ -52,6 +69,7 @@ export default function CheckoutFormFields() {
               ]}
               hint="A number the courier can try if the first one does not answer."
             />
+            {location === 'ON' && (
             <RadioGroup
               label="Thana / area"
               value={thana}
@@ -62,6 +80,7 @@ export default function CheckoutFormFields() {
               ]}
               hint="Not asked for a pickup order."
             />
+            )}
             <RadioGroup
               label="Email"
               value={email}
@@ -85,7 +104,7 @@ export default function CheckoutFormFields() {
             />
             <SaveButton
               pending={save.isPending}
-              onClick={() => save.mutate({ checkoutAltPhone: alt, checkoutEmail: email, checkoutThana: thana, checkoutNote: note })}
+              onClick={() => save.mutate({ checkoutAltPhone: alt, checkoutEmail: email, checkoutThana: thana, checkoutNote: note, checkoutLocation: location === 'ON' })}
             />
           </DesignSection>
 

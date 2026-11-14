@@ -137,6 +137,8 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   // ------------------------------------------------------------------ Products & stock
   { title: 'Add a product', where: 'Product > Add Product', path: '/vendor/product/add', keywords: 'new product create item variants sizes colours ai generate পণ্য যোগ' },
   { title: 'Clean a photo background (white or any colour)', where: 'Product > Add/Edit Product > Photos', path: '/vendor/product/add', keywords: 'remove background white background cut out photo clean product photo colour background bg remove chobi porishkar সাদা ব্যাকগ্রাউন্ড ছবি পরিষ্কার' },
+  { title: 'Expected delivery time for a product', where: 'Product > Add/Edit Product > More options', path: '/vendor/product/add', keywords: 'delivery days expected date how long shipping time per product koto din e delivery ডেলিভারি কত দিনে আনুমানিক তারিখ' },
+  { title: 'District, Thana & Area at checkout', where: 'Store > Checkout > Form Fields', path: '/vendor/store/checkout-form', keywords: 'district thana area picker checkout location inside outside dhaka zone jela thana জেলা থানা এলাকা' },
   { title: 'Change prices of many products', where: 'Product > All Products', path: '/vendor/product/all', keywords: 'bulk price change increase decrease percent undo sale price dam bariye komano দাম পরিবর্তন' },
   { title: 'Import products from CSV', where: 'Product > All Products', path: '/vendor/product/all', keywords: 'bulk upload csv excel import products' },
   { title: 'Schedule a product to go live', where: 'Product > All Products', path: '/vendor/product/all', keywords: 'publish later schedule hide date time draft public' },

@@ -113,6 +113,9 @@ export interface Product {
   /** Extra delivery charge and whether it is per piece (TellMe idea 117). */
   extraDeliveryCharge?: string | number | null;
   extraDeliveryPerPiece?: boolean;
+  /** Expected delivery days per zone; null = not set (no expected date on the product page). */
+  deliveryDaysDhaka?: number | null;
+  deliveryDaysOutside?: number | null;
   /** Extra information tabs (TellMe idea 119), up to 3. */
   infoTabs?: Array<{ title: string; text: string }> | null;
   /** Payment rule (TellMe idea 126): ANY or ONLINE_ONLY. */
@@ -205,6 +208,9 @@ export interface CreateProductPayload {
   /** Extra delivery charge and whether it is per piece (TellMe idea 117). */
   extraDeliveryCharge?: string | number | null;
   extraDeliveryPerPiece?: boolean;
+  /** Expected delivery days per zone; null = not set (no expected date on the product page). */
+  deliveryDaysDhaka?: number | null;
+  deliveryDaysOutside?: number | null;
   /** Extra information tabs (TellMe idea 119), up to 3. */
   infoTabs?: Array<{ title: string; text: string }> | null;
   /** Payment rule (TellMe idea 126): ANY or ONLINE_ONLY. */
@@ -302,7 +308,7 @@ export interface UpdateProductPayload {
   photoUrls?: string[];
   videoUrl?: string;
   price?: number;
-  discountPrice?: number;
+  discountPrice?: number | null;
   cost?: number;
   sku?: string;
   /** An empty string removes it. */
@@ -345,6 +351,9 @@ export interface UpdateProductPayload {
   /** Extra delivery charge and whether it is per piece (TellMe idea 117). */
   extraDeliveryCharge?: string | number | null;
   extraDeliveryPerPiece?: boolean;
+  /** Expected delivery days per zone; null = not set (no expected date on the product page). */
+  deliveryDaysDhaka?: number | null;
+  deliveryDaysOutside?: number | null;
   /** Extra information tabs (TellMe idea 119), up to 3. */
   infoTabs?: Array<{ title: string; text: string }> | null;
   /** Payment rule (TellMe idea 126): ANY or ONLINE_ONLY. */
