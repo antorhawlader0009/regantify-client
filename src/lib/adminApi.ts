@@ -326,6 +326,6 @@ export const adminApi = {
   // shows on the store's AI Credit history.
   adjustAiCredits: (vendorId: string, amount: number, reason: string) =>
     api
-      .post<{ balanceAfter: number; amount: number }>(`/v1/admin/vendors/${vendorId}/ai-tokens`, { amount, reason })
+      .post<{ balanceAfter: number; amount: number } | { pendingApproval: { id: string; summary: string } }>(`/v1/admin/vendors/${vendorId}/ai-tokens`, { amount, reason })
       .then((r) => r.data),
 };

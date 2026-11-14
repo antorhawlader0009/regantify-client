@@ -7,6 +7,7 @@ import { storefrontStoreUrl } from '../../../lib/storefrontUrl';
 import { adminApi, type AdminVendor } from '../../../lib/adminApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { toast } from '../../../lib/toast';
+import { isPendingApproval, toastPendingApproval } from '../../../lib/approvalsApi';
 
 function formatDateTime(iso: string | null) {
   if (!iso) return '-';
@@ -44,9 +45,14 @@ export function AiCreditsAdjust({ vendor, onDone }: { vendor: AdminVendor; onDon
   const mutation = useMutation({
     mutationFn: () => adminApi.adjustAiCredits(vendor.id, mode === 'add' ? n : -n, reason.trim()),
     onSuccess: (res) => {
-      toast.success(`${Math.abs(res.amount).toLocaleString('en-US')} AI Credits ${res.amount > 0 ? 'added' : 'removed'}.`);
       setAmount('');
       setReason('');
+      // A big change waits for a teammate's second approval (Approvals), like a wallet change.
+      if (isPendingApproval(res)) {
+        toastPendingApproval();
+        return;
+      }
+      toast.success(`${Math.abs(res.amount).toLocaleString('en-US')} AI Credits ${res.amount > 0 ? 'added' : 'removed'}.`);
       onDone(res.balanceAfter);
       queryClient.invalidateQueries({ queryKey: ['admin-vendors'] });
     },

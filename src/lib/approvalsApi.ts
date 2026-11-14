@@ -19,7 +19,7 @@ export function toastPendingApproval(): void {
 
 export interface ApprovalRow {
   id: string;
-  action: 'WALLET_ADJUST' | 'CLOSE_STORE' | 'TRANSFER_STORE' | 'PAYOUT' | 'SHOPPER_ERASE';
+  action: 'WALLET_ADJUST' | 'AI_CREDIT_ADJUST' | 'CLOSE_STORE' | 'TRANSFER_STORE' | 'PAYOUT' | 'SHOPPER_ERASE';
   actionLabel: string;
   vendorId: string | null;
   summary: string;
