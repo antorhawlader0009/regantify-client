@@ -29,6 +29,15 @@ export function fitPhotos<T>(items: T[], have: number, limit: number | null): T[
   return items.slice(0, room);
 }
 
+/**
+ * Variation photos (a size or colour's own photos) that are not also in the gallery. The plan's photos-per-product
+ * limit counts the gallery and these together (the server does the same), so a variation can't add more.
+ */
+export function variationOnlyPhotoCount(galleryUrls: string[], variationPhotos: { photoUrls: string[] }[]): number {
+  const gallery = new Set(galleryUrls);
+  return new Set(variationPhotos.flatMap((v) => v.photoUrls).filter((u) => u && !gallery.has(u))).size;
+}
+
 function fileListOf(files: File[]): FileList {
   const dt = new DataTransfer();
   files.forEach((f) => dt.items.add(f));
@@ -175,8 +184,11 @@ export function PhotoManager<P extends PhotoItem>({
   onPhotoSizeChange,
   onAddUrls,
   onReplace,
+  otherPhotos = 0,
 }: {
   photos: P[];
+  /** Photos the product holds outside this gallery (variation photos), counted toward the plan's limit. */
+  otherPhotos?: number;
   onFiles: (files: FileList) => void;
   onRemove: (id: string) => void;
   /** Move the photo at `from` to `to`. */
@@ -198,15 +210,16 @@ export function PhotoManager<P extends PhotoItem>({
 
   // The plan's photo limit: new files and picked photos are cut to what still fits.
   const limit = useProductPhotoLimit();
-  const full = limit !== null && photos.length >= limit;
+  const used = photos.length + otherPhotos;
+  const full = limit !== null && used >= limit;
   const rawOnFiles = onFiles;
   const rawOnAddUrls = onAddUrls;
   onFiles = (files: FileList) => {
-    const kept = fitPhotos(Array.from(files), photos.length, limit);
+    const kept = fitPhotos(Array.from(files), used, limit);
     if (kept.length) rawOnFiles(kept.length === files.length ? files : fileListOf(kept));
   };
   onAddUrls = (urls: string[]) => {
-    const kept = fitPhotos(urls, photos.length, limit);
+    const kept = fitPhotos(urls, used, limit);
     if (kept.length) rawOnAddUrls(kept);
   };
 
@@ -322,7 +335,7 @@ export function PhotoManager<P extends PhotoItem>({
 
       {full ? (
         <p className="rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-4 text-center text-sm text-neutral-600">
-          {limit} of {limit} photos. Your plan allows {limit} photos per product; remove one to add another.
+          {used} of {limit} photos{otherPhotos > 0 ? ` (${otherPhotos} in variations)` : ''}. Your plan allows {limit} photos per product, variation photos included; remove one to add another.
         </p>
       ) : (
       <button
@@ -342,7 +355,7 @@ export function PhotoManager<P extends PhotoItem>({
         {photos.length > 0 ? <Camera size={20} className="text-neutral-500" /> : <UploadCloud size={26} className="text-neutral-500" />}
         <span className="text-sm font-medium text-regantify-text">{photos.length > 0 ? 'Add more photos' : 'Upload photos'}</span>
         <span className="text-xs text-neutral-500">
-          Drag and drop here, or click to upload or pick from Media{limit !== null ? ` (${photos.length} of ${limit})` : ''}
+          Drag and drop here, or click to upload or pick from Media{limit !== null ? ` (${used} of ${limit}${otherPhotos > 0 ? `, ${otherPhotos} in variations` : ''})` : ''}
         </span>
       </button>
       )}

@@ -7,6 +7,7 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
 import { PhotoHoverActions, PhotoLightbox, PhotoPickerDialog } from './PhotoPicker';
+import { fitPhotos, useProductPhotoLimit } from './ProductFormKit';
 
 interface VariationsEditorProps {
   productSku: string;
@@ -19,6 +20,10 @@ interface VariationsEditorProps {
   onVariationPhotosChange: (photos: VariationValuePhotoInput[]) => void;
   /** Edit Product for a staff role without products.price: variant prices can't be changed (rule-plan.md Step 10). */
   priceLocked?: boolean;
+  /** The gallery's photos (uploaded addresses) and how many it holds (uploads in progress too): the plan's
+   *  photos-per-product limit counts the gallery and the variation photos together. */
+  galleryUrls?: string[];
+  galleryCount?: number;
 }
 
 function slugify(input: string): string {
@@ -62,7 +67,10 @@ export function VariationsEditor({
   variationPhotos,
   onVariationPhotosChange,
   priceLocked = false,
+  galleryUrls = [],
+  galleryCount = 0,
 }: VariationsEditorProps) {
+  const photoLimit = useProductPhotoLimit();
   // No cost column for a staff role without products.cost: the server keeps the saved costs (rule-plan.md Step 5).
   const canCost = useCan('products.cost');
   const [addingCustom, setAddingCustom] = useState(false);
@@ -221,6 +229,15 @@ export function VariationsEditor({
   const pickPhotos = (urls: string[]) => {
     if (!photoTool || urls.length === 0) return;
     const list = getPhotosFor(photoTool.value);
+    // Plan limit: a photo the product already holds (gallery or another variation) is free; a new one takes a place.
+    const held = new Set([...galleryUrls, ...variationPhotos.flatMap((p) => p.photoUrls)]);
+    const variationOnly = new Set(variationPhotos.flatMap((p) => p.photoUrls).filter((u) => !galleryUrls.includes(u))).size;
+    const freed = photoTool.kind === 'change' ? list[photoTool.index] : undefined;
+    const stillHeld = freed !== undefined && variationPhotos.some((p) => p.photoUrls.some((u, i) => u === freed && !(p.optionName === photoOptionName && p.optionValue === photoTool.value && i === photoTool.index)));
+    const used = galleryCount + variationOnly - (freed !== undefined && !stillHeld && !galleryUrls.includes(freed) ? 1 : 0);
+    const fresh = fitPhotos(urls.filter((u, i) => !held.has(u) && urls.indexOf(u) === i), used, photoLimit);
+    urls = urls.filter((u) => held.has(u) || fresh.includes(u));
+    if (urls.length === 0) return;
     const next = photoTool.kind === 'change' ? list.map((u, i) => (i === photoTool.index ? urls[0] : u)) : [...list, ...urls];
     setPhotosFor(photoTool.value, next.filter((u, i) => next.indexOf(u) === i));
   };

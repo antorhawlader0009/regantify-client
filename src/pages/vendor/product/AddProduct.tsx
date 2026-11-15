@@ -22,6 +22,7 @@ import {
   useUnsavedChangesWarning,
   fitPhotos,
   useProductPhotoLimit,
+  variationOnlyPhotoCount,
 } from '../../../components/product/ProductFormKit';
 import { VariationsEditor } from '../../../components/product/VariationsEditor';
 import { ComingSoonField } from '../../../components/product/ComingSoonField';
@@ -453,7 +454,7 @@ export default function AddProduct() {
           <SectionCard title="Photos" id="photos" description="Clear photos sell better. The first photo is the one shoppers see first.">
             <PageFileDrop
               onFiles={(files) => {
-                const kept = fitPhotos(Array.from(files), photos.length, photoLimit);
+                const kept = fitPhotos(Array.from(files), photos.length + variationOnlyPhotoCount(photos.flatMap((p) => (p.uploadedUrl ? [p.uploadedUrl] : [])), variationPhotos), photoLimit);
                 if (!kept.length) return;
                 const dt = new DataTransfer();
                 kept.forEach((f) => dt.items.add(f));
@@ -470,6 +471,7 @@ export default function AddProduct() {
               onReplace={(id, url) => setPhotos((prev) => prev.map((p) => (p.id === id ? pickedPhoto(url) : p)))}
               photoSize={photoSize}
               onPhotoSizeChange={setPhotoSize}
+              otherPhotos={variationOnlyPhotoCount(photos.flatMap((p) => (p.uploadedUrl ? [p.uploadedUrl] : [])), variationPhotos)}
             />
           </SectionCard>
 
@@ -534,6 +536,8 @@ export default function AddProduct() {
                 onVariantsChange={setVariants}
                 variationPhotos={variationPhotos}
                 onVariationPhotosChange={setVariationPhotos}
+                galleryUrls={photos.flatMap((p) => (p.uploadedUrl ? [p.uploadedUrl] : []))}
+                galleryCount={photos.length}
               />
             </SectionCard>
           )}
