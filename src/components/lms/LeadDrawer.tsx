@@ -525,7 +525,7 @@ function TagEditor({ tags, busy, onChange }: { tags: string[]; busy: boolean; on
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
               e.preventDefault();
               add();
             }

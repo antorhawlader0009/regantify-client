@@ -98,7 +98,7 @@ export function SmsTemplatePicker({
             aria-label="Name for this saved message"
             className={`${productInputClass} !w-56 !py-1.5`}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && name.trim()) save.mutate();
+              if (e.key === 'Enter' && name.trim() && !e.nativeEvent.isComposing && e.keyCode !== 229) save.mutate();
             }}
           />
           <button type="button" onClick={() => save.mutate()} disabled={!name.trim() || save.isPending} className={`${primaryBtn} !h-8 !px-3 text-xs`}>

@@ -131,7 +131,8 @@ export function ProductAiChat({
   };
 
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Not while a Bangla (or any IME) keyboard is still composing a word: that Enter picks the word.
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
       e.preventDefault();
       void send();
     }

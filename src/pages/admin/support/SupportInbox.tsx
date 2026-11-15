@@ -348,7 +348,7 @@ function TicketPane({ id }: { id: string }) {
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && tagInput.trim()) {
+                if (e.key === 'Enter' && tagInput.trim() && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                   e.preventDefault();
                   tagsM.mutate([...ticket.tags, tagInput.trim()]);
                   setTagInput('');

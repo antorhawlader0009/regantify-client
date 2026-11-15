@@ -286,7 +286,7 @@ export function VariationsEditor({
               maxLength={50}
               className={productInputClass}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && customName.trim()) {
+                if (e.key === 'Enter' && customName.trim() && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                   addOption(customName.trim());
                   setCustomName('');
                   setAddingCustom(false);
@@ -339,7 +339,7 @@ export function VariationsEditor({
                     value={valueInputs[option.name] ?? ''}
                     onChange={(e) => setValueInputs((prev) => ({ ...prev, [option.name]: e.target.value.slice(0, 50) }))}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                         e.preventDefault();
                         addValue(option.name);
                       }

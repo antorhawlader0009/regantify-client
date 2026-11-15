@@ -61,7 +61,7 @@ export function SearchWordsField({ value, onChange }: { value: string[]; onChang
             }
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
               e.preventDefault();
               commit();
             } else if (e.key === 'Backspace' && !draft && value.length > 0) {

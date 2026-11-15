@@ -1175,7 +1175,7 @@ function CollectionDialog({ target, onClose }: { target: ShopCollection | 'new';
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                   e.preventDefault();
                   setTerm(q.trim());
                 }
