@@ -60,6 +60,12 @@ const THEMES: ThemeInfo[] = [
       'A bold sneaker-store look: black and lime on light grey, big condensed capitals, a split hero with the photo on the right, grey product cards and a black footer. Every StorePal feature works the same.',
   },
   {
+    id: 'ELEVATE',
+    name: 'Elevate',
+    description:
+      'A quiet, modern menswear look: ink and sand, tracked uppercase labels, serif headings, square product cards and a near-black footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -87,6 +93,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  ELEVATE: '/template-demo/elevate',
   CHRONICS: '/template-demo/chronics',
   MAHABESH: '/template-demo/mahabesh',
 };
@@ -138,6 +145,25 @@ function ThemePreview({ id }: { id: StoreTheme }) {
             <div key={bg} className="rounded-md" style={{ background: bg }} />
           ))}
         </div>
+      </div>
+    );
+  }
+  if (id === 'ELEVATE') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-3.5 flex items-center justify-center px-2 border-b border-black/10">
+          <div className="w-10 h-1 bg-[#1C1B19]" />
+        </div>
+        <div className="h-9 bg-[#F6F3EE] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-[#1C1B19]" />
+          <div className="w-7 h-1 bg-[#6F6A5C]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="bg-[#EFECE7]" />
+          ))}
+        </div>
+        <div className="h-3 bg-[#141413]" />
       </div>
     );
   }
@@ -370,6 +396,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  ELEVATE: ['Fashion'],
   CHRONICS: ['Fashion'],
   MAHABESH: ['Furniture & Home'],
 };
