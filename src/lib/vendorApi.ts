@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'TECHZONE' | 'VAELORA' | 'STRIDE' | 'CHICWOVE' | 'FURNILUX' | 'ESTATEPRO' | 'DRIVECRAFT' | 'BELORA' | 'ELEVATE' | 'CHRONICS' | 'MAHABESH';
+export type StoreTheme = 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'TECHZONE' | 'VAELORA' | 'STRIDE' | 'CHICWOVE' | 'GADGETSTORE' | 'FURNILUX' | 'ESTATEPRO' | 'DRIVECRAFT' | 'BELORA' | 'ELEVATE' | 'CHRONICS' | 'MAHABESH';
 
 export interface VendorThemeInfo {
   theme: StoreTheme;

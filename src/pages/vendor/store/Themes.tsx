@@ -90,6 +90,12 @@ const THEMES: ThemeInfo[] = [
       'A clean furniture-store look: white with forest green buttons, extra-bold Plus Jakarta Sans headings, a rounded cream hero card, big room cards, bordered product cards and a near-black footer. Every StorePal feature works the same.',
   },
   {
+    id: 'GADGETSTORE',
+    name: 'Gadgetstore',
+    description:
+      'A clean tech-shop look: a black top bar over a white header with a spaced uppercase wordmark, a light grey hero with the product blended in, round grey category pictures, flat product pictures with a black Add to Cart bar, black and light promo tiles with lime buttons and a white footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -117,6 +123,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  GADGETSTORE: '/template-demo/gadgetstore',
   FURNILUX: '/template-demo/furnilux',
   ESTATEPRO: '/template-demo/estatepro',
   DRIVECRAFT: '/template-demo/drivecraft',
@@ -300,6 +307,42 @@ function ThemePreview({ id }: { id: StoreTheme }) {
           ))}
         </div>
         <div className="h-3 bg-[#171717]" />
+      </div>
+    );
+  }
+  if (id === 'GADGETSTORE') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-black" />
+        <div className="h-4 flex items-center px-2 gap-1.5 border-b border-neutral-100">
+          <div className="w-8 h-1.5 bg-[#0A0A0A]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/50" />
+            <div className="w-3 h-0.5 bg-black/50" />
+          </div>
+        </div>
+        <div className="h-10 bg-gradient-to-r from-[#F1F1F1] to-[#E4E4E4] flex items-center px-2 gap-2">
+          <div className="flex-1 flex flex-col gap-0.5">
+            <div className="w-12 h-1.5 bg-[#0A0A0A]" />
+            <div className="w-8 h-1.5 bg-[#BAD61F]" />
+            <div className="w-6 h-2 bg-[#BAD61F]" />
+          </div>
+          <div className="w-8 h-8 rounded-sm bg-[#D4D4D4]" />
+        </div>
+        <div className="px-2 pt-1.5 flex justify-center gap-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="w-3 h-3 rounded-full bg-[#F1F1F1]" />
+          ))}
+        </div>
+        <div className="p-2 grid grid-cols-5 gap-1.5 flex-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="flex flex-col gap-0.5">
+              <div className="flex-1 rounded-sm bg-[#F4F4F4]" />
+              <div className="h-1 bg-black" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 border-t border-neutral-100" />
       </div>
     );
   }
@@ -532,6 +575,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  GADGETSTORE: ['Technology & Gadgets'],
   FURNILUX: ['Furniture & Home'],
   BELORA: ['Beauty & Health'],
   ELEVATE: ['Fashion'],
