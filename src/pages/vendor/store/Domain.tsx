@@ -19,7 +19,12 @@ export default function Domain() {
   const [customDomain, setCustomDomain] = useState<string | null>(null);
   // Also carries the record host and the DNS company guess for the guide; refetched when the domain changes.
   const qc = useQueryClient();
-  const domainState = useQuery({ queryKey: ['vendor-domain-target', customDomain], queryFn: domainsApi.status, staleTime: 10 * 60_000 }).data;
+  // Same key as DomainStatusCard, so the guide's TXT record and the card's tick list come from one answer that refreshes while waiting.
+  const domainState = useQuery({
+    queryKey: ['vendor-domain-status', customDomain],
+    queryFn: domainsApi.status,
+    refetchInterval: (q) => (customDomain && q.state.data?.status !== 'ACTIVE' ? 15_000 : false),
+  }).data;
   const cnameTarget = domainState?.cnameTarget;
   // null while loading = "don't know yet" - never used to mean "not
   // allowed" so the page doesn't flash an upgrade prompt before the
@@ -144,7 +149,8 @@ export default function Domain() {
               <h2 className="text-lg font-medium text-regantify-text mb-1">Setup Guide</h2>
               <ol className="text-sm text-regantify-text-muted list-decimal list-inside space-y-1 mb-6">
                 <li>Search your domain name and connect domain. (Use the form below)</li>
-                <li>Add the CNAME record shown on the next screen in your domain registrar panel (ie. GoDaddy, NameCheap, etc)</li>
+                <li>Add the record(s) shown on the next screen where you bought the domain (Namecheap, GoDaddy, Hostinger...). The steps for your company open by themselves.</li>
+                <li>Wait on the page: it ticks each record when it sees it and goes Live by itself.</li>
               </ol>
 
               <h2 className="text-lg font-medium text-regantify-text mb-3">Search Domain</h2>
@@ -154,13 +160,13 @@ export default function Domain() {
               </label>
               <div className="flex items-stretch rounded-xl border border-black/10 overflow-hidden focus-within:border-regantify-cta transition-colors">
                 <span className="flex items-center px-3.5 bg-regantify-search text-sm text-regantify-text-muted border-r border-black/10">
-                  www.
+                  https://
                 </span>
                 <input
                   type="text"
                   value={domainInput}
                   onChange={(e) => setDomainInput(e.target.value)}
-                  placeholder="Domain name you purchased (example: my-site.com)"
+                  placeholder="The domain you bought (example: my-site.com or www.my-site.com)"
                   className="flex-1 px-3.5 py-2.5 text-sm text-regantify-text placeholder:text-regantify-text-muted
                     focus:outline-none"
                 />
@@ -222,6 +228,9 @@ export default function Domain() {
             target={cnameTarget ?? 'loading…'}
             detected={domainState?.dnsHost ?? null}
             onUseWww={handleUseWww}
+            // Shown only when the server says a TXT is required (none today, see needsTxt in DomainsService.statusFor).
+            txt={domainState?.domain === customDomain && domainState?.needsTxt ? (domainState?.verifyTxt ?? null) : null}
+            needsTxt={domainState?.needsTxt ?? false}
           />
         </>
       )}

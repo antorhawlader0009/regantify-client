@@ -16,6 +16,12 @@ export interface DomainState {
   recordHost?: string | null;
   /** The company running the domain's DNS, guessed from its nameservers (null when it has none yet). */
   dnsHost?: DnsHost | null;
+  /** True for a main domain (@): it also needs the ownership TXT record, because ALIAS / flattened records hide the CNAME Cloudflare looks for. */
+  needsTxt?: boolean;
+  /** The ownership TXT record to add: `host` is what to type in the company's Host/Name box (the domain is added by the company), `name` the full name. Null once live. */
+  verifyTxt?: { name: string; host: string; value: string } | null;
+  /** What the server sees in DNS right now. `txt` is null when no TXT is needed. Null when live or not checked. */
+  checks?: { pointing: boolean; txt: boolean | null } | null;
 }
 
 export type DnsHost = 'cloudflare' | 'namecheap' | 'hostinger' | 'godaddy' | 'porkbun' | 'other';
@@ -32,7 +38,7 @@ export interface AdminDomainRow {
 }
 
 export const DOMAIN_STATUS: Record<DomainStatus, { label: string; cls: string; hint: string }> = {
-  PENDING: { label: 'Waiting for DNS', cls: 'bg-amber-50 text-amber-800', hint: 'Add the record below at your domain seller. It is checked every 30 minutes.' },
+  PENDING: { label: 'Waiting for DNS', cls: 'bg-amber-50 text-amber-800', hint: 'Add the records shown below at your domain seller. This page looks for them every few seconds and finishes by itself.' },
   VERIFIED: { label: 'DNS is right, HTTPS starting', cls: 'bg-blue-50 text-blue-700', hint: 'The record points at us. The secure certificate is being made; this usually takes a few minutes.' },
   ACTIVE: { label: 'Live', cls: 'bg-green-50 text-green-700', hint: 'Your store opens on this domain with a secure (https) address.' },
   FAILED: { label: 'Not pointing at us', cls: 'bg-red-50 text-red-700', hint: 'The record changed or was removed. Put it back as shown below.' },

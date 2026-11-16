@@ -17,8 +17,13 @@ const HOSTS: { key: DnsHost; label: string }[] = [
   { key: 'other', label: 'Other (ExonHost, XeonBD, cPanel...)' },
 ];
 
-/** Companies that can point the main domain (mystore.com) at us. */
-const APEX_OK: Record<DnsHost, boolean> = { cloudflare: true, namecheap: true, hostinger: true, porkbun: true, godaddy: false, other: false };
+/**
+ * Companies that can point the main domain (mystore.com) at us. Only Cloudflare (2026-11-16): an ALIAS / flattened record elsewhere answers
+ * with Cloudflare's own addresses (our target is behind Cloudflare), so Cloudflare for SaaS sees "the hostname is using Cloudflare", refuses
+ * the TXT and HTTP proofs and wants a real CNAME, which a main domain can't have there (found on solvanebd.com at Namecheap). Those stores use
+ * www and forward the main domain to it.
+ */
+const APEX_OK: Record<DnsHost, boolean> = { cloudflare: true, namecheap: false, hostinger: false, porkbun: false, godaddy: false, other: false };
 
 function CopyValue({ value }: { value: string }) {
   const [done, setDone] = useState(false);
@@ -52,6 +57,26 @@ function RecordBox({ rows }: { rows: { label: string; value: string; copy?: bool
   );
 }
 
+/** How each company's form names the boxes of a TXT record. */
+const TXT_LABELS: Record<DnsHost, { type: string; host: string; value: string; ttl: string }> = {
+  cloudflare: { type: 'TXT', host: 'Name', value: 'Content', ttl: 'Auto' },
+  namecheap: { type: 'TXT Record', host: 'Host', value: 'Value', ttl: 'Automatic' },
+  hostinger: { type: 'TXT', host: 'Name', value: 'TXT value', ttl: 'leave as it is' },
+  godaddy: { type: 'TXT', host: 'Name', value: 'Value', ttl: '1 Hour (default)' },
+  porkbun: { type: 'TXT', host: 'Host', value: 'Answer', ttl: 'leave as it is' },
+  other: { type: 'TXT', host: 'Name / Host', value: 'Value / Content', ttl: 'default' },
+};
+
+/** Where the "add record" button is, per company (the same page as record 1). */
+const TXT_WHERE: Record<DnsHost, string> = {
+  cloudflare: 'On the same DNS → Records page, click Add record.',
+  namecheap: 'On the same Advanced DNS tab, click Add New Record.',
+  hostinger: 'On the same DNS records page, add a new record.',
+  godaddy: 'On the same DNS page, click Add New Record.',
+  porkbun: 'On the same DNS page, add a new record.',
+  other: 'On the same DNS page, add a new record.',
+};
+
 function Steps({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal space-y-2.5 pl-5 text-sm text-regantify-text marker:text-regantify-text-muted">{children}</ol>;
 }
@@ -62,7 +87,13 @@ export function DomainDnsGuide({
   target,
   detected,
   onUseWww,
+  txt,
+  needsTxt,
 }: {
+  /** The ownership TXT record (host = what to type in the Host/Name box). Null when not needed or already live. */
+  txt?: { host: string; value: string } | null;
+  /** True for a main domain: the TXT record is required, not a fallback. */
+  needsTxt?: boolean;
   domain: string;
   /** '@' for the main domain, else the part in front of it (www, shop). */
   recordHost: string;
@@ -128,6 +159,7 @@ export function DomainDnsGuide({
       </div>
 
       <div className="mt-5">
+        {txt && !needWww && <h3 className="mb-2 text-sm font-semibold text-regantify-text">Record 1: point your domain to your store</h3>}
         {needWww && <WwwPlan />}
 
         {host === 'cloudflare' && (
@@ -149,11 +181,16 @@ export function DomainDnsGuide({
           </Steps>
         )}
 
-        {host === 'namecheap' && (
+        {host === 'namecheap' && !needWww && (
           <Steps>
             <li>Log in to Namecheap, open <span className="font-medium">Domain List</span> and click <span className="font-medium">Manage</span> next to your domain.</li>
             <li>Open the <span className="font-medium">Advanced DNS</span> tab.</li>
-            <li>Delete the old records on host <span className="font-mono">{recordHost}</span>: any <span className="font-medium">A Record</span>, <span className="font-medium">CNAME Record</span> or <span className="font-medium">URL Redirect Record</span> (Namecheap adds parking records there).</li>
+            <li>
+              Delete the old records on host <span className="font-mono">{recordHost}</span>
+              {recordHost === 'www' && <> and on host <span className="font-mono">@</span></>}: any <span className="font-medium">A Record</span>, <span className="font-medium">ALIAS Record</span>,{' '}
+              <span className="font-medium">CNAME Record</span>, <span className="font-medium">URL Redirect Record</span>
+              {recordHost === 'www' && <> or a <span className="font-medium">TXT Record</span> named <span className="font-mono">_cf-custom-hostname</span></>} (Namecheap adds parking records there). Keep MX and other TXT records.
+            </li>
             <li>
               Click <span className="font-medium">Add New Record</span> and fill it in:
               <RecordBox rows={[
@@ -164,10 +201,22 @@ export function DomainDnsGuide({
               ]} />
             </li>
             <li>Click the green tick to save.</li>
+            {recordHost === 'www' && (
+              <li>
+                So people who type <span className="font-mono">{bought}</span> also arrive, click <span className="font-medium">Add New Record</span> again:
+                <RecordBox rows={[
+                  { label: 'Type', value: 'URL Redirect Record' },
+                  { label: 'Host', value: '@', copy: true },
+                  { label: 'Value', value: `https://${domain}`, copy: true },
+                  { label: 'Redirect type', value: 'Permanent (301)', note: 'pick it in the dropdown' },
+                ]} />
+                Click the green tick to save.
+              </li>
+            )}
           </Steps>
         )}
 
-        {host === 'hostinger' && (
+        {host === 'hostinger' && !needWww && (
           <Steps>
             <li>Log in to hPanel, go to <span className="font-medium">Domains</span> and click <span className="font-medium">Manage</span> next to your domain.</li>
             <li>Open <span className="font-medium">DNS / Nameservers</span> (DNS records).</li>
@@ -181,11 +230,17 @@ export function DomainDnsGuide({
                 { label: 'TTL', value: 'leave as it is' },
               ]} />
             </li>
-            <li>Click <span className="font-medium">Add Record</span>. {apex && 'On the main domain Hostinger shows it as ALIAS after saving; that is right.'}</li>
+            <li>Click <span className="font-medium">Add Record</span>.</li>
+            {recordHost === 'www' && (
+              <li>
+                So people who type <span className="font-mono">{bought}</span> also arrive: in hPanel open <span className="font-medium">Domains → Redirects</span> (or Redirect domain), send{' '}
+                <span className="font-mono">{bought}</span> to <span className="font-mono">https://{domain}</span>, type Permanent (301).
+              </li>
+            )}
           </Steps>
         )}
 
-        {host === 'porkbun' && (
+        {host === 'porkbun' && !needWww && (
           <Steps>
             <li>Log in to Porkbun, open <span className="font-medium">Domain Management</span> and click <span className="font-medium">DNS</span> under your domain.</li>
             <li>Delete the old records for this name (Porkbun's parking page uses an <span className="font-medium">ALIAS</span> record on the main domain and a <span className="font-medium">CNAME</span> on www).</li>
@@ -199,6 +254,12 @@ export function DomainDnsGuide({
               ]} />
             </li>
             <li>Click <span className="font-medium">Add</span>.</li>
+            {recordHost === 'www' && (
+              <li>
+                So people who type <span className="font-mono">{bought}</span> also arrive: open <span className="font-medium">URL Forwarding</span> for the domain, leave the subdomain empty, forward to{' '}
+                <span className="font-mono">https://{domain}</span>, type Permanent (301), and don't include the path.
+              </li>
+            )}
           </Steps>
         )}
 
@@ -254,12 +315,40 @@ export function DomainDnsGuide({
         )}
       </div>
 
+      {txt && !needWww && (
+        <div className="mt-6 border-t border-black/5 pt-5">
+          <h3 className="text-sm font-semibold text-regantify-text">
+            Record 2: prove the domain is yours{' '}
+            <span className="font-normal text-regantify-text-muted">{needsTxt ? '(needed)' : "(only if it doesn't connect within 30 minutes)"}</span>
+          </h3>
+          <p className="mb-2 mt-1 text-sm text-regantify-text-muted">
+            {needsTxt
+              ? 'A main domain needs this second record too. Without it the domain can stay on "Waiting" even when record 1 is right.'
+              : 'Usually record 1 is enough for this address. If the check above stays on "not found", add this record too.'}
+          </p>
+          <Steps>
+            <li>{TXT_WHERE[host]}</li>
+            <li>
+              Fill it in like this:
+              <RecordBox rows={[
+                { label: 'Type', value: TXT_LABELS[host].type },
+                { label: TXT_LABELS[host].host, value: txt.host, copy: true, note: `only this part, ${host === 'other' ? 'most companies add' : 'the company adds'} .${bought} by itself` },
+                { label: TXT_LABELS[host].value, value: txt.value, copy: true },
+                { label: 'TTL', value: TXT_LABELS[host].ttl },
+              ]} />
+            </li>
+            <li>Save it. Keep record 1 as it is: both records stay.</li>
+            {host === 'other' && <li>If the form wants the full name, type <span className="font-mono">{txt.host}.{bought}</span> instead.</li>}
+          </Steps>
+        </div>
+      )}
+
       <div className="mt-5 flex gap-2.5 rounded-xl bg-neutral-50 p-4 text-sm text-regantify-text-muted">
         <Info size={16} className="mt-0.5 shrink-0" />
         <ul className="space-y-1">
-          <li>Don't delete <span className="font-medium">MX</span> or <span className="font-medium">TXT</span> records: they run your email.</li>
-          <li>Don't change your nameservers. Only the one record above is needed.</li>
-          <li>After saving, press <span className="font-medium">Check now</span> above. It usually works in 5 to 30 minutes, sometimes up to 24 hours.</li>
+          <li>Don't delete your <span className="font-medium">MX</span> or other <span className="font-medium">TXT</span> records: they run your email.</li>
+          <li>Don't change your nameservers. Only the {txt && !needWww ? 'records' : 'record'} above {txt && !needWww ? 'are' : 'is'} needed.</li>
+          <li>You don't need to press anything after saving: the check above turns green by itself, usually in 5 to 30 minutes, sometimes a few hours.</li>
         </ul>
       </div>
     </div>
