@@ -311,6 +311,10 @@ export function VendorListPage({
               <option value="VAELORA">Vaelora</option>
               <option value="STRIDE">Stride</option>
               <option value="CHICWOVE">Chicwove</option>
+              <option value="SHOPEASE">Shopease</option>
+              <option value="QUICKBITE">Quickbite</option>
+              <option value="PETMART">Petmart</option>
+              <option value="PAPERNEST">Papernest</option>
               <option value="NOVELLA">Novella</option>
               <option value="NOVATREND">Novatrend</option>
               <option value="MINIMOG">Minimog</option>

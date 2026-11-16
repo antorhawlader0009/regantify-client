@@ -144,6 +144,30 @@ const THEMES: ThemeInfo[] = [
       'A warm all-in-one marketplace look: a cream page and header with a wide search bar and a menu row, a full-screen black hero, round category pictures, pale terracotta promo tiles, white bordered product cards and a black footer. Every StorePal feature works the same.',
   },
   {
+    id: 'PAPERNEST',
+    name: 'Papernest',
+    description:
+      'A bright, playful stationery look: a violet top bar, a search bar and menu row under a white header, a pastel sky-to-pink hero with a rainbow headline, a row of pastel category circles, mint and pink promo tiles, white rounded cards with a violet cart button and a navy footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'PETMART',
+    name: 'Petmart',
+    description:
+      'A friendly pet-store look: a white page with a pine green top bar and footer, a peach hero card with a big pet photo, tinted round category photos, white cards with a round green cart button, ember orange buttons and peach and sky offer tiles. Every StorePal feature works the same.',
+  },
+  {
+    id: 'QUICKBITE',
+    name: 'Quickbite',
+    description:
+      'A warm food-delivery look: a peach and amber gradient behind frosted glass panels, a big serif headline with a blob-shaped dish photo, round category pictures, glass dish cards with an amber Add pill and a dark brown footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'SHOPEASE',
+    name: 'Shopease',
+    description:
+      'A bright general-store look: white with vivid orange buttons, a forest green top bar, a dark full-width photo hero, tall category cards, a peach deal panel, white rounded product cards and a warm sand footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -171,6 +195,10 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  SHOPEASE: '/template-demo/shopease',
+  QUICKBITE: '/template-demo/quickbite',
+  PETMART: '/template-demo/petmart',
+  PAPERNEST: '/template-demo/papernest',
   NOVELLA: '/template-demo/novella',
   NOVATREND: '/template-demo/novatrend',
   MINIMOG: '/template-demo/minimog',
@@ -626,6 +654,126 @@ function ThemePreview({ id }: { id: StoreTheme }) {
       </div>
     );
   }
+  if (id === 'PAPERNEST') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#5B2E9E]" />
+        <div className="h-4 flex items-center px-2 gap-1.5 border-b border-slate-100">
+          <div className="w-8 h-1.5 bg-[#1B2A4A]" />
+          <div className="flex-1 h-2 rounded bg-slate-50 border border-slate-200 flex justify-end">
+            <div className="w-3 rounded-r bg-[#5B2E9E]" />
+          </div>
+        </div>
+        <div className="h-9 bg-gradient-to-r from-sky-100 via-pink-50 to-rose-100 flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-[#1B2A4A]" />
+          <div className="w-9 h-1.5 bg-gradient-to-r from-pink-500 to-teal-500" />
+          <div className="w-6 h-2 rounded-sm bg-[#5B2E9E]" />
+        </div>
+        <div className="px-2 pt-1.5 flex justify-center gap-1">
+          {['#FCE7F3', '#FEF3C7', '#FFEDD5', '#E0F2FE', '#D1FAE5'].map((c) => (
+            <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />
+          ))}
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded-md bg-white shadow-sm ring-1 ring-slate-100 flex flex-col overflow-hidden">
+              <div className="flex-1 bg-pink-50" />
+              <div className="h-1.5 w-2 rounded-sm bg-[#5B2E9E] self-end m-0.5" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#1B2A4A]" />
+      </div>
+    );
+  }
+  if (id === 'PETMART') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#1D4A3C]" />
+        <div className="h-4 flex items-center px-2 gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#1D4A3C]" />
+          <div className="w-7 h-1.5 bg-[#1D4A3C]" />
+          <div className="flex-1 h-2 rounded-full bg-[#F8FAFC] border border-[#E2E8F0] flex justify-end">
+            <div className="w-3 rounded-r-full bg-[#E8622A]" />
+          </div>
+        </div>
+        <div className="mx-2 h-9 rounded-lg bg-[#FFF3EA] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-[#163A2F]" />
+          <div className="w-6 h-2 rounded-full bg-[#E8622A]" />
+        </div>
+        <div className="px-2 pt-1.5 flex justify-center gap-1">
+          {['#FDE6C8', '#F9E0D0', '#FCD9D0', '#FDF0C0'].map((c) => (
+            <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />
+          ))}
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded border border-[#F1F5F9] shadow-sm flex flex-col">
+              <div className="flex-1 bg-[#F4F4F4]" />
+              <div className="h-1.5 w-1.5 rounded-full bg-[#1D4A3C] self-end m-0.5" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#1D4A3C]" />
+      </div>
+    );
+  }
+  if (id === 'QUICKBITE') {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-[#FFEBCB] via-[#FCD9A3] to-[#FFEFD6] flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5 bg-white/50 border-b border-white/60">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#E9A23B]" />
+          <div className="w-8 h-1.5 bg-[#2B2118]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-[#E9A23B]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="flex-1 px-2 py-2 flex items-center gap-2">
+          <div className="flex-1 flex flex-col gap-0.5">
+            <div className="w-12 h-1.5 bg-[#2B2118]" />
+            <div className="w-9 h-1.5 bg-[#2B2118]" />
+            <div className="w-6 h-2 rounded-full bg-[#E9A23B] mt-1" />
+          </div>
+          <div className="w-10 h-10 rounded-[42%_58%_52%_48%] bg-[#F4A640]/70" />
+        </div>
+        <div className="px-2 pb-2 grid grid-cols-4 gap-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="h-6 rounded bg-white/55 border border-white/70" />
+          ))}
+        </div>
+        <div className="h-3 bg-[#2A211A]" />
+      </div>
+    );
+  }
+  if (id === 'SHOPEASE') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#153A2B]" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-neutral-200">
+          <div className="w-2 h-2 rounded-sm bg-[#FF5A0F]" />
+          <div className="w-6 h-1.5 bg-[#111]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-[#FF5A0F]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-gradient-to-r from-[#1a1a1a] to-[#0C0D0C] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-[#111]" />
+          <div className="w-8 h-1.5 bg-[#FF5A0F]" />
+        </div>
+        <div className="p-2 grid grid-cols-5 gap-1.5 flex-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="rounded-sm border border-neutral-100 p-0.5 shadow-sm">
+              <div className="h-full rounded-sm bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#F4EFE8]" />
+      </div>
+    );
+  }
   if (id === 'CHICWOVE') {
     return (
       <div className="w-full h-full bg-[#FDF7F0] flex flex-col">
@@ -855,6 +1003,9 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  QUICKBITE: ['Grocery & Food'],
+  PETMART: ['Kids & Pets'],
+  PAPERNEST: ['Stationery & Education'],
   MENAURA: ['Fashion'],
   MALLON: ['Beauty & Health'],
   GROCERYANTO: ['Grocery & Food'],
