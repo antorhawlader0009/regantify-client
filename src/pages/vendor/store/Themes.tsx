@@ -78,6 +78,12 @@ const THEMES: ThemeInfo[] = [
       'An auto and riding gear look: near-black header and footer, racing red buttons, bold italic condensed capitals, square white product cards and an ink-to-red page band. Every StorePal feature works the same.',
   },
   {
+    id: 'ESTATEPRO',
+    name: 'Estatepro',
+    description:
+      'A luxury black-and-gold look for property listings: a black header over a full-screen hero photo, gold pill buttons, image category cards, a dark trust block with glass cards, white listing cards with a gold View Details button and a black footer on a cream page. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -105,6 +111,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  ESTATEPRO: '/template-demo/estatepro',
   DRIVECRAFT: '/template-demo/drivecraft',
   BELORA: '/template-demo/belora',
   ELEVATE: '/template-demo/elevate',
@@ -232,6 +239,34 @@ function ThemePreview({ id }: { id: StoreTheme }) {
           ))}
         </div>
         <div className="h-3 bg-[#0C0C0D]" />
+      </div>
+    );
+  }
+  if (id === 'ESTATEPRO') {
+    return (
+      <div className="w-full h-full bg-[#FDF8EE] flex flex-col">
+        <div className="h-4 bg-black/90 flex items-center px-2 gap-1.5">
+          <div className="w-2.5 h-2.5 rounded border border-[#F2C468]" />
+          <div className="w-8 h-1.5 bg-white" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-[#F2C468]" />
+            <div className="w-3 h-0.5 bg-white/60" />
+          </div>
+          <div className="w-4 h-2 rounded-full bg-[#F2C468]" />
+        </div>
+        <div className="h-10 bg-gradient-to-r from-black to-[#3a3a3a] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-white" />
+          <div className="w-9 h-1.5 bg-[#F2C468]" />
+        </div>
+        <div className="p-2 grid grid-cols-3 gap-1.5 flex-1">
+          {[0, 1, 2].map((n) => (
+            <div key={n} className="rounded bg-white shadow-sm flex flex-col overflow-hidden">
+              <div className="flex-1 bg-[#E7DFCE]" />
+              <div className="h-1.5 m-0.5 rounded-sm border border-[#F2C468]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#111]" />
       </div>
     );
   }
