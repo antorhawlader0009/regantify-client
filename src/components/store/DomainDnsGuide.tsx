@@ -479,6 +479,12 @@ export function DomainDnsGuide({
           <li>Don't delete your <span className="font-medium">MX</span> or other <span className="font-medium">TXT</span> records: they run your email.</li>
           <li>Don't change your nameservers. Only the {txt && !needWww ? 'records' : 'record'} above {txt && !needWww ? 'are' : 'is'} needed.</li>
           <li>You don't need to press anything after saving: the check above turns green by itself, usually in 5 to 30 minutes, sometimes a few hours.</li>
+          <li>
+            The domain stays yours. To use it somewhere else later, press <span className="font-medium">Remove Domain</span> first, then delete the
+            records you added here (the record on <span className="font-mono">{recordHost}</span>, and for a main domain also{' '}
+            <span className="font-mono">_cf-custom-hostname</span> and <span className="font-mono">_acme-challenge</span>). A domain that points
+            elsewhere for 7 days is disconnected by itself.
+          </li>
         </ul>
       </div>
     </div>
