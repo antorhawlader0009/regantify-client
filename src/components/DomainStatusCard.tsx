@@ -1,8 +1,74 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Circle, Loader2, RefreshCw } from 'lucide-react';
+import { Check, Circle, Copy, Loader2, RefreshCw } from 'lucide-react';
 import { apiErrorMessage } from '../lib/api';
 import { DOMAIN_STATUS, domainsApi } from '../lib/domainsApi';
 import { toast } from '../lib/toast';
+
+function CopyLine({ value }: { value: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-0.5 font-mono text-xs text-regantify-text">
+      {value}
+      <button
+        type="button"
+        aria-label={`Copy ${value}`}
+        className="rounded p-0.5 text-regantify-text-muted hover:bg-black/5"
+        onClick={() =>
+          void navigator.clipboard?.writeText(value).then(() => {
+            setDone(true);
+            toast.success('Copied');
+            setTimeout(() => setDone(false), 1500);
+          })
+        }
+      >
+        {done ? <Check size={12} /> : <Copy size={12} />}
+      </button>
+    </span>
+  );
+}
+
+/**
+ * Once the domain is live: how the store gets its Google search numbers. Search Console belongs to the store's own Google account (its
+ * data is theirs and only they can add the TXT at their domain seller), so the store does these steps; the server already made the domain
+ * the store's main address for search engines (Store > SEO "Prefer my custom domain", turned on when it went live).
+ */
+function GoogleSearchCard({ domain }: { domain: string }) {
+  const sitemap = `https://${domain}/sitemap.xml`;
+  return (
+    <div className="mt-4 border-t border-black/5 pt-4">
+      <p className="text-sm font-medium text-regantify-text">Get found on Google</p>
+      <p className="mt-1 text-sm text-regantify-text-muted">
+        {domain} is now your store's main address for Google. To see how many people find you on Google and what they search, add it to
+        Google Search Console once (about 5 minutes):
+      </p>
+      <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-sm text-regantify-text marker:text-regantify-text-muted">
+        <li>
+          Open{' '}
+          <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="font-medium underline">
+            Google Search Console
+          </a>{' '}
+          and sign in with your Gmail.
+        </li>
+        <li>
+          Choose <span className="font-medium">Domain</span> and type <CopyLine value={domain} />
+        </li>
+        <li>Google shows a TXT record. Add it where you manage your domain (same place as the records above), then press Verify.</li>
+        <li>
+          Open <span className="font-medium">Sitemaps</span> and submit <CopyLine value={sitemap} />
+        </li>
+      </ol>
+      <p className="mt-2 text-xs text-regantify-text-muted">
+        Google usually shows the first numbers in 2 or 3 days. All visits (Facebook, direct, Google) are already in Analytics. Search settings:{' '}
+        <Link to="/vendor/store/seo" className="underline">
+          Store &gt; SEO
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
 
 /** Store > Domain: where the connected domain stands, checked by the server (super-admin-new.md Step 9). */
 export function DomainStatusCard({ domain }: { domain: string }) {
@@ -89,6 +155,7 @@ export function DomainStatusCard({ domain }: { domain: string }) {
           Open https://{domain}
         </a>
       )}
+      {data.status === 'ACTIVE' && <GoogleSearchCard domain={domain} />}
     </div>
   );
 }
