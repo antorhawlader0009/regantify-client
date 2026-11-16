@@ -311,6 +311,9 @@ export function VendorListPage({
               <option value="VAELORA">Vaelora</option>
               <option value="STRIDE">Stride</option>
               <option value="CHICWOVE">Chicwove</option>
+              <option value="MALLON">Mallon</option>
+              <option value="GROCERYANTO">Groceryanto</option>
+              <option value="GREENMART">Greenmart</option>
               <option value="GLOWERIVE">Glowerive</option>
               <option value="GADGETSTORE">Gadgetstore</option>
               <option value="FURNILUX">Furnilux</option>

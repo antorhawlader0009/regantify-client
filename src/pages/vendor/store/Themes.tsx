@@ -102,6 +102,24 @@ const THEMES: ThemeInfo[] = [
       'A fresh natural-skincare look: a teal header and full-height teal hero, a pale mist page, serif headings, pill buttons, round category photos and a teal offer band over a deep teal footer. Every StorePal feature works the same.',
   },
   {
+    id: 'GREENMART',
+    name: 'Greenmart',
+    description:
+      'A fresh grocery look: a white page, a full-width pale green hero with a big photo, a round-photo category panel floating over its edge, white cards with a square green cart button, pale green offer panels and a deep green footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'GROCERYANTO',
+    name: 'Groceryanto',
+    description:
+      'A plain, clean grocery shop: white, vivid green buttons, a wide search bar with a black Search button, a green All Categories button, one wide banner, white cards with a pale green border and a green Add to cart button, and a light grey footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'MALLON',
+    name: 'Mallon',
+    description:
+      'A compact healthcare-store look: white with coral buttons and teal prices, a two-row header with a wide search bar and a coral "All Categories" block, a big blue banner, gradient promo tiles and a sand footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -129,6 +147,9 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  MALLON: '/template-demo/mallon',
+  GROCERYANTO: '/template-demo/groceryanto',
+  GREENMART: '/template-demo/greenmart',
   GLOWERIVE: '/template-demo/glowerive',
   GADGETSTORE: '/template-demo/gadgetstore',
   FURNILUX: '/template-demo/furnilux',
@@ -381,6 +402,92 @@ function ThemePreview({ id }: { id: StoreTheme }) {
       </div>
     );
   }
+  if (id === 'GREENMART') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#1C6B22]" />
+          <div className="w-8 h-1.5 bg-[#1D2A1F]" />
+        </div>
+        <div className="h-px bg-black/10" />
+        <div className="h-9 bg-gradient-to-br from-[#E9F0DC] to-[#EAF0DF] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-[#1D2A1F]" />
+          <div className="w-8 h-1.5 bg-[#1C6B22]" />
+        </div>
+        <div className="mx-2 -mt-1.5 rounded bg-white shadow p-1 flex justify-center gap-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="w-3 h-3 rounded-full bg-[#F1F6E8] border border-[#CDDFB2]" />
+          ))}
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded bg-white p-0.5 shadow-sm border border-black/5">
+              <div className="h-full rounded-sm bg-[#F1F6E8]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#10301A]" />
+      </div>
+    );
+  }
+  if (id === 'GROCERYANTO') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5">
+          <div className="w-8 h-1.5 bg-[#111111]" />
+          <div className="flex-1 h-2 rounded-full border border-[#E7F5FF] flex justify-end items-center pr-0.5">
+            <div className="w-4 h-1.5 rounded bg-black" />
+          </div>
+        </div>
+        <div className="h-3 border-y border-[#EBEBEB] flex items-center px-2 gap-1.5">
+          <div className="w-8 h-2 rounded-sm bg-[#1CB63B]" />
+          <div className="w-3 h-0.5 bg-black/30" />
+          <div className="w-3 h-0.5 bg-black/30" />
+        </div>
+        <div className="mx-2 mt-1.5 h-9 bg-[#E8F8EC] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-[#111111]" />
+          <div className="w-8 h-1.5 bg-[#1CB63B]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded-sm border border-[#B3DCBC] p-0.5 flex flex-col gap-0.5">
+              <div className="flex-1 bg-[#F7F8F9]" />
+              <div className="h-1.5 rounded-sm bg-[#008000]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#F7F8F9]" />
+      </div>
+    );
+  }
+  if (id === 'MALLON') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#1FB89A]" />
+        <div className="h-3 flex items-center px-2 gap-1.5 border-b border-gray-100">
+          <div className="w-7 h-1.5 bg-[#222]" />
+          <div className="flex-1 h-1.5 mx-1 border border-gray-200 flex justify-end"><div className="w-3 h-full bg-[#D9534F]" /></div>
+        </div>
+        <div className="h-2.5 flex items-center px-2 gap-1.5 border-b border-gray-100">
+          <div className="w-8 h-1.5 bg-[#D9534F]" />
+          <div className="w-3 h-0.5 bg-black/30" />
+          <div className="w-3 h-0.5 bg-black/30" />
+        </div>
+        <div className="mx-2 mt-1.5 h-9 bg-gradient-to-br from-[#2B7FD6] to-[#6CC3EE] flex items-center px-2">
+          <div className="w-10 h-1.5 bg-white" />
+        </div>
+        <div className="p-2 grid grid-cols-5 gap-1.5 flex-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="flex flex-col items-center gap-0.5">
+              <div className="w-full h-3 bg-[#F5F5EF]" />
+              <div className="w-3 h-0.5 bg-[#1FB89A]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#F5F5EF]" />
+      </div>
+    );
+  }
   if (id === 'CHICWOVE') {
     return (
       <div className="w-full h-full bg-[#FDF7F0] flex flex-col">
@@ -610,6 +717,9 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  MALLON: ['Beauty & Health'],
+  GROCERYANTO: ['Grocery & Food'],
+  GREENMART: ['Grocery & Food'],
   GLOWERIVE: ['Beauty & Health'],
   GADGETSTORE: ['Technology & Gadgets'],
   FURNILUX: ['Furniture & Home'],
