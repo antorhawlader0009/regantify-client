@@ -72,6 +72,12 @@ const THEMES: ThemeInfo[] = [
       'A soft skincare and beauty look: white with violet accents, serif headings, a lavender hero with a rounded picture, round category icons, pale violet panels and a white footer. Every StorePal feature works the same.',
   },
   {
+    id: 'DRIVECRAFT',
+    name: 'Drivecraft',
+    description:
+      'An auto and riding gear look: near-black header and footer, racing red buttons, bold italic condensed capitals, square white product cards and an ink-to-red page band. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -99,6 +105,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  DRIVECRAFT: '/template-demo/drivecraft',
   BELORA: '/template-demo/belora',
   ELEVATE: '/template-demo/elevate',
   CHRONICS: '/template-demo/chronics',
@@ -200,6 +207,31 @@ function ThemePreview({ id }: { id: StoreTheme }) {
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+  if (id === 'DRIVECRAFT') {
+    return (
+      <div className="w-full h-full bg-[#F3F3F3] flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5 bg-[#0C0C0D]">
+          <div className="w-8 h-1.5 bg-white" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-white/50" />
+            <div className="w-3 h-0.5 bg-[#D3161D]" />
+            <div className="w-3 h-0.5 bg-white/50" />
+          </div>
+          <div className="w-3 h-1.5 bg-[#D3161D]" />
+        </div>
+        <div className="h-9 bg-[#0C0C0D] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-white" />
+          <div className="w-9 h-1.5 bg-[#D3161D]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="bg-white shadow-sm" />
+          ))}
+        </div>
+        <div className="h-3 bg-[#0C0C0D]" />
       </div>
     );
   }
