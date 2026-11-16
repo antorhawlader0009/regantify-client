@@ -120,6 +120,30 @@ const THEMES: ThemeInfo[] = [
       'A compact healthcare-store look: white with coral buttons and teal prices, a two-row header with a wide search bar and a coral "All Categories" block, a big blue banner, gradient promo tiles and a sand footer. Every StorePal feature works the same.',
   },
   {
+    id: 'MENAURA',
+    name: 'Menaura',
+    description:
+      'A warm menswear look: cream and latte with mocha accents, serif headings, rounded white product cards, an ink offer banner and a deep brown footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'MINIMOG',
+    name: 'Minimog',
+    description:
+      'A clean lifestyle-store look: white with forest green buttons, bold Inter headings, a deep green top bar, a warm hero with the picture blended in, small category tiles, a sage sale banner and compact product cards. Every StorePal feature works the same.',
+  },
+  {
+    id: 'NOVATREND',
+    name: 'Novatrend',
+    description:
+      'A bold general-store look: a white header under a black announcement bar, a full-height black hero with an orange glow, vivid orange buttons, light grey rounded product cards and orange and black promo tiles over a black footer. Every StorePal feature works the same.',
+  },
+  {
+    id: 'NOVELLA',
+    name: 'Novella',
+    description:
+      'A warm all-in-one marketplace look: a cream page and header with a wide search bar and a menu row, a full-screen black hero, round category pictures, pale terracotta promo tiles, white bordered product cards and a black footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -147,6 +171,10 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  NOVELLA: '/template-demo/novella',
+  NOVATREND: '/template-demo/novatrend',
+  MINIMOG: '/template-demo/minimog',
+  MENAURA: '/template-demo/menaura',
   MALLON: '/template-demo/mallon',
   GROCERYANTO: '/template-demo/groceryanto',
   GREENMART: '/template-demo/greenmart',
@@ -488,6 +516,116 @@ function ThemePreview({ id }: { id: StoreTheme }) {
       </div>
     );
   }
+  if (id === 'MENAURA') {
+    return (
+      <div className="w-full h-full bg-[#FAF6F2] flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5 bg-[#E9DACB]">
+          <div className="w-8 h-1.5 rounded bg-[#2B2420]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-[#2B2420]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 rounded bg-[#2B2420]" />
+          <div className="w-9 h-1.5 rounded bg-[#7A5C40]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded bg-white ring-1 ring-black/10">
+              <div className="h-full rounded-t bg-[#F0E8E0]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#2B2420]" />
+      </div>
+    );
+  }
+  if (id === 'MINIMOG') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#12301A]" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-neutral-200">
+          <div className="w-2 h-2 rounded-sm bg-[#22632F]" />
+          <div className="w-6 h-1.5 bg-[#111]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-[#22632F]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-gradient-to-r from-[#FBF8F3] to-[#E9DCCB] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-[#111]" />
+          <div className="w-8 h-1.5 bg-[#22632F]" />
+        </div>
+        <div className="p-2 grid grid-cols-5 gap-1.5 flex-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="rounded-sm border border-neutral-100 p-0.5 shadow-sm">
+              <div className="h-full rounded-sm bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-neutral-50 border-t border-neutral-200" />
+      </div>
+    );
+  }
+  if (id === 'NOVATREND') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-black" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-neutral-100">
+          <div className="w-8 h-1.5 bg-[#0B0B0B]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-[#FF4B0F]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-[#0B0B0B] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-white" />
+          <div className="w-8 h-1.5 bg-[#FF4B0F]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded bg-[#F6F6F6] p-0.5">
+              <div className="h-full rounded-sm bg-white" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#0B0B0B]" />
+      </div>
+    );
+  }
+  if (id === 'NOVELLA') {
+    return (
+      <div className="w-full h-full bg-[#FAF8F5] flex flex-col">
+                <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-neutral-100">
+          <div className="w-8 h-1.5 bg-[#111111]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-[#C0714E]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-[#0A0A0A] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-white" />
+          <div className="w-8 h-1.5 bg-[#C0714E]" />
+        </div>
+        <div className="p-2 flex justify-center gap-1.5">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="w-3 h-3 rounded-full bg-[#F4EFE9] border border-[#C0714E]/40" />
+          ))}
+        </div>
+        <div className="flex-1 px-2 grid grid-cols-3 gap-1">
+          {[0, 1, 2].map((n) => (
+            <div key={n} className="rounded-sm bg-[#F3DFD6]" />
+          ))}
+        </div>
+        <div className="h-3 bg-[#141414]" />
+      </div>
+    );
+  }
   if (id === 'CHICWOVE') {
     return (
       <div className="w-full h-full bg-[#FDF7F0] flex flex-col">
@@ -717,6 +855,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  MENAURA: ['Fashion'],
   MALLON: ['Beauty & Health'],
   GROCERYANTO: ['Grocery & Food'],
   GREENMART: ['Grocery & Food'],
