@@ -20,8 +20,18 @@ export interface DomainState {
   needsTxt?: boolean;
   /** The ownership TXT record to add: `host` is what to type in the company's Host/Name box (the domain is added by the company), `name` the full name. Null once live. */
   verifyTxt?: { name: string; host: string; value: string } | null;
-  /** What the server sees in DNS right now. `txt` is null when no TXT is needed. Null when live or not checked. */
-  checks?: { pointing: boolean; txt: boolean | null } | null;
+  /** What the server sees in DNS right now. `txt` / `dcv` are null when not needed. Null when live or not checked. */
+  checks?: { pointing: boolean; txt: boolean | null; dcv?: boolean | null } | null;
+  /**
+   * A main domain (shop.com) is set up in two stages: RECORDS = add the ownership TXT and the certificate CNAME (`_acme-challenge`) while
+   * the domain still points elsewhere; POINT = Cloudflare has confirmed it and made its certificate, now point @ at us. Null for a
+   * subdomain, once live, or without Cloudflare.
+   */
+  apexSetup?: {
+    stage: 'RECORDS' | 'POINT';
+    ownership: { name: string; host: string; value: string } | null;
+    dcv: { name: string; host: string; value: string } | null;
+  } | null;
 }
 
 export type DnsHost = 'cloudflare' | 'namecheap' | 'hostinger' | 'godaddy' | 'porkbun' | 'other';

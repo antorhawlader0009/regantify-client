@@ -228,9 +228,10 @@ export default function Domain() {
             target={cnameTarget ?? 'loading…'}
             detected={domainState?.dnsHost ?? null}
             onUseWww={handleUseWww}
-            // Shown only when the server says a TXT is required (none today, see needsTxt in DomainsService.statusFor).
-            txt={domainState?.domain === customDomain && domainState?.needsTxt ? (domainState?.verifyTxt ?? null) : null}
-            needsTxt={domainState?.needsTxt ?? false}
+            // A main domain's TXT and certificate CNAME come inside apexSetup (two-stage steps), so the separate TXT block stays off.
+            txt={null}
+            needsTxt={false}
+            apexSetup={domainState?.domain === customDomain ? (domainState?.apexSetup ?? null) : null}
           />
         </>
       )}

@@ -16,12 +16,24 @@ export function DomainStatusCard({ domain }: { domain: string }) {
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not check right now.')),
   });
   if (!data) return null;
-  const s = DOMAIN_STATUS[data.status ?? 'PENDING'];
   const checks = data.checks ?? null;
+  const apex = data.apexSetup ?? null;
+  // A main domain shows where it is in its two stages instead of the plain status (VERIFIED would say "DNS is right" before @ points at us).
+  const s =
+    apex?.stage === 'RECORDS'
+      ? { label: 'Step 1 of 2', cls: 'bg-amber-50 text-amber-800', hint: 'Add the two records shown below. This page ticks each one when it sees it.' }
+      : apex?.stage === 'POINT'
+        ? { label: 'Step 2 of 2', cls: 'bg-blue-50 text-blue-700', hint: 'Your domain is confirmed and its certificate is ready. Now point it to your store (step 2 below).' }
+        : DOMAIN_STATUS[data.status ?? 'PENDING'];
   const rows: { label: string; ok: boolean }[] = [];
-  if (checks) {
-    rows.push({ label: data.needsTxt ? 'Record 1: your domain points to your store' : 'Your domain points to your store', ok: checks.pointing });
-    if (data.needsTxt && checks.txt !== null) rows.push({ label: 'Record 2: ownership code (TXT) added', ok: checks.txt });
+  if (checks && apex?.stage === 'RECORDS') {
+    if (checks.txt !== null) rows.push({ label: 'Ownership code (TXT _cf-custom-hostname)', ok: checks.txt });
+    if (checks.dcv != null) rows.push({ label: 'Certificate record (CNAME _acme-challenge)', ok: checks.dcv });
+  } else if (checks && apex?.stage === 'POINT') {
+    rows.push({ label: 'Step 1: domain confirmed, certificate ready', ok: true });
+    rows.push({ label: 'Step 2: your domain points to your store', ok: checks.pointing });
+  } else if (checks) {
+    rows.push({ label: 'Your domain points to your store', ok: checks.pointing });
   }
   const allFound = rows.length > 0 && rows.every((r) => r.ok);
   // Cloudflare's own words ("does not CNAME to this zone") mean nothing to a store, so while the tick list is shown they stay hidden.
@@ -64,7 +76,9 @@ export function DomainStatusCard({ domain }: { domain: string }) {
           {allFound && (
             <li className="flex items-center gap-2.5 text-sm text-regantify-text">
               <Loader2 size={16} className="animate-spin text-regantify-text-muted" />
-              All records found. Finishing the setup, usually within a few minutes. You can leave this page open.
+              {apex?.stage === 'RECORDS'
+                ? 'Both records found. Waiting for the confirmation; step 2 opens by itself, usually within a few minutes.'
+                : 'All records found. Finishing the setup, usually within a few minutes. You can leave this page open.'}
             </li>
           )}
           {!allFound && <li className="pl-7 text-xs text-regantify-text-muted">Records can take a few minutes to show up after you save them. This list updates by itself.</li>}

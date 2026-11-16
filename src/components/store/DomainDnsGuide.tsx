@@ -18,12 +18,130 @@ const HOSTS: { key: DnsHost; label: string }[] = [
 ];
 
 /**
- * Companies that can point the main domain (mystore.com) at us. Only Cloudflare (2026-11-16): an ALIAS / flattened record elsewhere answers
- * with Cloudflare's own addresses (our target is behind Cloudflare), so Cloudflare for SaaS sees "the hostname is using Cloudflare", refuses
- * the TXT and HTTP proofs and wants a real CNAME, which a main domain can't have there (found on solvanebd.com at Namecheap). Those stores use
- * www and forward the main domain to it.
+ * Companies that can point the main domain (mystore.com) at us: every one with an ALIAS / ANAME / flattened record on @. GoDaddy has none,
+ * so its stores use www and forward the main domain to it. A main domain is set up in two stages (`ApexSteps`, 2026-11-16, tested on
+ * solvanebd.com at Namecheap): first the ownership TXT and the certificate CNAME while the domain still points elsewhere, then the record on @.
+ * Pointing @ first fails for good: the ALIAS answers with Cloudflare's addresses and Cloudflare then refuses every proof.
  */
-const APEX_OK: Record<DnsHost, boolean> = { cloudflare: true, namecheap: false, hostinger: false, porkbun: false, godaddy: false, other: false };
+const APEX_OK: Record<DnsHost, boolean> = { cloudflare: true, namecheap: true, hostinger: true, porkbun: true, godaddy: false, other: true };
+
+/** How each company's form names the boxes of a CNAME record. */
+const CNAME_LABELS: Record<DnsHost, { type: string; host: string; value: string; note?: string }> = {
+  cloudflare: { type: 'CNAME', host: 'Name', value: 'Target', note: 'Proxy status: DNS only (grey cloud)' },
+  namecheap: { type: 'CNAME Record', host: 'Host', value: 'Value' },
+  hostinger: { type: 'CNAME', host: 'Name', value: 'Target' },
+  godaddy: { type: 'CNAME', host: 'Name', value: 'Value' },
+  porkbun: { type: 'CNAME', host: 'Host', value: 'Answer' },
+  other: { type: 'CNAME', host: 'Name / Host', value: 'Value / Target' },
+};
+
+/** The record on @ (step 2), as each company's form names it. */
+const APEX_RECORD: Record<DnsHost, { type: string; host: string; hostValue: string; value: string; note?: string }> = {
+  cloudflare: { type: 'CNAME', host: 'Name', hostValue: '@', value: 'Target', note: 'Proxy status: DNS only (grey cloud). Cloudflare "flattens" it, that is right.' },
+  namecheap: { type: 'ALIAS Record', host: 'Host', hostValue: '@', value: 'Value' },
+  hostinger: { type: 'CNAME', host: 'Name', hostValue: '@', value: 'Target', note: 'Hostinger shows it as ALIAS after saving, that is right.' },
+  godaddy: { type: 'CNAME', host: 'Name', hostValue: '@', value: 'Value' },
+  porkbun: { type: 'ALIAS', host: 'Host', hostValue: '(leave empty)', value: 'Answer' },
+  other: { type: 'ALIAS or ANAME', host: 'Name / Host', hostValue: '@', value: 'Value / Target' },
+};
+
+type ApexSetup = { stage: 'RECORDS' | 'POINT'; ownership: { host: string; value: string } | null; dcv: { host: string; value: string } | null };
+
+/** A main domain's two stages (see APEX_OK). The status card above ticks each record as it appears. */
+function ApexSteps({ host, domain, target, setup, onUseWww, switching }: { host: DnsHost; domain: string; target: string; setup: ApexSetup; onUseWww: () => void; switching: boolean }) {
+  const txt = TXT_LABELS[host];
+  const cname = CNAME_LABELS[host];
+  const rec = APEX_RECORD[host];
+  const stepCls = (on: boolean) => `rounded-xl border p-4 ${on ? 'border-regantify-text/30 bg-white' : 'border-black/5 bg-neutral-50 opacity-70'}`;
+  return (
+    <div className="space-y-4">
+      <div className={stepCls(setup.stage === 'RECORDS')}>
+        <h3 className="text-sm font-semibold text-regantify-text">
+          Step 1 of 2: prove the domain is yours {setup.stage === 'POINT' && <span className="ml-1 font-normal text-green-700">(done)</span>}
+        </h3>
+        {setup.stage === 'RECORDS' ? (
+          <>
+            <p className="mb-2 mt-1 text-sm text-regantify-text-muted">
+              Add these two records. Don't change anything else yet: your domain keeps working as it is during this step.
+            </p>
+            <Steps>
+              <li>{TXT_WHERE[host]}</li>
+              <li>
+                First record:
+                {setup.ownership ? (
+                  <RecordBox rows={[
+                    { label: 'Type', value: txt.type },
+                    { label: txt.host, value: setup.ownership.host, copy: true, note: `only this part, the company adds .${domain}` },
+                    { label: txt.value, value: setup.ownership.value, copy: true },
+                    { label: 'TTL', value: txt.ttl },
+                  ]} />
+                ) : (
+                  <p className="my-2 text-sm text-regantify-text-muted"><Loader2 size={14} className="mr-1 inline animate-spin" /> Getting your code...</p>
+                )}
+              </li>
+              <li>
+                Add a second record (it lets your secure certificate renew by itself, keep it for ever):
+                {setup.dcv ? (
+                  <RecordBox rows={[
+                    { label: 'Type', value: cname.type },
+                    { label: cname.host, value: setup.dcv.host, copy: true, note: `only this part, the company adds .${domain}` },
+                    { label: cname.value, value: setup.dcv.value, copy: true },
+                    ...(cname.note ? [{ label: 'Note', value: cname.note }] : []),
+                  ]} />
+                ) : (
+                  <p className="my-2 text-sm text-regantify-text-muted"><Loader2 size={14} className="mr-1 inline animate-spin" /> Getting the record...</p>
+                )}
+              </li>
+              <li>Save both. If an older TXT named <span className="font-mono">_cf-custom-hostname</span> or a TXT named <span className="font-mono">_acme-challenge</span> is already there, delete it.</li>
+              <li>Wait on this page. When both are ticked above and confirmed, step 2 opens by itself (usually 5 to 30 minutes).</li>
+            </Steps>
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-regantify-text-muted">Your domain is confirmed and its secure certificate is ready. Keep both records.</p>
+        )}
+      </div>
+
+      <div className={stepCls(setup.stage === 'POINT')}>
+        <h3 className="text-sm font-semibold text-regantify-text">Step 2 of 2: point your domain to your store</h3>
+        {setup.stage === 'POINT' ? (
+          <>
+            <Steps>
+              <li>
+                On the same DNS page, delete the old records on host <span className="font-mono">@</span>: any A, AAAA, CNAME, ALIAS or URL Redirect record
+                (parking pages use them). Keep MX and TXT records, and the two records from step 1.
+              </li>
+              <li>
+                Add this record:
+                <RecordBox rows={[
+                  { label: 'Type', value: rec.type },
+                  { label: rec.host, value: rec.hostValue, copy: rec.hostValue === '@' },
+                  { label: rec.value, value: target, copy: true },
+                  { label: 'TTL', value: 'Automatic / default' },
+                  ...(rec.note ? [{ label: 'Note', value: rec.note }] : []),
+                ]} />
+              </li>
+              <li>
+                If a <span className="font-mono">www</span> record points at <span className="font-mono">{target}</span>, delete it: your store uses{' '}
+                <span className="font-mono">{domain}</span> only.
+              </li>
+              <li>Save. The check above turns green by itself, usually within a few minutes.</li>
+            </Steps>
+            {host === 'other' && (
+              <div className="mt-3 rounded-xl bg-neutral-50 p-3 text-sm text-regantify-text-muted">
+                No ALIAS or ANAME for @ at your company? Use <span className="font-mono">www.{domain}</span> for your store instead.
+                <button type="button" onClick={onUseWww} disabled={switching} className="ml-2 font-medium text-regantify-text underline disabled:opacity-60">
+                  Use www.{domain}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-regantify-text-muted">Opens when step 1 is confirmed. Don't point the domain before that: it would stop the confirmation.</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function CopyValue({ value }: { value: string }) {
   const [done, setDone] = useState(false);
@@ -89,7 +207,10 @@ export function DomainDnsGuide({
   onUseWww,
   txt,
   needsTxt,
+  apexSetup,
 }: {
+  /** A main domain's two-stage setup from the server (null for a subdomain, once live, or while loading). */
+  apexSetup?: ApexSetup | null;
   /** The ownership TXT record (host = what to type in the Host/Name box). Null when not needed or already live. */
   txt?: { host: string; value: string } | null;
   /** True for a main domain: the TXT record is required, not a fallback. */
@@ -110,6 +231,8 @@ export function DomainDnsGuide({
   const bought = apex ? domain : domain.slice(recordHost.length + 1);
   const www = `www.${domain}`;
   const needWww = apex && !APEX_OK[host];
+  /** A main domain at a company that can point it: the two-stage steps replace the company's single-record steps. */
+  const apexFlow = apex && !needWww && !!apexSetup;
 
   const switchToWww = async () => {
     setSwitching(true);
@@ -161,6 +284,11 @@ export function DomainDnsGuide({
       <div className="mt-5">
         {txt && !needWww && <h3 className="mb-2 text-sm font-semibold text-regantify-text">Record 1: point your domain to your store</h3>}
         {needWww && <WwwPlan />}
+
+        {apexFlow && apexSetup ? (
+          <ApexSteps host={host} domain={domain} target={target} setup={apexSetup} onUseWww={() => void switchToWww()} switching={switching} />
+        ) : (
+        <>
 
         {host === 'cloudflare' && (
           <Steps>
@@ -312,6 +440,8 @@ export function DomainDnsGuide({
             If your company offers <span className="font-medium">ALIAS</span>, <span className="font-medium">ANAME</span> or "CNAME flattening" for the main domain (@), use that with the value{' '}
             <span className="font-mono">{target}</span> and you can skip the www step. Ask their support if you are not sure.
           </p>
+        )}
+        </>
         )}
       </div>
 
