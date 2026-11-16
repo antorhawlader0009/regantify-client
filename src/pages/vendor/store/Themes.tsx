@@ -66,6 +66,12 @@ const THEMES: ThemeInfo[] = [
       'A quiet, modern menswear look: ink and sand, tracked uppercase labels, serif headings, square product cards and a near-black footer. Every StorePal feature works the same.',
   },
   {
+    id: 'BELORA',
+    name: 'Belora',
+    description:
+      'A soft skincare and beauty look: white with violet accents, serif headings, a lavender hero with a rounded picture, round category icons, pale violet panels and a white footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -93,6 +99,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  BELORA: '/template-demo/belora',
   ELEVATE: '/template-demo/elevate',
   CHRONICS: '/template-demo/chronics',
   MAHABESH: '/template-demo/mahabesh',
@@ -164,6 +171,35 @@ function ThemePreview({ id }: { id: StoreTheme }) {
           ))}
         </div>
         <div className="h-3 bg-[#141413]" />
+      </div>
+    );
+  }
+  if (id === 'BELORA') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-1.5 bg-[#6B3FA0]" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 border-b border-[#E8DCF4]">
+          <div className="w-8 h-1.5 bg-[#6B3FA0]" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-black/30" />
+            <div className="w-3 h-0.5 bg-[#6B3FA0]" />
+            <div className="w-3 h-0.5 bg-black/30" />
+          </div>
+        </div>
+        <div className="h-9 bg-gradient-to-r from-[#F1E9F9] to-[#E1D3F2] flex items-center px-2 gap-2">
+          <div className="flex flex-col gap-0.5">
+            <div className="w-10 h-1.5 bg-[#1E1B26]" />
+            <div className="w-7 h-1 bg-[#6B3FA0]" />
+          </div>
+          <div className="ml-auto w-9 h-6 rounded bg-white/70" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="border border-[#E8DCF4] p-0.5">
+              <div className="h-full bg-[#F5F0FA]" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -396,6 +432,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  BELORA: ['Beauty & Health'],
   ELEVATE: ['Fashion'],
   CHRONICS: ['Fashion'],
   MAHABESH: ['Furniture & Home'],
