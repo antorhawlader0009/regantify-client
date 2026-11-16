@@ -96,6 +96,12 @@ const THEMES: ThemeInfo[] = [
       'A clean tech-shop look: a black top bar over a white header with a spaced uppercase wordmark, a light grey hero with the product blended in, round grey category pictures, flat product pictures with a black Add to Cart bar, black and light promo tiles with lime buttons and a white footer. Every StorePal feature works the same.',
   },
   {
+    id: 'GLOWERIVE',
+    name: 'Glowerive',
+    description:
+      'A fresh natural-skincare look: a teal header and full-height teal hero, a pale mist page, serif headings, pill buttons, round category photos and a teal offer band over a deep teal footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -123,6 +129,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  GLOWERIVE: '/template-demo/glowerive',
   GADGETSTORE: '/template-demo/gadgetstore',
   FURNILUX: '/template-demo/furnilux',
   ESTATEPRO: '/template-demo/estatepro',
@@ -343,6 +350,34 @@ function ThemePreview({ id }: { id: StoreTheme }) {
           ))}
         </div>
         <div className="h-3 border-t border-neutral-100" />
+      </div>
+    );
+  }
+  if (id === 'GLOWERIVE') {
+    return (
+      <div className="w-full h-full bg-[#F4F9F8] flex flex-col">
+        <div className="h-1.5 bg-[#0F4A42]" />
+        <div className="h-3.5 flex items-center px-2 gap-1.5 bg-[#1C6F65]">
+          <div className="w-8 h-1.5 bg-white" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-white/60" />
+            <div className="w-3 h-0.5 bg-white/60" />
+            <div className="w-3 h-0.5 bg-white/60" />
+          </div>
+        </div>
+        <div className="h-9 bg-[#1C6F65] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-white" />
+          <div className="w-8 h-1.5 rounded-full bg-[#0F4A42]" />
+        </div>
+        <div className="mx-2 -mt-1.5 h-2.5 rounded bg-[#E6F0EE]" />
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded-sm bg-white ring-1 ring-[#E6F0EE]">
+              <div className="h-full rounded-sm bg-[#E6F0EE]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#0F4A42]" />
       </div>
     );
   }
@@ -575,6 +610,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  GLOWERIVE: ['Beauty & Health'],
   GADGETSTORE: ['Technology & Gadgets'],
   FURNILUX: ['Furniture & Home'],
   BELORA: ['Beauty & Health'],
