@@ -46,7 +46,8 @@ export function AddMoneyDialog({ open, onOpenChange, currentBalance }: AddMoneyD
   });
 
   const parsedAmount = Number(amount);
-  const isValid = Number.isFinite(parsedAmount) && parsedAmount >= MIN_AMOUNT;
+  // Whole taka, at most ৳5,00,000 in one top-up (same rule as the server, security review P-8).
+  const isValid = Number.isInteger(parsedAmount) && parsedAmount >= MIN_AMOUNT && parsedAmount <= 500_000;
   const deficit = currentBalance < 0 ? Math.abs(currentBalance) : 0;
   const payableTotal = isValid ? parsedAmount + deficit : 0;
 
@@ -62,7 +63,7 @@ export function AddMoneyDialog({ open, onOpenChange, currentBalance }: AddMoneyD
       >
         <p className="mb-4 text-sm text-neutral-600">Pay with bKash, Nagad or a card through PayStation. It’s in your wallet as soon as the payment is confirmed. Added money pays for plans, SMS, AI Credits and fees; it can’t be withdrawn.</p>
 
-        <Field label="Amount" error={amount && !isValid ? `Add at least ${formatTaka(MIN_AMOUNT)}.` : null}>
+        <Field label="Amount" error={amount && !isValid ? `Enter whole taka from ${formatTaka(MIN_AMOUNT)} to ${formatTaka(500_000)}.` : null}>
           <MoneyInput value={amount} onChange={(v) => setAmount(toLatinDigits(v))} ariaLabel="Amount to add" />
         </Field>
         <div className="mt-2 flex flex-wrap gap-1.5">

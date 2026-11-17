@@ -25,6 +25,7 @@ const PATH_ACCESS: Array<[string, AdminPermission | null]> = [
   ['/admin/feature-use', 'stores.view'],
   ['/admin/activation', 'stores.view'],
   ['/admin/delivery-times', 'orders.view'],
+  ['/admin/cod-fee-watch', 'money.view'],
   ['/admin/help', 'support.manage'],
   ['/admin/feature-requests', 'support.manage'],
   ['/admin/changelog', 'announcements.manage'],

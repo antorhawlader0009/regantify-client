@@ -165,14 +165,14 @@ function PromoDialog({ promo, open, onClose, onDone }: { promo: AdminPromo | nul
     },
     onError: (err) => toast.error(apiErrorMessage(err, 'Could not save the promo code.')),
   });
-  const ok = (promo || /^[A-Za-z0-9_-]{3,24}$/.test(code.trim())) && (used || Number(value) > 0);
+  const ok = (promo || /^[A-Za-z0-9_-]{8,24}$/.test(code.trim())) && (used || Number(value) > 0);
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()} maxWidth="max-w-md">
       <div className="space-y-4 p-6">
         <h2 className="font-semibold text-regantify-text">{promo ? `Edit ${promo.code}` : 'Make a promo code'}</h2>
         {!promo && (
           <div>
-            <label className={label}>Code (3 to 24 letters or numbers)</label>
+            <label className={label}>Code (8 to 24 letters or numbers)</label>
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} maxLength={24} placeholder="WELCOME20" className={field} />
           </div>
         )}

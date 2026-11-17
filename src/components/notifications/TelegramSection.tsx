@@ -122,6 +122,12 @@ export function TelegramSection({ open }: { open: boolean }) {
             </button>
           )}
         </div>
+        {isOwner && (
+          // Security review P-32: a group has no single person, so everyone in it acts as the owner there.
+          <p className="text-xs text-neutral-500">
+            In a group, every member can confirm orders with /confirm and see full phone numbers and sales, like the owner. Add the bot only to a group of people you trust.
+          </p>
+        )}
 
         {waiting && (
           <p className="rounded-lg bg-neutral-50 px-3 py-2.5 text-xs text-neutral-600">

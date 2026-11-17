@@ -62,7 +62,8 @@ function RecordForm({ item, onDone }: { item: RefundItem; onDone: () => void }) 
           <input value={reference} onChange={(e) => setReference(e.target.value)} maxLength={80} placeholder="bKash TrxID or bank ref" className={`${inputClass} mt-1 block w-full`} />
         </label>
       </div>
-      <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Note (optional)" className={`${inputClass} block w-full`} />
+      <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Note (optional; needed to keep the money)" className={`${inputClass} block w-full`} />
+      <p className="text-xs text-neutral-500">Online money held for this order can be withdrawn 7 days after the refund is recorded.</p>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => setAskSms(true)} disabled={!amountOk || record.isPending} className={primaryBtn}>
           {record.isPending ? 'Saving…' : 'Save'}
@@ -73,8 +74,12 @@ function RecordForm({ item, onDone }: { item: RefundItem; onDone: () => void }) 
         <button
           type="button"
           onClick={() => record.mutate({ m: 'WAIVED', sms: false })}
-          disabled={record.isPending}
-          title="You keep the money on purpose, for example a refused parcel's advance. Nothing is paid back."
+          disabled={record.isPending || note.trim().length < 5}
+          title={
+            note.trim().length < 5
+              ? 'Write in the note why you keep the money first.'
+              : "You keep the money on purpose, for example a refused parcel's advance. Nothing is paid back."
+          }
           className="ml-auto text-sm text-neutral-500 underline underline-offset-2 hover:text-neutral-700"
         >
           Keep {taka(item.remaining)} (no refund)

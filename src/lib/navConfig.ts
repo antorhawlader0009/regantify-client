@@ -329,6 +329,7 @@ export const adminNav: NavSection[] = [
   { label: 'Trust and safety', icon: ShieldAlert, group: 'Stores', path: '/admin/trust-safety' },
   { label: 'Domains', icon: Globe, group: 'Stores', path: '/admin/domains' },
   { label: 'Delivery times', icon: Timer, group: 'Stores', path: '/admin/delivery-times' },
+  { label: 'COD fee watch', icon: Truck, group: 'Stores', path: '/admin/cod-fee-watch' },
 
   { label: 'Orders', icon: ClipboardList, group: 'Commerce', path: '/admin/orders' },
   { label: 'Customers', icon: UsersRound, group: 'Commerce', path: '/admin/customers' },

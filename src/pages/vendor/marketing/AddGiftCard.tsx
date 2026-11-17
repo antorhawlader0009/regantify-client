@@ -94,7 +94,7 @@ export default function AddGiftCard() {
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Code" hint="Leave empty and we make one, like K7QM-3XWD-9PTA.">
-                <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Optional" className={`${productInputClass} font-mono uppercase`} />
+                <input type="text" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Optional, at least 8 letters or numbers" className={`${productInputClass} font-mono uppercase`} />
               </Field>
               <DateField label="Expires" value={expiresAt} onChange={setExpiresAt} role="end" optional error={shown('expiresAt')} />
             </div>

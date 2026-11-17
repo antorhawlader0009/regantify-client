@@ -192,6 +192,7 @@ const ProductInsights = lazy(() => import('./pages/admin/ProductInsights'));
 const FeatureUse = lazy(() => import('./pages/admin/FeatureUse'));
 const Activation = lazy(() => import('./pages/admin/Activation'));
 const DeliveryTimes = lazy(() => import('./pages/admin/DeliveryTimes'));
+const CodFeeWatch = lazy(() => import('./pages/admin/CodFeeWatch'));
 const HelpArticles = lazy(() => import('./pages/admin/HelpArticles'));
 const Changelog = lazy(() => import('./pages/admin/Changelog'));
 const FeatureRequests = lazy(() => import('./pages/admin/FeatureRequests'));
@@ -324,8 +325,8 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/stock-count' &&
     r.path !== '/vendor/product/stock-history' &&
     r.path !== '/vendor/store/themes' &&
-    r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/hero-section' &&
+    r.path !== '/vendor/store/pages' &&
     r.path !== '/vendor/store/magazine' &&
     r.path !== '/vendor/store/faq' &&
     r.path !== '/vendor/store/locations' &&
@@ -426,6 +427,7 @@ const adminPlaceholderRoutes = flattenRoutes(adminNav).filter(
     r.path !== '/admin/feature-use' &&
     r.path !== '/admin/activation' &&
     r.path !== '/admin/delivery-times' &&
+    r.path !== '/admin/cod-fee-watch' &&
     r.path !== '/admin/help' &&
     r.path !== '/admin/changelog' &&
     r.path !== '/admin/feature-requests' &&
@@ -557,9 +559,9 @@ export default function App() {
                 <Route path="/vendor/product/collections/add" element={<AddCollection />} />
                 <Route path="/vendor/product/collections/edit/:id" element={<AddCollection />} />
                 <Route path="/vendor/store/themes" element={<Themes />} />
+                <Route path="/vendor/store/hero-section" element={<HeroSection />} />
                 <Route path="/vendor/store/pages" element={<Pages />} />
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
-                <Route path="/vendor/store/hero-section" element={<HeroSection />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
                 <Route path="/vendor/store/faq" element={<Faq />} />
                 <Route path="/vendor/store/locations" element={<ShopLocations />} />
@@ -783,6 +785,7 @@ export default function App() {
                 <Route path="/admin/feature-use" element={<FeatureUse />} />
                 <Route path="/admin/activation" element={<Activation />} />
                 <Route path="/admin/delivery-times" element={<DeliveryTimes />} />
+                <Route path="/admin/cod-fee-watch" element={<CodFeeWatch />} />
                 <Route path="/admin/help" element={<HelpArticles />} />
                 <Route path="/admin/changelog" element={<Changelog />} />
                 <Route path="/admin/feature-requests" element={<FeatureRequests />} />
