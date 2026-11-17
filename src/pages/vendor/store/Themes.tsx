@@ -186,6 +186,18 @@ const THEMES: ThemeInfo[] = [
       'A modern gadget-shop look: a deep navy header with a blue-lined menu, a dark navy-to-indigo hero with a blue-violet headline, pastel round category pictures, white rounded product cards with a soft blue Add to Cart button, a violet flash-offer tile and a clean white footer. Every StorePal feature works the same.',
   },
   {
+    id: 'URBANX',
+    name: 'Urbanx',
+    description:
+      'A bold streetwear look: black and volt green, big condensed capitals, a graffiti wordmark, a full-picture hero, grayscale category tiles and flat grey product cards. Every StorePal feature works the same.',
+  },
+  {
+    id: 'VIVA',
+    name: 'Viva',
+    description:
+      'A fresh marketplace look: a cream page with white rounded panels, a deep forest green top bar, big search pill and footer, a soft sage hero card with a serif headline, round category pictures, pastel promo tiles and white rounded product cards with coral discount tags. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -213,6 +225,8 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  VIVA: '/template-demo/viva',
+  URBANX: '/template-demo/urbanx',
   TECHNOVA: '/template-demo/technova',
   TASTEHOUSE: '/template-demo/tastehouse',
   SPORTEQ: '/template-demo/sporteq',
@@ -884,6 +898,54 @@ function ThemePreview({ id }: { id: StoreTheme }) {
       </div>
     );
   }
+  if (id === 'URBANX') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5 bg-[#050505]">
+          <div className="w-8 h-1.5 bg-white" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-white/50" />
+            <div className="w-3 h-0.5 bg-[#C8F02B]" />
+            <div className="w-3 h-0.5 bg-white/50" />
+          </div>
+          <div className="w-3 h-1.5 bg-[#C8F02B]" />
+        </div>
+        <div className="h-9 bg-[#050505] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-12 h-1.5 bg-white" />
+          <div className="w-9 h-1.5 bg-[#C8F02B]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="bg-[#F0F0F0]" />
+          ))}
+        </div>
+        <div className="h-3 bg-[#050505]" />
+      </div>
+    );
+  }
+  if (id === 'VIVA') {
+    return (
+      <div className="w-full h-full bg-[#FAF8F4] flex flex-col">
+        <div className="h-1.5 bg-[#0D3B2E]" />
+        <div className="h-4 flex items-center px-2 gap-1.5">
+          <div className="w-6 h-1.5 bg-[#0D3B2E]" />
+          <div className="flex-1 h-2 rounded-full border border-[#B9CFA6] bg-white" />
+        </div>
+        <div className="mx-2 h-9 rounded-lg bg-gradient-to-r from-[#ECE6D3] to-[#D6DCC4] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-[#082A20]" />
+          <div className="w-8 h-1.5 bg-[#0D3B2E]" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded bg-white p-0.5 shadow-sm">
+              <div className="h-full rounded-sm bg-[#EFEDEA]" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 bg-[#082A20]" />
+      </div>
+    );
+  }
   if (id === 'CHICWOVE') {
     return (
       <div className="w-full h-full bg-[#FDF7F0] flex flex-col">
@@ -1113,6 +1175,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  URBANX: ['Fashion'],
   TECHNOVA: ['Technology & Gadgets'],
   TASTEHOUSE: ['Grocery & Food'],
   QUICKBITE: ['Grocery & Food'],
