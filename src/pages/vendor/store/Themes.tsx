@@ -168,6 +168,12 @@ const THEMES: ThemeInfo[] = [
       'A bright general-store look: white with vivid orange buttons, a forest green top bar, a dark full-width photo hero, tall category cards, a peach deal panel, white rounded product cards and a warm sand footer. Every StorePal feature works the same.',
   },
   {
+    id: 'SPORTEQ',
+    name: 'Sporteq',
+    description:
+      'A bold sports-equipment look: a charcoal header, a full-picture black hero with big capitals, lime green buttons, a round-photo category row, light grey product cards and a clean white footer, with an Orbitron wordmark. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -195,6 +201,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  SPORTEQ: '/template-demo/sporteq',
   SHOPEASE: '/template-demo/shopease',
   QUICKBITE: '/template-demo/quickbite',
   PETMART: '/template-demo/petmart',
@@ -771,6 +778,37 @@ function ThemePreview({ id }: { id: StoreTheme }) {
           ))}
         </div>
         <div className="h-3 bg-[#F4EFE8]" />
+      </div>
+    );
+  }
+  if (id === 'SPORTEQ') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="h-4 bg-[#1B1B1B] flex items-center px-2 gap-1.5">
+          <div className="w-8 h-1.5 bg-white" />
+          <div className="flex-1 flex justify-center gap-1">
+            <div className="w-3 h-0.5 bg-white/70" />
+            <div className="w-3 h-0.5 bg-[#7DC400]" />
+          </div>
+        </div>
+        <div className="h-10 bg-gradient-to-r from-black to-[#3a3a3a] flex flex-col justify-center px-2 gap-0.5">
+          <div className="w-14 h-1.5 bg-white" />
+          <div className="w-9 h-1.5 bg-[#7DC400]" />
+          <div className="w-6 h-2 rounded-[1px] bg-[#7DC400]" />
+        </div>
+        <div className="px-2 pt-1.5 flex justify-center gap-1">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <div key={n} className="w-3 h-3 rounded-full bg-[#E5E5E5]" />
+          ))}
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {[0, 1, 2, 3].map((n) => (
+            <div key={n} className="rounded-sm bg-[#F6F6F6] p-0.5">
+              <div className="h-full rounded-sm bg-white" />
+            </div>
+          ))}
+        </div>
+        <div className="h-3 border-t border-[#E5E5E5]" />
       </div>
     );
   }
