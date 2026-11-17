@@ -1,0 +1,183 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Coral (deal 2/3, seed store-owner-billing-screen-9daf·8970a462·2026-11-17·r0) · redesign: full
+ * nav: kept (the dashboard shell and the Billing dialog) · signature: the account statement, four balances on one cotton sheet with figures in Geist Mono · states: loading, full (empty and error are the data calls' own: listed for the owner)
+ * axes: light/grotesk-sans/warm · posture: restrained · contrast: pass · faces: Inter (the dashboard's own, app scope) with Geist Mono figures · copy: verbatim · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H3 E4 S4 R4 V4 · weakest: H, an app screen has no hero; the statement sheet leads instead */
+/* Hallmark · dropped the second "Billing" heading and its sentence · the dialog around the page already titles it (two headings said the same thing) */
+/* Hallmark · waive 48 · the dashboard's own --c-* channels are re-pointed inside .billing-root so shared children (pack pickers, receipts, tabs) take the same paper; the values are the Coral tokens above, as RGB channels */
+/* Hallmark · answered F4 · ink is the one primary; the cotton card is the theme's secondary control, not a second primary */
+
+/*
+ * Store > Billing in the Coral material (Hallmark redesign 2026-11-17). Scoped to .billing-root, like the LMS and POS
+ * themes, so nothing outside this page changes. Warm paper and ink; coral only for focus and the one settled state
+ * ("Your plan"); problems stay red (the owner's rule: problem notices are red).
+ */
+[data-theme='billing'] {
+  --color-paper: oklch(97% 0.006 55);
+  --color-paper-2: oklch(94.5% 0.007 55);
+  --color-paper-3: oklch(91.5% 0.009 55);
+  --color-ink: oklch(21% 0.012 38);
+  --color-ink-2: oklch(29% 0.013 40);
+  --color-muted: oklch(47% 0.013 45);
+  --color-rule: oklch(87% 0.009 55);
+  --color-rule-2: oklch(81% 0.011 55);
+  --color-accent-2: oklch(54% 0.165 29);
+  --color-focus: oklch(54% 0.17 30);
+  --color-cotton: oklch(98.8% 0.0045 80);
+  --color-board: oklch(22% 0.011 40);
+  --color-board-type: oklch(96.5% 0.006 70);
+  --color-paid: oklch(55.5% 0.15 33);
+  --color-error: oklch(52% 0.19 27);
+  --color-error-type: oklch(99% 0.003 80);
+  --shade: 32% 0.03 50;
+  --lit: 100% 0.005 80;
+  --font-body: 'Inter', 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
+  --font-figure: 'Geist Mono', ui-monospace, monospace;
+  --radius-card: 8px;
+  --radius-input: 6px;
+  --edge-stock: inset 0 1px 0 oklch(var(--lit) / 0.9), inset 0 -1px 0 oklch(var(--shade) / 0.07), 0 0 0 0.5px oklch(var(--shade) / 0.22), 0 1px 0 oklch(var(--shade) / 0.12);
+  --cast-stock: 6px 5px 10px -6px oklch(var(--shade) / 0.3);
+  --cast-stock-lift: 12px 10px 18px -8px oklch(var(--shade) / 0.3);
+  --press-groove: inset 1px 1.5px 2px oklch(var(--shade) / 0.16), inset -1px -1px 0 oklch(var(--lit) / 0.9), 0 0 0 0.5px oklch(var(--shade) / 0.2);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* The dashboard's own colour channels, as Coral (same values as above, in the RGB form Tailwind's /opacity needs). */
+  --c-brand: 31 25 23; /* board: primary buttons and links are ink */
+  --c-brand-dark: 49 41 38; /* ink-2 */
+  --c-accent: 232 225 221; /* paper-3: the soft selected tint */
+  --c-line: 217 211 207; /* rule */
+  --c-content: 248 244 241; /* paper */
+  --c-search: 241 236 232; /* paper-2 */
+  --c-text: 29 22 20; /* ink */
+  --c-muted: 97 89 85; /* muted */
+
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+.billing-root :focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  transition: none;
+}
+
+/* ---- headings and text */
+.bl-title { font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; color: var(--color-ink); overflow-wrap: break-word; min-width: 0; }
+.bl-lead { font-size: 0.875rem; line-height: 1.55; color: var(--color-muted); max-width: 64ch; }
+.bl-note { font-size: 0.8125rem; line-height: 1.5; color: var(--color-muted); }
+.bl-fig { font-family: var(--font-figure); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.bl-link { color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-rule-2); text-underline-offset: 3px; }
+.bl-link:hover { text-decoration-color: var(--color-accent-2); }
+.bl-link:active { color: var(--color-ink-2); }
+
+/* ---- the stock every record sits on */
+.bl-sheet {
+  background-color: var(--color-cotton);
+  background-image: linear-gradient(100deg, var(--color-cotton), transparent 45%);
+  border-radius: var(--radius-card);
+  box-shadow: var(--edge-stock), var(--cast-stock);
+}
+
+/* ---- the statement: four balances on one sheet, split by rules */
+.bl-statement { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bl-slot { display: flex; flex-direction: column; padding: 20px; border-left: 1px solid var(--color-rule); position: relative; }
+.bl-slot:first-child { border-left: 0; }
+.bl-slot__label { font-size: 0.8125rem; font-weight: 500; color: var(--color-muted); }
+.bl-slot__value { margin-top: 4px; font-size: 1.75rem; line-height: 1.1; color: var(--color-ink); overflow-wrap: break-word; min-width: 0; }
+.bl-slot__status { margin-top: 8px; min-height: 2.6em; font-size: 0.8125rem; line-height: 1.45; color: var(--color-muted); }
+.bl-slot[data-tone='low'] .bl-slot__status,
+.bl-slot[data-tone='empty'] .bl-slot__status { color: var(--color-error); font-weight: 500; }
+.bl-slot[data-tone='empty']::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--color-error); }
+.bl-slot[data-active='true']::after { content: ''; position: absolute; left: 20px; right: 20px; bottom: 0; height: 2px; background: var(--color-ink); }
+@media (max-width: 64rem) {
+  .bl-statement { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bl-slot:nth-child(3) { border-left: 0; }
+  .bl-slot:nth-child(n + 3) { border-top: 1px solid var(--color-rule); }
+}
+@media (max-width: 36rem) {
+  .bl-statement { grid-template-columns: minmax(0, 1fr); }
+  .bl-slot { border-left: 0; }
+  .bl-slot:nth-child(n + 2) { border-top: 1px solid var(--color-rule); }
+}
+
+/* ---- controls: letterpress cards, the primary in ink */
+.bl-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--radius-card);
+  font-size: 0.875rem; font-weight: 500; text-align: center; line-height: 1.25;
+  cursor: pointer;
+  transition: transform var(--dur-micro) var(--ease-out), box-shadow var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+}
+.bl-btn--card { background-color: var(--color-cotton); color: var(--color-ink); text-shadow: 0.5px 0.75px 0 var(--color-cotton); box-shadow: var(--edge-stock), var(--cast-stock); }
+.bl-btn--ink { background-color: var(--color-board); color: var(--color-board-type); box-shadow: var(--cast-stock); }
+.bl-btn--quiet { min-height: 36px; background: transparent; color: var(--color-muted); font-weight: 400; text-decoration: underline; text-decoration-color: var(--color-rule-2); text-underline-offset: 3px; }
+.bl-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--edge-stock), var(--cast-stock-lift); }
+.bl-btn--ink:hover:not(:disabled) { background-color: var(--color-ink-2); box-shadow: var(--cast-stock-lift); }
+.bl-btn--quiet:hover:not(:disabled) { transform: none; box-shadow: none; color: var(--color-ink); text-decoration-color: var(--color-accent-2); }
+.bl-btn:active:not(:disabled) { transform: translateY(1px); box-shadow: var(--edge-stock); }
+.bl-btn--quiet:active:not(:disabled) { transform: none; color: var(--color-ink-2); }
+.bl-btn:disabled { cursor: not-allowed; opacity: 0.55; }
+.bl-btn[aria-busy='true'] { cursor: progress; }
+.bl-btn--block { width: 100%; }
+
+.bl-input {
+  height: 40px; width: 11rem; padding: 0 12px;
+  border: 1px solid var(--color-rule-2); border-radius: var(--radius-input);
+  background: var(--color-cotton); color: var(--color-ink); font-size: 0.875rem;
+  transition: border-color var(--dur-short) var(--ease-out);
+}
+.bl-input::placeholder { color: var(--color-muted); }
+.bl-input:hover { border-color: var(--color-muted); }
+.bl-input:focus { outline: none; border-color: var(--color-focus); }
+.bl-input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+.bl-input:disabled { opacity: 0.55; }
+
+/* ---- notices */
+.bl-notice { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border: 1px solid var(--color-ink); border-radius: var(--radius-card); font-size: 0.875rem; line-height: 1.5; color: var(--color-ink); }
+.bl-error-strip { padding: 8px 16px; border-radius: var(--radius-input); background: var(--color-error); color: var(--color-error-type); font-size: 0.8125rem; }
+.bl-ok-line { font-size: 0.8125rem; color: var(--color-ink); }
+
+/* ---- the usage ledger */
+.bl-ledger { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.bl-ledger th { text-align: left; font-weight: 400; color: var(--color-ink); padding: 12px 0; }
+.bl-ledger td { padding: 12px 0; text-align: right; white-space: nowrap; }
+.bl-ledger tr + tr { border-top: 1px solid var(--color-rule); }
+.bl-ledger .bl-ledger__limit { color: var(--color-muted); padding-left: 16px; width: 9rem; }
+.bl-meter { display: block; height: 4px; margin-top: 4px; border-radius: 2px; background: var(--color-paper-3); overflow: hidden; }
+.bl-meter > span { display: block; height: 100%; background: var(--color-ink); transform-origin: left; }
+.bl-meter[data-tone='full'] > span { background: var(--color-error); }
+
+/* ---- plan comparison: one ruled table, plans across */
+.bl-plans-wrap { position: relative; overflow-x: auto; }
+.bl-plans { width: 100%; min-width: 44rem; border-collapse: separate; border-spacing: 0; font-size: 0.875rem; table-layout: fixed; }
+.bl-plans th, .bl-plans td { padding: 12px 16px; vertical-align: top; text-align: left; }
+.bl-plans thead th { padding-top: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--color-rule-2); }
+.bl-plans tbody th { font-weight: 400; color: var(--color-muted); width: 11rem; }
+.bl-plans tbody tr + tr th, .bl-plans tbody tr + tr td { border-top: 1px solid var(--color-rule); }
+.bl-plans tfoot td { padding-top: 16px; padding-bottom: 20px; border-top: 1px solid var(--color-rule-2); }
+.bl-plans .bl-col-current { background: var(--color-paper-2); }
+.bl-plans thead .bl-col-current { border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.bl-plans tfoot .bl-col-current { border-radius: 0 0 var(--radius-card) var(--radius-card); }
+.bl-plan-name { font-size: 0.9375rem; font-weight: 600; color: var(--color-ink); }
+.bl-plan-price { font-variant-numeric: tabular-nums; margin-top: 4px; font-size: 1.5rem; line-height: 1.1; color: var(--color-ink); }
+.bl-plan-price s { margin-right: 8px; font-size: 0.875rem; color: var(--color-muted); }
+.bl-plan-unit { font-family: var(--font-body); font-size: 0.8125rem; letter-spacing: 0; color: var(--color-muted); }
+.bl-slot__value:not(.bl-fig), .bl-plan-price:not(.bl-fig) { font-weight: 600; letter-spacing: -0.02em; }
+.bl-plan-tag { display: inline-block; margin-top: 8px; font-size: 0.8125rem; font-weight: 500; color: var(--color-muted); }
+/* The one settled state, pressed into the stock in coral. */
+.bl-pressed { display: inline-block; margin-top: 8px; font-size: 0.875rem; font-weight: 600; color: var(--color-paid); transform: rotate(-2deg); text-shadow: 0.5px 0.75px 0 var(--color-cotton), -0.5px -0.5px 0 oklch(var(--shade) / 0.25); }
+.bl-yes { color: var(--color-ink); }
+.bl-no { color: var(--color-muted); }
+
+/* ---- loading: a still skeleton; it breathes only for visitors who allow motion */
+.bl-skeleton { border-radius: var(--radius-card); background: var(--color-paper-3); }
+@media (prefers-reduced-motion: no-preference) {
+  .bl-skeleton { animation: bl-breathe 1.6s var(--ease-out) infinite alternate; }
+}
+@keyframes bl-breathe { from { opacity: 1; } to { opacity: 0.55; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .billing-root *, .billing-root *::before, .billing-root *::after { transition-duration: 0ms !important; animation: none !important; }
+  .bl-btn:hover:not(:disabled), .bl-btn:active:not(:disabled) { transform: none; }
+}

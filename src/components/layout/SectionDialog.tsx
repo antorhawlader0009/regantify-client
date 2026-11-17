@@ -74,7 +74,7 @@ export function SectionDialog({ section }: { section: string }) {
             </nav>
           )}
 
-          <div className="vendor-cards min-w-0 flex-1 overflow-y-auto bg-neutral-50 p-4 md:p-5">
+          <div className="vendor-cards relative min-w-0 flex-1 overflow-y-auto bg-neutral-50 p-4 md:p-5">
             <Suspense fallback={<PageLoading />}>
               <Outlet />
             </Suspense>

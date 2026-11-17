@@ -20,10 +20,9 @@ import { aiChatBotApi } from '../../lib/aiChatBotApi';
 import { financeApi } from '../../lib/financeApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
-import { UsageBar } from '../../components/dashboard/SideCards';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { PayFromWalletButton } from '../../components/PayFromWalletButton';
-import { PageHeader, PillTabs, outlineBtn, primaryBtn } from '../../components/ui/PageKit';
+import { PillTabs } from '../../components/ui/PageKit';
 import { formatTaka } from '../../components/analytics/format';
 import { useAuthStore } from '../../store/authStore';
 import { SmsPackBuyer, perSms } from './sms/BuySmsDialog';
@@ -31,14 +30,18 @@ import { AiCreditPackBuyer } from './ai-automation/BuyChatBotDialog';
 import { AddMoneyDialog } from './finance/AddMoneyDialog';
 import Receipts from './finance/Receipts';
 import { DailyLimitBanner, UnlimitedBadge } from '../../components/DailyLimitBanner';
+import './billing/billing-theme.css';
 
 /*
  * Billing: everything the store pays the platform for, in one place (2026-10-16, after vendors said buying the
- * plan, SMS and AI credits on three different pages was a hassle). On top, one strip with the four balances a
- * store runs on (plan, wallet, SMS, AI Credits), each with its one "get more" action and an amber edge when it is
- * running low. Below, a tab per thing to buy, plus the receipts. `?tab=plan|sms|ai|wallet|receipts` opens a tab,
+ * plan, SMS and AI credits on three different pages was a hassle). On top, one statement with the four balances a
+ * store runs on (plan, wallet, SMS, AI Credits), each with its one "get more" action and a red line when it is
+ * running out. Below, a tab per thing to buy, plus the receipts. `?tab=plan|sms|ai|wallet|receipts` opens a tab,
  * so the SMS page, the AI Chat Bot page, the Dashboard and the payment return page can send the owner straight to
  * the right one. The SMS and AI pages keep their own "Buy" buttons as shortcuts (same pack pickers, in a dialog).
+ *
+ * Look (Hallmark redesign, Coral, 2026-11-17): warm paper, ink actions, figures in Geist Mono, the plans as one
+ * ruled table instead of four cards; styles in ./billing/billing-theme.css, scoped to .billing-root.
  */
 
 type Tab = 'plan' | 'sms' | 'ai' | 'wallet' | 'receipts';
@@ -67,22 +70,16 @@ function feeText(flat: string, percent: string, payer: PaymentFeePayer) {
   return `${formatFeeParts(flat, percent)} per COD order${payer === 'VENDOR' ? ', paid by you' : ''}`;
 }
 
-/** One feature line on a plan card: a tick (or a dash for "no") and the words. */
-/** "Unlimited products": the word highlighted, as everywhere products, orders and image uploads are listed. */
-function Unlimited({ children }: { children: ReactNode }) {
+/** A yes / no cell of the plan table: the words stay, a tick or a dash says which. */
+function YesNo({ on, children }: { on: boolean; children: ReactNode }) {
   return (
-    <>
-      <strong className="font-semibold text-emerald-700">Unlimited</strong> {children}
-    </>
-  );
-}
-
-function Feature({ on = true, children }: { on?: boolean; children: ReactNode }) {
-  return (
-    <li className={`flex items-start gap-2 ${on ? 'text-regantify-text' : 'text-neutral-400'}`}>
-      {on ? <Check size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden /> : <Minus size={14} className="mt-0.5 shrink-0" aria-hidden />}
-      <span>{children}</span>
-    </li>
+    <span className={`flex items-start gap-2 ${on ? 'bl-yes' : 'bl-no'}`}>
+      {on ? <Check size={15} className="mt-0.5 shrink-0" aria-hidden /> : <Minus size={15} className="mt-0.5 shrink-0" aria-hidden />}
+      <span>
+        {children}
+        {!on && <span className="sr-only"> (not included)</span>}
+      </span>
+    </span>
   );
 }
 
@@ -97,13 +94,13 @@ function describePlanEnd(iso: string) {
   };
 }
 
-// ---------------------------------------------------------------- the balance strip
+// ---------------------------------------------------------------- the statement
 
 type Tone = 'ok' | 'low' | 'empty';
 
 /**
- * One of the four balances. The strip is a single panel split by hairlines (not four cards), so it reads as one
- * account. A low or empty balance gets an amber/red edge on top and says what happens next, before it runs out.
+ * One of the four balances. The statement is one cotton sheet split by rules (not four cards), so it reads as one
+ * account. A balance that is low or used up says what happens next in red; the one whose tab is open is underlined.
  */
 function BalanceSlot({
   label,
@@ -113,7 +110,10 @@ function BalanceSlot({
   action,
   onAction,
   active,
+  figure = true,
 }: {
+  /** False when the value is a word (the plan name): figures are set in Geist Mono, words in the body face. */
+  figure?: boolean;
   label: string;
   value: ReactNode;
   status: ReactNode;
@@ -122,22 +122,35 @@ function BalanceSlot({
   onAction: () => void;
   active: boolean;
 }) {
-  const edge = tone === 'empty' ? 'shadow-[inset_0_3px_0_#dc2626]' : tone === 'low' ? 'shadow-[inset_0_3px_0_#f59e0b]' : '';
-  const statusColor = tone === 'empty' ? 'text-red-700' : tone === 'low' ? 'text-amber-800' : 'text-neutral-500';
   return (
-    <div className={`flex flex-col p-4 ${edge} ${active ? 'bg-brand-lime/20' : 'bg-white'}`}>
-      <p className="text-sm text-neutral-600">{label}</p>
-      <p className="mt-1 truncate text-2xl font-semibold tabular-nums text-regantify-text">{value}</p>
-      <p className={`mt-1 min-h-[2.5rem] text-xs leading-relaxed ${statusColor}`}>{status}</p>
-      <button
-        type="button"
-        onClick={onAction}
-        className={`${tone === 'ok' ? outlineBtn : primaryBtn} mt-3 h-9 w-full justify-center`}
-        aria-pressed={active}
-      >
+    <div className="bl-slot" data-tone={tone} data-active={active}>
+      <p className="bl-slot__label">{label}</p>
+      <p className={`bl-slot__value ${figure ? 'bl-fig' : ''}`}>{value}</p>
+      <p className="bl-slot__status">{status}</p>
+      <button type="button" onClick={onAction} className={`bl-btn bl-btn--block mt-3 ${tone === 'ok' ? 'bl-btn--card' : 'bl-btn--ink'}`} aria-pressed={active}>
         {action}
       </button>
     </div>
+  );
+}
+
+/** One row of "What you've used": the figure, then the limit or Unlimited, with a meter only when there is a limit. */
+function UsageRow({ label, used, limit, note }: { label: string; used: number; limit: number | null; note?: string }) {
+  const pct = limit ? Math.min(100, (used / limit) * 100) : 0;
+  return (
+    <tr>
+      <th scope="row">
+        {label}
+        {limit != null && (
+          <span className="bl-meter" data-tone={pct >= 100 ? 'full' : 'ok'} aria-hidden>
+            <span style={{ transform: `scaleX(${Math.max(pct, used > 0 ? 3 : 0) / 100})` }} />
+          </span>
+        )}
+        {note && <span className="bl-note mt-1 block">{note}</span>}
+      </th>
+      <td className="bl-fig">{used.toLocaleString()}</td>
+      <td className="bl-ledger__limit">{limit == null ? <UnlimitedBadge /> : <span className="bl-fig">of {limit.toLocaleString()}</span>}</td>
+    </tr>
   );
 }
 
@@ -223,25 +236,50 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
     .sort((a, b) => TIER_ORDER.indexOf(a.code) - TIER_ORDER.indexOf(b.code));
   const currentIndex = usage ? TIER_ORDER.indexOf(usage.plan.code) : -1;
   const planEnd = usage?.planExpiresAt ? describePlanEnd(usage.planExpiresAt) : null;
+  const colClass = (plan: Plan) => (usage?.plan.code === plan.code ? 'bl-col-current' : '');
+
+  // The rows of the comparison, each one fact per plan. "Unlimited" stays highlighted, as everywhere products, orders
+  // and image uploads are listed.
+  const rows: { label: string; cell: (plan: Plan) => ReactNode }[] = [
+    { label: 'Products, orders and image uploads', cell: () => <UnlimitedBadge /> },
+    { label: 'Staff', cell: (plan) => (plan.staffLimit === null ? 'Unlimited' : <span className="bl-fig">{limitText(plan.staffLimit)}</span>) },
+    {
+      label: 'Themes',
+      cell: (plan) => (plan.themeAllowance === null ? 'All themes' : <span><span className="bl-fig">{plan.themeAllowance}</span> {plan.themeAllowance === 1 ? 'theme' : 'themes'}</span>),
+    },
+    { label: 'AI Credits', cell: (plan) => <YesNo on={!!plan.aiCreditGrant}>{aiCreditsText(plan)}</YesNo> },
+    { label: 'Your own domain', cell: (plan) => <YesNo on={plan.customDomainAllowed}>{plan.customDomainAllowed ? 'Included' : 'Not included'}</YesNo> },
+    { label: 'Your own payment gateway', cell: (plan) => <YesNo on={plan.customPaymentGatewayAllowed}>{plan.customPaymentGatewayAllowed ? 'Included' : 'Not included'}</YesNo> },
+    { label: 'LMS (calls and follow-ups)', cell: (plan) => <YesNo on={plan.lmsEnabled}>{plan.lmsEnabled ? 'Included' : 'Not included'}</YesNo> },
+    { label: 'Cash on delivery charge', cell: (plan) => <span className="bl-note">{feeText(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer)}</span> },
+  ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {usage && (
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
-          <h2 className="text-[15px] font-semibold text-regantify-text">What you’ve used of {usage.plan.name}</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">
-            {feeText(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer)}.
-          </p>
-          <div className="mt-4 grid gap-x-8 gap-y-3 md:grid-cols-2">
-            <UsageBar label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
-            <UsageBar label="Orders this month" used={(usage.usage.ordersThisMonth ?? usage.usage.ordersToday).used} limit={(usage.usage.ordersThisMonth ?? usage.usage.ordersToday).limit} />
-            <UsageBar label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
-            <div>
-              <UsageBar label="Store visits this month" used={usage.usage.monthlyVisits.used} limit={usage.usage.monthlyVisits.limit} />
-              <p className="mt-1 text-xs text-neutral-500">For your information: your store keeps working for shoppers past the number.</p>
-            </div>
+        <section className="bl-sheet p-5">
+          <h2 className="bl-title">What you’ve used of {usage.plan.name}</h2>
+          <p className="bl-note mt-0.5">{feeText(usage.plan.codGatewayFeeBdt, usage.plan.codGatewayFeePercent, usage.plan.codGatewayFeePayer)}.</p>
+          <div className="mt-3 grid gap-x-10 md:grid-cols-2">
+            <table className="bl-ledger">
+              <tbody>
+                <UsageRow label="Products" used={usage.usage.products.used} limit={usage.usage.products.limit} />
+                <UsageRow label="Orders this month" used={(usage.usage.ordersThisMonth ?? usage.usage.ordersToday).used} limit={(usage.usage.ordersThisMonth ?? usage.usage.ordersToday).limit} />
+              </tbody>
+            </table>
+            <table className="bl-ledger">
+              <tbody>
+                <UsageRow label="Staff" used={usage.usage.staff.used} limit={usage.usage.staff.limit} />
+                <UsageRow
+                  label="Store visits this month"
+                  used={usage.usage.monthlyVisits.used}
+                  limit={usage.usage.monthlyVisits.limit}
+                  note="For your information: your store keeps working for shoppers past the number."
+                />
+              </tbody>
+            </table>
           </div>
-          <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-neutral-600">
+          <p className="bl-note mt-3 flex flex-wrap items-center gap-1.5">
             <UnlimitedBadge /> Products, orders and image uploads are unlimited on every plan.
           </p>
           <DailyLimitBanner daily={usage.daily} kinds={['products', 'orders', 'images']} className="mt-3" />
@@ -249,17 +287,17 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
       )}
 
       {pendingRequest && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-900">
-          <Clock size={16} className="mt-0.5 shrink-0 text-amber-700" aria-hidden />
+        <div className="bl-notice">
+          <Clock size={16} className="mt-0.5 shrink-0" aria-hidden />
           <p>
             Your request to move to <strong>{pendingRequest.requestedPlan.name}</strong> is waiting for our team. We’ll set it up and let you know.
           </p>
         </div>
       )}
 
-      <section>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold text-regantify-text">Compare plans</h2>
+      <section className="bl-sheet p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="bl-title">Compare plans</h2>
           {isOwner && (
             <form
               className="flex flex-wrap items-center gap-2"
@@ -268,96 +306,114 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
                 if (promoInput.trim().length >= 3) applyPromo.mutate();
               }}
             >
-              <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code" maxLength={24} aria-label="Promo code" className="h-9 w-40 rounded-lg border border-line bg-white px-3 text-sm uppercase placeholder:normal-case focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/40" />
-              <button type="submit" disabled={applyPromo.isPending || promoInput.trim().length < 3} className="h-9 rounded-lg border border-line bg-white px-3 text-sm text-regantify-text hover:bg-neutral-50 disabled:opacity-60">
+              <input value={promoInput} onChange={(e) => setPromoInput(e.target.value)} placeholder="Promo code" maxLength={24} aria-label="Promo code" className="bl-input" />
+              <button type="submit" disabled={applyPromo.isPending || promoInput.trim().length < 3} aria-busy={applyPromo.isPending} className="bl-btn bl-btn--card">
                 {applyPromo.isPending ? 'Checking…' : 'Apply'}
               </button>
             </form>
           )}
         </div>
-        {promo && <p className="mb-3 text-xs text-green-700">Code {promo.code.toUpperCase()} applied. The prices below include it.</p>}
-        {promoError && <p className="mb-3 text-xs text-red-600">{promoError}</p>}
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {sortedPlans.map((plan) => {
-            const isCurrent = usage?.plan.code === plan.code;
-            const isFree = Number(plan.priceMonthly) <= 0;
-            const higher = TIER_ORDER.indexOf(plan.code) > currentIndex;
-            const isPendingTarget = pendingRequest?.requestedPlan.code === plan.code;
-            return (
-              <li key={plan.id} className={`flex flex-col rounded-xl border bg-white p-4 ${isCurrent ? 'border-brand ring-1 ring-brand' : 'border-line'}`}>
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-[15px] font-semibold text-regantify-text">{plan.name}</h3>
-                  {isCurrent ? <span className="rounded border border-brand/30 bg-brand-lime px-1.5 py-0.5 text-[11px] font-medium text-regantify-text">Your plan</span> : plan.mostPopular ? <span className="rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">Most popular</span> : null}
-                </div>
-                <p className="mt-1 text-xl font-semibold tabular-nums text-regantify-text">
-                  {promo?.quotes[plan.code] && <s className="mr-1.5 text-sm font-normal text-neutral-400">{priceText(plan)}</s>}
-                  {payPrice(plan)}
-                  {!isFree && <span className="text-xs font-normal text-neutral-500"> /month</span>}
-                </p>
+        {promo && <p className="bl-ok-line mt-3">Code {promo.code.toUpperCase()} applied. The prices below include it.</p>}
+        {promoError && <p className="bl-error-strip mt-3">{promoError}</p>}
 
-                <ul className="my-4 flex-1 space-y-1.5 text-sm">
-                  <Feature><Unlimited>products</Unlimited></Feature>
-                  <Feature><Unlimited>orders</Unlimited></Feature>
-                  <Feature><Unlimited>image uploads</Unlimited></Feature>
-                  <Feature>{limitText(plan.staffLimit)} staff</Feature>
-                  <Feature>{plan.themeAllowance === null ? 'All themes' : `${plan.themeAllowance} ${plan.themeAllowance === 1 ? 'theme' : 'themes'}`}</Feature>
-                  <Feature on={!!plan.aiCreditGrant}>{aiCreditsText(plan)}</Feature>
-                  <Feature on={plan.customDomainAllowed}>Your own domain</Feature>
-                  <Feature on={plan.customPaymentGatewayAllowed}>Your own payment gateway</Feature>
-                  <Feature on={plan.lmsEnabled}>LMS (calls and follow-ups)</Feature>
-                  <li className="mt-2 border-t border-line pt-2 text-xs text-neutral-600">{feeText(plan.codGatewayFeeBdt, plan.codGatewayFeePercent, plan.codGatewayFeePayer)}</li>
-                </ul>
-
-                {isCurrent && !isFree && planEnd ? (
-                  <div>
-                    <button
-                      type="button"
-                      disabled={payMutation.isPending || !!terms?.[plan.code]?.tooFar}
-                      onClick={() => payMutation.mutate(plan.code)}
-                      className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-60"
-                    >
-                      {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${payPrice(plan)}`}
-                    </button>
-                    {!terms?.[plan.code]?.tooFar && (
-                      <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} className="mt-2" />
-                    )}
-                    {termLine(plan.code) && <p className="mt-1.5 text-xs text-neutral-500">{termLine(plan.code)}</p>}
-                  </div>
-                ) : isCurrent ? (
-                  <p className="flex h-10 items-center justify-center rounded-lg bg-neutral-50 text-sm text-neutral-500">You’re on this plan</p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {!isFree && (
-                      <button
-                        type="button"
-                        disabled={payMutation.isPending}
-                        onClick={() => payMutation.mutate(plan.code)}
-                        className={`inline-flex h-10 w-full items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors disabled:opacity-60 ${
-                          higher ? 'bg-brand text-white hover:bg-brand-dark' : 'border border-line bg-white text-regantify-text hover:bg-neutral-50'
-                        }`}
-                      >
-                        {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `${higher ? 'Upgrade' : 'Switch'} and pay ${payPrice(plan)}`}
-                      </button>
-                    )}
-                    {!isFree && (
-                      <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} />
-                    )}
-                    {!isFree && termLine(plan.code) && <p className="text-xs text-neutral-500">{termLine(plan.code)}</p>}
-                    <button
-                      type="button"
-                      disabled={requestMutation.isPending || Boolean(pendingRequest)}
-                      onClick={() => setConfirmRequest(plan)}
-                      className="h-9 w-full rounded-lg text-xs text-neutral-600 underline-offset-2 hover:text-regantify-text hover:underline disabled:no-underline disabled:opacity-60"
-                    >
-                      {isPendingTarget ? 'Request sent' : pendingRequest ? 'A request is already waiting' : isFree ? 'Ask to move to Free' : 'Or ask us to set it up by hand'}
-                    </button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-3 text-xs text-neutral-500">Paying with PayStation changes your plan as soon as the payment goes through.</p>
+        <div className="bl-plans-wrap mt-4">
+          <table className="bl-plans">
+            <caption className="sr-only">Plans compared</caption>
+            <thead>
+              <tr>
+                <td aria-hidden />
+                {sortedPlans.map((plan) => {
+                  const isCurrent = usage?.plan.code === plan.code;
+                  const isFree = Number(plan.priceMonthly) <= 0;
+                  return (
+                    <th key={plan.id} scope="col" className={colClass(plan)}>
+                      <p className="bl-plan-name">{plan.name}</p>
+                      <p className={`bl-plan-price ${isFree && !promo?.quotes[plan.code] ? '' : 'bl-fig'}`}>
+                        {promo?.quotes[plan.code] && <s>{priceText(plan)}</s>}
+                        {payPrice(plan)}
+                        {!isFree && <span className="bl-plan-unit"> /month</span>}
+                      </p>
+                      {isCurrent ? <span className="bl-pressed">Your plan</span> : plan.mostPopular ? <span className="bl-plan-tag">Most popular</span> : null}
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label}>
+                  <th scope="row">{row.label}</th>
+                  {sortedPlans.map((plan) => (
+                    <td key={plan.id} className={colClass(plan)}>
+                      {row.cell(plan)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td aria-hidden />
+                {sortedPlans.map((plan) => {
+                  const isCurrent = usage?.plan.code === plan.code;
+                  const isFree = Number(plan.priceMonthly) <= 0;
+                  const higher = TIER_ORDER.indexOf(plan.code) > currentIndex;
+                  const isPendingTarget = pendingRequest?.requestedPlan.code === plan.code;
+                  return (
+                    <td key={plan.id} className={colClass(plan)}>
+                      {isCurrent && !isFree && planEnd ? (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            disabled={payMutation.isPending || !!terms?.[plan.code]?.tooFar}
+                            aria-busy={payMutation.isPending && payingPlan === plan.code}
+                            onClick={() => payMutation.mutate(plan.code)}
+                            className="bl-btn bl-btn--ink bl-btn--block"
+                          >
+                            {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `Renew for 30 days, pay ${payPrice(plan)}`}
+                          </button>
+                          {!terms?.[plan.code]?.tooFar && (
+                            <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} />
+                          )}
+                          {termLine(plan.code) && <p className="bl-note">{termLine(plan.code)}</p>}
+                        </div>
+                      ) : isCurrent ? (
+                        <p className="bl-note py-2">You’re on this plan</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {!isFree && (
+                            <button
+                              type="button"
+                              disabled={payMutation.isPending}
+                              aria-busy={payMutation.isPending && payingPlan === plan.code}
+                              onClick={() => payMutation.mutate(plan.code)}
+                              className={`bl-btn bl-btn--block ${higher ? 'bl-btn--ink' : 'bl-btn--card'}`}
+                            >
+                              {payMutation.isPending && payingPlan === plan.code ? 'Opening PayStation…' : `${higher ? 'Upgrade' : 'Switch'} and pay ${payPrice(plan)}`}
+                            </button>
+                          )}
+                          {!isFree && (
+                            <PayFromWalletButton purpose="PLAN_UPGRADE" packageId={plan.code} promoCode={promo?.quotes[plan.code] ? promo.code : undefined} price={promo?.quotes[plan.code]?.finalPrice ?? Number(plan.priceMonthly)} onPaid={() => undefined} />
+                          )}
+                          {!isFree && termLine(plan.code) && <p className="bl-note">{termLine(plan.code)}</p>}
+                          <button
+                            type="button"
+                            disabled={requestMutation.isPending || Boolean(pendingRequest)}
+                            onClick={() => setConfirmRequest(plan)}
+                            className="bl-btn bl-btn--quiet bl-btn--block"
+                          >
+                            {isPendingTarget ? 'Request sent' : pendingRequest ? 'A request is already waiting' : isFree ? 'Ask to move to Free' : 'Or ask us to set it up by hand'}
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p className="bl-note mt-3">Paying with PayStation changes your plan as soon as the payment goes through.</p>
       </section>
 
       <ConfirmDialog
@@ -382,8 +438,8 @@ function PlanTab({ usage, plans, isOwner }: { usage: VendorPlanUsage | undefined
 function TabIntro({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="mb-4">
-      <h2 className="text-[15px] font-semibold text-regantify-text">{title}</h2>
-      <p className="mt-0.5 max-w-prose text-sm text-neutral-600">{children}</p>
+      <h2 className="bl-title">{title}</h2>
+      <p className="bl-lead mt-1">{children}</p>
     </div>
   );
 }
@@ -406,16 +462,16 @@ export default function Billing() {
 
   const openTab = (next: Tab) => {
     setSearchParams(next === 'plan' ? {} : { tab: next }, { replace: true });
-    // On a phone the tabs are below the strip: bring them into view so the tap visibly did something.
+    // On a phone the tabs are below the statement: bring them into view so the tap visibly did something.
     tabsRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   };
 
   if (usageLoading || plansLoading) {
     return (
-      <div className="space-y-4" aria-busy>
-        <div className="h-12 w-48 animate-pulse rounded-lg bg-neutral-100" />
-        <div className="h-44 animate-pulse rounded-xl bg-neutral-100" />
-        <div className="h-80 animate-pulse rounded-xl bg-neutral-100" />
+      <div data-theme="billing" className="billing-root space-y-4" aria-busy>
+        <div className="bl-skeleton h-40" />
+        <div className="bl-skeleton h-10 w-72" />
+        <div className="bl-skeleton h-80" />
       </div>
     );
   }
@@ -458,12 +514,11 @@ export default function Billing() {
       : `About ${ai.repliesLeft.toLocaleString()} chat replies left${ai.lowBalance ? '. Running low.' : '.'}`;
 
   return (
-    <div className="space-y-4">
-      <PageHeader className="" title="Billing" description="Your plan, wallet, SMS and AI Credits in one place. Buy what you need here." />
-
-      <section aria-label="Your balances" className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+    <div data-theme="billing" className="billing-root space-y-5">
+      <section aria-label="Your balances" className="bl-sheet bl-statement">
         <BalanceSlot
           label="Plan"
+          figure={false}
           value={usage?.plan.name ?? '–'}
           status={planStatus}
           tone={planTone}
@@ -521,42 +576,44 @@ export default function Billing() {
       {tab === 'plan' && <PlanTab usage={usage} plans={plans} isOwner={isOwner} />}
 
       {tab === 'sms' && (
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
+        <section className="bl-sheet p-5">
           <TabIntro title="Buy SMS">
             Your store texts customers about their orders, sends sign-in and COD codes, and runs your SMS campaigns. A long message can use 2 or more SMS.{' '}
-            <Link to="/vendor/sms" className="font-medium text-brand hover:underline">
+            <Link to="/vendor/sms" className="bl-link">
               See sent messages
             </Link>
           </TabIntro>
-          {isOwner ? <SmsPackBuyer /> : <p className="text-sm text-neutral-600">Only the store owner can buy SMS.</p>}
+          {isOwner ? <SmsPackBuyer /> : <p className="bl-lead">Only the store owner can buy SMS.</p>}
         </section>
       )}
 
       {tab === 'ai' && (
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
+        <section className="bl-sheet p-5">
           <TabIntro title="Buy AI Credits">
             The store chat and Ask AI use these. Credits never expire.{' '}
-            <Link to="/vendor/ai-usage" className="font-medium text-brand hover:underline">
+            <Link to="/vendor/ai-usage" className="bl-link">
               See where they went
             </Link>
           </TabIntro>
-          {isOwner ? <AiCreditPackBuyer creditsPerReply={ai?.creditsPerReply} /> : <p className="text-sm text-neutral-600">Only the store owner can buy AI Credits.</p>}
+          {isOwner ? <AiCreditPackBuyer creditsPerReply={ai?.creditsPerReply} /> : <p className="bl-lead">Only the store owner can buy AI Credits.</p>}
         </section>
       )}
 
       {tab === 'wallet' && (
-        <section className="rounded-xl border border-line bg-white p-4 sm:p-5">
+        <section className="bl-sheet p-5">
           <TabIntro title="Wallet">
             Money from online orders lands here, and you can pay for your plan, SMS and AI Credits from it. Add money with bKash, Nagad or a card.
           </TabIntro>
           <div className="flex flex-wrap items-center gap-3">
-            <p className={`mr-auto text-3xl font-semibold tabular-nums ${balance < 0 ? 'text-red-700' : 'text-regantify-text'}`}>{formatTaka(balance)}</p>
+            <p className="bl-fig mr-auto text-3xl" style={balance < 0 ? { color: 'var(--color-error)' } : undefined}>
+              {formatTaka(balance)}
+            </p>
             {isOwner && (
-              <button type="button" onClick={() => setAddMoneyOpen(true)} className={`${primaryBtn} h-10 px-4`}>
+              <button type="button" onClick={() => setAddMoneyOpen(true)} className="bl-btn bl-btn--ink">
                 Add money
               </button>
             )}
-            <Link to="/vendor/finance/wallet" className={`${outlineBtn} h-10 px-4`}>
+            <Link to="/vendor/finance/wallet" className="bl-btn bl-btn--card">
               See transactions
             </Link>
           </div>

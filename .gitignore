@@ -44,3 +44,6 @@ repomix-output.xml
 
 # Bundle report from npm run build:analyze (PERFORMANCE-PLAN.md Step 1)
 bundle-stats.html
+
+# Hallmark design skill records (local only)
+.hallmark/
