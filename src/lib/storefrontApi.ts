@@ -7,7 +7,7 @@ export interface StorefrontInfo {
   id: string;
   storeName: string;
   subdomain: string;
-  theme: 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'TECHZONE' | 'VAELORA' | 'STRIDE' | 'CHICWOVE' | 'TASTEHOUSE' | 'SPORTEQ' | 'SHOPEASE' | 'QUICKBITE' | 'PETMART' | 'PAPERNEST' | 'NOVELLA' | 'NOVATREND' | 'MINIMOG' | 'MENAURA' | 'MALLON' | 'GROCERYANTO' | 'GREENMART' | 'GLOWERIVE' | 'GADGETSTORE' | 'FURNILUX' | 'ESTATEPRO' | 'DRIVECRAFT' | 'BELORA' | 'ELEVATE' | 'CHRONICS' | 'MAHABESH';
+  theme: 'MEDIUM' | 'MINIMAL' | 'STOREPAL' | 'PLAYMATE' | 'SOLEVO' | 'TECHZONE' | 'VAELORA' | 'STRIDE' | 'CHICWOVE' | 'TECHNOVA' | 'TASTEHOUSE' | 'SPORTEQ' | 'SHOPEASE' | 'QUICKBITE' | 'PETMART' | 'PAPERNEST' | 'NOVELLA' | 'NOVATREND' | 'MINIMOG' | 'MENAURA' | 'MALLON' | 'GROCERYANTO' | 'GREENMART' | 'GLOWERIVE' | 'GADGETSTORE' | 'FURNILUX' | 'ESTATEPRO' | 'DRIVECRAFT' | 'BELORA' | 'ELEVATE' | 'CHRONICS' | 'MAHABESH';
   /** LMS store forms (Step 9), StorePal only; null when off. Same shape as the storefront app's copy. */
   lmsForms?: { notifyMe: boolean; callMeBack: boolean } | null;
 }
