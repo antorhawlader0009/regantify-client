@@ -112,7 +112,8 @@ export function ImageField({ value, onChange, label }: ImageFieldProps) {
   );
 }
 
-function MediaLibraryPicker({ onClose, onPick }: { onClose: () => void; onPick: (url: string) => void }) {
+/** The Media library as a picker: also used by Store > Hero Section. */
+export function MediaLibraryPicker({ onClose, onPick }: { onClose: () => void; onPick: (url: string) => void }) {
   const { data, isLoading } = useQuery({
     queryKey: ['media', 'picker'],
     queryFn: () => mediaApi.list({ type: 'image', perPage: 60 }),

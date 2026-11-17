@@ -68,6 +68,7 @@ export const SETTINGS_CATALOG: CatalogEntry[] = [
   { title: 'Order tracking SMS quiet hours', where: 'Store > Order Tracking', path: '/vendor/store/order-tracking', keywords: 'quiet hours night no sms 10pm 8am রাত' },
 
   // ------------------------------------------------------------------ Store > Design & content
+  { title: 'Hero section (home page slider)', where: 'Store > Hero Section', path: '/vendor/store/hero-section', keywords: 'hero banner slider slideshow carousel home page top picture cover image website cover slide হিরো ব্যানার স্লাইডার ছবি' },
   { title: 'Store theme / template', where: 'Store > Templates', path: '/vendor/store/themes', keywords: 'theme template storepal medium minimal change look design থিম টেমপ্লেট' },
   { title: 'Logo, favicon and brand colours', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'logo favicon color colour brand store name icon লোগো রঙ' },
   { title: 'Store fonts', where: 'Store > Design > Branding', path: '/vendor/store/branding', keywords: 'font fonts typeface typography letters heading font body font google fonts bangla font ফন্ট অক্ষর লেখার ধরন' },

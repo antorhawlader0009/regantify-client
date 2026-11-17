@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Store, Camera, ImageIcon, Loader2, Save } from 'lucide-react';
 import {
@@ -81,11 +82,6 @@ export default function Branding() {
   const [coverError, setCoverError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   // The website's own cover (first slide of the home page hero), separate from the link-preview cover above.
-  const [siteCoverPreview, setSiteCoverPreview] = useState<string | null>(null);
-  const [siteCoverUploading, setSiteCoverUploading] = useState(false);
-  const [siteCoverError, setSiteCoverError] = useState<string | null>(null);
-  const siteCoverInputRef = useRef<HTMLInputElement>(null);
-  const [coverSizeTip, setCoverSizeTip] = useState<string | null>(null);
   const [coverShareTip, setCoverShareTip] = useState<string | null>(null);
 
   /** A gentle size tip after picking a picture (never blocks the upload). */
@@ -103,26 +99,6 @@ export default function Branding() {
       };
       img.src = url;
     });
-
-  const handleRemoveSiteCover = async () => {
-    try {
-      await removeVendorSiteCover();
-      setBranding((prev) => ({ ...prev, brandSiteCoverUrl: null, brandSiteCoverOnly: false }));
-      toast.success('Website cover photo removed.');
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Could not remove it. Please try again.');
-    }
-  };
-
-  const handleSiteCoverOnly = async (only: boolean) => {
-    setBranding((prev) => ({ ...prev, brandSiteCoverOnly: only }));
-    try {
-      await setVendorSiteCoverOnly(only);
-    } catch (err: any) {
-      setBranding((prev) => ({ ...prev, brandSiteCoverOnly: !only }));
-      toast.error(err?.response?.data?.message ?? 'Could not save that. Please try again.');
-    }
-  };
 
   useEffect(() => {
     getVendorBranding()
@@ -399,85 +375,15 @@ export default function Branding() {
         onBangla={(v) => handleField('brandBanglaFont', v)}
       />
 
-      <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-3 mt-6">
-        <h2 className="text-sm font-semibold text-regantify-text">Website cover photo</h2>
+      {/* The website cover moved to Store > Hero Section (2026-11-17): the hero now shows only the pictures picked there. */}
+      <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-6 space-y-2 mt-6">
+        <h2 className="text-sm font-semibold text-regantify-text">Home page banner</h2>
         <p className="text-xs text-regantify-text-muted">
-          A wide picture shown at the top of your store&apos;s home page, as the first slide of the banner. It is separate from the
-          link-preview picture below, so each can be different. Use a wide picture, at least 1920×820.
+          The big pictures at the top of your home page are now set in Store &gt; Hero Section. Your old website cover photo was moved there.
         </p>
-        <div className="relative w-full max-w-xl aspect-[21/9] rounded-xl overflow-hidden bg-regantify-search border border-black/5">
-          {siteCoverPreview || branding.brandSiteCoverUrl ? (
-            <img src={siteCoverPreview ?? branding.brandSiteCoverUrl!} alt="Website cover" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-regantify-text-muted">
-              <ImageIcon size={28} />
-            </div>
-          )}
-          {siteCoverUploading && (
-            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <Loader2 size={20} className="animate-spin" />
-            </div>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => siteCoverInputRef.current?.click()}
-            disabled={siteCoverUploading}
-            className="rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-regantify-text hover:bg-regantify-search disabled:opacity-60"
-          >
-            {branding.brandSiteCoverUrl ? 'Change picture' : 'Upload picture'}
-          </button>
-          {branding.brandSiteCoverUrl && (
-            <button
-              type="button"
-              onClick={handleRemoveSiteCover}
-              className="rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-            >
-              Remove
-            </button>
-          )}
-        </div>
-        <input
-          ref={siteCoverInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          className="hidden"
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const file = e.target.files?.[0];
-            e.target.value = '';
-            if (!file) return;
-            void sizeTip(file, 1920, 820).then(setCoverSizeTip);
-            void handleImageUpload(
-              file,
-              setSiteCoverPreview,
-              setSiteCoverUploading,
-              setSiteCoverError,
-              uploadVendorSiteCover,
-              (url) => handleField('brandSiteCoverUrl', url),
-              'Website cover photo updated. Your storefront will reflect this shortly.',
-            );
-          }}
-        />
-        {coverSizeTip && <p className="text-xs text-amber-600">{coverSizeTip}</p>}
-        {siteCoverError && <p className="text-red-500 text-sm">{siteCoverError}</p>}
-        {branding.brandSiteCoverUrl && (
-          <label className="flex items-start gap-2 text-sm text-regantify-text">
-            <input
-              type="checkbox"
-              checked={branding.brandSiteCoverOnly}
-              onChange={(e) => void handleSiteCoverOnly(e.target.checked)}
-              className="mt-0.5 w-4 h-4"
-            />
-            <span>
-              Show only this picture
-              <span className="block text-xs text-regantify-text-muted">
-                Off: your category cover photos follow it as more slides. On: the banner shows this picture alone.
-              </span>
-            </span>
-          </label>
-        )}
-        <p className="text-xs text-regantify-text-muted">The banner is part of the StorePal theme and can be switched on or off in Design &gt; Customize.</p>
+        <Link to="/vendor/store/hero-section" className="inline-block rounded-xl border border-black/10 px-4 py-2 text-sm font-medium text-regantify-text hover:bg-regantify-search">
+          Open Hero Section
+        </Link>
       </div>
 
       <FullViewOnly>

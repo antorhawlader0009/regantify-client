@@ -60,6 +60,7 @@ const AddPage = lazy(() => import('./pages/vendor/store/AddPage'));
 const Magazine = lazy(() => import('./pages/vendor/store/Magazine'));
 const Faq = lazy(() => import('./pages/vendor/store/Faq'));
 const ShopLocations = lazy(() => import('./pages/vendor/store/ShopLocations'));
+const HeroSection = lazy(() => import('./pages/vendor/store/HeroSection'));
 const SocialFeed = lazy(() => import('./pages/vendor/store/SocialFeed'));
 const ShareQr = lazy(() => import('./pages/vendor/store/ShareQr'));
 const CheckoutFormFields = lazy(() => import('./pages/vendor/store/design/CheckoutFormFields'));
@@ -324,6 +325,7 @@ const vendorPlaceholderRoutes = flattenRoutes(vendorNav).filter(
     r.path !== '/vendor/product/stock-history' &&
     r.path !== '/vendor/store/themes' &&
     r.path !== '/vendor/store/pages' &&
+    r.path !== '/vendor/store/hero-section' &&
     r.path !== '/vendor/store/magazine' &&
     r.path !== '/vendor/store/faq' &&
     r.path !== '/vendor/store/locations' &&
@@ -557,6 +559,7 @@ export default function App() {
                 <Route path="/vendor/store/themes" element={<Themes />} />
                 <Route path="/vendor/store/pages" element={<Pages />} />
                 <Route path="/vendor/store/pages/add" element={<AddPage />} />
+                <Route path="/vendor/store/hero-section" element={<HeroSection />} />
                 <Route path="/vendor/store/pages/edit/:id" element={<AddPage />} />
                 <Route path="/vendor/store/faq" element={<Faq />} />
                 <Route path="/vendor/store/locations" element={<ShopLocations />} />

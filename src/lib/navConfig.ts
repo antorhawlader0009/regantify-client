@@ -172,6 +172,7 @@ export const vendorNav: NavSection[] = [
     group: 'Store',
     children: [
       { label: 'Templates', path: '/vendor/store/themes' },
+      { label: 'Hero Section', path: '/vendor/store/hero-section' },
       { label: 'Design', path: '/vendor/store/design', alsoActive: DESIGN_PAGE_PATHS },
       {
         label: 'Design',
