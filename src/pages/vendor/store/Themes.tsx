@@ -174,6 +174,12 @@ const THEMES: ThemeInfo[] = [
       'A bold sports-equipment look: a charcoal header, a full-picture black hero with big capitals, lime green buttons, a round-photo category row, light grey product cards and a clean white footer, with an Orbitron wordmark. Every StorePal feature works the same.',
   },
   {
+    id: 'TASTEHOUSE',
+    name: 'Tastehouse',
+    description:
+      'A warm food-delivery look: a cream page, a peach hero card with a big dish photo, tinted cuisine cards with round photos, soft dish cards with a small orange add button, green and peach offer tiles and a light footer. Every StorePal feature works the same.',
+  },
+  {
     id: 'CHICWOVE',
     name: 'Chicwove',
     description:
@@ -201,6 +207,7 @@ const DEMO_PATHS: Partial<Record<StoreTheme, string>> = {
   VAELORA: '/template-demo/vaelora',
   STRIDE: '/template-demo/stride',
   CHICWOVE: '/template-demo/chicwove',
+  TASTEHOUSE: '/template-demo/tastehouse',
   SPORTEQ: '/template-demo/sporteq',
   SHOPEASE: '/template-demo/shopease',
   QUICKBITE: '/template-demo/quickbite',
@@ -812,6 +819,32 @@ function ThemePreview({ id }: { id: StoreTheme }) {
       </div>
     );
   }
+  if (id === 'TASTEHOUSE') {
+    return (
+      <div className="w-full h-full bg-[#FFFBF7] flex flex-col">
+        <div className="h-3.5 flex items-center px-2 gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#F26A0F]" />
+          <div className="w-8 h-1.5 bg-[#16130F]" />
+          <div className="flex-1 h-2 rounded-full bg-[#FBEFE3]" />
+        </div>
+        <div className="mx-2 h-10 rounded-lg bg-gradient-to-br from-[#FFF3E4] to-[#FFE6CC] flex items-center px-2 gap-2">
+          <div className="flex-1 flex flex-col gap-0.5">
+            <div className="w-12 h-1.5 bg-[#16130F]" />
+            <div className="w-8 h-1.5 bg-[#F26A0F]" />
+          </div>
+          <div className="w-7 h-7 rounded-full bg-[#F4A640]/70" />
+        </div>
+        <div className="p-2 grid grid-cols-4 gap-1.5 flex-1">
+          {['#E9F3E3', '#FDEBD3', '#FDE4DE', '#EEE6F7'].map((c) => (
+            <div key={c} className="rounded-md p-1 flex items-center justify-center" style={{ background: c }}>
+              <div className="w-4 h-4 rounded-full bg-white/80" />
+            </div>
+          ))}
+        </div>
+        <div className="h-2 border-t border-[#F0E6DA]" />
+      </div>
+    );
+  }
   if (id === 'CHICWOVE') {
     return (
       <div className="w-full h-full bg-[#FDF7F0] flex flex-col">
@@ -1041,6 +1074,7 @@ const THEME_CATEGORIES: Partial<Record<StoreTheme, Category[]>> = {
   VAELORA: ['Watches & Accessories'],
   STRIDE: ['Fashion'],
   CHICWOVE: ['Fashion'],
+  TASTEHOUSE: ['Grocery & Food'],
   QUICKBITE: ['Grocery & Food'],
   PETMART: ['Kids & Pets'],
   PAPERNEST: ['Stationery & Education'],
