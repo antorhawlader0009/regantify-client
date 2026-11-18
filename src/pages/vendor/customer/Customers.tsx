@@ -34,6 +34,8 @@ import { CustomerGroupSettingsDialog } from './CustomerGroupSettingsDialog';
 import { useDashboardView } from '../../../lib/useDashboardView';
 import { FullViewOnly } from '../../../components/ui/FullViewOnly';
 import { useCan } from '../../../lib/useStaffAccess';
+import { useIsFreePlan } from '../../../lib/useFreePlan';
+import { upgradeToast } from '../../../components/ui/UpgradePrompt';
 
 const formatMoney = (n: number) => `৳${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -273,6 +275,8 @@ export default function Customers() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
+  // CSV import and export are for paid plans (the owner's rule, 2026-11-18); the server refuses the export too.
+  const csvLocked = useIsFreePlan() === true;
 
   // Automatic group filter (customer-groups.ts on the server); '' = every group.
   const [group, setGroup] = useState<CustomerGroup | ''>('');
@@ -317,6 +321,7 @@ export default function Customers() {
   // search/filter (not just the current page); with a selection, only
   // those rows - see CustomersService.exportCsv.
   const handleExportCsv = async () => {
+    if (csvLocked) return upgradeToast('import and export CSV files');
     setExporting(true);
     try {
       const rows = await customersApi.exportCsv({
@@ -400,7 +405,7 @@ export default function Customers() {
             {canEdit && (
               <>
                 {!isSimple && (
-                <button type="button" onClick={() => navigate('/vendor/customers/bulk-upload')} className={secondaryBtn}>
+                <button type="button" onClick={() => (csvLocked ? upgradeToast('import and export CSV files') : navigate('/vendor/customers/bulk-upload'))} className={secondaryBtn}>
                   <Upload size={15} />
                   Bulk upload
                 </button>

@@ -12,6 +12,8 @@ import { ViewProductOnStorefront } from '../../../components/product/ViewProduct
 import { useCan } from '../../../lib/useStaffAccess';
 import { CheckoutReminderButton } from '../../../components/order/CheckoutReminderSettings';
 import { FullViewOnly } from '../../../components/ui/FullViewOnly';
+import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
+import { useIsFreePlan } from '../../../lib/useFreePlan';
 
 const th = 'border-r border-line px-3 py-3 text-left font-normal last:border-r-0';
 
@@ -263,7 +265,20 @@ function IncompleteOrderRow({ order, selected, onToggleSelect, onChangeLabel, on
  * own card, in place of the order table): IncompleteOrder rows, i.e.
  * checkouts a shopper started but never placed.
  */
+/** Abandoned checkouts are a paid-plan feature (the owner's rule, 2026-11-18): a Free store keeps none, so it sees why. */
 export default function AbandonedCart() {
+  if (useIsFreePlan() === true) {
+    return (
+      <LockedFeatureCard
+        title="Abandoned checkouts aren't on the Free plan"
+        message="Upgrade your plan to see shoppers who started checkout but didn't order, and send them reminders."
+      />
+    );
+  }
+  return <AbandonedCartList />;
+}
+
+function AbandonedCartList() {
   const queryClient = useQueryClient();
   const canEdit = useCan('orders.edit');
   const canDelete = useCan('orders.delete');

@@ -1,6 +1,7 @@
 import type { FooterConfig } from '../../../../lib/footerApi';
 import { FooterLinkListEditor } from './FooterLinkListEditor';
 import { CallBarDesign } from './CallBarDesign';
+import { useIsFreePlan } from '../../../../lib/useFreePlan';
 
 const inputClass = 'w-full px-3 py-2 rounded-lg border border-black/10 text-sm focus:outline-none focus:border-regantify-cta';
 
@@ -161,14 +162,24 @@ export function FooterExtras({ config, onChange, storeAddress, storePhone }: { c
  * card, shown in Simple mode too (the rest of FooterExtras is Full mode), so every seller can find the switch.
  */
 export function FooterCreditToggle({ config, onChange }: { config: FooterConfig; onChange: (patch: Partial<FooterConfig>) => void }) {
+  // Hiding the credit is for paid plans only (the owner's rule, 2026-11-18); the server keeps it on for Free too.
+  const locked = useIsFreePlan() === true;
   return (
     <section className="mt-5 rounded-xl border border-line bg-white p-5">
-      <label className="flex items-center justify-between gap-3">
+      <label className={`flex items-center justify-between gap-3 ${locked ? 'opacity-70' : ''}`}>
         <span>
           <span className="block text-sm font-medium text-regantify-text">Show “System Design &amp; Developed By: Reganto IT Solution”</span>
-          <span className="mt-0.5 block text-xs text-regantify-text-muted">A small line in the footer’s bottom bar. Untick to hide it, then press Save.</span>
+          <span className="mt-0.5 block text-xs text-regantify-text-muted">
+            {locked ? 'Always shown on the Free plan. Upgrade your plan to hide it.' : 'A small line in the footer’s bottom bar. Untick to hide it, then press Save.'}
+          </span>
         </span>
-        <input type="checkbox" checked={config.showCredit} onChange={(e) => onChange({ showCredit: e.target.checked })} className="h-4 w-4 shrink-0" />
+        <input
+          type="checkbox"
+          checked={locked ? true : config.showCredit}
+          disabled={locked}
+          onChange={(e) => onChange({ showCredit: e.target.checked })}
+          className="h-4 w-4 shrink-0"
+        />
       </label>
     </section>
   );

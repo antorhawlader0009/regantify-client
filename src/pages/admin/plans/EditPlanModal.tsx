@@ -166,6 +166,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
   const [monthlyVisitLimit, setMonthlyVisitLimit] = useState<number | null>(plan?.monthlyVisitLimit ?? null);
   const [themeAllowance, setThemeAllowance] = useState<number | null>(plan?.themeAllowance ?? null);
   const [imageUploadLimitPerDay, setImageUploadLimitPerDay] = useState<number | null>(plan?.imageUploadLimitPerDay ?? null);
+  const [productLimit, setProductLimit] = useState<number | null>(plan?.productLimit ?? null);
+  const [imageUploadLimit, setImageUploadLimit] = useState<number | null>(plan?.imageUploadLimit ?? null);
   const [aiCreditGrant, setAiCreditGrant] = useState<number>(plan?.aiCreditGrant ?? 0);
   const [staffLimit, setStaffLimit] = useState<number | null>(plan?.staffLimit ?? null);
   const [staffRoleTier, setStaffRoleTier] = useState<number>(plan?.staffRoleTier ?? 0);
@@ -206,6 +208,8 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
       monthlyVisitLimit,
       themeAllowance,
       imageUploadLimitPerDay,
+      productLimit,
+      imageUploadLimit,
       aiCreditGrant,
       staffLimit,
       staffRoleTier,
@@ -301,7 +305,7 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
           </div>
 
           <p className="text-xs text-regantify-text-muted -mb-2">
-            Leave a limit field blank for unlimited. Products, orders and image uploads are unlimited in total; the "per day" numbers (new products, image uploads) cap a single day and "Orders / month" caps one calendar month (Dhaka time). Stores never see these numbers; they get a warning once 5 or fewer are left.
+            Leave a limit field blank for unlimited. The "per day" numbers (new products, image uploads) cap a single day and "Orders / month" caps one calendar month (Dhaka time). Stores never see these numbers; they get a warning once 5 or fewer are left.
           </p>
           <div className="grid grid-cols-2 gap-3">
             <LimitField label="New products / day" value={productLimitPerDay} onChange={setProductLimitPerDay} />
@@ -310,7 +314,12 @@ export function EditPlanModal({ plan, onOpenChange, onSave, submitting }: EditPl
             <LimitField label="Theme allowance" value={themeAllowance} onChange={setThemeAllowance} />
             <LimitField label="Image uploads / day" value={imageUploadLimitPerDay} onChange={setImageUploadLimitPerDay} />
             <LimitField label="Staff limit" value={staffLimit} onChange={setStaffLimit} />
+            <LimitField label="Products in total" value={productLimit} onChange={setProductLimit} />
+            <LimitField label="Images in total" value={imageUploadLimit} onChange={setImageUploadLimit} />
           </div>
+          <p className="text-xs text-regantify-text-muted -mt-1">
+            "In total" caps how many products and stored pictures a store may have (Free: 500 and 5,000 by default). Stores still see "Unlimited". A single store can get more in its store page under Limits.
+          </p>
 
           <div>
             <label htmlFor="plan-staff-roles" className="block text-xs font-medium text-regantify-text-muted mb-1">

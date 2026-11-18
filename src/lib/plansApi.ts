@@ -31,6 +31,9 @@ export interface Plan {
   /** Daily caps (products, orders and image uploads are unlimited in total). Only Super Admin's plan list has them; the vendor
    *  answers leave them out, because the number is never shown to a store (lib/dailyLimits.ts). null = no daily cap. */
   productLimitPerDay?: number | null;
+  /** TOTAL caps (2026-11-18): only in Super Admin's answers; stores never get them. */
+  productLimit?: number | null;
+  imageUploadLimit?: number | null;
   orderLimitPerDay?: number | null;
   imageUploadLimitPerDay?: number | null;
   monthlyVisitLimit: number | null;

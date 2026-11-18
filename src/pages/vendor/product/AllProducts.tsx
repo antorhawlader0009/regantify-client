@@ -30,7 +30,8 @@ import { productsApi, type Product } from '../../../lib/productsApi';
 import { categoriesApi } from '../../../lib/categoriesApi';
 import { downloadProducts } from '../../../lib/productExport';
 import { getVendorPlanUsage } from '../../../lib/plansApi';
-import { LockedBadge, dailyLimitToast } from '../../../components/ui/UpgradePrompt';
+import { LockedBadge, dailyLimitToast, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { useIsFreePlan } from '../../../lib/useFreePlan';
 import { DailyLimitBanner, UnlimitedBadge } from '../../../components/DailyLimitBanner';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuSeparator } from '../../../components/ui/DropdownMenu';
 import { toast } from '../../../lib/toast';
@@ -566,7 +567,10 @@ export default function AllProducts() {
   const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
   // Export: the ticked products, or with none ticked everything matching the filters (all pages).
   const [exporting, setExporting] = useState(false);
+  // CSV import and export are for paid plans (the owner's rule, 2026-11-18); the server refuses them too.
+  const csvLocked = useIsFreePlan() === true;
   async function handleExport() {
+    if (csvLocked) return upgradeToast('import and export CSV files');
     setExporting(true);
     try {
       const { count, truncated } = await downloadProducts({
@@ -765,7 +769,7 @@ export default function AllProducts() {
 
           {!isSimple && (
           <button
-            onClick={() => (atProductLimit ? dailyLimitToast('products') : setShowImportModal(true))}
+            onClick={() => (csvLocked ? upgradeToast('import and export CSV files') : atProductLimit ? dailyLimitToast('products') : setShowImportModal(true))}
             title={atProductLimit ? "Today's limit for new products is used up. Talk to support to raise it." : 'Import products from CSV'}
             className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm transition-colors ${
               atProductLimit ? 'bg-neutral-100 text-regantify-text-muted' : 'bg-brand-blue text-white hover:opacity-90'

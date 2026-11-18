@@ -22,6 +22,9 @@ export interface UpdatePlanPayload {
   monthlyVisitLimit?: number | null;
   themeAllowance?: number | null;
   imageUploadLimitPerDay?: number | null;
+  /** TOTAL products / stored images a store may have (2026-11-18; Free 500 / 5,000). Stores never see them ("Unlimited"). null = no cap. */
+  productLimit?: number | null;
+  imageUploadLimit?: number | null;
   /** AI Credits given once when the plan is bought (0 = none). */
   aiCreditGrant?: number | null;
   staffLimit?: number | null;

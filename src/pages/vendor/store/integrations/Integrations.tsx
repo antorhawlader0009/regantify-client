@@ -9,6 +9,8 @@ import { tiktokPixelApi } from '../../../../lib/tiktokPixelApi';
 import { webhooksApi } from '../../../../lib/webhooksApi';
 import { apiKeysApi } from '../../../../lib/apiKeysApi';
 import { useDashboardView } from '../../../../lib/useDashboardView';
+import { useIsFreePlan } from '../../../../lib/useFreePlan';
+import { LockedBadge } from '../../../../components/ui/UpgradePrompt';
 
 /**
  * Store > Integrations - one card per marketing/analytics integration.
@@ -24,6 +26,8 @@ export default function Integrations() {
   const { data: apiKeys } = useQuery({ queryKey: ['api-keys'], queryFn: apiKeysApi.list });
   // Simple mode (SIMPLE-VIEW-plan.md Step 8): Facebook Pixel, plus whatever is already connected.
   const { isSimple } = useDashboardView();
+  // Free plan: only the Meta Pixel (its Pixel ID) is offered (the owner's rule, 2026-11-18); the server refuses the rest.
+  const free = useIsFreePlan() === true;
 
   return (
     <div className="max-w-4xl">
@@ -47,6 +51,7 @@ export default function Integrations() {
         <IntegrationCard
           to="/vendor/store/integrations/meta-conversions-api"
           fullViewOnly
+          locked={free}
           icon={<Server size={20} />}
           iconClass="bg-[#1877F2]/10 text-[#1877F2]"
           title="Meta Conversions API"
@@ -64,6 +69,7 @@ export default function Integrations() {
         <IntegrationCard
           to="/vendor/store/integrations/tiktok-pixel"
           fullViewOnly
+          locked={free}
           icon={<Music2 size={20} />}
           iconClass="bg-black/5 text-regantify-text"
           title="TikTok Pixel"
@@ -73,6 +79,7 @@ export default function Integrations() {
         <IntegrationCard
           to="/vendor/store/integrations/google-analytics"
           fullViewOnly
+          locked={free}
           icon={<BarChart3 size={20} />}
           iconClass="bg-[#F9AB00]/10 text-[#E37400]"
           title="Google Analytics 4"
@@ -82,6 +89,7 @@ export default function Integrations() {
         <IntegrationCard
           to="/vendor/store/integrations/google-tag-manager"
           fullViewOnly
+          locked={free}
           icon={<Tags size={20} />}
           iconClass="bg-[#4285F4]/10 text-[#4285F4]"
           title="Google Tag Manager"
@@ -98,6 +106,7 @@ export default function Integrations() {
         <IntegrationCard
           to="/vendor/store/integrations/webhooks"
           fullViewOnly
+          locked={free}
           icon={<Webhook size={20} />}
           iconClass="bg-violet-50 text-violet-700"
           title="Webhooks"
@@ -115,6 +124,7 @@ export default function Integrations() {
         <IntegrationCard
           to="/vendor/store/integrations/external-api"
           fullViewOnly
+          locked={free}
           icon={<KeyRound size={20} />}
           iconClass="bg-slate-100 text-slate-700"
           title="External API"
@@ -134,6 +144,7 @@ function IntegrationCard({
   description,
   status,
   fullViewOnly,
+  locked,
 }: {
   // No link = not built yet ("Coming soon").
   to?: string;
@@ -145,6 +156,8 @@ function IntegrationCard({
   status?: 'connected' | 'not-set' | 'attention';
   /** Hidden in Simple mode unless it is already set up (SIMPLE-VIEW-plan.md Step 8). */
   fullViewOnly?: boolean;
+  /** Not on the store's plan (Free has only the Meta Pixel, 2026-11-18): shown greyed with a lock, not a link. */
+  locked?: boolean;
 }) {
   const { isSimple } = useDashboardView();
   if (isSimple && fullViewOnly && status !== 'connected' && status !== 'attention') return null;
@@ -152,7 +165,11 @@ function IntegrationCard({
     <>
       <div className="flex items-start justify-between gap-3">
         <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center ${iconClass}`}>{icon}</div>
-        {!to ? (
+        {locked ? (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
+            <LockedBadge size={11} className="text-amber-700" /> Paid plans
+          </span>
+        ) : !to ? (
           <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/5 text-regantify-text-muted">
             Coming soon
           </span>
@@ -172,7 +189,12 @@ function IntegrationCard({
       </div>
       <h2 className="text-base font-medium text-regantify-text mt-4">{title}</h2>
       <p className="text-sm text-regantify-text-muted mt-1">{description}</p>
-      {to && (
+      {locked ? (
+        <Link to="/vendor/billing?tab=plan" className="inline-flex items-center gap-1 text-sm font-medium text-regantify-cta mt-4">
+          Upgrade to use it
+          <ChevronRight size={16} />
+        </Link>
+      ) : to && (
         <span className="inline-flex items-center gap-1 text-sm font-medium text-regantify-cta mt-4">
           {status === 'connected' || status === 'attention' ? 'Manage' : 'Set up'}
           <ChevronRight size={16} />
@@ -181,7 +203,7 @@ function IntegrationCard({
     </>
   );
 
-  return to ? (
+  return to && !locked ? (
     <Link
       to={to}
       className="block bg-white rounded-2xl border border-black/5 p-5 hover:border-regantify-cta/40 hover:shadow-sm transition"

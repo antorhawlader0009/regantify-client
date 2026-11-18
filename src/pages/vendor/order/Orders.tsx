@@ -59,6 +59,7 @@ import {
 } from '../../../lib/courierApi';
 import { apiErrorMessage } from '../../../lib/api';
 import { LockedBadge, dailyLimitToast, upgradeToast } from '../../../components/ui/UpgradePrompt';
+import { useIsFreePlan } from '../../../lib/useFreePlan';
 import { DailyLimitBanner, UnlimitedBadge } from '../../../components/DailyLimitBanner';
 import { DropdownMenu, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub } from '../../../components/ui/DropdownMenu';
 import { Dialog } from '../../../components/ui/Dialog';
@@ -1078,7 +1079,10 @@ export default function Orders() {
   // "Export": the selected orders, or with nothing selected every order matching the current
   // tab, search, dates and filters (all pages), as a CSV that opens in Excel.
   const [exporting, setExporting] = useState(false);
+  // CSV import and export are for paid plans (the owner's rule, 2026-11-18); the server refuses the import too.
+  const csvLocked = useIsFreePlan() === true;
   async function handleExport() {
+    if (csvLocked) return upgradeToast('import and export CSV files');
     setExporting(true);
     try {
       const rows =
@@ -1333,7 +1337,7 @@ export default function Orders() {
           )}
 
           {!isSimple && canCreate && activeTab !== 'ABANDONED' && !trashView && (
-            <button type="button" onClick={() => navigate('/vendor/orders/import')} className={toolbarBtn} title="Bring orders in from an Excel or CSV file">
+            <button type="button" onClick={() => (csvLocked ? upgradeToast('import and export CSV files') : navigate('/vendor/orders/import'))} className={toolbarBtn} title="Bring orders in from an Excel or CSV file">
               <Upload size={15} />
               Import
             </button>

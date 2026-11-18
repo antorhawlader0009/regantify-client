@@ -14,7 +14,7 @@ export interface PlatformSwitch {
   changedAt: string | null;
 }
 
-export const LIMIT_FIELDS = ['productLimitPerDay', 'orderLimitPerDay', 'staffLimit', 'imageUploadLimitPerDay', 'landingPageLimit'] as const;
+export const LIMIT_FIELDS = ['productLimitPerDay', 'orderLimitPerDay', 'staffLimit', 'imageUploadLimitPerDay', 'landingPageLimit', 'productLimit', 'imageUploadLimit'] as const;
 export type LimitField = (typeof LIMIT_FIELDS)[number];
 export const LIMIT_LABEL: Record<LimitField, string> = {
   productLimitPerDay: 'New products per day',
@@ -22,6 +22,8 @@ export const LIMIT_LABEL: Record<LimitField, string> = {
   staffLimit: 'Staff',
   imageUploadLimitPerDay: 'Image uploads per day',
   landingPageLimit: 'Landing pages',
+  productLimit: 'Products in total',
+  imageUploadLimit: 'Images in total',
 };
 
 type Limits = Record<LimitField, number | null>;

@@ -7,6 +7,8 @@ import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { CodeEditor } from '../../../../components/editor/CodeEditor';
 import { CustomCodeAiHelper } from '../../../../components/store/CustomCodeAiHelper';
+import { LockedFeatureCard } from '../../../../components/ui/UpgradePrompt';
+import { useIsFreePlan } from '../../../../lib/useFreePlan';
 
 interface CustomCodePageProps {
   field: keyof CustomCode;
@@ -24,6 +26,8 @@ function CustomCodePage({ field, title, description, language }: CustomCodePageP
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ['custom-code'], queryFn: customCodeApi.get });
   const [value, setValue] = useState<string | null>(null);
+  // Custom CSS is for paid plans (the owner's rule, 2026-11-18); the server refuses it too.
+  const cssLocked = useIsFreePlan() === true && field === 'customCss';
 
   useEffect(() => {
     if (data) setValue(data[field] ?? '');
@@ -46,7 +50,9 @@ function CustomCodePage({ field, title, description, language }: CustomCodePageP
       </div>
       {field === 'headScripts' && <CustomScriptsNotice />}
 
-      {isLoading || value === null ? (
+      {cssLocked ? (
+        <LockedFeatureCard title="Custom CSS isn't on the Free plan" message="Upgrade your plan to add your own CSS to your store." />
+      ) : isLoading || value === null ? (
         <div className="bg-white rounded-2xl border border-black/5 p-8 flex items-center justify-center">
           <Loader2 size={20} className="animate-spin text-regantify-text-muted" />
         </div>

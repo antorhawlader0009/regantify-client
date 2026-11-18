@@ -10,6 +10,8 @@ import { useAuthStore } from '../../../../store/authStore';
 import { apiErrorMessage } from '../../../../lib/api';
 import { toast } from '../../../../lib/toast';
 import { inputClass, LoadError, Notice, Row, Section, Toggle } from './IntegrationForm';
+import { useIsFreePlan } from '../../../../lib/useFreePlan';
+import { LockedFeatureCard } from '../../../../components/ui/UpgradePrompt';
 
 // The pixel half of MetaPixelSettings (the Conversions API half is on
 // MetaConversionsApi.tsx; both pages read and save the same settings, each
@@ -48,6 +50,7 @@ export default function FacebookPixel() {
   });
   const { data: customDomain } = useQuery({ queryKey: ['vendor-domain'], queryFn: getVendorDomain });
   const [form, setForm] = useState<FormState | null>(null);
+  const free = useIsFreePlan() === true;
 
   // Fill the form once; later refetches never overwrite unsaved edits.
   // Save resets it itself.
@@ -57,7 +60,8 @@ export default function FacebookPixel() {
 
   const save = useMutation({
     mutationFn: (value: FormState) =>
-      metaPixelApi.update({
+      // Free plan: only the Pixel ID (the owner's rule, 2026-11-18).
+      free ? metaPixelApi.update({ pixelId: value.pixelId.replace(/\s/g, '') }) : metaPixelApi.update({
         pixelId: value.pixelId.replace(/\s/g, ''),
         secondaryPixelId: value.secondaryPixelId.replace(/\s/g, ''),
         eventMode: value.eventMode,
@@ -144,6 +148,14 @@ export default function FacebookPixel() {
             </div>
           )}
 
+          {free && (
+            <LockedFeatureCard
+              title="Free plan: Pixel ID only"
+              message="On the Free plan you can add your Pixel ID, and browser events are sent. The catalog feed, Conversions API, secondary pixel, domain verification and other options are on paid plans."
+            />
+          )}
+
+          {!free && (
           <Section title="Catalog Feed">
             <Row
               label="Feed URL"
@@ -165,6 +177,7 @@ export default function FacebookPixel() {
               </div>
             </Row>
           </Section>
+          )}
 
           <Section title="Meta Pixel">
             <Row label="Pixel ID" hint="Only the number, not the whole pixel code. Find it in Meta Events Manager.">
@@ -180,6 +193,7 @@ export default function FacebookPixel() {
               />
             </Row>
 
+            {!free && (<>
             <Row
               label="Event Trigger Method"
               hint='"StorePal Defined Events" sends product views, add-to-carts, checkouts and purchases with product details (best for catalog ads). Use "Automatic Events" only if the defined events cause problems in your ad account.'
@@ -258,8 +272,10 @@ export default function FacebookPixel() {
                 className={inputClass}
               />
             </Row>
+            </>)}
           </Section>
 
+          {!free && (
           <Notice tone="info">
             Send these events from our server too, so ad blockers and iOS can&apos;t lose them, and send Purchase only
             for confirmed orders: set up the{' '}
@@ -268,6 +284,7 @@ export default function FacebookPixel() {
             </Link>
             .
           </Notice>
+          )}
 
           <button
             onClick={() => save.mutate(form)}

@@ -243,16 +243,14 @@ function BookingDefaultsCard() {
 }
 
 export function RedxSettingsTab({ overview }: { overview: RedxOverview }) {
-  if (!overview.planAllowed && !overview.connected) {
-    return <PlanLockedCard title="RedX needs a paid plan" message="Upgrade to connect RedX and send parcels with it. SteadFast is free on every plan." />;
-  }
+  // Every plan may connect RedX (its account also helps the customer delivery check); booking is paid-only (2026-11-18).
   return (
     <div className="space-y-4">
       <AccountCard overview={overview} />
       {!overview.planAllowed ? (
         <PlanLockedCard
-          title="Your plan no longer includes RedX"
-          message="Upgrade to send parcels with RedX again. Parcels already sent keep updating."
+          title="Booking with RedX needs a paid plan"
+          message="You can connect RedX on the Free plan, but parcels are booked and followed only on paid plans. SteadFast works on every plan."
         />
       ) : (
         overview.connected && (
