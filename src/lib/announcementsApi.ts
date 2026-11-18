@@ -3,11 +3,12 @@ import { api } from './api';
 // Platform announcements (TellMe idea 131) - mirrors server/src/announcements.
 
 export type AnnouncementTone = 'INFO' | 'WARNING' | 'URGENT';
-export type AnnouncementFeature = 'POS' | 'LMS' | 'CUSTOM_DOMAIN';
+// CHAT_EXTENSION: stores with a browser linked to the Chat Order Saver; the extension's side panel shows these too.
+export type AnnouncementFeature = 'POS' | 'LMS' | 'CUSTOM_DOMAIN' | 'CHAT_EXTENSION';
 export type PlanCodeValue = 'FREE' | 'BASIC' | 'STARTER' | 'ADVANCE';
 
 export const TONE_LABEL: Record<AnnouncementTone, string> = { INFO: 'Information', WARNING: 'Warning', URGENT: 'Urgent' };
-export const FEATURE_LABEL: Record<AnnouncementFeature, string> = { POS: 'POS System', LMS: 'LMS', CUSTOM_DOMAIN: 'Custom domain' };
+export const FEATURE_LABEL: Record<AnnouncementFeature, string> = { POS: 'POS System', LMS: 'LMS', CUSTOM_DOMAIN: 'Custom domain', CHAT_EXTENSION: 'Chat extension users (also shown in the extension)' };
 
 /** What a store sees. */
 export interface VendorAnnouncement {
