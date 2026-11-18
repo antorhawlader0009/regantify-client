@@ -4,6 +4,7 @@ import { Loader2, Save } from 'lucide-react';
 import { getWatermarkSettings, updateWatermarkSettings, type WatermarkSettings } from '../../lib/vendorApi';
 import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
+import { useIsFreePlan } from '../../lib/useFreePlan';
 
 const POSITIONS: Array<[WatermarkSettings['position'], string]> = [
   ['TOP_LEFT', 'Top left'],
@@ -20,6 +21,7 @@ const POSITIONS: Array<[WatermarkSettings['position'], string]> = [
  */
 export function WatermarkSection() {
   const queryClient = useQueryClient();
+  const isFree = useIsFreePlan() === true;
   const { data, isLoading } = useQuery({ queryKey: ['watermark-settings'], queryFn: getWatermarkSettings, retry: false });
   const [mode, setMode] = useState<WatermarkSettings['mode']>('OFF');
   const [position, setPosition] = useState<WatermarkSettings['position']>('BOTTOM_RIGHT');
@@ -47,6 +49,11 @@ export function WatermarkSection() {
       <p className="mt-1 text-sm text-regantify-text-muted">
         Put your logo or shop name over every product photo in your store, so copied photos carry your name. Your uploaded photos are not changed, so you can switch it off any time. StorePal only.
       </p>
+      {isFree && (
+        <p className="mt-3 rounded-lg bg-red-600 px-3 py-2 text-sm text-white">
+          The watermark isn't shown on the Free plan. Your setting is kept and works again when you upgrade.
+        </p>
+      )}
       {isLoading ? (
         <div className="mt-4 h-20 animate-pulse rounded-lg bg-neutral-100" aria-busy />
       ) : (

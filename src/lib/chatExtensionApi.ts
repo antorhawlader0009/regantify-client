@@ -38,8 +38,15 @@ export interface ChatRecord {
 export interface ChatRecordDetail extends ChatRecord {
   note: string | null;
   messages: Array<{ from: 'customer' | 'store'; text: string }>;
+  /** What was read from the customer's photos (the photos themselves are no longer kept, 2026-11-18). */
+  photoFindings?: ChatPhotoFinding[];
   updatedAt: string;
 }
+
+export type ChatPhotoFinding =
+  | { kind: 'PAYMENT'; wallet: string | null; trxId: string | null; amount: number | null; sender: string | null }
+  | { kind: 'PRODUCT'; productId: string; productName: string }
+  | { kind: 'ADDRESS'; address: string };
 
 /** A customer photo kept with a saved chat (encrypted on the server, deleted 90 days after it was saved). */
 export interface ChatRecordPhoto {

@@ -535,9 +535,25 @@ function RecordDialog({ id, onClose }: { id: string; onClose: () => void }) {
                 ))}
               </div>
             )}
+            {(data.photoFindings?.length ?? 0) > 0 && (
+              <div>
+                <p className="mb-1 text-xs font-medium text-neutral-600">Read from the customer's photos</p>
+                <ul className="space-y-1 rounded-lg bg-neutral-50 p-2 text-xs text-regantify-text">
+                  {data.photoFindings!.map((f, i) => (
+                    <li key={i}>
+                      {f.kind === 'PAYMENT'
+                        ? `${f.wallet || 'Payment'}${f.trxId ? `, TrxID ${f.trxId}` : ''}${f.amount ? `, ৳${f.amount}` : ''}${f.sender ? `, from ${f.sender}` : ''} (from a screenshot, check it in your app)`
+                        : f.kind === 'PRODUCT'
+                          ? `Product: ${f.productName}`
+                          : `Address: ${f.address}`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {photos && photos.length > 0 && (
               <div>
-                <p className="mb-1 text-xs font-medium text-neutral-600">Customer photos (kept 90 days)</p>
+                <p className="mb-1 text-xs font-medium text-neutral-600">Customer photos saved before (kept 90 days)</p>
                 <div className="flex flex-wrap gap-2">
                   {photos.map((p) => (
                     <KeptPhoto key={p.id} photo={p} recordId={id} />
