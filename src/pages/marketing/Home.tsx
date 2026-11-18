@@ -2,7 +2,7 @@ import { siteAsset } from '../../lib/siteAssets';
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SiteNav, { readStoredLang, storeLang, readStoredNight, storeNight } from '../../components/marketing/SiteNav';
-import HeroFilmstrip from '../../components/marketing/HeroFilmstrip';
+import HeroScrollStory from '../../components/marketing/HeroScrollStory';
 import { useQuery } from '@tanstack/react-query';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import TemplateShowcase from '../../components/marketing/TemplateShowcase';
@@ -36,14 +36,36 @@ const dict = {
     hero_sub: 'Free setup and payment to orders and delivery, all in one place.',
     hero_cta: 'Start free',
     hero_carousel_label: 'What Regantify does',
-    hero_s1_title: 'Your whole shop, one app',
-    hero_s1_detail: 'Orders, payments and deliveries in one simple dashboard, made for Bangladeshi sellers.',
-    hero_s2_title: 'Book couriers in a tap',
-    hero_s2_detail: 'Send parcels with the leading local couriers and follow them without leaving the dashboard.',
-    hero_s3_title: 'Get paid your way',
-    hero_s3_detail: 'Mobile banking, card and QR payments reach your built-in wallet.',
-    hero_s4_title: 'Photo to product page',
-    hero_s4_detail: 'Snap a picture and AI drafts the title and details of your listing.',
+    hero_f1_title: 'Add products by chatting',
+    hero_f1_detail: 'Tell the AI assistant about your product in plain Bangla and it fills in the listing for you.',
+    hero_f1_p1: 'Name, price, colours and sizes picked up from your message',
+    hero_f1_p2: 'Photo and description ready to edit',
+    hero_f1_p3: 'Works with the full Add Product form',
+    hero_f2_title: 'Handle every order with confidence',
+    hero_f2_detail: 'Spot fake orders early, follow each order from pending to delivered, and manage returns and cancellations in one place.',
+    hero_f2_p1: 'Risk score and fake order detection',
+    hero_f2_p2: 'Customer order history check',
+    hero_f2_p3: 'Return and cancel in a tap',
+    hero_f3_title: 'Send to any courier',
+    hero_f3_detail: 'Book Pathao, SteadFast and RedX from your order list and follow every parcel.',
+    hero_f3_p1: 'Tracking and delivery status in the dashboard',
+    hero_f3_p2: 'Cash on delivery collected and recorded',
+    hero_f3_p3: 'Returns and refunds handled',
+    hero_f4_title: 'Landing pages in minutes',
+    hero_f4_detail: 'Drag sections into place, add a sticky order button and customer reviews, then publish a page that sells.',
+    hero_f4_p1: 'Drag and drop section builder',
+    hero_f4_p2: 'Ready-made designs for every kind of shop',
+    hero_f4_p3: 'AI drafts the page from your product',
+    hero_f5_title: 'POS and LMS in one dashboard',
+    hero_f5_detail: 'Sell over the counter and manage your leads without leaving Regantify.',
+    hero_f5_p1: 'Counter selling with a receipt printer and barcode scanner',
+    hero_f5_p2: 'LMS to manage leads and follow-ups',
+    hero_f5_p3: 'Same products, stock and customers as your online store',
+    hero_f6_title: 'Get paid, safely',
+    hero_f6_detail: 'Shoppers pay by mobile wallet, card or cash on delivery, and the money lands in your Regantify wallet.',
+    hero_f6_p1: 'Mobile banking, card and cash on delivery',
+    hero_f6_p2: 'Instant payment received updates',
+    hero_f6_p3: 'Daily earnings at a glance',
 
     who_title: 'Premium store designs',
     who_sub: 'Pick a design that fits what you sell, then make it yours.',
@@ -202,14 +224,36 @@ const dict = {
     hero_sub: 'ফ্রি সেটআপ থেকে পেমেন্ট, অর্ডার ও ডেলিভারি সব এক জায়গায়।',
     hero_cta: 'ফ্রি শুরু করুন',
     hero_carousel_label: 'Regantify যা যা করে',
-    hero_s1_title: 'পুরো দোকান, এক অ্যাপে',
-    hero_s1_detail: 'অর্ডার, পেমেন্ট আর ডেলিভারি, সব এক সহজ ড্যাশবোর্ডে। বাংলাদেশের বিক্রেতাদের জন্য তৈরি।',
-    hero_s2_title: 'এক ট্যাপে কুরিয়ার বুক',
-    hero_s2_detail: 'দেশের পরিচিত কুরিয়ার দিয়ে পার্সেল পাঠান, ড্যাশবোর্ড ছেড়ে না গিয়েই ট্র্যাক করুন।',
-    hero_s3_title: 'পেমেন্ট নিন আপনার মতো',
-    hero_s3_detail: 'মোবাইল ব্যাংকিং, কার্ড আর QR পেমেন্ট সরাসরি আপনার ওয়ালেটে।',
-    hero_s4_title: 'ছবি থেকে প্রোডাক্ট পেজ',
-    hero_s4_detail: 'একটা ছবি তুলুন, AI আপনার লিস্টিংয়ের টাইটেল আর বিবরণ লিখে দেবে।',
+    hero_f1_title: 'চ্যাট করেই প্রোডাক্ট যোগ করুন',
+    hero_f1_detail: 'AI অ্যাসিস্ট্যান্টকে সহজ বাংলায় প্রোডাক্টের কথা বলুন, লিস্টিং সে-ই সাজিয়ে দেবে।',
+    hero_f1_p1: 'আপনার মেসেজ থেকে নাম, দাম, রং আর সাইজ নেয়',
+    hero_f1_p2: 'ছবি আর বিবরণ এডিট করার জন্য তৈরি',
+    hero_f1_p3: 'পুরো Add Product ফর্মের সাথেই কাজ করে',
+    hero_f2_title: 'প্রতিটি অর্ডার সামলান নিশ্চিন্তে',
+    hero_f2_detail: 'ভুয়া অর্ডার আগেই ধরুন, পেন্ডিং থেকে ডেলিভারি পর্যন্ত প্রতিটি অর্ডার অনুসরণ করুন, রিটার্ন আর ক্যানসেলও এক জায়গায়।',
+    hero_f2_p1: 'রিস্ক স্কোর ও ভুয়া অর্ডার শনাক্ত',
+    hero_f2_p2: 'কাস্টমারের আগের অর্ডারের হিস্টরি',
+    hero_f2_p3: 'এক ট্যাপে রিটার্ন ও ক্যানসেল',
+    hero_f3_title: 'যেকোনো কুরিয়ারে পাঠান',
+    hero_f3_detail: 'অর্ডার লিস্ট থেকেই Pathao, SteadFast ও RedX-এ বুক করুন আর প্রতিটি পার্সেল ট্র্যাক করুন।',
+    hero_f3_p1: 'ড্যাশবোর্ডেই ট্র্যাকিং ও ডেলিভারি স্ট্যাটাস',
+    hero_f3_p2: 'ক্যাশ অন ডেলিভারির টাকা হিসাবে ওঠে',
+    hero_f3_p3: 'রিটার্ন ও রিফান্ড সামলানো যায়',
+    hero_f4_title: 'মিনিটেই ল্যান্ডিং পেজ',
+    hero_f4_detail: 'সেকশন টেনে বসান, স্টিকি অর্ডার বাটন আর কাস্টমার রিভিউ যোগ করুন, তারপর বিক্রি বাড়ানো পেজ পাবলিশ করুন।',
+    hero_f4_p1: 'ড্র্যাগ-অ্যান্ড-ড্রপ সেকশন বিল্ডার',
+    hero_f4_p2: 'সব ধরনের দোকানের জন্য রেডিমেড ডিজাইন',
+    hero_f4_p3: 'প্রোডাক্ট থেকে AI পেজের খসড়া লিখে দেয়',
+    hero_f5_title: 'একই ড্যাশবোর্ডে POS আর LMS',
+    hero_f5_detail: 'দোকানে সামনাসামনি বিক্রি করুন আর লিড সামলান, Regantify ছেড়ে না গিয়েই।',
+    hero_f5_p1: 'রসিদ প্রিন্টার ও বারকোড স্ক্যানারে কাউন্টার সেলিং',
+    hero_f5_p2: 'LMS-এ লিড ও ফলো-আপ ম্যানেজ',
+    hero_f5_p3: 'অনলাইন স্টোরের একই প্রোডাক্ট, স্টক ও কাস্টমার',
+    hero_f6_title: 'নিরাপদে পেমেন্ট নিন',
+    hero_f6_detail: 'ক্রেতা মোবাইল ওয়ালেট, কার্ড বা ক্যাশ অন ডেলিভারিতে দেন, টাকা সরাসরি আপনার Regantify ওয়ালেটে আসে।',
+    hero_f6_p1: 'মোবাইল ব্যাংকিং, কার্ড ও ক্যাশ অন ডেলিভারি',
+    hero_f6_p2: 'পেমেন্ট পাওয়ার সাথে সাথে আপডেট',
+    hero_f6_p3: 'প্রতিদিনের আয় এক নজরে',
 
     who_title: 'তৈরি স্টোর ডিজাইন',
     who_sub: 'আপনি যা বিক্রি করেন তার সাথে মানানসই ডিজাইন বেছে নিন, তারপর নিজের মতো সাজান।',
@@ -518,12 +562,14 @@ function HomeInner() {
     { title: t('feat4_title'), detail: t('feat4_detail') },
   ];
 
-  // The four pictures of the hero rail, in the order they should be met.
+  // The six landscape pictures of the hero scroll story, in the order they are met.
   const builtInSlides = [
-    { image: siteAsset('site/hero-1.webp'), alt: 'A seller showing the Regantify dashboard on two phones, with delivery and payment icons around', title: t('hero_s1_title'), detail: t('hero_s1_detail') },
-    { image: siteAsset('site/hero-2.webp'), alt: 'A delivery rider with parcels ready to send', title: t('hero_s2_title'), detail: t('hero_s2_detail') },
-    { image: siteAsset('site/hero-3.webp'), alt: 'A shopkeeper holding a phone with mobile payments coming in', title: t('hero_s3_title'), detail: t('hero_s3_detail') },
-    { image: siteAsset('site/hero-4.webp'), alt: 'A product photo turning into a finished listing on a phone', title: t('hero_s4_title'), detail: t('hero_s4_detail') },
+    { image: '/site/hero-feat-1.jpg', alt: 'A seller adding a product through the AI assistant chat', title: t('hero_f1_title'), detail: t('hero_f1_detail'), points: [t('hero_f1_p1'), t('hero_f1_p2'), t('hero_f1_p3')] },
+    { image: '/site/hero-feat-2.jpg', alt: 'A seller checking orders with a fake order risk score and order flow', title: t('hero_f2_title'), detail: t('hero_f2_detail'), points: [t('hero_f2_p1'), t('hero_f2_p2'), t('hero_f2_p3')] },
+    { image: '/site/hero-feat-3.jpg', alt: 'Parcels handed to couriers from the Regantify order list', title: t('hero_f3_title'), detail: t('hero_f3_detail'), points: [t('hero_f3_p1'), t('hero_f3_p2'), t('hero_f3_p3')] },
+    { image: '/site/hero-feat-4.jpg', alt: 'A seller building a landing page with the drag and drop builder', title: t('hero_f4_title'), detail: t('hero_f4_detail'), points: [t('hero_f4_p1'), t('hero_f4_p2'), t('hero_f4_p3')] },
+    { image: '/site/hero-feat-5.jpg', alt: 'A shop counter with POS on one side and LMS on the other, around the dashboard', title: t('hero_f5_title'), detail: t('hero_f5_detail'), points: [t('hero_f5_p1'), t('hero_f5_p2'), t('hero_f5_p3')] },
+    { image: '/site/hero-feat-6.jpg', alt: 'A shopper paying on a phone while the seller sees the payment arrive', title: t('hero_f6_title'), detail: t('hero_f6_detail'), points: [t('hero_f6_p1'), t('hero_f6_p2'), t('hero_f6_p3')] },
   ];
 
   const heroSlides = cms?.hero.slides.length
@@ -788,7 +834,7 @@ function HomeInner() {
       {/* Hero: dark theme background, copy on top, the 4 product pictures in a
           looping 3D rail underneath. The navbar is fixed and transparent, hence
           the extra top padding. */}
-      <section className="relative overflow-hidden bg-[#F3F7EC] dark:bg-[#1A1A1A] transition-colors duration-300 min-h-screen flex flex-col justify-center pt-[92px] pb-8">
+      <section className="relative overflow-x-clip bg-[#F3F7EC] dark:bg-[#1A1A1A] transition-colors duration-300 pt-[136px]">
 
         <div className="relative max-w-6xl mx-auto px-6 flex flex-col items-center text-center">
           {marketing?.banner && (
@@ -819,7 +865,7 @@ function HomeInner() {
         </div>
 
         <div className="relative mt-6">
-          <HeroFilmstrip slides={heroSlides} label={t('hero_carousel_label')} />
+          <HeroScrollStory slides={heroSlides} label={t('hero_carousel_label')} />
         </div>
       </section>
 
