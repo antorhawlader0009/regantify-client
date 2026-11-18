@@ -42,6 +42,7 @@ function useClock() {
 export default function OfficeWall() {
   const [data, setData] = useState<Summary | null>(null);
   const [error, setError] = useState('');
+  const [signedOut, setSignedOut] = useState(false);
   const now = useClock();
 
   useEffect(() => {
@@ -50,11 +51,17 @@ export default function OfficeWall() {
     const load = async () => {
       try {
         const res = await fetch('/v1/wall/summary', { credentials: 'include', cache: 'no-store' });
-        if (!res.ok) throw new Error(res.status === 401 ? 'Not signed in through Cloudflare. Reload the page.' : `The server answered ${res.status}.`);
+        if (res.status === 401) {
+          // An old or broken Cloudflare sign-in: sign out of Access and back in (a new emailed code).
+          if (alive) setSignedOut(true);
+          throw new Error('Your Cloudflare sign-in is not accepted.');
+        }
+        if (!res.ok) throw new Error(`The server answered ${res.status}.`);
         const body = (await res.json()) as Summary;
         if (alive) {
           setData(body);
           setError('');
+          setSignedOut(false);
         }
       } catch (e) {
         if (alive) setError((e as Error).message || 'Could not reach the server.');
@@ -86,6 +93,16 @@ export default function OfficeWall() {
           </p>
         </div>
       </header>
+
+      {signedOut && (
+        <div className="mb-5 rounded-xl bg-red-600 px-5 py-4 text-lg text-white">
+          <p className="font-medium">Cloudflare sign-in is not accepted.</p>
+          <p className="mt-1 text-base">Sign in again with your email code.</p>
+          <a href="/cdn-cgi/access/logout" className="mt-3 inline-block rounded-lg bg-white px-4 py-2 font-medium text-red-700">
+            Sign in again
+          </a>
+        </div>
+      )}
 
       {data && data.alerts.length > 0 && (
         <div className="mb-5 rounded-xl bg-red-600 px-5 py-3 text-lg font-medium text-white">
