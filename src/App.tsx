@@ -100,6 +100,7 @@ const FacebookPixel = lazy(() => import('./pages/vendor/store/integrations/Faceb
 const MetaConversionsApi = lazy(() => import('./pages/vendor/store/integrations/MetaConversionsApi'));
 const GoogleAnalytics = lazy(() => import('./pages/vendor/store/integrations/GoogleAnalytics'));
 const AnalyticsPage = lazy(() => import('./pages/vendor/analytics/AnalyticsPage'));
+const OfficeWall = lazy(() => import('./pages/wall/OfficeWall'));
 const AnalyticsLegacyRedirect = lazy(() => import('./pages/vendor/analytics/AnalyticsPage').then((m) => ({ default: m.AnalyticsLegacyRedirect })));
 const GoogleTagManager = lazy(() => import('./pages/vendor/store/integrations/GoogleTagManager'));
 const TiktokPixel = lazy(() => import('./pages/vendor/store/integrations/TiktokPixel'));
@@ -489,6 +490,8 @@ export default function App() {
             {/* Root → marketing landing page */}
             <Route path="/" element={<Home />} />
             <Route path="/blog" element={<Blog />} />
+            {/* Office wall: no Regantify login, its address is behind Cloudflare Access (server/src/office-wall/). */}
+            <Route path="/wall" element={<OfficeWall />} />
             <Route path="/legal/chat-extension-privacy" element={<ChatExtensionPrivacy />} />
             <Route path="/legal/app-privacy" element={<AppPrivacy />} />
             <Route path="/legal/privacy" element={<PlatformPrivacy />} />
