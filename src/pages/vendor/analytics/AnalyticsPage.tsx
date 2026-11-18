@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { useIsFreePlan } from '../../../lib/useFreePlan';
+import { LockedFeatureCard } from '../../../components/ui/UpgradePrompt';
 import { useDashboardView } from '../../../lib/useDashboardView';
 import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useIsFetching } from '@tanstack/react-query';
@@ -65,7 +67,20 @@ function readRange(params: URLSearchParams, today: string): { range: DateRange; 
  * Tab and dates live in the URL so a link or a refresh keeps the view,
  * and every tab reads the same dates.
  */
+/** Analytics is a paid-plan feature (the owner's rule, 2026-11-18): a Free store sees why, and keeps its Dashboard. */
 export default function AnalyticsPage() {
+  if (useIsFreePlan() === true) {
+    return (
+      <LockedFeatureCard
+        title="Analytics isn't on the Free plan"
+        message="Your Dashboard shows today's orders and sales. Upgrade your plan to see full reports on sales, profit, products, customers and marketing."
+      />
+    );
+  }
+  return <AnalyticsReports />;
+}
+
+function AnalyticsReports() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isSimple } = useDashboardView();
   const fetching = useIsFetching({ queryKey: ['analytics'] }) > 0;

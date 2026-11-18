@@ -7,7 +7,7 @@ import { apiErrorMessage } from '../../lib/api';
 import { toast } from '../../lib/toast';
 import { useCan } from '../../lib/useStaffAccess';
 import { PhotoHoverActions, PhotoLightbox, PhotoPickerDialog } from './PhotoPicker';
-import { fitPhotos, useProductPhotoLimit } from './ProductFormKit';
+import { fitPhotos, useProductPhotoLimit, useProductVariantLimit } from './ProductFormKit';
 
 interface VariationsEditorProps {
   productSku: string;
@@ -71,6 +71,7 @@ export function VariationsEditor({
   galleryCount = 0,
 }: VariationsEditorProps) {
   const photoLimit = useProductPhotoLimit();
+  const variantLimit = useProductVariantLimit();
   // No cost column for a staff role without products.cost: the server keeps the saved costs (rule-plan.md Step 5).
   const canCost = useCan('products.cost');
   const [addingCustom, setAddingCustom] = useState(false);
@@ -248,6 +249,11 @@ export function VariationsEditor({
 
   return (
     <div className="space-y-5">
+      {variantLimit !== null && combinations.length > variantLimit && (
+        <p className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white">
+          Your plan allows {variantLimit} variants per product. This product has {combinations.length}. Remove some sizes or colours, or upgrade your plan.
+        </p>
+      )}
       <div>
         <p className="text-sm font-medium text-regantify-text mb-2">Add Variation:</p>
         <div className="flex gap-2">

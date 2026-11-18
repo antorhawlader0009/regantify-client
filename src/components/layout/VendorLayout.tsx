@@ -15,6 +15,7 @@ import { Sidebar } from '../Sidebar';
 import { useVendorNav } from '../../lib/useStaffAccess';
 import { withoutAdvanced, withoutFlagged } from '../../lib/navConfig';
 import { useDashboardView } from '../../lib/useDashboardView';
+import { useIsFreePlan } from '../../lib/useFreePlan';
 import { useSimpleViewKeeps } from '../../lib/simpleView';
 import { FullViewPageBar } from '../FullViewPageBar';
 import { useVendorFeatures } from '../../lib/features';
@@ -44,10 +45,14 @@ export function VendorLayout() {
   const { isSimple } = useDashboardView();
   const keep = useSimpleViewKeeps();
   const keepKey = keep.join('|');
+  const isFree = useIsFreePlan() === true;
   const nav = useMemo(
-    () => withoutAdvanced(withoutFlagged(roleNav, flagsOn ?? []), !isSimple, pathname, keep),
+    () =>
+      withoutAdvanced(withoutFlagged(roleNav, flagsOn ?? []), !isSimple, pathname, keep)
+        // Free plan has no Analytics, only the Dashboard (the owner's rule, 2026-11-18).
+        .filter((s) => !(isFree && s.path === '/vendor/analytics')),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [roleNav, flagsOn, isSimple, pathname, keepKey],
+    [roleNav, flagsOn, isSimple, pathname, keepKey, isFree],
   );
 
   // Marks <body> while the vendor dashboard is open so index.css can swap its

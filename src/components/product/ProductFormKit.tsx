@@ -13,10 +13,20 @@ import { toast } from '../../lib/toast';
 export function useProductPhotoLimit(): number | null {
   const { data } = useQuery({
     queryKey: ['plan-image-limit'],
-    queryFn: () => api.get<{ photosPerProduct?: number }>('/v1/plans/image-limit').then((r) => r.data),
+    queryFn: () => api.get<{ photosPerProduct?: number; variantsPerProduct?: number }>('/v1/plans/image-limit').then((r) => r.data),
     staleTime: 5 * 60_000,
   });
   return data?.photosPerProduct ?? null;
+}
+
+/** Variants one product may have on the store's plan (Free 5, Basic 15, Starter 25, Advance 35; the server checks it again). */
+export function useProductVariantLimit(): number | null {
+  const { data } = useQuery({
+    queryKey: ['plan-image-limit'],
+    queryFn: () => api.get<{ photosPerProduct?: number; variantsPerProduct?: number }>('/v1/plans/image-limit').then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+  return data?.variantsPerProduct ?? null;
 }
 
 /** Keeps only as many new files / urls as still fit, and says so when some were left out. */
