@@ -832,12 +832,26 @@ function Facts({ rows }: { rows: Array<[string, string]> }) {
 }
 
 /** A dial filling its box on the left, facts on the right. */
+/** The two watches with the facts beside them on a wide, low panel, or under them on a taller one. */
 function DialWithFacts({ dial, facts }: { dial: (w: number, h: number) => ReactNode; facts: ReactNode }) {
   return (
-    <div className="flex h-full min-h-0 flex-col gap-[0.5em]">
-      <Fit className="min-h-0 flex-1">{(w, h) => dial(w, h)}</Fit>
-      <div className="shrink-0">{facts}</div>
-    </div>
+    <Fit className="h-full">
+      {(w, h) =>
+        w > h * 2.6 ? (
+          <div className="flex h-full min-h-0 items-center gap-[0.8em]">
+            <div className="h-full shrink-0" style={{ width: Math.min(w * 0.6, h * 2.15) }}>
+              {dial(Math.min(w * 0.6, h * 2.15), h)}
+            </div>
+            <div className="min-w-0 flex-1 [&_.grid]:!grid-cols-1">{facts}</div>
+          </div>
+        ) : (
+          <div className="flex h-full min-h-0 flex-col gap-[0.5em]">
+            <Fit className="min-h-0 flex-1">{(dw, dh) => dial(dw, dh)}</Fit>
+            <div className="shrink-0">{facts}</div>
+          </div>
+        )
+      }
+    </Fit>
   );
 }
 

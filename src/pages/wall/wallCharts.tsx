@@ -364,7 +364,9 @@ export function ClockDial({
   tip: (hour: number) => string;
 }) {
   const c = size / 2;
-  const pad = Math.max(11, size * 0.11);
+  // Room for the hour numbers outside the ring, so 12 (top), 6 (bottom), 3 and 9 always fit inside the box.
+  const fs = Math.max(8, size * 0.08);
+  const pad = Math.max(fs * 1.35, size * 0.12);
   const R = c - pad;
   const r0 = R * 0.42;
   const first = half === 'AM' ? 0 : 12;
@@ -386,8 +388,7 @@ export function ClockDial({
   };
   const nowHere = half === 'AM' ? nowHour < 12 : nowHour >= 12;
   const hand = (((nowHour % 12) + nowMinute / 60) / 12) * Math.PI * 2;
-  const [hx, hy] = at(hand, R + pad * 0.3);
-  const fs = Math.max(9, size * 0.085);
+  const [hx, hy] = at(hand, R * 0.98);
   return (
     <svg width={size} height={size} role="img" aria-label={localPeak >= 0 ? `${label}, ${half}: busiest at ${hour12(localPeak)}` : `${label}, ${half}: no data yet`}>
       {mine.map((_, i) => (
@@ -405,10 +406,10 @@ export function ClockDial({
       })}
       {/* Hour numbers like a watch: 12 at the top, 3 right, 6 bottom, 9 left. */}
       {Array.from({ length: 12 }, (_, i) => {
-        const [x, y] = at(i * step, R + pad * 0.55);
+        const [x, y] = at(i * step, R + pad * 0.5);
         const big = i % 3 === 0;
         return (
-          <text key={`l${i}`} x={x} y={y + fs * 0.35} textAnchor="middle" fill={big ? 'var(--ink2)' : 'var(--muted)'} style={{ fontSize: big ? fs : fs * 0.78, fontWeight: big ? 600 : 400 }}>
+          <text key={`l${i}`} x={x} y={y} textAnchor="middle" dominantBaseline="central" fill={big ? 'var(--ink2)' : 'var(--muted)'} style={{ fontSize: big ? fs : fs * 0.78, fontWeight: big ? 600 : 400 }}>
             {i === 0 ? 12 : i}
           </text>
         );
@@ -434,7 +435,7 @@ export function DayDials({
   ...rest
 }: { values: Array<number | null>; w: number; h: number; color?: string; nowHour: number; nowMinute?: number; label: string; tip: (hour: number) => string }) {
   const gap = Math.max(6, w * 0.04);
-  const size = Math.max(64, Math.floor(Math.min((w - gap) / 2, h)));
+  const size = Math.max(0, Math.floor(Math.min((w - gap) / 2, h)));
   const max = Math.max(0, ...values.map((v) => v ?? 0));
   return (
     <div className="flex h-full items-center justify-center" style={{ gap }}>
