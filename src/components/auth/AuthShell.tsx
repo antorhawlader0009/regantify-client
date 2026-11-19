@@ -226,7 +226,7 @@ export function AuthShell({
         .rg-auth-float { animation: rg-auth-float 4.5s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) { .rg-auth-up, .rg-auth-float { animation: none !important; } }
       `}</style>
-      <main className="flex min-h-screen items-center justify-center bg-[#FBF4EC] px-4 pb-6 pt-[84px] md:pb-[84px] transition-colors duration-300 dark:bg-[#241812]">
+      <main className="flex min-h-screen min-h-dvh items-center justify-center bg-[#FBF4EC] px-4 pb-6 pt-[84px] md:pb-[84px] transition-colors duration-300 dark:bg-[#241812]">
         <div className="rg-auth-up grid w-full max-w-[960px] overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_30px_70px_-30px_rgba(194,83,31,0.35)] dark:border-white/10 dark:bg-[#2E2019] md:grid-cols-2">
           <aside className="relative hidden flex-col items-center border-r border-black/5 bg-[#F9E8D6] px-8 py-7 dark:border-white/10 dark:bg-[#33241C] md:flex">
             <Logo />

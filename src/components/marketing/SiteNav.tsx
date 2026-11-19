@@ -219,7 +219,9 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
     if (!hero) return;
     const onScroll = () => {
       const next = glassAfter ? document.getElementById(glassAfter) : null;
-      setScrolled(next ? next.getBoundingClientRect().top < 76 : window.scrollY > 24);
+      // On a phone the headline scrolls up behind the bar first, so the bar turns to glass as soon as scrolling starts.
+      const phone = window.matchMedia('(max-width: 767px)').matches;
+      setScrolled(phone ? window.scrollY > 24 : next ? next.getBoundingClientRect().top < 76 : window.scrollY > 24);
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -271,7 +273,7 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
         <nav
           ref={dockRef}
           data-tone={light ? 'light' : 'dark'}
-          className="hidden md:flex items-center gap-1 py-2 text-sm font-medium"
+          className="hidden lg:flex items-center gap-1 py-2 text-sm font-medium"
         >
           {sectionLink('categories', t.who)}
           {sectionLink('run', t.services)}

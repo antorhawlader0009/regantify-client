@@ -363,7 +363,7 @@ function VendorPhoneEntryInner() {
   const errText = (m?: string) => (m ? t(m as Key) : '');
 
   return (
-    <div className={`min-h-screen ${th.page}`}>
+    <div className={`min-h-screen min-h-dvh ${th.page}`}>
       <style>{`
         @keyframes rg-shop-bounce {
           0%, 100% { transform: translateY(0) rotate(0deg); }

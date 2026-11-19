@@ -88,6 +88,13 @@ body,
   height: 100%;
 }
 
+/* iPhone and Android browsers otherwise enlarge text on their own after a rotation, and flash a grey box on every tap. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   color: #1a1a1a;

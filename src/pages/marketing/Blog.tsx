@@ -39,7 +39,7 @@ export default function Blog() {
 
   return (
     <div className={ui.night ? 'dark' : ''}>
-    <div lang={ui.lang} className={`min-h-screen bg-white text-[#241812] dark:bg-[#1E1410] dark:text-white ${bn ? 'font-bn' : ''}`}>
+    <div lang={ui.lang} className={`min-h-screen min-h-dvh bg-white text-[#241812] dark:bg-[#1E1410] dark:text-white ${bn ? 'font-bn' : ''}`}>
       <SiteNav lang={ui.lang} onToggleLang={ui.toggleLang} variant="solid" night={ui.night} onToggleTheme={ui.toggleNight} light={!ui.night} />
       <main className="mx-auto max-w-5xl px-6 py-12">
         <h1 className="text-3xl font-bold">{bn ? 'ব্লগ' : 'Blog'}</h1>
@@ -84,7 +84,7 @@ export function BlogPostPage() {
 
   return (
     <div className={ui.night ? 'dark' : ''}>
-    <div lang={ui.lang} className={`min-h-screen bg-white text-[#241812] dark:bg-[#1E1410] dark:text-white ${bn ? 'font-bn' : ''}`}>
+    <div lang={ui.lang} className={`min-h-screen min-h-dvh bg-white text-[#241812] dark:bg-[#1E1410] dark:text-white ${bn ? 'font-bn' : ''}`}>
       <SiteNav lang={ui.lang} onToggleLang={ui.toggleLang} variant="solid" night={ui.night} onToggleTheme={ui.toggleNight} light={!ui.night} />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <Link to="/blog" className="mb-6 inline-flex items-center gap-1 text-sm text-[#241812]/60 hover:text-[#C2531F] dark:text-white/60">

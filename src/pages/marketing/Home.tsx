@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import TemplateShowcase from '../../components/marketing/TemplateShowcase';
 import FaqChat from '../../components/marketing/FaqChat';
+import { useIsPhone } from '../../lib/useIsPhone';
+import ScrollPinned from '../../components/marketing/ScrollPinned';
 import {
   Store,
   ArrowUpRight,
@@ -567,6 +569,34 @@ function HomeInner() {
     { name: t('tpl8'), image: '/images/designs/gadgets.jpg' },
   ];
 
+  const isPhone = useIsPhone();
+  // Pricing on a phone: the page's scroll brings plan card `k` to the middle of the swipeable row.
+  const planRowRef = useRef<HTMLDivElement>(null);
+  const showPlan = (k: number) => {
+    const row = planRowRef.current;
+    const card = row?.children[k] as HTMLElement | undefined;
+    if (!row || !card) return;
+    const r = row.getBoundingClientRect();
+    const c = card.getBoundingClientRect();
+    row.scrollTo({ left: row.scrollLeft + (c.left + c.width / 2 - (r.left + r.width / 2)), behavior: 'smooth' });
+  };
+  const designsSection = (
+    <section
+      id="categories"
+      className="relative overflow-hidden border-y border-black/10 bg-[#FCF3E8] dark:border-white/10 dark:bg-[#1B1210]"
+    >
+      <div className="relative max-w-[68rem] mx-auto px-6 py-16">
+        <h2 className="text-2xl font-bold mb-2">{t('who_title')}</h2>
+        <p className="text-[#241812]/60 dark:text-white/60 mb-10 max-w-lg">{t('who_sub')}</p>
+        <TemplateShowcase
+          templates={templates}
+          ctaLabel={t('tpl_cta')}
+          onCta={() => navigate('/vendor/signup')}
+        />
+      </div>
+    </section>
+  );
+
   const features = [
     { title: t('feat1_title'), detail: t('feat1_detail') },
     { title: t('feat2_title'), detail: t('feat2_detail') },
@@ -824,6 +854,7 @@ function HomeInner() {
         <HeroScrollStory
           slides={heroSlides}
           label={t('hero_carousel_label')}
+          after={isPhone ? designsSection : undefined}
           header={(
         <div className="relative max-w-6xl mx-auto px-6 pt-[144px] flex flex-col items-center text-center">
           {marketing?.banner && (
@@ -856,21 +887,8 @@ function HomeInner() {
         />
       </section>
 
-      {/* Ready-made store designs (nav link: #categories) */}
-      <section
-        id="categories"
-        className="relative overflow-hidden border-y border-black/10 bg-[#FCF3E8] dark:border-white/10 dark:bg-[#1B1210]"
-      >
-        <div className="relative max-w-[68rem] mx-auto px-6 py-16">
-          <h2 className="text-2xl font-bold mb-2">{t('who_title')}</h2>
-          <p className="text-[#241812]/60 dark:text-white/60 mb-10 max-w-lg">{t('who_sub')}</p>
-          <TemplateShowcase
-            templates={templates}
-            ctaLabel={t('tpl_cta')}
-            onCta={() => navigate('/vendor/signup')}
-          />
-        </div>
-      </section>
+      {/* Ready-made store designs (nav link: #categories). On a phone it rides inside the hero's pinned block. */}
+      {!isPhone && designsSection}
 
       {/* Stores that run on Regantify, picked by Super Admin (Marketing). Hidden until at least one is picked. */}
       {marketing && marketing.featured.length > 0 && (
@@ -934,9 +952,12 @@ function HomeInner() {
           scroll-reveal cards, sliding billing toggle, rolling price
           numbers, hover-lift, shimmer on the popular plan. The full
           feature comparison chart is hidden and opens in a popup. */}
+      {/* On a phone the section is pinned while scrolling brings the plan cards across one by one (hero-style); the
+          row can also be swiped by hand. */}
+      <ScrollPinned enabled={isPhone} steps={plans.length} onStep={showPlan}>
       <section id="pricing" className="relative overflow-hidden bg-[#241812]">
 
-        <div ref={pricingRef} className="relative max-w-6xl mx-auto px-6 py-24">
+        <div ref={pricingRef} className="relative max-w-6xl mx-auto px-6 py-14 sm:py-24">
           <div className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}>
             <h2 className="text-3xl sm:text-4xl font-bold text-white">{t('pricing_title')}</h2>
             <p className="mt-3 text-white/60 max-w-lg">{t('pricing_sub')}</p>
@@ -945,7 +966,7 @@ function HomeInner() {
 
           {/* Sliding billing toggle */}
           <div
-            className={`mt-8 ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
+            className={`mt-6 sm:mt-8 ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
             style={{ animationDelay: '0.1s' }}
           >
             <div className="relative inline-grid grid-cols-2 p-1 rounded-full bg-white/10 backdrop-blur border border-white/10">
@@ -975,7 +996,9 @@ function HomeInner() {
           </div>
 
           {/* Animated plan cards */}
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+          {/* On a phone the plans sit in one swipeable row (one card and a peek of the next) instead of four tall
+              cards stacked; from tablet width up they are the grid. */}
+          <div ref={planRowRef} className="-mx-6 mt-8 flex snap-x snap-mandatory items-stretch gap-4 overflow-x-auto px-6 pb-6 pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mt-12 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 sm:pt-0 lg:grid-cols-4">
             {plans.map((plan, i) => {
               // Monthly mode  -> big number = per-month price
               // Yearly mode   -> big number = full year price (rate x 12)
@@ -987,12 +1010,12 @@ function HomeInner() {
               return (
                 <div
                   key={plan.key}
-                  className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}
+                  className={`w-[82%] max-w-[20rem] shrink-0 snap-center sm:w-auto sm:max-w-none sm:shrink ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
                   style={{ animationDelay: `${0.2 + i * 0.12}s` }}
                 >
                   <div className={hi ? 'rg-float h-full' : 'h-full'}>
                     <div
-                      className={`group relative h-full flex flex-col rounded-3xl p-6 overflow-hidden
+                      className={`group relative h-full flex flex-col rounded-3xl p-5 sm:p-6 overflow-hidden
                         transition-all duration-500 ease-out hover:-translate-y-2 ${
                           hi
                             ? 'rg-glow rg-shimmer bg-gradient-to-b from-[#F4A261] to-[#D9803F] text-[#241812]'
@@ -1013,8 +1036,8 @@ function HomeInner() {
                       </p>
 
                       {/* Rolling price - monthly rate in Monthly mode, full-year price in Yearly mode */}
-                      <div className="mt-6 flex items-baseline gap-1.5 flex-wrap">
-                        <span className="text-4xl font-bold tracking-tight">
+                      <div className="mt-4 sm:mt-6 flex items-baseline gap-1.5 flex-wrap">
+                        <span className="text-3xl sm:text-4xl font-bold tracking-tight">
                           ৳<AnimatedNumber value={displayPrice} />
                         </span>
                         {displayPrice !== 0 && (
@@ -1102,7 +1125,7 @@ function HomeInner() {
 
           {/* View chart button - chart itself is hidden until clicked */}
           <div
-            className={`mt-12 flex justify-center ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
+            className={`mt-6 sm:mt-12 flex justify-center ${pricingVisible ? 'rg-fade-up' : 'opacity-0'}`}
             style={{ animationDelay: '0.9s' }}
           >
             <button
@@ -1117,6 +1140,7 @@ function HomeInner() {
           </div>
         </div>
       </section>
+      </ScrollPinned>
 
       {/* Everything to run your shop: six pictures with a title and a line each, then the four promises. */}
       <section

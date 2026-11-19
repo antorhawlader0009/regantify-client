@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { Check } from 'lucide-react';
+import { useIsPhone } from '../../lib/useIsPhone';
 
 // ---------------------------------------------------------------------------
 // The hero's picture carousel ("cover flow": the chosen picture big in the
@@ -26,12 +27,16 @@ type Props = {
   label: string;
   /** Shown above the carousel and pinned with it (the hero headline), so only the pictures change. */
   header?: ReactNode;
+  /** On a phone only: a section shown right under the carousel, inside the pinned block (see `inline` below). */
+  after?: ReactNode;
 };
 
 /** Every picture is landscape (the border-free crops are about 2.2:1). */
 const RATIO = 2.2;
 /** Scroll distance (px) that brings the next picture. */
 const STEP = 240;
+/** On a phone: where the top of the picture row rests once pinned, just under the nav bar (px from the screen top). */
+const PHONE_PIN_GAP = 70;
 /** Width of the centre card: nearly the full screen on a phone, capped on desktop. */
 const CARD_W = 'min(80vw, 640px)';
 
@@ -90,12 +95,16 @@ function loopOffset(i: number, sel: number, n: number) {
   return d;
 }
 
-export default function HeroScrollStory({ slides, label, header }: Props) {
+export default function HeroScrollStory({ slides, label, header, after }: Props) {
   const n = slides.length;
   const [idx, setIdx] = useState(0);
   const idxRef = useRef(0);
   const [h, setH] = useState(0);
   const [pinTop, setPinTop] = useState(0);
+  // On a phone the section that follows (`after`) rides inside the pinned block, right under the carousel. While the
+  // pictures change, the screen then shows that section where the scroll runway would otherwise be an empty band.
+  const isPhone = useIsPhone();
+  const inline = isPhone && !!after;
   // The slide that was showing just before this one: it is the one that fades out.
   const prevIdx = useRef(0);
   const leaving = prevIdx.current !== idx ? prevIdx.current : -1;
@@ -107,6 +116,7 @@ export default function HeroScrollStory({ slides, label, header }: Props) {
   const doneRef = useRef(false);
   const outerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   // Height of the content (the pinned box is exactly this tall) and where it pins.
   useLayoutEffect(() => {
@@ -115,8 +125,12 @@ export default function HeroScrollStory({ slides, label, header }: Props) {
     const measure = () => {
       const ch = el.offsetHeight;
       setH(ch);
-      // Pin at the very top; if the content is taller than the screen, show its bottom part.
-      setPinTop(Math.min(0, window.innerHeight - ch));
+      // Pin at the very top; if the content is taller than the screen, show its bottom part
+      // (except with `after`, which is meant to run on past the screen: pin its top).
+      // On a phone (`inline`) the block pins once the headline has scrolled away: the top of the picture row comes to rest
+      // just under the nav bar, so the first stretch of scrolling only lifts the headline off the screen.
+      const rowTop = cardsRef.current?.offsetTop ?? 0;
+      setPinTop(inline ? Math.min(0, PHONE_PIN_GAP - rowTop) : Math.min(0, window.innerHeight - ch));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -126,7 +140,7 @@ export default function HeroScrollStory({ slides, label, header }: Props) {
       ro.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [n]);
+  }, [n, inline]);
 
   // Scroll picks the picture.
   useEffect(() => {
@@ -223,6 +237,7 @@ export default function HeroScrollStory({ slides, label, header }: Props) {
 
       {/* Cards: the row fades out at both page edges. */}
       <div
+        ref={cardsRef}
         className="relative z-10 mx-auto w-full overflow-hidden"
         style={{
           // Room above and below the cards, so their shadow is not cut off by the clipping box.
@@ -322,6 +337,18 @@ export default function HeroScrollStory({ slides, label, header }: Props) {
           })}
         </div>
       </div>
+
+      {/* The section that follows, on a phone: it stays put while the pictures change and scrolls on after. Its own
+          swipes, taps and keys must not move the carousel. */}
+      {inline && (
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          {after}
+        </div>
+      )}
     </div>
     </div>
   );
