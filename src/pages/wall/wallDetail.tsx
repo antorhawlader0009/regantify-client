@@ -109,6 +109,8 @@ const shortDay = (d: string) => (isoDay.test(d) ? dateText(d) : d);
 export function DetailDialog({ section, onClose }: { section: string | null; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [data, setData] = useState<Detail | null>(null);
+  const [pickedIp, setPickedIp] = useState<string | null>(null);
+  useEffect(() => setPickedIp(null), [section]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -195,8 +197,9 @@ export function DetailDialog({ section, onClose }: { section: string | null; onC
                 </div>
               )}
               {data.tables.map((t) => (
-                <DetailTableBox key={t.title} table={t} />
+                <DetailTableBox key={t.title} table={t} onFirstCell={data.section === 'cyber' && t.title.startsWith('Busiest IPs') ? setPickedIp : undefined} />
               ))}
+              {data.section === 'cyber' && <IpLogPanel picked={pickedIp} onPick={setPickedIp} />}
               {!data.stats.length && !data.charts.length && !data.tables.length && !data.note && <p className="text-[var(--muted)]">Nothing to show for these 30 days.</p>}
             </>
           )}
@@ -238,7 +241,7 @@ function DetailChartBox({ chart, color }: { chart: Detail['charts'][number]; col
   );
 }
 
-function DetailTableBox({ table }: { table: Detail['tables'][number] }) {
+function DetailTableBox({ table, onFirstCell }: { table: Detail['tables'][number]; onFirstCell?: (value: string) => void }) {
   const [all, setAll] = useState(false);
   const rows = all ? table.rows : table.rows.slice(0, 15);
   return (
@@ -266,7 +269,13 @@ function DetailTableBox({ table }: { table: Detail['tables'][number] }) {
                     const num = unit && unit !== 'text' && unit !== 'date';
                     return (
                       <td key={j} className={`max-w-[28em] truncate px-3 py-1.5 ${num ? 'text-right tabular-nums' : ''} ${j === 0 ? 'font-medium' : ''}`} title={typeof cell === 'string' ? cell : undefined}>
-                        {fmt(cell, unit)}
+                        {j === 0 && onFirstCell && typeof cell === 'string' && /^[0-9a-f:.]+$/i.test(cell) ? (
+                          <button type="button" className="font-medium text-[var(--s1)] underline-offset-2 hover:underline" onClick={() => onFirstCell(cell)} title="See this IP's requests of the last 24 hours">
+                            {cell}
+                          </button>
+                        ) : (
+                          fmt(cell, unit)
+                        )}
                       </td>
                     );
                   })}
@@ -280,6 +289,147 @@ function DetailTableBox({ table }: { table: Detail['tables'][number] }) {
         <button type="button" className="mt-1 text-[0.88em] font-medium text-[var(--s1)]" onClick={() => setAll((x) => !x)}>
           {all ? 'Show fewer' : `Show all ${table.rows.length}`}
         </button>
+      )}
+    </div>
+  );
+}
+
+// ---- Per-IP request log (last 24 hours) --------------------------------------------------------------------------------
+
+interface IpRow {
+  ip: string;
+  requests: number;
+  country: string;
+  company: string;
+  network: string;
+}
+interface IpLogAnswer {
+  ip: string;
+  hours: number;
+  country: string;
+  company: string;
+  lines: Array<{ at: number; method: string; status: number; path: string }>;
+}
+
+async function wallGet<T>(path: string): Promise<T> {
+  const base = import.meta.env.DEV ? `${location.protocol}//${location.hostname}:4000` : '';
+  const res = await fetch(`${base}/v1/wall/${path}`, { credentials: import.meta.env.DEV ? 'omit' : 'include', cache: 'no-store' });
+  if (!res.ok) throw new Error(`The server answered ${res.status}.`);
+  return (await res.json()) as T;
+}
+
+const timeText = (ms: number) =>
+  new Date(ms).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+/**
+ * Which paths each visitor IP asked for in the last 24 hours (server: office-wall/ip-log.ts). Super Admin panel calls and
+ * our own server's address are never logged there.
+ */
+function IpLogPanel({ picked, onPick }: { picked: string | null; onPick: (ip: string | null) => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [list, setList] = useState<IpRow[] | null>(null);
+  const [log, setLog] = useState<IpLogAnswer | null>(null);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    wallGet<{ ips: IpRow[] }>('ips')
+      .then((r) => alive && setList(r.ips))
+      .catch((e: Error) => alive && setError(e.message));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!picked) {
+      setLog(null);
+      return;
+    }
+    let alive = true;
+    setLog(null);
+    setError('');
+    box.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    wallGet<IpLogAnswer>(`ips/${encodeURIComponent(picked)}`)
+      .then((r) => alive && setLog(r))
+      .catch((e: Error) => alive && setError(e.message === 'The server answered 404.' ? 'No log for this address.' : e.message));
+    return () => {
+      alive = false;
+    };
+  }, [picked]);
+
+  const shownLines = log ? log.lines.filter((l) => !filter || `${l.method} ${l.status} ${l.path}`.toLowerCase().includes(filter.toLowerCase())) : [];
+
+  return (
+    <div ref={box} className="scroll-mt-2">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <p className="font-semibold">{picked ? `Requests from ${picked}, last 24 hours` : 'Request log by IP, last 24 hours'}</p>
+        {picked && (
+          <button type="button" className="text-[0.88em] font-medium text-[var(--s1)]" onClick={() => onPick(null)}>
+            ‹ All IPs
+          </button>
+        )}
+      </div>
+      {error && <p className="rounded-lg bg-[var(--bad)] px-3 py-2 font-medium text-white">{error}</p>}
+      {!picked && !error && (
+        <>
+          {!list && <p className="text-[var(--muted)]">Loading…</p>}
+          {list && list.length === 0 && <p className="text-[0.92em] text-[var(--muted)]">No visitor requests logged in the last 24 hours yet.</p>}
+          {list && list.length > 0 && (
+            <DetailTableBox
+              table={{
+                title: `${list.length} IPs (press an IP to see its paths)`,
+                columns: [{ label: 'IP' }, { label: 'Country' }, { label: 'Network' }, { label: 'Requests', unit: 'count' }],
+                rows: list.map((r) => [r.ip, r.country, r.company, r.requests]),
+              }}
+              onFirstCell={onPick}
+            />
+          )}
+        </>
+      )}
+      {picked && !error && (
+        <>
+          {!log && <p className="text-[var(--muted)]">Loading…</p>}
+          {log && (
+            <>
+              <p className="mb-2 text-[0.9em] text-[var(--ink2)]">
+                {log.country} · {log.company || 'network unknown'} · {log.lines.length} requests kept (newest first, at most 300)
+              </p>
+              <input
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter: GET, POST, 404, /v1/store…"
+                className="mb-2 w-full rounded-lg border border-[var(--line)] bg-transparent px-3 py-1.5 text-[0.92em]"
+              />
+              <div className="max-h-[50vh] overflow-auto rounded-xl border border-[var(--line)]">
+                <table className="w-full text-[0.9em]">
+                  <thead className="sticky top-0">
+                    <tr className="bg-[var(--track)] text-left text-[var(--ink2)]">
+                      <th className="whitespace-nowrap px-3 py-1.5 font-medium">Time (Dhaka)</th>
+                      <th className="px-3 py-1.5 font-medium">Method</th>
+                      <th className="px-3 py-1.5 font-medium">Status</th>
+                      <th className="px-3 py-1.5 font-medium">Path</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shownLines.map((l, i) => (
+                      <tr key={i} className="border-t border-[var(--line)]">
+                        <td className="whitespace-nowrap px-3 py-1 tabular-nums text-[var(--ink2)]">{timeText(l.at)}</td>
+                        <td className="px-3 py-1 font-mono font-medium">{l.method}</td>
+                        <td className={`px-3 py-1 tabular-nums ${l.status >= 500 ? 'font-semibold text-[var(--bad)]' : l.status >= 400 ? 'text-[var(--bad)]' : ''}`}>{l.status}</td>
+                        <td className="max-w-[40em] truncate px-3 py-1 font-mono" title={l.path}>
+                          {l.path}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {shownLines.length === 0 && <p className="px-3 py-2 text-[var(--muted)]">Nothing in the last 24 hours.</p>}
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
