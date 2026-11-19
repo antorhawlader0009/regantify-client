@@ -19,9 +19,9 @@ export interface WallSettings {
 
 const KEY = 'regantify-wall-settings-v4';
 const DEFAULT_TILES = ['orders', 'sales', 'income', 'aov', 'visits', 'activeStores', 'newStores', 'shoppers'];
-const DEFAULT_PANELS = ['hours', 'traffic', 'cyber', 'sources', 'countries', 'network', 'apps', 'server', 'trend', 'status', 'channels', 'topStores', 'latest', 'security', 'todo'];
+const DEFAULT_PANELS = ['rushSales', 'rushServer', 'hours', 'traffic', 'cyber', 'sources', 'countries', 'network', 'apps', 'server', 'trend', 'status', 'channels', 'topStores', 'latest', 'security', 'todo'];
 export const MAX_TILES = 16;
-export const MAX_PANELS = 16;
+export const MAX_PANELS = 18;
 
 /** One-click mixes for a screen, by who watches it. Nothing in a preset shows the same number twice. */
 const PRESETS: Array<{ name: string; hint: string; tiles: string[]; panels: string[] }> = [
@@ -52,12 +52,21 @@ function applyPreset(items: WallItem[], on: string[]): WallItem[] {
   return [...on.filter((id) => all.includes(id)).map((id) => ({ id, on: true })), ...all.filter((id) => !on.includes(id)).map((id) => ({ id, on: false }))];
 }
 
-function withDefaults(saved: WallItem[] | undefined, all: string[], defaults: string[]): WallItem[] {
+/** Panels added later that a wall already set up should get switched on by itself (once, while there is room). */
+const FRESH_ON = ['rushSales', 'rushServer'];
+
+function withDefaults(saved: WallItem[] | undefined, all: string[], defaults: string[], max = Infinity): WallItem[] {
   const known = new Set(all);
   const list = (saved ?? []).filter((x) => known.has(x.id));
   const have = new Set(list.map((x) => x.id));
   if (!saved?.length) return [...defaults.map((id) => ({ id, on: true })), ...all.filter((id) => !defaults.includes(id)).map((id) => ({ id, on: false }))];
-  return [...list, ...all.filter((id) => !have.has(id)).map((id) => ({ id, on: false }))];
+  let on = list.filter((x) => x.on).length;
+  const added = all.filter((id) => !have.has(id)).map((id) => {
+    const fresh = FRESH_ON.includes(id) && on < max;
+    if (fresh) on += 1;
+    return { id, on: fresh };
+  });
+  return [...list, ...added];
 }
 
 export function defaultSettings(): WallSettings {
@@ -79,7 +88,7 @@ export function loadSettings(): WallSettings {
       theme: s.theme === 'dark' ? 'dark' : 'light',
       refreshSec: [5, 15, 30, 60].includes(Number(s.refreshSec)) ? Number(s.refreshSec) : 5,
       tiles: withDefaults(s.tiles, TILES.map((t) => t.id), DEFAULT_TILES),
-      panels: withDefaults(s.panels, PANELS.map((p) => p.id), DEFAULT_PANELS),
+      panels: withDefaults(s.panels, PANELS.map((p) => p.id), DEFAULT_PANELS, MAX_PANELS),
     };
   } catch {
     return base;

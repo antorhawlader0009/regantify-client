@@ -334,6 +334,86 @@ export function Ring({ percent, label, size, color = 'var(--s1)' }: { percent: n
   );
 }
 
+/**
+ * A 24-hour watch face (the owner's request, 2026-11-19): midnight at the top, noon at the bottom, one wedge per hour whose
+ * length shows that hour's value, the busiest hour drawn solid with its time in the middle, and a hand at the current Dhaka
+ * time. An hour with no data (null) leaves its slot empty. Every wedge has a tooltip, and the label says the busiest hour, so
+ * colour is never the only signal.
+ */
+export function ClockDial({
+  values,
+  size,
+  color = 'var(--s1)',
+  nowHour,
+  nowMinute = 0,
+  label,
+  tip,
+}: {
+  values: Array<number | null>;
+  size: number;
+  color?: string;
+  nowHour: number;
+  nowMinute?: number;
+  label: string;
+  tip: (hour: number) => string;
+}) {
+  const c = size / 2;
+  const pad = Math.max(12, size * 0.1);
+  const R = c - pad;
+  const r0 = R * 0.4;
+  const max = Math.max(0, ...values.map((v) => v ?? 0));
+  const peak = max > 0 ? values.findIndex((v) => v === max) : -1;
+  const at = (a: number, r: number) => [c + r * Math.sin(a), c - r * Math.cos(a)];
+  const step = (Math.PI * 2) / 24;
+  const gap = step * 0.12;
+  const wedge = (h: number, r1: number) => {
+    const a0 = h * step + gap / 2;
+    const a1 = (h + 1) * step - gap / 2;
+    const [x0, y0] = at(a0, r0);
+    const [x1, y1] = at(a0, r1);
+    const [x2, y2] = at(a1, r1);
+    const [x3, y3] = at(a1, r0);
+    return `M${x0},${y0} L${x1},${y1} A${r1},${r1} 0 0 1 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 0 0 ${x0},${y0} Z`;
+  };
+  const hand = ((nowHour + nowMinute / 60) / 24) * Math.PI * 2;
+  const [hx, hy] = at(hand, R + pad * 0.35);
+  const fs = Math.max(9, size * 0.065);
+  return (
+    <svg width={size} height={size} role="img" aria-label={peak >= 0 ? `${label}: busiest at ${String(peak).padStart(2, '0')}:00` : `${label}: no data yet`}>
+      {Array.from({ length: 24 }, (_, h) => (
+        <path key={`t${h}`} d={wedge(h, R)} fill="var(--track)" />
+      ))}
+      {values.map((v, h) => {
+        if (v === null || max <= 0) return null;
+        const r1 = r0 + Math.max(0.04, v / max) * (R - r0);
+        return (
+          <path key={h} d={wedge(h, r1)} fill={color} fillOpacity={h === peak ? 1 : 0.3 + 0.55 * (v / max)}>
+            <title>{tip(h)}</title>
+          </path>
+        );
+      })}
+      {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => {
+        const [x, y] = at(h * step, R + pad * 0.55);
+        const big = h % 6 === 0;
+        return (
+          <text key={`l${h}`} x={x} y={y + fs * 0.35} textAnchor="middle" fill={big ? 'var(--ink2)' : 'var(--muted)'} style={{ fontSize: big ? fs : fs * 0.85, fontWeight: big ? 600 : 400 }}>
+            {String(h).padStart(2, '0')}
+          </text>
+        );
+      })}
+      <line x1={c} y1={c} x2={hx} y2={hy} stroke="var(--ink)" strokeWidth={Math.max(1.5, size * 0.008)} strokeLinecap="round" opacity={0.75} />
+      <circle cx={c} cy={c} r={r0 * 0.92} fill="var(--card)" />
+      <circle cx={c} cy={c} r={Math.max(2, size * 0.012)} fill="var(--ink)" />
+      <text x={c} y={c - fs * 0.25} textAnchor="middle" fill="var(--ink)" style={{ fontSize: fs * 1.55, fontWeight: 700 }}>
+        {peak >= 0 ? `${String(peak).padStart(2, '0')}:00` : '…'}
+      </text>
+      <text x={c} y={c + fs * 1.15} textAnchor="middle" fill="var(--muted)" style={{ fontSize: fs * 0.9 }}>
+        {peak >= 0 ? 'busiest' : 'collecting'}
+      </text>
+    </svg>
+  );
+}
+
 export function niceMax(v: number): number {
   if (v <= 4) return 4;
   const p = 10 ** Math.floor(Math.log10(v));

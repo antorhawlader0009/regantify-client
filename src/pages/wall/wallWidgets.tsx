@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { AreaChart, BarList, ColumnChart, Donut, Fit, Ring, SERIES, Sparkline, compact, kTaka, type DonutSlice } from './wallCharts';
+import { AreaChart, BarList, ClockDial, ColumnChart, Donut, Fit, Ring, SERIES, Sparkline, compact, kTaka, type DonutSlice } from './wallCharts';
 
 /** The shape of GET /v1/wall/summary (server/src/office-wall/office-wall.service.ts). */
 export interface Slice {
@@ -27,6 +27,14 @@ export interface Summary extends InfraParts {
   yesterdayHours: Array<{ hour: number; orders: number; sales: number }>;
   latest: Array<{ id: string; store: string; total: number; source: string; payment: string; zone: string; at: string }>;
   alerts: string[];
+  /** The typical day hour by hour (server/src/office-wall/rhythm.ts), for the "busy hours" dials. */
+  rhythm?: null | {
+    builtAt: string;
+    sales: { days: number; hours: Array<{ hour: number; orders: number; sales: number }>; weekdays: Array<{ dow: number; orders: number; sales: number }> };
+    visitors: { days: number; hours: Array<{ hour: number; perDay: number }> };
+    signups: { days: number; hours: Array<{ hour: number; n: number }> };
+    server: { days: number; cpu: Array<{ hour: number; avg: number | null; peak: number | null; days: number }>; requests: Array<{ hour: number; perDay: number | null; days: number }> };
+  };
   slowAt: string;
   income: { today: number; sameTimeYesterday: number; parts: { plans: number; sms: number; ai: number; fees: number }; walletTopups: number; last30: Array<{ day: string; amount: number }> };
   signups30: Array<{ day: string; n: number }>;
@@ -761,7 +769,187 @@ export const PANELS: PanelDef[] = [
       return <Fit>{(w, h) => <ColumnChart w={w} h={h} values={v} labels={v.map((_, i) => hh(i))} color={SERIES[4]} highlight={ctx.nowHour} tickEvery={3} tip={(i) => `${hh(i)}:00 · ${v[i]} new visitors`} />}</Fit>;
     },
   },
+  {
+    id: 'rushSales',
+    title: 'Busy hours: sales',
+    subtitle: (d) => (d.rhythm ? `typical day, last ${d.rhythm.sales.days} days` : ''),
+    render: (d, ctx) => <RushSales d={d} nowHour={ctx.nowHour} />,
+  },
+  {
+    id: 'rushServer',
+    title: 'Busy hours: server',
+    subtitle: (d) => (d.rhythm?.server.days ? `typical day, ${d.rhythm.server.days} day${d.rhythm.server.days === 1 ? '' : 's'} measured` : 'collecting'),
+    render: (d, ctx) => <RushServer d={d} nowHour={ctx.nowHour} />,
+  },
+  {
+    id: 'rushVisitors',
+    title: 'Busy hours: visitors',
+    subtitle: (d) => (d.rhythm ? `typical day, last ${d.rhythm.visitors.days} days` : ''),
+    render: (d, ctx) => <RushVisitors d={d} nowHour={ctx.nowHour} />,
+  },
 ];
+
+// ---- Busy hours (watch dials) ----------------------------------------------------
+
+const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** Bangladesh's week starts on Saturday. */
+const WEEK_ORDER = [6, 0, 1, 2, 3, 4, 5];
+const dhakaMinute = () => new Date(Date.now() + 6 * 3_600_000).getUTCMinutes();
+/** The `n` busiest hours, busiest first, as "21:00, 20:00". */
+function topHours(values: Array<number | null>, n: number): string {
+  return values
+    .map((v, h) => ({ v: v ?? 0, h }))
+    .filter((x) => x.v > 0)
+    .sort((a, b) => b.v - a.v)
+    .slice(0, n)
+    .map((x) => `${hh(x.h)}:00`)
+    .join(', ');
+}
+/** The quietest hour that has data. */
+function quietHour(values: Array<number | null>): number | null {
+  let best: number | null = null;
+  values.forEach((v, h) => {
+    if (v !== null && (best === null || v < (values[best] ?? 0))) best = h;
+  });
+  return best;
+}
+
+function Facts({ rows }: { rows: Array<[string, string]> }) {
+  return (
+    <div className="flex min-w-0 flex-col justify-center gap-[0.45em] text-[0.9em]">
+      {rows.map(([k, v]) => (
+        <div key={k} className="min-w-0">
+          <div className="text-[0.85em] text-[var(--muted)]">{k}</div>
+          <div className="truncate font-semibold text-[var(--ink)]" title={v}>
+            {v}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** A dial filling its box on the left, facts on the right. */
+function DialWithFacts({ dial, facts }: { dial: (size: number) => ReactNode; facts: ReactNode }) {
+  return (
+    <div className="flex h-full min-h-0 gap-[0.8em]">
+      <Fit className="min-w-0 flex-[1.15]">{(w, h) => <div className="flex h-full items-center justify-center">{dial(Math.max(80, Math.min(w, h)))}</div>}</Fit>
+      <div className="flex min-w-0 flex-1 flex-col justify-center">{facts}</div>
+    </div>
+  );
+}
+
+function RushSales({ d, nowHour }: { d: Summary; nowHour: number }) {
+  if (!d.rhythm) return <div className="text-[var(--muted)]">Loading…</div>;
+  const s = d.rhythm.sales;
+  const orders = s.hours.map((x) => (x.orders > 0 ? x.orders : 0));
+  const peak = s.hours.reduce((a, b) => (b.orders > a.orders ? b : a), s.hours[0]);
+  const days = WEEK_ORDER.map((i) => s.weekdays.find((w) => w.dow === i) ?? { dow: i, orders: 0, sales: 0 });
+  const bestDay = days.reduce((a, b) => (b.orders > a.orders ? b : a), days[0]);
+  const dayMax = Math.max(0.0001, ...days.map((x) => x.orders));
+  const quiet = quietHour(orders);
+  return (
+    <DialWithFacts
+      dial={(size) => (
+        <ClockDial
+          size={size}
+          values={orders}
+          color={SERIES[0]}
+          nowHour={nowHour}
+          nowMinute={dhakaMinute()}
+          label="Orders by hour"
+          tip={(h) => `${hh(h)}:00 · ${s.hours[h].orders} orders and ${taka(s.hours[h].sales)} on a typical day`}
+        />
+      )}
+      facts={
+        <div className="flex flex-col gap-[0.6em]">
+          <Facts
+            rows={[
+              ['Busiest hours', topHours(orders, 3) || 'No sales yet'],
+              ['At the peak', peak.orders ? `${peak.orders} orders · ${taka(peak.sales)} a day` : '-'],
+              ['Quietest', quiet !== null ? `${hh(quiet)}:00` : '-'],
+            ]}
+          />
+          <div>
+            <div className="mb-[0.3em] text-[0.8em] text-[var(--muted)]">
+              Best day: <span className="font-semibold text-[var(--ink)]">{bestDay.orders ? WEEKDAY[bestDay.dow] : '-'}</span>
+            </div>
+            <div className="flex h-[2.6em] items-end gap-[0.25em]">
+              {days.map((x) => (
+                <div key={x.dow} className="flex flex-1 flex-col items-center gap-[0.15em]" title={`${WEEKDAY[x.dow]} · ${x.orders} orders · ${taka(x.sales)} on average`}>
+                  <div className="w-full rounded-t-[3px]" style={{ height: `${Math.max(6, (x.orders / dayMax) * 100) * 0.016}em`, background: SERIES[0], opacity: x.dow === bestDay.dow ? 1 : 0.45 }} />
+                  <span className="text-[0.7em] text-[var(--muted)]">{WEEKDAY[x.dow].slice(0, 2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      }
+    />
+  );
+}
+
+function RushServer({ d, nowHour }: { d: Summary; nowHour: number }) {
+  if (!d.rhythm) return <div className="text-[var(--muted)]">Loading…</div>;
+  const sv = d.rhythm.server;
+  const cpu = sv.cpu.map((x) => x.avg);
+  const req = sv.requests.map((x) => x.perDay);
+  const peakCpu = sv.cpu.reduce<(typeof sv.cpu)[number] | null>((a, b) => (b.avg !== null && (a === null || b.avg > (a.avg ?? 0)) ? b : a), null);
+  const hottest = sv.cpu.reduce<(typeof sv.cpu)[number] | null>((a, b) => (b.peak !== null && (a === null || b.peak > (a.peak ?? 0)) ? b : a), null);
+  const measured = cpu.filter((v) => v !== null).length;
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-[0.4em]">
+      <div className="flex min-h-0 flex-1 gap-[0.6em]">
+        {[
+          { values: cpu, color: SERIES[1], label: 'CPU', tip: (h: number) => (sv.cpu[h].avg === null ? `${hh(h)}:00 · not measured yet` : `${hh(h)}:00 · CPU ${sv.cpu[h].avg}% on average, ${sv.cpu[h].peak}% at most`) },
+          { values: req, color: SERIES[2], label: 'API requests', tip: (h: number) => (sv.requests[h].perDay === null ? `${hh(h)}:00 · not measured yet` : `${hh(h)}:00 · ${num(sv.requests[h].perDay ?? 0)} API requests a day`) },
+        ].map((x) => (
+          <div key={x.label} className="flex min-w-0 flex-1 flex-col items-center">
+            <Fit className="w-full min-h-0 flex-1">{(w, h) => <div className="flex h-full items-center justify-center"><ClockDial size={Math.max(70, Math.min(w, h))} values={x.values} color={x.color} nowHour={nowHour} nowMinute={dhakaMinute()} label={x.label} tip={x.tip} /></div>}</Fit>
+            <span className="text-[0.85em] font-medium text-[var(--ink2)]">{x.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="truncate text-[0.85em] text-[var(--ink2)]">
+        {measured < 24
+          ? `Measuring: ${measured} of 24 hours seen so far, the full picture after one day.`
+          : `CPU busiest ${peakCpu ? `${hh(peakCpu.hour)}:00 (${peakCpu.avg}% avg)` : '-'} · highest ${hottest ? `${hottest.peak}% at ${hh(hottest.hour)}:00` : '-'} · API busiest ${topHours(req, 1) || '-'}`}
+      </div>
+    </div>
+  );
+}
+
+function RushVisitors({ d, nowHour }: { d: Summary; nowHour: number }) {
+  if (!d.rhythm) return <div className="text-[var(--muted)]">Loading…</div>;
+  const r = d.rhythm;
+  const visits = r.visitors.hours.map((x) => x.perDay);
+  const signups = r.signups.hours.map((x) => x.n);
+  const peak = r.visitors.hours.reduce((a, b) => (b.perDay > a.perDay ? b : a), r.visitors.hours[0]);
+  return (
+    <DialWithFacts
+      dial={(size) => (
+        <ClockDial
+          size={size}
+          values={visits}
+          color={SERIES[4]}
+          nowHour={nowHour}
+          nowMinute={dhakaMinute()}
+          label="Store visitors by hour"
+          tip={(h) => `${hh(h)}:00 · ${r.visitors.hours[h].perDay} visitors on a typical day`}
+        />
+      )}
+      facts={
+        <Facts
+          rows={[
+            ['Most visitors', topHours(visits, 3) || 'No visits yet'],
+            ['At the peak', peak.perDay ? `${num(peak.perDay)} visitors a day` : '-'],
+            [`New stores sign up (${r.signups.days} days)`, topHours(signups, 2) || 'No sign-ups yet'],
+          ]}
+        />
+      }
+    />
+  );
+}
 
 function uptime(s: number | null): string {
   if (s === null) return '?';
