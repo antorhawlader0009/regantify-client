@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { authApi, type LoginAccountChoice } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
+import { AuthShell, AuthHeading } from '../../components/auth/AuthShell';
 import SiteNav, { readStoredLang, storeLang } from '../../components/marketing/SiteNav';
 import {
   Lock,
@@ -16,10 +17,6 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  LayoutDashboard,
-  PackageCheck,
-  Wallet,
-  BarChart3,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -119,6 +116,22 @@ const dict = {
   },
 } as const;
 
+
+const SLIDES = {
+  en: [
+    { before: 'Set up your online store ', highlight: 'in minutes' },
+    { before: 'Let AI answer ', highlight: 'your customers' },
+    { before: 'Block fake COD orders ', highlight: 'before they ship' },
+    { before: 'All business orders ', highlight: 'in one place' },
+  ],
+  bn: [
+    { before: 'অনলাইন দোকান সাজান ', highlight: 'কয়েক মিনিটে' },
+    { before: 'AI দিয়ে উত্তর দিন ', highlight: 'আপনার কাস্টমারকে' },
+    { before: 'ভুয়া COD অর্ডার আটকান ', highlight: 'পাঠানোর আগেই' },
+    { before: 'ব্যবসার সব অর্ডার ', highlight: 'এক জায়গায়' },
+  ],
+};
+
 type Key = keyof typeof dict.en;
 
 const LangContext = createContext<{
@@ -173,68 +186,68 @@ function readStoredMode(): Mode {
 
 const themes = {
   night: {
-    page: 'bg-[#1A1A1A] text-white',
-    nav: 'bg-[#1A1A1A] border-b border-white/10',
+    page: 'bg-[#241812] text-white',
+    nav: 'bg-[#241812] border-b border-white/10',
     brand: 'text-white',
     navText: 'text-white/85 hover:text-white',
     navActive: 'bg-white/15 text-white',
     navBtnBorder: 'text-white/85 border border-white/25 hover:border-white/50 hover:text-white',
-    tag: 'text-white bg-[#008060]',
+    tag: 'text-white bg-[#C2531F]',
     headline: 'text-white',
     sub: 'text-white/75',
     perkCard: 'bg-white/[0.05] border border-white/10',
     perkTitle: 'text-white',
     perkDetail: 'text-white/60',
-    cardInner: 'bg-[#232323] border border-white/10',
+    cardInner: 'bg-[#2E2019] border border-white/10',
     formTitle: 'text-white',
     formSub: 'text-white/60',
     label: 'text-white/85',
     input:
       'bg-white/[0.07] text-white border border-white/15 placeholder:text-white/35 ' +
-      'focus:border-[#95BF47] focus:bg-white/[0.1] focus:ring-2 focus:ring-[#95BF47]/25',
-    inputIcon: 'text-white/40 group-focus-within:text-[#95BF47]',
+      'focus:border-[#F4A261] focus:bg-white/[0.1] focus:ring-2 focus:ring-[#F4A261]/25',
+    inputIcon: 'text-white/40 group-focus-within:text-[#F4A261]',
     eyeBtn: 'text-white/45 hover:text-white hover:bg-white/10',
     error: 'text-red-400',
     errorBox: 'text-red-400 bg-red-500/10 border border-red-500/20',
-    link: 'text-white/60 hover:text-[#95BF47]',
+    link: 'text-white/60 hover:text-[#F4A261]',
     muted: 'text-white/50',
-    accentLink: 'text-[#95BF47] hover:text-[#A6D054]',
-    accentText: 'text-[#95BF47]',
-    primaryBtn: 'bg-[#95BF47] text-[#1A1A1A] hover:bg-[#A6D054]',
-    signupBtn: 'bg-[#95BF47] text-[#1A1A1A] hover:bg-[#84AD3D]',
-    iconChip: 'bg-[#95BF47] text-[#1A1A1A]',
+    accentLink: 'text-[#F4A261] hover:text-[#F7B27E]',
+    accentText: 'text-[#F4A261]',
+    primaryBtn: 'bg-[#F4A261] text-[#241812] hover:bg-[#F7B27E]',
+    signupBtn: 'bg-[#F4A261] text-[#241812] hover:bg-[#E08A4B]',
+    iconChip: 'bg-[#F4A261] text-[#241812]',
   },
   day: {
-    page: 'bg-[#F6F8F2] text-[#1A1A1A]',
+    page: 'bg-[#FBF4EC] text-[#241812]',
     nav: 'bg-white border-b border-black/10',
-    brand: 'text-[#1A1A1A]',
-    navText: 'text-[#1A1A1A]/75 hover:text-[#1A1A1A]',
-    navActive: 'bg-black/[0.07] text-[#1A1A1A]',
-    navBtnBorder: 'text-[#1A1A1A]/80 border border-black/15 hover:border-black/35 hover:text-[#1A1A1A]',
-    tag: 'text-white bg-[#008060]',
-    headline: 'text-[#1A1A1A]',
-    sub: 'text-[#1A1A1A]/65',
+    brand: 'text-[#241812]',
+    navText: 'text-[#241812]/75 hover:text-[#241812]',
+    navActive: 'bg-black/[0.07] text-[#241812]',
+    navBtnBorder: 'text-[#241812]/80 border border-black/15 hover:border-black/35 hover:text-[#241812]',
+    tag: 'text-white bg-[#C2531F]',
+    headline: 'text-[#241812]',
+    sub: 'text-[#241812]/65',
     perkCard: 'bg-white border border-black/10',
-    perkTitle: 'text-[#1A1A1A]',
-    perkDetail: 'text-[#1A1A1A]/60',
+    perkTitle: 'text-[#241812]',
+    perkDetail: 'text-[#241812]/60',
     cardInner: 'bg-white border border-black/10',
-    formTitle: 'text-[#1A1A1A]',
-    formSub: 'text-[#1A1A1A]/60',
-    label: 'text-[#1A1A1A]/80',
+    formTitle: 'text-[#241812]',
+    formSub: 'text-[#241812]/60',
+    label: 'text-[#241812]/80',
     input:
-      'bg-[#F1F1F1] text-[#1A1A1A] border border-black/10 placeholder:text-[#1A1A1A]/35 ' +
-      'focus:border-[#008060] focus:bg-white focus:ring-2 focus:ring-[#008060]/20',
-    inputIcon: 'text-[#1A1A1A]/40 group-focus-within:text-[#008060]',
-    eyeBtn: 'text-[#1A1A1A]/45 hover:text-[#1A1A1A] hover:bg-black/[0.06]',
+      'bg-[#F6EADD] text-[#241812] border border-black/10 placeholder:text-[#241812]/35 ' +
+      'focus:border-[#C2531F] focus:bg-white focus:ring-2 focus:ring-[#C2531F]/20',
+    inputIcon: 'text-[#241812]/40 group-focus-within:text-[#C2531F]',
+    eyeBtn: 'text-[#241812]/45 hover:text-[#241812] hover:bg-black/[0.06]',
     error: 'text-red-600',
     errorBox: 'text-red-700 bg-red-50 border border-red-200',
-    link: 'text-[#1A1A1A]/60 hover:text-[#008060]',
-    muted: 'text-[#1A1A1A]/55',
-    accentLink: 'text-[#008060] hover:text-[#006B51]',
-    accentText: 'text-[#008060]',
-    primaryBtn: 'bg-[#008060] text-white hover:bg-[#006B51]',
-    signupBtn: 'bg-[#008060] text-white hover:bg-[#006B51]',
-    iconChip: 'bg-[#008060] text-white',
+    link: 'text-[#241812]/60 hover:text-[#C2531F]',
+    muted: 'text-[#241812]/55',
+    accentLink: 'text-[#C2531F] hover:text-[#A8441A]',
+    accentText: 'text-[#C2531F]',
+    primaryBtn: 'bg-[#C2531F] text-white hover:bg-[#A8441A]',
+    signupBtn: 'bg-[#C2531F] text-white hover:bg-[#A8441A]',
+    iconChip: 'bg-[#C2531F] text-white',
   },
 } as const;
 
@@ -342,13 +355,6 @@ function VendorPhoneEntryInner() {
     }
   };
 
-  const perks = [
-    { icon: LayoutDashboard, title: t('perk1_title'), detail: t('perk1_detail') },
-    { icon: PackageCheck, title: t('perk2_title'), detail: t('perk2_detail') },
-    { icon: Wallet, title: t('perk3_title'), detail: t('perk3_detail') },
-    { icon: BarChart3, title: t('perk4_title'), detail: t('perk4_detail') },
-  ];
-
   const inputBase =
     `w-full pl-11 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 transition-colors ${th.input}`;
 
@@ -357,7 +363,7 @@ function VendorPhoneEntryInner() {
   const errText = (m?: string) => (m ? t(m as Key) : '');
 
   return (
-    <div className={`min-h-screen ${th.page}`}>
+    <div className={`min-h-screen min-h-dvh ${th.page}`}>
       <style>{`
         @keyframes rg-shop-bounce {
           0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -374,61 +380,20 @@ function VendorPhoneEntryInner() {
         lang={lang}
         onToggleLang={toggle}
         variant="solid"
+        transparent
         active="login"
-        extra={
-          <button
-            type="button"
-            onClick={toggleMode}
-            aria-label={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
-            title={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white border border-white/30 hover:bg-white/15 transition-colors"
-          >
-            {mode === 'night' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        }
+        night={mode === 'night'}
+        onToggleTheme={toggleMode}
+        light={mode === 'day'}
       />
 
-      {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left - pitch */}
-        <section className="hidden lg:block">
-          <span className={`inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full mb-6 ${th.tag}`}>
-            <Store size={14} />
-            {t('pitch_tag')}
-          </span>
-          <h1 className={`text-4xl xl:text-5xl font-bold leading-[1.15] max-w-md ${th.headline}`}>
-            {t('pitch_title_1')}{' '}
-            <span className={th.accentText}>{t('pitch_title_accent')}</span>
-            {t('pitch_title_2')}
-          </h1>
-          <p className={`mt-5 text-lg max-w-md leading-relaxed ${th.sub}`}>{t('pitch_sub')}</p>
-
-          <ul className="mt-10 space-y-3.5 max-w-md">
-            {perks.map((perk, i) => (
-              <li key={i} className={`flex items-start gap-4 p-4 rounded-2xl ${th.perkCard}`}>
-                <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${th.iconChip}`}>
-                  <perk.icon size={20} strokeWidth={2.2} />
-                </div>
-                <div>
-                  <h3 className={`font-semibold ${th.perkTitle}`}>{perk.title}</h3>
-                  <p className={`mt-0.5 text-sm ${th.perkDetail}`}>{perk.detail}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
+      <AuthShell night={mode === 'night'} slides={SLIDES[lang]} start={0}>
         {/* Right - form card */}
-        <section className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
-          <div className={`rounded-2xl p-7 sm:p-9 ${th.cardInner}`}>
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${th.iconChip}`}>
-              <Lock size={22} strokeWidth={2.2} />
-            </div>
-            <h2 className={`mt-5 text-2xl font-bold ${th.formTitle}`}>{t('form_title')}</h2>
-            <p className={`mt-2 text-sm leading-relaxed ${th.formSub}`}>{t('form_sub')}</p>
+        <div>
+            <AuthHeading title={t('form_title')} sub={t('form_sub')} />
 
             {accountChoices ? (
-              <div className="mt-7 space-y-3">
+              <div className="mt-5 space-y-3">
                 <p className={`text-sm font-medium ${th.label}`}>{t('choose_account')}</p>
                 {accountChoices.map((a) => (
                   <button
@@ -464,7 +429,7 @@ function VendorPhoneEntryInner() {
                 </button>
               </div>
             ) : (
-            <form onSubmit={passwordForm.handleSubmit((v) => handlePasswordLogin(v))} className="mt-7 space-y-5">
+            <form onSubmit={passwordForm.handleSubmit((v) => handlePasswordLogin(v))} className="mt-5 space-y-4">
               <div>
                 <label className={`block text-sm font-medium mb-1.5 ${th.label}`}>
                   {t('label_identifier')}
@@ -554,9 +519,8 @@ function VendorPhoneEntryInner() {
               </p>
             </form>
             )}
-          </div>
-        </section>
-      </main>
+        </div>
+      </AuthShell>
     </div>
   );
 }

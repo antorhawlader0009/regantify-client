@@ -45,7 +45,7 @@ export default function VendorImpersonateEntry() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="min-h-screen min-h-dvh flex items-center justify-center bg-white">
       <div className="text-sm text-regantify-text-muted">
         {error ?? 'Signing in…'}
       </div>

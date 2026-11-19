@@ -20,7 +20,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 export default function ChatExtensionPrivacy() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen min-h-dvh bg-white">
       <div className="mx-auto max-w-3xl px-4 py-10">
         <p className="text-xs uppercase tracking-wide text-green-700">Regantify</p>
         <h1 className="mt-1 text-2xl font-semibold text-neutral-900">Chat Order Saver: Privacy Policy</h1>

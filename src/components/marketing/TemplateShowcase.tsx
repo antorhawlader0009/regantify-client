@@ -42,19 +42,21 @@ function PreviewPlaceholder() {
   );
 }
 
+/** One full-page screenshot inside the browser window. Only the chosen one is visible; hovering the window slides it
+    from top to bottom, like browsing the page. On touch screens (no hover) the window itself scrolls instead. */
 function TemplateCard({ template, ctaLabel, onCta }: { template: ShowcaseTemplate; ctaLabel: string; onCta: () => void }) {
   const [failed, setFailed] = useState(false);
   return (
     <article
-      className="group flex flex-col border border-white/70 bg-white/35 p-2 backdrop-blur-xl
-        shadow-[0_10px_30px_-10px_rgba(30,60,20,0.25)] transition-all duration-300
-        hover:-translate-y-1 hover:bg-white/55 hover:shadow-[0_16px_38px_-10px_rgba(30,60,20,0.32)]
+      className="group flex flex-col rounded-2xl border border-white/70 bg-white/35 p-1.5 backdrop-blur-xl sm:p-2
+        shadow-[0_10px_30px_-10px_rgba(70,30,15,0.25)] transition-all duration-300
+        hover:-translate-y-1 hover:bg-white/55 hover:shadow-[0_16px_38px_-10px_rgba(70,30,15,0.32)]
         dark:border-white/10 dark:bg-white/[0.06] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7)]
         dark:hover:bg-white/10 dark:hover:shadow-[0_16px_38px_-10px_rgba(0,0,0,0.8)]"
     >
       {/* The window: a portrait shape, the screenshot inside it is taller and slides up on hover. */}
       <div
-        className="relative aspect-[3/4] overflow-hidden bg-white/60 ring-1 ring-black/5
+        className="relative aspect-[3/4] overflow-hidden rounded-xl bg-white/60 ring-1 ring-black/5
           [container-type:size] dark:bg-black/30 dark:ring-white/10"
       >
         {failed ? (
@@ -74,15 +76,15 @@ function TemplateCard({ template, ctaLabel, onCta }: { template: ShowcaseTemplat
         )}
       </div>
 
-      <h3 className="px-1 pb-2 pt-2.5 text-sm font-semibold leading-snug text-[#1A1A1A] dark:text-white">
+      <h3 className="px-1 pb-1.5 pt-2 text-[13px] font-semibold sm:pb-2 sm:pt-2.5 sm:text-sm leading-snug text-[#241812] dark:text-white">
         {template.name}
       </h3>
 
       <button
         type="button"
         onClick={onCta}
-        className="inline-flex w-full items-center justify-center gap-1.5 bg-[#95BF47] py-2 text-[13px]
-          font-semibold text-[#1A1A1A] transition-colors hover:bg-[#84AD3D]"
+        className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#F4A261] py-2 text-xs sm:text-[13px]
+          font-semibold text-[#241812] transition-colors hover:bg-[#E08A4B]"
       >
         {ctaLabel}
         <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
@@ -93,7 +95,7 @@ function TemplateCard({ template, ctaLabel, onCta }: { template: ShowcaseTemplat
 
 export default function TemplateShowcase({ templates, ctaLabel, onCta }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {templates.map((tpl) => (
         <TemplateCard key={tpl.name} template={tpl} ctaLabel={ctaLabel} onCta={onCta} />
       ))}
