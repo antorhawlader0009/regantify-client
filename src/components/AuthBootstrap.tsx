@@ -65,7 +65,13 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!hasHydrated) {
+  // The public marketing pages need no session, so they draw straight away
+  // instead of waiting for the refresh call (which can take seconds on a slow
+  // network). The silent refresh still runs in the background, and
+  // ProtectedRoute waits for it itself before it decides anything.
+  const isPublicPage = window.location.pathname === '/' || window.location.pathname.startsWith('/blog');
+
+  if (!hasHydrated && !isPublicPage) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-sm text-regantify-text-muted">Loading…</div>

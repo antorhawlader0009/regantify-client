@@ -17,7 +17,17 @@ interface ProtectedRouteProps {
  * before a page reload.
  */
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { accessToken, user } = useAuthStore();
+  const { accessToken, user, hasHydrated } = useAuthStore();
+
+  // AuthBootstrap lets public pages draw before the session restore finishes,
+  // so someone who goes from one of them into the dashboard waits here instead.
+  if (!hasHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-sm text-regantify-text-muted">Loading…</div>
+      </div>
+    );
+  }
 
   if (!accessToken || !user) {
     const loginPath = allowedRoles.includes('SUPER_ADMIN') ? '/admin/login' : '/vendor/login';
