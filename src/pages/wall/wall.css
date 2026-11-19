@@ -1,0 +1,296 @@
+/* Office wall. Everything is scoped to .wall-root so no other page is touched. Light is the default; dark is picked in the wall's Settings. */
+.wall-root {
+  color-scheme: light;
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --ink2: #475569;
+  --muted: #8a96a8;
+  --line: #e7ebf1;
+  --track: #edf0f5;
+  --other: #b6bec9;
+  --good: #16a34a;
+  --warn: #eda100;
+  --bad: #dc2626;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05);
+  /* Categorical order (validated reference palette, light steps). */
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --s5: #e87ba4;
+  --s6: #008300;
+  --s7: #6250d6;
+  --s8: #e34948;
+
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  padding: 0.85em 1em;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: clamp(11px, 0.74vw, 17px);
+}
+.wall-root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --card: #141b23;
+  --ink: #e6edf3;
+  --ink2: #a9b6c3;
+  --muted: #6f7d8c;
+  --line: #222c37;
+  --track: #1f2833;
+  --other: #56606c;
+  --good: #22c55e;
+  --warn: #f2b632;
+  --bad: #f05252;
+  --shadow: none;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --s4: #c98500;
+  --s5: #d55181;
+  --s6: #0ca30c;
+  --s7: #9085e9;
+  --s8: #e66767;
+}
+
+.wall-fit {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.wall-card {
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.wall-root[data-theme='dark'] .wall-card {
+  border: 1px solid var(--line);
+}
+
+.wall-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0.7em 0.9em 0.6em;
+  border-top: 3px solid var(--accent);
+}
+.wall-tile.is-bad {
+  background: var(--bad);
+  color: #fff;
+  border-top-color: var(--bad);
+}
+.wall-tile-label {
+  font-size: 0.92em;
+  color: var(--ink2);
+}
+.wall-tile-value {
+  position: relative;
+  z-index: 1;
+  max-width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1em;
+  font-size: 2.15em;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.wall-tile-detail {
+  font-size: 0.85em;
+  color: var(--muted);
+  position: relative;
+  z-index: 1;
+}
+.wall-tile.is-bad .wall-tile-label,
+.wall-tile.is-bad .wall-tile-detail {
+  color: #fff;
+}
+.wall-tile-spark {
+  position: absolute;
+  right: 0.6em;
+  top: 2.3em;
+  width: 30%;
+  height: 2.2em;
+  opacity: 0.95;
+}
+.wall-chip {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0.05em 0.55em;
+  font-size: 0.8em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wall-chip.is-up {
+  background: color-mix(in srgb, var(--good) 14%, transparent);
+  color: var(--good);
+}
+.wall-chip.is-down {
+  background: color-mix(in srgb, var(--bad) 13%, transparent);
+  color: var(--bad);
+}
+.wall-tile.is-bad .wall-chip {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.wall-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75em 0.95em 0.8em;
+}
+.wall-panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin-bottom: 0.5em;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: var(--ink);
+}
+.wall-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wall-axis {
+  font-size: 10px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.wall-donut-total {
+  font-size: 18px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.wall-donut-label {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.wall-ring-value {
+  font-weight: 700;
+  fill: var(--ink);
+}
+.wall-ring-label {
+  fill: var(--muted);
+}
+
+.wall-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em 1.5em;
+  border-radius: 12px;
+  background: #dc2626;
+  color: #fff;
+  padding: 0.55em 1em;
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+.wall-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  border-radius: 10px;
+  padding: 0.4em 0.65em;
+  color: var(--ink2);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.wall-icon-btn:hover,
+.wall-icon-btn:focus-visible {
+  opacity: 1;
+}
+
+/* Settings dialog */
+.wall-dialog {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  border: 0;
+  border-radius: 16px;
+  padding: 0;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.wall-dialog.wall-detail {
+  width: min(1150px, calc(100vw - 32px));
+}
+/* Panels and tiles open their 30-day dialog when pressed. */
+.wall-open {
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.wall-open:hover,
+.wall-open:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--s1), var(--shadow);
+}
+.wall-open .wall-30d {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.wall-open:hover .wall-30d,
+.wall-open:focus-visible .wall-30d {
+  opacity: 1;
+}
+.wall-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+.wall-seg {
+  display: inline-flex;
+  border-radius: 10px;
+  background: var(--track);
+  padding: 3px;
+}
+.wall-seg button {
+  border-radius: 8px;
+  padding: 0.3em 0.9em;
+  color: var(--ink2);
+}
+.wall-seg button[aria-pressed='true'] {
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.wall-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 0.35em 0.5em;
+}
+.wall-item button.wall-move {
+  border-radius: 6px;
+  padding: 0 0.35em;
+  color: var(--muted);
+}
+.wall-item button.wall-move:hover:not(:disabled) {
+  background: var(--track);
+  color: var(--ink);
+}
+.wall-item button.wall-move:disabled {
+  opacity: 0.3;
+}

@@ -1,34 +1,39 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import './wall.css';
+import { PANELS, TILES, TileCard, type PanelDef, type Summary, type WallHistory } from './wallWidgets';
+import { SettingsDialog, loadSettings, saveSettings, type WallSettings } from './wallSettings';
+import { DETAIL_OF, DetailDialog } from './wallDetail';
 
 /**
- * Office wall (2026-11-18): one dark screen for the office monitor with the server, today's orders and the busiest stores.
+ * Office wall (2026-11-18, redesigned 2026-11-19): one screen for the office monitor with the server, today's orders, the platform's
+ * money and the busiest stores. Light by default; what it shows, the order, the theme and the refresh time are picked in its own
+ * Settings (gear button) and kept in this browser. Everything is sized to the window so it never scrolls.
  * Opened only on its own private address, behind Cloudflare Access (an emailed one-time code); the data route checks
- * Cloudflare's token too (server/src/office-wall/). It asks the same address (same origin) every 15 seconds.
+ * Cloudflare's token too (server/src/office-wall/). It asks the same address (same origin).
  */
-interface Summary {
-  at: string;
-  day: string;
-  host: {
-    cpuPercent: number | null;
-    cpuCores: number;
-    load: { one: number; five: number; fifteen: number };
-    memory: { totalMb: number; usedMb: number; percent: number } | null;
-    disk: { totalGb: number; usedGb: number; percent: number } | null;
-    uptimeSeconds: number | null;
+
+/** Points kept for the CPU / memory / network lines: 120 refreshes = 10 minutes at 5 s. */
+const HISTORY = 120;
+
+function nextHistory(h: WallHistory, body: Summary): WallHistory {
+  const push = (list: number[], v: number | null | undefined) => (v === null || v === undefined ? list : [...list, v].slice(-HISTORY));
+  return {
+    cpu: push(h.cpu, body.host.cpuPercent),
+    memory: push(h.memory, body.host.memory?.percent),
+    netIn: push(h.netIn, body.network?.inBps === null || body.network?.inBps === undefined ? null : body.network.inBps * 8),
+    netOut: push(h.netOut, body.network?.outBps === null || body.network?.outBps === undefined ? null : body.network.outBps * 8),
   };
-  database: { ok: boolean; latencyMs: number | null };
-  jobs: { total: number; late: number };
-  orders: { today: { orders: number; sales: number }; sameTimeYesterday: { orders: number; sales: number } };
-  hours: Array<{ hour: number; orders: number; sales: number }>;
-  latest: Array<{ id: string; store: string; total: number; source: string; at: string }>;
-  topStores: Array<{ store: string; subdomain: string; orders: number; sales: number }>;
-  stores: { total: number; active: number; newToday: number };
-  alerts: string[];
 }
 
-const REFRESH_MS = 15_000;
-const taka = (n: number) => `৳${Math.round(n).toLocaleString('en-IN')}`;
-const SOURCE: Record<string, string> = { STOREFRONT: 'Online', MANUAL: 'Added', POS: 'POS', RESELLER: 'Resale' };
+function useViewport() {
+  const [v, setV] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+  useEffect(() => {
+    const on = () => setV({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return v;
+}
 
 function useClock() {
   const [now, setNow] = useState(() => new Date());
@@ -39,18 +44,109 @@ function useClock() {
   return now;
 }
 
+/** Columns and rows for the panel grid so every panel fits; spare cells go to panels that read better wide. */
+const WIDE_NEXT = ['latest', 'topStores', 'topProducts', 'channels', 'income30', 'signups30', 'visitHours', 'todo', 'server'];
+/** A panel's comfortable width (px): narrower than this the grid prefers another row. */
+const PANEL_PX = 270;
+/** The narrowest (px) and the shortest (px) a panel may ever get; past that, panels are left out (and the header says so). */
+const MIN_PANEL_PX = 220;
+const MIN_PANEL_H = 150;
+/** Narrowest a number tile may get (px). */
+const MIN_TILE_PX = 175;
+
+/** How many tile rows a number of tiles takes at this width. */
+function tileRowsFor(count: number, width: number): number {
+  const perRow = Math.min(8, Math.max(2, Math.floor(width / MIN_TILE_PX)));
+  return count ? Math.ceil(count / perRow) : 0;
+}
+
+/**
+ * Columns and rows for the panels so that every one fits with no scrolling. Spare cells go to panels that read better wide.
+ * On a small screen it adds rows, then narrows columns down to MIN_PANEL_PX, and only when even that can't hold them
+ * leaves the last panels out (`hidden`).
+ */
+function gridFor(all: PanelDef[], width: number, height: number, tileRows: number) {
+  const tileH = Math.min(Math.max(height * 0.11, 80), 150);
+  const availH = height - 64 - tileRows * (tileH + 12) - 12;
+  const maxRows = Math.max(1, Math.floor(availH / MIN_PANEL_H));
+  const prefCols = Math.max(1, Math.floor(width / PANEL_PX));
+  const hardCols = Math.max(1, Math.floor(width / MIN_PANEL_PX));
+  const capacity = maxRows * hardCols;
+  const panels = all.slice(0, capacity);
+  const hidden = all.length - panels.length;
+  const n = panels.length;
+  const rowsFor = (u: number) => (u <= 4 ? 1 : u <= 10 ? 2 : u <= 18 ? 3 : 4);
+  const fit = (u: number) => {
+    let r = rowsFor(u);
+    let c = Math.ceil(u / r);
+    if (c > prefCols) {
+      c = prefCols;
+      r = Math.ceil(u / c);
+    }
+    if (r > maxRows) {
+      r = maxRows;
+      c = Math.min(hardCols, Math.ceil(u / r));
+      r = Math.ceil(u / c);
+    }
+    return { r, c };
+  };
+  let wide = new Set(panels.filter((p) => p.wide).map((p) => p.id));
+  let units = n + wide.size;
+  let { r: rows, c: cols } = fit(units);
+  // Wide panels only when they don't push the grid past what the screen holds.
+  if (cols < 3 || rows > maxRows || cols * rows < units) {
+    wide = new Set();
+    units = n;
+    ({ r: rows, c: cols } = fit(units));
+  }
+  let spare = cols * rows - units;
+  if (cols >= 3) {
+    const ids = panels.map((p) => p.id);
+    for (const id of [...WIDE_NEXT, ...ids]) {
+      if (spare <= 0) break;
+      if (ids.includes(id) && !wide.has(id)) {
+        wide.add(id);
+        spare -= 1;
+      }
+    }
+  }
+  return { cols, rows, wide, panels, hidden };
+}
+
 export default function OfficeWall() {
+  const [settings, setSettings] = useState<WallSettings>(() => loadSettings());
+  const [showSettings, setShowSettings] = useState(false);
+  /** The section whose 30-day dialog is open (wallDetail.tsx), or null. */
+  const [detail, setDetail] = useState<string | null>(null);
   const [data, setData] = useState<Summary | null>(null);
+  const [hist, setHist] = useState<WallHistory>({ cpu: [], memory: [], netIn: [], netOut: [] });
   const [error, setError] = useState('');
   const [signedOut, setSignedOut] = useState(false);
   const now = useClock();
+  const refreshMs = settings.refreshSec * 1000;
+
+  const update = (s: WallSettings) => {
+    setSettings(s);
+    saveSettings(s);
+  };
 
   useEffect(() => {
     document.title = 'Regantify wall';
     let alive = true;
     const load = async () => {
       try {
-        const res = await fetch('/v1/wall/summary', { credentials: 'include', cache: 'no-store' });
+        // Dev build only: `/wall?demo` shows sample numbers; otherwise it asks the local API on port 4000 (needs WALL_DEV_OPEN=true there).
+        if (import.meta.env.DEV && new URLSearchParams(location.search).has('demo')) {
+          const { demoSummary } = await import('./wallDemo');
+          const body = demoSummary();
+          if (!alive) return;
+          setData(body);
+          setError('');
+          setHist((h) => nextHistory(h, body));
+          return;
+        }
+        const url = import.meta.env.DEV ? `${location.protocol}//${location.hostname}:4000/v1/wall/summary` : '/v1/wall/summary';
+        const res = await fetch(url, { credentials: import.meta.env.DEV ? 'omit' : 'include', cache: 'no-store' });
         if (res.status === 401) {
           // An old or broken Cloudflare sign-in: sign out of Access and back in (a new emailed code).
           if (alive) setSignedOut(true);
@@ -58,207 +154,146 @@ export default function OfficeWall() {
         }
         if (!res.ok) throw new Error(`The server answered ${res.status}.`);
         const body = (await res.json()) as Summary;
-        if (alive) {
-          setData(body);
-          setError('');
-          setSignedOut(false);
-        }
+        if (!alive) return;
+        setData(body);
+        setError('');
+        setSignedOut(false);
+        setHist((h) => nextHistory(h, body));
       } catch (e) {
         if (alive) setError((e as Error).message || 'Could not reach the server.');
       }
     };
     void load();
-    const t = setInterval(load, REFRESH_MS);
+    const t = setInterval(load, refreshMs);
     return () => {
       alive = false;
       clearInterval(t);
     };
-  }, []);
+  }, [refreshMs]);
+
+
+  const chosenPanels = useMemo(() => settings.panels.filter((p) => p.on).map((p) => PANELS.find((d) => d.id === p.id)!).filter(Boolean), [settings.panels]);
+  const { w: width, h: height } = useViewport();
+  // A tile whose number a panel on screen already shows is left out, so nothing is on the wall twice.
+  const tilesFor = (shown: Set<string>) =>
+    settings.tiles.filter((t) => t.on).map((t) => TILES.find((d) => d.id === t.id)!).filter((t) => t && !t.twins?.some((id) => shown.has(id)));
+  const grid = useMemo(() => {
+    const guess = tilesFor(new Set(chosenPanels.map((p) => p.id)));
+    return gridFor(chosenPanels, width, height, tileRowsFor(guess.length, width));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosenPanels, settings.tiles, width, height]);
+  const panels = grid.panels;
+  const shownPanels = useMemo(() => new Set(panels.map((p) => p.id)), [panels]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const tiles = useMemo(() => tilesFor(shownPanels), [settings.tiles, shownPanels]);
+  const tileRows = tileRowsFor(tiles.length, width);
+  const tileCols = Math.max(1, Math.ceil(tiles.length / Math.max(1, tileRows)));
 
   const clock = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const date = now.toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', weekday: 'long', day: 'numeric', month: 'long' });
-  const stale = data ? now.getTime() - new Date(data.at).getTime() > REFRESH_MS * 4 : false;
+  const date = now.toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const nowHour = Number(now.toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', hour12: false })) % 24;
+  const stale = data ? now.getTime() - new Date(data.at).getTime() > Math.max(refreshMs * 4, 60_000) : false;
+
+  const fullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void document.documentElement.requestFullscreen?.().catch(() => undefined);
+  };
 
   return (
-    <div className="min-h-screen bg-[#0b0f14] p-6 text-[#e6edf3]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <header className="mb-5 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Regantify</h1>
-          <p className="text-sm text-[#8b98a5]">{date}</p>
+    <div className="wall-root" data-theme={settings.theme}>
+      <header className="flex shrink-0 items-center justify-between gap-4">
+        <div className="flex min-w-0 items-baseline gap-3">
+          <h1 className="text-[1.6em] font-bold tracking-tight">Regantify</h1>
+          <span className="truncate text-[var(--ink2)]">{date}</span>
         </div>
-        <div className="text-right">
-          <p className="text-4xl font-semibold tabular-nums">{clock}</p>
-          <p className={`text-xs ${error || stale ? 'text-[#ff7b72]' : 'text-[#8b98a5]'}`}>
+        <div className="flex items-center gap-3">
+          {grid.hidden > 0 && (
+            <span className="text-[0.92em] font-semibold text-[var(--bad)]" title="Pick fewer panels in Settings, or use a bigger screen">
+              {grid.hidden} panel{grid.hidden === 1 ? '' : 's'} hidden: screen too small
+            </span>
+          )}
+          <span className={`text-[0.92em] ${error || stale ? 'font-semibold text-[var(--bad)]' : 'text-[var(--muted)]'}`}>
             {error || (stale ? 'Data is old: the server is not answering' : data ? `Updated ${new Date(data.at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka' })}` : 'Loading…')}
-          </p>
+          </span>
+          <span className="text-[2em] font-bold tabular-nums leading-none">{clock}</span>
+          <button type="button" className="wall-icon-btn" onClick={fullscreen} aria-label="Full screen" title="Full screen">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+            </svg>
+          </button>
+          <button type="button" className="wall-icon-btn" onClick={() => setShowSettings(true)} aria-label="Settings" title="Settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+            </svg>
+            <span className="text-[0.9em]">Settings</span>
+          </button>
         </div>
       </header>
 
       {signedOut && (
-        <div className="mb-5 rounded-xl bg-red-600 px-5 py-4 text-lg text-white">
-          <p className="font-medium">Cloudflare sign-in is not accepted.</p>
-          <p className="mt-1 text-base">Sign in again with your email code.</p>
-          <a href="/cdn-cgi/access/logout" className="mt-3 inline-block rounded-lg bg-white px-4 py-2 font-medium text-red-700">
+        <div className="wall-alerts shrink-0 items-center justify-between">
+          <span>Cloudflare sign-in is not accepted. Sign in again with your email code.</span>
+          <a href="/cdn-cgi/access/logout" className="rounded-lg bg-white px-3 py-1 text-[#b91c1c]">
             Sign in again
           </a>
         </div>
       )}
 
-      {data && data.alerts.length > 0 && (
-        <div className="mb-5 rounded-xl bg-red-600 px-5 py-3 text-lg font-medium text-white">
+      {data && (data.alerts.length > 0 || data.cyber?.level === 'ATTACK') && (
+        <div className="wall-alerts shrink-0" role="alert">
+          {data.cyber?.level === 'ATTACK' && <span>⚠ Possible cyber attack: {data.cyber.reasons.slice(0, 2).join(' · ')}</span>}
           {data.alerts.map((a) => (
-            <p key={a}>{a}</p>
+            <span key={a}>⚠ {a}</span>
           ))}
         </div>
       )}
 
-      {data && (
+      {data ? (
         <>
-          <section className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Gauge label="CPU" percent={data.host.cpuPercent} detail={`${data.host.cpuCores} cores · load ${data.host.load.one}`} />
-            <Gauge
-              label="Memory"
-              percent={data.host.memory?.percent ?? null}
-              detail={data.host.memory ? `${(data.host.memory.usedMb / 1024).toFixed(1)} of ${(data.host.memory.totalMb / 1024).toFixed(0)} GB` : 'Not available'}
-            />
-            <Gauge label="Disk" percent={data.host.disk?.percent ?? null} detail={data.host.disk ? `${data.host.disk.usedGb} of ${data.host.disk.totalGb} GB` : 'Not available'} />
-            <Tile
-              label="Database"
-              value={data.database.ok ? `${data.database.latencyMs ?? '?'} ms` : 'Down'}
-              bad={!data.database.ok}
-              detail={`${data.jobs.late ? `${data.jobs.late} job(s) late` : `All ${data.jobs.total} jobs on time`} · up ${uptime(data.host.uptimeSeconds)}`}
-            />
-          </section>
-
-          <section className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Tile label="Orders today" value={data.orders.today.orders.toLocaleString('en-IN')} big detail={compare(data.orders.today.orders, data.orders.sameTimeYesterday.orders, (n) => String(n))} />
-            <Tile label="Sales today" value={taka(data.orders.today.sales)} big detail={compare(data.orders.today.sales, data.orders.sameTimeYesterday.sales, taka)} />
-            <Tile label="New stores today" value={String(data.stores.newToday)} big detail={`${data.stores.active.toLocaleString('en-IN')} active of ${data.stores.total.toLocaleString('en-IN')}`} />
-            <Tile label="Stores with an order today" value={String(data.topStores.length >= 10 ? '10+' : data.topStores.length)} big detail="Busiest ten listed below" />
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-3">
-            <Panel title="Orders by hour (Dhaka)">
-              <HourBars hours={data.hours} nowHour={Number(now.toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', hour12: false }))} />
-            </Panel>
-            <Panel title="Top stores today">
-              {data.topStores.length === 0 ? (
-                <p className="text-[#8b98a5]">No orders yet today.</p>
-              ) : (
-                <ol className="space-y-2">
-                  {data.topStores.map((s, i) => (
-                    <li key={s.subdomain} className="flex items-baseline justify-between gap-3">
-                      <span className="truncate">
-                        <span className="mr-2 inline-block w-5 text-right tabular-nums text-[#8b98a5]">{i + 1}</span>
-                        {s.store}
-                      </span>
-                      <span className="shrink-0 tabular-nums">
-                        {s.orders} <span className="text-[#8b98a5]">· {taka(s.sales)}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </Panel>
-            <Panel title="Latest orders">
-              {data.latest.length === 0 ? (
-                <p className="text-[#8b98a5]">No orders yet today.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {data.latest.map((o) => (
-                    <li key={o.id} className="flex items-baseline justify-between gap-3">
-                      <span className="truncate">
-                        <span className="mr-2 tabular-nums text-[#8b98a5]">{new Date(o.at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}</span>
-                        {o.store}
-                      </span>
-                      <span className="shrink-0 tabular-nums">
-                        {taka(o.total)} <span className="text-xs text-[#8b98a5]">{SOURCE[o.source] ?? o.source}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
-          </section>
+          {tiles.length > 0 && (
+            <section className="grid shrink-0 gap-[0.75em]" style={{ gridTemplateColumns: `repeat(${tileCols}, minmax(0, 1fr))`, gridAutoRows: 'clamp(5.8em, 11vh, 9.5em)' }}>
+              {tiles.map((t) => (
+                <TileCard key={t.id} def={t} d={data} hist={hist} shown={shownPanels} onOpen={DETAIL_OF[`tile:${t.id}`] ? () => setDetail(DETAIL_OF[`tile:${t.id}`]) : undefined} />
+              ))}
+            </section>
+          )}
+          {panels.length > 0 && (
+            <section
+              className="grid min-h-0 flex-1 gap-[0.75em]"
+              style={{ gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`, gridAutoFlow: 'row dense' }}
+            >
+              {panels.map((p) => (
+                <div
+                  key={p.id}
+                  className={`wall-card wall-panel ${DETAIL_OF[p.id] ? 'wall-open' : ''}`}
+                  style={grid.wide.has(p.id) ? { gridColumn: 'span 2' } : undefined}
+                  {...(DETAIL_OF[p.id]
+                    ? {
+                        role: 'button',
+                        tabIndex: 0,
+                        'aria-label': `${p.title}: open the last 30 days`,
+                        onClick: () => setDetail(DETAIL_OF[p.id]),
+                        onKeyDown: (e: React.KeyboardEvent) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setDetail(DETAIL_OF[p.id])),
+                      }
+                    : {})}
+                >
+                  <h2 className="wall-panel-title">
+                    <span className="truncate">{p.title}</span>
+                    {DETAIL_OF[p.id] && <span className="wall-30d shrink-0 text-[0.8em] font-medium text-[var(--s1)]">30 days ›</span>}
+                  </h2>
+                  <div className="wall-panel-body">{p.render(data, { hist, nowHour, shown: shownPanels })}</div>
+                </div>
+              ))}
+            </section>
+          )}
         </>
+      ) : (
+        <div className="grid flex-1 place-items-center text-[1.2em] text-[var(--muted)]">{error || 'Loading the wall…'}</div>
       )}
-    </div>
-  );
-}
 
-function uptime(s: number | null): string {
-  if (s === null) return '?';
-  const d = Math.floor(s / 86_400);
-  const h = Math.floor((s % 86_400) / 3600);
-  return d ? `${d}d ${h}h` : `${h}h`;
-}
-
-function compare(today: number, yesterday: number, fmt: (n: number) => string): string {
-  if (!yesterday) return `Yesterday by now: ${fmt(yesterday)}`;
-  const pct = Math.round(((today - yesterday) / yesterday) * 100);
-  return `${pct >= 0 ? '+' : ''}${pct}% vs yesterday by now (${fmt(yesterday)})`;
-}
-
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl bg-[#131a22] p-5">
-      <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-[#8b98a5]">{title}</h2>
-      <div className="text-base">{children}</div>
-    </div>
-  );
-}
-
-function Tile({ label, value, detail, big, bad }: { label: string; value: string; detail: string; big?: boolean; bad?: boolean }) {
-  return (
-    <div className={`rounded-2xl p-5 ${bad ? 'bg-red-600 text-white' : 'bg-[#131a22]'}`}>
-      <p className={`text-sm ${bad ? 'text-white' : 'text-[#8b98a5]'}`}>{label}</p>
-      <p className={`mt-1 font-semibold tabular-nums ${big ? 'text-5xl' : 'text-4xl'}`}>{value}</p>
-      <p className={`mt-2 text-sm ${bad ? 'text-white' : 'text-[#8b98a5]'}`}>{detail}</p>
-    </div>
-  );
-}
-
-/** A usage bar: grey track, blue fill, red from 85%. The number is always written, so the colour is never the only signal. */
-function Gauge({ label, percent, detail }: { label: string; percent: number | null; detail: string }) {
-  const p = percent === null ? null : Math.max(0, Math.min(100, percent));
-  const high = p !== null && p >= 85;
-  return (
-    <div className="rounded-2xl bg-[#131a22] p-5">
-      <p className="text-sm text-[#8b98a5]">{label}</p>
-      <p className={`mt-1 text-4xl font-semibold tabular-nums ${high ? 'text-[#ff7b72]' : ''}`}>{p === null ? '…' : `${p}%`}</p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#26303b]" role="img" aria-label={`${label} ${p ?? 0}%`}>
-        <div className={`h-full rounded-full ${high ? 'bg-[#ff7b72]' : 'bg-[#4c9aff]'}`} style={{ width: `${p ?? 0}%` }} />
-      </div>
-      <p className="mt-2 text-sm text-[#8b98a5]">{detail}</p>
-    </div>
-  );
-}
-
-/** Orders per Dhaka hour, 0 to 23; the hours still to come stay empty. One series, so no legend; hover shows the numbers. */
-function HourBars({ hours, nowHour }: { hours: Summary['hours']; nowHour: number }) {
-  const byHour = new Map(hours.map((h) => [h.hour, h]));
-  const max = Math.max(1, ...hours.map((h) => h.orders));
-  return (
-    <div>
-      <div className="flex h-48 items-end gap-[2px]">
-        {Array.from({ length: 24 }, (_, h) => {
-          const row = byHour.get(h);
-          const n = row?.orders ?? 0;
-          return (
-            <div key={h} className="group relative flex h-full flex-1 items-end" title={`${String(h).padStart(2, '0')}:00 · ${n} orders · ${taka(row?.sales ?? 0)}`}>
-              <div className={`w-full rounded-t ${h === nowHour ? 'bg-[#79b8ff]' : 'bg-[#4c9aff]'}`} style={{ height: n ? `${Math.max(3, (n / max) * 100)}%` : '0' }} />
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-2 flex justify-between text-xs tabular-nums text-[#8b98a5]">
-        <span>00</span>
-        <span>06</span>
-        <span>12</span>
-        <span>18</span>
-        <span>23</span>
-      </div>
-      <p className="mt-2 text-sm text-[#8b98a5]">Busiest hour: {max > 1 || hours.length ? `${String(hours.reduce((a, b) => (b.orders > a.orders ? b : a), { hour: 0, orders: 0, sales: 0 }).hour).padStart(2, '0')}:00, ${max} orders` : 'none yet'}</p>
+      <SettingsDialog open={showSettings} value={settings} onChange={update} onClose={() => setShowSettings(false)} />
+      <DetailDialog section={detail} onClose={() => setDetail(null)} />
     </div>
   );
 }
