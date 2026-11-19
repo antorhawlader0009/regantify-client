@@ -39,30 +39,30 @@ export default function Blog() {
 
   return (
     <div className={ui.night ? 'dark' : ''}>
-    <div lang={ui.lang} className={`min-h-screen bg-white text-[#1A1A1A] dark:bg-[#141414] dark:text-white ${bn ? 'font-bn' : ''}`}>
+    <div lang={ui.lang} className={`min-h-screen bg-white text-[#241812] dark:bg-[#1E1410] dark:text-white ${bn ? 'font-bn' : ''}`}>
       <SiteNav lang={ui.lang} onToggleLang={ui.toggleLang} variant="solid" night={ui.night} onToggleTheme={ui.toggleNight} light={!ui.night} />
       <main className="mx-auto max-w-5xl px-6 py-12">
         <h1 className="text-3xl font-bold">{bn ? 'ব্লগ' : 'Blog'}</h1>
-        <p className="mt-2 text-[#1A1A1A]/60 dark:text-white/60">{bn ? 'অনলাইনে বিক্রির টিপস আর Regantify-র খবর।' : 'Selling tips and news from Regantify.'}</p>
+        <p className="mt-2 text-[#241812]/60 dark:text-white/60">{bn ? 'অনলাইনে বিক্রির টিপস আর Regantify-র খবর।' : 'Selling tips and news from Regantify.'}</p>
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="animate-spin text-neutral-400" />
           </div>
         ) : !data || data.length === 0 ? (
-          <p className="py-16 text-center text-[#1A1A1A]/60 dark:text-white/60">{bn ? 'এখনো কোনো লেখা নেই।' : 'No posts yet.'}</p>
+          <p className="py-16 text-center text-[#241812]/60 dark:text-white/60">{bn ? 'এখনো কোনো লেখা নেই।' : 'No posts yet.'}</p>
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {data.map((p) => (
-              <Link key={p.slug} to={`/blog/${p.slug}`} className="group overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-[#008060] dark:border-white/10">
+              <Link key={p.slug} to={`/blog/${p.slug}`} className="group overflow-hidden rounded-2xl border border-black/10 transition-colors hover:border-[#C2531F] dark:border-white/10">
                 {p.coverUrl ? (
                   <img src={p.coverUrl} alt="" loading="lazy" className="aspect-[16/9] w-full object-cover" />
                 ) : (
-                  <div className="aspect-[16/9] w-full bg-[#F3F7EC] dark:bg-[#1A1A1A]" />
+                  <div className="aspect-[16/9] w-full bg-[#FCF3E8] dark:bg-[#241812]" />
                 )}
                 <div className="space-y-1.5 p-4">
-                  <p className="text-xs text-[#1A1A1A]/50 dark:text-white/50">{formatDhakaDate(p.publishedAt)}</p>
-                  <h2 className="font-semibold leading-snug group-hover:text-[#008060]">{p.title}</h2>
-                  {p.excerpt && <p className="line-clamp-3 text-sm text-[#1A1A1A]/60 dark:text-white/60">{p.excerpt}</p>}
+                  <p className="text-xs text-[#241812]/50 dark:text-white/50">{formatDhakaDate(p.publishedAt)}</p>
+                  <h2 className="font-semibold leading-snug group-hover:text-[#C2531F]">{p.title}</h2>
+                  {p.excerpt && <p className="line-clamp-3 text-sm text-[#241812]/60 dark:text-white/60">{p.excerpt}</p>}
                 </div>
               </Link>
             ))}
@@ -84,10 +84,10 @@ export function BlogPostPage() {
 
   return (
     <div className={ui.night ? 'dark' : ''}>
-    <div lang={ui.lang} className={`min-h-screen bg-white text-[#1A1A1A] dark:bg-[#141414] dark:text-white ${bn ? 'font-bn' : ''}`}>
+    <div lang={ui.lang} className={`min-h-screen bg-white text-[#241812] dark:bg-[#1E1410] dark:text-white ${bn ? 'font-bn' : ''}`}>
       <SiteNav lang={ui.lang} onToggleLang={ui.toggleLang} variant="solid" night={ui.night} onToggleTheme={ui.toggleNight} light={!ui.night} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link to="/blog" className="mb-6 inline-flex items-center gap-1 text-sm text-[#1A1A1A]/60 hover:text-[#008060] dark:text-white/60">
+        <Link to="/blog" className="mb-6 inline-flex items-center gap-1 text-sm text-[#241812]/60 hover:text-[#C2531F] dark:text-white/60">
           <ArrowLeft size={14} /> {bn ? 'সব লেখা' : 'All posts'}
         </Link>
         {isLoading ? (
@@ -95,25 +95,25 @@ export function BlogPostPage() {
             <Loader2 className="animate-spin text-neutral-400" />
           </div>
         ) : isError || !data ? (
-          <p className="py-16 text-center text-[#1A1A1A]/60 dark:text-white/60">{bn ? 'লেখাটি পাওয়া যায়নি।' : 'This post was not found.'}</p>
+          <p className="py-16 text-center text-[#241812]/60 dark:text-white/60">{bn ? 'লেখাটি পাওয়া যায়নি।' : 'This post was not found.'}</p>
         ) : (
           <article>
-            <p className="text-sm text-[#1A1A1A]/50 dark:text-white/50">{formatDhakaDate(data.publishedAt)}</p>
+            <p className="text-sm text-[#241812]/50 dark:text-white/50">{formatDhakaDate(data.publishedAt)}</p>
             <h1 className="mt-2 text-3xl font-bold leading-tight">{data.title}</h1>
             {data.coverUrl && <img src={data.coverUrl} alt="" className="mt-6 w-full rounded-2xl object-cover" />}
             <Markdown text={data.body} className="mt-8 !text-base dark:!text-white/90" />
             {data.tags.length > 0 && (
               <div className="mt-8 flex flex-wrap gap-2">
                 {data.tags.map((t) => (
-                  <span key={t} className="rounded-full bg-[#F3F7EC] px-3 py-1 text-xs text-[#008060] dark:bg-white/10 dark:text-[#95BF47]">
+                  <span key={t} className="rounded-full bg-[#FCF3E8] px-3 py-1 text-xs text-[#C2531F] dark:bg-white/10 dark:text-[#F4A261]">
                     {t}
                   </span>
                 ))}
               </div>
             )}
-            <div className="mt-12 rounded-2xl bg-[#F3F7EC] p-6 dark:bg-white/5">
+            <div className="mt-12 rounded-2xl bg-[#FCF3E8] p-6 dark:bg-white/5">
               <p className="font-semibold">{bn ? 'নিজের অনলাইন দোকান খুলুন' : 'Open your own online shop'}</p>
-              <Link to="/vendor/signup" className="mt-3 inline-flex rounded-full bg-[#008060] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#006B51]">
+              <Link to="/vendor/signup" className="mt-3 inline-flex rounded-full bg-[#C2531F] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#A8441A]">
                 {bn ? 'ফ্রি শুরু করুন' : 'Start free'}
               </Link>
             </div>

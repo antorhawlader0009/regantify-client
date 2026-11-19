@@ -6,12 +6,11 @@ import HeroScrollStory from '../../components/marketing/HeroScrollStory';
 import { useQuery } from '@tanstack/react-query';
 import { storefrontStoreUrl } from '../../lib/storefrontUrl';
 import TemplateShowcase from '../../components/marketing/TemplateShowcase';
+import FaqChat from '../../components/marketing/FaqChat';
 import {
   Store,
   ArrowUpRight,
   Check,
-  Plus,
-  Minus,
   X,
   BarChart3,
   Sparkles,
@@ -37,40 +36,46 @@ const dict = {
     hero_cta: 'Start free',
     hero_carousel_label: 'What Regantify does',
     hero_f1_title: 'Add products by chatting',
-    hero_f1_detail: 'Tell the AI assistant about your product in plain Bangla and it fills in the listing for you.',
-    hero_f1_p1: 'Name, price, colours and sizes picked up from your message',
-    hero_f1_p2: 'Photo and description ready to edit',
-    hero_f1_p3: 'Works with the full Add Product form',
+    hero_f1_detail: 'Describe it in plain Bangla; AI fills the listing.',
+    hero_f1_p1: 'Name, price, colours, sizes',
+    hero_f1_p2: 'Photo and description ready',
+    hero_f1_p3: 'Works with Add Product form',
+    hero_f1_p4: 'Edit anything before saving',
     hero_f2_title: 'Handle every order with confidence',
-    hero_f2_detail: 'Spot fake orders early, follow each order from pending to delivered, and manage returns and cancellations in one place.',
-    hero_f2_p1: 'Risk score and fake order detection',
-    hero_f2_p2: 'Customer order history check',
-    hero_f2_p3: 'Return and cancel in a tap',
+    hero_f2_detail: 'Catch fake orders, track every order to delivery.',
+    hero_f2_p1: 'Risk score, fake order check',
+    hero_f2_p2: 'Customer order history',
+    hero_f2_p3: 'Return or cancel in a tap',
+    hero_f2_p4: 'Every status in one place',
     hero_f3_title: 'Send to any courier',
-    hero_f3_detail: 'Book Pathao, SteadFast and RedX from your order list and follow every parcel.',
-    hero_f3_p1: 'Tracking and delivery status in the dashboard',
-    hero_f3_p2: 'Cash on delivery collected and recorded',
+    hero_f3_detail: 'Book Pathao, SteadFast and RedX from your order list.',
+    hero_f3_p1: 'Live tracking in dashboard',
+    hero_f3_p2: 'COD collected and recorded',
     hero_f3_p3: 'Returns and refunds handled',
+    hero_f3_p4: 'Bulk booking in one click',
     hero_f4_title: 'Landing pages in minutes',
-    hero_f4_detail: 'Drag sections into place, add a sticky order button and customer reviews, then publish a page that sells.',
-    hero_f4_p1: 'Drag and drop section builder',
-    hero_f4_p2: 'Ready-made designs for every kind of shop',
-    hero_f4_p3: 'AI drafts the page from your product',
+    hero_f4_detail: 'Drag sections, publish a page that sells.',
+    hero_f4_p1: 'Drag and drop builder',
+    hero_f4_p2: 'Ready-made shop designs',
+    hero_f4_p3: 'AI drafts from your product',
+    hero_f4_p4: 'Order button and reviews',
     hero_f5_title: 'POS and LMS in one dashboard',
-    hero_f5_detail: 'Sell over the counter and manage your leads without leaving Regantify.',
-    hero_f5_p1: 'Counter selling with a receipt printer and barcode scanner',
-    hero_f5_p2: 'LMS to manage leads and follow-ups',
-    hero_f5_p3: 'Same products, stock and customers as your online store',
+    hero_f5_detail: 'Sell at the counter and manage leads, all in Regantify.',
+    hero_f5_p1: 'Receipt printer, barcode scanner',
+    hero_f5_p2: 'Leads and follow-ups',
+    hero_f5_p3: 'Same products, stock, customers',
+    hero_f5_p4: 'Cashier PIN and shift reports',
     hero_f6_title: 'Get paid, safely',
-    hero_f6_detail: 'Shoppers pay by mobile wallet, card or cash on delivery, and the money lands in your Regantify wallet.',
-    hero_f6_p1: 'Mobile banking, card and cash on delivery',
-    hero_f6_p2: 'Instant payment received updates',
+    hero_f6_detail: 'Wallet, card or COD; money lands in your wallet.',
+    hero_f6_p1: 'Mobile banking, card, COD',
+    hero_f6_p2: 'Instant payment updates',
     hero_f6_p3: 'Daily earnings at a glance',
+    hero_f6_p4: 'Safe checkout for shoppers',
 
     who_title: 'Premium store designs',
     who_sub: 'Pick a design that fits what you sell, then make it yours.',
     tpl_cta: 'Start for free',
-    tpl1: 'Fashion Store',
+    tpl1: 'Jewelry Store',
     tpl2: 'Grocery & Food',
     tpl3: 'Baby Care',
     tpl4: 'Furniture',
@@ -198,6 +203,7 @@ const dict = {
     val_no: '-',
 
     faq_title: 'Questions, answered',
+    faq_reset: 'Start over',
     faq1_q: 'Do I need my own website?',
     faq1_a: 'No. Your shop page goes live the moment you add your first product. You can add your own domain name later if you want.',
     faq2_q: 'Do I need a merchant account to get paid?',
@@ -225,40 +231,46 @@ const dict = {
     hero_cta: 'ফ্রি শুরু করুন',
     hero_carousel_label: 'Regantify যা যা করে',
     hero_f1_title: 'চ্যাট করেই প্রোডাক্ট যোগ করুন',
-    hero_f1_detail: 'AI অ্যাসিস্ট্যান্টকে সহজ বাংলায় প্রোডাক্টের কথা বলুন, লিস্টিং সে-ই সাজিয়ে দেবে।',
-    hero_f1_p1: 'আপনার মেসেজ থেকে নাম, দাম, রং আর সাইজ নেয়',
-    hero_f1_p2: 'ছবি আর বিবরণ এডিট করার জন্য তৈরি',
-    hero_f1_p3: 'পুরো Add Product ফর্মের সাথেই কাজ করে',
+    hero_f1_detail: 'সহজ বাংলায় বলুন, লিস্টিং AI সাজিয়ে দেবে।',
+    hero_f1_p1: 'নাম, দাম, রং, সাইজ',
+    hero_f1_p2: 'ছবি ও বিবরণ তৈরি',
+    hero_f1_p3: 'Add Product ফর্মে কাজ করে',
+    hero_f1_p4: 'সেভের আগে সব এডিট করা যায়',
     hero_f2_title: 'প্রতিটি অর্ডার সামলান নিশ্চিন্তে',
-    hero_f2_detail: 'ভুয়া অর্ডার আগেই ধরুন, পেন্ডিং থেকে ডেলিভারি পর্যন্ত প্রতিটি অর্ডার অনুসরণ করুন, রিটার্ন আর ক্যানসেলও এক জায়গায়।',
+    hero_f2_detail: 'ভুয়া অর্ডার ধরুন, ডেলিভারি পর্যন্ত ট্র্যাক করুন।',
     hero_f2_p1: 'রিস্ক স্কোর ও ভুয়া অর্ডার শনাক্ত',
-    hero_f2_p2: 'কাস্টমারের আগের অর্ডারের হিস্টরি',
+    hero_f2_p2: 'কাস্টমারের অর্ডার হিস্টরি',
     hero_f2_p3: 'এক ট্যাপে রিটার্ন ও ক্যানসেল',
+    hero_f2_p4: 'সব স্ট্যাটাস এক জায়গায়',
     hero_f3_title: 'যেকোনো কুরিয়ারে পাঠান',
-    hero_f3_detail: 'অর্ডার লিস্ট থেকেই Pathao, SteadFast ও RedX-এ বুক করুন আর প্রতিটি পার্সেল ট্র্যাক করুন।',
-    hero_f3_p1: 'ড্যাশবোর্ডেই ট্র্যাকিং ও ডেলিভারি স্ট্যাটাস',
-    hero_f3_p2: 'ক্যাশ অন ডেলিভারির টাকা হিসাবে ওঠে',
-    hero_f3_p3: 'রিটার্ন ও রিফান্ড সামলানো যায়',
+    hero_f3_detail: 'অর্ডার লিস্ট থেকেই Pathao, SteadFast, RedX-এ বুক করুন।',
+    hero_f3_p1: 'ড্যাশবোর্ডে লাইভ ট্র্যাকিং',
+    hero_f3_p2: 'COD-এর টাকা হিসাবে ওঠে',
+    hero_f3_p3: 'রিটার্ন ও রিফান্ড সামলানো',
+    hero_f3_p4: 'এক ক্লিকে বাল্ক বুকিং',
     hero_f4_title: 'মিনিটেই ল্যান্ডিং পেজ',
-    hero_f4_detail: 'সেকশন টেনে বসান, স্টিকি অর্ডার বাটন আর কাস্টমার রিভিউ যোগ করুন, তারপর বিক্রি বাড়ানো পেজ পাবলিশ করুন।',
-    hero_f4_p1: 'ড্র্যাগ-অ্যান্ড-ড্রপ সেকশন বিল্ডার',
-    hero_f4_p2: 'সব ধরনের দোকানের জন্য রেডিমেড ডিজাইন',
-    hero_f4_p3: 'প্রোডাক্ট থেকে AI পেজের খসড়া লিখে দেয়',
+    hero_f4_detail: 'সেকশন টেনে বসান, বিক্রি বাড়ানো পেজ পাবলিশ করুন।',
+    hero_f4_p1: 'ড্র্যাগ-অ্যান্ড-ড্রপ বিল্ডার',
+    hero_f4_p2: 'রেডিমেড দোকানের ডিজাইন',
+    hero_f4_p3: 'প্রোডাক্ট থেকে AI খসড়া',
+    hero_f4_p4: 'অর্ডার বাটন ও রিভিউ',
     hero_f5_title: 'একই ড্যাশবোর্ডে POS আর LMS',
-    hero_f5_detail: 'দোকানে সামনাসামনি বিক্রি করুন আর লিড সামলান, Regantify ছেড়ে না গিয়েই।',
-    hero_f5_p1: 'রসিদ প্রিন্টার ও বারকোড স্ক্যানারে কাউন্টার সেলিং',
-    hero_f5_p2: 'LMS-এ লিড ও ফলো-আপ ম্যানেজ',
-    hero_f5_p3: 'অনলাইন স্টোরের একই প্রোডাক্ট, স্টক ও কাস্টমার',
+    hero_f5_detail: 'দোকানে বিক্রি আর লিড সামলান, Regantify-তেই।',
+    hero_f5_p1: 'রসিদ প্রিন্টার ও বারকোড স্ক্যানার',
+    hero_f5_p2: 'লিড ও ফলো-আপ',
+    hero_f5_p3: 'একই প্রোডাক্ট, স্টক ও কাস্টমার',
+    hero_f5_p4: 'ক্যাশিয়ার পিন ও শিফট রিপোর্ট',
     hero_f6_title: 'নিরাপদে পেমেন্ট নিন',
-    hero_f6_detail: 'ক্রেতা মোবাইল ওয়ালেট, কার্ড বা ক্যাশ অন ডেলিভারিতে দেন, টাকা সরাসরি আপনার Regantify ওয়ালেটে আসে।',
-    hero_f6_p1: 'মোবাইল ব্যাংকিং, কার্ড ও ক্যাশ অন ডেলিভারি',
-    hero_f6_p2: 'পেমেন্ট পাওয়ার সাথে সাথে আপডেট',
+    hero_f6_detail: 'ওয়ালেট, কার্ড বা COD-এ পেমেন্ট, টাকা আপনার ওয়ালেটে।',
+    hero_f6_p1: 'মোবাইল ব্যাংকিং, কার্ড, COD',
+    hero_f6_p2: 'পেমেন্টের সাথে সাথে আপডেট',
     hero_f6_p3: 'প্রতিদিনের আয় এক নজরে',
+    hero_f6_p4: 'ক্রেতার জন্য নিরাপদ চেকআউট',
 
     who_title: 'তৈরি স্টোর ডিজাইন',
     who_sub: 'আপনি যা বিক্রি করেন তার সাথে মানানসই ডিজাইন বেছে নিন, তারপর নিজের মতো সাজান।',
     tpl_cta: 'ফ্রি শুরু করুন',
-    tpl1: 'ফ্যাশন স্টোর',
+    tpl1: 'জুয়েলারি স্টোর',
     tpl2: 'মুদি ও খাবার',
     tpl3: 'বেবি কেয়ার',
     tpl4: 'ফার্নিচার',
@@ -386,6 +398,7 @@ const dict = {
     val_no: '-',
 
     faq_title: 'প্রশ্ন, উত্তর সহ',
+    faq_reset: 'আবার শুরু করুন',
     faq1_q: 'নিজের ওয়েবসাইট লাগবে কি?',
     faq1_a: 'না। প্রথম প্রোডাক্ট যোগ করার সাথে সাথেই আপনার দোকান লাইভ হয়ে যায়। পরে চাইলে নিজের ডোমেইন নাম যোগ করতে পারবেন।',
     faq2_q: 'টাকা নিতে মার্চেন্ট অ্যাকাউন্ট লাগবে কি?',
@@ -524,7 +537,6 @@ function HomeInner() {
   // Text and pictures Super Admin set in Marketing > Homepage content (super-admin-new.md Step 14); an empty part keeps the built-in text below.
   const cms = marketing?.content;
   usePageMeta(cms?.seo.title || undefined, cms?.seo.description || undefined, cms?.seo.imageUrl ?? undefined);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   // Day / night for the whole page. The hero, pricing and closing sections are
   // dark by design in both modes; the rest of the page follows this.
@@ -542,17 +554,17 @@ function HomeInner() {
     if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
   }, [hash]);
 
-  // Our own store screenshots (tall, full-page), kept on the CDN (lib/siteAssets.ts).
+  // Store design screenshots (tall, full-page), in public/images/designs/.
   // Eight cards = two rows of four.
   const templates = [
-    { name: t('tpl1'), image: siteAsset('templates/fashion.webp') },
-    { name: t('tpl2'), image: siteAsset('templates/grocery.webp') },
-    { name: t('tpl3'), image: siteAsset('templates/baby-care.webp') },
-    { name: t('tpl4'), image: siteAsset('templates/furniture.webp') },
-    { name: t('tpl5'), image: siteAsset('templates/books.webp') },
-    { name: t('tpl6'), image: siteAsset('templates/pets.webp') },
-    { name: t('tpl7'), image: siteAsset('templates/medical.webp') },
-    { name: t('tpl8'), image: siteAsset('templates/gadgets.webp') },
+    { name: t('tpl1'), image: '/images/designs/jewelry.jpg' },
+    { name: t('tpl2'), image: '/images/designs/grocery.jpg' },
+    { name: t('tpl3'), image: '/images/designs/baby.jpg' },
+    { name: t('tpl4'), image: '/images/designs/furniture.jpg' },
+    { name: t('tpl5'), image: '/images/designs/books.jpg' },
+    { name: t('tpl6'), image: '/images/designs/pet.jpg' },
+    { name: t('tpl7'), image: '/images/designs/medical.jpg' },
+    { name: t('tpl8'), image: '/images/designs/gadgets.jpg' },
   ];
 
   const features = [
@@ -564,44 +576,17 @@ function HomeInner() {
 
   // The six landscape pictures of the hero scroll story, in the order they are met.
   const builtInSlides = [
-    { image: '/site/hero-feat-1.jpg', alt: 'A seller adding a product through the AI assistant chat', title: t('hero_f1_title'), detail: t('hero_f1_detail'), points: [t('hero_f1_p1'), t('hero_f1_p2'), t('hero_f1_p3')] },
-    { image: '/site/hero-feat-2.jpg', alt: 'A seller checking orders with a fake order risk score and order flow', title: t('hero_f2_title'), detail: t('hero_f2_detail'), points: [t('hero_f2_p1'), t('hero_f2_p2'), t('hero_f2_p3')] },
-    { image: '/site/hero-feat-3.jpg', alt: 'Parcels handed to couriers from the Regantify order list', title: t('hero_f3_title'), detail: t('hero_f3_detail'), points: [t('hero_f3_p1'), t('hero_f3_p2'), t('hero_f3_p3')] },
-    { image: '/site/hero-feat-4.jpg', alt: 'A seller building a landing page with the drag and drop builder', title: t('hero_f4_title'), detail: t('hero_f4_detail'), points: [t('hero_f4_p1'), t('hero_f4_p2'), t('hero_f4_p3')] },
-    { image: '/site/hero-feat-5.jpg', alt: 'A shop counter with POS on one side and LMS on the other, around the dashboard', title: t('hero_f5_title'), detail: t('hero_f5_detail'), points: [t('hero_f5_p1'), t('hero_f5_p2'), t('hero_f5_p3')] },
-    { image: '/site/hero-feat-6.jpg', alt: 'A shopper paying on a phone while the seller sees the payment arrive', title: t('hero_f6_title'), detail: t('hero_f6_detail'), points: [t('hero_f6_p1'), t('hero_f6_p2'), t('hero_f6_p3')] },
+    { image: '/site/hero-feat-1.jpg', alt: 'A seller adding a product through the AI assistant chat', title: t('hero_f1_title'), detail: t('hero_f1_detail'), points: [t('hero_f1_p1'), t('hero_f1_p2'), t('hero_f1_p3'), t('hero_f1_p4')] },
+    { image: '/site/hero-feat-2.jpg', alt: 'A seller checking orders with a fake order risk score and order flow', title: t('hero_f2_title'), detail: t('hero_f2_detail'), points: [t('hero_f2_p1'), t('hero_f2_p2'), t('hero_f2_p3'), t('hero_f2_p4')] },
+    { image: '/site/hero-feat-3.jpg', alt: 'Parcels handed to couriers from the Regantify order list', title: t('hero_f3_title'), detail: t('hero_f3_detail'), points: [t('hero_f3_p1'), t('hero_f3_p2'), t('hero_f3_p3'), t('hero_f3_p4')] },
+    { image: '/site/hero-feat-4.jpg', alt: 'A seller building a landing page with the drag and drop builder', title: t('hero_f4_title'), detail: t('hero_f4_detail'), points: [t('hero_f4_p1'), t('hero_f4_p2'), t('hero_f4_p3'), t('hero_f4_p4')] },
+    { image: '/site/hero-feat-5.jpg', alt: 'A shop counter with POS on one side and LMS on the other, around the dashboard', title: t('hero_f5_title'), detail: t('hero_f5_detail'), points: [t('hero_f5_p1'), t('hero_f5_p2'), t('hero_f5_p3'), t('hero_f5_p4')] },
+    { image: '/site/hero-feat-6.jpg', alt: 'A shopper paying on a phone while the seller sees the payment arrive', title: t('hero_f6_title'), detail: t('hero_f6_detail'), points: [t('hero_f6_p1'), t('hero_f6_p2'), t('hero_f6_p3'), t('hero_f6_p4')] },
   ];
 
   const heroSlides = cms?.hero.slides.length
     ? cms.hero.slides.map((s) => ({ image: s.imageUrl, alt: pick(s.title, lang) || 'Regantify', title: pick(s.title, lang), detail: pick(s.detail, lang) }))
     : builtInSlides;
-
-  const runYourBusiness = [
-    {
-      eyebrow: t('f1_eyebrow'),
-      title: t('f1_title'),
-      detail: t('f1_detail'),
-      bullets: [t('f1_b1'), t('f1_b2'), t('f1_b3')],
-      image: siteAsset('site/feature-courier.webp'),
-      alt: 'Vendor managing orders and courier pickup from one screen',
-    },
-    {
-      eyebrow: t('f2_eyebrow'),
-      title: t('f2_title'),
-      detail: t('f2_detail'),
-      bullets: [t('f2_b1'), t('f2_b2'), t('f2_b3')],
-      image: siteAsset('site/feature-payments.webp'),
-      alt: 'Built-in wallet accepting mobile payments',
-    },
-    {
-      eyebrow: t('f3_eyebrow'),
-      title: t('f3_title'),
-      detail: t('f3_detail'),
-      bullets: [t('f3_b1'), t('f3_b2'), t('f3_b3')],
-      image: siteAsset('site/feature-photo.webp'),
-      alt: 'Product photo turning into a finished listing automatically',
-    },
-  ];
 
   // Mirrors the real 4 subscription tiers (Free/Basic/Starter/Advance -
   // see server/prisma/seed-plans.ts, the actual source of truth).
@@ -763,7 +748,7 @@ function HomeInner() {
   return (
     // `dark:` variants only match INSIDE an element that has the class, so the class sits on a wrapper.
     <div className={night ? 'dark' : ''}>
-    <div className="bg-white text-[#1A1A1A] transition-colors duration-300 dark:bg-[#141414] dark:text-white">
+    <div className="bg-white text-[#241812] transition-colors duration-300 dark:bg-[#1E1410] dark:text-white">
       {/* Local keyframes for the animated pricing section + chart popup */}
       <style>{`
         @keyframes rg-fade-up {
@@ -775,8 +760,8 @@ function HomeInner() {
           50%      { transform: translateY(-6px); }
         }
         @keyframes rg-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(149,191,71,0.45), 0 20px 50px -12px rgba(0,0,0,0.5); }
-          50%      { box-shadow: 0 0 0 10px rgba(149,191,71,0), 0 20px 50px -12px rgba(0,0,0,0.5); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(244,162,97,0.45), 0 20px 50px -12px rgba(0,0,0,0.5); }
+          50%      { box-shadow: 0 0 0 10px rgba(244,162,97,0), 0 20px 50px -12px rgba(0,0,0,0.5); }
         }
         @keyframes rg-shimmer {
           0%   { transform: translateX(-120%) skewX(-18deg); }
@@ -829,54 +814,56 @@ function HomeInner() {
 
       {/* Header: shared with the login / sign up pages. Transparent over the hero,
           dark glass once scrolled. */}
-      <SiteNav lang={lang} onToggleLang={toggle} variant="hero" night={night} onToggleTheme={toggleTheme} light={!night} />
+      <SiteNav lang={lang} onToggleLang={toggle} variant="hero" glassAfter="categories" night={night} onToggleTheme={toggleTheme} light={!night} />
 
       {/* Hero: dark theme background, copy on top, the 4 product pictures in a
           looping 3D rail underneath. The navbar is fixed and transparent, hence
           the extra top padding. */}
-      <section className="relative overflow-x-clip bg-[#F3F7EC] dark:bg-[#1A1A1A] transition-colors duration-300 pt-[136px]">
+      <section className="relative overflow-x-clip bg-[#FCF3E8] dark:bg-[#241812] transition-colors duration-300">
 
-        <div className="relative max-w-6xl mx-auto px-6 flex flex-col items-center text-center">
+        <HeroScrollStory
+          slides={heroSlides}
+          label={t('hero_carousel_label')}
+          header={(
+        <div className="relative max-w-6xl mx-auto px-6 pt-[144px] flex flex-col items-center text-center">
           {marketing?.banner && (
             <div className="mb-5 max-w-full">
               {marketing.banner.link ? (
                 marketing.banner.link.startsWith('/') ? (
-                  <a href={marketing.banner.link} onClick={(e) => { e.preventDefault(); navigate(marketing.banner!.link!); }} className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#008060] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#006e52]">
+                  <a href={marketing.banner.link} onClick={(e) => { e.preventDefault(); navigate(marketing.banner!.link!); }} className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#C2531F] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#A8441A]">
                     <span className="truncate">{marketing.banner.text}</span>
                     <ArrowRight size={14} className="shrink-0" />
                   </a>
                 ) : (
-                  <a href={marketing.banner.link} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#008060] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#006e52]">
+                  <a href={marketing.banner.link} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-2 rounded-full bg-[#C2531F] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#A8441A]">
                     <span className="truncate">{marketing.banner.text}</span>
                     <ArrowRight size={14} className="shrink-0" />
                   </a>
                 )
               ) : (
-                <span className="inline-flex max-w-full items-center rounded-full bg-[#008060] px-4 py-1.5 text-sm font-medium text-white"><span className="truncate">{marketing.banner.text}</span></span>
+                <span className="inline-flex max-w-full items-center rounded-full bg-[#C2531F] px-4 py-1.5 text-sm font-medium text-white"><span className="truncate">{marketing.banner.text}</span></span>
               )}
             </div>
           )}
-          <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.2] text-[#1A1A1A] dark:text-white max-w-3xl">
+          <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold leading-[1.2] text-[#241812] dark:text-white max-w-3xl">
             {pick(cms?.hero.title, lang) || t('hero_title')}
           </h1>
-          <p className="mt-4 text-lg sm:text-xl text-[#008060] dark:text-[#95BF47] font-medium">
+          <p className="mt-4 text-lg sm:text-xl text-[#C2531F] dark:text-[#F4A261] font-medium">
             {pick(cms?.hero.sub, lang) || t('hero_sub')}
           </p>
         </div>
-
-        <div className="relative mt-6">
-          <HeroScrollStory slides={heroSlides} label={t('hero_carousel_label')} />
-        </div>
+          )}
+        />
       </section>
 
       {/* Ready-made store designs (nav link: #categories) */}
       <section
         id="categories"
-        className="relative overflow-hidden border-y border-black/10 bg-[#F3F7EC] dark:border-white/10 dark:bg-[#0F130D]"
+        className="relative overflow-hidden border-y border-black/10 bg-[#FCF3E8] dark:border-white/10 dark:bg-[#1B1210]"
       >
-        <div className="relative max-w-6xl mx-auto px-6 py-16">
+        <div className="relative max-w-[68rem] mx-auto px-6 py-16">
           <h2 className="text-2xl font-bold mb-2">{t('who_title')}</h2>
-          <p className="text-[#1A1A1A]/60 dark:text-white/60 mb-10 max-w-lg">{t('who_sub')}</p>
+          <p className="text-[#241812]/60 dark:text-white/60 mb-10 max-w-lg">{t('who_sub')}</p>
           <TemplateShowcase
             templates={templates}
             ctaLabel={t('tpl_cta')}
@@ -887,20 +874,20 @@ function HomeInner() {
 
       {/* Stores that run on Regantify, picked by Super Admin (Marketing). Hidden until at least one is picked. */}
       {marketing && marketing.featured.length > 0 && (
-        <section id="stores" className="border-b border-black/10 bg-white dark:border-white/10 dark:bg-[#141414]">
+        <section id="stores" className="border-b border-black/10 bg-white dark:border-white/10 dark:bg-[#1E1410]">
           <div className="max-w-6xl mx-auto px-6 py-14">
             <h2 className="text-2xl font-bold mb-8">{pick(cms?.showcaseTitle, lang) || (lang === 'bn' ? 'Regantify-তে চলছে যেসব দোকান' : 'Stores running on Regantify')}</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {marketing.featured.map((f) => (
-                <a key={f.subdomain} href={storefrontStoreUrl(f.subdomain)} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 rounded-2xl border border-black/10 p-4 transition-colors hover:border-[#008060] dark:border-white/10">
+                <a key={f.subdomain} href={storefrontStoreUrl(f.subdomain)} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 rounded-2xl border border-black/10 p-4 transition-colors hover:border-[#C2531F] dark:border-white/10">
                   {f.logoUrl ? (
                     <img src={f.logoUrl} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
                   ) : (
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#F3F7EC] text-lg font-bold text-[#008060] dark:bg-[#1A1A1A]">{f.name.slice(0, 1).toUpperCase()}</span>
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#FCF3E8] text-lg font-bold text-[#C2531F] dark:bg-[#241812]">{f.name.slice(0, 1).toUpperCase()}</span>
                   )}
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-semibold">{f.name}</span>
-                    <span className="flex items-center gap-1 text-xs text-[#008060]">{lang === 'bn' ? 'দোকান দেখুন' : 'Visit store'}<ArrowUpRight size={12} /></span>
+                    <span className="flex items-center gap-1 text-xs text-[#C2531F]">{lang === 'bn' ? 'দোকান দেখুন' : 'Visit store'}<ArrowUpRight size={12} /></span>
                   </span>
                 </a>
               ))}
@@ -911,12 +898,12 @@ function HomeInner() {
 
       {/* What sellers say: testimonials from Admin > Marketing (super-admin-new.md Step 14). Hidden until one is switched on. */}
       {cms && cms.testimonials.items.length > 0 && (
-        <section id="testimonials" className="border-b border-black/10 bg-[#F3F7EC] dark:border-white/10 dark:bg-[#0F130D]">
+        <section id="testimonials" className="border-b border-black/10 bg-[#FCF3E8] dark:border-white/10 dark:bg-[#1B1210]">
           <div className="max-w-6xl mx-auto px-6 py-16">
             <h2 className="text-2xl font-bold mb-8">{pick(cms.testimonials.title, lang) || (lang === 'bn' ? 'বিক্রেতারা যা বলছেন' : 'What sellers say')}</h2>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {cms.testimonials.items.map((item) => (
-                <figure key={item.id} className="flex flex-col rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-[#1A1A1A]">
+                <figure key={item.id} className="flex flex-col rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-[#241812]">
                   {item.rating && (
                     <div className="mb-3 flex gap-0.5" aria-label={`${item.rating} of 5`}>
                       {Array.from({ length: 5 }, (_, i) => (
@@ -924,16 +911,16 @@ function HomeInner() {
                       ))}
                     </div>
                   )}
-                  <blockquote className="flex-1 whitespace-pre-line text-[15px] leading-relaxed text-[#1A1A1A]/80 dark:text-white/80">{pick(item.quote, lang)}</blockquote>
+                  <blockquote className="flex-1 whitespace-pre-line text-[15px] leading-relaxed text-[#241812]/80 dark:text-white/80">{pick(item.quote, lang)}</blockquote>
                   <figcaption className="mt-4 flex items-center gap-3">
                     {item.photoUrl ? (
                       <img src={item.photoUrl} alt="" loading="lazy" className="h-10 w-10 rounded-full object-cover" />
                     ) : (
-                      <span className="grid h-10 w-10 place-items-center rounded-full bg-[#F3F7EC] text-sm font-bold text-[#008060] dark:bg-white/10">{item.name.slice(0, 1).toUpperCase()}</span>
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-[#FCF3E8] text-sm font-bold text-[#C2531F] dark:bg-white/10">{item.name.slice(0, 1).toUpperCase()}</span>
                     )}
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold">{item.name}</span>
-                      {pick(item.role, lang) && <span className="block truncate text-xs text-[#1A1A1A]/50 dark:text-white/50">{pick(item.role, lang)}</span>}
+                      {pick(item.role, lang) && <span className="block truncate text-xs text-[#241812]/50 dark:text-white/50">{pick(item.role, lang)}</span>}
                     </span>
                   </figcaption>
                 </figure>
@@ -943,86 +930,11 @@ function HomeInner() {
         </section>
       )}
 
-      {/* Run your business - editorial image strip */}
-      <section id="run" className="max-w-6xl mx-auto px-6 py-20">
-        <div className="max-w-xl">
-          <h2 className="text-2xl font-bold">{t('run_title')}</h2>
-          <p className="mt-3 text-[#1A1A1A]/60 dark:text-white/60">{t('run_sub')}</p>
-        </div>
-
-        <div className="mt-14 space-y-20 md:space-y-24">
-          {runYourBusiness.map((item, i) => {
-            const imageFirst = i % 2 === 1;
-            return (
-              <div key={item.title} className="grid md:grid-cols-2 items-center gap-10 md:gap-16">
-                <div className={imageFirst ? 'md:order-2' : ''}>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[#008060]/30 bg-[#008060]/[0.06] px-4 py-2 text-sm font-medium text-[#008060] dark:border-[#95BF47]/30 dark:bg-[#95BF47]/10 dark:text-[#95BF47]">
-                    <Zap size={16} />
-                    {item.eyebrow}
-                  </span>
-                  <h3 className="mt-5 text-3xl sm:text-4xl font-bold leading-tight">{item.title}</h3>
-                  <p className="mt-4 text-base sm:text-lg text-[#1A1A1A]/60 dark:text-white/60 leading-relaxed max-w-lg">{item.detail}</p>
-                  <ul className="mt-7 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                    {item.bullets.map((b) => (
-                      <li key={b} className="flex items-start gap-3 text-[15px] text-[#1A1A1A]/70 dark:text-white/70">
-                        <CheckCircle2 size={22} strokeWidth={1.5} className="mt-px shrink-0 text-[#008060] dark:text-[#95BF47]" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <a
-                    href="#features"
-                    className="mt-8 inline-flex items-center gap-2 rounded-lg border border-[#008060]/30 px-5 py-3 text-sm font-medium transition-colors hover:bg-[#008060]/[0.06] dark:border-[#95BF47]/30 dark:hover:bg-[#95BF47]/10"
-                  >
-                    {t('run_learn')}
-                    <ArrowRight size={16} />
-                  </a>
-                </div>
-                <div className={`relative ${imageFirst ? 'md:order-1' : ''}`}>
-                  <div className="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-[0_25px_60px_-20px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-[#1C1C1C]">
-                    <img src={item.image} alt={item.alt} className="block w-full h-auto" />
-                  </div>
-                  <div className="absolute -top-5 right-3 sm:-right-4 flex items-center gap-3 rounded-2xl border border-[#008060]/25 bg-white px-4 py-3 shadow-lg dark:border-[#95BF47]/30 dark:bg-[#1C1C1C]">
-                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#008060]/10 text-[#008060] dark:bg-[#95BF47]/15 dark:text-[#95BF47]">
-                      <Zap size={20} />
-                    </span>
-                    <span className="leading-tight">
-                      <span className="block text-xs text-[#1A1A1A]/50 dark:text-white/50">{t('run_chip')}</span>
-                      <span className="block text-sm font-semibold">{item.bullets[0]}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="bg-[#F1F1F1] border-y border-black/10 dark:bg-[#1A1A1A] dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-bold mb-10">{t('feat_title')}</h2>
-          <div className="grid sm:grid-cols-2 gap-x-10 gap-y-10">
-            {features.map((f) => (
-              <div key={f.title} className="flex gap-4">
-                <div className="mt-1 w-8 h-8 shrink-0 rounded-lg bg-[#95BF47] flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{f.title}</h3>
-                  <p className="mt-1.5 text-sm text-[#1A1A1A]/60 dark:text-white/60">{f.detail}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Pricing - highly animated. Dark stage with drifting glow blobs,
           scroll-reveal cards, sliding billing toggle, rolling price
           numbers, hover-lift, shimmer on the popular plan. The full
           feature comparison chart is hidden and opens in a popup. */}
-      <section id="pricing" className="relative overflow-hidden bg-[#1A1A1A]">
+      <section id="pricing" className="relative overflow-hidden bg-[#241812]">
 
         <div ref={pricingRef} className="relative max-w-6xl mx-auto px-6 py-24">
           <div className={pricingVisible ? 'rg-fade-up' : 'opacity-0'}>
@@ -1039,14 +951,14 @@ function HomeInner() {
             <div className="relative inline-grid grid-cols-2 p-1 rounded-full bg-white/10 backdrop-blur border border-white/10">
               <span
                 aria-hidden
-                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-[#95BF47] shadow-lg
+                className="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-[#F4A261] shadow-lg
                   transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                 style={{ transform: billing === 'yearly' ? 'translateX(100%)' : 'translateX(0)' }}
               />
               <button
                 onClick={() => setBilling('monthly')}
                 className={`relative z-10 px-6 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
-                  billing === 'monthly' ? 'text-[#1A1A1A]' : 'text-white/70 hover:text-white'
+                  billing === 'monthly' ? 'text-[#241812]' : 'text-white/70 hover:text-white'
                 }`}
               >
                 {t('pricing_toggle_monthly')}
@@ -1054,7 +966,7 @@ function HomeInner() {
               <button
                 onClick={() => setBilling('yearly')}
                 className={`relative z-10 px-6 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
-                  billing === 'yearly' ? 'text-[#1A1A1A]' : 'text-white/70 hover:text-white'
+                  billing === 'yearly' ? 'text-[#241812]' : 'text-white/70 hover:text-white'
                 }`}
               >
                 {t('pricing_toggle_yearly')}
@@ -1083,20 +995,20 @@ function HomeInner() {
                       className={`group relative h-full flex flex-col rounded-3xl p-6 overflow-hidden
                         transition-all duration-500 ease-out hover:-translate-y-2 ${
                           hi
-                            ? 'rg-glow rg-shimmer bg-gradient-to-b from-[#95BF47] to-[#7FA83A] text-[#1A1A1A]'
-                            : 'bg-white/[0.06] backdrop-blur border border-white/10 text-white hover:bg-white/[0.1] hover:border-white/25 hover:shadow-[0_24px_60px_-20px_rgba(149,191,71,0.35)]'
+                            ? 'rg-glow rg-shimmer bg-gradient-to-b from-[#F4A261] to-[#D9803F] text-[#241812]'
+                            : 'bg-white/[0.06] backdrop-blur border border-white/10 text-white hover:bg-white/[0.1] hover:border-white/25 hover:shadow-[0_24px_60px_-20px_rgba(244,162,97,0.35)]'
                         }`}
                     >
                       {/* Popular badge */}
                       {hi && plan.badge && (
-                        <span className="rg-badge absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-semibold bg-[#1A1A1A] text-[#95BF47] px-2.5 py-1 rounded-full">
+                        <span className="rg-badge absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] font-semibold bg-[#241812] text-[#F4A261] px-2.5 py-1 rounded-full">
                           <Sparkles size={12} />
                           {plan.badge}
                         </span>
                       )}
 
                       <h3 className="text-lg font-semibold">{plan.name}</h3>
-                      <p className={`mt-1 text-xs leading-relaxed ${hi ? 'text-[#1A1A1A]/70' : 'text-white/55'}`}>
+                      <p className={`mt-1 text-xs leading-relaxed ${hi ? 'text-[#241812]/70' : 'text-white/55'}`}>
                         {plan.tagline}
                       </p>
 
@@ -1106,7 +1018,7 @@ function HomeInner() {
                           ৳<AnimatedNumber value={displayPrice} />
                         </span>
                         {displayPrice !== 0 && (
-                          <span className={`text-xs ${hi ? 'text-[#1A1A1A]/65' : 'text-white/55'}`}>
+                          <span className={`text-xs ${hi ? 'text-[#241812]/65' : 'text-white/55'}`}>
                             {isYearly ? t('pricing_per_year') : t('pricing_per_month')}
                           </span>
                         )}
@@ -1116,7 +1028,7 @@ function HomeInner() {
                       <div className="mt-2 min-h-[38px]">
                         {displayPrice !== 0 && (
                           <>
-                            <p className={`text-xs ${hi ? 'text-[#1A1A1A]/65' : 'text-white/45'}`}>
+                            <p className={`text-xs ${hi ? 'text-[#241812]/65' : 'text-white/45'}`}>
                               {isYearly ? t('pricing_sub_yearly') : t('pricing_sub_monthly')}
                               {isYearly && (
                                 <>
@@ -1130,7 +1042,7 @@ function HomeInner() {
                             {isYearly && savePerYear > 0 && (
                               <p
                                 className={`mt-1 inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                                  hi ? 'bg-[#1A1A1A] text-[#95BF47]' : 'bg-[#95BF47]/20 text-[#95BF47]'
+                                  hi ? 'bg-[#241812] text-[#F4A261]' : 'bg-[#F4A261]/20 text-[#F4A261]'
                                 }`}
                               >
                                 {t('pricing_save')} ৳{savePerYear.toLocaleString('en-US')}
@@ -1146,8 +1058,8 @@ function HomeInner() {
                         className={`mt-5 w-full py-2.5 rounded-full text-sm font-semibold transition-all duration-300
                           hover:scale-[1.03] active:scale-95 inline-flex items-center justify-center gap-1.5 ${
                             hi
-                              ? 'bg-[#1A1A1A] text-white hover:bg-black'
-                              : 'bg-[#95BF47] text-[#1A1A1A] hover:bg-[#A6D054]'
+                              ? 'bg-[#241812] text-white hover:bg-black'
+                              : 'bg-[#F4A261] text-[#241812] hover:bg-[#F7B27E]'
                           }`}
                       >
                         {plan.cta}
@@ -1158,8 +1070,8 @@ function HomeInner() {
                       </button>
 
                       {/* Highlights */}
-                      <div className={`mt-6 pt-5 border-t ${hi ? 'border-[#1A1A1A]/15' : 'border-white/10'}`}>
-                        <p className={`text-[11px] uppercase tracking-wider font-semibold mb-3 ${hi ? 'text-[#1A1A1A]/60' : 'text-white/40'}`}>
+                      <div className={`mt-6 pt-5 border-t ${hi ? 'border-[#241812]/15' : 'border-white/10'}`}>
+                        <p className={`text-[11px] uppercase tracking-wider font-semibold mb-3 ${hi ? 'text-[#241812]/60' : 'text-white/40'}`}>
                           {t('pricing_key_features')}
                         </p>
                         <ul className="space-y-2.5">
@@ -1171,10 +1083,10 @@ function HomeInner() {
                             >
                               <Check
                                 size={15}
-                                className={`mt-0.5 shrink-0 ${hi ? 'text-[#1A1A1A]' : 'text-[#95BF47]'}`}
+                                className={`mt-0.5 shrink-0 ${hi ? 'text-[#241812]' : 'text-[#F4A261]'}`}
                               />
-                              <span className={hi ? 'text-[#1A1A1A]/85' : 'text-white/80'}>
-                                <span className={hi ? 'text-[#1A1A1A]/60' : 'text-white/45'}>{row.label}: </span>
+                              <span className={hi ? 'text-[#241812]/85' : 'text-white/80'}>
+                                <span className={hi ? 'text-[#241812]/60' : 'text-white/45'}>{row.label}: </span>
                                 {featureRows[row.idx].values[i]}
                               </span>
                             </li>
@@ -1196,12 +1108,52 @@ function HomeInner() {
             <button
               onClick={() => setChartOpen(true)}
               className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full border border-white/25 text-white font-medium
-                bg-white/5 backdrop-blur hover:bg-[#95BF47] hover:text-[#1A1A1A] hover:border-[#95BF47]
+                bg-white/5 backdrop-blur hover:bg-[#F4A261] hover:text-[#241812] hover:border-[#F4A261]
                 hover:scale-105 active:scale-95 transition-all duration-300"
             >
               <BarChart3 size={18} className="transition-transform duration-300 group-hover:rotate-12" />
               {t('pricing_view_chart')}
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Everything to run your shop: six pictures with a title and a line each, then the four promises. */}
+      <section
+        id="features"
+        className="relative border-y border-black/10 bg-[#F6EADD] dark:border-white/10 dark:bg-[#241812]"
+      >
+        <span id="run" className="absolute left-0 top-0" aria-hidden="true" />
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <h2 className="mb-12 max-w-2xl text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl">{t('feat_title')}</h2>
+
+          <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {builtInSlides.map((slide) => (
+              <figure key={slide.image}>
+                <img
+                  src={slide.image}
+                  alt={slide.alt}
+                  width={1280}
+                  height={800}
+                  loading="lazy"
+                  decoding="async"
+                  className="block aspect-[16/10] w-full rounded-2xl object-cover shadow-[0_14px_30px_-18px_rgba(70,30,15,0.45)]"
+                />
+                <figcaption className="mt-4">
+                  <h3 className="text-lg font-bold leading-snug">{slide.title}</h3>
+                  <p className="mt-1 text-[15px] leading-relaxed text-[#241812]/65 dark:text-white/65">{slide.detail}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+
+          <div className="mt-16 grid gap-x-8 gap-y-6 border-t border-[#241812]/20 pt-8 sm:grid-cols-2 lg:grid-cols-4 dark:border-white/20">
+            {features.map((f) => (
+              <div key={f.title}>
+                <h3 className="font-bold">{f.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-[#241812]/65 dark:text-white/65">{f.detail}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -1216,20 +1168,20 @@ function HomeInner() {
           aria-label={t('pricing_chart_title')}
         >
           <div
-            className="rg-pop-in relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden dark:bg-[#1C1C1C] dark:text-white"
+            className="rg-pop-in relative w-full max-w-5xl max-h-[88vh] flex flex-col rounded-3xl bg-white shadow-2xl overflow-hidden dark:bg-[#271A14] dark:text-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Popup header */}
             <div className="flex items-start justify-between gap-4 px-6 sm:px-8 pt-6 pb-4 border-b border-black/10 dark:border-white/10">
               <div>
                 <h3 className="text-xl font-bold">{t('pricing_chart_title')}</h3>
-                <p className="mt-1 text-sm text-[#1A1A1A]/60 dark:text-white/60">{t('pricing_chart_sub')}</p>
+                <p className="mt-1 text-sm text-[#241812]/60 dark:text-white/60">{t('pricing_chart_sub')}</p>
               </div>
               <button
                 onClick={() => setChartOpen(false)}
                 aria-label={t('pricing_close')}
-                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#F1F1F1] dark:bg-white/10
-                  hover:bg-[#1A1A1A] hover:text-white dark:hover:bg-white/20 hover:rotate-90 transition-all duration-300"
+                className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-[#F6EADD] dark:bg-white/10
+                  hover:bg-[#241812] hover:text-white dark:hover:bg-white/20 hover:rotate-90 transition-all duration-300"
               >
                 <X size={18} />
               </button>
@@ -1245,7 +1197,7 @@ function HomeInner() {
                   ))}
                 </colgroup>
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-[#F1F1F1] dark:bg-[#262626]">
+                  <tr className="bg-[#F6EADD] dark:bg-[#2E2019]">
                     <th className="text-left font-semibold px-5 py-3.5 border-b border-black/10 dark:border-white/10">
                       {t('pricing_feature_col')}
                     </th>
@@ -1253,14 +1205,14 @@ function HomeInner() {
                       <th
                         key={plan.key}
                         className={`text-left font-semibold px-5 py-3.5 border-b border-black/10 dark:border-white/10 ${
-                          plan.highlighted ? 'bg-[#1A1A1A] text-white dark:bg-black/50' : ''
+                          plan.highlighted ? 'bg-[#241812] text-white dark:bg-black/50' : ''
                         }`}
                       >
                         {plan.highlighted && plan.badge && (
-                          <div className="text-[10px] font-medium text-[#95BF47] mb-0.5">{plan.badge}</div>
+                          <div className="text-[10px] font-medium text-[#F4A261] mb-0.5">{plan.badge}</div>
                         )}
                         {plan.name}
-                        <div className={`mt-0.5 text-xs font-medium ${plan.highlighted ? 'text-white/60' : 'text-[#1A1A1A]/50 dark:text-white/50'}`}>
+                        <div className={`mt-0.5 text-xs font-medium ${plan.highlighted ? 'text-white/60' : 'text-[#241812]/50 dark:text-white/50'}`}>
                           {plan.monthlyPrice === 0
                             ? '৳0'
                             : billing === 'yearly'
@@ -1275,18 +1227,18 @@ function HomeInner() {
                   {featureRows.map((row, i) => (
                     <tr
                       key={row.label}
-                      className={`rg-row-in ${i % 2 === 1 ? 'bg-[#F1F1F1]/40 dark:bg-white/[0.03]' : ''}`}
+                      className={`rg-row-in ${i % 2 === 1 ? 'bg-[#F6EADD]/40 dark:bg-white/[0.03]' : ''}`}
                       style={{ animationDelay: `${0.1 + i * 0.035}s` }}
                     >
-                      <td className="px-5 py-3.5 border-b border-black/10 dark:border-white/10 text-[#1A1A1A]/80 dark:text-white/80 font-medium">
+                      <td className="px-5 py-3.5 border-b border-black/10 dark:border-white/10 text-[#241812]/80 dark:text-white/80 font-medium">
                         {row.label}
                       </td>
                       {row.values.map((val, j) => (
                         <td
                           key={j}
                           className={`px-5 py-3.5 border-b border-black/10 dark:border-white/10 ${
-                            plans[j].highlighted ? 'bg-[#1A1A1A]/[0.03] dark:bg-white/[0.04]' : ''
-                          } ${val === '✓' ? 'text-[#008060] dark:text-[#95BF47] font-medium' : val === '-' ? 'text-[#1A1A1A]/30 dark:text-white/30' : 'text-[#1A1A1A]/75 dark:text-white/75'}`}
+                            plans[j].highlighted ? 'bg-[#241812]/[0.03] dark:bg-white/[0.04]' : ''
+                          } ${val === '✓' ? 'text-[#C2531F] dark:text-[#F4A261] font-medium' : val === '-' ? 'text-[#241812]/30 dark:text-white/30' : 'text-[#241812]/75 dark:text-white/75'}`}
                         >
                           {val}
                         </td>
@@ -1298,7 +1250,7 @@ function HomeInner() {
             </div>
 
             {/* Popup footer */}
-            <div className="px-6 sm:px-8 py-4 border-t border-black/10 dark:border-white/10 flex items-center justify-end gap-3 bg-white dark:bg-[#1C1C1C]">
+            <div className="px-6 sm:px-8 py-4 border-t border-black/10 dark:border-white/10 flex items-center justify-end gap-3 bg-white dark:bg-[#271A14]">
               <button
                 onClick={() => setChartOpen(false)}
                 className="px-5 py-2.5 rounded-full text-sm font-medium border border-black/15 hover:border-black/40 dark:border-white/20 dark:hover:border-white/50 transition-colors"
@@ -1310,7 +1262,7 @@ function HomeInner() {
                   setChartOpen(false);
                   navigate('/vendor/signup');
                 }}
-                className="px-5 py-2.5 rounded-full text-sm font-medium bg-[#008060] text-white hover:bg-[#006B51] transition-colors inline-flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-full text-sm font-medium bg-[#C2531F] text-white hover:bg-[#A8441A] transition-colors inline-flex items-center gap-1.5"
               >
                 {t('hero_cta')}
                 <ArrowUpRight size={16} />
@@ -1320,30 +1272,12 @@ function HomeInner() {
         </div>
       )}
 
-      {/* FAQ */}
-      <section id="faq" className="bg-white border-y border-black/10 dark:bg-[#141414] dark:border-white/10">
-        <div className="max-w-3xl mx-auto px-6 py-20">
-          <h2 className="text-2xl font-bold mb-10">{t('faq_title')}</h2>
-          <div className="divide-y divide-black/10 border-t border-b border-black/10 dark:divide-white/10 dark:border-white/10">
-            {faqs.map((item, i) => {
-              const open = openFaq === i;
-              return (
-                <div key={item.q}>
-                  <button
-                    onClick={() => setOpenFaq(open ? null : i)}
-                    className="w-full flex items-center justify-between gap-4 py-5 text-left"
-                  >
-                    <span className="font-medium">{item.q}</span>
-                    {open ? (
-                      <Minus size={18} className="shrink-0 text-[#1A1A1A]/50 dark:text-white/50" />
-                    ) : (
-                      <Plus size={18} className="shrink-0 text-[#1A1A1A]/50 dark:text-white/50" />
-                    )}
-                  </button>
-                  {open && <p className="pb-5 text-sm text-[#1A1A1A]/60 dark:text-white/60 max-w-xl leading-relaxed">{item.a}</p>}
-                </div>
-              );
-            })}
+      {/* FAQ as a chat: the title on the left, a thread of questions and replies on the right. */}
+      <section id="faq" className="bg-white border-y border-black/10 dark:bg-[#1E1410] dark:border-white/10">
+        <div className="max-w-6xl mx-auto grid gap-10 px-6 py-20 lg:grid-cols-12 lg:gap-16">
+          <h2 className="text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:col-span-4">{t('faq_title')}</h2>
+          <div className="lg:col-span-8">
+            <FaqChat key={lang + faqs.length} items={faqs} resetLabel={t('faq_reset')} />
           </div>
         </div>
       </section>
@@ -1352,7 +1286,7 @@ function HomeInner() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img src={siteAsset('site/closing.webp')} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[#1A1A1A]/90" />
+          <div className="absolute inset-0 bg-[#241812]/90" />
         </div>
         <div className="relative max-w-6xl mx-auto px-6 py-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
@@ -1361,8 +1295,8 @@ function HomeInner() {
           </div>
           <button
             onClick={() => navigate('/vendor/signup')}
-            className="px-6 py-3.5 rounded-full bg-[#95BF47] hover:bg-[#84AD3D]
-              text-[#1A1A1A] font-medium transition-colors inline-flex items-center gap-2 shrink-0"
+            className="px-6 py-3.5 rounded-full bg-[#F4A261] hover:bg-[#E08A4B]
+              text-[#241812] font-medium transition-colors inline-flex items-center gap-2 shrink-0"
           >
             {t('closing_cta')}
             <ArrowUpRight size={18} />
@@ -1370,25 +1304,36 @@ function HomeInner() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[#1A1A1A]/60 dark:text-white/60">
-        <div className="flex items-center gap-2">
-          <Store size={18} />
-          <span>Regantify</span>
+      {/* Footer: dark, picks up from the closing banner above it. */}
+      <footer className="bg-[#1B1210] text-white/60">
+        <div className="max-w-6xl mx-auto grid gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <div className="flex items-center gap-2.5 text-white">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#F4A261] text-[#241812]">
+                <Store size={18} />
+              </span>
+              <span className="text-xl font-extrabold tracking-tight">Regantify</span>
+            </div>
+          </div>
+          <nav className="flex flex-col gap-3 text-sm lg:col-span-3" aria-label="Legal">
+            <a href="/legal/privacy" className="w-fit transition-colors hover:text-white">
+              {t('footer_privacy')}
+            </a>
+            <a href="/legal/terms" className="w-fit transition-colors hover:text-white">
+              {t('footer_terms')}
+            </a>
+          </nav>
+          <nav className="flex flex-col gap-3 text-sm lg:col-span-3" aria-label="Sign in">
+            <button onClick={() => navigate('/vendor/login')} className="w-fit transition-colors hover:text-white">
+              {t('footer_vendor')}
+            </button>
+            <button onClick={() => navigate('/admin/login')} className="w-fit transition-colors hover:text-white">
+              {t('footer_admin')}
+            </button>
+          </nav>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-6">
-          <a href="/legal/privacy" className="hover:text-[#1A1A1A] dark:hover:text-white">
-            {t('footer_privacy')}
-          </a>
-          <a href="/legal/terms" className="hover:text-[#1A1A1A] dark:hover:text-white">
-            {t('footer_terms')}
-          </a>
-          <button onClick={() => navigate('/vendor/login')} className="hover:text-[#1A1A1A] dark:hover:text-white">
-            {t('footer_vendor')}
-          </button>
-          <button onClick={() => navigate('/admin/login')} className="hover:text-[#1A1A1A] dark:hover:text-white">
-            {t('footer_admin')}
-          </button>
+        <div className="border-t border-white/10">
+          <p className="max-w-6xl mx-auto px-6 py-5 text-xs text-white/40">© {new Date().getFullYear()} Regantify</p>
         </div>
       </footer>
     </div>

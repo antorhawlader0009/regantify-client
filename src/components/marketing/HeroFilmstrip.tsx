@@ -250,7 +250,7 @@ export default function HeroFilmstrip({ slides, label }: Props) {
 
   // Static: a gradient that never changes is painted once, not every frame.
   const stageStyle: CSSProperties = {
-    background: 'radial-gradient(ellipse at 50% 52%, rgba(149,191,71,0.16), transparent 42%)',
+    background: 'radial-gradient(ellipse at 50% 52%, rgba(244,162,97,0.16), transparent 42%)',
   };
   // The rail lines use currentColor so day (dark lines) and night (white lines) share one rule.
   const railLines: CSSProperties = {
@@ -274,7 +274,7 @@ export default function HeroFilmstrip({ slides, label }: Props) {
         onPointerUp={onPointerUp}
         style={stageStyle}
         className="relative h-[400px] sm:h-[460px] overflow-hidden select-none touch-pan-y cursor-ew-resize
-          [perspective:1450px] [contain:layout_paint] outline-none focus-visible:ring-2 focus-visible:ring-[#95BF47]/60"
+          [perspective:1450px] [contain:layout_paint] outline-none focus-visible:ring-2 focus-visible:ring-[#F4A261]/60"
       >
         <div
           aria-hidden="true"
@@ -297,10 +297,10 @@ export default function HeroFilmstrip({ slides, label }: Props) {
                 aria-label={slide.title}
                 onClick={() => goToSlide(i % n)}
                 className="absolute top-1/2 left-1/2 w-[clamp(270px,40vw,500px)] overflow-hidden rounded-2xl
-                  border border-black/10 bg-white dark:border-white/10 dark:bg-[#232323] p-2 text-left outline-none
+                  border border-black/10 bg-white dark:border-white/10 dark:bg-[#2E2019] p-2 text-left outline-none
                   will-change-transform shadow-[0_24px_48px_-16px_rgba(0,0,0,0.35)]
                   dark:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.7)]
-                  [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-[#95BF47]"
+                  [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-[#F4A261]"
               >
                 <img
                   src={slide.image}
@@ -313,16 +313,16 @@ export default function HeroFilmstrip({ slides, label }: Props) {
                 />
                 <span className="flex items-start gap-3 px-2 pt-3 pb-2 min-h-[104px] sm:min-h-[112px]">
                   <span
-                    className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#95BF47]
-                      text-[11px] font-semibold leading-none text-[#95BF47] tabular-nums"
+                    className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[#F4A261]
+                      text-[11px] font-semibold leading-none text-[#F4A261] tabular-nums"
                   >
                     {String((i % n) + 1).padStart(2, '0')}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-base sm:text-lg font-semibold leading-tight text-[#1A1A1A] dark:text-white">
+                    <span className="block text-base sm:text-lg font-semibold leading-tight text-[#241812] dark:text-white">
                       {slide.title}
                     </span>
-                    <span className="mt-1 block text-[13px] sm:text-sm leading-snug text-[#1A1A1A]/60 dark:text-white/65">
+                    <span className="mt-1 block text-[13px] sm:text-sm leading-snug text-[#241812]/60 dark:text-white/65">
                       {slide.detail}
                     </span>
                   </span>
@@ -332,8 +332,8 @@ export default function HeroFilmstrip({ slides, label }: Props) {
           })}
         </div>
         {/* Soft fade into the page on both sides (matches the hero background). */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-[12%] bg-gradient-to-r from-[#F3F7EC] to-transparent dark:from-[#1A1A1A]" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] w-[12%] bg-gradient-to-l from-[#F3F7EC] to-transparent dark:from-[#1A1A1A]" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-[12%] bg-gradient-to-r from-[#FCF3E8] to-transparent dark:from-[#241812]" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] w-[12%] bg-gradient-to-l from-[#FCF3E8] to-transparent dark:from-[#241812]" />
       </div>
 
       <div className="mt-2 flex items-center justify-center gap-2" role="group" aria-label={label}>
@@ -345,7 +345,7 @@ export default function HeroFilmstrip({ slides, label }: Props) {
             aria-current={active === i}
             onClick={() => goToSlide(i)}
             className={`h-2 rounded-full transition-all duration-300 ${
-              active === i ? 'w-7 bg-[#95BF47]' : 'w-2 bg-black/20 hover:bg-black/40 dark:bg-white/30 dark:hover:bg-white/60'
+              active === i ? 'w-7 bg-[#F4A261]' : 'w-2 bg-black/20 hover:bg-black/40 dark:bg-white/30 dark:hover:bg-white/60'
             }`}
           />
         ))}

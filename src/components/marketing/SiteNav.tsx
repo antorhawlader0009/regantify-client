@@ -161,25 +161,25 @@ const LINK_CLASS = 'rounded-full px-3 py-1.5 transition-colors will-change-trans
 const TONES = {
   dark: {
     ink: 'text-white',
-    glass: 'bg-[#1A1A1A]/70 border-white/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)]',
+    glass: 'bg-[#241812]/70 border-white/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.5)]',
     chip: 'bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20',
     track: 'bg-white/10 ring-1 ring-white/20 hover:bg-white/15',
     thumb: 'bg-white',
-    thumbInk: 'text-[#1A1A1A]',
+    thumbInk: 'text-[#241812]',
     idleInk: 'text-white/80',
     soft: 'hover:bg-white/15',
     current: 'text-white bg-white/15',
   },
   light: {
-    ink: 'text-[#1A1A1A]',
+    ink: 'text-[#241812]',
     glass: 'bg-white/75 border-black/10 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.25)]',
-    chip: 'bg-black/5 text-[#1A1A1A] ring-1 ring-black/10 hover:bg-black/10',
+    chip: 'bg-black/5 text-[#241812] ring-1 ring-black/10 hover:bg-black/10',
     track: 'bg-black/5 ring-1 ring-black/10 hover:bg-black/[0.08]',
-    thumb: 'bg-[#1A1A1A]',
+    thumb: 'bg-[#241812]',
     thumbInk: 'text-white',
-    idleInk: 'text-[#1A1A1A]/70',
+    idleInk: 'text-[#241812]/70',
     soft: 'hover:bg-black/5',
-    current: 'text-[#1A1A1A] bg-black/5',
+    current: 'text-[#241812] bg-black/5',
   },
 } as const;
 
@@ -200,9 +200,11 @@ type SiteNavProps = {
   light?: boolean;
   /** solid variant only: fixed and fully transparent, like Home's bar before it is scrolled. */
   transparent?: boolean;
+  /** hero variant: id of the section after the hero. The bar stays transparent until that section reaches it (instead of turning to glass after a few px of scroll). */
+  glassAfter?: string;
 };
 
-export default function SiteNav({ lang, onToggleLang, variant, active, extra, night, onToggleTheme, light, transparent }: SiteNavProps) {
+export default function SiteNav({ lang, onToggleLang, variant, active, extra, night, onToggleTheme, light, transparent, glassAfter }: SiteNavProps) {
   const navigate = useNavigate();
   const t = labels[lang];
   const c = light ? TONES.light : TONES.dark;
@@ -215,12 +217,23 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     if (!hero) return;
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      const next = glassAfter ? document.getElementById(glassAfter) : null;
+      setScrolled(next ? next.getBoundingClientRect().top < 76 : window.scrollY > 24);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, [hero, glassAfter]);
+  // The hero's scroll story reports when its last picture is reached; the bar floats up then, before the hero leaves.
+  const [storyDone, setStoryDone] = useState(false);
+  useEffect(() => {
+    if (!hero) return;
+    const onDone = (e: Event) => setStoryDone(Boolean((e as CustomEvent<boolean>).detail));
+    window.addEventListener('hero-story-done', onDone);
+    return () => window.removeEventListener('hero-story-done', onDone);
   }, [hero]);
-  const glass = hero ? scrolled : !transparent;
+  const glass = hero ? scrolled || storyDone : !transparent;
 
   // On Home the links scroll the page; from the auth pages they go Home first.
   const sectionLink = (id: string, text: string) =>
@@ -233,19 +246,24 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
   return (
     <header className={`${hero || transparent ? 'fixed' : 'sticky'} top-0 inset-x-0 z-30 px-3 sm:px-4 pt-3 sm:pt-4 font-nav`}>
       <div
-        className={`max-w-6xl mx-auto h-[60px] flex items-center justify-between gap-2 pl-4 sm:pl-5 pr-2.5 rounded-2xl
-          border transition-all duration-300 ${
-            glass ? `backdrop-blur-xl ${c.glass}` : 'bg-transparent border-transparent'
-          }`}
+        className="relative max-w-6xl mx-auto h-[60px] flex items-center justify-between gap-2 pl-4 sm:pl-5 pr-2.5 rounded-2xl"
       >
+        {/* The glass bar floats up into place (rises, grows and fades in) once the hero has scrolled away, and sinks back when it returns. */}
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 -z-10 rounded-2xl border backdrop-blur-xl ${c.glass}
+            transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
+              glass ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-3 scale-[0.97]'
+            }`}
+        />
         {hero ? (
           <a href="#" aria-label={t.home} className="flex items-center gap-2.5 shrink-0">
-            <Store className="text-[#95BF47]" size={24} strokeWidth={2} />
+            <Store className="text-[#F4A261]" size={24} strokeWidth={2} />
             <span className={`${c.ink} text-xl font-semibold leading-none max-[399px]:hidden`}>Regantify</span>
           </a>
         ) : (
           <Link to="/" aria-label={t.home} className="flex items-center gap-2.5 shrink-0">
-            <Store className="text-[#95BF47]" size={24} strokeWidth={2} />
+            <Store className="text-[#F4A261]" size={24} strokeWidth={2} />
             <span className={`${c.ink} text-xl font-semibold leading-none max-[399px]:hidden`}>Regantify</span>
           </Link>
         )}
@@ -316,8 +334,8 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
             <button
               type="button"
               onClick={() => navigate('/vendor/signup')}
-              className="ml-0.5 sm:ml-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#95BF47] text-[#1A1A1A]
-                hover:bg-[#84AD3D] transition-colors whitespace-nowrap"
+              className="ml-0.5 sm:ml-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#F4A261] text-[#241812]
+                hover:bg-[#E08A4B] transition-colors whitespace-nowrap"
             >
               {t.start}
             </button>

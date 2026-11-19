@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 'react';
-import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { Check } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // The hero's picture carousel ("cover flow": the chosen picture big in the
@@ -24,14 +24,14 @@ type Props = {
   slides: ScrollStorySlide[];
   /** Accessible name of the whole carousel. */
   label: string;
+  /** Shown above the carousel and pinned with it (the hero headline), so only the pictures change. */
+  header?: ReactNode;
 };
 
 /** Every picture is landscape (the border-free crops are about 2.2:1). */
 const RATIO = 2.2;
 /** Scroll distance (px) that brings the next picture. */
 const STEP = 240;
-/** Space kept for the fixed site header while pinned. */
-const PIN_TOP = 84;
 /** Width of the centre card: nearly the full screen on a phone, capped on desktop. */
 const CARD_W = 'min(80vw, 640px)';
 
@@ -53,6 +53,35 @@ function cardStyle(offset: number) {
   };
 }
 
+/** The text only ever travels DOWN: it comes out from behind the picture above it (the
+    picture sits on top), settles, and when the next slide takes over it drifts a little
+    further down while fading away. Waiting slides sit hidden behind the picture. */
+type Phase = 'in' | 'out' | 'wait';
+function rise(phase: Phase, delayMs: number) {
+  if (phase === 'in') {
+    return {
+      opacity: 1,
+      transform: 'translate3d(0,0,0) scale(1)',
+      transformOrigin: 'top left',
+      transition: `opacity 0.45s ease ${delayMs + 120}ms, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) ${delayMs + 120}ms`,
+    } as const;
+  }
+  if (phase === 'out') {
+    return {
+      opacity: 0,
+      transform: 'translate3d(0,34px,0) scale(0.99)',
+      transformOrigin: 'top left',
+      transition: 'opacity 0.35s ease, transform 0.4s ease-in',
+    } as const;
+  }
+  return {
+    opacity: 0,
+    transform: 'translate3d(0,-64px,0) scale(0.96)',
+    transformOrigin: 'top left',
+    transition: 'none',
+  } as const;
+}
+
 /** Shortest signed distance of slide `i` from `sel` on a loop of `n`. */
 function loopOffset(i: number, sel: number, n: number) {
   let d = i - sel;
@@ -61,14 +90,21 @@ function loopOffset(i: number, sel: number, n: number) {
   return d;
 }
 
-export default function HeroScrollStory({ slides, label }: Props) {
+export default function HeroScrollStory({ slides, label, header }: Props) {
   const n = slides.length;
   const [idx, setIdx] = useState(0);
   const idxRef = useRef(0);
   const [h, setH] = useState(0);
-  const [pinTop, setPinTop] = useState(PIN_TOP);
+  const [pinTop, setPinTop] = useState(0);
+  // The slide that was showing just before this one: it is the one that fades out.
+  const prevIdx = useRef(0);
+  const leaving = prevIdx.current !== idx ? prevIdx.current : -1;
+  useEffect(() => {
+    prevIdx.current = idx;
+  }, [idx]);
   const dragX = useRef<number | null>(null);
   const moved = useRef(false);
+  const doneRef = useRef(false);
   const outerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +115,8 @@ export default function HeroScrollStory({ slides, label }: Props) {
     const measure = () => {
       const ch = el.offsetHeight;
       setH(ch);
-      setPinTop(Math.max(PIN_TOP, Math.round((window.innerHeight - ch) / 2)));
+      // Pin at the very top; if the content is taller than the screen, show its bottom part.
+      setPinTop(Math.min(0, window.innerHeight - ch));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -104,6 +141,12 @@ export default function HeroScrollStory({ slides, label }: Props) {
       if (k !== idxRef.current) {
         idxRef.current = k;
         setIdx(k);
+      }
+      // Tell the nav once the last picture is reached, so it can float up before the hero scrolls away.
+      const done = rel >= (n - 1) * STEP;
+      if (done !== doneRef.current) {
+        doneRef.current = done;
+        window.dispatchEvent(new CustomEvent('hero-story-done', { detail: done }));
       }
     };
     const onScroll = () => {
@@ -173,18 +216,34 @@ export default function HeroScrollStory({ slides, label }: Props) {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse at 50% 38%, rgba(149,191,71,0.18), transparent 55%)' }}
+        style={{ background: 'radial-gradient(ellipse at 50% 38%, rgba(244,162,97,0.07), transparent 55%)' }}
       />
+
+      {header}
 
       {/* Cards: the row fades out at both page edges. */}
       <div
-        className="relative mx-auto w-full overflow-hidden"
+        className="relative z-10 mx-auto w-full overflow-hidden"
         style={{
-          height: `calc(${CARD_W} / ${RATIO} + 40px)`,
+          // Room above and below the cards, so their shadow is not cut off by the clipping box.
+          height: `calc(${CARD_W} / ${RATIO} + 150px)`,
+          marginTop: header ? 0 : 0,
+          marginBottom: -56,
           maskImage: 'linear-gradient(to right, transparent, #000 12%, #000 88%, transparent)',
           WebkitMaskImage: 'linear-gradient(to right, transparent, #000 12%, #000 88%, transparent)',
         }}
       >
+        {/* Soft green light behind the middle picture. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: `calc(${CARD_W} * 1.7)`,
+            height: `calc(${CARD_W} / ${RATIO} * 1.9)`,
+            background: 'radial-gradient(closest-side, rgba(244,162,97,0.14), rgba(244,162,97,0.05) 55%, transparent)',
+            filter: 'blur(24px)',
+          }}
+        />
         {slides.map((slide, i) => {
           const offset = loopOffset(i, idx, n);
           return (
@@ -202,9 +261,9 @@ export default function HeroScrollStory({ slides, label }: Props) {
                 if (offset !== 0) go(i);
               }}
               className="absolute left-1/2 top-1/2 overflow-hidden rounded-2xl bg-white p-[3px] text-left outline-none
-                shadow-[0_28px_56px_-20px_rgba(0,0,0,0.4)] will-change-transform
+                shadow-[0_1px_2px_rgba(70,30,15,0.10),0_10px_20px_-6px_rgba(70,30,15,0.20),0_36px_60px_-18px_rgba(70,30,15,0.28)] will-change-transform
                 transition-[transform,opacity,filter] duration-[650ms] ease-[cubic-bezier(0.2,0.7,0.2,1)]
-                dark:shadow-[0_28px_56px_-20px_rgba(0,0,0,0.75)] focus-visible:ring-2 focus-visible:ring-[#95BF47]"
+                dark:shadow-[0_1px_2px_rgba(0,0,0,0.5),0_12px_24px_-6px_rgba(0,0,0,0.6),0_40px_70px_-18px_rgba(0,0,0,0.8)] focus-visible:ring-2 focus-visible:ring-[#F4A261]"
               style={{ width: CARD_W, ...cardStyle(offset) }}
             >
               <img
@@ -223,76 +282,45 @@ export default function HeroScrollStory({ slides, label }: Props) {
         })}
       </div>
 
-      {/* Text of the chosen picture. All texts share one grid cell, so the height is
-          that of the longest one and nothing jumps when the picture changes. */}
-      <div className="relative mx-auto mt-2 grid max-w-2xl px-6 text-center">
-        {slides.map((slide, i) => {
-          const on = i === idx;
-          return (
-            <div
-              key={i}
-              aria-hidden={!on}
-              className="col-start-1 row-start-1 transition-[opacity,transform] duration-500 ease-out"
-              style={{
-                opacity: on ? 1 : 0,
-                transform: on ? 'translate3d(0,0,0)' : 'translate3d(0,10px,0)',
-                visibility: on ? 'visible' : 'hidden',
-              }}
-            >
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight text-[#1A1A1A] dark:text-white">
-                {slide.title}
-              </h2>
-              <p className="mt-2 text-sm sm:text-base leading-relaxed text-[#1A1A1A]/65 dark:text-white/70">
-                {slide.detail}
-              </p>
-              {slide.points && slide.points.length > 0 && (
-                <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5">
-                  {slide.points.map((p) => (
-                    <li key={p} className="flex items-center gap-1.5 text-[13px] sm:text-sm text-[#1A1A1A]/80 dark:text-white/80">
-                      <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#95BF47]/20 text-[#008060] dark:text-[#95BF47]">
-                        <Check size={10} strokeWidth={3} />
-                      </span>
-                      <span>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="relative mt-4 flex items-center justify-center gap-3 pb-6" role="group" aria-label={label}>
-        <button
-          type="button"
-          aria-label="Previous"
-          onClick={() => go(idx - 1)}
-          className="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-[#1A1A1A] hover:bg-black/5 dark:border-white/25 dark:text-white dark:hover:bg-white/10"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <div className="flex items-center gap-2">
-          {slides.map((slide, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={slide.title}
-              aria-current={idx === i}
-              onClick={() => go(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                idx === i ? 'w-7 bg-[#95BF47]' : 'w-2 bg-black/20 hover:bg-black/40 dark:bg-white/30 dark:hover:bg-white/60'
-              }`}
-            />
-          ))}
+      {/* Under the pictures: only the chosen picture's text, left-aligned and no wider than the middle picture. All texts
+          share one grid cell, so the height is that of the longest one. */}
+      <div className="relative z-0 mx-auto mt-2 pb-6" style={{ width: CARD_W }}>
+        <div className="grid pl-6 text-left" style={{ width: '78%' }}>
+          {slides.map((slide, i) => {
+            const on = i === idx;
+            const phase: Phase = on ? 'in' : i === leaving ? 'out' : 'wait';
+            return (
+              <div
+                key={i}
+                aria-hidden={!on}
+                className="col-start-1 row-start-1"
+                style={{ visibility: on ? 'visible' : 'hidden', transition: `visibility 0s linear ${on ? 0 : 0.45}s` }}
+              >
+                <h2 style={rise(phase, 0)} className="text-xl font-bold leading-tight text-[#241812] sm:text-2xl lg:text-[1.7rem] dark:text-white">
+                  {slide.title}
+                </h2>
+                <p style={rise(phase, 90)} className="mt-1 text-sm leading-snug text-[#241812]/60 sm:text-[15px] dark:text-white/65">
+                  {slide.detail}
+                </p>
+                {slide.points && slide.points.length > 0 && (
+                  <ul style={rise(phase, 180)} className="mt-2 grid grid-cols-1 gap-1 min-[480px]:grid-cols-2">
+                    {slide.points.map((p) => (
+                      <li
+                        key={p}
+                        className="flex min-w-0 items-center gap-1.5 rounded-full border border-[#C2531F]/15 bg-white/70 py-[3px] pl-1 pr-2.5 text-[12px] font-medium leading-tight text-[#241812]/85 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/85 dark:shadow-none"
+                      >
+                        <span className="grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full bg-[#C2531F] text-white dark:bg-[#F4A261] dark:text-[#241812]">
+                          <Check size={9} strokeWidth={3.5} />
+                        </span>
+                        <span className="truncate">{p}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
-        <button
-          type="button"
-          aria-label="Next"
-          onClick={() => go(idx + 1)}
-          className="grid h-8 w-8 place-items-center rounded-full border border-black/15 text-[#1A1A1A] hover:bg-black/5 dark:border-white/25 dark:text-white dark:hover:bg-white/10"
-        >
-          <ChevronRight size={16} />
-        </button>
       </div>
     </div>
     </div>

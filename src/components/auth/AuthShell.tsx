@@ -5,19 +5,19 @@ import { Bot, Check, Package, Send, ShieldCheck, ShoppingBag, Store, TriangleAle
 // Shared two-panel card for the vendor Login and Sign up pages: a carousel panel
 // on the left, the form on the right. The pages keep their own day/night switch,
 // so the shell takes `night` and adds Tailwind's `dark` class itself.
-// Colours are the dashboard's green (#008060 / #95BF47), nothing new.
+// Colours are the dashboard's green (#C2531F / #F4A261), nothing new.
 // ---------------------------------------------------------------------------
 
 export type AuthSlide = { before: string; highlight: string };
 
 const FRAME =
-  'relative w-full max-w-[270px] rounded-2xl border border-black/10 bg-white p-3.5 shadow-[0_24px_50px_-20px_rgba(0,128,96,0.35)] dark:border-white/10 dark:bg-[#232323]';
+  'relative w-full max-w-[270px] rounded-2xl border border-black/10 bg-white p-3.5 shadow-[0_24px_50px_-20px_rgba(194,83,31,0.35)] dark:border-white/10 dark:bg-[#2E2019]';
 const BAR = 'rounded-full bg-black/10 dark:bg-white/15';
 
 function Badge({ className = '', children }: { className?: string; children: ReactNode }) {
   return (
     <span
-      className={`absolute grid h-10 w-10 place-items-center rounded-full text-white shadow-lg ring-4 ring-white dark:ring-[#232323] ${className}`}
+      className={`absolute grid h-10 w-10 place-items-center rounded-full text-white shadow-lg ring-4 ring-white dark:ring-[#2E2019] ${className}`}
     >
       {children}
     </span>
@@ -25,15 +25,15 @@ function Badge({ className = '', children }: { className?: string; children: Rea
 }
 
 function StoreScene() {
-  const tiles = ['#008060', '#95BF47', '#F59E0B'];
+  const tiles = ['#C2531F', '#F4A261', '#F59E0B'];
   return (
     <div className={FRAME}>
       <div className="flex items-center gap-1.5">
-        <span className="h-2 w-2 rounded-full bg-[#008060]" />
+        <span className="h-2 w-2 rounded-full bg-[#C2531F]" />
         <span className={`h-2 w-16 ${BAR}`} />
         <span className={`ml-auto h-2 w-10 ${BAR}`} />
       </div>
-      <div className="mt-3 grid h-20 place-items-center rounded-xl bg-gradient-to-br from-[#008060] to-[#95BF47] text-center">
+      <div className="mt-3 grid h-20 place-items-center rounded-xl bg-gradient-to-br from-[#C2531F] to-[#F4A261] text-center">
         <div>
           <span className="block h-2.5 w-24 rounded-full bg-white/90" />
           <span className="mx-auto mt-2 block h-1.5 w-14 rounded-full bg-white/60" />
@@ -46,7 +46,7 @@ function StoreScene() {
               <ShoppingBag size={20} style={{ color: c }} />
             </div>
             <span className={`mt-2 block h-1.5 w-full ${BAR}`} />
-            <span className="mt-2 block h-5 rounded-md bg-[#008060]" />
+            <span className="mt-2 block h-5 rounded-md bg-[#C2531F]" />
           </div>
         ))}
       </div>
@@ -61,7 +61,7 @@ function ChatScene() {
   return (
     <div className={FRAME}>
       <div className="flex items-center gap-2 border-b border-black/5 pb-3 dark:border-white/10">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#008060] text-white">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#C2531F] text-white">
           <Bot size={17} />
         </span>
         <span className={`h-2 w-20 ${BAR}`} />
@@ -77,7 +77,7 @@ function ChatScene() {
           </div>
         </div>
         <div className="flex justify-end">
-          <div className="rounded-2xl rounded-br-sm bg-[#008060] px-3 py-2">
+          <div className="rounded-2xl rounded-br-sm bg-[#C2531F] px-3 py-2">
             <span className="block h-1.5 w-32 rounded-full bg-white/80" />
             <span className="mt-1.5 block h-1.5 w-24 rounded-full bg-white/60" />
             <span className="mt-1.5 block h-1.5 w-12 rounded-full bg-white/60" />
@@ -94,9 +94,9 @@ function ChatScene() {
       </div>
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-black/10 px-3 py-2 dark:border-white/10">
         <span className={`h-1.5 w-24 ${BAR}`} />
-        <Send size={15} className="ml-auto text-[#008060] dark:text-[#95BF47]" />
+        <Send size={15} className="ml-auto text-[#C2531F] dark:text-[#F4A261]" />
       </div>
-      <Badge className="-left-3 -top-3 bg-[#008060]">
+      <Badge className="-left-3 -top-3 bg-[#C2531F]">
         <Bot size={19} />
       </Badge>
     </div>
@@ -113,7 +113,7 @@ function OrdersScene() {
     <div className={FRAME}>
       <div className="flex items-center gap-2">
         <span className={`h-2 w-20 ${BAR}`} />
-        <span className="ml-auto rounded-full bg-[#008060]/10 px-2.5 py-1 text-[10px] font-semibold text-[#008060] dark:text-[#95BF47]">
+        <span className="ml-auto rounded-full bg-[#C2531F]/10 px-2.5 py-1 text-[10px] font-semibold text-[#C2531F] dark:text-[#F4A261]">
           COD
         </span>
       </div>
@@ -142,7 +142,7 @@ function OrdersScene() {
           </div>
         ))}
       </div>
-      <Badge className="-right-3 -top-3 bg-[#008060]">
+      <Badge className="-right-3 -top-3 bg-[#C2531F]">
         <ShieldCheck size={20} />
       </Badge>
     </div>
@@ -150,11 +150,11 @@ function OrdersScene() {
 }
 
 function InboxScene() {
-  const tints = ['#008060', '#F59E0B', '#10B981'];
+  const tints = ['#C2531F', '#F59E0B', '#10B981'];
   return (
     <div className={FRAME}>
       <div className="flex items-center gap-2">
-        <span className="h-2 w-2 rounded-full bg-[#008060]" />
+        <span className="h-2 w-2 rounded-full bg-[#C2531F]" />
         <span className={`h-2 w-16 ${BAR}`} />
       </div>
       <div className="mt-3 space-y-2.5">
@@ -162,7 +162,7 @@ function InboxScene() {
           <div
             key={c}
             className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${
-              i === 1 ? 'bg-[#008060]/10' : 'border border-black/5 dark:border-white/10'
+              i === 1 ? 'bg-[#C2531F]/10' : 'border border-black/5 dark:border-white/10'
             }`}
           >
             <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ background: c }}>
@@ -188,8 +188,8 @@ const SCENES = [StoreScene, ChatScene, OrdersScene, InboxScene];
 function Logo() {
   return (
     <span className="inline-flex items-center gap-2.5">
-      <Store className="text-[#008060] dark:text-[#95BF47]" size={28} strokeWidth={2} />
-      <span className="text-xl font-semibold leading-none text-[#1A1A1A] dark:text-white">Regantify</span>
+      <Store className="text-[#C2531F] dark:text-[#F4A261]" size={28} strokeWidth={2} />
+      <span className="text-xl font-semibold leading-none text-[#241812] dark:text-white">Regantify</span>
     </span>
   );
 }
@@ -226,16 +226,16 @@ export function AuthShell({
         .rg-auth-float { animation: rg-auth-float 4.5s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) { .rg-auth-up, .rg-auth-float { animation: none !important; } }
       `}</style>
-      <main className="flex min-h-screen items-center justify-center bg-[#F6F8F2] px-4 pb-6 pt-[84px] md:pb-[84px] transition-colors duration-300 dark:bg-[#1A1A1A]">
-        <div className="rg-auth-up grid w-full max-w-[960px] overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_30px_70px_-30px_rgba(0,128,96,0.35)] dark:border-white/10 dark:bg-[#232323] md:grid-cols-2">
-          <aside className="relative hidden flex-col items-center border-r border-black/5 bg-[#EFF6E4] px-8 py-7 dark:border-white/10 dark:bg-[#2A2A2A] md:flex">
+      <main className="flex min-h-screen items-center justify-center bg-[#FBF4EC] px-4 pb-6 pt-[84px] md:pb-[84px] transition-colors duration-300 dark:bg-[#241812]">
+        <div className="rg-auth-up grid w-full max-w-[960px] overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_30px_70px_-30px_rgba(194,83,31,0.35)] dark:border-white/10 dark:bg-[#2E2019] md:grid-cols-2">
+          <aside className="relative hidden flex-col items-center border-r border-black/5 bg-[#F9E8D6] px-8 py-7 dark:border-white/10 dark:bg-[#33241C] md:flex">
             <Logo />
             <h2
               key={`t${idx}`}
-              className="rg-auth-up mt-8 max-w-[340px] text-center text-[22px] font-bold leading-tight tracking-tight text-[#1A1A1A]/75 dark:text-white/85"
+              className="rg-auth-up mt-8 max-w-[340px] text-center text-[22px] font-bold leading-tight tracking-tight text-[#241812]/75 dark:text-white/85"
             >
               {slide.before}
-              <span className="text-[#008060] dark:text-[#95BF47]">{slide.highlight}</span>
+              <span className="text-[#C2531F] dark:text-[#F4A261]">{slide.highlight}</span>
             </h2>
             <div key={`i${idx}`} className="rg-auth-up flex w-full flex-1 items-center justify-center py-6">
               <div className="rg-auth-float flex w-full justify-center">
@@ -252,7 +252,7 @@ export function AuthShell({
                   aria-label={`Slide ${i + 1}`}
                   onClick={() => setIdx(i)}
                   className={`h-2 rounded-full transition-all duration-300 ${
-                    i === idx ? 'w-7 bg-[#008060] dark:bg-[#95BF47]' : 'w-2 bg-black/20 hover:bg-black/30 dark:bg-white/25'
+                    i === idx ? 'w-7 bg-[#C2531F] dark:bg-[#F4A261]' : 'w-2 bg-black/20 hover:bg-black/30 dark:bg-white/25'
                   }`}
                 />
               ))}
@@ -275,8 +275,8 @@ export function AuthShell({
 export function AuthHeading({ title, sub }: { title: string; sub: ReactNode }) {
   return (
     <div>
-      <h1 className="text-2xl font-bold leading-tight text-[#1A1A1A] dark:text-white">{title}</h1>
-      <p className="mt-1.5 text-sm leading-relaxed text-[#1A1A1A]/60 dark:text-white/60">{sub}</p>
+      <h1 className="text-2xl font-bold leading-tight text-[#241812] dark:text-white">{title}</h1>
+      <p className="mt-1.5 text-sm leading-relaxed text-[#241812]/60 dark:text-white/60">{sub}</p>
       <hr className="mt-4 border-black/10 dark:border-white/10" />
     </div>
   );
