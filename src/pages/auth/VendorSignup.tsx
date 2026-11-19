@@ -8,6 +8,7 @@ import { authApi } from '../../lib/authApi';
 import { useAuthStore } from '../../store/authStore';
 import { GoogleButton } from '../../components/auth/GoogleButton';
 import { TWO_STEP_PATH } from '../../lib/twoStepApi';
+import { AuthShell, AuthHeading } from '../../components/auth/AuthShell';
 import SiteNav, { readStoredLang, storeLang } from '../../components/marketing/SiteNav';
 import {
   Phone,
@@ -15,10 +16,6 @@ import {
   Store,
   ArrowRight,
   ArrowLeft,
-  ShieldCheck,
-  Zap,
-  Wallet,
-  KeyRound,
   Eye,
   EyeOff,
   Sun,
@@ -129,6 +126,22 @@ const dict = {
     err_pick_account: 'এই নম্বরে একাধিক অ্যাকাউন্ট আছে। বেছে নিতে লগইন পেজ থেকে সাইন ইন করুন।',
   },
 } as const;
+
+
+const SLIDES = {
+  en: [
+    { before: 'Set up your online store ', highlight: 'in minutes' },
+    { before: 'Let AI answer ', highlight: 'your customers' },
+    { before: 'Block fake COD orders ', highlight: 'before they ship' },
+    { before: 'All business orders ', highlight: 'in one place' },
+  ],
+  bn: [
+    { before: 'অনলাইন দোকান সাজান ', highlight: 'কয়েক মিনিটে' },
+    { before: 'AI দিয়ে উত্তর দিন ', highlight: 'আপনার কাস্টমারকে' },
+    { before: 'ভুয়া COD অর্ডার আটকান ', highlight: 'পাঠানোর আগেই' },
+    { before: 'ব্যবসার সব অর্ডার ', highlight: 'এক জায়গায়' },
+  ],
+};
 
 type Key = keyof typeof dict.en;
 
@@ -371,12 +384,6 @@ function VendorSignupInner() {
     }
   };
 
-  const perks = [
-    { icon: Zap, title: t('perk1_title'), detail: t('perk1_detail') },
-    { icon: Wallet, title: t('perk2_title'), detail: t('perk2_detail') },
-    { icon: ShieldCheck, title: t('perk3_title'), detail: t('perk3_detail') },
-  ];
-
   const inputBase =
     `w-full pl-11 pr-4 py-3.5 rounded-xl focus:outline-none transition-colors ${th.input}`;
 
@@ -402,67 +409,29 @@ function VendorSignupInner() {
         lang={lang}
         onToggleLang={toggle}
         variant="solid"
+        transparent
         active="signup"
-        extra={
-          <button
-            type="button"
-            onClick={toggleMode}
-            aria-label={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
-            title={mode === 'night' ? t('theme_to_light') : t('theme_to_dark')}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white border border-white/30 hover:bg-white/15 transition-colors"
-          >
-            {mode === 'night' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        }
+        night={mode === 'night'}
+        onToggleTheme={toggleMode}
+        light={mode === 'day'}
       />
 
-      {/* Content */}
-      <main className="max-w-6xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left - pitch */}
-        <section className="hidden lg:block">
-          <span className={`inline-flex items-center text-sm font-medium px-3 py-1.5 rounded-full mb-6 ${th.tag}`}>
-            {t('pitch_tag')}
-          </span>
-          <h1 className={`text-4xl xl:text-5xl font-bold leading-[1.15] max-w-md ${th.headline}`}>
-            {t('pitch_title_1')}{' '}
-            <span className={th.accentText}>{t('pitch_title_accent')}</span>
-            {t('pitch_title_2')}
-          </h1>
-          <p className={`mt-5 text-lg max-w-md leading-relaxed ${th.sub}`}>{t('pitch_sub')}</p>
-
-          <ul className="mt-10 space-y-4 max-w-md">
-            {perks.map((perk, i) => (
-              <li
-                key={i}
-                className={`flex items-start gap-4 p-4 rounded-2xl ${th.perkCard}`}
-              >
-                <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${th.iconChip}`}>
-                  <perk.icon size={20} strokeWidth={2.2} />
-                </div>
-                <div>
-                  <h3 className={`font-semibold ${th.perkTitle}`}>{perk.title}</h3>
-                  <p className={`mt-0.5 text-sm ${th.perkDetail}`}>{perk.detail}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
+      <AuthShell night={mode === 'night'} slides={SLIDES[lang]} start={2}>
         {/* Right - form card */}
-        <section className="w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
-          <div className={`rounded-2xl p-7 sm:p-9 ${th.cardInner}`}>
+        <div>
             {existingPhone ? (
               /* ---------- Existing account: log in with password ---------- */
               <div key="existing">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${th.iconChip}`}>
-                  <KeyRound size={22} strokeWidth={2.2} />
-                </div>
-                <h2 className={`mt-5 text-2xl font-bold ${th.formTitle}`}>{t('exists_title')}</h2>
-                <p className={`mt-2 text-sm leading-relaxed ${th.formSub}`}>
-                  <span className={`font-medium ${th.accentText}`}>{existingPhone}</span> {t('exists_mid')}
-                </p>
+                <AuthHeading
+                  title={t('exists_title')}
+                  sub={
+                    <>
+                      <span className={`font-medium ${th.accentText}`}>{existingPhone}</span> {t('exists_mid')}
+                    </>
+                  }
+                />
 
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="mt-7 space-y-5">
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="mt-5 space-y-4">
                   <div>
                     <label className={`block text-sm font-medium mb-1.5 ${th.label}`}>
                       {t('label_password')}
@@ -537,13 +506,9 @@ function VendorSignupInner() {
             ) : (
               /* ---------- Default: phone number -> Send OTP ---------- */
               <div key="signup">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${th.iconChip}`}>
-                  <Store size={22} strokeWidth={2.2} />
-                </div>
-                <h2 className={`mt-5 text-2xl font-bold ${th.formTitle}`}>{t('form_title')}</h2>
-                <p className={`mt-2 text-sm leading-relaxed ${th.formSub}`}>{t('form_sub')}</p>
+                <AuthHeading title={t('form_title')} sub={t('form_sub')} />
 
-                <form onSubmit={otpForm.handleSubmit(handleSendOtp)} className="mt-7 space-y-5">
+                <form onSubmit={otpForm.handleSubmit(handleSendOtp)} className="mt-5 space-y-4">
                   <div>
                     <label className={`block text-sm font-medium mb-1.5 ${th.label}`}>{t('label_phone')}</label>
                     <div className="relative group">
@@ -598,9 +563,8 @@ function VendorSignupInner() {
                 </form>
               </div>
             )}
-          </div>
-        </section>
-      </main>
+        </div>
+      </AuthShell>
     </div>
   );
 }

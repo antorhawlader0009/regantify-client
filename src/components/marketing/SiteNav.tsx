@@ -198,9 +198,11 @@ type SiteNavProps = {
   onToggleTheme?: () => void;
   /** Light bar (dark text on white glass), for a light hero. Default: white on dark. */
   light?: boolean;
+  /** solid variant only: fixed and fully transparent, like Home's bar before it is scrolled. */
+  transparent?: boolean;
 };
 
-export default function SiteNav({ lang, onToggleLang, variant, active, extra, night, onToggleTheme, light }: SiteNavProps) {
+export default function SiteNav({ lang, onToggleLang, variant, active, extra, night, onToggleTheme, light, transparent }: SiteNavProps) {
   const navigate = useNavigate();
   const t = labels[lang];
   const c = light ? TONES.light : TONES.dark;
@@ -218,7 +220,7 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, [hero]);
-  const glass = !hero || scrolled;
+  const glass = hero ? scrolled : !transparent;
 
   // On Home the links scroll the page; from the auth pages they go Home first.
   const sectionLink = (id: string, text: string) =>
@@ -229,7 +231,7 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
     );
 
   return (
-    <header className={`${hero ? 'fixed' : 'sticky'} top-0 inset-x-0 z-30 px-3 sm:px-4 pt-3 sm:pt-4 font-nav`}>
+    <header className={`${hero || transparent ? 'fixed' : 'sticky'} top-0 inset-x-0 z-30 px-3 sm:px-4 pt-3 sm:pt-4 font-nav`}>
       <div
         className={`max-w-6xl mx-auto h-[60px] flex items-center justify-between gap-2 pl-4 sm:pl-5 pr-2.5 rounded-2xl
           border transition-all duration-300 ${
@@ -301,14 +303,7 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
               EN
             </span>
           </button>
-          {active === 'login' ? (
-            <span
-              aria-current="page"
-              className={`hidden sm:inline-flex px-3.5 py-2 rounded-lg text-sm font-medium cursor-default ${c.current}`}
-            >
-              {t.login}
-            </span>
-          ) : (
+          {active !== 'login' && (
             <button
               type="button"
               onClick={() => navigate('/vendor/login')}
@@ -317,15 +312,16 @@ export default function SiteNav({ lang, onToggleLang, variant, active, extra, ni
               {t.login}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => active !== 'signup' && navigate('/vendor/signup')}
-            aria-current={active === 'signup' ? 'page' : undefined}
-            className="ml-0.5 sm:ml-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#95BF47] text-[#1A1A1A]
-              hover:bg-[#84AD3D] transition-colors whitespace-nowrap"
-          >
-            {t.start}
-          </button>
+          {active !== 'signup' && (
+            <button
+              type="button"
+              onClick={() => navigate('/vendor/signup')}
+              className="ml-0.5 sm:ml-1 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-[#95BF47] text-[#1A1A1A]
+                hover:bg-[#84AD3D] transition-colors whitespace-nowrap"
+            >
+              {t.start}
+            </button>
+          )}
         </div>
       </div>
     </header>
