@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { AreaChart, BarList, ClockDial, ColumnChart, Donut, Fit, Ring, SERIES, Sparkline, compact, kTaka, type DonutSlice } from './wallCharts';
+import { AreaChart, BarList, ClockDial, hour12, time12, ColumnChart, Donut, Fit, Ring, SERIES, Sparkline, compact, kTaka, type DonutSlice } from './wallCharts';
 
 /** The shape of GET /v1/wall/summary (server/src/office-wall/office-wall.service.ts). */
 export interface Slice {
@@ -165,7 +165,6 @@ const bytes = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(2)} GB` : n >= 1e
 
 export const taka = kTaka;
 const num = (n: number) => n.toLocaleString('en-IN');
-const hh = (h: number) => String(h).padStart(2, '0');
 const shortDay = (d: string) => new Date(`${d}T00:00:00+06:00`).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short' });
 
 // ---- Fixed colours per thing (a colour follows the thing, never its rank) ----
@@ -508,10 +507,10 @@ export const PANELS: PanelDef[] = [
                 h={h}
                 values={today.map((x) => x?.orders ?? 0)}
                 compare={yest.map((x) => x?.orders ?? 0)}
-                labels={Array.from({ length: 24 }, (_, i) => hh(i))}
+                labels={Array.from({ length: 24 }, (_, i) => hour12(i))}
                 highlight={ctx.nowHour}
                 tickEvery={3}
-                tip={(i) => `${hh(i)}:00 · today ${today[i]?.orders ?? 0} orders (${taka(today[i]?.sales ?? 0)}) · yesterday ${yest[i]?.orders ?? 0}`}
+                tip={(i) => `${hour12(i)} · today ${today[i]?.orders ?? 0} orders (${taka(today[i]?.sales ?? 0)}) · yesterday ${yest[i]?.orders ?? 0}`}
               />
             )}
           </Fit>
@@ -614,7 +613,7 @@ export const PANELS: PanelDef[] = [
                 const pay = PAYMENT[o.payment];
                 return (
                   <li key={o.id} className="flex h-6 items-center gap-2">
-                    <span className="w-11 shrink-0 tabular-nums text-[var(--muted)]">{new Date(o.at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="w-[4.6em] shrink-0 tabular-nums text-[var(--muted)]">{time12(o.at)}</span>
                     <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: pay && pay[1] >= 0 ? SERIES[pay[1]] : 'var(--other)' }} title={pay?.[0]} />
                     <span className="min-w-0 flex-1 truncate">{o.store}</span>
                     {w >= 300 && <span className="shrink-0 text-[0.82em] text-[var(--muted)]">{SOURCE[o.source]?.[0] ?? o.source}</span>}
@@ -642,7 +641,7 @@ export const PANELS: PanelDef[] = [
     wide: true,
     render: (d) => {
       const rows = d.traffic.series.slice(0, -1);
-      const labels = rows.map((m) => new Date(m.minute * 60_000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' }));
+      const labels = rows.map((m) => time12(m.minute * 60_000));
       return (
         <div className="flex h-full flex-col">
           <div className="mb-1 flex justify-end">
@@ -766,7 +765,7 @@ export const PANELS: PanelDef[] = [
     title: 'Store visitors by hour',
     render: (d, ctx) => {
       const v = Array.from({ length: 24 }, (_, h) => d.visits.hours.find((x) => x.hour === h)?.n ?? 0);
-      return <Fit>{(w, h) => <ColumnChart w={w} h={h} values={v} labels={v.map((_, i) => hh(i))} color={SERIES[4]} highlight={ctx.nowHour} tickEvery={3} tip={(i) => `${hh(i)}:00 · ${v[i]} new visitors`} />}</Fit>;
+      return <Fit>{(w, h) => <ColumnChart w={w} h={h} values={v} labels={v.map((_, i) => hour12(i))} color={SERIES[4]} highlight={ctx.nowHour} tickEvery={3} tip={(i) => `${hour12(i)} · ${v[i]} new visitors`} />}</Fit>;
     },
   },
   {
@@ -795,14 +794,14 @@ const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 /** Bangladesh's week starts on Saturday. */
 const WEEK_ORDER = [6, 0, 1, 2, 3, 4, 5];
 const dhakaMinute = () => new Date(Date.now() + 6 * 3_600_000).getUTCMinutes();
-/** The `n` busiest hours, busiest first, as "21:00, 20:00". */
+/** The `n` busiest hours, busiest first, as "9 PM, 8 PM". */
 function topHours(values: Array<number | null>, n: number): string {
   return values
     .map((v, h) => ({ v: v ?? 0, h }))
     .filter((x) => x.v > 0)
     .sort((a, b) => b.v - a.v)
     .slice(0, n)
-    .map((x) => `${hh(x.h)}:00`)
+    .map((x) => `${hour12(x.h)}`)
     .join(', ');
 }
 /** The quietest hour that has data. */
@@ -858,7 +857,7 @@ function RushSales({ d, nowHour }: { d: Summary; nowHour: number }) {
           nowHour={nowHour}
           nowMinute={dhakaMinute()}
           label="Orders by hour"
-          tip={(h) => `${hh(h)}:00 · ${s.hours[h].orders} orders and ${taka(s.hours[h].sales)} on a typical day`}
+          tip={(h) => `${hour12(h)} · ${s.hours[h].orders} orders and ${taka(s.hours[h].sales)} on a typical day`}
         />
       )}
       facts={
@@ -867,7 +866,7 @@ function RushSales({ d, nowHour }: { d: Summary; nowHour: number }) {
             rows={[
               ['Busiest hours', topHours(orders, 3) || 'No sales yet'],
               ['At the peak', peak.orders ? `${peak.orders} orders · ${taka(peak.sales)} a day` : '-'],
-              ['Quietest', quiet !== null ? `${hh(quiet)}:00` : '-'],
+              ['Quietest', quiet !== null ? `${hour12(quiet)}` : '-'],
             ]}
           />
           <div>
@@ -901,8 +900,8 @@ function RushServer({ d, nowHour }: { d: Summary; nowHour: number }) {
     <div className="flex h-full min-h-0 flex-col gap-[0.4em]">
       <div className="flex min-h-0 flex-1 gap-[0.6em]">
         {[
-          { values: cpu, color: SERIES[1], label: 'CPU', tip: (h: number) => (sv.cpu[h].avg === null ? `${hh(h)}:00 · not measured yet` : `${hh(h)}:00 · CPU ${sv.cpu[h].avg}% on average, ${sv.cpu[h].peak}% at most`) },
-          { values: req, color: SERIES[2], label: 'API requests', tip: (h: number) => (sv.requests[h].perDay === null ? `${hh(h)}:00 · not measured yet` : `${hh(h)}:00 · ${num(sv.requests[h].perDay ?? 0)} API requests a day`) },
+          { values: cpu, color: SERIES[1], label: 'CPU', tip: (h: number) => (sv.cpu[h].avg === null ? `${hour12(h)} · not measured yet` : `${hour12(h)} · CPU ${sv.cpu[h].avg}% on average, ${sv.cpu[h].peak}% at most`) },
+          { values: req, color: SERIES[2], label: 'API requests', tip: (h: number) => (sv.requests[h].perDay === null ? `${hour12(h)} · not measured yet` : `${hour12(h)} · ${num(sv.requests[h].perDay ?? 0)} API requests a day`) },
         ].map((x) => (
           <div key={x.label} className="flex min-w-0 flex-1 flex-col items-center">
             <Fit className="w-full min-h-0 flex-1">{(w, h) => <div className="flex h-full items-center justify-center"><ClockDial size={Math.max(70, Math.min(w, h))} values={x.values} color={x.color} nowHour={nowHour} nowMinute={dhakaMinute()} label={x.label} tip={x.tip} /></div>}</Fit>
@@ -913,7 +912,7 @@ function RushServer({ d, nowHour }: { d: Summary; nowHour: number }) {
       <div className="truncate text-[0.85em] text-[var(--ink2)]">
         {measured < 24
           ? `Measuring: ${measured} of 24 hours seen so far, the full picture after one day.`
-          : `CPU busiest ${peakCpu ? `${hh(peakCpu.hour)}:00 (${peakCpu.avg}% avg)` : '-'} · highest ${hottest ? `${hottest.peak}% at ${hh(hottest.hour)}:00` : '-'} · API busiest ${topHours(req, 1) || '-'}`}
+          : `CPU busiest ${peakCpu ? `${hour12(peakCpu.hour)} (${peakCpu.avg}% avg)` : '-'} · highest ${hottest ? `${hottest.peak}% at ${hour12(hottest.hour)}` : '-'} · API busiest ${topHours(req, 1) || '-'}`}
       </div>
     </div>
   );
@@ -935,7 +934,7 @@ function RushVisitors({ d, nowHour }: { d: Summary; nowHour: number }) {
           nowHour={nowHour}
           nowMinute={dhakaMinute()}
           label="Store visitors by hour"
-          tip={(h) => `${hh(h)}:00 · ${r.visitors.hours[h].perDay} visitors on a typical day`}
+          tip={(h) => `${hour12(h)} · ${r.visitors.hours[h].perDay} visitors on a typical day`}
         />
       )}
       facts={
@@ -1099,7 +1098,7 @@ function SlowRoutesPanel({ d }: { d: Summary }) {
             ))}
           </ul>
           <p className="mt-auto truncate text-[0.78em] text-[var(--muted)]">
-            p95 · one API process, since {new Date(d.dev.perfSince).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit' })}
+            p95 · one API process, since {time12(d.dev.perfSince)}
           </p>
         </div>
       )}

@@ -3,6 +3,7 @@ import './wall.css';
 import { PANELS, TILES, TileCard, type PanelDef, type Summary, type WallHistory } from './wallWidgets';
 import { SettingsDialog, loadSettings, saveSettings, type WallSettings } from './wallSettings';
 import { DETAIL_OF, DetailDialog } from './wallDetail';
+import { time12 } from './wallCharts';
 
 /**
  * Office wall (2026-11-18, redesigned 2026-11-19): one screen for the office monitor with the server, today's orders, the platform's
@@ -189,7 +190,7 @@ export default function OfficeWall() {
   const tileRows = tileRowsFor(tiles.length, width);
   const tileCols = Math.max(1, Math.ceil(tiles.length / Math.max(1, tileRows)));
 
-  const clock = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const clock = time12(now, true);
   const date = now.toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const nowHour = Number(now.toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', hour: '2-digit', hour12: false })) % 24;
   const stale = data ? now.getTime() - new Date(data.at).getTime() > Math.max(refreshMs * 4, 60_000) : false;
@@ -213,7 +214,7 @@ export default function OfficeWall() {
             </span>
           )}
           <span className={`text-[0.92em] ${error || stale ? 'font-semibold text-[var(--bad)]' : 'text-[var(--muted)]'}`}>
-            {error || (stale ? 'Data is old: the server is not answering' : data ? `Updated ${new Date(data.at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Dhaka' })}` : 'Loading…')}
+            {error || (stale ? 'Data is old: the server is not answering' : data ? `Updated ${time12(data.at, true)}` : 'Loading…')}
           </span>
           <span className="text-[2em] font-bold tabular-nums leading-none">{clock}</span>
           <button type="button" className="wall-icon-btn" onClick={fullscreen} aria-label="Full screen" title="Full screen">

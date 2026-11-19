@@ -379,7 +379,7 @@ export function ClockDial({
   const [hx, hy] = at(hand, R + pad * 0.35);
   const fs = Math.max(9, size * 0.065);
   return (
-    <svg width={size} height={size} role="img" aria-label={peak >= 0 ? `${label}: busiest at ${String(peak).padStart(2, '0')}:00` : `${label}: no data yet`}>
+    <svg width={size} height={size} role="img" aria-label={peak >= 0 ? `${label}: busiest at ${hour12(peak)}` : `${label}: no data yet`}>
       {Array.from({ length: 24 }, (_, h) => (
         <path key={`t${h}`} d={wedge(h, R)} fill="var(--track)" />
       ))}
@@ -397,7 +397,7 @@ export function ClockDial({
         const big = h % 6 === 0;
         return (
           <text key={`l${h}`} x={x} y={y + fs * 0.35} textAnchor="middle" fill={big ? 'var(--ink2)' : 'var(--muted)'} style={{ fontSize: big ? fs : fs * 0.85, fontWeight: big ? 600 : 400 }}>
-            {String(h).padStart(2, '0')}
+            {hour12(h)}
           </text>
         );
       })}
@@ -405,7 +405,7 @@ export function ClockDial({
       <circle cx={c} cy={c} r={r0 * 0.92} fill="var(--card)" />
       <circle cx={c} cy={c} r={Math.max(2, size * 0.012)} fill="var(--ink)" />
       <text x={c} y={c - fs * 0.25} textAnchor="middle" fill="var(--ink)" style={{ fontSize: fs * 1.55, fontWeight: 700 }}>
-        {peak >= 0 ? `${String(peak).padStart(2, '0')}:00` : '…'}
+        {peak >= 0 ? hour12(peak) : '…'}
       </text>
       <text x={c} y={c + fs * 1.15} textAnchor="middle" fill="var(--muted)" style={{ fontSize: fs * 0.9 }}>
         {peak >= 0 ? 'busiest' : 'collecting'}
@@ -441,4 +441,15 @@ export function kTaka(n: number): string {
   if (a >= 1_000_000) return `${sign}৳${+(a / 1_000_000).toFixed(2)}M`;
   const k = a / 1000;
   return `${sign}৳${+k.toFixed(k < 10 ? 2 : k < 100 ? 1 : 0)}k`;
+}
+
+/** An hour of the day in the 12-hour form the wall uses everywhere (the owner's rule, 2026-11-19): 0 -> "12 AM", 15 -> "3 PM". */
+export function hour12(h: number): string {
+  const x = ((h % 24) + 24) % 24;
+  return `${x % 12 === 0 ? 12 : x % 12} ${x < 12 ? 'AM' : 'PM'}`;
+}
+
+/** A moment as Dhaka time in 12-hour form: "3:05 PM" (or "3:05:09 PM" with seconds). */
+export function time12(d: Date | string | number, seconds = false): string {
+  return new Date(d).toLocaleTimeString('en-US', { timeZone: 'Asia/Dhaka', hour: 'numeric', minute: '2-digit', ...(seconds ? { second: '2-digit' } : {}), hour12: true });
 }

@@ -102,7 +102,7 @@ function fmt(v: string | number | null | undefined, unit?: Unit): string {
 function dateText(v: string): string {
   if (isoDay.test(v)) return new Date(`${v}T00:00:00+06:00`).toLocaleDateString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short' });
   const d = new Date(v);
-  return Number.isNaN(d.getTime()) ? v : d.toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return Number.isNaN(d.getTime()) ? v : d.toLocaleString('en-GB', { timeZone: 'Asia/Dhaka', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
 }
 const shortDay = (d: string) => (isoDay.test(d) ? dateText(d) : d);
 
