@@ -34,7 +34,7 @@ export function AdminBell() {
       </button>
       {open && (
         <div className="fixed inset-x-3 top-[76px] z-50 overflow-hidden rounded-xl border border-line bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[380px]">
-          <div className="flex items-center justify-between border-b border-line px-4 py-2.5"> m
+          <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
             <p className="text-sm font-semibold text-regantify-text">Alerts</p>
             <div className="flex items-center gap-3 text-xs">
               {unread > 0 && <button type="button" onClick={() => read.mutate()} className="text-regantify-cta hover:underline">Mark all read</button>}
