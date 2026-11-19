@@ -342,6 +342,8 @@ export function Ring({ percent, label, size, color = 'var(--s1)' }: { percent: n
  */
 export function ClockDial({
   values,
+  half,
+  max,
   size,
   color = 'var(--s1)',
   nowHour,
@@ -349,7 +351,11 @@ export function ClockDial({
   label,
   tip,
 }: {
+  /** All 24 hours; this dial draws its own half. */
   values: Array<number | null>;
+  half: 'AM' | 'PM';
+  /** The biggest value of the whole day, so the AM and PM dials share one scale. */
+  max: number;
   size: number;
   color?: string;
   nowHour: number;
@@ -358,59 +364,83 @@ export function ClockDial({
   tip: (hour: number) => string;
 }) {
   const c = size / 2;
-  const pad = Math.max(12, size * 0.1);
+  const pad = Math.max(11, size * 0.11);
   const R = c - pad;
-  const r0 = R * 0.4;
-  const max = Math.max(0, ...values.map((v) => v ?? 0));
-  const peak = max > 0 ? values.findIndex((v) => v === max) : -1;
+  const r0 = R * 0.42;
+  const first = half === 'AM' ? 0 : 12;
+  const mine = Array.from({ length: 12 }, (_, i) => values[first + i] ?? null);
+  const dayPeak = max > 0 ? values.findIndex((v) => v === max) : -1;
+  const localMax = Math.max(0, ...mine.map((v) => v ?? 0));
+  const localPeak = localMax > 0 ? first + mine.findIndex((v) => v === localMax) : -1;
   const at = (a: number, r: number) => [c + r * Math.sin(a), c - r * Math.cos(a)];
-  const step = (Math.PI * 2) / 24;
-  const gap = step * 0.12;
-  const wedge = (h: number, r1: number) => {
-    const a0 = h * step + gap / 2;
-    const a1 = (h + 1) * step - gap / 2;
+  const step = (Math.PI * 2) / 12;
+  const gap = step * 0.1;
+  const wedge = (i: number, r1: number) => {
+    const a0 = i * step + gap / 2;
+    const a1 = (i + 1) * step - gap / 2;
     const [x0, y0] = at(a0, r0);
     const [x1, y1] = at(a0, r1);
     const [x2, y2] = at(a1, r1);
     const [x3, y3] = at(a1, r0);
     return `M${x0},${y0} L${x1},${y1} A${r1},${r1} 0 0 1 ${x2},${y2} L${x3},${y3} A${r0},${r0} 0 0 0 ${x0},${y0} Z`;
   };
-  const hand = ((nowHour + nowMinute / 60) / 24) * Math.PI * 2;
-  const [hx, hy] = at(hand, R + pad * 0.35);
-  const fs = Math.max(9, size * 0.065);
+  const nowHere = half === 'AM' ? nowHour < 12 : nowHour >= 12;
+  const hand = (((nowHour % 12) + nowMinute / 60) / 12) * Math.PI * 2;
+  const [hx, hy] = at(hand, R + pad * 0.3);
+  const fs = Math.max(9, size * 0.085);
   return (
-    <svg width={size} height={size} role="img" aria-label={peak >= 0 ? `${label}: busiest at ${hour12(peak)}` : `${label}: no data yet`}>
-      {Array.from({ length: 24 }, (_, h) => (
-        <path key={`t${h}`} d={wedge(h, R)} fill="var(--track)" />
+    <svg width={size} height={size} role="img" aria-label={localPeak >= 0 ? `${label}, ${half}: busiest at ${hour12(localPeak)}` : `${label}, ${half}: no data yet`}>
+      {mine.map((_, i) => (
+        <path key={`t${i}`} d={wedge(i, R)} fill="var(--track)" />
       ))}
-      {values.map((v, h) => {
+      {mine.map((v, i) => {
         if (v === null || max <= 0) return null;
+        const h = first + i;
         const r1 = r0 + Math.max(0.04, v / max) * (R - r0);
         return (
-          <path key={h} d={wedge(h, r1)} fill={color} fillOpacity={h === peak ? 1 : 0.3 + 0.55 * (v / max)}>
+          <path key={h} d={wedge(i, r1)} fill={color} fillOpacity={h === dayPeak ? 1 : 0.3 + 0.55 * (v / max)} stroke={h === dayPeak ? 'var(--ink)' : 'none'} strokeWidth={h === dayPeak ? 1.2 : 0}>
             <title>{tip(h)}</title>
           </path>
         );
       })}
-      {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => {
-        const [x, y] = at(h * step, R + pad * 0.55);
-        const big = h % 6 === 0;
+      {/* Hour numbers like a watch: 12 at the top, 3 right, 6 bottom, 9 left. */}
+      {Array.from({ length: 12 }, (_, i) => {
+        const [x, y] = at(i * step, R + pad * 0.55);
+        const big = i % 3 === 0;
         return (
-          <text key={`l${h}`} x={x} y={y + fs * 0.35} textAnchor="middle" fill={big ? 'var(--ink2)' : 'var(--muted)'} style={{ fontSize: big ? fs : fs * 0.85, fontWeight: big ? 600 : 400 }}>
-            {hour12(h)}
+          <text key={`l${i}`} x={x} y={y + fs * 0.35} textAnchor="middle" fill={big ? 'var(--ink2)' : 'var(--muted)'} style={{ fontSize: big ? fs : fs * 0.78, fontWeight: big ? 600 : 400 }}>
+            {i === 0 ? 12 : i}
           </text>
         );
       })}
-      <line x1={c} y1={c} x2={hx} y2={hy} stroke="var(--ink)" strokeWidth={Math.max(1.5, size * 0.008)} strokeLinecap="round" opacity={0.75} />
+      {nowHere && <line x1={c} y1={c} x2={hx} y2={hy} stroke="var(--ink)" strokeWidth={Math.max(1.5, size * 0.012)} strokeLinecap="round" opacity={0.8} />}
       <circle cx={c} cy={c} r={r0 * 0.92} fill="var(--card)" />
-      <circle cx={c} cy={c} r={Math.max(2, size * 0.012)} fill="var(--ink)" />
-      <text x={c} y={c - fs * 0.25} textAnchor="middle" fill="var(--ink)" style={{ fontSize: fs * 1.55, fontWeight: 700 }}>
-        {peak >= 0 ? hour12(peak) : '…'}
+      {nowHere && <circle cx={c} cy={c} r={Math.max(2, size * 0.016)} fill="var(--ink)" />}
+      <text x={c} y={c - fs * 0.1} textAnchor="middle" fill="var(--ink)" style={{ fontSize: fs * 1.35, fontWeight: 700 }}>
+        {half}
       </text>
-      <text x={c} y={c + fs * 1.15} textAnchor="middle" fill="var(--muted)" style={{ fontSize: fs * 0.9 }}>
-        {peak >= 0 ? 'busiest' : 'collecting'}
+      <text x={c} y={c + fs * 1.05} textAnchor="middle" fill="var(--muted)" style={{ fontSize: fs * 0.82 }}>
+        {localPeak >= 0 ? `peak ${hour12(localPeak)}` : 'no data'}
       </text>
     </svg>
+  );
+}
+
+/** The day as two watches side by side, AM (midnight to 11 AM) and PM (noon to 11 PM), on one shared scale. */
+export function DayDials({
+  values,
+  w,
+  h,
+  ...rest
+}: { values: Array<number | null>; w: number; h: number; color?: string; nowHour: number; nowMinute?: number; label: string; tip: (hour: number) => string }) {
+  const gap = Math.max(6, w * 0.04);
+  const size = Math.max(64, Math.floor(Math.min((w - gap) / 2, h)));
+  const max = Math.max(0, ...values.map((v) => v ?? 0));
+  return (
+    <div className="flex h-full items-center justify-center" style={{ gap }}>
+      <ClockDial values={values} half="AM" max={max} size={size} {...rest} />
+      <ClockDial values={values} half="PM" max={max} size={size} {...rest} />
+    </div>
   );
 }
 

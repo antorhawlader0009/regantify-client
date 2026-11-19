@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { AreaChart, BarList, ClockDial, hour12, time12, ColumnChart, Donut, Fit, Ring, SERIES, Sparkline, compact, kTaka, type DonutSlice } from './wallCharts';
+import { AreaChart, BarList, DayDials, hour12, time12, ColumnChart, Donut, Fit, Ring, SERIES, Sparkline, compact, kTaka, type DonutSlice } from './wallCharts';
 
 /** The shape of GET /v1/wall/summary (server/src/office-wall/office-wall.service.ts). */
 export interface Slice {
@@ -770,18 +770,21 @@ export const PANELS: PanelDef[] = [
   },
   {
     id: 'rushSales',
+    wide: true,
     title: 'Busy hours: sales',
     subtitle: (d) => (d.rhythm ? `typical day, last ${d.rhythm.sales.days} days` : ''),
     render: (d, ctx) => <RushSales d={d} nowHour={ctx.nowHour} />,
   },
   {
     id: 'rushServer',
+    wide: true,
     title: 'Busy hours: server',
     subtitle: (d) => (d.rhythm?.server.days ? `typical day, ${d.rhythm.server.days} day${d.rhythm.server.days === 1 ? '' : 's'} measured` : 'collecting'),
     render: (d, ctx) => <RushServer d={d} nowHour={ctx.nowHour} />,
   },
   {
     id: 'rushVisitors',
+    wide: true,
     title: 'Busy hours: visitors',
     subtitle: (d) => (d.rhythm ? `typical day, last ${d.rhythm.visitors.days} days` : ''),
     render: (d, ctx) => <RushVisitors d={d} nowHour={ctx.nowHour} />,
@@ -815,10 +818,10 @@ function quietHour(values: Array<number | null>): number | null {
 
 function Facts({ rows }: { rows: Array<[string, string]> }) {
   return (
-    <div className="flex min-w-0 flex-col justify-center gap-[0.45em] text-[0.9em]">
+    <div className="grid gap-x-[0.8em] gap-y-[0.3em] text-[0.88em]" style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(0, 1fr))` }}>
       {rows.map(([k, v]) => (
         <div key={k} className="min-w-0">
-          <div className="text-[0.85em] text-[var(--muted)]">{k}</div>
+          <div className="truncate text-[0.85em] text-[var(--muted)]">{k}</div>
           <div className="truncate font-semibold text-[var(--ink)]" title={v}>
             {v}
           </div>
@@ -829,11 +832,11 @@ function Facts({ rows }: { rows: Array<[string, string]> }) {
 }
 
 /** A dial filling its box on the left, facts on the right. */
-function DialWithFacts({ dial, facts }: { dial: (size: number) => ReactNode; facts: ReactNode }) {
+function DialWithFacts({ dial, facts }: { dial: (w: number, h: number) => ReactNode; facts: ReactNode }) {
   return (
-    <div className="flex h-full min-h-0 gap-[0.8em]">
-      <Fit className="min-w-0 flex-[1.15]">{(w, h) => <div className="flex h-full items-center justify-center">{dial(Math.max(80, Math.min(w, h)))}</div>}</Fit>
-      <div className="flex min-w-0 flex-1 flex-col justify-center">{facts}</div>
+    <div className="flex h-full min-h-0 flex-col gap-[0.5em]">
+      <Fit className="min-h-0 flex-1">{(w, h) => dial(w, h)}</Fit>
+      <div className="shrink-0">{facts}</div>
     </div>
   );
 }
@@ -849,9 +852,10 @@ function RushSales({ d, nowHour }: { d: Summary; nowHour: number }) {
   const quiet = quietHour(orders);
   return (
     <DialWithFacts
-      dial={(size) => (
-        <ClockDial
-          size={size}
+      dial={(w, h) => (
+        <DayDials
+          w={w}
+          h={h}
           values={orders}
           color={SERIES[0]}
           nowHour={nowHour}
@@ -861,7 +865,7 @@ function RushSales({ d, nowHour }: { d: Summary; nowHour: number }) {
         />
       )}
       facts={
-        <div className="flex flex-col gap-[0.6em]">
+        <div className="flex flex-col gap-[0.4em]">
           <Facts
             rows={[
               ['Busiest hours', topHours(orders, 3) || 'No sales yet'],
@@ -869,14 +873,14 @@ function RushSales({ d, nowHour }: { d: Summary; nowHour: number }) {
               ['Quietest', quiet !== null ? `${hour12(quiet)}` : '-'],
             ]}
           />
-          <div>
-            <div className="mb-[0.3em] text-[0.8em] text-[var(--muted)]">
+          <div className="flex items-end gap-[0.6em]">
+            <div className="shrink-0 text-[0.8em] text-[var(--muted)]">
               Best day: <span className="font-semibold text-[var(--ink)]">{bestDay.orders ? WEEKDAY[bestDay.dow] : '-'}</span>
             </div>
-            <div className="flex h-[2.6em] items-end gap-[0.25em]">
+            <div className="flex h-[2em] min-w-0 flex-1 items-end gap-[0.25em]">
               {days.map((x) => (
                 <div key={x.dow} className="flex flex-1 flex-col items-center gap-[0.15em]" title={`${WEEKDAY[x.dow]} · ${x.orders} orders · ${taka(x.sales)} on average`}>
-                  <div className="w-full rounded-t-[3px]" style={{ height: `${Math.max(6, (x.orders / dayMax) * 100) * 0.016}em`, background: SERIES[0], opacity: x.dow === bestDay.dow ? 1 : 0.45 }} />
+                  <div className="w-full rounded-t-[3px]" style={{ height: `${Math.max(6, (x.orders / dayMax) * 100) * 0.011}em`, background: SERIES[0], opacity: x.dow === bestDay.dow ? 1 : 0.45 }} />
                   <span className="text-[0.7em] text-[var(--muted)]">{WEEKDAY[x.dow].slice(0, 2)}</span>
                 </div>
               ))}
@@ -898,14 +902,14 @@ function RushServer({ d, nowHour }: { d: Summary; nowHour: number }) {
   const measured = cpu.filter((v) => v !== null).length;
   return (
     <div className="flex h-full min-h-0 flex-col gap-[0.4em]">
-      <div className="flex min-h-0 flex-1 gap-[0.6em]">
+      <div className="flex min-h-0 flex-1 flex-col gap-[0.3em]">
         {[
           { values: cpu, color: SERIES[1], label: 'CPU', tip: (h: number) => (sv.cpu[h].avg === null ? `${hour12(h)} · not measured yet` : `${hour12(h)} · CPU ${sv.cpu[h].avg}% on average, ${sv.cpu[h].peak}% at most`) },
           { values: req, color: SERIES[2], label: 'API requests', tip: (h: number) => (sv.requests[h].perDay === null ? `${hour12(h)} · not measured yet` : `${hour12(h)} · ${num(sv.requests[h].perDay ?? 0)} API requests a day`) },
         ].map((x) => (
-          <div key={x.label} className="flex min-w-0 flex-1 flex-col items-center">
-            <Fit className="w-full min-h-0 flex-1">{(w, h) => <div className="flex h-full items-center justify-center"><ClockDial size={Math.max(70, Math.min(w, h))} values={x.values} color={x.color} nowHour={nowHour} nowMinute={dhakaMinute()} label={x.label} tip={x.tip} /></div>}</Fit>
-            <span className="text-[0.85em] font-medium text-[var(--ink2)]">{x.label}</span>
+          <div key={x.label} className="flex min-h-0 flex-1 items-center gap-[0.4em]">
+            <span className="w-[3.6em] shrink-0 text-right text-[0.85em] font-semibold leading-tight text-[var(--ink2)]">{x.label}</span>
+            <Fit className="h-full min-w-0 flex-1">{(w, h) => <DayDials w={w} h={h} values={x.values} color={x.color} nowHour={nowHour} nowMinute={dhakaMinute()} label={x.label} tip={x.tip} />}</Fit>
           </div>
         ))}
       </div>
@@ -926,9 +930,10 @@ function RushVisitors({ d, nowHour }: { d: Summary; nowHour: number }) {
   const peak = r.visitors.hours.reduce((a, b) => (b.perDay > a.perDay ? b : a), r.visitors.hours[0]);
   return (
     <DialWithFacts
-      dial={(size) => (
-        <ClockDial
-          size={size}
+      dial={(w, h) => (
+        <DayDials
+          w={w}
+          h={h}
           values={visits}
           color={SERIES[4]}
           nowHour={nowHour}
